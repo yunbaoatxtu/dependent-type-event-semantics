@@ -1,0 +1,13 @@
+{
+  "exists": ["e"],
+  "body": {
+    "and": [
+      {"pred": "butter", "args": ["e"]},
+      {"pred": "Agent", "args": ["e", "John"]},
+      {"pred": "Theme", "args": ["e", "toast"]},
+      {"pred": "slowly", "args": ["e"]},
+      {"pred": "in", "args": ["e", "bathroom"]},
+      {"pred": "at", "args": ["e", "noon"]}
+    ]
+  }
+}

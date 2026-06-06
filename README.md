@@ -1,0 +1,66 @@
+# Dependent-Type Event Semantics
+
+This repository develops a dependent-type replacement for several core
+functions traditionally handled by Davidsonian and neo-Davidsonian event
+semantics.
+
+The central idea is not to deny that natural language can refer to events.
+Rather, the project decomposes the hidden event variable into more specific
+typed mechanisms:
+
+- natural-number-indexed verb families for variable polyadicity;
+- dependent role records for thematic-role structure;
+- sigma and option types for argument omission;
+- interval-indexed operators for time and aspect;
+- state-transition types for causation and resultatives;
+- episode witnesses introduced only for counting and discourse reference.
+
+## Repository Layout
+
+```text
+paper/
+  dependent_type_replacement_for_event_semantics_sci_manuscript.md
+  dependent_type_replacement_for_event_semantics_sci_manuscript.docx
+
+translator/
+  dependent_type_event_translator.py
+  examples/
+    example_butter.json
+
+docs/
+  event_to_dependent_type_notes.md
+```
+
+## Quick Start
+
+Run the prototype translator on the included example:
+
+```bash
+python3 translator/dependent_type_event_translator.py \
+  translator/examples/example_butter.json \
+  --pretty
+```
+
+Expected core translation:
+
+```text
+at_T(noon, butter(2)(slowly, in(bathroom), John, toast))
+```
+
+## Scope
+
+The current implementation is a prototype. It accepts a small JSON
+representation of neo-Davidsonian event formulas and emits a dependent-type
+style rendering. The accompanying paper explains the broader theoretical
+architecture needed to replace event semantics across variable polyadicity,
+argument omission, thematic roles, event quantity, causation, and resultatives.
+
+## Status
+
+Early research prototype and manuscript draft.
+
+## Citation
+
+If you build on this project, cite the manuscript draft in `paper/` and the
+background work discussed there, especially Luo and Shi's type-theoretic
+analysis of variable polyadicity without events.

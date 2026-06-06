@@ -1,0 +1,16 @@
+[project]
+name = "dependent-type-event-semantics"
+version = "0.1.0"
+description = "Prototype translator and manuscript for a dependent-type replacement of event semantics."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Research prototype" }
+]
+
+[project.scripts]
+dt-event-translate = "translator.dependent_type_event_translator:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
