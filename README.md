@@ -103,6 +103,12 @@ Run all deterministic project checks through one entry point:
 python3 scripts/verify_project.py
 ```
 
+If Coq/Rocq is installed, the verification script also checks:
+
+```bash
+coqc formalization/DependentTypeEventSemantics.v
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON

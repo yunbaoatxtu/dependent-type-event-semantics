@@ -10,3 +10,8 @@ build/
 *.egg-info/
 ~$*.docx
 .~*.docx
+*.aux
+*.glob
+*.vo
+*.vok
+*.vos

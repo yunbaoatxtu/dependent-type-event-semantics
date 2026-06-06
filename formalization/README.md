@@ -24,3 +24,10 @@ python3 scripts/check_formalization.py
 The checker regenerates the scaffold files and verifies that the committed
 outputs contain the expected declarations, `Check`/`#check` commands, and
 normalized names such as `unknown_state`.
+
+When Coq/Rocq is available, the project verification script also compiles the
+Coq scaffold:
+
+```bash
+python3 scripts/verify_project.py
+```
