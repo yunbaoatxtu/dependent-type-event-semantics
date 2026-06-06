@@ -103,10 +103,22 @@ Run all deterministic project checks through one entry point:
 python3 scripts/verify_project.py
 ```
 
-If Coq/Rocq is installed, the verification script also checks:
+Coq/Rocq is not required to run the translator. The Python implementation is
+the core automation layer: it parses the event-semantics input, builds the
+structured AST, type-checks that AST, and exports shallow proof-assistant
+syntax. When Coq/Rocq is installed, the verification script can additionally
+compile the generated Coq scaffold as an optional boundary check:
 
 ```bash
 coqc formalization/DependentTypeEventSemantics.v
+```
+
+Use `--skip-coq` to run only the Python and scaffold-consistency checks, or
+`--require-coq` when a local proof-assistant boundary check is mandatory:
+
+```bash
+python3 scripts/verify_project.py --skip-coq
+python3 scripts/verify_project.py --require-coq
 ```
 
 ## Scope

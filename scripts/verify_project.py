@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
+import argparse
+import shutil
 import subprocess
 import sys
-import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,14 +22,14 @@ def run(label: str, command: list[str]) -> None:
     subprocess.run(command, cwd=ROOT, check=True)
 
 
-def run_optional_coq_check() -> None:
+def run_optional_coq_check(require_coq: bool) -> None:
     if shutil.which("coqc"):
-        run("Coq scaffold check", ["coqc", str(COQ_FILE)])
+        run("optional Coq scaffold boundary check", ["coqc", str(COQ_FILE)])
         return
 
     if ROCQ_ENV.exists():
         run(
-            "Coq scaffold check",
+            "optional Coq scaffold boundary check",
             [
                 "/bin/zsh",
                 "-lc",
@@ -37,10 +38,32 @@ def run_optional_coq_check() -> None:
         )
         return
 
-    print("==> Coq scaffold check skipped: coqc not found")
+    message = "Coq scaffold boundary check skipped: coqc not found"
+    if require_coq:
+        raise SystemExit(message)
+    print(f"==> {message}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Run translator, scaffold, and optional proof-assistant checks."
+    )
+    coq_group = parser.add_mutually_exclusive_group()
+    coq_group.add_argument(
+        "--skip-coq",
+        action="store_true",
+        help="Skip the optional Coq/Rocq scaffold boundary check.",
+    )
+    coq_group.add_argument(
+        "--require-coq",
+        action="store_true",
+        help="Fail if the Coq/Rocq scaffold boundary check cannot be run.",
+    )
+    return parser.parse_args()
 
 
 def main() -> None:
+    args = parse_args()
     run("unit tests", [sys.executable, "-m", "unittest", "discover", "-v"])
     run(
         "python compile check",
@@ -54,10 +77,14 @@ def main() -> None:
             "tests/test_translator.py",
             "scripts/generate_formalization.py",
             "scripts/check_formalization.py",
+            "scripts/verify_project.py",
         ],
     )
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])
-    run_optional_coq_check()
+    if args.skip_coq:
+        print("==> Coq scaffold boundary check skipped by --skip-coq")
+    else:
+        run_optional_coq_check(args.require_coq)
     print("all deterministic checks passed")
 
 
