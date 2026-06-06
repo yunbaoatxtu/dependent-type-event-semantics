@@ -150,3 +150,39 @@ Current type rules:
 This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being
 silently rendered as plausible formulas.
+
+## Lean and Coq Style Export
+
+Well-typed ASTs are exported to shallow embedding syntax for Lean- or Coq-style
+formalization. Export is intentionally blocked when `type_check.ok` is false.
+
+Run:
+
+```bash
+python3 translator/dependent_type_event_translator.py \
+  translator/examples/example_eat_omission.json \
+  --export lean
+```
+
+Lean-style output:
+
+```text
+(Exists fun x_theme : Food => (eat 0 John x_theme))
+```
+
+Coq-style output:
+
+```text
+(exists x_theme : Food, (eat 0 John x_theme))
+```
+
+For non-binding constructors, both targets currently use the same shallow
+prefix form:
+
+```text
+(repeat 2 (knock 0 John))
+(Cause John (Transition vase _ broken))
+```
+
+Names are normalized for proof-assistant friendliness. For example,
+`in(bathroom)` is exported as `in_bathroom`.

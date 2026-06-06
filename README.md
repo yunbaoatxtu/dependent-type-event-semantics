@@ -68,6 +68,14 @@ Run the test suite:
 python3 -m unittest discover -v
 ```
 
+Export a well-typed translation to a shallow proof-assistant embedding:
+
+```bash
+python3 translator/dependent_type_event_translator.py \
+  translator/examples/example_eat_omission.json \
+  --export lean
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON

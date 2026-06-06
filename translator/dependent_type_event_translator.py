@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -59,6 +60,7 @@ class EventAnalysis:
 
 Term = dict[str, Any]
 TypeCheck = dict[str, Any]
+EXPORT_TARGETS = ("lean", "coq")
 
 
 def flatten_conjunction(expr: dict[str, Any]) -> list[Atom]:
@@ -345,6 +347,77 @@ def check_term(term: Term) -> TypeCheck:
     }
 
 
+def export_atom(name: str, target: str) -> str:
+    if target not in EXPORT_TARGETS:
+        raise ValueError(f"Unsupported export target: {target!r}")
+    if name == "_":
+        return "_"
+    sanitized = re.sub(r"[^0-9A-Za-z_]+", "_", name).strip("_")
+    if not sanitized:
+        raise ValueError(f"Cannot export empty atom from {name!r}")
+    if sanitized[0].isdigit():
+        sanitized = "x_" + sanitized
+    return sanitized
+
+
+def export_type_name(name: str, target: str) -> str:
+    return export_atom(name, target)
+
+
+def export_term(term: Term, target: str) -> str:
+    type_check = check_term(term)
+    if not type_check["ok"]:
+        errors = "; ".join(type_check["errors"])
+        raise ValueError(f"Cannot export ill-typed AST: {errors}")
+    if target not in EXPORT_TARGETS:
+        raise ValueError(f"Unsupported export target: {target!r}")
+
+    def emit(current: Term) -> str:
+        kind = current["kind"]
+        if kind == "application":
+            parts = [
+                export_atom(current["function"], target),
+                str(current["adverb_count"]),
+            ]
+            parts.extend(export_atom(x, target) for x in current["modifiers"])
+            parts.extend(export_atom(x, target) for x in current["arguments"])
+            return "(" + " ".join(parts) + ")"
+        if kind == "sigma":
+            witness = export_atom(current["witness"], target)
+            witness_type = export_type_name(current["type"], target)
+            body = emit(current["body"])
+            if target == "lean":
+                return f"(Exists fun {witness} : {witness_type} => {body})"
+            return f"(exists {witness} : {witness_type}, {body})"
+        if kind == "repeat":
+            return f"(repeat {current['count']} {emit(current['body'])})"
+        if kind == "time":
+            op = export_atom(current["operator"] + "_T", target)
+            args = [export_atom(x, target) for x in current["arguments"]]
+            args.append(emit(current["body"]))
+            return "(" + " ".join([op] + args) + ")"
+        if kind == "transition":
+            return (
+                "(Transition "
+                + " ".join(
+                    export_atom(current[field], target)
+                    for field in ("theme", "source_state", "target_state")
+                )
+                + ")"
+            )
+        if kind == "cause":
+            return (
+                "(Cause "
+                + export_atom(current["causer"], target)
+                + " "
+                + emit(current["effect"])
+                + ")"
+            )
+        raise ValueError(f"Unknown term kind: {kind!r}")
+
+    return emit(term)
+
+
 def infer_omitted_theme(verb: str, roles: dict[str, str]) -> tuple[str, str] | None:
     has_theme = any(role in roles for role in ("Theme", "Patient", "Object"))
     if has_theme or verb not in OMITTED_THEME_TYPES:
@@ -417,6 +490,14 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
         ),
         "ast": proposition_ast,
         "type_check": type_check,
+        "exports": (
+            {
+                target: export_term(proposition_ast, target)
+                for target in EXPORT_TARGETS
+            }
+            if type_check["ok"]
+            else {}
+        ),
         "translation": proposition,
         "residual_atoms_not_translated": [
             {"pred": atom.pred, "args": list(atom.args)} for atom in analysis.residuals
@@ -428,9 +509,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Translate event semantics JSON into a dependent-type rendering.")
     parser.add_argument("json_file", type=Path)
     parser.add_argument("--pretty", action="store_true", help="Print explanatory text.")
+    parser.add_argument(
+        "--export",
+        choices=EXPORT_TARGETS,
+        help="Print only a Lean- or Coq-style shallow embedding.",
+    )
     args = parser.parse_args()
     data = json.loads(args.json_file.read_text(encoding="utf-8"))
     result = translate(data)
+    if args.export:
+        print(result["exports"][args.export])
+        return
     if args.pretty:
         print(f"Lexical type: {result['lexical_signature']}")
         print(f"Translation:  {result['translation']}")

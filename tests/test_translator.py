@@ -2,7 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
-from translator.dependent_type_event_translator import check_term, translate
+from translator.dependent_type_event_translator import check_term, export_term, translate
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,6 +25,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["modifiers"], ["slowly", "in(bathroom)"])
         self.assertEqual(result["type_check"], {"ok": True, "type": "t", "errors": []})
+        self.assertEqual(
+            result["exports"]["lean"],
+            "(at_T noon (butter 2 slowly in_bathroom John toast))",
+        )
+        self.assertEqual(
+            result["exports"]["coq"],
+            "(at_T noon (butter 2 slowly in_bathroom John toast))",
+        )
         self.assertEqual(result["residual_atoms_not_translated"], [])
 
     def test_argument_omission_introduces_sigma_witness(self) -> None:
@@ -41,6 +49,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["arguments"], ["John", "x_theme"])
         self.assertTrue(result["type_check"]["ok"])
+        self.assertEqual(
+            result["exports"]["lean"],
+            "(Exists fun x_theme : Food => (eat 0 John x_theme))",
+        )
+        self.assertEqual(
+            result["exports"]["coq"],
+            "(exists x_theme : Food, (eat 0 John x_theme))",
+        )
 
     def test_event_counting_wraps_proposition(self) -> None:
         result = translate(load_example("example_knock_twice.json"))
@@ -49,6 +65,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "repeat")
         self.assertEqual(result["ast"]["body"]["function"], "knock")
         self.assertTrue(result["type_check"]["ok"])
+        self.assertEqual(result["exports"]["lean"], "(repeat 2 (knock 0 John))")
 
     def test_resultative_becomes_causal_transition(self) -> None:
         result = translate(load_example("example_break_result.json"))
@@ -61,6 +78,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["effect"]["kind"], "transition")
         self.assertEqual(result["ast"]["activity"]["function"], "break")
         self.assertTrue(result["type_check"]["ok"])
+        self.assertEqual(
+            result["exports"]["coq"],
+            "(Cause John (Transition vase _ broken))",
+        )
 
     def test_type_checker_rejects_bad_adverb_count(self) -> None:
         result = check_term(
@@ -91,6 +112,17 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertFalse(result["ok"])
         self.assertIn("cause.effect must have type Transition", result["errors"][0])
+
+    def test_export_rejects_ill_typed_ast(self) -> None:
+        bad = {
+            "kind": "application",
+            "function": "butter",
+            "adverb_count": 3,
+            "modifiers": ["slowly"],
+            "arguments": ["John", "toast"],
+        }
+        with self.assertRaisesRegex(ValueError, "Cannot export ill-typed AST"):
+            export_term(bad, "lean")
 
 
 if __name__ == "__main__":
