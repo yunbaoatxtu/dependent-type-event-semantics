@@ -1,0 +1,10 @@
+{
+  "exists": ["e"],
+  "body": {
+    "and": [
+      {"pred": "knock", "args": ["e"]},
+      {"pred": "Agent", "args": ["e", "John"]},
+      {"pred": "twice", "args": ["e"]}
+    ]
+  }
+}

@@ -25,6 +25,18 @@ ROLE_ORDER = [
 ]
 TIME_PREDS = {"at", "during", "before", "after", "until", "since"}
 ROLE_PREDS = set(ROLE_ORDER)
+RESULT_PREDS = {"Result", "ResultState"}
+COUNT_PREDS = {"count", "times"}
+COUNT_WORDS = {
+    "once": 1,
+    "twice": 2,
+    "thrice": 3,
+}
+OMITTED_THEME_TYPES = {
+    "eat": "Food",
+    "read": "Readable",
+    "drink": "Drinkable",
+}
 
 
 @dataclass(frozen=True)
@@ -40,6 +52,8 @@ class EventAnalysis:
     roles: dict[str, str]
     adverbs: list[str]
     times: list[Atom]
+    results: list[Atom]
+    counts: list[str]
     residuals: list[Atom]
 
 
@@ -85,6 +99,8 @@ def analyze_event_formula(data: dict[str, Any]) -> EventAnalysis:
     roles: dict[str, str] = {}
     adverbs: list[str] = []
     times: list[Atom] = []
+    results: list[Atom] = []
+    counts: list[str] = []
     residuals: list[Atom] = []
 
     for atom in atoms:
@@ -94,6 +110,12 @@ def analyze_event_formula(data: dict[str, Any]) -> EventAnalysis:
             roles[atom.pred] = atom.args[1]
         elif atom.pred in TIME_PREDS and len(atom.args) >= 2 and atom.args[0] == event_var:
             times.append(atom)
+        elif atom.pred in RESULT_PREDS and len(atom.args) >= 2 and atom.args[0] == event_var:
+            results.append(atom)
+        elif atom.pred in COUNT_PREDS and len(atom.args) == 2 and atom.args[0] == event_var:
+            counts.append(atom.args[1])
+        elif atom.pred in COUNT_WORDS and atom.args == (event_var,):
+            counts.append(str(COUNT_WORDS[atom.pred]))
         elif atom.args == (event_var,):
             adverbs.append(atom.pred)
         elif len(atom.args) >= 1 and atom.args[0] == event_var:
@@ -101,7 +123,7 @@ def analyze_event_formula(data: dict[str, Any]) -> EventAnalysis:
         else:
             residuals.append(atom)
 
-    return EventAnalysis(event_var, verb, roles, adverbs, times, residuals)
+    return EventAnalysis(event_var, verb, roles, adverbs, times, results, counts, residuals)
 
 
 def ordered_arguments(roles: dict[str, str]) -> list[str]:
@@ -126,16 +148,49 @@ def render_time_operator(atom: Atom, proposition: str) -> str:
     return f"{atom.pred}_T(({rest}), {proposition})"
 
 
+def infer_omitted_theme(verb: str, roles: dict[str, str]) -> tuple[str, str] | None:
+    has_theme = any(role in roles for role in ("Theme", "Patient", "Object"))
+    if has_theme or verb not in OMITTED_THEME_TYPES:
+        return None
+    return ("x_theme", OMITTED_THEME_TYPES[verb])
+
+
+def render_resultative(analysis: EventAnalysis, base_activity: str) -> str:
+    if not analysis.results:
+        return base_activity
+    result_state = analysis.results[-1].args[1]
+    agent = analysis.roles.get("Agent") or analysis.roles.get("Actor") or "causer"
+    theme = (
+        analysis.roles.get("Theme")
+        or analysis.roles.get("Patient")
+        or analysis.roles.get("Object")
+        or "theme"
+    )
+    return f"Cause({agent}, Transition({theme}, _, {result_state}))"
+
+
+def render_count_operator(count: str, proposition: str) -> str:
+    return f"repeat({count}, {proposition})"
+
+
 def translate(data: dict[str, Any]) -> dict[str, Any]:
     analysis = analyze_event_formula(data)
     args = ordered_arguments(analysis.roles)
+    omitted_theme = infer_omitted_theme(analysis.verb, analysis.roles)
+    if omitted_theme is not None:
+        args = args + [omitted_theme[0]]
     n = len(analysis.adverbs)
     app_args = analysis.adverbs + args
     application = f"{analysis.verb}({n})"
     if app_args:
         application += "(" + ", ".join(app_args) + ")"
 
-    proposition = application
+    proposition = render_resultative(analysis, application)
+    if omitted_theme is not None:
+        witness, witness_type = omitted_theme
+        proposition = f"Sigma {witness} : {witness_type}. {proposition}"
+    for count in analysis.counts:
+        proposition = render_count_operator(count, proposition)
     for time_atom in analysis.times:
         proposition = render_time_operator(time_atom, proposition)
 
@@ -148,12 +203,22 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
             "ADV": "(e -> t) -> (e -> t)",
             family_name: f"{family_name}(n) = ADV^n -> " + " -> ".join([ENTITY] * arity + [PROP]),
             "Time": "temporal predicates become proposition-level operators, not event entities",
+            "Omission": "licensed implicit arguments become Sigma witnesses",
+            "Counting": "event-count expressions become repeat/count operators over propositions",
+            "Result": "result predicates become typed causal state transitions",
         },
         "lexical_signature": dependent_signature(analysis.verb, arity),
         "adverb_count": n,
         "ordered_roles": analysis.roles,
         "adverbs": analysis.adverbs,
         "time_operators": [atom.pred for atom in analysis.times],
+        "result_states": [atom.args[1] for atom in analysis.results],
+        "counts": analysis.counts,
+        "omitted_arguments": (
+            [{"role": "Theme", "witness": omitted_theme[0], "type": omitted_theme[1]}]
+            if omitted_theme is not None
+            else []
+        ),
         "translation": proposition,
         "residual_atoms_not_translated": [
             {"pred": atom.pred, "args": list(atom.args)} for atom in analysis.residuals

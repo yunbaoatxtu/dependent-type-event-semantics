@@ -1,0 +1,9 @@
+{
+  "exists": ["e"],
+  "body": {
+    "and": [
+      {"pred": "eat", "args": ["e"]},
+      {"pred": "Agent", "args": ["e", "John"]}
+    ]
+  }
+}

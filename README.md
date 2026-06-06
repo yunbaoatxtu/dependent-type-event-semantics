@@ -47,6 +47,21 @@ Expected core translation:
 at_T(noon, butter(2)(slowly, in(bathroom), John, toast))
 ```
 
+## Verified Translation Stages
+
+The current prototype has small, testable rules for:
+
+- variable polyadicity plus temporal modification;
+- lexically licensed argument omission;
+- event counting with `once`/`twice`/`thrice` or explicit `count`;
+- causal-resultative translation into a typed state transition.
+
+Run the test suite:
+
+```bash
+python3 -m unittest discover -v
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON
