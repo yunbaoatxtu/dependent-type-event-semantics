@@ -28,3 +28,8 @@ def example_1 : PropT := (at_T noon (butter 2 slowly in_bathroom John toast))
 def example_2 : Prop := (Exists fun x_theme : Food => (eat 0 John x_theme))
 def example_3 : PropT := (repeat 2 (knock 0 John))
 def example_4 : PropT := (Cause John (Transition vase unknown_state broken))
+
+#check example_1
+#check example_2
+#check example_3
+#check example_4

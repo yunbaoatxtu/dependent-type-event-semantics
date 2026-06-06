@@ -28,3 +28,8 @@ Definition example_1 : PropT := (at_T noon (butter 2 slowly in_bathroom John toa
 Definition example_2 : Prop := (exists x_theme : Food, (eat 0 John x_theme)).
 Definition example_3 : PropT := (repeat 2 (knock 0 John)).
 Definition example_4 : PropT := (Cause John (Transition vase unknown_state broken)).
+
+Check example_1.
+Check example_2.
+Check example_3.
+Check example_4.

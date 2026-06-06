@@ -145,11 +145,13 @@ class TranslatorTests(unittest.TestCase):
             "def example_2 : PropT := (Cause John (Transition vase unknown_state broken))",
             lean_module,
         )
+        self.assertIn("#check example_2", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Definition example_1 : Prop := (exists x_theme : Food, (eat 0 John x_theme)).",
             coq_module,
         )
+        self.assertIn("Check example_2.", coq_module)
 
 
 if __name__ == "__main__":

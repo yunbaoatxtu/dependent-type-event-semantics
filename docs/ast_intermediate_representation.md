@@ -205,3 +205,9 @@ formalization/DependentTypeEventSemantics.v
 
 The generated files contain shared declarations for the shallow embedding and
 one `example_n` definition for each checked example.
+
+They also include `#check example_n` commands in Lean style and
+`Check example_n.` commands in Coq style. When no proof assistant is installed,
+`scripts/check_formalization.py` still provides a deterministic consistency
+check by regenerating the files and checking their expected declarations,
+examples, normalized names, and check commands.

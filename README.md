@@ -90,6 +90,13 @@ Generate Lean/Coq-style formalization scaffolds from the checked examples:
 python3 scripts/generate_formalization.py
 ```
 
+Check that the generated formalization scaffolds match the current translator
+and examples:
+
+```bash
+python3 scripts/check_formalization.py
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON

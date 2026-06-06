@@ -458,6 +458,15 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             expr = result["exports"][target]
             annotation = "Prop" if expr.startswith("(Exists ") else "PropT"
             lines.append(f"def example_{idx} : {annotation} := {expr}")
+        lines.extend(
+            [
+                "",
+                "#check example_1",
+                "#check example_2",
+                "#check example_3",
+                "#check example_4",
+            ]
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -492,6 +501,15 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         expr = result["exports"][target]
         annotation = "Prop" if expr.startswith("(exists ") else "PropT"
         lines.append(f"Definition example_{idx} : {annotation} := {expr}.")
+    lines.extend(
+        [
+            "",
+            "Check example_1.",
+            "Check example_2.",
+            "Check example_3.",
+            "Check example_4.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
