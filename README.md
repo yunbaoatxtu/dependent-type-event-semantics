@@ -48,6 +48,18 @@ Expected core translation:
 at_T(noon, butter(2)(slowly, in(bathroom), John, toast))
 ```
 
+Run the end-to-end natural-language prototype on a controlled sentence:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "John buttered the toast slowly in the bathroom at noon"
+```
+
+This rule-based pipeline emits four layers that can later be exposed in a web
+interface: the natural-language input, an event-semantics JSON formula, the
+dependent-type translation and AST, and generated Coq code with an optional
+Coq/Rocq boundary check.
+
 ## Verified Translation Stages
 
 The current prototype has small, testable rules for:

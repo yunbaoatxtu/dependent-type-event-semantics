@@ -8,6 +8,7 @@ from translator.dependent_type_event_translator import (
     export_term,
     translate,
 )
+from translator.natural_language_pipeline import run_pipeline, sentence_to_event_semantics
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -152,6 +153,34 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn("Check example_2.", coq_module)
+
+    def test_single_example_module_checks_only_defined_example(self) -> None:
+        result = translate(load_example("example_eat_omission.json"))
+        coq_module = export_module([result], "coq")
+        self.assertIn("Definition example_1 : Prop :=", coq_module)
+        self.assertIn("Check example_1.", coq_module)
+        self.assertNotIn("Check example_2.", coq_module)
+
+    def test_rule_based_sentence_to_event_semantics(self) -> None:
+        formula = sentence_to_event_semantics("John knocked twice.")
+        self.assertEqual(formula["exists"], ["e"])
+        atoms = formula["body"]["and"]
+        self.assertEqual(atoms[-1], {"pred": "twice", "args": ["e"]})
+
+    def test_natural_language_pipeline_success(self) -> None:
+        result = run_pipeline("John ate")
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "Sigma x_theme : Food. eat(0)(John, x_theme)",
+        )
+        self.assertIn("Definition example_1", result["coq_code"])
+        self.assertIn("Check example_1.", result["coq_code"])
+
+    def test_natural_language_pipeline_reports_unsupported_sentence(self) -> None:
+        result = run_pipeline("Mary admired the painting")
+        self.assertFalse(result["ok"])
+        self.assertIn("Unsupported sentence", result["error"])
 
 
 if __name__ == "__main__":

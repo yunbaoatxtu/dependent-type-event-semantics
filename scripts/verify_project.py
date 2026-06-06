@@ -74,6 +74,7 @@ def main() -> None:
             "-m",
             "py_compile",
             "translator/dependent_type_event_translator.py",
+            "translator/natural_language_pipeline.py",
             "tests/test_translator.py",
             "scripts/generate_formalization.py",
             "scripts/check_formalization.py",
