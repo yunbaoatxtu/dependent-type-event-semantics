@@ -76,6 +76,14 @@ python3 translator/dependent_type_event_translator.py \
   --export lean
 ```
 
+Render the manuscript locally. This wrapper fixes the macOS `soffice` crash
+caused by a missing `little-cms2` library by pointing LibreOffice at the copy
+bundled with the Codex runtime:
+
+```bash
+sh scripts/render_paper.sh
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON

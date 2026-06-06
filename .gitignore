@@ -1,5 +1,6 @@
 __pycache__/
 .pycache/
+work/
 *.py[cod]
 .DS_Store
 .venv/
