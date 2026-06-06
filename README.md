@@ -97,6 +97,12 @@ and examples:
 python3 scripts/check_formalization.py
 ```
 
+Run all deterministic project checks through one entry point:
+
+```bash
+python3 scripts/verify_project.py
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON
