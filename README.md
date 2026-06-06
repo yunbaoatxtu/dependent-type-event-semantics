@@ -84,6 +84,12 @@ bundled with the Codex runtime:
 sh scripts/render_paper.sh
 ```
 
+Generate Lean/Coq-style formalization scaffolds from the checked examples:
+
+```bash
+python3 scripts/generate_formalization.py
+```
+
 ## Scope
 
 The current implementation is a prototype. It accepts a small JSON

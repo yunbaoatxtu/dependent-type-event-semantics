@@ -185,4 +185,23 @@ prefix form:
 ```
 
 Names are normalized for proof-assistant friendliness. For example,
-`in(bathroom)` is exported as `in_bathroom`.
+`in(bathroom)` is exported as `in_bathroom`, and the unknown source state `_`
+is exported as `unknown_state`.
+
+## Formalization Files
+
+Run:
+
+```bash
+python3 scripts/generate_formalization.py
+```
+
+This writes:
+
+```text
+formalization/DependentTypeEventSemantics.lean
+formalization/DependentTypeEventSemantics.v
+```
+
+The generated files contain shared declarations for the shallow embedding and
+one `example_n` definition for each checked example.

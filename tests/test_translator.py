@@ -2,7 +2,12 @@ import json
 import unittest
 from pathlib import Path
 
-from translator.dependent_type_event_translator import check_term, export_term, translate
+from translator.dependent_type_event_translator import (
+    check_term,
+    export_module,
+    export_term,
+    translate,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,7 +85,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(
             result["exports"]["coq"],
-            "(Cause John (Transition vase _ broken))",
+            "(Cause John (Transition vase unknown_state broken))",
         )
 
     def test_type_checker_rejects_bad_adverb_count(self) -> None:
@@ -123,6 +128,28 @@ class TranslatorTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValueError, "Cannot export ill-typed AST"):
             export_term(bad, "lean")
+
+    def test_export_module_contains_declarations_and_examples(self) -> None:
+        results = [
+            translate(load_example("example_eat_omission.json")),
+            translate(load_example("example_break_result.json")),
+        ]
+        lean_module = export_module(results, "lean")
+        coq_module = export_module(results, "coq")
+        self.assertIn("constant Entity : Type", lean_module)
+        self.assertIn(
+            "def example_1 : Prop := (Exists fun x_theme : Food => (eat 0 John x_theme))",
+            lean_module,
+        )
+        self.assertIn(
+            "def example_2 : PropT := (Cause John (Transition vase unknown_state broken))",
+            lean_module,
+        )
+        self.assertIn("Parameter Entity : Type.", coq_module)
+        self.assertIn(
+            "Definition example_1 : Prop := (exists x_theme : Food, (eat 0 John x_theme)).",
+            coq_module,
+        )
 
 
 if __name__ == "__main__":

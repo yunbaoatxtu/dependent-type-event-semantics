@@ -1,0 +1,30 @@
+-- Auto-generated shallow embedding for dependent-type event semantics.
+-- This file is an interface scaffold, not a complete proof development.
+
+constant Entity : Type
+constant Food : Type
+constant PropT : Type
+constant TransitionT : Type
+
+constant John : Entity
+constant toast : Entity
+constant vase : Entity
+constant noon : Entity
+constant broken : Entity
+constant unknown_state : Entity
+
+constant slowly : Entity
+constant in_bathroom : Entity
+
+constant butter : Nat -> Entity -> Entity -> Entity -> Entity -> PropT
+constant eat : Nat -> Entity -> Food -> Prop
+constant knock : Nat -> Entity -> PropT
+constant repeat : Nat -> PropT -> PropT
+constant at_T : Entity -> PropT -> PropT
+constant Transition : Entity -> Entity -> Entity -> TransitionT
+constant Cause : Entity -> TransitionT -> PropT
+
+def example_1 : PropT := (at_T noon (butter 2 slowly in_bathroom John toast))
+def example_2 : Prop := (Exists fun x_theme : Food => (eat 0 John x_theme))
+def example_3 : PropT := (repeat 2 (knock 0 John))
+def example_4 : PropT := (Cause John (Transition vase unknown_state broken))

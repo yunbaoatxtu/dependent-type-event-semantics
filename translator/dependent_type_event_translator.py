@@ -351,7 +351,7 @@ def export_atom(name: str, target: str) -> str:
     if target not in EXPORT_TARGETS:
         raise ValueError(f"Unsupported export target: {target!r}")
     if name == "_":
-        return "_"
+        return "unknown_state"
     sanitized = re.sub(r"[^0-9A-Za-z_]+", "_", name).strip("_")
     if not sanitized:
         raise ValueError(f"Cannot export empty atom from {name!r}")
@@ -416,6 +416,83 @@ def export_term(term: Term, target: str) -> str:
         raise ValueError(f"Unknown term kind: {kind!r}")
 
     return emit(term)
+
+
+def export_module(results: list[dict[str, Any]], target: str) -> str:
+    if target not in EXPORT_TARGETS:
+        raise ValueError(f"Unsupported export target: {target!r}")
+    for idx, result in enumerate(results):
+        if not result.get("type_check", {}).get("ok"):
+            raise ValueError(f"Cannot export result {idx}: type_check failed")
+
+    if target == "lean":
+        lines = [
+            "-- Auto-generated shallow embedding for dependent-type event semantics.",
+            "-- This file is an interface scaffold, not a complete proof development.",
+            "",
+            "constant Entity : Type",
+            "constant Food : Type",
+            "constant PropT : Type",
+            "constant TransitionT : Type",
+            "",
+            "constant John : Entity",
+            "constant toast : Entity",
+            "constant vase : Entity",
+            "constant noon : Entity",
+            "constant broken : Entity",
+            "constant unknown_state : Entity",
+            "",
+            "constant slowly : Entity",
+            "constant in_bathroom : Entity",
+            "",
+            "constant butter : Nat -> Entity -> Entity -> Entity -> Entity -> PropT",
+            "constant eat : Nat -> Entity -> Food -> Prop",
+            "constant knock : Nat -> Entity -> PropT",
+            "constant repeat : Nat -> PropT -> PropT",
+            "constant at_T : Entity -> PropT -> PropT",
+            "constant Transition : Entity -> Entity -> Entity -> TransitionT",
+            "constant Cause : Entity -> TransitionT -> PropT",
+            "",
+        ]
+        for idx, result in enumerate(results, 1):
+            expr = result["exports"][target]
+            annotation = "Prop" if expr.startswith("(Exists ") else "PropT"
+            lines.append(f"def example_{idx} : {annotation} := {expr}")
+        return "\n".join(lines) + "\n"
+
+    lines = [
+        "(* Auto-generated shallow embedding for dependent-type event semantics. *)",
+        "(* This file is an interface scaffold, not a complete proof development. *)",
+        "",
+        "Parameter Entity : Type.",
+        "Parameter Food : Type.",
+        "Parameter PropT : Type.",
+        "Parameter TransitionT : Type.",
+        "",
+        "Parameter John : Entity.",
+        "Parameter toast : Entity.",
+        "Parameter vase : Entity.",
+        "Parameter noon : Entity.",
+        "Parameter broken : Entity.",
+        "Parameter unknown_state : Entity.",
+        "",
+        "Parameter slowly : Entity.",
+        "Parameter in_bathroom : Entity.",
+        "",
+        "Parameter butter : nat -> Entity -> Entity -> Entity -> Entity -> PropT.",
+        "Parameter eat : nat -> Entity -> Food -> Prop.",
+        "Parameter knock : nat -> Entity -> PropT.",
+        "Parameter repeat : nat -> PropT -> PropT.",
+        "Parameter at_T : Entity -> PropT -> PropT.",
+        "Parameter Transition : Entity -> Entity -> Entity -> TransitionT.",
+        "Parameter Cause : Entity -> TransitionT -> PropT.",
+        "",
+    ]
+    for idx, result in enumerate(results, 1):
+        expr = result["exports"][target]
+        annotation = "Prop" if expr.startswith("(exists ") else "PropT"
+        lines.append(f"Definition example_{idx} : {annotation} := {expr}.")
+    return "\n".join(lines) + "\n"
 
 
 def infer_omitted_theme(verb: str, roles: dict[str, str]) -> tuple[str, str] | None:
@@ -514,11 +591,21 @@ def main() -> None:
         choices=EXPORT_TARGETS,
         help="Print only a Lean- or Coq-style shallow embedding.",
     )
+    parser.add_argument(
+        "--export-module",
+        choices=EXPORT_TARGETS,
+        help="Print a Lean- or Coq-style module scaffold for the input example.",
+    )
     args = parser.parse_args()
     data = json.loads(args.json_file.read_text(encoding="utf-8"))
     result = translate(data)
+    if args.export and args.export_module:
+        parser.error("--export and --export-module cannot be used together")
     if args.export:
         print(result["exports"][args.export])
+        return
+    if args.export_module:
+        print(export_module([result], args.export_module), end="")
         return
     if args.pretty:
         print(f"Lexical type: {result['lexical_signature']}")
