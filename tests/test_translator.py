@@ -21,6 +21,9 @@ class TranslatorTests(unittest.TestCase):
             result["translation"],
             "at_T(noon, butter(2)(slowly, in(bathroom), John, toast))",
         )
+        self.assertEqual(result["ast"]["kind"], "time")
+        self.assertEqual(result["ast"]["body"]["kind"], "application")
+        self.assertEqual(result["ast"]["body"]["modifiers"], ["slowly", "in(bathroom)"])
         self.assertEqual(result["residual_atoms_not_translated"], [])
 
     def test_argument_omission_introduces_sigma_witness(self) -> None:
@@ -33,11 +36,16 @@ class TranslatorTests(unittest.TestCase):
             result["omitted_arguments"],
             [{"role": "Theme", "witness": "x_theme", "type": "Food"}],
         )
+        self.assertEqual(result["ast"]["kind"], "sigma")
+        self.assertEqual(result["ast"]["body"]["kind"], "application")
+        self.assertEqual(result["ast"]["body"]["arguments"], ["John", "x_theme"])
 
     def test_event_counting_wraps_proposition(self) -> None:
         result = translate(load_example("example_knock_twice.json"))
         self.assertEqual(result["counts"], ["2"])
         self.assertEqual(result["translation"], "repeat(2, knock(0)(John))")
+        self.assertEqual(result["ast"]["kind"], "repeat")
+        self.assertEqual(result["ast"]["body"]["function"], "knock")
 
     def test_resultative_becomes_causal_transition(self) -> None:
         result = translate(load_example("example_break_result.json"))
@@ -46,6 +54,9 @@ class TranslatorTests(unittest.TestCase):
             result["translation"],
             "Cause(John, Transition(vase, _, broken))",
         )
+        self.assertEqual(result["ast"]["kind"], "cause")
+        self.assertEqual(result["ast"]["effect"]["kind"], "transition")
+        self.assertEqual(result["ast"]["activity"]["function"], "break")
 
 
 if __name__ == "__main__":

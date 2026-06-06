@@ -29,6 +29,7 @@ translator/
 
 docs/
   event_to_dependent_type_notes.md
+  ast_intermediate_representation.md
 ```
 
 ## Quick Start
@@ -55,6 +56,10 @@ The current prototype has small, testable rules for:
 - lexically licensed argument omission;
 - event counting with `once`/`twice`/`thrice` or explicit `count`;
 - causal-resultative translation into a typed state transition.
+
+Each translation result includes both a human-readable `translation` string and
+a structured `ast` object. The AST is the intended next bridge toward a proof
+assistant or a typed semantic checker.
 
 Run the test suite:
 

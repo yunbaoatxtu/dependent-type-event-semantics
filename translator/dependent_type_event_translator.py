@@ -57,6 +57,9 @@ class EventAnalysis:
     residuals: list[Atom]
 
 
+Term = dict[str, Any]
+
+
 def flatten_conjunction(expr: dict[str, Any]) -> list[Atom]:
     if "and" in expr:
         atoms: list[Atom] = []
@@ -148,6 +151,88 @@ def render_time_operator(atom: Atom, proposition: str) -> str:
     return f"{atom.pred}_T(({rest}), {proposition})"
 
 
+def application_term(verb: str, adverbs: list[str], args: list[str]) -> Term:
+    return {
+        "kind": "application",
+        "function": verb,
+        "adverb_count": len(adverbs),
+        "modifiers": adverbs,
+        "arguments": args,
+    }
+
+
+def sigma_term(witness: str, witness_type: str, body: Term) -> Term:
+    return {
+        "kind": "sigma",
+        "witness": witness,
+        "type": witness_type,
+        "body": body,
+    }
+
+
+def repeat_term(count: str, body: Term) -> Term:
+    return {
+        "kind": "repeat",
+        "count": count,
+        "body": body,
+    }
+
+
+def time_term(atom: Atom, body: Term) -> Term:
+    return {
+        "kind": "time",
+        "operator": atom.pred,
+        "arguments": list(atom.args[1:]),
+        "body": body,
+    }
+
+
+def transition_term(theme: str, source_state: str, target_state: str) -> Term:
+    return {
+        "kind": "transition",
+        "theme": theme,
+        "source_state": source_state,
+        "target_state": target_state,
+    }
+
+
+def cause_term(causer: str, effect: Term, activity: Term | None = None) -> Term:
+    term: Term = {
+        "kind": "cause",
+        "causer": causer,
+        "effect": effect,
+    }
+    if activity is not None:
+        term["activity"] = activity
+    return term
+
+
+def render_term(term: Term) -> str:
+    kind = term["kind"]
+    if kind == "application":
+        rendered = f"{term['function']}({term['adverb_count']})"
+        args = term["modifiers"] + term["arguments"]
+        if args:
+            rendered += "(" + ", ".join(args) + ")"
+        return rendered
+    if kind == "sigma":
+        return f"Sigma {term['witness']} : {term['type']}. {render_term(term['body'])}"
+    if kind == "repeat":
+        return f"repeat({term['count']}, {render_term(term['body'])})"
+    if kind == "time":
+        args = term["arguments"]
+        rendered_args = args[0] if len(args) == 1 else "(" + ", ".join(args) + ")"
+        return f"{term['operator']}_T({rendered_args}, {render_term(term['body'])})"
+    if kind == "transition":
+        return (
+            f"Transition({term['theme']}, {term['source_state']}, "
+            f"{term['target_state']})"
+        )
+    if kind == "cause":
+        return f"Cause({term['causer']}, {render_term(term['effect'])})"
+    raise ValueError(f"Unknown term kind: {kind!r}")
+
+
 def infer_omitted_theme(verb: str, roles: dict[str, str]) -> tuple[str, str] | None:
     has_theme = any(role in roles for role in ("Theme", "Patient", "Object"))
     if has_theme or verb not in OMITTED_THEME_TYPES:
@@ -155,7 +240,7 @@ def infer_omitted_theme(verb: str, roles: dict[str, str]) -> tuple[str, str] | N
     return ("x_theme", OMITTED_THEME_TYPES[verb])
 
 
-def render_resultative(analysis: EventAnalysis, base_activity: str) -> str:
+def resultative_term(analysis: EventAnalysis, base_activity: Term) -> Term:
     if not analysis.results:
         return base_activity
     result_state = analysis.results[-1].args[1]
@@ -166,11 +251,11 @@ def render_resultative(analysis: EventAnalysis, base_activity: str) -> str:
         or analysis.roles.get("Object")
         or "theme"
     )
-    return f"Cause({agent}, Transition({theme}, _, {result_state}))"
-
-
-def render_count_operator(count: str, proposition: str) -> str:
-    return f"repeat({count}, {proposition})"
+    return cause_term(
+        agent,
+        transition_term(theme, "_", result_state),
+        activity=base_activity,
+    )
 
 
 def translate(data: dict[str, Any]) -> dict[str, Any]:
@@ -180,19 +265,17 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
     if omitted_theme is not None:
         args = args + [omitted_theme[0]]
     n = len(analysis.adverbs)
-    app_args = analysis.adverbs + args
-    application = f"{analysis.verb}({n})"
-    if app_args:
-        application += "(" + ", ".join(app_args) + ")"
 
-    proposition = render_resultative(analysis, application)
+    proposition_ast = application_term(analysis.verb, analysis.adverbs, args)
+    proposition_ast = resultative_term(analysis, proposition_ast)
     if omitted_theme is not None:
         witness, witness_type = omitted_theme
-        proposition = f"Sigma {witness} : {witness_type}. {proposition}"
+        proposition_ast = sigma_term(witness, witness_type, proposition_ast)
     for count in analysis.counts:
-        proposition = render_count_operator(count, proposition)
+        proposition_ast = repeat_term(count, proposition_ast)
     for time_atom in analysis.times:
-        proposition = render_time_operator(time_atom, proposition)
+        proposition_ast = time_term(time_atom, proposition_ast)
+    proposition = render_term(proposition_ast)
 
     arity = len(args)
     family_name = "IV-ADV" if arity == 1 else "TV-ADV" if arity == 2 else f"V{arity}-ADV"
@@ -219,6 +302,7 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
             if omitted_theme is not None
             else []
         ),
+        "ast": proposition_ast,
         "translation": proposition,
         "residual_atoms_not_translated": [
             {"pred": atom.pred, "args": list(atom.args)} for atom in analysis.residuals
