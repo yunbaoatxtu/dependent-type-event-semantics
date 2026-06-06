@@ -118,3 +118,35 @@ The optional `activity` field preserves the original verbal description even
 when the visible rendering focuses on the causal transition. This is useful for
 later proof assistant export, where the causing process and the result
 transition may need separate types.
+
+## Type Checking
+
+The translator runs a lightweight structural type check over every emitted AST.
+The result is returned as:
+
+```json
+{
+  "type_check": {
+    "ok": true,
+    "type": "t",
+    "errors": []
+  }
+}
+```
+
+Current type rules:
+
+- `application` has type `t` when `adverb_count` is a natural number equal to
+  the number of `modifiers`.
+- `sigma` has type `t` when its body has type `t`.
+- `repeat` has type `t` when `count` is a positive natural number and its body
+  has type `t`.
+- `time` has type `t` when its operator is a recognized temporal operator and
+  its body has type `t`.
+- `transition` has type `Transition`.
+- `cause` has type `t` only when its `effect` has type `Transition`; its
+  optional `activity` must have type `t`.
+
+This is intentionally a shallow type layer. It does not yet prove semantic
+validity, but it prevents malformed intermediate representations from being
+silently rendered as plausible formulas.

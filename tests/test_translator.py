@@ -2,7 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
-from translator.dependent_type_event_translator import translate
+from translator.dependent_type_event_translator import check_term, translate
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +24,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "time")
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["modifiers"], ["slowly", "in(bathroom)"])
+        self.assertEqual(result["type_check"], {"ok": True, "type": "t", "errors": []})
         self.assertEqual(result["residual_atoms_not_translated"], [])
 
     def test_argument_omission_introduces_sigma_witness(self) -> None:
@@ -39,6 +40,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "sigma")
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["arguments"], ["John", "x_theme"])
+        self.assertTrue(result["type_check"]["ok"])
 
     def test_event_counting_wraps_proposition(self) -> None:
         result = translate(load_example("example_knock_twice.json"))
@@ -46,6 +48,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["translation"], "repeat(2, knock(0)(John))")
         self.assertEqual(result["ast"]["kind"], "repeat")
         self.assertEqual(result["ast"]["body"]["function"], "knock")
+        self.assertTrue(result["type_check"]["ok"])
 
     def test_resultative_becomes_causal_transition(self) -> None:
         result = translate(load_example("example_break_result.json"))
@@ -57,6 +60,37 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "cause")
         self.assertEqual(result["ast"]["effect"]["kind"], "transition")
         self.assertEqual(result["ast"]["activity"]["function"], "break")
+        self.assertTrue(result["type_check"]["ok"])
+
+    def test_type_checker_rejects_bad_adverb_count(self) -> None:
+        result = check_term(
+            {
+                "kind": "application",
+                "function": "butter",
+                "adverb_count": 1,
+                "modifiers": ["slowly", "carefully"],
+                "arguments": ["John", "toast"],
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn("does not match", result["errors"][0])
+
+    def test_type_checker_rejects_bad_cause_effect(self) -> None:
+        result = check_term(
+            {
+                "kind": "cause",
+                "causer": "John",
+                "effect": {
+                    "kind": "application",
+                    "function": "break",
+                    "adverb_count": 0,
+                    "modifiers": [],
+                    "arguments": ["John", "vase"],
+                },
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn("cause.effect must have type Transition", result["errors"][0])
 
 
 if __name__ == "__main__":

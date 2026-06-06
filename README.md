@@ -59,7 +59,8 @@ The current prototype has small, testable rules for:
 
 Each translation result includes both a human-readable `translation` string and
 a structured `ast` object. The AST is the intended next bridge toward a proof
-assistant or a typed semantic checker.
+assistant or a typed semantic checker. The translator also returns a
+`type_check` object that verifies basic AST well-formedness.
 
 Run the test suite:
 

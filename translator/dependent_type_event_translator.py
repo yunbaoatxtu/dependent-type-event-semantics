@@ -58,6 +58,7 @@ class EventAnalysis:
 
 
 Term = dict[str, Any]
+TypeCheck = dict[str, Any]
 
 
 def flatten_conjunction(expr: dict[str, Any]) -> list[Atom]:
@@ -233,6 +234,117 @@ def render_term(term: Term) -> str:
     raise ValueError(f"Unknown term kind: {kind!r}")
 
 
+def check_term(term: Term) -> TypeCheck:
+    errors: list[str] = []
+
+    def check(current: Term, path: str) -> str:
+        kind = current.get("kind")
+        if kind == "application":
+            modifiers = current.get("modifiers")
+            arguments = current.get("arguments")
+            adverb_count = current.get("adverb_count")
+            if not isinstance(current.get("function"), str) or not current["function"]:
+                errors.append(f"{path}: application.function must be a non-empty string")
+            if not isinstance(modifiers, list) or not all(isinstance(x, str) for x in modifiers):
+                errors.append(f"{path}: application.modifiers must be a list of strings")
+                modifiers = []
+            if not isinstance(arguments, list) or not all(isinstance(x, str) for x in arguments):
+                errors.append(f"{path}: application.arguments must be a list of strings")
+            if not isinstance(adverb_count, int) or adverb_count < 0:
+                errors.append(f"{path}: application.adverb_count must be a natural number")
+            elif adverb_count != len(modifiers):
+                errors.append(
+                    f"{path}: application.adverb_count={adverb_count} "
+                    f"does not match {len(modifiers)} modifier(s)"
+                )
+            return PROP
+
+        if kind == "sigma":
+            if not isinstance(current.get("witness"), str) or not current["witness"]:
+                errors.append(f"{path}: sigma.witness must be a non-empty string")
+            if not isinstance(current.get("type"), str) or not current["type"]:
+                errors.append(f"{path}: sigma.type must be a non-empty string")
+            body = current.get("body")
+            if not isinstance(body, dict):
+                errors.append(f"{path}: sigma.body must be a term")
+                return PROP
+            body_type = check(body, f"{path}.body")
+            if body_type != PROP:
+                errors.append(f"{path}: sigma.body must have type {PROP}, got {body_type}")
+            return PROP
+
+        if kind == "repeat":
+            count = current.get("count")
+            if not isinstance(count, str) or not count.isdigit() or int(count) < 1:
+                errors.append(f"{path}: repeat.count must be a positive natural number")
+            body = current.get("body")
+            if not isinstance(body, dict):
+                errors.append(f"{path}: repeat.body must be a term")
+                return PROP
+            body_type = check(body, f"{path}.body")
+            if body_type != PROP:
+                errors.append(f"{path}: repeat.body must have type {PROP}, got {body_type}")
+            return PROP
+
+        if kind == "time":
+            operator = current.get("operator")
+            arguments = current.get("arguments")
+            if operator not in TIME_PREDS:
+                errors.append(f"{path}: time.operator must be one of {sorted(TIME_PREDS)}")
+            if not isinstance(arguments, list) or not arguments:
+                errors.append(f"{path}: time.arguments must be a non-empty list")
+            elif not all(isinstance(x, str) and x for x in arguments):
+                errors.append(f"{path}: time.arguments must contain non-empty strings")
+            body = current.get("body")
+            if not isinstance(body, dict):
+                errors.append(f"{path}: time.body must be a term")
+                return PROP
+            body_type = check(body, f"{path}.body")
+            if body_type != PROP:
+                errors.append(f"{path}: time.body must have type {PROP}, got {body_type}")
+            return PROP
+
+        if kind == "transition":
+            for field in ("theme", "source_state", "target_state"):
+                if not isinstance(current.get(field), str) or not current[field]:
+                    errors.append(f"{path}: transition.{field} must be a non-empty string")
+            return "Transition"
+
+        if kind == "cause":
+            if not isinstance(current.get("causer"), str) or not current["causer"]:
+                errors.append(f"{path}: cause.causer must be a non-empty string")
+            effect = current.get("effect")
+            if not isinstance(effect, dict):
+                errors.append(f"{path}: cause.effect must be a term")
+            else:
+                effect_type = check(effect, f"{path}.effect")
+                if effect_type != "Transition":
+                    errors.append(
+                        f"{path}: cause.effect must have type Transition, got {effect_type}"
+                    )
+            activity = current.get("activity")
+            if activity is not None:
+                if not isinstance(activity, dict):
+                    errors.append(f"{path}: cause.activity must be a term when present")
+                else:
+                    activity_type = check(activity, f"{path}.activity")
+                    if activity_type != PROP:
+                        errors.append(
+                            f"{path}: cause.activity must have type {PROP}, got {activity_type}"
+                        )
+            return PROP
+
+        errors.append(f"{path}: unknown term kind {kind!r}")
+        return "Unknown"
+
+    inferred_type = check(term, "ast")
+    return {
+        "ok": not errors,
+        "type": inferred_type if not errors else "Invalid",
+        "errors": errors,
+    }
+
+
 def infer_omitted_theme(verb: str, roles: dict[str, str]) -> tuple[str, str] | None:
     has_theme = any(role in roles for role in ("Theme", "Patient", "Object"))
     if has_theme or verb not in OMITTED_THEME_TYPES:
@@ -275,6 +387,7 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
         proposition_ast = repeat_term(count, proposition_ast)
     for time_atom in analysis.times:
         proposition_ast = time_term(time_atom, proposition_ast)
+    type_check = check_term(proposition_ast)
     proposition = render_term(proposition_ast)
 
     arity = len(args)
@@ -303,6 +416,7 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
             else []
         ),
         "ast": proposition_ast,
+        "type_check": type_check,
         "translation": proposition,
         "residual_atoms_not_translated": [
             {"pred": atom.pred, "args": list(atom.args)} for atom in analysis.residuals
