@@ -51,17 +51,20 @@ Expected core translation:
 at_T(noon, butter(2)(slowly, in(bathroom), John, toast))
 ```
 
-Run the end-to-end natural-language prototype on a controlled sentence:
+Run the end-to-end natural-language prototype on a sentence:
 
 ```bash
 python3 -m translator.natural_language_pipeline \
-  "John buttered the toast slowly in the bathroom at noon"
+  "a cat sits on a mat"
 ```
 
-This rule-based pipeline emits four layers that can later be exposed in a web
-interface: the natural-language input, an event-semantics JSON formula, the
-dependent-type translation and AST, and generated Coq code with an optional
-Coq/Rocq boundary check.
+The pipeline includes a conservative fallback parser for simple English
+sentences. It emits four layers that can later be exposed in a web interface:
+the natural-language input, an event-semantics JSON formula, the dependent-type
+translation and AST, and generated Coq code with an optional Coq/Rocq boundary
+check. For unlisted sentences, the fallback analysis is intentionally shallow:
+it identifies a subject, predicate, possible object, common adverbs, count
+words, and simple prepositional modifiers.
 
 Run the local web demo:
 

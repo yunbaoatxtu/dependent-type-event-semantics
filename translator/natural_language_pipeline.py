@@ -19,6 +19,23 @@ ROOT = Path(__file__).resolve().parents[1]
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
+ARTICLES = {"a", "an", "the"}
+PREPOSITIONS = {
+    "at", "in", "on", "under", "over", "near", "beside", "with", "from", "to", "into",
+}
+COUNT_WORDS = {"once", "twice", "thrice"}
+COMMON_ADVERBS = {
+    "slowly", "quickly", "quietly", "loudly", "carefully", "happily", "sadly",
+}
+IRREGULAR_VERBS = {
+    "admired": "admire",
+    "ate": "eat",
+    "sat": "sit",
+    "broke": "break",
+    "broken": "break",
+    "went": "go",
+    "ran": "run",
+}
 
 
 def atom(pred: str, *args: str) -> dict[str, Any]:
@@ -33,6 +50,88 @@ def normalize_sentence(sentence: str) -> str:
     normalized = sentence.strip().rstrip(".!?")
     normalized = re.sub(r"\s+", " ", normalized)
     return normalized.lower()
+
+
+def tokenize(sentence: str) -> list[str]:
+    return re.findall(r"[A-Za-z0-9_']+", normalize_sentence(sentence))
+
+
+def clean_phrase(tokens: list[str]) -> str:
+    content = [token for token in tokens if token not in ARTICLES]
+    if not content:
+        return "entity"
+    return "_".join(content)
+
+
+def lemma_verb(token: str) -> str:
+    if token in IRREGULAR_VERBS:
+        return IRREGULAR_VERBS[token]
+    if token.endswith("ies") and len(token) > 3:
+        return token[:-3] + "y"
+    if token.endswith("es") and len(token) > 3:
+        return token[:-2]
+    if token.endswith("s") and len(token) > 2:
+        return token[:-1]
+    if token.endswith("ed") and len(token) > 3:
+        stem = token[:-2]
+        if len(stem) > 1 and stem[-1] == stem[-2]:
+            return stem[:-1]
+        return stem
+    if token.endswith("ing") and len(token) > 4:
+        stem = token[:-3]
+        if len(stem) > 1 and stem[-1] == stem[-2]:
+            return stem[:-1]
+        return stem
+    return token
+
+
+def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
+    tokens = tokenize(sentence)
+    if len(tokens) < 2:
+        raise ValueError("Please enter at least a subject and a predicate.")
+
+    subject_tokens: list[str] = []
+    idx = 0
+    while idx < len(tokens) and tokens[idx] in ARTICLES:
+        idx += 1
+    if idx < len(tokens):
+        subject_tokens.append(tokens[idx])
+        idx += 1
+    if idx >= len(tokens):
+        raise ValueError("Could not identify a predicate after the subject.")
+
+    verb = lemma_verb(tokens[idx])
+    idx += 1
+    items = [atom(verb, "e"), atom("Agent", "e", clean_phrase(subject_tokens))]
+    object_tokens: list[str] = []
+
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token in COUNT_WORDS:
+            items.append(atom(token, "e"))
+            idx += 1
+            continue
+        if token in COMMON_ADVERBS:
+            items.append(atom(token, "e"))
+            idx += 1
+            continue
+        if token in PREPOSITIONS:
+            prep = token
+            idx += 1
+            phrase: list[str] = []
+            while idx < len(tokens) and tokens[idx] not in PREPOSITIONS | COUNT_WORDS | COMMON_ADVERBS:
+                phrase.append(tokens[idx])
+                idx += 1
+            if phrase:
+                items.append(atom(prep, "e", clean_phrase(phrase)))
+            continue
+        object_tokens.append(token)
+        idx += 1
+
+    theme = clean_phrase(object_tokens)
+    if object_tokens and theme != "entity":
+        items.append(atom("Theme", "e", theme))
+    return event_formula(*items)
 
 
 def sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
@@ -64,11 +163,7 @@ def sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             atom("Theme", "e", "vase"),
             atom("Result", "e", "broken"),
         )
-    raise ValueError(
-        "Unsupported sentence for the current rule-based prototype. "
-        "Try: John buttered the toast slowly in the bathroom at noon; "
-        "John ate; John knocked twice; John broke the vase."
-    )
+    return fallback_sentence_to_event_semantics(sentence)
 
 
 def coq_command(coq_file: Path) -> list[str] | None:

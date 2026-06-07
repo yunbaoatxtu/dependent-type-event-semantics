@@ -7,22 +7,27 @@ constant PropT : Type
 constant TransitionT : Type
 
 constant John : Entity
-constant toast : Entity
-constant vase : Entity
-constant noon : Entity
 constant broken : Entity
-constant unknown_state : Entity
-
-constant slowly : Entity
 constant in_bathroom : Entity
+constant noon : Entity
+constant slowly : Entity
+constant toast : Entity
+constant unknown_state : Entity
+constant vase : Entity
 
+constant repeat : Nat -> PropT -> PropT
+constant at_T : Entity -> PropT -> PropT
+constant during_T : Entity -> PropT -> PropT
+constant before_T : Entity -> PropT -> PropT
+constant after_T : Entity -> PropT -> PropT
+constant until_T : Entity -> PropT -> PropT
+constant since_T : Entity -> PropT -> PropT
+constant Transition : Entity -> Entity -> Entity -> TransitionT
+constant Cause : Entity -> TransitionT -> PropT
+constant break : Nat -> Entity -> Entity -> PropT
 constant butter : Nat -> Entity -> Entity -> Entity -> Entity -> PropT
 constant eat : Nat -> Entity -> Food -> Prop
 constant knock : Nat -> Entity -> PropT
-constant repeat : Nat -> PropT -> PropT
-constant at_T : Entity -> PropT -> PropT
-constant Transition : Entity -> Entity -> Entity -> TransitionT
-constant Cause : Entity -> TransitionT -> PropT
 
 def example_1 : PropT := (at_T noon (butter 2 slowly in_bathroom John toast))
 def example_2 : Prop := (Exists fun x_theme : Food => (eat 0 John x_theme))

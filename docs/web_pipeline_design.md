@@ -8,10 +8,12 @@ This project can support a web interface with four visible stages:
 4. Coq/Rocq boundary validation
 
 The current repository implements the first small backend slice in
-`translator/natural_language_pipeline.py`. It is deliberately rule-based and
-limited to controlled examples. This keeps the verification problem honest:
-the user can see where parsing succeeds, where translation succeeds, and where
-Coq validation succeeds.
+`translator/natural_language_pipeline.py`. It combines hand-written analyses
+for the main research examples with a conservative fallback parser for simple
+English sentences. This keeps the verification problem honest: the user can see
+where parsing succeeds, where translation succeeds, and where Coq validation
+succeeds, while unlisted sentences receive a shallow first-pass analysis rather
+than a false claim of full semantic understanding.
 
 The repository also includes a small dependency-free local web demo in
 `web/app.py`. It is intended as a thin interface over the verified backend, not
@@ -54,7 +56,7 @@ type-check result and mark external validation as skipped.
 
 The interface should distinguish at least four failure classes:
 
-- unsupported natural-language pattern;
+- empty or severely underspecified natural-language input;
 - malformed event-semantics JSON;
 - failed dependent-type AST check;
 - failed Coq/Rocq boundary validation.
@@ -64,9 +66,9 @@ the parser is too weak, not because the dependent-type replacement is wrong.
 Likewise, an AST may pass internally while the exported proof-assistant syntax
 needs more declarations.
 
-## Current Controlled Sentences
+## Current Sentence Coverage
 
-The prototype currently supports:
+The prototype has specific analyses for:
 
 - `John buttered the toast slowly in the bathroom at noon`
 - `John ate`
@@ -75,3 +77,8 @@ The prototype currently supports:
 
 These examples correspond to variable polyadicity with time, argument
 omission, event counting, and causal-resultative translation.
+
+Other simple English sentences are handled by the fallback parser. For example,
+`a cat sits on a mat` becomes an event-semantics formula with `sit(e)`,
+`Agent(e, cat)`, and `on(e, mat)`, then translates to
+`sit(1)(on(mat), cat)` and can be checked by the generated Coq scaffold.

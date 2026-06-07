@@ -418,6 +418,93 @@ def export_term(term: Term, target: str) -> str:
     return emit(term)
 
 
+def application_result_type(function: str) -> str:
+    return "Prop" if function == "eat" else "PropT"
+
+
+def application_argument_types(function: str, argument_count: int) -> list[str]:
+    if function == "eat" and argument_count >= 2:
+        return ["Entity"] * (argument_count - 1) + ["Food"]
+    return ["Entity"] * argument_count
+
+
+def collect_term_declarations(
+    term: Term,
+    target: str,
+    functions: dict[str, tuple[list[str], str]],
+    constants: set[str],
+    types: set[str],
+    bound: set[str] | None = None,
+) -> None:
+    bound = set() if bound is None else bound
+    kind = term["kind"]
+    if kind == "application":
+        function = export_atom(term["function"], target)
+        modifier_types = ["Entity"] * len(term["modifiers"])
+        argument_types = application_argument_types(function, len(term["arguments"]))
+        functions[function] = (
+            ["nat" if target == "coq" else "Nat"] + modifier_types + argument_types,
+            application_result_type(function),
+        )
+        for value in term["modifiers"] + term["arguments"]:
+            exported = export_atom(value, target)
+            if exported not in bound:
+                constants.add(exported)
+        return
+    if kind == "sigma":
+        witness = export_atom(term["witness"], target)
+        witness_type = export_type_name(term["type"], target)
+        types.add(witness_type)
+        collect_term_declarations(
+            term["body"],
+            target,
+            functions,
+            constants,
+            types,
+            bound | {witness},
+        )
+        return
+    if kind == "repeat":
+        collect_term_declarations(term["body"], target, functions, constants, types, bound)
+        return
+    if kind == "time":
+        for value in term["arguments"]:
+            exported = export_atom(value, target)
+            if exported not in bound:
+                constants.add(exported)
+        collect_term_declarations(term["body"], target, functions, constants, types, bound)
+        return
+    if kind == "transition":
+        for field in ("theme", "source_state", "target_state"):
+            exported = export_atom(term[field], target)
+            if exported not in bound:
+                constants.add(exported)
+        return
+    if kind == "cause":
+        causer = export_atom(term["causer"], target)
+        if causer not in bound:
+            constants.add(causer)
+        collect_term_declarations(term["effect"], target, functions, constants, types, bound)
+        activity = term.get("activity")
+        if activity is not None:
+            collect_term_declarations(activity, target, functions, constants, types, bound)
+        return
+    raise ValueError(f"Unknown term kind: {kind!r}")
+
+
+def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str, Any]:
+    functions: dict[str, tuple[list[str], str]] = {}
+    constants: set[str] = set()
+    types = {"Entity", "Food", "PropT", "TransitionT"}
+    for result in results:
+        collect_term_declarations(result["ast"], target, functions, constants, types)
+    return {
+        "types": sorted(types),
+        "constants": sorted(constants),
+        "functions": functions,
+    }
+
+
 def export_module(results: list[dict[str, Any]], target: str) -> str:
     if target not in EXPORT_TARGETS:
         raise ValueError(f"Unsupported export target: {target!r}")
@@ -425,35 +512,37 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         if not result.get("type_check", {}).get("ok"):
             raise ValueError(f"Cannot export result {idx}: type_check failed")
 
+    declarations = module_declarations(results, target)
+
     if target == "lean":
         lines = [
             "-- Auto-generated shallow embedding for dependent-type event semantics.",
             "-- This file is an interface scaffold, not a complete proof development.",
             "",
-            "constant Entity : Type",
-            "constant Food : Type",
-            "constant PropT : Type",
-            "constant TransitionT : Type",
-            "",
-            "constant John : Entity",
-            "constant toast : Entity",
-            "constant vase : Entity",
-            "constant noon : Entity",
-            "constant broken : Entity",
-            "constant unknown_state : Entity",
-            "",
-            "constant slowly : Entity",
-            "constant in_bathroom : Entity",
-            "",
-            "constant butter : Nat -> Entity -> Entity -> Entity -> Entity -> PropT",
-            "constant eat : Nat -> Entity -> Food -> Prop",
-            "constant knock : Nat -> Entity -> PropT",
-            "constant repeat : Nat -> PropT -> PropT",
-            "constant at_T : Entity -> PropT -> PropT",
-            "constant Transition : Entity -> Entity -> Entity -> TransitionT",
-            "constant Cause : Entity -> TransitionT -> PropT",
-            "",
         ]
+        lines.extend(f"constant {name} : Type" for name in declarations["types"])
+        lines.append("")
+        lines.extend(
+            f"constant {name} : Entity" for name in declarations["constants"]
+        )
+        lines.extend(
+            [
+                "",
+                "constant repeat : Nat -> PropT -> PropT",
+                "constant at_T : Entity -> PropT -> PropT",
+                "constant during_T : Entity -> PropT -> PropT",
+                "constant before_T : Entity -> PropT -> PropT",
+                "constant after_T : Entity -> PropT -> PropT",
+                "constant until_T : Entity -> PropT -> PropT",
+                "constant since_T : Entity -> PropT -> PropT",
+                "constant Transition : Entity -> Entity -> Entity -> TransitionT",
+                "constant Cause : Entity -> TransitionT -> PropT",
+            ]
+        )
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            signature = " -> ".join(arg_types + [result_type])
+            lines.append(f"constant {name} : {signature}")
+        lines.append("")
         for idx, result in enumerate(results, 1):
             expr = result["exports"][target]
             annotation = "Prop" if expr.startswith("(Exists ") else "PropT"
@@ -467,30 +556,30 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "(* Auto-generated shallow embedding for dependent-type event semantics. *)",
         "(* This file is an interface scaffold, not a complete proof development. *)",
         "",
-        "Parameter Entity : Type.",
-        "Parameter Food : Type.",
-        "Parameter PropT : Type.",
-        "Parameter TransitionT : Type.",
-        "",
-        "Parameter John : Entity.",
-        "Parameter toast : Entity.",
-        "Parameter vase : Entity.",
-        "Parameter noon : Entity.",
-        "Parameter broken : Entity.",
-        "Parameter unknown_state : Entity.",
-        "",
-        "Parameter slowly : Entity.",
-        "Parameter in_bathroom : Entity.",
-        "",
-        "Parameter butter : nat -> Entity -> Entity -> Entity -> Entity -> PropT.",
-        "Parameter eat : nat -> Entity -> Food -> Prop.",
-        "Parameter knock : nat -> Entity -> PropT.",
-        "Parameter repeat : nat -> PropT -> PropT.",
-        "Parameter at_T : Entity -> PropT -> PropT.",
-        "Parameter Transition : Entity -> Entity -> Entity -> TransitionT.",
-        "Parameter Cause : Entity -> TransitionT -> PropT.",
-        "",
     ]
+    lines.extend(f"Parameter {name} : Type." for name in declarations["types"])
+    lines.append("")
+    lines.extend(
+        f"Parameter {name} : Entity." for name in declarations["constants"]
+    )
+    lines.extend(
+        [
+            "",
+            "Parameter repeat : nat -> PropT -> PropT.",
+            "Parameter at_T : Entity -> PropT -> PropT.",
+            "Parameter during_T : Entity -> PropT -> PropT.",
+            "Parameter before_T : Entity -> PropT -> PropT.",
+            "Parameter after_T : Entity -> PropT -> PropT.",
+            "Parameter until_T : Entity -> PropT -> PropT.",
+            "Parameter since_T : Entity -> PropT -> PropT.",
+            "Parameter Transition : Entity -> Entity -> Entity -> TransitionT.",
+            "Parameter Cause : Entity -> TransitionT -> PropT.",
+        ]
+    )
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        signature = " -> ".join(arg_types + [result_type])
+        lines.append(f"Parameter {name} : {signature}.")
+    lines.append("")
     for idx, result in enumerate(results, 1):
         expr = result["exports"][target]
         annotation = "Prop" if expr.startswith("(exists ") else "PropT"

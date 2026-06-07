@@ -168,6 +168,13 @@ class TranslatorTests(unittest.TestCase):
         atoms = formula["body"]["and"]
         self.assertEqual(atoms[-1], {"pred": "twice", "args": ["e"]})
 
+    def test_fallback_sentence_to_event_semantics(self) -> None:
+        formula = sentence_to_event_semantics("a cat sits on a mat")
+        atoms = formula["body"]["and"]
+        self.assertIn({"pred": "sit", "args": ["e"]}, atoms)
+        self.assertIn({"pred": "Agent", "args": ["e", "cat"]}, atoms)
+        self.assertIn({"pred": "on", "args": ["e", "mat"]}, atoms)
+
     def test_natural_language_pipeline_success(self) -> None:
         result = run_pipeline("John ate")
         self.assertTrue(result["ok"])
@@ -178,10 +185,25 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Definition example_1", result["coq_code"])
         self.assertIn("Check example_1.", result["coq_code"])
 
-    def test_natural_language_pipeline_reports_unsupported_sentence(self) -> None:
+    def test_natural_language_pipeline_handles_unlisted_sentence(self) -> None:
         result = run_pipeline("Mary admired the painting")
-        self.assertFalse(result["ok"])
-        self.assertIn("Unsupported sentence", result["error"])
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "admire(0)(mary, painting)",
+        )
+
+    def test_natural_language_pipeline_handles_cat_on_mat(self) -> None:
+        result = run_pipeline("a cat sits on a mat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "sit(1)(on(mat), cat)",
+        )
+        self.assertIn("Parameter cat : Entity.", result["coq_code"])
+        self.assertIn("Parameter on_mat : Entity.", result["coq_code"])
+        self.assertIn("Parameter sit : nat -> Entity -> Entity -> PropT.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_web_analyze_sentence_success(self) -> None:
         result = analyze_sentence("John broke the vase")
