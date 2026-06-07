@@ -8,7 +8,11 @@ from translator.dependent_type_event_translator import (
     export_term,
     translate,
 )
-from translator.natural_language_pipeline import run_pipeline, sentence_to_event_semantics
+from translator.natural_language_pipeline import (
+    construction_rules,
+    run_pipeline,
+    sentence_to_event_semantics,
+)
 from web.app import analyze_sentence, render_page
 
 
@@ -245,6 +249,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertTrue(result["ok"])
         self.assertEqual(result["kind"], "timed_after")
+        self.assertEqual(result["construction_rule"]["id"], "timed_after")
         self.assertEqual(result["type_check"]["type"], "Prop")
         self.assertIn("Parameter Time : Type.", result["coq_code"])
         self.assertIn("Parameter Marseillaise : Entity.", result["coq_code"])
@@ -265,6 +270,10 @@ class TranslatorTests(unittest.TestCase):
         result = run_pipeline("Mary saw John leave", require_coq=True)
         self.assertTrue(result["ok"])
         self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(
+            result["construction_rule"]["id"],
+            "perception_nominalization",
+        )
         self.assertIn("Parameter E : Prop -> Entity.", result["coq_code"])
         self.assertIn("Parameter leave : Entity -> Prop.", result["coq_code"])
         self.assertIn("Parameter see : Entity -> Entity -> Prop.", result["coq_code"])
@@ -280,6 +289,7 @@ class TranslatorTests(unittest.TestCase):
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
         self.assertTrue(result["ok"])
         self.assertEqual(result["kind"], "universal_timed_burning")
+        self.assertEqual(result["construction_rule"]["id"], "universal_timed_burning")
         self.assertIn("Parameter Time : Type.", result["coq_code"])
         self.assertIn("Parameter oxygen : Entity.", result["coq_code"])
         self.assertIn("Parameter burn : Entity -> Time -> Prop.", result["coq_code"])
@@ -295,6 +305,7 @@ class TranslatorTests(unittest.TestCase):
         result = run_pipeline("some boy loves some girl", require_coq=True)
         self.assertTrue(result["ok"])
         self.assertEqual(result["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(result["construction_rule"]["id"], "quantifier_scope_ambiguity")
         self.assertIn("some_boy_wide_scope", result["coq_code"])
         self.assertIn("some_girl_wide_scope", result["coq_code"])
         self.assertIn("Parameter boy : Entity -> Prop.", result["coq_code"])
@@ -304,6 +315,34 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter some : Entity.", result["coq_code"])
         self.assertNotIn("Parameter boy : nat ->", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
+        rules = {rule.rule_id: rule for rule in construction_rules()}
+        expected = {
+            "timed_after",
+            "perception_nominalization",
+            "universal_timed_burning",
+            "quantifier_scope_ambiguity",
+        }
+        self.assertTrue(expected.issubset(rules))
+        self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["perception_nominalization"].forbidden_coq_fragments)
+        self.assertIn("IN", rules["universal_timed_burning"].forbidden_coq_fragments)
+        self.assertIn("Parameter some : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
+
+    def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
+        examples = {
+            "timed_after": "after the singing of the Marseillaise, John saluted the flag",
+            "perception_nominalization": "Mary saw John leave",
+            "universal_timed_burning": "In every burning, oxygen is consumed",
+            "quantifier_scope_ambiguity": "some boy loves some girl",
+        }
+        for rule in construction_rules():
+            with self.subTest(rule=rule.rule_id):
+                result = run_pipeline(examples[rule.rule_id], require_coq=True)
+                self.assertTrue(result["ok"])
+                for fragment in rule.forbidden_coq_fragments:
+                    self.assertNotIn(fragment, result["coq_code"])
 
     def test_web_analyze_sentence_success(self) -> None:
         result = analyze_sentence("John broke the vase")

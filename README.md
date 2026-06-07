@@ -121,6 +121,12 @@ uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Both
 generated Coq scaffolds are checked without introducing an `Event` type.
 
+Specialized constructions are tracked by a small construction registry. Each
+registered rule declares its phenomenon, analysis function, and Coq fragments
+that must not appear in the generated scaffold. For example, the three
+Parsons/Luo-Shi replacements forbid hidden `Event` declarations, and the
+burning example additionally forbids `IN`.
+
 Run the local web demo:
 
 ```bash

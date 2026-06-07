@@ -114,6 +114,13 @@ design sketch: it already distinguished nested perception cases from temporal
 regex-only browser logic with typed Python stages, visible ASTs, and Coq/Rocq
 boundary checks.
 
+Specialized analyses are now mediated by a construction registry. Each rule
+records a rule identifier, a human-readable label, the semantic phenomenon it
+covers, its analyzer, and Coq fragments that are disallowed for that
+construction. This keeps the web pipeline honest: a rule may compile in Coq and
+still fail if it reintroduces a hidden `Event` declaration or an unwanted
+event-inclusion predicate.
+
 ## Type Discipline
 
 The web demo must not treat every surface phrase as an entity. In particular,

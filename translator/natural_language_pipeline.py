@@ -9,6 +9,8 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +42,15 @@ IRREGULAR_VERBS = {
     "ran": "run",
     "left": "leave",
 }
+
+
+@dataclass(frozen=True)
+class ConstructionRule:
+    rule_id: str
+    label: str
+    phenomenon: str
+    analyzer: Callable[[str], dict[str, Any] | None]
+    forbidden_coq_fragments: tuple[str, ...] = ()
 
 
 def atom(pred: str, *args: str) -> dict[str, Any]:
@@ -357,6 +368,100 @@ def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def construction_rules() -> list[ConstructionRule]:
+    return [
+        ConstructionRule(
+            rule_id="perception_nominalization",
+            label="Perception complement nominalization",
+            phenomenon="Parsons/Luo-Shi perception complement",
+            analyzer=perception_nominalization_pipeline,
+            forbidden_coq_fragments=("Parameter Event : Type.", "exists e : Event"),
+        ),
+        ConstructionRule(
+            rule_id="universal_timed_burning",
+            label="Universal timed burning",
+            phenomenon="Parsons/Luo-Shi event inclusion",
+            analyzer=every_burning_pipeline,
+            forbidden_coq_fragments=("Parameter Event : Type.", "IN"),
+        ),
+        ConstructionRule(
+            rule_id="timed_after",
+            label="Timed after relation",
+            phenomenon="Parsons/Luo-Shi event ordering",
+            analyzer=timed_after_pipeline,
+            forbidden_coq_fragments=("Parameter Event : Type.", "exists e : Event"),
+        ),
+        ConstructionRule(
+            rule_id="quantifier_scope_ambiguity",
+            label="Quantifier-scope ambiguity",
+            phenomenon="Existential scope ambiguity",
+            analyzer=quantifier_scope_pipeline,
+            forbidden_coq_fragments=("Parameter some : Entity.", "Parameter boy : nat ->"),
+        ),
+    ]
+
+
+def check_forbidden_coq_fragments(
+    coq_code: str,
+    forbidden_fragments: tuple[str, ...],
+) -> list[str]:
+    return [fragment for fragment in forbidden_fragments if fragment in coq_code]
+
+
+def run_registered_rule(
+    rule: ConstructionRule,
+    sentence: str,
+    require_coq: bool,
+) -> dict[str, Any] | None:
+    analysis = rule.analyzer(sentence)
+    if analysis is None:
+        return None
+
+    forbidden_found = check_forbidden_coq_fragments(
+        analysis["coq_code"],
+        rule.forbidden_coq_fragments,
+    )
+    if forbidden_found:
+        return {
+            **analysis,
+            "ok": False,
+            "construction_rule": {
+                "id": rule.rule_id,
+                "label": rule.label,
+                "phenomenon": rule.phenomenon,
+                "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+            },
+            "coq_check": {
+                "ok": False,
+                "status": "failed",
+                "message": (
+                    "Generated Coq contains forbidden construction fragments: "
+                    + ", ".join(forbidden_found)
+                ),
+            },
+            "conclusion": "Translation failed construction-specific Coq hygiene checks.",
+        }
+
+    coq_check = verify_coq_code(analysis["coq_code"], require_coq=require_coq)
+    success = analysis["type_check"]["ok"] and coq_check["ok"] is not False
+    return {
+        **analysis,
+        "ok": success,
+        "construction_rule": {
+            "id": rule.rule_id,
+            "label": rule.label,
+            "phenomenon": rule.phenomenon,
+            "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+        },
+        "coq_check": coq_check,
+        "conclusion": (
+            f"Translation succeeded via construction rule {rule.rule_id}."
+            if success
+            else "Translation failed at Coq/Rocq boundary validation."
+        ),
+    }
+
+
 def normalize_sentence(sentence: str) -> str:
     normalized = sentence.strip().rstrip(".!?")
     normalized = re.sub(r"\s+", " ", normalized)
@@ -528,62 +633,10 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
-        perception = perception_nominalization_pipeline(sentence)
-        if perception is not None:
-            coq_check = verify_coq_code(perception["coq_code"], require_coq=require_coq)
-            success = perception["type_check"]["ok"] and coq_check["ok"] is not False
-            return {
-                **perception,
-                "ok": success,
-                "coq_check": coq_check,
-                "conclusion": (
-                    "Translation succeeded with perception-complement nominalization."
-                    if success
-                    else "Translation failed at Coq/Rocq boundary validation."
-                ),
-            }
-        burning = every_burning_pipeline(sentence)
-        if burning is not None:
-            coq_check = verify_coq_code(burning["coq_code"], require_coq=require_coq)
-            success = burning["type_check"]["ok"] and coq_check["ok"] is not False
-            return {
-                **burning,
-                "ok": success,
-                "coq_check": coq_check,
-                "conclusion": (
-                    "Translation succeeded with universal timed replacement."
-                    if success
-                    else "Translation failed at Coq/Rocq boundary validation."
-                ),
-            }
-        timed = timed_after_pipeline(sentence)
-        if timed is not None:
-            coq_check = verify_coq_code(timed["coq_code"], require_coq=require_coq)
-            success = timed["type_check"]["ok"] and coq_check["ok"] is not False
-            return {
-                **timed,
-                "ok": success,
-                "coq_check": coq_check,
-                "conclusion": (
-                    "Translation succeeded with timed dependent-type replacement."
-                    if success
-                    else "Translation failed at Coq/Rocq boundary validation."
-                ),
-            }
-        scoped = quantifier_scope_pipeline(sentence)
-        if scoped is not None:
-            coq_check = verify_coq_code(scoped["coq_code"], require_coq=require_coq)
-            success = coq_check["ok"] is not False
-            return {
-                **scoped,
-                "ok": success,
-                "coq_check": coq_check,
-                "conclusion": (
-                    "Translation succeeded with multiple quantifier-scope readings."
-                    if success
-                    else "Translation failed at Coq/Rocq boundary validation."
-                ),
-            }
+        for rule in construction_rules():
+            registered_result = run_registered_rule(rule, sentence, require_coq)
+            if registered_result is not None:
+                return registered_result
         event_semantics = sentence_to_event_semantics(sentence)
         translation = translate(event_semantics)
         coq_code = export_module([translation], "coq")
