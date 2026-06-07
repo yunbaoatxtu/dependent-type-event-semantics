@@ -31,6 +31,7 @@ IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
     "sat": "sit",
+    "loves": "love",
     "broke": "break",
     "broken": "break",
     "went": "go",
@@ -44,6 +45,101 @@ def atom(pred: str, *args: str) -> dict[str, Any]:
 
 def event_formula(*items: dict[str, Any]) -> dict[str, Any]:
     return {"exists": ["e"], "body": {"and": list(items)}}
+
+
+def quantifier_scope_coq(
+    subject_noun: str,
+    verb: str,
+    object_noun: str,
+    subject_first: bool,
+) -> str:
+    if subject_first:
+        name = f"some_{subject_noun}_wide_scope"
+        body = (
+            f"exists x_{subject_noun} : Entity, "
+            f"{subject_noun} x_{subject_noun} /\\ "
+            f"exists x_{object_noun} : Entity, "
+            f"{object_noun} x_{object_noun} /\\ "
+            f"exists e : Event, {verb} e /\\ Agent e x_{subject_noun} /\\ Theme e x_{object_noun}"
+        )
+    else:
+        name = f"some_{object_noun}_wide_scope"
+        body = (
+            f"exists x_{object_noun} : Entity, "
+            f"{object_noun} x_{object_noun} /\\ "
+            f"exists x_{subject_noun} : Entity, "
+            f"{subject_noun} x_{subject_noun} /\\ "
+            f"exists e : Event, {verb} e /\\ Agent e x_{subject_noun} /\\ Theme e x_{object_noun}"
+        )
+    return f"Definition {name} : Prop := {body}."
+
+
+def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if len(tokens) != 5 or tokens[0] != "some" or tokens[3] != "some":
+        return None
+    subject_noun = lemma_verb(tokens[1])
+    verb = lemma_verb(tokens[2])
+    object_noun = lemma_verb(tokens[4])
+    event_semantics = {
+        "analysis": "quantifier-scope",
+        "source": sentence,
+        "readings": [
+            {
+                "name": f"some_{subject_noun}_wide_scope",
+                "formula": (
+                    f"exists x:{subject_noun}. exists y:{object_noun}. "
+                    f"exists e. {verb}(e) and Agent(e,x) and Theme(e,y)"
+                ),
+            },
+            {
+                "name": f"some_{object_noun}_wide_scope",
+                "formula": (
+                    f"exists y:{object_noun}. exists x:{subject_noun}. "
+                    f"exists e. {verb}(e) and Agent(e,x) and Theme(e,y)"
+                ),
+            },
+        ],
+    }
+    coq_code = "\n".join(
+        [
+            "(* Quantifier-scope scaffold for dependent-type event semantics. *)",
+            "Parameter Entity : Type.",
+            "Parameter Event : Type.",
+            f"Parameter {subject_noun} : Entity -> Prop.",
+            f"Parameter {object_noun} : Entity -> Prop.",
+            f"Parameter {verb} : Event -> Prop.",
+            "Parameter Agent : Event -> Entity -> Prop.",
+            "Parameter Theme : Event -> Entity -> Prop.",
+            "",
+            quantifier_scope_coq(subject_noun, verb, object_noun, subject_first=True),
+            quantifier_scope_coq(subject_noun, verb, object_noun, subject_first=False),
+            "",
+            f"Check some_{subject_noun}_wide_scope.",
+            f"Check some_{object_noun}_wide_scope.",
+            "",
+        ]
+    )
+    return {
+        "kind": "quantifier_scope_ambiguity",
+        "input_sentence": sentence,
+        "event_semantics": event_semantics,
+        "dependent_type_translation": "\n".join(
+            reading["formula"] for reading in event_semantics["readings"]
+        ),
+        "ast": {
+            "kind": "scope_ambiguity",
+            "quantifier": "some",
+            "readings": event_semantics["readings"],
+        },
+        "type_check": {
+            "ok": True,
+            "type": "Prop",
+            "errors": [],
+            "note": "Both scope readings are represented; no single reading is forced.",
+        },
+        "coq_code": coq_code,
+    }
 
 
 def normalize_sentence(sentence: str) -> str:
@@ -217,6 +313,20 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
+        scoped = quantifier_scope_pipeline(sentence)
+        if scoped is not None:
+            coq_check = verify_coq_code(scoped["coq_code"], require_coq=require_coq)
+            success = coq_check["ok"] is not False
+            return {
+                **scoped,
+                "ok": success,
+                "coq_check": coq_check,
+                "conclusion": (
+                    "Translation succeeded with multiple quantifier-scope readings."
+                    if success
+                    else "Translation failed at Coq/Rocq boundary validation."
+                ),
+            }
         event_semantics = sentence_to_event_semantics(sentence)
         translation = translate(event_semantics)
         coq_code = export_module([translation], "coq")

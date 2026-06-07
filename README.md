@@ -66,6 +66,20 @@ check. For unlisted sentences, the fallback analysis is intentionally shallow:
 it identifies a subject, predicate, possible object, common adverbs, count
 words, and simple prepositional modifiers.
 
+Quantifier-scope examples receive a separate ambiguity analysis instead of
+being forced through the fallback parser:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "some boy loves some girl" \
+  --require-coq
+```
+
+This produces both subject-wide and object-wide existential readings and checks
+the generated Coq scaffold. Coq/Rocq verifies the exported formal terms; it does
+not by itself prove that an arbitrary natural-language parse is the only correct
+semantic analysis.
+
 Run the local web demo:
 
 ```bash

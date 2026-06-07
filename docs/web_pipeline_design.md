@@ -82,3 +82,10 @@ Other simple English sentences are handled by the fallback parser. For example,
 `a cat sits on a mat` becomes an event-semantics formula with `sit(e)`,
 `Agent(e, cat)`, and `on(e, mat)`, then translates to
 `sit(1)(on(mat), cat)` and can be checked by the generated Coq scaffold.
+
+Quantifier-scope cases are not sent through the simple fallback parser. The
+sentence `some boy loves some girl` is represented as a scope ambiguity with
+two checked readings: one in which the boy existential has wider scope, and one
+in which the girl existential has wider scope. In this path, `boy` and `girl`
+are predicates of type `Entity -> Prop`, while `some` is a quantifier pattern,
+not an entity constant.

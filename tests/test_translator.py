@@ -205,6 +205,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter sit : nat -> Entity -> Entity -> PropT.", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_quantifier_scope_ambiguity_some_boy_loves_some_girl(self) -> None:
+        result = run_pipeline("some boy loves some girl", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "quantifier_scope_ambiguity")
+        self.assertIn("some_boy_wide_scope", result["coq_code"])
+        self.assertIn("some_girl_wide_scope", result["coq_code"])
+        self.assertIn("Parameter boy : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter girl : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter love : Event -> Prop.", result["coq_code"])
+        self.assertIn("Parameter Agent : Event -> Entity -> Prop.", result["coq_code"])
+        self.assertNotIn("Parameter some : Entity.", result["coq_code"])
+        self.assertNotIn("Parameter boy : nat ->", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_web_analyze_sentence_success(self) -> None:
         result = analyze_sentence("John broke the vase")
         self.assertTrue(result["ok"])
