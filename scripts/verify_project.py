@@ -79,6 +79,7 @@ def main() -> None:
             "scripts/generate_formalization.py",
             "scripts/check_formalization.py",
             "scripts/verify_project.py",
+            "web/app.py",
         ],
     )
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])

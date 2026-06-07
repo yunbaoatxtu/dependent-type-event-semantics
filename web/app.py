@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""Small stdlib web demo for the translation verification pipeline."""
+
+from __future__ import annotations
+
+import argparse
+import html
+import json
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+
+from translator.natural_language_pipeline import run_pipeline
+
+
+DEFAULT_SENTENCE = "John knocked twice"
+
+
+def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]:
+    sentence = sentence.strip()
+    if not sentence:
+        return {
+            "ok": False,
+            "input_sentence": sentence,
+            "error": "Please enter a sentence.",
+            "conclusion": "Translation failed before parsing.",
+        }
+    return run_pipeline(sentence, require_coq=require_coq)
+
+
+def compact_json(data: Any) -> str:
+    return json.dumps(data, ensure_ascii=False, indent=2)
+
+
+def status_label(result: dict[str, Any]) -> str:
+    if result.get("ok"):
+        coq = result.get("coq_check", {})
+        if coq.get("status") == "skipped":
+            return "Internally checked; Coq/Rocq skipped"
+        return "Translation verified"
+    return "Needs attention"
+
+
+def panel(title: str, body: str) -> str:
+    return (
+        '<section class="panel">'
+        f"<h2>{html.escape(title)}</h2>"
+        f"<pre>{html.escape(body)}</pre>"
+        "</section>"
+    )
+
+
+def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> str:
+    result = analyze_sentence(sentence, require_coq=require_coq)
+    event_semantics = compact_json(result.get("event_semantics", result.get("error", "")))
+    dependent = result.get("dependent_type_translation", result.get("error", ""))
+    ast = compact_json(result.get("ast", {}))
+    coq_code = result.get("coq_code", "")
+    coq_check = compact_json(result.get("coq_check", {}))
+    checked = " checked" if require_coq else ""
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dependent-Type Event Semantics</title>
+  <style>
+    :root {{
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #5d6b78;
+      --line: #d8dee6;
+      --surface: #f7f9fb;
+      --accent: #0f766e;
+      --accent-soft: #e6f3f1;
+      --error: #9f1239;
+      --error-soft: #fff1f2;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+    }}
+    main {{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }}
+    header {{
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }}
+    h1 {{
+      font-size: 24px;
+      line-height: 1.2;
+      margin: 0 0 6px;
+      letter-spacing: 0;
+    }}
+    p {{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }}
+    form {{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 20px 0;
+    }}
+    input[type="text"] {{
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 11px;
+      font-size: 15px;
+    }}
+    label {{
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      color: var(--muted);
+      white-space: nowrap;
+      font-size: 14px;
+    }}
+    button {{
+      min-height: 42px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      padding: 0 16px;
+      font-weight: 650;
+      cursor: pointer;
+    }}
+    .status {{
+      border: 1px solid {('#fecdd3' if not result.get('ok') else '#b7ded8')};
+      background: {('var(--error-soft)' if not result.get('ok') else 'var(--accent-soft)')};
+      color: {('var(--error)' if not result.get('ok') else '#115e59')};
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+      font-weight: 650;
+    }}
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }}
+    .panel {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      min-width: 0;
+      overflow: hidden;
+    }}
+    h2 {{
+      font-size: 14px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      letter-spacing: 0;
+    }}
+    pre {{
+      margin: 0;
+      padding: 12px;
+      min-height: 132px;
+      max-height: 360px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }}
+    @media (max-width: 760px) {{
+      header, form, .grid {{ grid-template-columns: 1fr; display: grid; }}
+      label {{ white-space: normal; }}
+    }}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Dependent-Type Event Semantics</h1>
+        <p>Natural-language input to event semantics, dependent-type translation, and Coq/Rocq validation.</p>
+      </div>
+    </header>
+    <form method="get" action="/">
+      <input name="sentence" type="text" value="{html.escape(sentence)}" aria-label="Sentence">
+      <label><input name="require_coq" type="checkbox" value="1"{checked}> require Coq/Rocq</label>
+      <button type="submit">Analyze</button>
+    </form>
+    <div class="status">{html.escape(status_label(result))}: {html.escape(result.get("conclusion", ""))}</div>
+    <div class="grid">
+      {panel("Event Semantics", event_semantics)}
+      {panel("Dependent-Type Translation", dependent)}
+      {panel("AST", ast)}
+      {panel("Coq/Rocq Check", coq_check)}
+      {panel("Generated Coq", coq_code)}
+    </div>
+  </main>
+</body>
+</html>
+"""
+
+
+class PipelineHandler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/analyze":
+            self.write_json_response(self.handle_api(parsed.query))
+            return
+        if parsed.path not in {"/", ""}:
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [DEFAULT_SENTENCE])[0]
+        require_coq = params.get("require_coq", ["0"])[0] == "1"
+        self.write_html_response(render_page(sentence, require_coq=require_coq))
+
+    def handle_api(self, query: str) -> dict[str, Any]:
+        params = parse_qs(query)
+        sentence = params.get("sentence", [""])[0]
+        require_coq = params.get("require_coq", ["0"])[0] == "1"
+        return analyze_sentence(sentence, require_coq=require_coq)
+
+    def write_html_response(self, content: str) -> None:
+        encoded = content.encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    def write_json_response(self, content: dict[str, Any]) -> None:
+        encoded = compact_json(content).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run the local web demo.")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument(
+        "--render-static",
+        type=Path,
+        help="Write a static HTML preview instead of starting a server.",
+    )
+    parser.add_argument(
+        "--sentence",
+        default=DEFAULT_SENTENCE,
+        help="Sentence used for --render-static output.",
+    )
+    args = parser.parse_args()
+    if args.render_static:
+        args.render_static.write_text(render_page(args.sentence), encoding="utf-8")
+        print(f"Wrote {args.render_static}")
+        return
+    server = ThreadingHTTPServer((args.host, args.port), PipelineHandler)
+    print(f"Serving http://{args.host}:{args.port}")
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

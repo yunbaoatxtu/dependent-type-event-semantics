@@ -13,6 +13,10 @@ limited to controlled examples. This keeps the verification problem honest:
 the user can see where parsing succeeds, where translation succeeds, and where
 Coq validation succeeds.
 
+The repository also includes a small dependency-free local web demo in
+`web/app.py`. It is intended as a thin interface over the verified backend, not
+as a separate semantic implementation.
+
 ## Proposed Request Flow
 
 ```text
@@ -22,6 +26,12 @@ sentence
   -> export_module([translation], "coq")
   -> verify_coq_code(coq_code)
   -> web response
+```
+
+The local page is started with:
+
+```bash
+python3 -m web.app --port 8765
 ```
 
 ## Successful Response

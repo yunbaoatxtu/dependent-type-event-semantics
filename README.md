@@ -30,6 +30,9 @@ translator/
 docs/
   event_to_dependent_type_notes.md
   ast_intermediate_representation.md
+
+web/
+  app.py
 ```
 
 ## Quick Start
@@ -59,6 +62,16 @@ This rule-based pipeline emits four layers that can later be exposed in a web
 interface: the natural-language input, an event-semantics JSON formula, the
 dependent-type translation and AST, and generated Coq code with an optional
 Coq/Rocq boundary check.
+
+Run the local web demo:
+
+```bash
+python3 -m web.app --port 8765
+```
+
+Then open `http://127.0.0.1:8765`. The page uses the same checked pipeline and
+shows event semantics, dependent-type output, AST, generated Coq, and the
+validation result.
 
 ## Verified Translation Stages
 

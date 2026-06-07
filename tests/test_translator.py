@@ -9,6 +9,7 @@ from translator.dependent_type_event_translator import (
     translate,
 )
 from translator.natural_language_pipeline import run_pipeline, sentence_to_event_semantics
+from web.app import analyze_sentence, render_page
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -181,6 +182,24 @@ class TranslatorTests(unittest.TestCase):
         result = run_pipeline("Mary admired the painting")
         self.assertFalse(result["ok"])
         self.assertIn("Unsupported sentence", result["error"])
+
+    def test_web_analyze_sentence_success(self) -> None:
+        result = analyze_sentence("John broke the vase")
+        self.assertTrue(result["ok"])
+        self.assertIn("Cause(John, Transition(vase, _, broken))", result["dependent_type_translation"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_web_analyze_sentence_empty_input(self) -> None:
+        result = analyze_sentence("  ")
+        self.assertFalse(result["ok"])
+        self.assertIn("Please enter a sentence", result["error"])
+
+    def test_web_page_contains_pipeline_panels(self) -> None:
+        page = render_page("John knocked twice")
+        self.assertIn("Event Semantics", page)
+        self.assertIn("Dependent-Type Translation", page)
+        self.assertIn("Generated Coq", page)
+        self.assertIn("repeat(2, knock(0)(John))", page)
 
 
 if __name__ == "__main__":
