@@ -359,8 +359,21 @@ class TranslatorTests(unittest.TestCase):
         page = render_page("John knocked twice")
         self.assertIn("Event Semantics", page)
         self.assertIn("Dependent-Type Translation", page)
+        self.assertIn("Construction Rule", page)
         self.assertIn("Generated Coq", page)
         self.assertIn("repeat(2, knock(0)(John))", page)
+
+    def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
+        page = render_page("Mary saw John leave", require_coq=True)
+        self.assertIn("Construction Rule", page)
+        self.assertIn("id: perception_nominalization", page)
+        self.assertIn("phenomenon: Parsons/Luo-Shi perception complement", page)
+        self.assertIn("- Parameter Event : Type.", page)
+
+    def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
+        page = render_page("a cat sits on a mat", require_coq=True)
+        self.assertIn("Construction Rule", page)
+        self.assertIn("No registered construction rule matched", page)
 
 
 if __name__ == "__main__":

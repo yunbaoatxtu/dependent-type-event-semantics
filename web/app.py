@@ -43,6 +43,24 @@ def status_label(result: dict[str, Any]) -> str:
     return "Needs attention"
 
 
+def construction_rule_summary(result: dict[str, Any]) -> str:
+    rule = result.get("construction_rule")
+    if not rule:
+        return "No registered construction rule matched; fallback or general translator path was used."
+    forbidden = rule.get("forbidden_coq_fragments", [])
+    lines = [
+        f"id: {rule.get('id', '')}",
+        f"label: {rule.get('label', '')}",
+        f"phenomenon: {rule.get('phenomenon', '')}",
+        "forbidden Coq fragments:",
+    ]
+    if forbidden:
+        lines.extend(f"- {fragment}" for fragment in forbidden)
+    else:
+        lines.append("- none")
+    return "\n".join(lines)
+
+
 def panel(title: str, body: str) -> str:
     return (
         '<section class="panel">'
@@ -57,6 +75,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     event_semantics = compact_json(result.get("event_semantics", result.get("error", "")))
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
+    construction = construction_rule_summary(result)
     coq_code = result.get("coq_code", "")
     coq_check = compact_json(result.get("coq_check", {}))
     checked = " checked" if require_coq else ""
@@ -205,6 +224,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     <div class="grid">
       {panel("Event Semantics", event_semantics)}
       {panel("Dependent-Type Translation", dependent)}
+      {panel("Construction Rule", construction)}
       {panel("AST", ast)}
       {panel("Coq/Rocq Check", coq_check)}
       {panel("Generated Coq", coq_code)}
