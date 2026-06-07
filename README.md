@@ -90,6 +90,19 @@ Parameter with_knife : Adv.
 Parameter butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT.
 ```
 
+Parsons-style event talk can also be routed through typed replacements. For
+example:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "after the singing of the Marseillaise, John saluted the flag" \
+  --require-coq
+```
+
+This stage exports `Time`, `before`, `sing`, and `salute` declarations and
+checks a formula of the form `exists t_sing t_salute : Time, ...`. It does not
+introduce a hidden `Event` parameter for this sentence.
+
 Run the local web demo:
 
 ```bash

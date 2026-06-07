@@ -238,6 +238,29 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter with_knife : Entity.", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_parsons_after_singing_uses_time_not_event(self) -> None:
+        result = run_pipeline(
+            "after the singing of the Marseillaise, John saluted the flag",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "timed_after")
+        self.assertEqual(result["type_check"]["type"], "Prop")
+        self.assertIn("Parameter Time : Type.", result["coq_code"])
+        self.assertIn("Parameter Marseillaise : Entity.", result["coq_code"])
+        self.assertIn("Parameter John : Entity.", result["coq_code"])
+        self.assertIn("Parameter flag : Entity.", result["coq_code"])
+        self.assertIn("Parameter sing : Entity -> Time -> Prop.", result["coq_code"])
+        self.assertIn(
+            "Parameter salute : Entity -> Entity -> Time -> Prop.",
+            result["coq_code"],
+        )
+        self.assertIn("Parameter before : Time -> Time -> Prop.", result["coq_code"])
+        self.assertIn("Definition after_singing_salute : Prop :=", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("exists e : Event", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_quantifier_scope_ambiguity_some_boy_loves_some_girl(self) -> None:
         result = run_pipeline("some boy loves some girl", require_coq=True)
         self.assertTrue(result["ok"])

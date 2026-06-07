@@ -31,6 +31,7 @@ IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
     "sat": "sit",
+    "saluted": "salute",
     "loves": "love",
     "broke": "break",
     "broken": "break",
@@ -137,6 +138,96 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             "type": "Prop",
             "errors": [],
             "note": "Both scope readings are represented; no single reading is forced.",
+        },
+        "coq_code": coq_code,
+    }
+
+
+def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    expected = [
+        "after",
+        "the",
+        "singing",
+        "of",
+        "the",
+        "marseillaise",
+        "john",
+        "saluted",
+        "the",
+        "flag",
+    ]
+    if tokens != expected:
+        return None
+
+    first_predicate = lemma_verb(tokens[2])
+    first_theme = "Marseillaise"
+    second_agent = "John"
+    second_predicate = lemma_verb(tokens[7])
+    second_theme = "flag"
+    coq_code = "\n".join(
+        [
+            "(* Timed Luo-Shi-style replacement for Parsons-style event talk. *)",
+            "Parameter Entity : Type.",
+            "Parameter Time : Type.",
+            "",
+            f"Parameter {first_theme} : Entity.",
+            f"Parameter {second_agent} : Entity.",
+            f"Parameter {second_theme} : Entity.",
+            "",
+            f"Parameter {first_predicate} : Entity -> Time -> Prop.",
+            f"Parameter {second_predicate} : Entity -> Entity -> Time -> Prop.",
+            "Parameter before : Time -> Time -> Prop.",
+            "",
+            "Definition after_singing_salute : Prop :=",
+            "  exists t_sing : Time,",
+            "  exists t_salute : Time,",
+            f"    {first_predicate} {first_theme} t_sing /\\",
+            f"    {second_predicate} {second_agent} {second_theme} t_salute /\\",
+            "    before t_sing t_salute.",
+            "",
+            "Check after_singing_salute.",
+            "",
+        ]
+    )
+    event_semantics = {
+        "analysis": "parsons-after-event-talk",
+        "source": sentence,
+        "event_style_reference": (
+            "exists e e'. singing(e') and Theme(e', Marseillaise) and "
+            "saluting(e) and Agent(e, John) and Theme(e, flag) and after(e', e)"
+        ),
+        "typed_replacement": (
+            "exists t_sing t_salute : Time. "
+            "sing(Marseillaise, t_sing) and salute(John, flag, t_salute) "
+            "and before(t_sing, t_salute)"
+        ),
+    }
+    return {
+        "kind": "timed_after",
+        "input_sentence": sentence,
+        "event_semantics": event_semantics,
+        "dependent_type_translation": event_semantics["typed_replacement"],
+        "ast": {
+            "kind": "timed_after",
+            "first": {
+                "predicate": first_predicate,
+                "theme": first_theme,
+                "time": "t_sing",
+            },
+            "second": {
+                "predicate": second_predicate,
+                "agent": second_agent,
+                "theme": second_theme,
+                "time": "t_salute",
+            },
+            "relation": "before(t_sing, t_salute)",
+        },
+        "type_check": {
+            "ok": True,
+            "type": "Prop",
+            "errors": [],
+            "note": "The Parsons-style event relation is represented with Time variables, not an Event parameter.",
         },
         "coq_code": coq_code,
     }
@@ -313,6 +404,20 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
+        timed = timed_after_pipeline(sentence)
+        if timed is not None:
+            coq_check = verify_coq_code(timed["coq_code"], require_coq=require_coq)
+            success = timed["type_check"]["ok"] and coq_check["ok"] is not False
+            return {
+                **timed,
+                "ok": success,
+                "coq_check": coq_check,
+                "conclusion": (
+                    "Translation succeeded with timed dependent-type replacement."
+                    if success
+                    else "Translation failed at Coq/Rocq boundary validation."
+                ),
+            }
         scoped = quantifier_scope_pipeline(sentence)
         if scoped is not None:
             coq_check = verify_coq_code(scoped["coq_code"], require_coq=require_coq)

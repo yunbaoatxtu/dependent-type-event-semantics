@@ -91,6 +91,15 @@ in which the girl existential has wider scope. In this path, `boy` and `girl`
 are predicates of type `Entity -> Prop`, while `some` is a quantifier pattern,
 not an entity constant.
 
+The first Parsons-style event-talk case is handled by a timed replacement
+instead of an event parameter. The sentence `after the singing of the
+Marseillaise, John saluted the flag` keeps a visible event-semantics reference
+formula for comparison, but its checked Coq scaffold declares `Time`,
+`before : Time -> Time -> Prop`, `sing : Entity -> Time -> Prop`, and
+`salute : Entity -> Entity -> Time -> Prop`. It defines the translation as an
+existential formula over two time variables and deliberately does not declare
+`Event`.
+
 ## Type Discipline
 
 The web demo must not treat every surface phrase as an entity. In particular,
