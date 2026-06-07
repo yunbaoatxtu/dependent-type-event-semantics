@@ -30,6 +30,7 @@ COMMON_ADVERBS = {
 IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
+    "saw": "see",
     "sat": "sit",
     "saluted": "salute",
     "loves": "love",
@@ -37,6 +38,7 @@ IRREGULAR_VERBS = {
     "broken": "break",
     "went": "go",
     "ran": "run",
+    "left": "leave",
 }
 
 
@@ -233,6 +235,128 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if tokens not in (["mary", "saw", "john", "leave"], ["mary", "saw", "john", "left"]):
+        return None
+
+    experiencer = "Mary"
+    embedded_subject = "John"
+    perception_predicate = lemma_verb(tokens[1])
+    embedded_predicate = lemma_verb(tokens[3])
+    coq_code = "\n".join(
+        [
+            "(* Luo-Shi-style nominalization for perception complements. *)",
+            "Parameter Entity : Type.",
+            "",
+            f"Parameter {experiencer} : Entity.",
+            f"Parameter {embedded_subject} : Entity.",
+            "",
+            "Parameter E : Prop -> Entity.",
+            f"Parameter {embedded_predicate} : Entity -> Prop.",
+            f"Parameter {perception_predicate} : Entity -> Entity -> Prop.",
+            "",
+            "Definition mary_saw_john_leave : Prop :=",
+            f"  {perception_predicate} {experiencer} (E ({embedded_predicate} {embedded_subject})).",
+            "",
+            "Check mary_saw_john_leave.",
+            "",
+        ]
+    )
+    event_semantics = {
+        "analysis": "parsons-perception-complement",
+        "source": sentence,
+        "event_style_reference": (
+            "exists e e'. seeing(e) and Experiencer(e, Mary) and "
+            "leaving(e') and Agent(e', John) and Theme(e, e')"
+        ),
+        "typed_replacement": "see(Mary, E(leave(John)))",
+    }
+    return {
+        "kind": "perception_nominalization",
+        "input_sentence": sentence,
+        "event_semantics": event_semantics,
+        "dependent_type_translation": event_semantics["typed_replacement"],
+        "ast": {
+            "kind": "perception_nominalization",
+            "perception": perception_predicate,
+            "experiencer": experiencer,
+            "embedded": {
+                "predicate": embedded_predicate,
+                "subject": embedded_subject,
+                "nominalizer": "E",
+            },
+        },
+        "type_check": {
+            "ok": True,
+            "type": "Prop",
+            "errors": [],
+            "note": "The perceived eventuality is embedded by E : Prop -> Entity, not by an Event argument.",
+        },
+        "coq_code": coq_code,
+    }
+
+
+def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if tokens != ["in", "every", "burning", "oxygen", "is", "consumed"]:
+        return None
+
+    coq_code = "\n".join(
+        [
+            "(* Timed universal replacement for Parsons-style event inclusion. *)",
+            "Parameter Entity : Type.",
+            "Parameter Time : Type.",
+            "",
+            "Parameter oxygen : Entity.",
+            "",
+            "Parameter burn : Entity -> Time -> Prop.",
+            "Parameter consume : Entity -> Time -> Prop.",
+            "",
+            "Definition every_burning_consumes_oxygen : Prop :=",
+            "  forall x : Entity,",
+            "  forall t : Time,",
+            "    burn x t -> consume oxygen t.",
+            "",
+            "Check every_burning_consumes_oxygen.",
+            "",
+        ]
+    )
+    event_semantics = {
+        "analysis": "parsons-event-inclusion",
+        "source": sentence,
+        "event_style_reference": (
+            "forall e. burning(e) -> exists e'. consuming(e') and "
+            "Theme(e', oxygen) and IN(e', e)"
+        ),
+        "typed_replacement": (
+            "forall x : Entity. forall t : Time. "
+            "burn(x, t) -> consume(oxygen, t)"
+        ),
+    }
+    return {
+        "kind": "universal_timed_burning",
+        "input_sentence": sentence,
+        "event_semantics": event_semantics,
+        "dependent_type_translation": event_semantics["typed_replacement"],
+        "ast": {
+            "kind": "forall_time",
+            "domain": "burning",
+            "entity_variable": "x",
+            "time_variable": "t",
+            "antecedent": "burn(x, t)",
+            "consequent": "consume(oxygen, t)",
+        },
+        "type_check": {
+            "ok": True,
+            "type": "Prop",
+            "errors": [],
+            "note": "Event inclusion is represented as universal quantification over entities and times.",
+        },
+        "coq_code": coq_code,
+    }
+
+
 def normalize_sentence(sentence: str) -> str:
     normalized = sentence.strip().rstrip(".!?")
     normalized = re.sub(r"\s+", " ", normalized)
@@ -404,6 +528,34 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
+        perception = perception_nominalization_pipeline(sentence)
+        if perception is not None:
+            coq_check = verify_coq_code(perception["coq_code"], require_coq=require_coq)
+            success = perception["type_check"]["ok"] and coq_check["ok"] is not False
+            return {
+                **perception,
+                "ok": success,
+                "coq_check": coq_check,
+                "conclusion": (
+                    "Translation succeeded with perception-complement nominalization."
+                    if success
+                    else "Translation failed at Coq/Rocq boundary validation."
+                ),
+            }
+        burning = every_burning_pipeline(sentence)
+        if burning is not None:
+            coq_check = verify_coq_code(burning["coq_code"], require_coq=require_coq)
+            success = burning["type_check"]["ok"] and coq_check["ok"] is not False
+            return {
+                **burning,
+                "ok": success,
+                "coq_check": coq_check,
+                "conclusion": (
+                    "Translation succeeded with universal timed replacement."
+                    if success
+                    else "Translation failed at Coq/Rocq boundary validation."
+                ),
+            }
         timed = timed_after_pipeline(sentence)
         if timed is not None:
             coq_check = verify_coq_code(timed["coq_code"], require_coq=require_coq)

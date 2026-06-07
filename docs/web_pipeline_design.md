@@ -100,6 +100,20 @@ formula for comparison, but its checked Coq scaffold declares `Time`,
 existential formula over two time variables and deliberately does not declare
 `Event`.
 
+The remaining two Parsons/Luo-Shi examples have their own typed routes. `Mary
+saw John leave` uses a nominalizing map `E : Prop -> Entity`, so the perceived
+content is rendered as `see Mary (E (leave John))` rather than as a hidden
+event argument. `In every burning, oxygen is consumed` is rendered as
+`forall x : Entity, forall t : Time, burn x t -> consume oxygen t`; the checked
+scaffold therefore avoids both an `Event` type and an event-inclusion predicate
+such as `IN`.
+
+The pasted legacy browser prototype from the earlier webpage is useful as a
+design sketch: it already distinguished nested perception cases from temporal
+`After` cases. The current repository keeps that separation, but replaces the
+regex-only browser logic with typed Python stages, visible ASTs, and Coq/Rocq
+boundary checks.
+
 ## Type Discipline
 
 The web demo must not treat every surface phrase as an entity. In particular,

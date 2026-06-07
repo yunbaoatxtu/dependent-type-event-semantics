@@ -261,6 +261,36 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("exists e : Event", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_parsons_perception_complement_uses_nominalizer_not_event(self) -> None:
+        result = run_pipeline("Mary saw John leave", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertIn("Parameter E : Prop -> Entity.", result["coq_code"])
+        self.assertIn("Parameter leave : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter see : Entity -> Entity -> Prop.", result["coq_code"])
+        self.assertIn(
+            "see Mary (E (leave John))",
+            result["coq_code"],
+        )
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("exists e : Event", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_parsons_every_burning_uses_universal_time_not_inclusion(self) -> None:
+        result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "universal_timed_burning")
+        self.assertIn("Parameter Time : Type.", result["coq_code"])
+        self.assertIn("Parameter oxygen : Entity.", result["coq_code"])
+        self.assertIn("Parameter burn : Entity -> Time -> Prop.", result["coq_code"])
+        self.assertIn("Parameter consume : Entity -> Time -> Prop.", result["coq_code"])
+        self.assertIn("forall x : Entity", result["coq_code"])
+        self.assertIn("forall t : Time", result["coq_code"])
+        self.assertIn("burn x t -> consume oxygen t", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("IN", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_quantifier_scope_ambiguity_some_boy_loves_some_girl(self) -> None:
         result = run_pipeline("some boy loves some girl", require_coq=True)
         self.assertTrue(result["ok"])

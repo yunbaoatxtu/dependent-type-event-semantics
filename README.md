@@ -103,6 +103,24 @@ This stage exports `Time`, `before`, `sing`, and `salute` declarations and
 checks a formula of the form `exists t_sing t_salute : Time, ...`. It does not
 introduce a hidden `Event` parameter for this sentence.
 
+Two further Parsons/Luo-Shi examples are now checked by specialized paths:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "Mary saw John leave" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "In every burning, oxygen is consumed" \
+  --require-coq
+```
+
+The perception-complement example uses a nominalizing map
+`E : Prop -> Entity`, yielding `see Mary (E (leave John))`. The burning example
+uses universal time quantification:
+`forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Both
+generated Coq scaffolds are checked without introducing an `Event` type.
+
 Run the local web demo:
 
 ```bash
