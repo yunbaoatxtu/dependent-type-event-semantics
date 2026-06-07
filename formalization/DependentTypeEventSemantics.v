@@ -5,15 +5,16 @@ Parameter Entity : Type.
 Parameter Food : Type.
 Parameter PropT : Type.
 Parameter TransitionT : Type.
+Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
 
 Parameter John : Entity.
 Parameter broken : Entity.
-Parameter in_bathroom : Entity.
 Parameter noon : Entity.
-Parameter slowly : Entity.
 Parameter toast : Entity.
 Parameter unknown_state : Entity.
 Parameter vase : Entity.
+Parameter in_bathroom : Adv.
+Parameter slowly : Adv.
 
 Parameter repeat : nat -> PropT -> PropT.
 Parameter at_T : Entity -> PropT -> PropT.
@@ -25,7 +26,7 @@ Parameter since_T : Entity -> PropT -> PropT.
 Parameter Transition : Entity -> Entity -> Entity -> TransitionT.
 Parameter Cause : Entity -> TransitionT -> PropT.
 Parameter break : nat -> Entity -> Entity -> PropT.
-Parameter butter : nat -> Entity -> Entity -> Entity -> Entity -> PropT.
+Parameter butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT.
 Parameter eat : nat -> Entity -> Food -> Prop.
 Parameter knock : nat -> Entity -> PropT.
 

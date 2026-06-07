@@ -5,15 +5,16 @@ constant Entity : Type
 constant Food : Type
 constant PropT : Type
 constant TransitionT : Type
+def Adv : Type := (Entity -> PropT) -> Entity -> PropT
 
 constant John : Entity
 constant broken : Entity
-constant in_bathroom : Entity
 constant noon : Entity
-constant slowly : Entity
 constant toast : Entity
 constant unknown_state : Entity
 constant vase : Entity
+constant in_bathroom : Adv
+constant slowly : Adv
 
 constant repeat : Nat -> PropT -> PropT
 constant at_T : Entity -> PropT -> PropT
@@ -25,7 +26,7 @@ constant since_T : Entity -> PropT -> PropT
 constant Transition : Entity -> Entity -> Entity -> TransitionT
 constant Cause : Entity -> TransitionT -> PropT
 constant break : Nat -> Entity -> Entity -> PropT
-constant butter : Nat -> Entity -> Entity -> Entity -> Entity -> PropT
+constant butter : Nat -> Adv -> Adv -> Entity -> Entity -> PropT
 constant eat : Nat -> Entity -> Food -> Prop
 constant knock : Nat -> Entity -> PropT
 

@@ -428,11 +428,16 @@ def application_argument_types(function: str, argument_count: int) -> list[str]:
     return ["Entity"] * argument_count
 
 
+def modifier_type() -> str:
+    return "Adv"
+
+
 def collect_term_declarations(
     term: Term,
     target: str,
     functions: dict[str, tuple[list[str], str]],
     constants: set[str],
+    modifiers: set[str],
     types: set[str],
     bound: set[str] | None = None,
 ) -> None:
@@ -440,13 +445,17 @@ def collect_term_declarations(
     kind = term["kind"]
     if kind == "application":
         function = export_atom(term["function"], target)
-        modifier_types = ["Entity"] * len(term["modifiers"])
+        modifier_types = [modifier_type()] * len(term["modifiers"])
         argument_types = application_argument_types(function, len(term["arguments"]))
         functions[function] = (
             ["nat" if target == "coq" else "Nat"] + modifier_types + argument_types,
             application_result_type(function),
         )
-        for value in term["modifiers"] + term["arguments"]:
+        for value in term["modifiers"]:
+            exported = export_atom(value, target)
+            if exported not in bound:
+                modifiers.add(exported)
+        for value in term["arguments"]:
             exported = export_atom(value, target)
             if exported not in bound:
                 constants.add(exported)
@@ -460,19 +469,20 @@ def collect_term_declarations(
             target,
             functions,
             constants,
+            modifiers,
             types,
             bound | {witness},
         )
         return
     if kind == "repeat":
-        collect_term_declarations(term["body"], target, functions, constants, types, bound)
+        collect_term_declarations(term["body"], target, functions, constants, modifiers, types, bound)
         return
     if kind == "time":
         for value in term["arguments"]:
             exported = export_atom(value, target)
             if exported not in bound:
                 constants.add(exported)
-        collect_term_declarations(term["body"], target, functions, constants, types, bound)
+        collect_term_declarations(term["body"], target, functions, constants, modifiers, types, bound)
         return
     if kind == "transition":
         for field in ("theme", "source_state", "target_state"):
@@ -484,10 +494,10 @@ def collect_term_declarations(
         causer = export_atom(term["causer"], target)
         if causer not in bound:
             constants.add(causer)
-        collect_term_declarations(term["effect"], target, functions, constants, types, bound)
+        collect_term_declarations(term["effect"], target, functions, constants, modifiers, types, bound)
         activity = term.get("activity")
         if activity is not None:
-            collect_term_declarations(activity, target, functions, constants, types, bound)
+            collect_term_declarations(activity, target, functions, constants, modifiers, types, bound)
         return
     raise ValueError(f"Unknown term kind: {kind!r}")
 
@@ -495,12 +505,16 @@ def collect_term_declarations(
 def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str, Any]:
     functions: dict[str, tuple[list[str], str]] = {}
     constants: set[str] = set()
+    modifiers: set[str] = set()
     types = {"Entity", "Food", "PropT", "TransitionT"}
     for result in results:
-        collect_term_declarations(result["ast"], target, functions, constants, types)
+        collect_term_declarations(
+            result["ast"], target, functions, constants, modifiers, types
+        )
     return {
         "types": sorted(types),
         "constants": sorted(constants),
+        "modifiers": sorted(modifiers),
         "functions": functions,
     }
 
@@ -521,9 +535,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "",
         ]
         lines.extend(f"constant {name} : Type" for name in declarations["types"])
+        lines.append("def Adv : Type := (Entity -> PropT) -> Entity -> PropT")
         lines.append("")
         lines.extend(
             f"constant {name} : Entity" for name in declarations["constants"]
+        )
+        lines.extend(
+            f"constant {name} : Adv" for name in declarations["modifiers"]
         )
         lines.extend(
             [
@@ -558,9 +576,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "",
     ]
     lines.extend(f"Parameter {name} : Type." for name in declarations["types"])
+    lines.append("Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.")
     lines.append("")
     lines.extend(
         f"Parameter {name} : Entity." for name in declarations["constants"]
+    )
+    lines.extend(
+        f"Parameter {name} : Adv." for name in declarations["modifiers"]
     )
     lines.extend(
         [

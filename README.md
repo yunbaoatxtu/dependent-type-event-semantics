@@ -80,6 +80,16 @@ the generated Coq scaffold. Coq/Rocq verifies the exported formal terms; it does
 not by itself prove that an arbitrary natural-language parse is the only correct
 semantic analysis.
 
+Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
+and prepositional modifiers are exported as `Adv`, not `Entity`:
+
+```coq
+Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
+Parameter in_bathroom : Adv.
+Parameter with_knife : Adv.
+Parameter butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT.
+```
+
 Run the local web demo:
 
 ```bash

@@ -41,6 +41,17 @@ class TranslatorTests(unittest.TestCase):
             "(at_T noon (butter 2 slowly in_bathroom John toast))",
         )
         self.assertEqual(result["residual_atoms_not_translated"], [])
+        coq_module = export_module([result], "coq")
+        self.assertIn(
+            "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+            coq_module,
+        )
+        self.assertIn("Parameter slowly : Adv.", coq_module)
+        self.assertIn("Parameter in_bathroom : Adv.", coq_module)
+        self.assertIn(
+            "Parameter butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT.",
+            coq_module,
+        )
 
     def test_argument_omission_introduces_sigma_witness(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -201,8 +212,30 @@ class TranslatorTests(unittest.TestCase):
             "sit(1)(on(mat), cat)",
         )
         self.assertIn("Parameter cat : Entity.", result["coq_code"])
-        self.assertIn("Parameter on_mat : Entity.", result["coq_code"])
-        self.assertIn("Parameter sit : nat -> Entity -> Entity -> PropT.", result["coq_code"])
+        self.assertIn("Parameter on_mat : Adv.", result["coq_code"])
+        self.assertIn("Parameter sit : nat -> Adv -> Entity -> PropT.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_luo_shi_modifier_types_for_classic_sentence(self) -> None:
+        result = run_pipeline(
+            "john buttered the toast in the bathroom with a knife",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "butter(2)(in(bathroom), with(knife), john, toast)",
+        )
+        self.assertIn("Parameter in_bathroom : Adv.", result["coq_code"])
+        self.assertIn("Parameter with_knife : Adv.", result["coq_code"])
+        self.assertIn("Parameter john : Entity.", result["coq_code"])
+        self.assertIn("Parameter toast : Entity.", result["coq_code"])
+        self.assertIn(
+            "Parameter butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT.",
+            result["coq_code"],
+        )
+        self.assertNotIn("Parameter in_bathroom : Entity.", result["coq_code"])
+        self.assertNotIn("Parameter with_knife : Entity.", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_quantifier_scope_ambiguity_some_boy_loves_some_girl(self) -> None:

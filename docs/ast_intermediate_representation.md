@@ -151,6 +151,17 @@ This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being
 silently rendered as plausible formulas.
 
+Modifier entries are not entity-denoting arguments. In the proof-assistant
+scaffold they are exported at type `Adv`, with the current shallow Coq
+definition:
+
+```coq
+Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
+```
+
+Thus `in(bathroom)` exports as `in_bathroom : Adv`, while ordinary arguments
+such as `John` and `toast` export as `Entity`.
+
 ## Lean and Coq Style Export
 
 Well-typed ASTs are exported to shallow embedding syntax for Lean- or Coq-style

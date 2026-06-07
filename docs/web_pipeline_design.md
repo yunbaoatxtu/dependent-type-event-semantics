@@ -82,6 +82,7 @@ Other simple English sentences are handled by the fallback parser. For example,
 `a cat sits on a mat` becomes an event-semantics formula with `sit(e)`,
 `Agent(e, cat)`, and `on(e, mat)`, then translates to
 `sit(1)(on(mat), cat)` and can be checked by the generated Coq scaffold.
+The modifier `on(mat)` is exported as an `Adv` item, not as an entity.
 
 Quantifier-scope cases are not sent through the simple fallback parser. The
 sentence `some boy loves some girl` is represented as a scope ambiguity with
@@ -89,3 +90,17 @@ two checked readings: one in which the boy existential has wider scope, and one
 in which the girl existential has wider scope. In this path, `boy` and `girl`
 are predicates of type `Entity -> Prop`, while `some` is a quantifier pattern,
 not an entity constant.
+
+## Type Discipline
+
+The web demo must not treat every surface phrase as an entity. In particular,
+Luo-Shi style adverbial and prepositional modifiers are represented at type
+`Adv`, with the shallow Coq interface:
+
+```coq
+Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
+```
+
+For example, `john buttered the toast in the bathroom with a knife` exports
+`in_bathroom : Adv`, `with_knife : Adv`, `john : Entity`, `toast : Entity`, and
+`butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT`.
