@@ -15,7 +15,7 @@ from translator.natural_language_pipeline import (
     run_pipeline,
     sentence_to_event_semantics,
 )
-from web.app import analyze_sentence, render_page
+from web.app import analyze_sentence, build_diagnostics, render_page
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -353,16 +353,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertIn("Cause(John, Transition(vase, _, broken))", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
 
     def test_web_analyze_sentence_empty_input(self) -> None:
         result = analyze_sentence("  ")
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
+        self.assertEqual(result["diagnostics"]["summary"], "translation failed")
 
     def test_web_page_contains_pipeline_panels(self) -> None:
         page = render_page("John knocked twice")
         self.assertIn("Event Semantics", page)
         self.assertIn("Dependent-Type Translation", page)
+        self.assertIn("Diagnostics", page)
         self.assertIn("Construction Rule", page)
         self.assertIn("Generated Coq", page)
         self.assertIn("repeat(2, knock(0)(John))", page)
@@ -383,6 +388,20 @@ class TranslatorTests(unittest.TestCase):
         page = render_page("a cat sits on a mat", require_coq=True)
         self.assertIn("Construction Rule", page)
         self.assertIn("No registered construction rule matched", page)
+
+    def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
+        diagnostics = build_diagnostics(
+            {
+                "ok": False,
+                "type_check": {"ok": True},
+                "construction_hygiene": {"ok": False},
+                "coq_check": {"ok": False},
+            }
+        )
+        self.assertEqual(diagnostics["summary"], "construction hygiene failed")
+        self.assertEqual(diagnostics["stages"]["type_check"], "passed")
+        self.assertEqual(diagnostics["stages"]["construction_hygiene"], "failed")
+        self.assertEqual(diagnostics["stages"]["coq_check"], "failed")
 
     def test_pipeline_reports_construction_hygiene_separately(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)

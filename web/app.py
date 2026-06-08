@@ -21,13 +21,50 @@ DEFAULT_SENTENCE = "John knocked twice"
 def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     sentence = sentence.strip()
     if not sentence:
-        return {
+        result = {
             "ok": False,
             "input_sentence": sentence,
             "error": "Please enter a sentence.",
             "conclusion": "Translation failed before parsing.",
         }
-    return run_pipeline(sentence, require_coq=require_coq)
+        return add_diagnostics(result)
+    return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
+
+
+def check_status(ok: Any) -> str:
+    if ok is True:
+        return "passed"
+    if ok is None:
+        return "skipped"
+    return "failed"
+
+
+def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
+    type_check = result.get("type_check", {})
+    construction_hygiene = result.get("construction_hygiene", {})
+    coq_check = result.get("coq_check", {})
+    stages = {
+        "type_check": check_status(type_check.get("ok", result.get("ok"))),
+        "construction_hygiene": (
+            check_status(construction_hygiene.get("ok"))
+            if construction_hygiene
+            else "not_applicable"
+        ),
+        "coq_check": check_status(coq_check.get("ok")) if coq_check else "not_applicable",
+    }
+    if result.get("ok"):
+        summary = "translation verified"
+    elif construction_hygiene and construction_hygiene.get("ok") is False:
+        summary = "construction hygiene failed"
+    elif coq_check and coq_check.get("ok") is False:
+        summary = "coq validation failed"
+    else:
+        summary = "translation failed"
+    return {"summary": summary, "stages": stages}
+
+
+def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
+    return {**result, "diagnostics": build_diagnostics(result)}
 
 
 def compact_json(data: Any) -> str:
@@ -84,6 +121,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
     construction = construction_rule_summary(result)
+    diagnostics = compact_json(result.get("diagnostics", {}))
     coq_code = result.get("coq_code", "")
     coq_check = compact_json(result.get("coq_check", {}))
     checked = " checked" if require_coq else ""
@@ -232,6 +270,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     <div class="grid">
       {panel("Event Semantics", event_semantics)}
       {panel("Dependent-Type Translation", dependent)}
+      {panel("Diagnostics", diagnostics)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}
       {panel("Coq/Rocq Check", coq_check)}
