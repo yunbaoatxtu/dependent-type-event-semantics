@@ -457,6 +457,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("must distinguish a rule's policy from an actual", web_design)
         self.assertIn("found forbidden fragments: none", web_design)
 
+    def test_docs_explain_web_diagnostics_summary(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
+        self.assertIn('"summary": "translation verified"', readme)
+        self.assertIn('"type_check": "passed"', readme)
+        self.assertIn('"construction_hygiene": "passed"', readme)
+        self.assertIn('"coq_check": "passed"', readme)
+        self.assertIn("the compact diagnostics summary", web_design)
+        self.assertIn("construction-specific hygiene", web_design)
+
 
 if __name__ == "__main__":
     unittest.main()

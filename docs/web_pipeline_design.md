@@ -43,10 +43,16 @@ A successful response should include:
 - the original sentence;
 - the event-semantics formula as JSON;
 - the dependent-type rendering;
+- the compact diagnostics summary;
 - the structured AST;
 - the generated Coq scaffold;
 - the Coq/Rocq validation status;
 - a short conclusion.
+
+The diagnostics summary has four stage values: `passed`, `failed`, `skipped`,
+and `not_applicable`. It summarizes `type_check`, `construction_hygiene`, and
+`coq_check` so a user can see whether a failure belongs to internal structure,
+construction-specific hygiene, or the external proof-assistant boundary.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

@@ -143,6 +143,22 @@ records actual violations. A clean replacement therefore looks like:
 }
 ```
 
+The web/API layer also adds a compact `diagnostics` object that summarizes the
+three relevant checks for user interfaces:
+
+```json
+{
+  "diagnostics": {
+    "summary": "translation verified",
+    "stages": {
+      "type_check": "passed",
+      "construction_hygiene": "passed",
+      "coq_check": "passed"
+    }
+  }
+}
+```
+
 Run the local web demo:
 
 ```bash
