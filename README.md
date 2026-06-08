@@ -127,6 +127,22 @@ that must not appear in the generated scaffold. For example, the three
 Parsons/Luo-Shi replacements forbid hidden `Event` declarations, and the
 burning example additionally forbids `IN`.
 
+The web/API result separates the rule's hygiene policy from the actual
+generated output. `forbidden_coq_fragments` is the policy list; it does not mean
+those fragments appeared in the generated Coq. `found_forbidden_fragments`
+records actual violations. A clean replacement therefore looks like:
+
+```json
+{
+  "construction_hygiene": {
+    "ok": true,
+    "checked": true,
+    "forbidden_coq_fragments": ["Parameter Event : Type.", "IN"],
+    "found_forbidden_fragments": []
+  }
+}
+```
+
 Run the local web demo:
 
 ```bash

@@ -427,6 +427,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["coq_check"]["status"], "failed")
         self.assertIn("forbidden construction fragments", result["coq_check"]["message"])
 
+    def test_docs_explain_construction_hygiene_policy_vs_actual_findings(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
+        self.assertIn("`forbidden_coq_fragments` is the policy list", readme)
+        self.assertIn("`found_forbidden_fragments`", readme)
+        self.assertIn('"found_forbidden_fragments": []', readme)
+        self.assertIn("must distinguish a rule's policy from an actual", web_design)
+        self.assertIn("found forbidden fragments: none", web_design)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -121,6 +121,13 @@ construction. This keeps the web pipeline honest: a rule may compile in Coq and
 still fail if it reintroduces a hidden `Event` declaration or an unwanted
 event-inclusion predicate.
 
+The `Construction Rule` panel must distinguish a rule's policy from an actual
+failure. `forbidden_coq_fragments` names fragments that would be illegal for the
+matched construction. `found_forbidden_fragments` reports fragments that were
+actually found in the generated Coq scaffold. A successful replacement can
+therefore display forbidden fragments as policy while still showing `hygiene:
+passed` and `found forbidden fragments: none`.
+
 ## Type Discipline
 
 The web demo must not treat every surface phrase as an entity. In particular,
