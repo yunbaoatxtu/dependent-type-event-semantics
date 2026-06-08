@@ -47,15 +47,23 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
     rule = result.get("construction_rule")
     if not rule:
         return "No registered construction rule matched; fallback or general translator path was used."
+    hygiene = result.get("construction_hygiene", {})
     forbidden = rule.get("forbidden_coq_fragments", [])
     lines = [
         f"id: {rule.get('id', '')}",
         f"label: {rule.get('label', '')}",
         f"phenomenon: {rule.get('phenomenon', '')}",
+        f"hygiene: {'passed' if hygiene.get('ok') else 'failed'}",
         "forbidden Coq fragments:",
     ]
     if forbidden:
         lines.extend(f"- {fragment}" for fragment in forbidden)
+    else:
+        lines.append("- none")
+    found = hygiene.get("found_forbidden_fragments", [])
+    lines.append("found forbidden fragments:")
+    if found:
+        lines.extend(f"- {fragment}" for fragment in found)
     else:
         lines.append("- none")
     return "\n".join(lines)

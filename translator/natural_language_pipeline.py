@@ -408,6 +408,27 @@ def check_forbidden_coq_fragments(
     return [fragment for fragment in forbidden_fragments if fragment in coq_code]
 
 
+def construction_rule_payload(rule: ConstructionRule) -> dict[str, Any]:
+    return {
+        "id": rule.rule_id,
+        "label": rule.label,
+        "phenomenon": rule.phenomenon,
+        "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+    }
+
+
+def construction_hygiene_payload(
+    rule: ConstructionRule,
+    found_fragments: list[str],
+) -> dict[str, Any]:
+    return {
+        "ok": not found_fragments,
+        "checked": True,
+        "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+        "found_forbidden_fragments": found_fragments,
+    }
+
+
 def run_registered_rule(
     rule: ConstructionRule,
     sentence: str,
@@ -425,12 +446,8 @@ def run_registered_rule(
         return {
             **analysis,
             "ok": False,
-            "construction_rule": {
-                "id": rule.rule_id,
-                "label": rule.label,
-                "phenomenon": rule.phenomenon,
-                "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
-            },
+            "construction_rule": construction_rule_payload(rule),
+            "construction_hygiene": construction_hygiene_payload(rule, forbidden_found),
             "coq_check": {
                 "ok": False,
                 "status": "failed",
@@ -447,12 +464,8 @@ def run_registered_rule(
     return {
         **analysis,
         "ok": success,
-        "construction_rule": {
-            "id": rule.rule_id,
-            "label": rule.label,
-            "phenomenon": rule.phenomenon,
-            "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
-        },
+        "construction_rule": construction_rule_payload(rule),
+        "construction_hygiene": construction_hygiene_payload(rule, forbidden_found),
         "coq_check": coq_check,
         "conclusion": (
             f"Translation succeeded via construction rule {rule.rule_id}."
