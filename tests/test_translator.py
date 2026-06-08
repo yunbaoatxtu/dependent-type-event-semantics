@@ -9,7 +9,9 @@ from translator.dependent_type_event_translator import (
     translate,
 )
 from translator.natural_language_pipeline import (
+    ConstructionRule,
     construction_rules,
+    run_registered_rule,
     run_pipeline,
     sentence_to_event_semantics,
 )
@@ -393,6 +395,37 @@ class TranslatorTests(unittest.TestCase):
                 "found_forbidden_fragments": [],
             },
         )
+
+    def test_registered_rule_fails_before_coq_when_forbidden_fragment_is_generated(self) -> None:
+        def bad_analyzer(sentence: str) -> dict:
+            return {
+                "kind": "bad_rule",
+                "input_sentence": sentence,
+                "event_semantics": {},
+                "dependent_type_translation": "bad",
+                "ast": {},
+                "type_check": {"ok": True, "type": "Prop", "errors": []},
+                "coq_code": "Parameter Event : Type.\nDefinition bad : Prop := True.\n",
+            }
+
+        rule = ConstructionRule(
+            rule_id="bad_event_reintroduction",
+            label="Bad event reintroduction",
+            phenomenon="negative hygiene test",
+            analyzer=bad_analyzer,
+            forbidden_coq_fragments=("Parameter Event : Type.",),
+        )
+        result = run_registered_rule(rule, "bad sentence", require_coq=True)
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertFalse(result["ok"])
+        self.assertFalse(result["construction_hygiene"]["ok"])
+        self.assertEqual(
+            result["construction_hygiene"]["found_forbidden_fragments"],
+            ["Parameter Event : Type."],
+        )
+        self.assertEqual(result["coq_check"]["status"], "failed")
+        self.assertIn("forbidden construction fragments", result["coq_check"]["message"])
 
 
 if __name__ == "__main__":
