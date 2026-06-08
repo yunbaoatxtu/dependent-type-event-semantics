@@ -373,6 +373,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("id: perception_nominalization", page)
         self.assertIn("phenomenon: Parsons/Luo-Shi perception complement", page)
         self.assertIn("hygiene: passed", page)
+        self.assertIn("hygiene policy:", page)
+        self.assertNotIn("forbidden Coq fragments:", page)
         self.assertIn("- Parameter Event : Type.", page)
         self.assertIn("found forbidden fragments:", page)
         self.assertIn("- none", page)

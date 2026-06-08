@@ -54,7 +54,7 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
         f"label: {rule.get('label', '')}",
         f"phenomenon: {rule.get('phenomenon', '')}",
         f"hygiene: {'passed' if hygiene.get('ok') else 'failed'}",
-        "forbidden Coq fragments:",
+        "hygiene policy:",
     ]
     if forbidden:
         lines.extend(f"- {fragment}" for fragment in forbidden)
