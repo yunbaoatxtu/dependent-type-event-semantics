@@ -13,6 +13,19 @@ from translator.natural_language_pipeline import (
     run_pipeline,
     sentence_to_event_semantics,
 )
+from translator.unified_syntax import (
+    Application,
+    Constant,
+    RuleStage,
+    Sigma,
+    Sort,
+    Variable,
+    coq_identifier,
+    render_term,
+    stage_order,
+    term_sort,
+    validate_stage_order,
+)
 from web.app import analyze_sentence, render_page
 
 
@@ -25,6 +38,33 @@ def load_example(name: str) -> dict:
 
 
 class TranslatorTests(unittest.TestCase):
+    def test_unified_syntax_stage_order_starts_with_common_frontend(self) -> None:
+        self.assertEqual(
+            stage_order(),
+            (
+                RuleStage.UNIFIED_SYNTAX,
+                RuleStage.MLTT,
+                RuleStage.UTT,
+                RuleStage.TDTT,
+                RuleStage.SYSTEM_TRANSLATION,
+                RuleStage.METATHEORY,
+            ),
+        )
+        self.assertEqual(validate_stage_order(), [])
+        self.assertTrue(validate_stage_order((RuleStage.MLTT, RuleStage.UNIFIED_SYNTAX)))
+
+    def test_unified_syntax_terms_have_sorts_and_coq_rendering(self) -> None:
+        john = Constant("John", Sort.ENTITY)
+        leave = Application("leave", ("John",), Sort.PROP)
+        witness = Variable("x theme", Sort.ENTITY)
+        sigma = Sigma(witness, leave)
+        self.assertEqual(term_sort(john), Sort.ENTITY)
+        self.assertEqual(term_sort(leave), Sort.PROP)
+        self.assertEqual(term_sort(sigma), Sort.PROP)
+        self.assertEqual(render_term(leave), "(leave John)")
+        self.assertEqual(render_term(sigma), "(exists x_theme : Entity, (leave John))")
+        self.assertEqual(coq_identifier("2 bad-name"), "x_2_bad_name")
+
     def test_variable_polyadicity_and_time(self) -> None:
         result = translate(load_example("example_butter.json"))
         self.assertEqual(result["adverb_count"], 2)

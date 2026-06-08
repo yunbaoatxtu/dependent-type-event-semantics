@@ -151,6 +151,20 @@ a structured `ast` object. The AST is the intended next bridge toward a proof
 assistant or a typed semantic checker. The translator also returns a
 `type_check` object that verifies basic AST well-formedness.
 
+The proof-oriented roadmap is staged deliberately:
+
+1. unified syntax framework;
+2. MLTT;
+3. UTT;
+4. TDTT;
+5. translations between systems;
+6. metatheoretic proofs.
+
+The first stage now has a small shared syntax module at
+`translator/unified_syntax.py`. It defines common sorts, term constructors, and
+the stage order that later MLTT, UTT, and TDTT modules should refine rather than
+replace.
+
 Run the test suite:
 
 ```bash
@@ -185,6 +199,11 @@ and examples:
 ```bash
 python3 scripts/check_formalization.py
 ```
+
+The GitHub Actions workflow runs the portable deterministic checks with
+`--skip-coq`, because GitHub's default Ubuntu runner does not provide a local
+Coq/Rocq installation. Use `--require-coq` locally when proof-assistant boundary
+validation is required.
 
 Run all deterministic project checks through one entry point:
 

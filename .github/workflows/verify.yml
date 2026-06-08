@@ -13,4 +13,4 @@ jobs:
         with:
           python-version: "3.11"
       - name: Run deterministic checks
-        run: python scripts/verify_project.py
+        run: python scripts/verify_project.py --skip-coq
