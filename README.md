@@ -259,7 +259,9 @@ assistant or a typed semantic checker. The translator also returns a
 `type_check` object that verifies basic AST well-formedness. Module-level
 export also rejects declaration conflicts, such as reusing the same constant
 name at incompatible types or exporting one shallow function name with
-incompatible signatures.
+incompatible signatures. This includes cross-category clashes: a result-state
+constant such as `broken : State` cannot be reused in the same generated module
+as an entity-denoting constant `broken : Entity`.
 
 Run the test suite:
 

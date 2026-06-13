@@ -339,6 +339,15 @@ class TranslatorTests(unittest.TestCase):
         ):
             export_module([read_book, book_sits], "coq")
 
+    def test_export_rejects_entity_state_constant_conflicts(self) -> None:
+        break_result = translate(sentence_to_event_semantics("John broke the vase"))
+        broken_sits = translate(sentence_to_event_semantics("broken sits"))
+        with self.assertRaisesRegex(
+            ValueError,
+            "Conflicting export types for constant broken: State vs Entity",
+        ):
+            export_module([break_result, broken_sits], "coq")
+
     def test_export_allows_mixed_modifier_counts_with_modifier_sequence(self) -> None:
         two_modifier_butter = translate(
             sentence_to_event_semantics("john buttered the toast in the bathroom with a knife")
