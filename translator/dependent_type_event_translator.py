@@ -543,6 +543,19 @@ def check_term(term: Term) -> TypeCheck:
             for field in ("theme", "source_state", "target_state"):
                 if not isinstance(current.get(field), str) or not current[field]:
                     errors.append(f"{path}: transition.{field} must be a non-empty string")
+            source_state = current.get("source_state")
+            target_state = current.get("target_state")
+            if (
+                isinstance(source_state, str)
+                and isinstance(target_state, str)
+                and source_state != "_"
+                and target_state != "_"
+                and source_state == target_state
+            ):
+                errors.append(
+                    f"{path}: transition.source_state and target_state must differ "
+                    "when both are known"
+                )
             return "TransitionT"
 
         if kind == "cause":
