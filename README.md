@@ -208,7 +208,9 @@ The current prototype has small, testable rules for:
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness
 `x_theme : Readable` and `read : nat -> Entity -> Readable -> Prop`; `John drank`
-analogously uses `Drinkable`.
+analogously uses `Drinkable`. The same lexical object types are used for overt
+objects, so `Mary read the book` declares `book : Readable` and gives the
+example type `Prop`, matching the exported `read` signature.
 
 Each translation result includes both a human-readable `translation` string and
 a structured `ast` object. The AST is the intended next bridge toward a proof

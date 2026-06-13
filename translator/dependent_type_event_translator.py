@@ -418,6 +418,19 @@ def export_term(term: Term, target: str) -> str:
     return emit(term)
 
 
+def export_result_type(term: Term) -> str:
+    kind = term["kind"]
+    if kind == "application":
+        return application_result_type(term["function"])
+    if kind == "sigma":
+        return "Prop"
+    if kind in {"repeat", "time", "cause"}:
+        return "PropT"
+    if kind == "transition":
+        return "TransitionT"
+    raise ValueError(f"Unknown term kind: {kind!r}")
+
+
 def application_result_type(function: str) -> str:
     return "Prop" if function in OMITTED_THEME_TYPES else "PropT"
 
@@ -594,7 +607,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         for idx, result in enumerate(results, 1):
             expr = result["exports"][target]
-            annotation = "Prop" if expr.startswith("(Exists ") else "PropT"
+            annotation = export_result_type(result["ast"])
             lines.append(f"def example_{idx} : {annotation} := {expr}")
         lines.append("")
         for idx in range(1, len(results) + 1):
@@ -635,7 +648,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     for idx, result in enumerate(results, 1):
         expr = result["exports"][target]
-        annotation = "Prop" if expr.startswith("(exists ") else "PropT"
+        annotation = export_result_type(result["ast"])
         lines.append(f"Definition example_{idx} : {annotation} := {expr}.")
     lines.append("")
     for idx in range(1, len(results) + 1):

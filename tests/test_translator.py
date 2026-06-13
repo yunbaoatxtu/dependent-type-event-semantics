@@ -232,6 +232,30 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("exists x_theme : Drinkable", drink_result["coq_code"])
         self.assertEqual(drink_result["coq_check"]["status"], "passed")
 
+    def test_explicit_lexical_theme_uses_matching_result_annotation(self) -> None:
+        read_result = run_pipeline("Mary read the book", require_coq=True)
+        self.assertTrue(read_result["ok"])
+        self.assertEqual(read_result["dependent_type_translation"], "read(0)(mary, book)")
+        self.assertIn("Parameter book : Readable.", read_result["coq_code"])
+        self.assertIn(
+            "Parameter read : nat -> Entity -> Readable -> Prop.",
+            read_result["coq_code"],
+        )
+        self.assertIn(
+            "Definition example_1 : Prop := (read 0 mary book).",
+            read_result["coq_code"],
+        )
+        self.assertEqual(read_result["coq_check"]["status"], "passed")
+
+        drink_result = run_pipeline("John drank water", require_coq=True)
+        self.assertTrue(drink_result["ok"])
+        self.assertIn("Parameter water : Drinkable.", drink_result["coq_code"])
+        self.assertIn(
+            "Definition example_1 : Prop := (drink 0 john water).",
+            drink_result["coq_code"],
+        )
+        self.assertEqual(drink_result["coq_check"]["status"], "passed")
+
     def test_natural_language_pipeline_handles_unlisted_sentence(self) -> None:
         result = run_pipeline("Mary admired the painting")
         self.assertTrue(result["ok"])
