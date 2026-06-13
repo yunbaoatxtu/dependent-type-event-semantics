@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from scripts.check_paper_docx_sync import check_sync, format_sync_errors
+from scripts.check_paper_docx_sync import check_sync, format_sync_errors, markdown_text_blocks
 from translator.dependent_type_event_translator import (
     check_term,
     export_module,
@@ -41,6 +41,39 @@ def write_minimal_docx(path: Path, paragraphs: list[str]) -> None:
     )
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("word/document.xml", document)
+
+
+def markdown_boundary_fixture() -> tuple[str, list[str]]:
+    markdown = (
+        "# **Title & Scope**\n\n"
+        "_Manuscript <draft> & check_\n\n"
+        "## **Section <A> & B**\n\n"
+        "- **Bullet** with A < B & C\n\n"
+        "| **Col <1>** | Col & 2 |\n"
+        "| --- | --- |\n"
+        "| **Cell A** | Cell <B> & C |\n"
+        "\n"
+        "Between tables.\n\n"
+        "| Left | Right |\n"
+        "| --- | --- |\n"
+        "| More <left> | More & right |\n"
+    )
+    expected_blocks = [
+        "Title & Scope",
+        "Manuscript <draft> & check",
+        "Section <A> & B",
+        "Bullet with A < B & C",
+        "Col <1>",
+        "Col & 2",
+        "Cell A",
+        "Cell <B> & C",
+        "Between tables.",
+        "Left",
+        "Right",
+        "More <left>",
+        "More & right",
+    ]
+    return markdown, expected_blocks
 
 
 class TranslatorTests(unittest.TestCase):
@@ -703,6 +736,25 @@ class TranslatorTests(unittest.TestCase):
                 "1. Natural-number-indexed verb families",
                 format_sync_errors(missing),
             )
+
+    def test_paper_docx_sync_extracts_markdown_boundary_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            markdown_path = Path(directory) / "paper.md"
+            markdown, expected_blocks = markdown_boundary_fixture()
+            markdown_path.write_text(markdown, encoding="utf-8")
+
+            self.assertEqual(markdown_text_blocks(markdown_path), expected_blocks)
+
+    def test_paper_docx_sync_matches_boundary_blocks_in_docx_text(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            markdown_path = temp / "paper.md"
+            docx_path = temp / "paper.docx"
+            markdown, expected_blocks = markdown_boundary_fixture()
+            markdown_path.write_text(markdown, encoding="utf-8")
+            write_minimal_docx(docx_path, expected_blocks)
+
+            self.assertEqual(check_sync(markdown_path, docx_path), [])
 
 
 if __name__ == "__main__":
