@@ -419,6 +419,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Event Semantics", page)
         self.assertIn("Dependent-Type Translation", page)
         self.assertIn("Diagnostics", page)
+        self.assertIn("Next Steps", page)
+        self.assertIn("No recovery actions needed.", page)
         self.assertIn("Construction Rule", page)
         self.assertIn("Generated Coq", page)
         self.assertIn("repeat(2, knock(0)(John))", page)
@@ -445,12 +447,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: natural-language parsing.", page)
         self.assertIn("Suggested next step: Try a sentence with at least a subject and a predicate.", page)
+        self.assertIn("Next Steps", page)
+        self.assertIn("- Add subject and predicate [revise_sentence]", page)
+        self.assertIn("Use a sentence with at least a recognizable subject and predicate.", page)
 
     def test_web_page_status_shows_empty_input_failure_stage(self) -> None:
         page = render_page("  ")
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: empty input.", page)
         self.assertIn("Suggested next step: Enter a non-empty sentence.", page)
+        self.assertIn("Next Steps", page)
+        self.assertIn("- Enter a sentence [edit_input]", page)
+        self.assertIn("Type a non-empty natural-language sentence before analyzing.", page)
 
     def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
         diagnostics = build_diagnostics(
@@ -560,12 +568,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.failure_stage` distinguishes", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
+        self.assertIn("separate `Next Steps`", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
         self.assertIn("`diagnostics.recovery_hint` is `null` on success", web_design)
         self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
         self.assertIn("`kind`, `label`, and `detail` fields", web_design)
+        self.assertIn("render the same actions in a `Next Steps` panel", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
 
     def test_docs_explain_api_contract(self) -> None:

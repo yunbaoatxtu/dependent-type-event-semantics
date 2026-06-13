@@ -191,6 +191,21 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def next_steps_summary(result: dict[str, Any]) -> str:
+    actions = result.get("diagnostics", {}).get("recovery_actions", [])
+    if not actions:
+        return "No recovery actions needed."
+    lines = []
+    for action in actions:
+        label = action.get("label", "")
+        kind = action.get("kind", "")
+        detail = action.get("detail", "")
+        lines.append(f"- {label} [{kind}]")
+        if detail:
+            lines.append(f"  {detail}")
+    return "\n".join(lines)
+
+
 def panel(title: str, body: str) -> str:
     return (
         '<section class="panel">'
@@ -207,6 +222,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     ast = compact_json(result.get("ast", {}))
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
+    next_steps = next_steps_summary(result)
     coq_code = result.get("coq_code", "")
     coq_check = compact_json(result.get("coq_check", {}))
     checked = " checked" if require_coq else ""
@@ -356,6 +372,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("Event Semantics", event_semantics)}
       {panel("Dependent-Type Translation", dependent)}
       {panel("Diagnostics", diagnostics)}
+      {panel("Next Steps", next_steps)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}
       {panel("Coq/Rocq Check", coq_check)}

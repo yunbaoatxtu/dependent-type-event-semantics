@@ -180,6 +180,8 @@ For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 `diagnostics.recovery_hint` gives a short next-step suggestion for that failure
 stage, while `diagnostics.recovery_actions` exposes the same advice as
 structured actions for frontends and automation.
+The local web page renders those structured actions in a separate `Next Steps`
+panel.
 
 Run the local web demo:
 

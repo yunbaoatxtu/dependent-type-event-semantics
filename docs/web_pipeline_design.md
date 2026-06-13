@@ -90,6 +90,8 @@ The web status line should surface `recovery_hint` directly so users do not
 have to inspect raw JSON before trying the next repair.
 Machine clients should prefer `recovery_actions` when they need stable action
 names or button labels.
+The page should render the same actions in a `Next Steps` panel, keeping
+human-facing guidance and machine-facing API output aligned.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal
