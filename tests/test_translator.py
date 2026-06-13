@@ -15,7 +15,7 @@ from translator.natural_language_pipeline import (
     run_pipeline,
     sentence_to_event_semantics,
 )
-from web.app import analyze_sentence, build_diagnostics, render_page
+from web.app import PipelineHandler, analyze_sentence, build_diagnostics, render_page
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -359,6 +359,26 @@ class TranslatorTests(unittest.TestCase):
 
     def test_web_analyze_sentence_empty_input(self) -> None:
         result = analyze_sentence("  ")
+        self.assertFalse(result["ok"])
+        self.assertIn("Please enter a sentence", result["error"])
+        self.assertEqual(result["diagnostics"]["summary"], "translation failed")
+
+    def test_api_analyze_response_contains_diagnostics(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=Mary+saw+John+leave&require_coq=1",
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["construction_rule"]["id"], "perception_nominalization")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+
+    def test_api_analyze_response_reports_empty_input(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
