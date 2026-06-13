@@ -81,7 +81,15 @@ def dependent_signature(verb: str, arity: int) -> str:
         family = "TV-ADV"
     else:
         family = f"V{arity}-ADV"
-    return f"{verb} : Pi n : N. {family}(n)"
+    signature = " -> ".join(dependent_argument_types(verb, arity) + [PROP])
+    return f"{verb} : Pi n : N. {family}(n); {family}(n) = ADV^n -> {signature}"
+
+
+def dependent_argument_types(verb: str, arity: int) -> list[str]:
+    return [
+        ENTITY if argument_type == "Entity" else argument_type
+        for argument_type in application_argument_types(verb, arity)
+    ]
 
 
 def analyze_event_formula(data: dict[str, Any]) -> EventAnalysis:
@@ -993,7 +1001,10 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
         "dependent_type_principle": {
             "N": "natural numbers count adverbial modifiers",
             "ADV": "(e -> t) -> (e -> t)",
-            family_name: f"{family_name}(n) = ADV^n -> " + " -> ".join([ENTITY] * arity + [PROP]),
+            family_name: (
+                f"{family_name}(n) = ADV^n -> "
+                + " -> ".join(dependent_argument_types(analysis.verb, arity) + [PROP])
+            ),
             "Time": "temporal predicates become proposition-level operators, not event entities",
             "Omission": "licensed implicit arguments become Sigma witnesses",
             "Counting": "event-count expressions become repeat/count operators over propositions",

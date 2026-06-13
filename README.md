@@ -245,6 +245,9 @@ objects, so `Mary read the book` declares `book : Readable` and gives the
 example type `Prop`, matching the exported `read` signature. The shallow
 interface defines `PropT` as an alias of Coq `Prop`, so temporal operators such
 as `at_T` can also scope over these existential propositions.
+The explanatory fields returned with each analysis use the same refinement:
+`lexical_signature` and `dependent_type_principle` render `read` as
+`ADV^n -> e -> Readable -> t`, not as a generic `ADV^n -> e -> e -> t`.
 
 Each translation result includes both a human-readable `translation` string and
 a structured `ast` object. The AST is the intended next bridge toward a proof

@@ -481,6 +481,27 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(drink_result["coq_check"]["status"], "passed")
 
+    def test_dependent_signature_records_refined_argument_types(self) -> None:
+        read_translation = translate(sentence_to_event_semantics("Mary read the book"))
+        self.assertEqual(
+            read_translation["lexical_signature"],
+            "read : Pi n : N. TV-ADV(n); TV-ADV(n) = ADV^n -> e -> Readable -> t",
+        )
+        self.assertEqual(
+            read_translation["dependent_type_principle"]["TV-ADV"],
+            "TV-ADV(n) = ADV^n -> e -> Readable -> t",
+        )
+
+        eat_translation = translate(sentence_to_event_semantics("John ate"))
+        self.assertEqual(
+            eat_translation["lexical_signature"],
+            "eat : Pi n : N. TV-ADV(n); TV-ADV(n) = ADV^n -> e -> Food -> t",
+        )
+        self.assertEqual(
+            eat_translation["dependent_type_principle"]["TV-ADV"],
+            "TV-ADV(n) = ADV^n -> e -> Food -> t",
+        )
+
     def test_time_can_scope_over_lexical_prop_outputs(self) -> None:
         omitted_result = run_pipeline("John read at noon", require_coq=True)
         self.assertTrue(omitted_result["ok"])
