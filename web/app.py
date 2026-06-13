@@ -94,6 +94,52 @@ def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
 
+def result_state_warning_for_entry(entry: dict[str, Any]) -> dict[str, str] | None:
+    policy = str(entry.get("source_policy", ""))
+    state = str(entry.get("state", ""))
+    scale = str(entry.get("scale", ""))
+    if policy == "unknown_source_allowed":
+        return {
+            "kind": "unknown_result_source",
+            "state": state,
+            "scale": scale,
+            "message": (
+                f"Result state {state} has no unique lexical pre-state; "
+                "source remains unknown_state."
+            ),
+        }
+    if policy == "derived_scale_no_known_prestate":
+        return {
+            "kind": "derived_result_scale",
+            "state": state,
+            "scale": scale,
+            "message": (
+                f"Result state {state} uses a derived scale without a known lexical "
+                "pre-state; source remains unknown_state."
+            ),
+        }
+    if policy == "source_state_only":
+        return {
+            "kind": "source_state_used_as_target",
+            "state": state,
+            "scale": scale,
+            "message": (
+                f"Result state {state} is currently licensed only as a source state; "
+                "source remains unknown_state."
+            ),
+        }
+    return None
+
+
+def result_state_warnings(result: dict[str, Any]) -> list[dict[str, str]]:
+    warnings = []
+    for entry in result.get("result_state_lexicon", []):
+        warning = result_state_warning_for_entry(entry)
+        if warning is not None:
+            warnings.append(warning)
+    return warnings
+
+
 def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     type_check = result.get("type_check", {})
     construction_hygiene = result.get("construction_hygiene", {})
@@ -132,6 +178,7 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "recovery_hint": recovery_hint,
         "recovery_actions": recovery_actions_for(failure_stage),
         "stages": stages,
+        "warnings": result_state_warnings(result),
     }
 
 
@@ -240,14 +287,22 @@ def result_state_lexicon_panel(result: dict[str, Any]) -> str:
             source = entry.get("default_source_state")
             source_text = str(source) if source is not None else "unknown_state"
             policy = str(entry.get("source_policy", ""))
+            warning = result_state_warning_for_entry(entry)
+            warning_html = (
+                f'<p class="lexicon-warning">{html.escape(warning["message"])}</p>'
+                if warning
+                else ""
+            )
+            item_class = "lexicon-entry lexicon-entry--warning" if warning else "lexicon-entry"
             rows.append(
-                '<li class="lexicon-entry">'
+                f'<li class="{item_class}">'
                 f'<strong>{html.escape(state)}</strong>'
                 '<dl>'
                 f'<dt>scale</dt><dd>{html.escape(scale)}</dd>'
                 f'<dt>source</dt><dd>{html.escape(source_text)}</dd>'
                 f'<dt>policy</dt><dd>{html.escape(policy)}</dd>'
                 '</dl>'
+                f"{warning_html}"
                 '</li>'
             )
         body = '<ul class="lexicon-list">' + "".join(rows) + "</ul>"
@@ -294,6 +349,8 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       --surface: #f7f9fb;
       --accent: #0f766e;
       --accent-soft: #e6f3f1;
+      --warning: #92400e;
+      --warning-soft: #fffbeb;
       --error: #9f1239;
       --error-soft: #fff1f2;
     }}
@@ -431,6 +488,10 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       background: #ffffff;
       padding: 9px 10px;
     }}
+    .lexicon-entry--warning {{
+      border-left-color: var(--warning);
+      background: var(--warning-soft);
+    }}
     .lexicon-entry strong {{
       display: block;
       margin-bottom: 6px;
@@ -450,6 +511,11 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       margin: 0;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       word-break: break-word;
+    }}
+    .lexicon-warning {{
+      margin-top: 8px;
+      color: var(--warning);
+      font-size: 13px;
     }}
     h2 {{
       font-size: 14px;

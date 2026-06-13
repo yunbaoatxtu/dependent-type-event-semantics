@@ -183,6 +183,7 @@ three relevant checks for user interfaces:
     "failure_stage": null,
     "recovery_hint": null,
     "recovery_actions": [],
+    "warnings": [],
     "stages": {
       "type_check": "passed",
       "construction_hygiene": "passed",
@@ -216,6 +217,10 @@ than attempted.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `next-step--<kind>` CSS class for frontend automation.
+`diagnostics.warnings` records non-fatal semantic audit notices. For example,
+`Mary painted the door red` can pass type checking and Coq/Rocq validation while
+still warning that `red` has no unique lexical pre-state, so the transition
+source remains `unknown_state`.
 
 Run the local web demo:
 
@@ -256,7 +261,10 @@ pipeline exposes the same audit trail in `result_state_lexicon`, so a caller can
 see, for example, that `flat` uses the lexical pre-state `not_flat`, while
 `red` keeps an unknown source.
 The web page renders these records in a dedicated Result State Lexicon panel
-and also exposes the raw JSON for exact auditing.
+and also exposes the raw JSON for exact auditing. Entries whose source is
+licensed as unknown are also surfaced through `diagnostics.warnings`, so a
+successful translation can still report that the lexical state model is
+underspecified.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

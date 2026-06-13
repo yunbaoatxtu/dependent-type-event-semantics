@@ -74,6 +74,10 @@ next-step suggestion tied to the failure stage.
 `diagnostics.recovery_actions` is an array of structured action objects with
 `kind`, `label`, and `detail` fields so a frontend can render repair steps
 without parsing prose.
+`diagnostics.warnings` is an array of non-fatal semantic audit notices. It is
+empty for fully specified result-state transitions such as `hammered ... flat`,
+but records cases such as `painted ... red` where the target state is typed and
+checked while the source state remains `unknown_state`.
 
 ## Successful Response
 
@@ -98,7 +102,8 @@ later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not
 have to inspect raw JSON before trying the next repair.
 Machine clients should prefer `recovery_actions` when they need stable action
-names or button labels.
+names or button labels, and `warnings` when they need to flag underspecified but
+still successfully checked translations.
 The page should render the same actions in a `Next Steps` panel, keeping
 human-facing guidance and machine-facing API output aligned.
 Each rendered action must expose `data-action-kind` and a `next-step--<kind>`

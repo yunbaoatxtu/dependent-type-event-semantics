@@ -273,6 +273,28 @@ class TranslatorTests(unittest.TestCase):
             "Definition example_1 : PropT := (Cause mary (Transition door color_scale unknown_state red)).",
             painted["coq_code"],
         )
+
+        flat_api = analyze_sentence("John hammered the metal flat", require_coq=True)
+        self.assertTrue(flat_api["ok"])
+        self.assertEqual(flat_api["diagnostics"]["warnings"], [])
+
+        painted_api = analyze_sentence("Mary painted the door red", require_coq=True)
+        self.assertTrue(painted_api["ok"])
+        self.assertEqual(painted_api["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(
+            painted_api["diagnostics"]["warnings"],
+            [
+                {
+                    "kind": "unknown_result_source",
+                    "state": "red",
+                    "scale": "color_scale",
+                    "message": (
+                        "Result state red has no unique lexical pre-state; "
+                        "source remains unknown_state."
+                    ),
+                }
+            ],
+        )
         self.assertEqual(painted["coq_check"]["status"], "passed")
 
     def test_type_checker_rejects_bad_adverb_count(self) -> None:
@@ -1085,6 +1107,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("lexical_prestate", page)
         self.assertIn("Result State Lexicon JSON", page)
 
+        warning_page = render_page("Mary painted the door red", require_coq=True)
+        self.assertIn("red", warning_page)
+        self.assertIn("color_scale", warning_page)
+        self.assertIn("unknown_source_allowed", warning_page)
+        self.assertIn("source remains unknown_state", warning_page)
+        self.assertIn("lexicon-entry--warning", warning_page)
+
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
         page = render_page("Mary saw John leave", require_coq=True)
         self.assertIn("Construction Rule", page)
@@ -1264,12 +1293,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"failure_stage": null', readme)
         self.assertIn('"recovery_hint": null', readme)
         self.assertIn('"recovery_actions": []', readme)
+        self.assertIn('"warnings": []', readme)
         self.assertIn('"type_check": "passed"', readme)
         self.assertIn('"construction_hygiene": "passed"', readme)
         self.assertIn('"coq_check": "passed"', readme)
         self.assertIn("`diagnostics.failure_stage` distinguishes", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
+        self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1283,6 +1314,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
         self.assertIn("`diagnostics.recovery_hint` is `null` on success", web_design)
         self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
+        self.assertIn("`diagnostics.warnings` is an array", web_design)
         self.assertIn("`kind`, `label`, and `detail` fields", web_design)
         self.assertIn("render the same actions in a `Next Steps` panel", web_design)
         self.assertIn("`data-action-kind`", web_design)
