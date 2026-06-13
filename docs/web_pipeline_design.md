@@ -1,11 +1,13 @@
 # Web Pipeline Design
 
-This project can support a web interface with four visible stages:
+This project can support a web interface with visible verification panels:
 
 1. Natural-language input
 2. Event-semantics analysis
 3. Dependent-type translation
-4. Coq/Rocq boundary validation
+4. Result-state lexicon audit records
+5. Internal diagnostics and next steps
+6. Coq/Rocq boundary validation
 
 The current repository implements the first small backend slice in
 `translator/natural_language_pipeline.py`. It combines hand-written analyses
@@ -17,7 +19,9 @@ than a false claim of full semantic understanding.
 
 The repository also includes a small dependency-free local web demo in
 `web/app.py`. It is intended as a thin interface over the verified backend, not
-as a separate semantic implementation.
+as a separate semantic implementation. The page renders `result_state_lexicon`
+twice: a compact human-readable Result State Lexicon panel and a raw JSON panel
+for exact audit data.
 
 ## Proposed Request Flow
 

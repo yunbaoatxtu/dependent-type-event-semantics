@@ -255,6 +255,8 @@ default source state, and whether an unknown source is explicitly allowed. The
 pipeline exposes the same audit trail in `result_state_lexicon`, so a caller can
 see, for example, that `flat` uses the lexical pre-state `not_flat`, while
 `red` keeps an unknown source.
+The web page renders these records in a dedicated Result State Lexicon panel
+and also exposes the raw JSON for exact auditing.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

@@ -136,7 +136,10 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
 
 
 def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
-    return {**result, "diagnostics": build_diagnostics(result)}
+    enriched = {**result}
+    enriched.setdefault("result_state_lexicon", [])
+    enriched["diagnostics"] = build_diagnostics(enriched)
+    return enriched
 
 
 def compact_json(data: Any) -> str:
@@ -225,6 +228,37 @@ def next_steps_panel(result: dict[str, Any]) -> str:
     )
 
 
+def result_state_lexicon_panel(result: dict[str, Any]) -> str:
+    entries = result.get("result_state_lexicon", [])
+    if not entries:
+        body = '<p class="lexicon-empty">No result states detected.</p>'
+    else:
+        rows = []
+        for entry in entries:
+            state = str(entry.get("state", ""))
+            scale = str(entry.get("scale", ""))
+            source = entry.get("default_source_state")
+            source_text = str(source) if source is not None else "unknown_state"
+            policy = str(entry.get("source_policy", ""))
+            rows.append(
+                '<li class="lexicon-entry">'
+                f'<strong>{html.escape(state)}</strong>'
+                '<dl>'
+                f'<dt>scale</dt><dd>{html.escape(scale)}</dd>'
+                f'<dt>source</dt><dd>{html.escape(source_text)}</dd>'
+                f'<dt>policy</dt><dd>{html.escape(policy)}</dd>'
+                '</dl>'
+                '</li>'
+            )
+        body = '<ul class="lexicon-list">' + "".join(rows) + "</ul>"
+    return (
+        '<section class="panel result-lexicon-panel">'
+        "<h2>Result State Lexicon</h2>"
+        f'<div class="result-lexicon">{body}</div>'
+        "</section>"
+    )
+
+
 def panel(title: str, body: str) -> str:
     return (
         '<section class="panel">'
@@ -239,6 +273,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     event_semantics = compact_json(result.get("event_semantics", result.get("error", "")))
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
+    result_lexicon = compact_json(result.get("result_state_lexicon", []))
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
     coq_code = result.get("coq_code", "")
@@ -351,6 +386,9 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     .next-steps {{
       padding: 12px;
     }}
+    .result-lexicon {{
+      padding: 12px;
+    }}
     .next-step-list {{
       list-style: none;
       margin: 0;
@@ -375,10 +413,43 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }}
     .next-step p,
-    .next-step-empty {{
+    .next-step-empty,
+    .lexicon-empty {{
       margin: 0;
       color: var(--muted);
       line-height: 1.45;
+    }}
+    .lexicon-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }}
+    .lexicon-entry {{
+      border-left: 3px solid var(--accent);
+      background: #ffffff;
+      padding: 9px 10px;
+    }}
+    .lexicon-entry strong {{
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }}
+    .lexicon-entry dl {{
+      display: grid;
+      grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .lexicon-entry dt {{
+      color: var(--muted);
+    }}
+    .lexicon-entry dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
     }}
     h2 {{
       font-size: 14px;
@@ -421,10 +492,12 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     <div class="grid">
       {panel("Event Semantics", event_semantics)}
       {panel("Dependent-Type Translation", dependent)}
+      {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
       {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}
+      {panel("Result State Lexicon JSON", result_lexicon)}
       {panel("Coq/Rocq Check", coq_check)}
       {panel("Generated Coq", coq_code)}
     </div>
