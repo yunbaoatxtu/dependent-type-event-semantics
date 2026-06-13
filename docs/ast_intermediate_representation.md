@@ -132,6 +132,48 @@ when the visible rendering focuses on the causal transition. This is useful for
 later proof assistant export, where the causing process and the result
 transition may need separate types.
 
+### `scope_ambiguity`
+
+Represents a construction-specific ambiguity that is not forced through the
+simple event-formula fallback parser. For `some boy loves some girl`, the AST
+keeps two readings with explicit quantifier order and predicate types:
+
+```json
+{
+  "kind": "scope_ambiguity",
+  "quantifier": "some",
+  "readings": [
+    {
+      "name": "some_boy_wide_scope",
+      "quantifier": "some",
+      "scope_order": [
+        {
+          "role": "subject",
+          "variable": "x_boy",
+          "predicate": "boy",
+          "predicate_type": "Entity -> Prop"
+        },
+        {
+          "role": "object",
+          "variable": "x_girl",
+          "predicate": "girl",
+          "predicate_type": "Entity -> Prop"
+        }
+      ],
+      "relation": {
+        "predicate": "love",
+        "predicate_type": "Entity -> Entity -> Prop",
+        "arguments": ["x_boy", "x_girl"]
+      }
+    }
+  ]
+}
+```
+
+The paired object-wide reading has the same relation arguments but reverses the
+`scope_order`. This makes the ambiguity auditable before the Coq formula is
+rendered.
+
 ## Type Checking
 
 The translator runs a lightweight structural type check over every emitted AST.

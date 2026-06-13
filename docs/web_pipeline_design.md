@@ -134,11 +134,14 @@ The modifier `on(mat)` is exported as an `Adv` item, not as an entity.
 Quantifier-scope cases are not sent through the simple fallback parser. The
 sentence `some boy loves some girl` is represented as a scope ambiguity with
 two checked readings: one in which the boy existential has wider scope, and one
-in which the girl existential has wider scope. In this path, `boy` and `girl`
-are predicates of type `Entity -> Prop`, while `some` is a quantifier pattern,
-not an entity constant. The checked scaffold also types `love` directly as
-`Entity -> Entity -> Prop`, so the two readings do not smuggle in an `Event`
-type, `Agent`, or `Theme` declaration.
+in which the girl existential has wider scope. Each reading is recorded as a
+structured AST object with a `scope_order`, bound variables, restrictor
+predicate types, and the binary relation type before the readable and Coq
+formulas are rendered. In this path, `boy` and `girl` are predicates of type
+`Entity -> Prop`, while `some` is a quantifier pattern, not an entity constant.
+The checked scaffold also types `love` directly as `Entity -> Entity -> Prop`,
+so the two readings do not smuggle in an `Event` type, `Agent`, or `Theme`
+declaration.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the

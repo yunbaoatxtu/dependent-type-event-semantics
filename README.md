@@ -76,11 +76,14 @@ python3 -m translator.natural_language_pipeline \
 ```
 
 This produces both subject-wide and object-wide existential readings and checks
-the generated Coq scaffold. Coq/Rocq verifies the exported formal terms; it does
-not by itself prove that an arbitrary natural-language parse is the only correct
-semantic analysis. The quantifier-scope scaffold does not introduce an `Event`
-type: `boy` and `girl` are predicates of type `Entity -> Prop`, and `love` is
-typed directly as `Entity -> Entity -> Prop`.
+the generated Coq scaffold. The intermediate AST stores each reading as a
+structured scope order with bound variables, `Entity -> Prop` restrictor
+predicates, and an `Entity -> Entity -> Prop` relation before any formula string
+is rendered. Coq/Rocq verifies the exported formal terms; it does not by itself
+prove that an arbitrary natural-language parse is the only correct semantic
+analysis. The quantifier-scope scaffold does not introduce an `Event` type:
+`boy` and `girl` are predicates of type `Entity -> Prop`, and `love` is typed
+directly as `Entity -> Entity -> Prop`.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:

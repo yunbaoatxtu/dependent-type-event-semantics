@@ -62,31 +62,124 @@ def event_formula(*items: dict[str, Any]) -> dict[str, Any]:
     return {"exists": ["e"], "body": {"and": list(items)}}
 
 
-def quantifier_scope_coq(
+def quantifier_scope_reading(
     subject_noun: str,
     verb: str,
     object_noun: str,
     subject_first: bool,
-) -> str:
+) -> dict[str, Any]:
+    subject = {
+        "role": "subject",
+        "variable": f"x_{subject_noun}",
+        "predicate": subject_noun,
+        "predicate_type": "Entity -> Prop",
+    }
+    obj = {
+        "role": "object",
+        "variable": f"x_{object_noun}",
+        "predicate": object_noun,
+        "predicate_type": "Entity -> Prop",
+    }
+    scope_order = [subject, obj] if subject_first else [obj, subject]
+    relation = {
+        "predicate": verb,
+        "predicate_type": "Entity -> Entity -> Prop",
+        "arguments": [subject["variable"], obj["variable"]],
+    }
     if subject_first:
         name = f"some_{subject_noun}_wide_scope"
-        body = (
-            f"exists x_{subject_noun} : Entity, "
-            f"{subject_noun} x_{subject_noun} /\\ "
-            f"exists x_{object_noun} : Entity, "
-            f"{object_noun} x_{object_noun} /\\ "
-            f"{verb} x_{subject_noun} x_{object_noun}"
-        )
     else:
         name = f"some_{object_noun}_wide_scope"
-        body = (
-            f"exists x_{object_noun} : Entity, "
-            f"{object_noun} x_{object_noun} /\\ "
-            f"exists x_{subject_noun} : Entity, "
-            f"{subject_noun} x_{subject_noun} /\\ "
-            f"{verb} x_{subject_noun} x_{object_noun}"
+    return {
+        "name": name,
+        "quantifier": "some",
+        "scope_order": scope_order,
+        "relation": relation,
+    }
+
+
+def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str:
+    relation = reading["relation"]
+    args = relation["arguments"]
+    if coq:
+        body = f"{relation['predicate']} {' '.join(args)}"
+        connective = "/\\"
+        separator = ", "
+    else:
+        body = f"{relation['predicate']}({', '.join(args)})"
+        connective = "and"
+        separator = ". "
+    for binder in reversed(reading["scope_order"]):
+        var = binder["variable"]
+        predicate = binder["predicate"]
+        if coq:
+            predicate_application = f"{predicate} {var}"
+            body = (
+                f"exists {var} : Entity{separator}"
+                f"{predicate_application} {connective} {body}"
+            )
+        else:
+            predicate_application = f"{predicate}({var})"
+            body = (
+                f"exists {var} : Entity{separator}"
+                f"{predicate_application} {connective} {body}"
+            )
+    return body
+
+
+def quantifier_scope_coq(reading: dict[str, Any]) -> str:
+    return f"Definition {reading['name']} : Prop := {render_quantifier_reading(reading, coq=True)}."
+
+
+def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
+    errors: list[str] = []
+    if len(readings) != 2:
+        errors.append(f"expected two scope readings, got {len(readings)}")
+
+    observed_orders: list[tuple[str, ...]] = []
+    for index, reading in enumerate(readings):
+        order = reading.get("scope_order")
+        relation = reading.get("relation")
+        if not isinstance(order, list) or len(order) != 2:
+            errors.append(f"readings[{index}].scope_order must contain two binders")
+            continue
+        if not isinstance(relation, dict):
+            errors.append(f"readings[{index}].relation must be an object")
+            continue
+
+        observed_orders.append(tuple(str(binder.get("role")) for binder in order))
+        relation_args = relation.get("arguments")
+        if relation.get("predicate_type") != "Entity -> Entity -> Prop":
+            errors.append(
+                f"readings[{index}].relation must have type Entity -> Entity -> Prop"
+            )
+        if not isinstance(relation_args, list) or len(relation_args) != 2:
+            errors.append(f"readings[{index}].relation.arguments must contain two entities")
+
+        for binder_index, binder in enumerate(order):
+            if not isinstance(binder, dict):
+                errors.append(f"readings[{index}].scope_order[{binder_index}] must be an object")
+                continue
+            if binder.get("predicate_type") != "Entity -> Prop":
+                errors.append(
+                    f"readings[{index}].scope_order[{binder_index}] "
+                    "must have predicate type Entity -> Prop"
+                )
+            if not binder.get("variable"):
+                errors.append(
+                    f"readings[{index}].scope_order[{binder_index}] must bind a variable"
+                )
+
+    if set(observed_orders) != {("subject", "object"), ("object", "subject")}:
+        errors.append(
+            "scope readings must include both subject-wide and object-wide orders"
         )
-    return f"Definition {name} : Prop := {body}."
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+        "reading_count": len(readings),
+    }
 
 
 def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
@@ -96,24 +189,17 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     subject_noun = lemma_verb(tokens[1])
     verb = lemma_verb(tokens[2])
     object_noun = lemma_verb(tokens[4])
+    readings = [
+        quantifier_scope_reading(subject_noun, verb, object_noun, subject_first=True),
+        quantifier_scope_reading(subject_noun, verb, object_noun, subject_first=False),
+    ]
+    type_check = check_quantifier_scope_readings(readings)
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
         "readings": [
-            {
-                "name": f"some_{subject_noun}_wide_scope",
-                "formula": (
-                    f"exists x:{subject_noun}. exists y:{object_noun}. "
-                    f"{verb}(x,y)"
-                ),
-            },
-            {
-                "name": f"some_{object_noun}_wide_scope",
-                "formula": (
-                    f"exists y:{object_noun}. exists x:{subject_noun}. "
-                    f"{verb}(x,y)"
-                ),
-            },
+            {**reading, "formula": render_quantifier_reading(reading)}
+            for reading in readings
         ],
     }
     coq_code = "\n".join(
@@ -124,8 +210,8 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             f"Parameter {object_noun} : Entity -> Prop.",
             f"Parameter {verb} : Entity -> Entity -> Prop.",
             "",
-            quantifier_scope_coq(subject_noun, verb, object_noun, subject_first=True),
-            quantifier_scope_coq(subject_noun, verb, object_noun, subject_first=False),
+            quantifier_scope_coq(readings[0]),
+            quantifier_scope_coq(readings[1]),
             "",
             f"Check some_{subject_noun}_wide_scope.",
             f"Check some_{object_noun}_wide_scope.",
@@ -142,12 +228,10 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         "ast": {
             "kind": "scope_ambiguity",
             "quantifier": "some",
-            "readings": event_semantics["readings"],
+            "readings": readings,
         },
         "type_check": {
-            "ok": True,
-            "type": "Prop",
-            "errors": [],
+            **type_check,
             "note": (
                 "Both scope readings are represented with entity predicates "
                 "and a binary relation; no Event argument is introduced."

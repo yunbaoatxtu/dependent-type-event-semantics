@@ -489,7 +489,28 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter Theme :", result["coq_code"])
         self.assertNotIn("Parameter some : Entity.", result["coq_code"])
         self.assertNotIn("Parameter boy : nat ->", result["coq_code"])
+        self.assertEqual(result["type_check"]["reading_count"], 2)
         self.assertIn("no Event argument is introduced", result["type_check"]["note"])
+        readings = result["ast"]["readings"]
+        self.assertEqual(
+            [binder["role"] for binder in readings[0]["scope_order"]],
+            ["subject", "object"],
+        )
+        self.assertEqual(
+            [binder["role"] for binder in readings[1]["scope_order"]],
+            ["object", "subject"],
+        )
+        for reading in readings:
+            self.assertEqual(
+                reading["relation"]["predicate_type"],
+                "Entity -> Entity -> Prop",
+            )
+            self.assertEqual(
+                reading["relation"]["arguments"],
+                ["x_boy", "x_girl"],
+            )
+            for binder in reading["scope_order"]:
+                self.assertEqual(binder["predicate_type"], "Entity -> Prop")
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
