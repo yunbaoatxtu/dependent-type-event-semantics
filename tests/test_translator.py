@@ -880,6 +880,31 @@ class TranslatorTests(unittest.TestCase):
             self.assertIn((" alpha ", False, False, False), records)
             self.assertIn(("beta", True, False, False), records)
 
+    @unittest.skipUnless(python_docx_available(), "python-docx is not available")
+    def test_paper_docx_pipeline_round_trips_rich_markdown_fixture(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            markdown_path = temp / "paper.md"
+            docx_path = temp / "paper.docx"
+            markdown, expected_blocks = markdown_boundary_fixture()
+            markdown_path.write_text(markdown, encoding="utf-8")
+
+            build_docx(markdown_path, docx_path)
+
+            self.assertEqual(markdown_text_blocks(markdown_path), expected_blocks)
+            self.assertEqual(check_sync(markdown_path, docx_path), [])
+
+            records = docx_run_styles(docx_path)
+            self.assertIn(("Title & Scope", True, False, False), records)
+            self.assertIn(("Manuscript <draft> & check", False, True, False), records)
+            self.assertIn(("Section <A> & B", True, False, False), records)
+            self.assertIn(("Bullet", True, False, False), records)
+            self.assertIn(("Col <1>", True, False, False), records)
+            self.assertIn(("Cell A", True, False, False), records)
+            self.assertIn(("code", False, False, True), records)
+            self.assertIn(("emphasis", False, True, False), records)
+            self.assertIn((", and visible link.", False, False, False), records)
+
 
 if __name__ == "__main__":
     unittest.main()
