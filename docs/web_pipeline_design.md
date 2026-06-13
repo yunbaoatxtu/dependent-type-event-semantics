@@ -92,6 +92,8 @@ Machine clients should prefer `recovery_actions` when they need stable action
 names or button labels.
 The page should render the same actions in a `Next Steps` panel, keeping
 human-facing guidance and machine-facing API output aligned.
+Each rendered action must expose `data-action-kind` and a `next-step--<kind>`
+CSS class so later UI controls and browser tests have stable hooks.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

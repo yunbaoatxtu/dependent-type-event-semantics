@@ -448,7 +448,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Failure stage: natural-language parsing.", page)
         self.assertIn("Suggested next step: Try a sentence with at least a subject and a predicate.", page)
         self.assertIn("Next Steps", page)
-        self.assertIn("- Add subject and predicate [revise_sentence]", page)
+        self.assertIn('class="next-step next-step--revise_sentence"', page)
+        self.assertIn('data-action-kind="revise_sentence"', page)
+        self.assertIn("<strong>Add subject and predicate</strong>", page)
+        self.assertIn("<code>revise_sentence</code>", page)
         self.assertIn("Use a sentence with at least a recognizable subject and predicate.", page)
 
     def test_web_page_status_shows_empty_input_failure_stage(self) -> None:
@@ -457,7 +460,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Failure stage: empty input.", page)
         self.assertIn("Suggested next step: Enter a non-empty sentence.", page)
         self.assertIn("Next Steps", page)
-        self.assertIn("- Enter a sentence [edit_input]", page)
+        self.assertIn('class="next-step next-step--edit_input"', page)
+        self.assertIn('data-action-kind="edit_input"', page)
+        self.assertIn("<strong>Enter a sentence</strong>", page)
+        self.assertIn("<code>edit_input</code>", page)
         self.assertIn("Type a non-empty natural-language sentence before analyzing.", page)
 
     def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
@@ -569,6 +575,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("separate `Next Steps`", readme)
+        self.assertIn("stable `data-action-kind`", readme)
+        self.assertIn("`next-step--<kind>` CSS class", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
@@ -576,6 +584,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
         self.assertIn("`kind`, `label`, and `detail` fields", web_design)
         self.assertIn("render the same actions in a `Next Steps` panel", web_design)
+        self.assertIn("`data-action-kind`", web_design)
+        self.assertIn("`next-step--<kind>`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
 
     def test_docs_explain_api_contract(self) -> None:
@@ -593,6 +603,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
         self.assertIn("The web status line should surface `recovery_hint` directly", web_design)
         self.assertIn("Machine clients should prefer `recovery_actions`", web_design)
+
+    def test_paper_mentions_diagnostic_recovery_actions(self) -> None:
+        manuscript = (
+            ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("machine-readable failure_stage field", manuscript)
+        self.assertIn("structured recovery_actions", manuscript)
+        self.assertIn("Next Steps panel", manuscript)
+        self.assertIn("data-action-kind", manuscript)
+        self.assertIn("stage-local diagnostics", manuscript)
 
 
 if __name__ == "__main__":

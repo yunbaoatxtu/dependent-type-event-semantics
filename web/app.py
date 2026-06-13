@@ -191,19 +191,37 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def next_steps_summary(result: dict[str, Any]) -> str:
+def css_token(value: str) -> str:
+    return "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in value)
+
+
+def next_steps_panel(result: dict[str, Any]) -> str:
     actions = result.get("diagnostics", {}).get("recovery_actions", [])
     if not actions:
-        return "No recovery actions needed."
-    lines = []
-    for action in actions:
-        label = action.get("label", "")
-        kind = action.get("kind", "")
-        detail = action.get("detail", "")
-        lines.append(f"- {label} [{kind}]")
-        if detail:
-            lines.append(f"  {detail}")
-    return "\n".join(lines)
+        body = '<p class="next-step-empty">No recovery actions needed.</p>'
+    else:
+        items = []
+        for action in actions:
+            kind = action.get("kind", "")
+            label = action.get("label", "")
+            detail = action.get("detail", "")
+            kind_class = css_token(kind)
+            items.append(
+                '<li '
+                f'class="next-step next-step--{html.escape(kind_class)}" '
+                f'data-action-kind="{html.escape(kind)}">'
+                f'<strong>{html.escape(label)}</strong>'
+                f'<code>{html.escape(kind)}</code>'
+                f'<p>{html.escape(detail)}</p>'
+                "</li>"
+            )
+        body = '<ul class="next-step-list">' + "".join(items) + "</ul>"
+    return (
+        '<section class="panel next-steps-panel">'
+        "<h2>Next Steps</h2>"
+        f'<div class="next-steps">{body}</div>'
+        "</section>"
+    )
 
 
 def panel(title: str, body: str) -> str:
@@ -222,7 +240,6 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     ast = compact_json(result.get("ast", {}))
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
-    next_steps = next_steps_summary(result)
     coq_code = result.get("coq_code", "")
     coq_check = compact_json(result.get("coq_check", {}))
     checked = " checked" if require_coq else ""
@@ -330,6 +347,38 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       min-width: 0;
       overflow: hidden;
     }}
+    .next-steps {{
+      padding: 12px;
+    }}
+    .next-step-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }}
+    .next-step {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }}
+    .next-step strong {{
+      font-size: 14px;
+    }}
+    .next-step code {{
+      width: fit-content;
+      color: var(--muted);
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }}
+    .next-step p,
+    .next-step-empty {{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }}
     h2 {{
       font-size: 14px;
       margin: 0;
@@ -372,7 +421,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("Event Semantics", event_semantics)}
       {panel("Dependent-Type Translation", dependent)}
       {panel("Diagnostics", diagnostics)}
-      {panel("Next Steps", next_steps)}
+      {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}
       {panel("Coq/Rocq Check", coq_check)}

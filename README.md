@@ -181,7 +181,8 @@ For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 stage, while `diagnostics.recovery_actions` exposes the same advice as
 structured actions for frontends and automation.
 The local web page renders those structured actions in a separate `Next Steps`
-panel.
+panel. Each rendered action carries a stable `data-action-kind` attribute and a
+`next-step--<kind>` CSS class for frontend automation.
 
 Run the local web demo:
 
