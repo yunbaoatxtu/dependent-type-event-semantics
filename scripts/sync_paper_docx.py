@@ -49,12 +49,14 @@ def add_markdown_runs(
     italic: bool = False,
     color: Any | None = None,
 ) -> None:
-    for segment, segment_bold in markdown_inline_segments(text):
-        run = paragraph.add_run(segment)
-        if base_bold or segment_bold:
+    for segment in markdown_inline_segments(text):
+        run = paragraph.add_run(segment.text)
+        if base_bold or segment.bold:
             run.bold = True
-        if italic:
+        if italic or segment.italic:
             run.italic = True
+        if segment.code:
+            run.font.name = "Courier New"
         if color is not None:
             run.font.color.rgb = color
 

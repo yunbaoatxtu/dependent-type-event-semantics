@@ -7,7 +7,12 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 from scripts.check_paper_docx_sync import check_sync, format_sync_errors
-from scripts.paper_markdown import markdown_inline_segments, markdown_text_blocks
+from scripts.paper_markdown import (
+    InlineSegment,
+    markdown_inline_segments,
+    markdown_text_blocks,
+    normalize_markdown_inline,
+)
 from scripts.sync_paper_docx import build_docx
 from translator.dependent_type_event_translator import (
     check_term,
@@ -55,15 +60,29 @@ def python_docx_available() -> bool:
     return True
 
 
-def docx_run_styles(path: Path) -> list[tuple[str, bool]]:
+def docx_run_styles(path: Path) -> list[tuple[str, bool, bool, bool]]:
     with zipfile.ZipFile(path) as archive:
         document_xml = archive.read("word/document.xml")
     root = ET.fromstring(document_xml)
-    records: list[tuple[str, bool]] = []
+    records: list[tuple[str, bool, bool, bool]] = []
     for run in root.findall(".//w:r", WORD_NAMESPACE):
         text = "".join(node.text or "" for node in run.findall(".//w:t", WORD_NAMESPACE))
         if text:
-            records.append((text, run.find("w:rPr/w:b", WORD_NAMESPACE) is not None))
+            run_properties = run.find("w:rPr", WORD_NAMESPACE)
+            is_bold = (
+                run_properties is not None
+                and run_properties.find("w:b", WORD_NAMESPACE) is not None
+            )
+            is_italic = (
+                run_properties is not None
+                and run_properties.find("w:i", WORD_NAMESPACE) is not None
+            )
+            font_values = []
+            if run_properties is not None:
+                fonts = run_properties.find("w:rFonts", WORD_NAMESPACE)
+                if fonts is not None:
+                    font_values = list(fonts.attrib.values())
+            records.append((text, is_bold, is_italic, "Courier New" in font_values))
     return records
 
 
@@ -81,6 +100,8 @@ def markdown_boundary_fixture() -> tuple[str, list[str]]:
         "| Left | Right |\n"
         "| --- | --- |\n"
         "| More <left> | More & right |\n"
+        "\n"
+        "Inline `code`, *emphasis*, and [visible link](https://example.test).\n"
     )
     expected_blocks = [
         "Title & Scope",
@@ -96,6 +117,7 @@ def markdown_boundary_fixture() -> tuple[str, list[str]]:
         "Right",
         "More <left>",
         "More & right",
+        "Inline code, emphasis, and visible link.",
     ]
     return markdown, expected_blocks
 
@@ -783,15 +805,40 @@ class TranslatorTests(unittest.TestCase):
     def test_sync_paper_docx_splits_inline_bold_segments(self) -> None:
         self.assertEqual(
             markdown_inline_segments("Plain **bold** tail"),
-            [("Plain ", False), ("bold", True), (" tail", False)],
+            [
+                InlineSegment("Plain "),
+                InlineSegment("bold", bold=True),
+                InlineSegment(" tail"),
+            ],
         )
         self.assertEqual(
             markdown_inline_segments("**A** and **B**"),
-            [("A", True), (" and ", False), ("B", True)],
+            [
+                InlineSegment("A", bold=True),
+                InlineSegment(" and "),
+                InlineSegment("B", bold=True),
+            ],
         )
         self.assertEqual(
             markdown_inline_segments("Unclosed **bold"),
-            [("Unclosed **bold", False)],
+            [InlineSegment("Unclosed **bold")],
+        )
+
+    def test_paper_markdown_normalizes_code_italic_and_link_text(self) -> None:
+        text = "Use `code` and *emphasis* plus [visible link](https://example.test)."
+        self.assertEqual(
+            markdown_inline_segments(text),
+            [
+                InlineSegment("Use "),
+                InlineSegment("code", code=True),
+                InlineSegment(" and "),
+                InlineSegment("emphasis", italic=True),
+                InlineSegment(" plus visible link."),
+            ],
+        )
+        self.assertEqual(
+            normalize_markdown_inline(text),
+            "Use code and emphasis plus visible link.",
         )
 
     @unittest.skipUnless(python_docx_available(), "python-docx is not available")
@@ -806,6 +853,7 @@ class TranslatorTests(unittest.TestCase):
                     "_Italic **subtitle**_\n\n"
                     "## Heading **Bold**\n\n"
                     "Regular **bold paragraph** tail.\n\n"
+                    "Use `code span` and *italic span*.\n\n"
                     "- List **bold item** tail\n\n"
                     "| Header **One** | Header Two |\n"
                     "| --- | --- |\n"
@@ -818,17 +866,19 @@ class TranslatorTests(unittest.TestCase):
             build_docx(markdown_path, docx_path)
 
             records = docx_run_styles(docx_path)
-            self.assertIn(("Regular ", False), records)
-            self.assertIn(("bold paragraph", True), records)
-            self.assertIn(("List ", False), records)
-            self.assertIn(("bold item", True), records)
-            self.assertIn(("Header ", True), records)
-            self.assertIn(("One", True), records)
-            self.assertIn(("Body ", False), records)
-            self.assertIn(("bold cell", True), records)
-            self.assertIn(("Keywords:", True), records)
-            self.assertIn((" alpha ", False), records)
-            self.assertIn(("beta", True), records)
+            self.assertIn(("Regular ", False, False, False), records)
+            self.assertIn(("bold paragraph", True, False, False), records)
+            self.assertIn(("code span", False, False, True), records)
+            self.assertIn(("italic span", False, True, False), records)
+            self.assertIn(("List ", False, False, False), records)
+            self.assertIn(("bold item", True, False, False), records)
+            self.assertIn(("Header ", True, False, False), records)
+            self.assertIn(("One", True, False, False), records)
+            self.assertIn(("Body ", False, False, False), records)
+            self.assertIn(("bold cell", True, False, False), records)
+            self.assertIn(("Keywords:", True, False, False), records)
+            self.assertIn((" alpha ", False, False, False), records)
+            self.assertIn(("beta", True, False, False), records)
 
 
 if __name__ == "__main__":
