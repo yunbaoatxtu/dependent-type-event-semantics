@@ -36,6 +36,28 @@ The local page is started with:
 python3 -m web.app --port 8765
 ```
 
+## API Contract
+
+The web demo exposes the same checked pipeline as a JSON endpoint:
+
+```text
+GET /api/analyze?sentence=Mary+saw+John+leave&require_coq=1
+```
+
+The request has two stable query parameters:
+
+- `sentence`: required natural-language input;
+- `require_coq`: optional flag, where `1` requests the external Coq/Rocq
+  boundary check and the default leaves it skipped when not needed.
+
+The response is a single JSON object. On success, it must expose the same
+semantic artifacts shown on the page: `event_semantics`,
+`dependent_type_translation`, `ast`, `coq_code`, `construction_rule`,
+`construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`. On
+failure, it must still return `ok: false`, an `error` message when available,
+and a `diagnostics` object so callers can distinguish parser, type-checking,
+construction-hygiene, and Coq/Rocq boundary failures.
+
 ## Successful Response
 
 A successful response should include:

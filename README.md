@@ -159,6 +159,19 @@ three relevant checks for user interfaces:
 }
 ```
 
+Programmatic clients can call the same pipeline through the local JSON API:
+
+```text
+GET /api/analyze?sentence=Mary+saw+John+leave&require_coq=1
+```
+
+The `sentence` parameter carries the natural-language input. `require_coq=1`
+asks the server to run the external Coq/Rocq boundary check when the toolchain
+is available. The response includes the same event-semantics JSON,
+dependent-type rendering, generated Coq, `construction_rule`,
+`construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
+page.
+
 Run the local web demo:
 
 ```bash

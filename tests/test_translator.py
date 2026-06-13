@@ -487,6 +487,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
 
+    def test_docs_explain_api_contract(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
+        self.assertIn("/api/analyze?sentence=Mary+saw+John+leave&require_coq=1", readme)
+        self.assertIn("`sentence` parameter carries the natural-language input", readme)
+        self.assertIn("`construction_rule`", readme)
+        self.assertIn("## API Contract", web_design)
+        self.assertIn("`sentence`: required natural-language input", web_design)
+        self.assertIn("`require_coq`: optional flag", web_design)
+        self.assertIn("`dependent_type_translation`", web_design)
+        self.assertIn("`construction_hygiene`", web_design)
+        self.assertIn("failure, it must still return `ok: false`", web_design)
+
 
 if __name__ == "__main__":
     unittest.main()
