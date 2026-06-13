@@ -194,7 +194,8 @@ Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).
 For example, `john buttered the toast in the bathroom with a knife` exports
 `in_bathroom : Adv`, `with_knife : Adv`, `john : Entity`, `toast : Entity`, and
 `butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, with the
-two modifiers passed as a `ModifierSeq 2` value. The AST still checks the
-natural-number index against the modifier list before export, and the shallow
-Coq interface now gives the external checker the same length invariant while
-keeping the lexical verb declaration stable across different modifier counts.
+two modifiers passed as a `ModifierSeq 2` value. The AST checks the
+natural-number index against both the visible modifier list and a normalized
+`modifier_vector` before export, and the shallow Coq interface now gives the
+external checker the same length invariant while keeping the lexical verb
+declaration stable across different modifier counts.

@@ -154,12 +154,28 @@ def render_time_operator(atom: Atom, proposition: str) -> str:
     return f"{atom.pred}_T(({rest}), {proposition})"
 
 
+def modifier_vector(adverbs: list[str]) -> Term:
+    length = len(adverbs)
+    return {
+        "kind": "modifier_vector",
+        "length": length,
+        "items": [
+            {
+                "modifier": modifier,
+                "tail_length": length - index - 1,
+            }
+            for index, modifier in enumerate(adverbs)
+        ],
+    }
+
+
 def application_term(verb: str, adverbs: list[str], args: list[str]) -> Term:
     return {
         "kind": "application",
         "function": verb,
         "adverb_count": len(adverbs),
         "modifiers": adverbs,
+        "modifier_vector": modifier_vector(adverbs),
         "arguments": args,
     }
 
@@ -243,6 +259,7 @@ def check_term(term: Term) -> TypeCheck:
         kind = current.get("kind")
         if kind == "application":
             modifiers = current.get("modifiers")
+            vector = current.get("modifier_vector")
             arguments = current.get("arguments")
             adverb_count = current.get("adverb_count")
             if not isinstance(current.get("function"), str) or not current["function"]:
@@ -250,6 +267,74 @@ def check_term(term: Term) -> TypeCheck:
             if not isinstance(modifiers, list) or not all(isinstance(x, str) for x in modifiers):
                 errors.append(f"{path}: application.modifiers must be a list of strings")
                 modifiers = []
+            vector_items: list[dict[str, Any]] = []
+            vector_length: int | None = None
+            if not isinstance(vector, dict):
+                errors.append(f"{path}: application.modifier_vector must be a vector object")
+            else:
+                if vector.get("kind") != "modifier_vector":
+                    errors.append(
+                        f"{path}: application.modifier_vector.kind must be modifier_vector"
+                    )
+                length = vector.get("length")
+                items = vector.get("items")
+                if not isinstance(length, int) or length < 0:
+                    errors.append(
+                        f"{path}: application.modifier_vector.length must be a natural number"
+                    )
+                else:
+                    vector_length = length
+                if not isinstance(items, list):
+                    errors.append(f"{path}: application.modifier_vector.items must be a list")
+                else:
+                    for index, item in enumerate(items):
+                        if not isinstance(item, dict):
+                            errors.append(
+                                f"{path}: application.modifier_vector.items[{index}] must be an object"
+                            )
+                            continue
+                        modifier = item.get("modifier")
+                        tail_length = item.get("tail_length")
+                        if not isinstance(modifier, str) or not modifier:
+                            errors.append(
+                                f"{path}: application.modifier_vector.items[{index}].modifier "
+                                "must be a non-empty string"
+                            )
+                        if not isinstance(tail_length, int) or tail_length < 0:
+                            errors.append(
+                                f"{path}: application.modifier_vector.items[{index}].tail_length "
+                                "must be a natural number"
+                            )
+                        vector_items.append(item)
+                    if vector_length is not None and vector_length != len(items):
+                        errors.append(
+                            f"{path}: application.modifier_vector.length={vector_length} "
+                            f"does not match {len(items)} vector item(s)"
+                        )
+            vector_modifiers = [
+                item.get("modifier")
+                for item in vector_items
+                if isinstance(item.get("modifier"), str)
+            ]
+            if vector_modifiers and vector_modifiers != modifiers:
+                errors.append(
+                    f"{path}: application.modifier_vector modifiers do not match "
+                    "application.modifiers"
+                )
+            if vector_length is not None:
+                if vector_length != len(modifiers):
+                    errors.append(
+                        f"{path}: application.modifier_vector.length={vector_length} "
+                        f"does not match {len(modifiers)} modifier(s)"
+                    )
+                for index, item in enumerate(vector_items):
+                    expected_tail = vector_length - index - 1
+                    if item.get("tail_length") != expected_tail:
+                        errors.append(
+                            f"{path}: application.modifier_vector.items[{index}].tail_length="
+                            f"{item.get('tail_length')} does not match expected "
+                            f"tail length {expected_tail}"
+                        )
             if not isinstance(arguments, list) or not all(isinstance(x, str) for x in arguments):
                 errors.append(f"{path}: application.arguments must be a list of strings")
             if not isinstance(adverb_count, int) or adverb_count < 0:
@@ -258,6 +343,11 @@ def check_term(term: Term) -> TypeCheck:
                 errors.append(
                     f"{path}: application.adverb_count={adverb_count} "
                     f"does not match {len(modifiers)} modifier(s)"
+                )
+            elif vector_length is not None and adverb_count != vector_length:
+                errors.append(
+                    f"{path}: application.adverb_count={adverb_count} "
+                    f"does not match modifier_vector.length={vector_length}"
                 )
             return PROP
 
@@ -372,12 +462,13 @@ def export_term(term: Term, target: str) -> str:
     if target not in EXPORT_TARGETS:
         raise ValueError(f"Unsupported export target: {target!r}")
 
-    def emit_modifier_sequence(modifiers: list[str]) -> str:
+    def emit_modifier_sequence(vector: Term) -> str:
         sequence = "mods_nil"
-        tail_length = 0
-        for modifier in reversed(modifiers):
-            sequence = f"(mods_cons {tail_length} {export_atom(modifier, target)} {sequence})"
-            tail_length += 1
+        for item in reversed(vector["items"]):
+            sequence = (
+                f"(mods_cons {item['tail_length']} "
+                f"{export_atom(item['modifier'], target)} {sequence})"
+            )
         return sequence
 
     def emit(current: Term) -> str:
@@ -386,7 +477,7 @@ def export_term(term: Term, target: str) -> str:
             parts = [
                 export_atom(current["function"], target),
                 str(current["adverb_count"]),
-                emit_modifier_sequence(current["modifiers"]),
+                emit_modifier_sequence(current["modifier_vector"]),
             ]
             parts.extend(export_atom(x, target) for x in current["arguments"])
             return "(" + " ".join(parts) + ")"

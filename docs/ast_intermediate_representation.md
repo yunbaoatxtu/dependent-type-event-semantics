@@ -18,6 +18,14 @@ Represents a dependent verb-family application.
   "function": "butter",
   "adverb_count": 2,
   "modifiers": ["slowly", "in(bathroom)"],
+  "modifier_vector": {
+    "kind": "modifier_vector",
+    "length": 2,
+    "items": [
+      {"modifier": "slowly", "tail_length": 1},
+      {"modifier": "in(bathroom)", "tail_length": 0}
+    ]
+  },
   "arguments": ["John", "toast"]
 }
 ```
@@ -103,6 +111,11 @@ Represent causal-resultative structure.
     "function": "break",
     "adverb_count": 0,
     "modifiers": [],
+    "modifier_vector": {
+      "kind": "modifier_vector",
+      "length": 0,
+      "items": []
+    },
     "arguments": ["John", "vase"]
   }
 }
@@ -137,7 +150,8 @@ The result is returned as:
 Current type rules:
 
 - `application` has type `t` when `adverb_count` is a natural number equal to
-  the number of `modifiers`.
+  the number of `modifiers`, and when the normalized `modifier_vector` has the
+  same length, the same modifier order, and descending `tail_length` fields.
 - `sigma` has type `t` when its body has type `t`.
 - `repeat` has type `t` when `count` is a positive natural number and its body
   has type `t`.
@@ -164,10 +178,11 @@ Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).
 ```
 
 Thus `in(bathroom)` exports as `in_bathroom : Adv`, while ordinary arguments
-such as `John` and `toast` export as `Entity`. Application exports place the
-individual modifier constants into an indexed `ModifierSeq n` value. This keeps
-one verb declaration stable when several checked examples use different numbers
-of modifiers, while giving Coq an explicit length invariant to check.
+such as `John` and `toast` export as `Entity`. Application exports read the
+normalized `modifier_vector` and place its individual modifier constants into an
+indexed `ModifierSeq n` value. This keeps one verb declaration stable when
+several checked examples use different numbers of modifiers, while giving Coq an
+explicit length invariant to check.
 
 ## Lean and Coq Style Export
 

@@ -6,6 +6,7 @@ from translator.dependent_type_event_translator import (
     check_term,
     export_module,
     export_term,
+    modifier_vector,
     translate,
 )
 from translator.natural_language_pipeline import (
@@ -38,6 +39,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "time")
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["modifiers"], ["slowly", "in(bathroom)"])
+        self.assertEqual(
+            result["ast"]["body"]["modifier_vector"],
+            {
+                "kind": "modifier_vector",
+                "length": 2,
+                "items": [
+                    {"modifier": "slowly", "tail_length": 1},
+                    {"modifier": "in(bathroom)", "tail_length": 0},
+                ],
+            },
+        )
         self.assertEqual(result["type_check"], {"ok": True, "type": "t", "errors": []})
         self.assertEqual(
             result["exports"]["lean"],
@@ -122,11 +134,33 @@ class TranslatorTests(unittest.TestCase):
                 "function": "butter",
                 "adverb_count": 1,
                 "modifiers": ["slowly", "carefully"],
+                "modifier_vector": modifier_vector(["slowly", "carefully"]),
                 "arguments": ["John", "toast"],
             }
         )
         self.assertFalse(result["ok"])
         self.assertIn("does not match", result["errors"][0])
+
+    def test_type_checker_rejects_bad_modifier_vector_tail_length(self) -> None:
+        result = check_term(
+            {
+                "kind": "application",
+                "function": "butter",
+                "adverb_count": 2,
+                "modifiers": ["slowly", "carefully"],
+                "modifier_vector": {
+                    "kind": "modifier_vector",
+                    "length": 2,
+                    "items": [
+                        {"modifier": "slowly", "tail_length": 0},
+                        {"modifier": "carefully", "tail_length": 0},
+                    ],
+                },
+                "arguments": ["John", "toast"],
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn("tail_length=0 does not match expected tail length 1", result["errors"][0])
 
     def test_type_checker_rejects_bad_cause_effect(self) -> None:
         result = check_term(
@@ -138,6 +172,7 @@ class TranslatorTests(unittest.TestCase):
                     "function": "break",
                     "adverb_count": 0,
                     "modifiers": [],
+                    "modifier_vector": modifier_vector([]),
                     "arguments": ["John", "vase"],
                 },
             }
@@ -151,6 +186,7 @@ class TranslatorTests(unittest.TestCase):
             "function": "butter",
             "adverb_count": 3,
             "modifiers": ["slowly"],
+            "modifier_vector": modifier_vector(["slowly"]),
             "arguments": ["John", "toast"],
         }
         with self.assertRaisesRegex(ValueError, "Cannot export ill-typed AST"):

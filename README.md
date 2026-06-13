@@ -96,12 +96,14 @@ Parameter with_knife : Adv.
 Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 ```
 
-The generated AST still records the natural-number modifier count and rejects a
-count/vector mismatch. The proof-assistant scaffold now packages the actual
-modifiers into an indexed `ModifierSeq n`, so Coq also checks that the sequence
-passed to `butter n` has length `n`. One lexical constant such as `butter` can
-therefore occur in the same Coq file with zero, two, or three modifiers without
-producing conflicting shallow function declarations.
+The generated AST records both the surface modifier list and a normalized
+`modifier_vector` with explicit tail lengths; it rejects mismatches among the
+natural-number count, the surface list, and the vector. The proof-assistant
+scaffold then packages the same vector into an indexed `ModifierSeq n`, so Coq
+also checks that the sequence passed to `butter n` has length `n`. One lexical
+constant such as `butter` can therefore occur in the same Coq file with zero,
+two, or three modifiers without producing conflicting shallow function
+declarations.
 
 Parsons-style event talk can also be routed through typed replacements. For
 example:
