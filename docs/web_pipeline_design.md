@@ -61,6 +61,8 @@ construction-hygiene, and Coq/Rocq boundary failures.
 `diagnostics.failure_stage` is the machine-readable failure locator. It is
 `null` on successful translations and otherwise one of `input`, `parsing`,
 `type_check`, `construction_hygiene`, or `coq_check`.
+`diagnostics.recovery_hint` is `null` on success and otherwise gives a compact
+next-step suggestion tied to the failure stage.
 
 ## Successful Response
 
@@ -81,6 +83,8 @@ and `not_applicable`. It summarizes `type_check`, `construction_hygiene`, and
 construction-specific hygiene, or the external proof-assistant boundary.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
+The web status line should surface `recovery_hint` directly so users do not
+have to inspect raw JSON before trying the next repair.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

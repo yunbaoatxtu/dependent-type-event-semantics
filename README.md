@@ -151,6 +151,7 @@ three relevant checks for user interfaces:
   "diagnostics": {
     "summary": "translation verified",
     "failure_stage": null,
+    "recovery_hint": null,
     "stages": {
       "type_check": "passed",
       "construction_hygiene": "passed",
@@ -175,6 +176,8 @@ page.
 
 For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 `type_check`, `construction_hygiene`, and `coq_check` failures.
+`diagnostics.recovery_hint` gives a short next-step suggestion for that failure
+stage.
 
 Run the local web demo:
 

@@ -23,6 +23,13 @@ FAILURE_STAGE_LABELS = {
     "construction_hygiene": "construction hygiene",
     "coq_check": "Coq/Rocq validation",
 }
+FAILURE_STAGE_HINTS = {
+    "input": "Enter a non-empty sentence.",
+    "parsing": "Try a sentence with at least a subject and a predicate.",
+    "type_check": "Inspect the dependent-type AST and type-check errors.",
+    "construction_hygiene": "Remove forbidden construction fragments from generated Coq.",
+    "coq_check": "Check the generated Coq scaffold and local Coq/Rocq toolchain.",
+}
 
 
 def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]:
@@ -77,7 +84,13 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     else:
         summary = "translation failed"
         failure_stage = "parsing"
-    return {"summary": summary, "failure_stage": failure_stage, "stages": stages}
+    recovery_hint = FAILURE_STAGE_HINTS.get(failure_stage) if failure_stage else None
+    return {
+        "summary": summary,
+        "failure_stage": failure_stage,
+        "recovery_hint": recovery_hint,
+        "stages": stages,
+    }
 
 
 def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
@@ -103,9 +116,11 @@ def status_detail(result: dict[str, Any]) -> str:
         return result.get("conclusion", "")
     label = FAILURE_STAGE_LABELS.get(failure_stage, failure_stage)
     conclusion = result.get("conclusion", "")
+    hint = result.get("diagnostics", {}).get("recovery_hint")
+    suffix = f" Suggested next step: {hint}" if hint else ""
     if conclusion:
-        return f"{conclusion} Failure stage: {label}."
-    return f"Failure stage: {label}."
+        return f"{conclusion} Failure stage: {label}.{suffix}"
+    return f"Failure stage: {label}.{suffix}"
 
 
 def construction_rule_summary(result: dict[str, Any]) -> str:
