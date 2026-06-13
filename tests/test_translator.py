@@ -1,11 +1,13 @@
 import json
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape
 
 from scripts.check_paper_docx_sync import check_sync, format_sync_errors, markdown_text_blocks
+from scripts.sync_paper_docx import build_docx, markdown_inline_segments
 from translator.dependent_type_event_translator import (
     check_term,
     export_module,
@@ -24,6 +26,7 @@ from web.app import PipelineHandler, analyze_sentence, build_diagnostics, render
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = ROOT / "translator" / "examples"
+WORD_NAMESPACE = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
 
 
 def load_example(name: str) -> dict:
@@ -41,6 +44,26 @@ def write_minimal_docx(path: Path, paragraphs: list[str]) -> None:
     )
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("word/document.xml", document)
+
+
+def python_docx_available() -> bool:
+    try:
+        import docx  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def docx_run_styles(path: Path) -> list[tuple[str, bool]]:
+    with zipfile.ZipFile(path) as archive:
+        document_xml = archive.read("word/document.xml")
+    root = ET.fromstring(document_xml)
+    records: list[tuple[str, bool]] = []
+    for run in root.findall(".//w:r", WORD_NAMESPACE):
+        text = "".join(node.text or "" for node in run.findall(".//w:t", WORD_NAMESPACE))
+        if text:
+            records.append((text, run.find("w:rPr/w:b", WORD_NAMESPACE) is not None))
+    return records
 
 
 def markdown_boundary_fixture() -> tuple[str, list[str]]:
@@ -755,6 +778,56 @@ class TranslatorTests(unittest.TestCase):
             write_minimal_docx(docx_path, expected_blocks)
 
             self.assertEqual(check_sync(markdown_path, docx_path), [])
+
+    def test_sync_paper_docx_splits_inline_bold_segments(self) -> None:
+        self.assertEqual(
+            markdown_inline_segments("Plain **bold** tail"),
+            [("Plain ", False), ("bold", True), (" tail", False)],
+        )
+        self.assertEqual(
+            markdown_inline_segments("**A** and **B**"),
+            [("A", True), (" and ", False), ("B", True)],
+        )
+        self.assertEqual(
+            markdown_inline_segments("Unclosed **bold"),
+            [("Unclosed **bold", False)],
+        )
+
+    @unittest.skipUnless(python_docx_available(), "python-docx is not available")
+    def test_sync_paper_docx_renders_inline_bold_runs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            markdown_path = temp / "paper.md"
+            docx_path = temp / "paper.docx"
+            markdown_path.write_text(
+                (
+                    "# **Title** Plain\n\n"
+                    "_Italic **subtitle**_\n\n"
+                    "## Heading **Bold**\n\n"
+                    "Regular **bold paragraph** tail.\n\n"
+                    "- List **bold item** tail\n\n"
+                    "| Header **One** | Header Two |\n"
+                    "| --- | --- |\n"
+                    "| Body **bold cell** tail | Plain |\n\n"
+                    "**Keywords:** alpha **beta**\n"
+                ),
+                encoding="utf-8",
+            )
+
+            build_docx(markdown_path, docx_path)
+
+            records = docx_run_styles(docx_path)
+            self.assertIn(("Regular ", False), records)
+            self.assertIn(("bold paragraph", True), records)
+            self.assertIn(("List ", False), records)
+            self.assertIn(("bold item", True), records)
+            self.assertIn(("Header ", True), records)
+            self.assertIn(("One", True), records)
+            self.assertIn(("Body ", False), records)
+            self.assertIn(("bold cell", True), records)
+            self.assertIn(("Keywords:", True), records)
+            self.assertIn((" alpha ", False), records)
+            self.assertIn(("beta", True), records)
 
 
 if __name__ == "__main__":

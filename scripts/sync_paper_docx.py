@@ -4,17 +4,14 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 try:
-    from docx import Document
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.shared import Inches, Pt, RGBColor
-except ImportError as exc:  # pragma: no cover - depends on local document tooling.
-    raise SystemExit(
-        "python-docx is required. Run this script with the bundled Codex "
-        "workspace Python runtime or install python-docx."
-    ) from exc
+    from scripts.check_paper_docx_sync import is_table_separator, split_table_row
+except ModuleNotFoundError:  # pragma: no cover - used when run as scripts/sync_paper_docx.py.
+    from check_paper_docx_sync import is_table_separator, split_table_row
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,53 +19,89 @@ DEFAULT_MARKDOWN = ROOT / "paper" / "dependent_type_replacement_for_event_semant
 DEFAULT_DOCX = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.docx"
 
 
-def split_table_row(line: str) -> list[str]:
-    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+@dataclass(frozen=True)
+class DocxTooling:
+    Document: Any
+    WD_ALIGN_PARAGRAPH: Any
+    Inches: Any
+    Pt: Any
+    RGBColor: Any
 
 
-def is_table_separator(line: str) -> bool:
-    cells = split_table_row(line)
-    return bool(cells) and all(set(cell) <= {"-", ":", " "} and "-" in cell for cell in cells)
+def load_docx_tooling() -> DocxTooling:
+    try:
+        from docx import Document
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.shared import Inches, Pt, RGBColor
+    except ImportError as exc:  # pragma: no cover - depends on local document tooling.
+        raise SystemExit(
+            "python-docx is required. Run this script with the bundled Codex "
+            "workspace Python runtime or install python-docx."
+        ) from exc
+    return DocxTooling(Document, WD_ALIGN_PARAGRAPH, Inches, Pt, RGBColor)
 
 
-def apply_base_styles(document: Document) -> None:
+def markdown_inline_segments(text: str) -> list[tuple[str, bool]]:
+    if "**" not in text:
+        return [(text, False)] if text else []
+
+    parts = text.split("**")
+    if len(parts) % 2 == 0:
+        return [(text, False)]
+
+    return [(part, index % 2 == 1) for index, part in enumerate(parts) if part]
+
+
+def add_markdown_runs(
+    paragraph: Any,
+    text: str,
+    *,
+    base_bold: bool = False,
+    italic: bool = False,
+    color: Any | None = None,
+) -> None:
+    for segment, segment_bold in markdown_inline_segments(text):
+        run = paragraph.add_run(segment)
+        if base_bold or segment_bold:
+            run.bold = True
+        if italic:
+            run.italic = True
+        if color is not None:
+            run.font.color.rgb = color
+
+
+def apply_base_styles(document: Any, tooling: DocxTooling) -> None:
     styles = document.styles
     normal = styles["Normal"]
     normal.font.name = "Arial"
-    normal.font.size = Pt(10.5)
-    normal.paragraph_format.space_after = Pt(6)
+    normal.font.size = tooling.Pt(10.5)
+    normal.paragraph_format.space_after = tooling.Pt(6)
     normal.paragraph_format.line_spacing = 1.12
 
     for name, size in [("Heading 1", 15), ("Heading 2", 12.5)]:
         style = styles[name]
         style.font.name = "Arial"
-        style.font.size = Pt(size)
+        style.font.size = tooling.Pt(size)
         style.font.bold = True
-        style.font.color.rgb = RGBColor(43, 110, 171)
-        style.paragraph_format.space_before = Pt(12)
-        style.paragraph_format.space_after = Pt(6)
+        style.font.color.rgb = tooling.RGBColor(43, 110, 171)
+        style.paragraph_format.space_before = tooling.Pt(12)
+        style.paragraph_format.space_after = tooling.Pt(6)
 
     title = styles["Title"]
     title.font.name = "Arial"
-    title.font.size = Pt(16)
+    title.font.size = tooling.Pt(16)
     title.font.bold = True
-    title.font.color.rgb = RGBColor(31, 78, 121)
-    title.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    title.paragraph_format.space_after = Pt(4)
+    title.font.color.rgb = tooling.RGBColor(31, 78, 121)
+    title.paragraph_format.alignment = tooling.WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_after = tooling.Pt(4)
 
 
-def add_keywords(document: Document, line: str) -> None:
+def add_keywords(document: Any, line: str) -> None:
     paragraph = document.add_paragraph()
-    prefix = "**Keywords:**"
-    if line.startswith(prefix):
-        run = paragraph.add_run("Keywords:")
-        run.bold = True
-        paragraph.add_run(line[len(prefix) :])
-    else:
-        paragraph.add_run(line)
+    add_markdown_runs(paragraph, line)
 
 
-def add_markdown_table(document: Document, rows: list[list[str]]) -> None:
+def add_markdown_table(document: Any, rows: list[list[str]], tooling: DocxTooling) -> None:
     if not rows:
         return
     table = document.add_table(rows=1, cols=len(rows[0]))
@@ -76,30 +109,28 @@ def add_markdown_table(document: Document, rows: list[list[str]]) -> None:
     table.autofit = True
     header_cells = table.rows[0].cells
     for index, value in enumerate(rows[0]):
-        header_cells[index].text = value
-        for paragraph in header_cells[index].paragraphs:
-            for run in paragraph.runs:
-                run.bold = True
+        add_markdown_runs(header_cells[index].paragraphs[0], value, base_bold=True)
 
     for row in rows[1:]:
         cells = table.add_row().cells
         for index, value in enumerate(row):
-            cells[index].text = value
+            add_markdown_runs(cells[index].paragraphs[0], value)
 
     for row in table.rows:
         for cell in row.cells:
             for paragraph in cell.paragraphs:
-                paragraph.paragraph_format.space_after = Pt(2)
+                paragraph.paragraph_format.space_after = tooling.Pt(2)
 
 
 def build_docx(markdown_path: Path, docx_path: Path) -> None:
-    document = Document()
+    tooling = load_docx_tooling()
+    document = tooling.Document()
     section = document.sections[0]
-    section.top_margin = Inches(0.9)
-    section.bottom_margin = Inches(0.75)
-    section.left_margin = Inches(0.9)
-    section.right_margin = Inches(0.9)
-    apply_base_styles(document)
+    section.top_margin = tooling.Inches(0.9)
+    section.bottom_margin = tooling.Inches(0.75)
+    section.left_margin = tooling.Inches(0.9)
+    section.right_margin = tooling.Inches(0.9)
+    apply_base_styles(document, tooling)
 
     lines = markdown_path.read_text(encoding="utf-8").splitlines()
     index = 0
@@ -110,16 +141,20 @@ def build_docx(markdown_path: Path, docx_path: Path) -> None:
             continue
 
         if line.startswith("# "):
-            document.add_paragraph(line[2:].strip(), style="Title")
+            paragraph = document.add_paragraph(style="Title")
+            add_markdown_runs(paragraph, line[2:].strip(), base_bold=True)
             index += 1
             continue
 
         if line.startswith("_") and line.endswith("_") and len(line) > 1:
             paragraph = document.add_paragraph()
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = paragraph.add_run(line.strip("_"))
-            run.italic = True
-            run.font.color.rgb = RGBColor(91, 107, 120)
+            paragraph.alignment = tooling.WD_ALIGN_PARAGRAPH.CENTER
+            add_markdown_runs(
+                paragraph,
+                line.strip("_"),
+                italic=True,
+                color=tooling.RGBColor(91, 107, 120),
+            )
             index += 1
             continue
 
@@ -127,7 +162,8 @@ def build_docx(markdown_path: Path, docx_path: Path) -> None:
             heading = line[3:].strip()
             if heading == "Functional replacement map":
                 document.add_page_break()
-            document.add_paragraph(heading, style="Heading 1")
+            paragraph = document.add_paragraph(style="Heading 1")
+            add_markdown_runs(paragraph, heading, base_bold=True)
             index += 1
             continue
 
@@ -138,11 +174,12 @@ def build_docx(markdown_path: Path, docx_path: Path) -> None:
                 if not is_table_separator(current):
                     table_rows.append(split_table_row(current))
                 index += 1
-            add_markdown_table(document, table_rows)
+            add_markdown_table(document, table_rows, tooling)
             continue
 
         if line.startswith("- "):
-            document.add_paragraph(line[2:].strip(), style="List Bullet")
+            paragraph = document.add_paragraph(style="List Bullet")
+            add_markdown_runs(paragraph, line[2:].strip())
             index += 1
             continue
 
@@ -151,12 +188,13 @@ def build_docx(markdown_path: Path, docx_path: Path) -> None:
             index += 1
             continue
 
-        document.add_paragraph(line)
+        paragraph = document.add_paragraph()
+        add_markdown_runs(paragraph, line)
         index += 1
 
     footer = document.sections[0].footer.paragraphs[0]
     footer.text = "Manuscript draft"
-    footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    footer.alignment = tooling.WD_ALIGN_PARAGRAPH.RIGHT
     docx_path.parent.mkdir(parents=True, exist_ok=True)
     document.save(docx_path)
 
