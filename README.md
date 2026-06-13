@@ -218,7 +218,10 @@ as `at_T` can also scope over these existential propositions.
 Each translation result includes both a human-readable `translation` string and
 a structured `ast` object. The AST is the intended next bridge toward a proof
 assistant or a typed semantic checker. The translator also returns a
-`type_check` object that verifies basic AST well-formedness.
+`type_check` object that verifies basic AST well-formedness. Module-level
+export also rejects declaration conflicts, such as reusing the same constant
+name at incompatible types or exporting one shallow function name with
+incompatible signatures.
 
 Run the test suite:
 

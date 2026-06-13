@@ -462,6 +462,28 @@ def modifier_type() -> str:
     return "Adv"
 
 
+def add_constant_declaration(constants: dict[str, str], name: str, type_name: str) -> None:
+    existing = constants.get(name)
+    if existing is not None and existing != type_name:
+        raise ValueError(
+            f"Conflicting export types for constant {name}: {existing} vs {type_name}"
+        )
+    constants[name] = type_name
+
+
+def add_function_declaration(
+    functions: dict[str, tuple[list[str], str]],
+    name: str,
+    signature: tuple[list[str], str],
+) -> None:
+    existing = functions.get(name)
+    if existing is not None and existing != signature:
+        raise ValueError(
+            f"Conflicting export signatures for function {name}: {existing} vs {signature}"
+        )
+    functions[name] = signature
+
+
 def collect_term_declarations(
     term: Term,
     target: str,
@@ -483,9 +505,13 @@ def collect_term_declarations(
             bound_types,
         )
         types.update(argument_type for argument_type in argument_types if argument_type != "Entity")
-        functions[function] = (
-            ["nat" if target == "coq" else "Nat"] + modifier_types + argument_types,
-            application_result_type(function),
+        add_function_declaration(
+            functions,
+            function,
+            (
+                ["nat" if target == "coq" else "Nat"] + modifier_types + argument_types,
+                application_result_type(function),
+            ),
         )
         for value in term["modifiers"]:
             exported = export_atom(value, target)
@@ -494,7 +520,7 @@ def collect_term_declarations(
         for value, argument_type in zip(term["arguments"], argument_types):
             exported = export_atom(value, target)
             if exported not in bound_types:
-                constants.setdefault(exported, argument_type)
+                add_constant_declaration(constants, exported, argument_type)
         return
     if kind == "sigma":
         witness = export_atom(term["witness"], target)
@@ -519,7 +545,7 @@ def collect_term_declarations(
         for value in term["arguments"]:
             exported = export_atom(value, target)
             if exported not in bound_types:
-                constants.setdefault(exported, "Entity")
+                add_constant_declaration(constants, exported, "Entity")
         collect_term_declarations(
             term["body"], target, functions, constants, modifiers, types, bound_types
         )
@@ -528,12 +554,12 @@ def collect_term_declarations(
         for field in ("theme", "source_state", "target_state"):
             exported = export_atom(term[field], target)
             if exported not in bound_types:
-                constants.setdefault(exported, "Entity")
+                add_constant_declaration(constants, exported, "Entity")
         return
     if kind == "cause":
         causer = export_atom(term["causer"], target)
         if causer not in bound_types:
-            constants.setdefault(causer, "Entity")
+            add_constant_declaration(constants, causer, "Entity")
         collect_term_declarations(
             term["effect"], target, functions, constants, modifiers, types, bound_types
         )

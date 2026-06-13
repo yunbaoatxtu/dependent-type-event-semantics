@@ -149,6 +149,30 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Cannot export ill-typed AST"):
             export_term(bad, "lean")
 
+    def test_export_rejects_conflicting_constant_types(self) -> None:
+        read_book = translate(sentence_to_event_semantics("Mary read the book"))
+        book_sits = translate(sentence_to_event_semantics("book sits"))
+        with self.assertRaisesRegex(
+            ValueError,
+            "Conflicting export types for constant book: Readable vs Entity",
+        ):
+            export_module([read_book, book_sits], "coq")
+
+    def test_export_rejects_conflicting_function_signatures(self) -> None:
+        two_modifier_butter = translate(
+            sentence_to_event_semantics("john buttered the toast in the bathroom with a knife")
+        )
+        three_modifier_butter = translate(
+            sentence_to_event_semantics(
+                "john buttered the toast slowly in the bathroom with a knife"
+            )
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "Conflicting export signatures for function butter",
+        ):
+            export_module([two_modifier_butter, three_modifier_butter], "coq")
+
     def test_export_module_contains_declarations_and_examples(self) -> None:
         results = [
             translate(load_example("example_eat_omission.json")),
