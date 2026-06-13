@@ -12,6 +12,7 @@ from translator.dependent_type_event_translator import (
 from translator.natural_language_pipeline import (
     ConstructionRule,
     check_perception_nominalization_ast,
+    check_quantifier_scope_readings,
     check_timed_after_ast,
     check_universal_timed_ast,
     construction_rules,
@@ -607,6 +608,17 @@ class TranslatorTests(unittest.TestCase):
             for binder in reading["scope_order"]:
                 self.assertEqual(binder["predicate_type"], "Entity -> Prop")
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_quantifier_scope_rejects_duplicate_scope_order(self) -> None:
+        result = run_pipeline("some boy loves some girl", require_coq=False)
+        readings = result["ast"]["readings"]
+        readings[1]["scope_order"] = list(readings[0]["scope_order"])
+        type_check = check_quantifier_scope_readings(readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "scope readings must include both subject-wide and object-wide orders",
+            type_check["errors"],
+        )
 
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
         rules = {rule.rule_id: rule for rule in construction_rules()}
