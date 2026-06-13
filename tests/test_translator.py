@@ -202,6 +202,36 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Definition example_1", result["coq_code"])
         self.assertIn("Check example_1.", result["coq_code"])
 
+    def test_omission_exports_lexical_witness_types(self) -> None:
+        read_result = run_pipeline("John read", require_coq=True)
+        self.assertTrue(read_result["ok"])
+        self.assertEqual(
+            read_result["dependent_type_translation"],
+            "Sigma x_theme : Readable. read(0)(john, x_theme)",
+        )
+        self.assertIn("Parameter Readable : Type.", read_result["coq_code"])
+        self.assertIn(
+            "Parameter read : nat -> Entity -> Readable -> Prop.",
+            read_result["coq_code"],
+        )
+        self.assertIn("exists x_theme : Readable", read_result["coq_code"])
+        self.assertNotIn("Parameter x_theme", read_result["coq_code"])
+        self.assertEqual(read_result["coq_check"]["status"], "passed")
+
+        drink_result = run_pipeline("John drank", require_coq=True)
+        self.assertTrue(drink_result["ok"])
+        self.assertEqual(
+            drink_result["dependent_type_translation"],
+            "Sigma x_theme : Drinkable. drink(0)(john, x_theme)",
+        )
+        self.assertIn("Parameter Drinkable : Type.", drink_result["coq_code"])
+        self.assertIn(
+            "Parameter drink : nat -> Entity -> Drinkable -> Prop.",
+            drink_result["coq_code"],
+        )
+        self.assertIn("exists x_theme : Drinkable", drink_result["coq_code"])
+        self.assertEqual(drink_result["coq_check"]["status"], "passed")
+
     def test_natural_language_pipeline_handles_unlisted_sentence(self) -> None:
         result = run_pipeline("Mary admired the painting")
         self.assertTrue(result["ok"])

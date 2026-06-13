@@ -38,6 +38,7 @@ IRREGULAR_VERBS = {
     "loves": "love",
     "broke": "break",
     "broken": "break",
+    "drank": "drink",
     "went": "go",
     "ran": "run",
     "left": "leave",

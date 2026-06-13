@@ -205,6 +205,11 @@ The current prototype has small, testable rules for:
 - event counting with `once`/`twice`/`thrice` or explicit `count`;
 - causal-resultative translation into a typed state transition.
 
+Argument omission preserves the lexical type of the missing object at the Coq
+boundary. For example, `John read` exports an existential witness
+`x_theme : Readable` and `read : nat -> Entity -> Readable -> Prop`; `John drank`
+analogously uses `Drinkable`.
+
 Each translation result includes both a human-readable `translation` string and
 a structured `ast` object. The AST is the intended next bridge toward a proof
 assistant or a typed semantic checker. The translator also returns a
