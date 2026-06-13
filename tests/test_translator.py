@@ -312,10 +312,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some_girl_wide_scope", result["coq_code"])
         self.assertIn("Parameter boy : Entity -> Prop.", result["coq_code"])
         self.assertIn("Parameter girl : Entity -> Prop.", result["coq_code"])
-        self.assertIn("Parameter love : Event -> Prop.", result["coq_code"])
-        self.assertIn("Parameter Agent : Event -> Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter love : Entity -> Entity -> Prop.", result["coq_code"])
+        self.assertIn("love x_boy x_girl", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("exists e : Event", result["coq_code"])
+        self.assertNotIn("Parameter Agent :", result["coq_code"])
+        self.assertNotIn("Parameter Theme :", result["coq_code"])
         self.assertNotIn("Parameter some : Entity.", result["coq_code"])
         self.assertNotIn("Parameter boy : nat ->", result["coq_code"])
+        self.assertIn("no Event argument is introduced", result["type_check"]["note"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
@@ -330,6 +335,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["perception_nominalization"].forbidden_coq_fragments)
         self.assertIn("IN", rules["universal_timed_burning"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter some : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:

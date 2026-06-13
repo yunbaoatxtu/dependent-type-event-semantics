@@ -136,7 +136,9 @@ sentence `some boy loves some girl` is represented as a scope ambiguity with
 two checked readings: one in which the boy existential has wider scope, and one
 in which the girl existential has wider scope. In this path, `boy` and `girl`
 are predicates of type `Entity -> Prop`, while `some` is a quantifier pattern,
-not an entity constant.
+not an entity constant. The checked scaffold also types `love` directly as
+`Entity -> Entity -> Prop`, so the two readings do not smuggle in an `Event`
+type, `Agent`, or `Theme` declaration.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the

@@ -74,7 +74,7 @@ def quantifier_scope_coq(
             f"{subject_noun} x_{subject_noun} /\\ "
             f"exists x_{object_noun} : Entity, "
             f"{object_noun} x_{object_noun} /\\ "
-            f"exists e : Event, {verb} e /\\ Agent e x_{subject_noun} /\\ Theme e x_{object_noun}"
+            f"{verb} x_{subject_noun} x_{object_noun}"
         )
     else:
         name = f"some_{object_noun}_wide_scope"
@@ -83,7 +83,7 @@ def quantifier_scope_coq(
             f"{object_noun} x_{object_noun} /\\ "
             f"exists x_{subject_noun} : Entity, "
             f"{subject_noun} x_{subject_noun} /\\ "
-            f"exists e : Event, {verb} e /\\ Agent e x_{subject_noun} /\\ Theme e x_{object_noun}"
+            f"{verb} x_{subject_noun} x_{object_noun}"
         )
     return f"Definition {name} : Prop := {body}."
 
@@ -103,14 +103,14 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                 "name": f"some_{subject_noun}_wide_scope",
                 "formula": (
                     f"exists x:{subject_noun}. exists y:{object_noun}. "
-                    f"exists e. {verb}(e) and Agent(e,x) and Theme(e,y)"
+                    f"{verb}(x,y)"
                 ),
             },
             {
                 "name": f"some_{object_noun}_wide_scope",
                 "formula": (
                     f"exists y:{object_noun}. exists x:{subject_noun}. "
-                    f"exists e. {verb}(e) and Agent(e,x) and Theme(e,y)"
+                    f"{verb}(x,y)"
                 ),
             },
         ],
@@ -119,12 +119,9 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         [
             "(* Quantifier-scope scaffold for dependent-type event semantics. *)",
             "Parameter Entity : Type.",
-            "Parameter Event : Type.",
             f"Parameter {subject_noun} : Entity -> Prop.",
             f"Parameter {object_noun} : Entity -> Prop.",
-            f"Parameter {verb} : Event -> Prop.",
-            "Parameter Agent : Event -> Entity -> Prop.",
-            "Parameter Theme : Event -> Entity -> Prop.",
+            f"Parameter {verb} : Entity -> Entity -> Prop.",
             "",
             quantifier_scope_coq(subject_noun, verb, object_noun, subject_first=True),
             quantifier_scope_coq(subject_noun, verb, object_noun, subject_first=False),
@@ -150,7 +147,10 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             "ok": True,
             "type": "Prop",
             "errors": [],
-            "note": "Both scope readings are represented; no single reading is forced.",
+            "note": (
+                "Both scope readings are represented with entity predicates "
+                "and a binary relation; no Event argument is introduced."
+            ),
         },
         "coq_code": coq_code,
     }
@@ -396,7 +396,14 @@ def construction_rules() -> list[ConstructionRule]:
             label="Quantifier-scope ambiguity",
             phenomenon="Existential scope ambiguity",
             analyzer=quantifier_scope_pipeline,
-            forbidden_coq_fragments=("Parameter some : Entity.", "Parameter boy : nat ->"),
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+                "Parameter some : Entity.",
+                "Parameter boy : nat ->",
+            ),
         ),
     ]
 
