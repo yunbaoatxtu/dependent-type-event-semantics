@@ -12,6 +12,7 @@ from translator.dependent_type_event_translator import (
 from translator.natural_language_pipeline import (
     ConstructionRule,
     check_perception_nominalization_ast,
+    check_universal_timed_ast,
     construction_rules,
     run_registered_rule,
     run_pipeline,
@@ -496,7 +497,40 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("burn x t -> consume oxygen t", result["coq_code"])
         self.assertNotIn("Parameter Event : Type.", result["coq_code"])
         self.assertNotIn("IN", result["coq_code"])
+        self.assertEqual(
+            result["ast"]["binders"],
+            [{"variable": "x", "type": "Entity"}, {"variable": "t", "type": "Time"}],
+        )
+        self.assertEqual(
+            result["ast"]["antecedent"],
+            {
+                "predicate": "burn",
+                "predicate_type": "Entity -> Time -> Prop",
+                "arguments": ["x", "t"],
+            },
+        )
+        self.assertEqual(
+            result["ast"]["consequent"],
+            {
+                "predicate": "consume",
+                "predicate_type": "Entity -> Time -> Prop",
+                "arguments": ["oxygen", "t"],
+                "theme": {"name": "oxygen", "type": "Entity"},
+            },
+        )
+        self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_universal_timed_burning_rejects_unshared_time_variable(self) -> None:
+        result = run_pipeline("In every burning, oxygen is consumed", require_coq=False)
+        ast = result["ast"]
+        ast["consequent"]["arguments"] = ["oxygen", "t2"]
+        type_check = check_universal_timed_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "forall_time.consequent must share the bound time variable t",
+            type_check["errors"],
+        )
 
     def test_quantifier_scope_ambiguity_some_boy_loves_some_girl(self) -> None:
         result = run_pipeline("some boy loves some girl", require_coq=True)

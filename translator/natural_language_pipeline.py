@@ -460,6 +460,71 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def universal_timed_burning_ast() -> dict[str, Any]:
+    return {
+        "kind": "forall_time",
+        "binders": [
+            {"variable": "x", "type": "Entity"},
+            {"variable": "t", "type": "Time"},
+        ],
+        "antecedent": {
+            "predicate": "burn",
+            "predicate_type": "Entity -> Time -> Prop",
+            "arguments": ["x", "t"],
+        },
+        "consequent": {
+            "predicate": "consume",
+            "predicate_type": "Entity -> Time -> Prop",
+            "arguments": ["oxygen", "t"],
+            "theme": {
+                "name": "oxygen",
+                "type": "Entity",
+            },
+        },
+    }
+
+
+def check_universal_timed_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "forall_time":
+        errors.append("ast.kind must be forall_time")
+
+    binders = ast.get("binders")
+    if not isinstance(binders, list) or len(binders) != 2:
+        errors.append("forall_time.binders must contain Entity and Time binders")
+    else:
+        expected = [{"variable": "x", "type": "Entity"}, {"variable": "t", "type": "Time"}]
+        if binders != expected:
+            errors.append("forall_time.binders must bind x : Entity and t : Time")
+
+    for field in ("antecedent", "consequent"):
+        predicate = ast.get(field)
+        if not isinstance(predicate, dict):
+            errors.append(f"forall_time.{field} must be a predicate object")
+            continue
+        if predicate.get("predicate_type") != "Entity -> Time -> Prop":
+            errors.append(f"forall_time.{field} must have type Entity -> Time -> Prop")
+        args = predicate.get("arguments")
+        if not isinstance(args, list) or len(args) != 2:
+            errors.append(f"forall_time.{field}.arguments must contain entity and time")
+        elif args[1] != "t":
+            errors.append(f"forall_time.{field} must share the bound time variable t")
+
+    consequent = ast.get("consequent")
+    if isinstance(consequent, dict):
+        theme = consequent.get("theme")
+        if not isinstance(theme, dict) or theme.get("type") != "Entity":
+            errors.append("forall_time.consequent.theme must have type Entity")
+        elif theme.get("name") not in consequent.get("arguments", []):
+            errors.append("forall_time.consequent.theme must occur in consequent arguments")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
 def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     if tokens != ["in", "every", "burning", "oxygen", "is", "consumed"]:
@@ -497,23 +562,16 @@ def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
             "burn(x, t) -> consume(oxygen, t)"
         ),
     }
+    ast = universal_timed_burning_ast()
+    type_check = check_universal_timed_ast(ast)
     return {
         "kind": "universal_timed_burning",
         "input_sentence": sentence,
         "event_semantics": event_semantics,
         "dependent_type_translation": event_semantics["typed_replacement"],
-        "ast": {
-            "kind": "forall_time",
-            "domain": "burning",
-            "entity_variable": "x",
-            "time_variable": "t",
-            "antecedent": "burn(x, t)",
-            "consequent": "consume(oxygen, t)",
-        },
+        "ast": ast,
         "type_check": {
-            "ok": True,
-            "type": "Prop",
-            "errors": [],
+            **type_check,
             "note": "Event inclusion is represented as universal quantification over entities and times.",
         },
         "coq_code": coq_code,

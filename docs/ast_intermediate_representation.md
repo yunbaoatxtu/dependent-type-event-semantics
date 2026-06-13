@@ -168,6 +168,40 @@ then mapped into an entity-denoting percept by `E : Prop -> Entity`:
 This prevents the construction from being represented as a hidden event object
 while still giving the perception verb an entity-denoting object.
 
+### `forall_time`
+
+Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
+`In every burning, oxygen is consumed`. Instead of introducing events and
+`IN(e, e')`, the AST binds an entity and a time, then checks two time-indexed
+predicates:
+
+```json
+{
+  "kind": "forall_time",
+  "binders": [
+    {"variable": "x", "type": "Entity"},
+    {"variable": "t", "type": "Time"}
+  ],
+  "antecedent": {
+    "predicate": "burn",
+    "predicate_type": "Entity -> Time -> Prop",
+    "arguments": ["x", "t"]
+  },
+  "consequent": {
+    "predicate": "consume",
+    "predicate_type": "Entity -> Time -> Prop",
+    "arguments": ["oxygen", "t"],
+    "theme": {
+      "name": "oxygen",
+      "type": "Entity"
+    }
+  }
+}
+```
+
+The structural check requires the antecedent and consequent to share the bound
+time variable `t`.
+
 ### `scope_ambiguity`
 
 Represents a construction-specific ambiguity that is not forced through the
@@ -242,6 +276,9 @@ Current type rules:
   type `Entity -> Entity -> Prop`, the embedded predicate has type
   `Entity -> Prop`, the embedded subject is an `Entity`, and the nominalizer has
   type `Prop -> Entity`.
+- `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
+  both the antecedent and consequent have type `Entity -> Time -> Prop` over the
+  shared time variable `t`.
 
 This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being

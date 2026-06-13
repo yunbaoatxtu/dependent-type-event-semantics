@@ -138,8 +138,10 @@ The perception-complement example uses a nominalizing map
 `see : Entity -> Entity -> Prop`, `leave : Entity -> Prop`, and the nominalized
 object produced by `E`, so the construction is type-checked before Coq export.
 The burning example uses universal time quantification:
-`forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Both
-generated Coq scaffolds are checked without introducing an `Event` type.
+`forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
+stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and
+`consume` have type `Entity -> Time -> Prop` and share the same time variable.
+Both generated Coq scaffolds are checked without introducing an `Event` type.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments

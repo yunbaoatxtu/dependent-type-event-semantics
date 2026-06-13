@@ -160,8 +160,10 @@ event argument. The AST records the nominalized proposition explicitly:
 `E : Prop -> Entity` from `leave John : Prop`. `In every burning, oxygen is
 consumed` is rendered as
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`; the checked
-scaffold therefore avoids both an `Event` type and an event-inclusion predicate
-such as `IN`.
+AST stores the `Entity` and `Time` binders and verifies that `burn` and
+`consume` are both typed as `Entity -> Time -> Prop` over the shared time
+variable. The scaffold therefore avoids both an `Event` type and an
+event-inclusion predicate such as `IN`.
 
 The pasted legacy browser prototype from the earlier webpage is useful as a
 design sketch: it already distinguished nested perception cases from temporal
