@@ -422,6 +422,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Construction Rule", page)
         self.assertIn("No registered construction rule matched", page)
 
+    def test_web_page_status_shows_parser_failure_stage(self) -> None:
+        page = render_page("John")
+        self.assertIn("Needs attention", page)
+        self.assertIn("Failure stage: natural-language parsing.", page)
+
+    def test_web_page_status_shows_empty_input_failure_stage(self) -> None:
+        page = render_page("  ")
+        self.assertIn("Needs attention", page)
+        self.assertIn("Failure stage: empty input.", page)
+
     def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
         diagnostics = build_diagnostics(
             {

@@ -16,6 +16,13 @@ from translator.natural_language_pipeline import run_pipeline
 
 
 DEFAULT_SENTENCE = "John knocked twice"
+FAILURE_STAGE_LABELS = {
+    "input": "empty input",
+    "parsing": "natural-language parsing",
+    "type_check": "dependent-type checking",
+    "construction_hygiene": "construction hygiene",
+    "coq_check": "Coq/Rocq validation",
+}
 
 
 def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]:
@@ -88,6 +95,17 @@ def status_label(result: dict[str, Any]) -> str:
             return "Internally checked; Coq/Rocq skipped"
         return "Translation verified"
     return "Needs attention"
+
+
+def status_detail(result: dict[str, Any]) -> str:
+    failure_stage = result.get("diagnostics", {}).get("failure_stage")
+    if not failure_stage:
+        return result.get("conclusion", "")
+    label = FAILURE_STAGE_LABELS.get(failure_stage, failure_stage)
+    conclusion = result.get("conclusion", "")
+    if conclusion:
+        return f"{conclusion} Failure stage: {label}."
+    return f"Failure stage: {label}."
 
 
 def construction_rule_summary(result: dict[str, Any]) -> str:
@@ -276,7 +294,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       <label><input name="require_coq" type="checkbox" value="1"{checked}> require Coq/Rocq</label>
       <button type="submit">Analyze</button>
     </form>
-    <div class="status">{html.escape(status_label(result))}: {html.escape(result.get("conclusion", ""))}</div>
+    <div class="status">{html.escape(status_label(result))}: {html.escape(status_detail(result))}</div>
     <div class="grid">
       {panel("Event Semantics", event_semantics)}
       {panel("Dependent-Type Translation", dependent)}
