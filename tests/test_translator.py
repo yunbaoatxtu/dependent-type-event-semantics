@@ -229,6 +229,29 @@ class TranslatorTests(unittest.TestCase):
             result["errors"],
         )
 
+    def test_type_checker_rejects_role_frame_label_order_mismatch(self) -> None:
+        result = check_term(
+            {
+                "kind": "application",
+                "function": "butter",
+                "adverb_count": 0,
+                "modifiers": [],
+                "modifier_vector": modifier_vector([]),
+                "arguments": ["John", "toast"],
+                "role_frame": role_frame(
+                    [
+                        {"role": "Theme", "value": "John", "type": "Entity", "source": "explicit"},
+                        {"role": "Agent", "value": "toast", "type": "Entity", "source": "explicit"},
+                    ]
+                ),
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "ast: application.role_frame roles must follow canonical thematic order",
+            result["errors"],
+        )
+
     def test_type_checker_rejects_bad_cause_effect(self) -> None:
         result = check_term(
             {

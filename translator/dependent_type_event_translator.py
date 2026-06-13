@@ -190,6 +190,12 @@ def role_frame(entries: list[dict[str, str]]) -> Term:
     }
 
 
+def role_order_key(role: str) -> tuple[int, int | str]:
+    if role in ROLE_ORDER:
+        return (0, ROLE_ORDER.index(role))
+    return (1, role)
+
+
 def application_term(
     verb: str,
     adverbs: list[str],
@@ -380,6 +386,7 @@ def check_term(term: Term) -> TypeCheck:
                     errors.append(f"{path}: application.role_frame.roles must be a list")
                 else:
                     seen_roles: set[str] = set()
+                    role_labels: list[str] = []
                     for index, role_entry in enumerate(roles):
                         if not isinstance(role_entry, dict):
                             errors.append(
@@ -401,6 +408,7 @@ def check_term(term: Term) -> TypeCheck:
                             )
                         else:
                             seen_roles.add(role)
+                            role_labels.append(role)
                         if not isinstance(value, str) or not value:
                             errors.append(
                                 f"{path}: application.role_frame.roles[{index}].value "
@@ -422,6 +430,12 @@ def check_term(term: Term) -> TypeCheck:
                         errors.append(
                             f"{path}: application.role_frame values do not match "
                             "application.arguments"
+                        )
+                    expected_role_labels = sorted(role_labels, key=role_order_key)
+                    if role_labels != expected_role_labels:
+                        errors.append(
+                            f"{path}: application.role_frame roles must follow canonical "
+                            "thematic order"
                         )
             if not isinstance(adverb_count, int) or adverb_count < 0:
                 errors.append(f"{path}: application.adverb_count must be a natural number")
