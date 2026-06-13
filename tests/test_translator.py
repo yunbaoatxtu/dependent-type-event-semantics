@@ -356,6 +356,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
         self.assertIsNone(result["diagnostics"]["failure_stage"])
         self.assertIsNone(result["diagnostics"]["recovery_hint"])
+        self.assertEqual(result["diagnostics"]["recovery_actions"], [])
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
 
@@ -366,6 +367,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
         self.assertEqual(result["diagnostics"]["failure_stage"], "input")
         self.assertEqual(result["diagnostics"]["recovery_hint"], "Enter a non-empty sentence.")
+        self.assertEqual(result["diagnostics"]["recovery_actions"][0]["kind"], "edit_input")
+        self.assertEqual(result["diagnostics"]["recovery_actions"][0]["label"], "Enter a sentence")
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
 
     def test_web_analyze_sentence_reports_parser_failure_stage(self) -> None:
@@ -377,6 +380,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             result["diagnostics"]["recovery_hint"],
             "Try a sentence with at least a subject and a predicate.",
+        )
+        self.assertEqual(result["diagnostics"]["recovery_actions"][0]["kind"], "revise_sentence")
+        self.assertEqual(
+            result["diagnostics"]["recovery_actions"][0]["label"],
+            "Add subject and predicate",
         )
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
 
@@ -391,6 +399,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
         self.assertIsNone(result["diagnostics"]["failure_stage"])
         self.assertIsNone(result["diagnostics"]["recovery_hint"])
+        self.assertEqual(result["diagnostics"]["recovery_actions"], [])
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
@@ -403,6 +412,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
         self.assertEqual(result["diagnostics"]["failure_stage"], "input")
         self.assertEqual(result["diagnostics"]["recovery_hint"], "Enter a non-empty sentence.")
+        self.assertEqual(result["diagnostics"]["recovery_actions"][0]["kind"], "edit_input")
 
     def test_web_page_contains_pipeline_panels(self) -> None:
         page = render_page("John knocked twice")
@@ -457,6 +467,8 @@ class TranslatorTests(unittest.TestCase):
             diagnostics["recovery_hint"],
             "Remove forbidden construction fragments from generated Coq.",
         )
+        self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "inspect_coq")
+        self.assertEqual(diagnostics["recovery_actions"][0]["label"], "Remove forbidden fragments")
         self.assertEqual(diagnostics["stages"]["type_check"], "passed")
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "failed")
         self.assertEqual(diagnostics["stages"]["coq_check"], "failed")
@@ -476,6 +488,8 @@ class TranslatorTests(unittest.TestCase):
             diagnostics["recovery_hint"],
             "Inspect the dependent-type AST and type-check errors.",
         )
+        self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "inspect_ast")
+        self.assertEqual(diagnostics["recovery_actions"][0]["label"], "Inspect typed AST")
         self.assertEqual(diagnostics["stages"]["type_check"], "failed")
         self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
 
@@ -539,15 +553,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"summary": "translation verified"', readme)
         self.assertIn('"failure_stage": null', readme)
         self.assertIn('"recovery_hint": null', readme)
+        self.assertIn('"recovery_actions": []', readme)
         self.assertIn('"type_check": "passed"', readme)
         self.assertIn('"construction_hygiene": "passed"', readme)
         self.assertIn('"coq_check": "passed"', readme)
         self.assertIn("`diagnostics.failure_stage` distinguishes", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
+        self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
         self.assertIn("`diagnostics.recovery_hint` is `null` on success", web_design)
+        self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
+        self.assertIn("`kind`, `label`, and `detail` fields", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
 
     def test_docs_explain_api_contract(self) -> None:
@@ -564,6 +582,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("failure, it must still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
         self.assertIn("The web status line should surface `recovery_hint` directly", web_design)
+        self.assertIn("Machine clients should prefer `recovery_actions`", web_design)
 
 
 if __name__ == "__main__":

@@ -30,6 +30,43 @@ FAILURE_STAGE_HINTS = {
     "construction_hygiene": "Remove forbidden construction fragments from generated Coq.",
     "coq_check": "Check the generated Coq scaffold and local Coq/Rocq toolchain.",
 }
+FAILURE_STAGE_ACTIONS = {
+    "input": [
+        {
+            "kind": "edit_input",
+            "label": "Enter a sentence",
+            "detail": "Type a non-empty natural-language sentence before analyzing.",
+        }
+    ],
+    "parsing": [
+        {
+            "kind": "revise_sentence",
+            "label": "Add subject and predicate",
+            "detail": "Use a sentence with at least a recognizable subject and predicate.",
+        }
+    ],
+    "type_check": [
+        {
+            "kind": "inspect_ast",
+            "label": "Inspect typed AST",
+            "detail": "Compare the generated AST with the dependent-type checker errors.",
+        }
+    ],
+    "construction_hygiene": [
+        {
+            "kind": "inspect_coq",
+            "label": "Remove forbidden fragments",
+            "detail": "Regenerate Coq without fragments banned by the matched construction rule.",
+        }
+    ],
+    "coq_check": [
+        {
+            "kind": "inspect_coq",
+            "label": "Check Coq/Rocq scaffold",
+            "detail": "Inspect declarations and verify the local Coq/Rocq toolchain is available.",
+        }
+    ],
+}
 
 
 def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]:
@@ -51,6 +88,10 @@ def check_status(ok: Any) -> str:
     if ok is None:
         return "skipped"
     return "failed"
+
+
+def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
+    return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
 
 def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
@@ -89,6 +130,7 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "summary": summary,
         "failure_stage": failure_stage,
         "recovery_hint": recovery_hint,
+        "recovery_actions": recovery_actions_for(failure_stage),
         "stages": stages,
     }
 
