@@ -38,46 +38,45 @@ OMITTED_THEME_TYPES = {
     "read": "Readable",
     "drink": "Drinkable",
 }
+
+
+@dataclass(frozen=True)
+class StateLexiconEntry:
+    scale: str
+    default_source_state: str | None = None
+    allow_unknown_source: bool = False
+
+
+STATE_LEXICON = {
+    "alive": StateLexiconEntry("life_scale", default_source_state="dead"),
+    "broken": StateLexiconEntry("integrity_scale", default_source_state="intact"),
+    "clean": StateLexiconEntry("cleanliness_scale", default_source_state="dirty"),
+    "closed": StateLexiconEntry("access_scale", default_source_state="open"),
+    "dead": StateLexiconEntry("life_scale", default_source_state="alive"),
+    "dirty": StateLexiconEntry("cleanliness_scale", default_source_state="clean"),
+    "dry": StateLexiconEntry("moisture_scale", default_source_state="wet"),
+    "empty": StateLexiconEntry("content_scale", default_source_state="full"),
+    "flat": StateLexiconEntry("shape_scale", default_source_state="not_flat"),
+    "frozen": StateLexiconEntry("phase_scale", default_source_state="liquid"),
+    "full": StateLexiconEntry("content_scale", default_source_state="empty"),
+    "intact": StateLexiconEntry("integrity_scale"),
+    "liquid": StateLexiconEntry("phase_scale", default_source_state="solid"),
+    "melted": StateLexiconEntry("phase_scale", default_source_state="solid"),
+    "not_flat": StateLexiconEntry("shape_scale", default_source_state="flat"),
+    "open": StateLexiconEntry("access_scale", default_source_state="closed"),
+    "red": StateLexiconEntry("color_scale", allow_unknown_source=True),
+    "round": StateLexiconEntry("shape_scale", allow_unknown_source=True),
+    "solid": StateLexiconEntry("phase_scale", default_source_state="liquid"),
+    "straight": StateLexiconEntry("shape_scale", allow_unknown_source=True),
+    "wet": StateLexiconEntry("moisture_scale", default_source_state="dry"),
+}
 STATE_SCALE_BY_STATE = {
-    "alive": "life_scale",
-    "broken": "integrity_scale",
-    "clean": "cleanliness_scale",
-    "closed": "access_scale",
-    "dead": "life_scale",
-    "dirty": "cleanliness_scale",
-    "dry": "moisture_scale",
-    "empty": "content_scale",
-    "flat": "shape_scale",
-    "frozen": "phase_scale",
-    "full": "content_scale",
-    "intact": "integrity_scale",
-    "liquid": "phase_scale",
-    "melted": "phase_scale",
-    "open": "access_scale",
-    "not_flat": "shape_scale",
-    "red": "color_scale",
-    "round": "shape_scale",
-    "solid": "phase_scale",
-    "straight": "shape_scale",
-    "wet": "moisture_scale",
+    state: entry.scale for state, entry in STATE_LEXICON.items()
 }
 SOURCE_STATE_BY_TARGET_STATE = {
-    "alive": "dead",
-    "broken": "intact",
-    "clean": "dirty",
-    "closed": "open",
-    "dead": "alive",
-    "dirty": "clean",
-    "dry": "wet",
-    "empty": "full",
-    "flat": "not_flat",
-    "frozen": "liquid",
-    "full": "empty",
-    "liquid": "solid",
-    "melted": "solid",
-    "open": "closed",
-    "solid": "liquid",
-    "wet": "dry",
+    state: entry.default_source_state
+    for state, entry in STATE_LEXICON.items()
+    if entry.default_source_state is not None
 }
 
 
@@ -307,11 +306,45 @@ def time_term(atom: Atom, body: Term) -> Term:
 def infer_state_scale(state: str) -> str:
     if state == "_":
         return "unknown_scale"
-    return STATE_SCALE_BY_STATE.get(state, f"{state}_scale")
+    entry = STATE_LEXICON.get(state)
+    if entry is not None:
+        return entry.scale
+    return f"{state}_scale"
 
 
 def infer_source_state(target_state: str) -> str:
-    return SOURCE_STATE_BY_TARGET_STATE.get(target_state, "_")
+    entry = STATE_LEXICON.get(target_state)
+    if entry is None or entry.default_source_state is None:
+        return "_"
+    return entry.default_source_state
+
+
+def state_lexicon_metadata(state: str) -> dict[str, Any]:
+    entry = STATE_LEXICON.get(state)
+    if entry is None:
+        return {
+            "state": state,
+            "scale": infer_state_scale(state),
+            "default_source_state": None,
+            "source_policy": "derived_scale_no_known_prestate",
+        }
+    if entry.default_source_state is not None:
+        return {
+            "state": state,
+            "scale": entry.scale,
+            "default_source_state": entry.default_source_state,
+            "source_policy": "lexical_prestate",
+        }
+    return {
+        "state": state,
+        "scale": entry.scale,
+        "default_source_state": None,
+        "source_policy": (
+            "unknown_source_allowed"
+            if entry.allow_unknown_source
+            else "source_state_only"
+        ),
+    }
 
 
 def transition_term(theme: str, source_state: str, target_state: str) -> Term:
@@ -1106,6 +1139,9 @@ def translate(data: dict[str, Any]) -> dict[str, Any]:
         "adverbs": analysis.adverbs,
         "time_operators": [atom.pred for atom in analysis.times],
         "result_states": [atom.args[1] for atom in analysis.results],
+        "result_state_lexicon": [
+            state_lexicon_metadata(atom.args[1]) for atom in analysis.results
+        ],
         "counts": analysis.counts,
         "omitted_arguments": (
             [{"role": "Theme", "witness": omitted_theme[0], "type": omitted_theme[1]}]

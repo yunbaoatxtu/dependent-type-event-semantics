@@ -3,11 +3,15 @@ import unittest
 from pathlib import Path
 
 from translator.dependent_type_event_translator import (
+    SOURCE_STATE_BY_TARGET_STATE,
+    STATE_LEXICON,
+    STATE_SCALE_BY_STATE,
     check_term,
     export_module,
     export_term,
     modifier_vector,
     role_frame,
+    state_lexicon_metadata,
     translate,
 )
 from translator.natural_language_pipeline import (
@@ -140,6 +144,17 @@ class TranslatorTests(unittest.TestCase):
         result = translate(load_example("example_break_result.json"))
         self.assertEqual(result["result_states"], ["broken"])
         self.assertEqual(
+            result["result_state_lexicon"],
+            [
+                {
+                    "state": "broken",
+                    "scale": "integrity_scale",
+                    "default_source_state": "intact",
+                    "source_policy": "lexical_prestate",
+                }
+            ],
+        )
+        self.assertEqual(
             result["translation"],
             "Cause(John, Transition(vase, integrity_scale, intact, broken))",
         )
@@ -176,6 +191,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
 
+    def test_state_lexicon_is_structured_and_consistent(self) -> None:
+        self.assertEqual(STATE_LEXICON["broken"].scale, "integrity_scale")
+        self.assertEqual(STATE_LEXICON["broken"].default_source_state, "intact")
+        self.assertEqual(STATE_SCALE_BY_STATE["flat"], "shape_scale")
+        self.assertEqual(SOURCE_STATE_BY_TARGET_STATE["flat"], "not_flat")
+        self.assertNotIn("red", SOURCE_STATE_BY_TARGET_STATE)
+        self.assertEqual(
+            state_lexicon_metadata("red"),
+            {
+                "state": "red",
+                "scale": "color_scale",
+                "default_source_state": None,
+                "source_policy": "unknown_source_allowed",
+            },
+        )
+
+        for target_state, source_state in SOURCE_STATE_BY_TARGET_STATE.items():
+            with self.subTest(target_state=target_state):
+                self.assertIn(source_state, STATE_LEXICON)
+                self.assertEqual(
+                    STATE_LEXICON[source_state].scale,
+                    STATE_LEXICON[target_state].scale,
+                )
+
     def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
         formula = sentence_to_event_semantics("John hammered the metal flat")
         self.assertIn({"pred": "Theme", "args": ["e", "metal"]}, formula["body"]["and"])
@@ -186,6 +225,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             result["dependent_type_translation"],
             "Cause(john, Transition(metal, shape_scale, not_flat, flat))",
+        )
+        self.assertEqual(
+            result["result_state_lexicon"],
+            [
+                {
+                    "state": "flat",
+                    "scale": "shape_scale",
+                    "default_source_state": "not_flat",
+                    "source_policy": "lexical_prestate",
+                }
+            ],
         )
         self.assertEqual(result["ast"]["effect"]["state_scale"], "shape_scale")
         self.assertEqual(result["ast"]["effect"]["source_state"], "not_flat")
@@ -204,6 +254,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             painted["dependent_type_translation"],
             "Cause(mary, Transition(door, color_scale, _, red))",
+        )
+        self.assertEqual(
+            painted["result_state_lexicon"],
+            [
+                {
+                    "state": "red",
+                    "scale": "color_scale",
+                    "default_source_state": None,
+                    "source_policy": "unknown_source_allowed",
+                }
+            ],
         )
         self.assertEqual(painted["ast"]["effect"]["source_state"], "_")
         self.assertIn("Parameter color_scale : StateScale.", painted["coq_code"])
@@ -1221,11 +1282,14 @@ class TranslatorTests(unittest.TestCase):
         web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
         self.assertIn("/api/analyze?sentence=Mary+saw+John+leave&require_coq=1", readme)
         self.assertIn("`sentence` parameter carries the natural-language input", readme)
+        self.assertIn("`result_state_lexicon`", readme)
         self.assertIn("`construction_rule`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
         self.assertIn("`dependent_type_translation`", web_design)
+        self.assertIn("`result_state_lexicon`", web_design)
+        self.assertIn("`source_policy`", web_design)
         self.assertIn("`construction_hygiene`", web_design)
         self.assertIn("failure, it must still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)

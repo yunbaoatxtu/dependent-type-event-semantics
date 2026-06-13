@@ -157,6 +157,19 @@ also supplies the source state: `broken` is reached from `intact`, `flat` from
 safe lexical pre-state, such as the color state `red`, still export `_` as
 `unknown_state`.
 
+The same information is exposed as `result_state_lexicon` in pipeline output:
+
+```json
+[
+  {
+    "state": "flat",
+    "scale": "shape_scale",
+    "default_source_state": "not_flat",
+    "source_policy": "lexical_prestate"
+  }
+]
+```
+
 ### `timed_after`
 
 Represents the Luo-Shi-style replacement for Parsons' temporal event-ordering

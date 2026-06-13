@@ -1002,6 +1002,7 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
             "input_sentence": sentence,
             "event_semantics": event_semantics,
             "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
             "ast": translation["ast"],
             "type_check": translation["type_check"],
             "coq_code": coq_code,

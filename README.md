@@ -201,9 +201,9 @@ GET /api/analyze?sentence=Mary+saw+John+leave&require_coq=1
 The `sentence` parameter carries the natural-language input. `require_coq=1`
 asks the server to run the external Coq/Rocq boundary check when the toolchain
 is available. The response includes the same event-semantics JSON,
-dependent-type rendering, generated Coq, `construction_rule`,
-`construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
-page.
+dependent-type rendering, generated Coq, `result_state_lexicon`,
+`construction_rule`, `construction_hygiene`, `coq_check`, and `diagnostics`
+fields used by the web page.
 
 For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 `type_check`, `construction_hygiene`, and `coq_check` failures.
@@ -249,6 +249,12 @@ opposite or pre-state, the translator supplies it as the transition source;
 otherwise the source remains `unknown_state`. The same state-scale lexicon
 covers common dimensions such as integrity, shape, access, phase, moisture,
 fullness, color, cleanliness, and life status.
+Internally this is a structured `StateLexiconEntry` table rather than two
+independent dictionaries. Each known result state records its scale, optional
+default source state, and whether an unknown source is explicitly allowed. The
+pipeline exposes the same audit trail in `result_state_lexicon`, so a caller can
+see, for example, that `flat` uses the lexical pre-state `not_flat`, while
+`red` keeps an unknown source.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness
