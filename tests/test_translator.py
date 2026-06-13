@@ -7,6 +7,7 @@ from translator.dependent_type_event_translator import (
     export_module,
     export_term,
     modifier_vector,
+    role_frame,
     translate,
 )
 from translator.natural_language_pipeline import (
@@ -43,6 +44,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "time")
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["modifiers"], ["slowly", "in(bathroom)"])
+        self.assertEqual(
+            result["ast"]["body"]["role_frame"],
+            {
+                "kind": "role_frame",
+                "roles": [
+                    {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                    {"role": "Theme", "value": "toast", "type": "Entity", "source": "explicit"},
+                ],
+            },
+        )
         self.assertEqual(
             result["ast"]["body"]["modifier_vector"],
             {
@@ -96,6 +107,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "sigma")
         self.assertEqual(result["ast"]["body"]["kind"], "application")
         self.assertEqual(result["ast"]["body"]["arguments"], ["John", "x_theme"])
+        self.assertEqual(
+            result["ast"]["body"]["role_frame"],
+            {
+                "kind": "role_frame",
+                "roles": [
+                    {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                    {"role": "Theme", "value": "x_theme", "type": "Food", "source": "omitted"},
+                ],
+            },
+        )
         self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(
             result["exports"]["lean"],
@@ -125,6 +146,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["ast"]["kind"], "cause")
         self.assertEqual(result["ast"]["effect"]["kind"], "transition")
         self.assertEqual(result["ast"]["activity"]["function"], "break")
+        self.assertEqual(
+            result["ast"]["activity"]["role_frame"]["roles"],
+            [
+                {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                {"role": "Theme", "value": "vase", "type": "Entity", "source": "explicit"},
+            ],
+        )
         self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(
             result["exports"]["coq"],
@@ -140,6 +168,12 @@ class TranslatorTests(unittest.TestCase):
                 "modifiers": ["slowly", "carefully"],
                 "modifier_vector": modifier_vector(["slowly", "carefully"]),
                 "arguments": ["John", "toast"],
+                "role_frame": role_frame(
+                    [
+                        {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                        {"role": "Theme", "value": "toast", "type": "Entity", "source": "explicit"},
+                    ]
+                ),
             }
         )
         self.assertFalse(result["ok"])
@@ -161,10 +195,39 @@ class TranslatorTests(unittest.TestCase):
                     ],
                 },
                 "arguments": ["John", "toast"],
+                "role_frame": role_frame(
+                    [
+                        {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                        {"role": "Theme", "value": "toast", "type": "Entity", "source": "explicit"},
+                    ]
+                ),
             }
         )
         self.assertFalse(result["ok"])
         self.assertIn("tail_length=0 does not match expected tail length 1", result["errors"][0])
+
+    def test_type_checker_rejects_role_frame_argument_mismatch(self) -> None:
+        result = check_term(
+            {
+                "kind": "application",
+                "function": "butter",
+                "adverb_count": 0,
+                "modifiers": [],
+                "modifier_vector": modifier_vector([]),
+                "arguments": ["John", "toast"],
+                "role_frame": role_frame(
+                    [
+                        {"role": "Agent", "value": "toast", "type": "Entity", "source": "explicit"},
+                        {"role": "Theme", "value": "John", "type": "Entity", "source": "explicit"},
+                    ]
+                ),
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "ast: application.role_frame values do not match application.arguments",
+            result["errors"],
+        )
 
     def test_type_checker_rejects_bad_cause_effect(self) -> None:
         result = check_term(
@@ -178,6 +241,12 @@ class TranslatorTests(unittest.TestCase):
                     "modifiers": [],
                     "modifier_vector": modifier_vector([]),
                     "arguments": ["John", "vase"],
+                    "role_frame": role_frame(
+                        [
+                            {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                            {"role": "Theme", "value": "vase", "type": "Entity", "source": "explicit"},
+                        ]
+                    ),
                 },
             }
         )
@@ -192,6 +261,12 @@ class TranslatorTests(unittest.TestCase):
             "modifiers": ["slowly"],
             "modifier_vector": modifier_vector(["slowly"]),
             "arguments": ["John", "toast"],
+            "role_frame": role_frame(
+                [
+                    {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                    {"role": "Theme", "value": "toast", "type": "Entity", "source": "explicit"},
+                ]
+            ),
         }
         with self.assertRaisesRegex(ValueError, "Cannot export ill-typed AST"):
             export_term(bad, "lean")

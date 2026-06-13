@@ -142,6 +142,20 @@ def ordered_arguments(roles: dict[str, str]) -> list[str]:
     return args
 
 
+def ordered_role_entries(roles: dict[str, str]) -> list[dict[str, str]]:
+    entries: list[dict[str, str]] = []
+    for role in ROLE_ORDER:
+        if role in roles:
+            entries.append(
+                {"role": role, "value": roles[role], "type": "Entity", "source": "explicit"}
+            )
+    for role in sorted(set(roles) - set(ROLE_ORDER)):
+        entries.append(
+            {"role": role, "value": roles[role], "type": "Entity", "source": "explicit"}
+        )
+    return entries
+
+
 def render_modifier(atom: Atom) -> str:
     rest = ", ".join(atom.args[1:])
     return f"{atom.pred}({rest})" if rest else atom.pred
@@ -169,7 +183,19 @@ def modifier_vector(adverbs: list[str]) -> Term:
     }
 
 
-def application_term(verb: str, adverbs: list[str], args: list[str]) -> Term:
+def role_frame(entries: list[dict[str, str]]) -> Term:
+    return {
+        "kind": "role_frame",
+        "roles": entries,
+    }
+
+
+def application_term(
+    verb: str,
+    adverbs: list[str],
+    args: list[str],
+    role_entries: list[dict[str, str]],
+) -> Term:
     return {
         "kind": "application",
         "function": verb,
@@ -177,6 +203,7 @@ def application_term(verb: str, adverbs: list[str], args: list[str]) -> Term:
         "modifiers": adverbs,
         "modifier_vector": modifier_vector(adverbs),
         "arguments": args,
+        "role_frame": role_frame(role_entries),
     }
 
 
@@ -261,6 +288,7 @@ def check_term(term: Term) -> TypeCheck:
             modifiers = current.get("modifiers")
             vector = current.get("modifier_vector")
             arguments = current.get("arguments")
+            frame = current.get("role_frame")
             adverb_count = current.get("adverb_count")
             if not isinstance(current.get("function"), str) or not current["function"]:
                 errors.append(f"{path}: application.function must be a non-empty string")
@@ -335,8 +363,66 @@ def check_term(term: Term) -> TypeCheck:
                             f"{item.get('tail_length')} does not match expected "
                             f"tail length {expected_tail}"
                         )
-            if not isinstance(arguments, list) or not all(isinstance(x, str) for x in arguments):
+            valid_arguments = isinstance(arguments, list) and all(
+                isinstance(x, str) for x in arguments
+            )
+            if not valid_arguments:
                 errors.append(f"{path}: application.arguments must be a list of strings")
+                arguments = []
+            frame_values: list[str] = []
+            if not isinstance(frame, dict):
+                errors.append(f"{path}: application.role_frame must be a role_frame object")
+            else:
+                if frame.get("kind") != "role_frame":
+                    errors.append(f"{path}: application.role_frame.kind must be role_frame")
+                roles = frame.get("roles")
+                if not isinstance(roles, list):
+                    errors.append(f"{path}: application.role_frame.roles must be a list")
+                else:
+                    seen_roles: set[str] = set()
+                    for index, role_entry in enumerate(roles):
+                        if not isinstance(role_entry, dict):
+                            errors.append(
+                                f"{path}: application.role_frame.roles[{index}] must be an object"
+                            )
+                            continue
+                        role = role_entry.get("role")
+                        value = role_entry.get("value")
+                        role_type = role_entry.get("type")
+                        source = role_entry.get("source", "explicit")
+                        if not isinstance(role, str) or not role:
+                            errors.append(
+                                f"{path}: application.role_frame.roles[{index}].role "
+                                "must be a non-empty string"
+                            )
+                        elif role in seen_roles:
+                            errors.append(
+                                f"{path}: application.role_frame has duplicate role {role}"
+                            )
+                        else:
+                            seen_roles.add(role)
+                        if not isinstance(value, str) or not value:
+                            errors.append(
+                                f"{path}: application.role_frame.roles[{index}].value "
+                                "must be a non-empty string"
+                            )
+                        else:
+                            frame_values.append(value)
+                        if not isinstance(role_type, str) or not role_type:
+                            errors.append(
+                                f"{path}: application.role_frame.roles[{index}].type "
+                                "must be a non-empty string"
+                            )
+                        if source not in {"explicit", "omitted"}:
+                            errors.append(
+                                f"{path}: application.role_frame.roles[{index}].source "
+                                "must be explicit or omitted"
+                            )
+                    if valid_arguments and frame_values != arguments:
+                        errors.append(
+                            f"{path}: application.role_frame values do not match "
+                            "application.arguments"
+                        )
             if not isinstance(adverb_count, int) or adverb_count < 0:
                 errors.append(f"{path}: application.adverb_count must be a natural number")
             elif adverb_count != len(modifiers):
@@ -825,12 +911,21 @@ def resultative_term(analysis: EventAnalysis, base_activity: Term) -> Term:
 def translate(data: dict[str, Any]) -> dict[str, Any]:
     analysis = analyze_event_formula(data)
     args = ordered_arguments(analysis.roles)
+    role_entries = ordered_role_entries(analysis.roles)
     omitted_theme = infer_omitted_theme(analysis.verb, analysis.roles)
     if omitted_theme is not None:
         args = args + [omitted_theme[0]]
+        role_entries = role_entries + [
+            {
+                "role": "Theme",
+                "value": omitted_theme[0],
+                "type": omitted_theme[1],
+                "source": "omitted",
+            }
+        ]
     n = len(analysis.adverbs)
 
-    proposition_ast = application_term(analysis.verb, analysis.adverbs, args)
+    proposition_ast = application_term(analysis.verb, analysis.adverbs, args, role_entries)
     proposition_ast = resultative_term(analysis, proposition_ast)
     if omitted_theme is not None:
         witness, witness_type = omitted_theme

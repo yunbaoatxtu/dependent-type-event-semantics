@@ -26,7 +26,14 @@ Represents a dependent verb-family application.
       {"modifier": "in(bathroom)", "tail_length": 0}
     ]
   },
-  "arguments": ["John", "toast"]
+  "arguments": ["John", "toast"],
+  "role_frame": {
+    "kind": "role_frame",
+    "roles": [
+      {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+      {"role": "Theme", "value": "toast", "type": "Entity", "source": "explicit"}
+    ]
+  }
 }
 ```
 
@@ -310,6 +317,9 @@ Current type rules:
 - `application` has type `t` when `adverb_count` is a natural number equal to
   the number of `modifiers`, and when the normalized `modifier_vector` has the
   same length, the same modifier order, and descending `tail_length` fields.
+  It must also contain a `role_frame` whose role values match
+  `application.arguments` in order. This preserves thematic-role labels such as
+  `Agent` and `Theme` after the event variable is discharged.
 - `sigma` has type `t` when its body has type `t`.
 - `repeat` has type `t` when `count` is a positive natural number and its body
   has type `t`.
