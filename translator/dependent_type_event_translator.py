@@ -372,14 +372,20 @@ def export_term(term: Term, target: str) -> str:
     if target not in EXPORT_TARGETS:
         raise ValueError(f"Unsupported export target: {target!r}")
 
+    def emit_modifier_sequence(modifiers: list[str]) -> str:
+        sequence = "mods_nil"
+        for modifier in reversed(modifiers):
+            sequence = f"(mods_cons {export_atom(modifier, target)} {sequence})"
+        return sequence
+
     def emit(current: Term) -> str:
         kind = current["kind"]
         if kind == "application":
             parts = [
                 export_atom(current["function"], target),
                 str(current["adverb_count"]),
+                emit_modifier_sequence(current["modifiers"]),
             ]
-            parts.extend(export_atom(x, target) for x in current["modifiers"])
             parts.extend(export_atom(x, target) for x in current["arguments"])
             return "(" + " ".join(parts) + ")"
         if kind == "sigma":
@@ -497,7 +503,6 @@ def collect_term_declarations(
     kind = term["kind"]
     if kind == "application":
         function = export_atom(term["function"], target)
-        modifier_types = [modifier_type()] * len(term["modifiers"])
         argument_types = typed_application_argument_types(
             function,
             term["arguments"],
@@ -509,7 +514,7 @@ def collect_term_declarations(
             functions,
             function,
             (
-                ["nat" if target == "coq" else "Nat"] + modifier_types + argument_types,
+                ["nat" if target == "coq" else "Nat", "ModifierSeq"] + argument_types,
                 application_result_type(function),
             ),
         )
@@ -607,6 +612,9 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(f"constant {name} : Type" for name in declarations["types"])
         lines.append("abbrev PropT : Type := Prop")
         lines.append("def Adv : Type := (Entity -> PropT) -> Entity -> PropT")
+        lines.append("constant ModifierSeq : Type")
+        lines.append("constant mods_nil : ModifierSeq")
+        lines.append("constant mods_cons : Adv -> ModifierSeq -> ModifierSeq")
         lines.append("")
         lines.extend(
             f"constant {name} : {type_name}" for name, type_name in declarations["constants"]
@@ -649,6 +657,9 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(f"Parameter {name} : Type." for name in declarations["types"])
     lines.append("Definition PropT : Type := Prop.")
     lines.append("Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.")
+    lines.append("Parameter ModifierSeq : Type.")
+    lines.append("Parameter mods_nil : ModifierSeq.")
+    lines.append("Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.")
     lines.append("")
     lines.extend(
         f"Parameter {name} : {type_name}." for name, type_name in declarations["constants"]

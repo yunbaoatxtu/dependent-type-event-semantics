@@ -186,8 +186,15 @@ Luo-Shi style adverbial and prepositional modifiers are represented at type
 ```coq
 Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
+Parameter ModifierSeq : Type.
+Parameter mods_nil : ModifierSeq.
+Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.
 ```
 
 For example, `john buttered the toast in the bathroom with a knife` exports
 `in_bathroom : Adv`, `with_knife : Adv`, `john : Entity`, `toast : Entity`, and
-`butter : nat -> Adv -> Adv -> Entity -> Entity -> PropT`.
+`butter : nat -> ModifierSeq -> Entity -> Entity -> PropT`, with the two
+modifiers passed as a `ModifierSeq` value. The AST still checks the natural
+number index against the modifier list before export, while the shallow Coq
+interface keeps the lexical verb declaration stable across different modifier
+counts.

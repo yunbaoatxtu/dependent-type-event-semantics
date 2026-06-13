@@ -158,10 +158,16 @@ definition:
 ```coq
 Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
+Parameter ModifierSeq : Type.
+Parameter mods_nil : ModifierSeq.
+Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.
 ```
 
 Thus `in(bathroom)` exports as `in_bathroom : Adv`, while ordinary arguments
-such as `John` and `toast` export as `Entity`.
+such as `John` and `toast` export as `Entity`. Application exports place the
+individual modifier constants into a `ModifierSeq` value. This keeps one verb
+declaration stable when several checked examples use different numbers of
+modifiers.
 
 ## Lean and Coq Style Export
 
@@ -179,20 +185,20 @@ python3 translator/dependent_type_event_translator.py \
 Lean-style output:
 
 ```text
-(Exists fun x_theme : Food => (eat 0 John x_theme))
+(Exists fun x_theme : Food => (eat 0 mods_nil John x_theme))
 ```
 
 Coq-style output:
 
 ```text
-(exists x_theme : Food, (eat 0 John x_theme))
+(exists x_theme : Food, (eat 0 mods_nil John x_theme))
 ```
 
 For non-binding constructors, both targets currently use the same shallow
 prefix form:
 
 ```text
-(repeat 2 (knock 0 John))
+(repeat 2 (knock 0 mods_nil John))
 (Cause John (Transition vase _ broken))
 ```
 
