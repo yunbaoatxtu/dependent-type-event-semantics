@@ -23,7 +23,9 @@ python3 scripts/check_formalization.py
 
 The checker regenerates the scaffold files and verifies that the committed
 outputs contain the expected declarations, `Check`/`#check` commands, and
-normalized names such as `unknown_state`.
+normalized names such as `unknown_state`. It also checks that causal-resultative
+states are not exported as ordinary entities: `unknown_state` and `broken` have
+type `State`, and `Transition` has type `Entity -> State -> State -> TransitionT`.
 
 Coq/Rocq is a boundary validator here, not the implementation language of the
 translator. The Python translator is responsible for producing and checking the

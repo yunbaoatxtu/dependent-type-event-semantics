@@ -158,6 +158,19 @@ class TranslatorTests(unittest.TestCase):
             result["exports"]["coq"],
             "(Cause John (Transition vase unknown_state broken))",
         )
+        coq_module = export_module([result], "coq")
+        self.assertIn("Parameter State : Type.", coq_module)
+        self.assertIn("Parameter vase : Entity.", coq_module)
+        self.assertIn("Parameter broken : State.", coq_module)
+        self.assertIn("Parameter unknown_state : State.", coq_module)
+        self.assertIn(
+            "Parameter Transition : Entity -> State -> State -> TransitionT.",
+            coq_module,
+        )
+        self.assertNotIn(
+            "Parameter Transition : Entity -> Entity -> Entity -> TransitionT.",
+            coq_module,
+        )
 
     def test_type_checker_rejects_bad_adverb_count(self) -> None:
         result = check_term(

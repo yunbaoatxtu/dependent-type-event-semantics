@@ -26,6 +26,8 @@ def main() -> None:
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
         "coq declarations": "Parameter Entity : Type." in coq,
+        "lean state declarations": "constant State : Type" in lean,
+        "coq state declarations": "Parameter State : Type." in coq,
         "lean PropT alias": "abbrev PropT : Type := Prop" in lean,
         "coq PropT alias": "Definition PropT : Type := Prop." in coq,
         "lean indexed modifier sequence type": "constant ModifierSeq : Nat -> Type" in lean,
@@ -40,6 +42,16 @@ def main() -> None:
         ),
         "lean check commands": "#check example_4" in lean,
         "coq check commands": "Check example_4." in coq,
+        "lean transition state signature": (
+            "constant Transition : Entity -> State -> State -> TransitionT" in lean
+        ),
+        "coq transition state signature": (
+            "Parameter Transition : Entity -> State -> State -> TransitionT." in coq
+        ),
+        "lean result states": "constant unknown_state : State" in lean
+        and "constant broken : State" in lean,
+        "coq result states": "Parameter unknown_state : State." in coq
+        and "Parameter broken : State." in coq,
         "lean unknown state normalized": "Transition vase unknown_state broken" in lean,
         "coq unknown state normalized": "Transition vase unknown_state broken" in coq,
         "no raw transition placeholder": "Transition vase _ broken" not in lean

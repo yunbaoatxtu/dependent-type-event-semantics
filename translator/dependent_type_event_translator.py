@@ -797,10 +797,13 @@ def collect_term_declarations(
         )
         return
     if kind == "transition":
-        for field in ("theme", "source_state", "target_state"):
+        theme = export_atom(term["theme"], target)
+        if theme not in bound_types:
+            add_constant_declaration(constants, theme, "Entity")
+        for field in ("source_state", "target_state"):
             exported = export_atom(term[field], target)
             if exported not in bound_types:
-                add_constant_declaration(constants, exported, "Entity")
+                add_constant_declaration(constants, exported, "State")
         return
     if kind == "cause":
         causer = export_atom(term["causer"], target)
@@ -822,7 +825,7 @@ def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str,
     functions: dict[str, tuple[list[str], str]] = {}
     constants: dict[str, str] = {}
     modifiers: set[str] = set()
-    types = {"Entity", "Food", "TransitionT"}
+    types = {"Entity", "Food", "State", "TransitionT"}
     for result in results:
         collect_term_declarations(
             result["ast"], target, functions, constants, modifiers, types
@@ -875,7 +878,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "constant after_T : Entity -> PropT -> PropT",
                 "constant until_T : Entity -> PropT -> PropT",
                 "constant since_T : Entity -> PropT -> PropT",
-                "constant Transition : Entity -> Entity -> Entity -> TransitionT",
+                "constant Transition : Entity -> State -> State -> TransitionT",
                 "constant Cause : Entity -> TransitionT -> PropT",
             ]
         )
@@ -922,7 +925,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Parameter after_T : Entity -> PropT -> PropT.",
             "Parameter until_T : Entity -> PropT -> PropT.",
             "Parameter since_T : Entity -> PropT -> PropT.",
-            "Parameter Transition : Entity -> Entity -> Entity -> TransitionT.",
+            "Parameter Transition : Entity -> State -> State -> TransitionT.",
             "Parameter Cause : Entity -> TransitionT -> PropT.",
         ]
     )

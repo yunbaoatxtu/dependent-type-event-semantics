@@ -236,6 +236,10 @@ The current prototype has small, testable rules for:
 - event counting with `once`/`twice`/`thrice` or explicit `count`;
 - causal-resultative translation into a typed state transition.
 
+Resultatives now export result states separately from ordinary individuals:
+`vase` has type `Entity`, while `unknown_state` and `broken` have type `State`,
+and `Transition` has type `Entity -> State -> State -> TransitionT`.
+
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness
 `x_theme : Readable` and

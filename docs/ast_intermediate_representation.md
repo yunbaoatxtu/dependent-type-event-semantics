@@ -137,7 +137,9 @@ Cause(John, Transition(vase, _, broken))
 The optional `activity` field preserves the original verbal description even
 when the visible rendering focuses on the causal transition. This is useful for
 later proof assistant export, where the causing process and the result
-transition may need separate types.
+transition may need separate types. The shallow exporter now gives the
+transition theme type `Entity` and the source/target states type `State`, so
+`Transition` is exported as `Entity -> State -> State -> TransitionT`.
 
 ### `timed_after`
 
@@ -328,7 +330,8 @@ Current type rules:
   has type `t`.
 - `time` has type `t` when its operator is a recognized temporal operator and
   its body has type `t`.
-- `transition` has type `Transition`.
+- `transition` has type `Transition`; its `theme` is exported as `Entity`, while
+  `source_state` and `target_state` are exported as `State`.
 - `cause` has type `t` only when its `effect` has type `Transition`; its
   optional `activity` must have type `t`.
 - `timed_after` has type `Prop` when it binds `t_sing : Time` and

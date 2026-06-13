@@ -3,6 +3,7 @@
 
 Parameter Entity : Type.
 Parameter Food : Type.
+Parameter State : Type.
 Parameter TransitionT : Type.
 Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
@@ -11,10 +12,10 @@ Parameter mods_nil : ModifierSeq 0.
 Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).
 
 Parameter John : Entity.
-Parameter broken : Entity.
+Parameter broken : State.
 Parameter noon : Entity.
 Parameter toast : Entity.
-Parameter unknown_state : Entity.
+Parameter unknown_state : State.
 Parameter vase : Entity.
 Parameter in_bathroom : Adv.
 Parameter slowly : Adv.
@@ -26,7 +27,7 @@ Parameter before_T : Entity -> PropT -> PropT.
 Parameter after_T : Entity -> PropT -> PropT.
 Parameter until_T : Entity -> PropT -> PropT.
 Parameter since_T : Entity -> PropT -> PropT.
-Parameter Transition : Entity -> Entity -> Entity -> TransitionT.
+Parameter Transition : Entity -> State -> State -> TransitionT.
 Parameter Cause : Entity -> TransitionT -> PropT.
 Parameter break : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
