@@ -88,19 +88,20 @@ and prepositional modifiers are exported as `Adv`, not `Entity`:
 ```coq
 Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
-Parameter ModifierSeq : Type.
-Parameter mods_nil : ModifierSeq.
-Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.
+Parameter ModifierSeq : nat -> Type.
+Parameter mods_nil : ModifierSeq 0.
+Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).
 Parameter in_bathroom : Adv.
 Parameter with_knife : Adv.
-Parameter butter : nat -> ModifierSeq -> Entity -> Entity -> PropT.
+Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 ```
 
 The generated AST still records the natural-number modifier count and rejects a
-count/vector mismatch. The proof-assistant scaffold packages the actual
-modifiers into `ModifierSeq`, so one lexical constant such as `butter` can occur
-in the same Coq file with zero, two, or three modifiers without producing
-conflicting shallow function declarations.
+count/vector mismatch. The proof-assistant scaffold now packages the actual
+modifiers into an indexed `ModifierSeq n`, so Coq also checks that the sequence
+passed to `butter n` has length `n`. One lexical constant such as `butter` can
+therefore occur in the same Coq file with zero, two, or three modifiers without
+producing conflicting shallow function declarations.
 
 Parsons-style event talk can also be routed through typed replacements. For
 example:
@@ -218,7 +219,7 @@ The current prototype has small, testable rules for:
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness
 `x_theme : Readable` and
-`read : nat -> ModifierSeq -> Entity -> Readable -> Prop`; `John drank`
+`read : forall n : nat, ModifierSeq n -> Entity -> Readable -> Prop`; `John drank`
 analogously uses `Drinkable`. The same lexical object types are used for overt
 objects, so `Mary read the book` declares `book : Readable` and gives the
 example type `Prop`, matching the exported `read` signature. The shallow

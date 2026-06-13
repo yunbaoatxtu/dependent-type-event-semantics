@@ -41,11 +41,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["type_check"], {"ok": True, "type": "t", "errors": []})
         self.assertEqual(
             result["exports"]["lean"],
-            "(at_T noon (butter 2 (mods_cons slowly (mods_cons in_bathroom mods_nil)) John toast))",
+            "(at_T noon (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast))",
         )
         self.assertEqual(
             result["exports"]["coq"],
-            "(at_T noon (butter 2 (mods_cons slowly (mods_cons in_bathroom mods_nil)) John toast))",
+            "(at_T noon (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast))",
         )
         self.assertEqual(result["residual_atoms_not_translated"], [])
         coq_module = export_module([result], "coq")
@@ -54,16 +54,16 @@ class TranslatorTests(unittest.TestCase):
             "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
             coq_module,
         )
-        self.assertIn("Parameter ModifierSeq : Type.", coq_module)
-        self.assertIn("Parameter mods_nil : ModifierSeq.", coq_module)
+        self.assertIn("Parameter ModifierSeq : nat -> Type.", coq_module)
+        self.assertIn("Parameter mods_nil : ModifierSeq 0.", coq_module)
         self.assertIn(
-            "Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.",
+            "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
             coq_module,
         )
         self.assertIn("Parameter slowly : Adv.", coq_module)
         self.assertIn("Parameter in_bathroom : Adv.", coq_module)
         self.assertIn(
-            "Parameter butter : nat -> ModifierSeq -> Entity -> Entity -> PropT.",
+            "Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
             coq_module,
         )
 
@@ -176,19 +176,30 @@ class TranslatorTests(unittest.TestCase):
         )
         coq_module = export_module([two_modifier_butter, three_modifier_butter], "coq")
         self.assertIn(
-            "Parameter butter : nat -> ModifierSeq -> Entity -> Entity -> PropT.",
+            "Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
             coq_module,
         )
         self.assertIn(
-            "Definition example_1 : PropT := (butter 2 (mods_cons in_bathroom (mods_cons with_knife mods_nil)) john toast).",
+            "Definition example_1 : PropT := (butter 2 (mods_cons 1 in_bathroom (mods_cons 0 with_knife mods_nil)) john toast).",
             coq_module,
         )
         self.assertIn(
-            "Definition example_2 : PropT := (butter 3 (mods_cons slowly (mods_cons in_bathroom (mods_cons with_knife mods_nil))) john toast).",
+            "Definition example_2 : PropT := (butter 3 (mods_cons 2 slowly (mods_cons 1 in_bathroom (mods_cons 0 with_knife mods_nil))) john toast).",
             coq_module,
         )
         coq_check = verify_coq_code(coq_module, require_coq=True)
         self.assertEqual(coq_check["status"], "passed", coq_check["message"])
+
+    def test_indexed_modifier_sequence_rejects_wrong_length_in_coq(self) -> None:
+        result = translate(load_example("example_butter.json"))
+        coq_module = export_module([result], "coq")
+        broken_module = coq_module.replace(
+            "butter 2 (mods_cons 1 slowly",
+            "butter 2 (mods_cons 0 slowly",
+        )
+        coq_check = verify_coq_code(broken_module, require_coq=True)
+        self.assertEqual(coq_check["status"], "failed")
+        self.assertIn("ModifierSeq", coq_check["message"])
 
     def test_export_module_contains_declarations_and_examples(self) -> None:
         results = [
@@ -253,7 +264,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter Readable : Type.", read_result["coq_code"])
         self.assertIn(
-            "Parameter read : nat -> ModifierSeq -> Entity -> Readable -> Prop.",
+            "Parameter read : forall n : nat, ModifierSeq n -> Entity -> Readable -> Prop.",
             read_result["coq_code"],
         )
         self.assertIn("exists x_theme : Readable", read_result["coq_code"])
@@ -268,7 +279,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter Drinkable : Type.", drink_result["coq_code"])
         self.assertIn(
-            "Parameter drink : nat -> ModifierSeq -> Entity -> Drinkable -> Prop.",
+            "Parameter drink : forall n : nat, ModifierSeq n -> Entity -> Drinkable -> Prop.",
             drink_result["coq_code"],
         )
         self.assertIn("exists x_theme : Drinkable", drink_result["coq_code"])
@@ -280,7 +291,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(read_result["dependent_type_translation"], "read(0)(mary, book)")
         self.assertIn("Parameter book : Readable.", read_result["coq_code"])
         self.assertIn(
-            "Parameter read : nat -> ModifierSeq -> Entity -> Readable -> Prop.",
+            "Parameter read : forall n : nat, ModifierSeq n -> Entity -> Readable -> Prop.",
             read_result["coq_code"],
         )
         self.assertIn(
@@ -338,7 +349,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter cat : Entity.", result["coq_code"])
         self.assertIn("Parameter on_mat : Adv.", result["coq_code"])
-        self.assertIn("Parameter sit : nat -> ModifierSeq -> Entity -> PropT.", result["coq_code"])
+        self.assertIn(
+            "Parameter sit : forall n : nat, ModifierSeq n -> Entity -> PropT.",
+            result["coq_code"],
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_luo_shi_modifier_types_for_classic_sentence(self) -> None:
@@ -356,7 +370,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter john : Entity.", result["coq_code"])
         self.assertIn("Parameter toast : Entity.", result["coq_code"])
         self.assertIn(
-            "Parameter butter : nat -> ModifierSeq -> Entity -> Entity -> PropT.",
+            "Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
             result["coq_code"],
         )
         self.assertNotIn("Parameter in_bathroom : Entity.", result["coq_code"])

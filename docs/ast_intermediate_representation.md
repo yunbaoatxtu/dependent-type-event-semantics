@@ -158,16 +158,16 @@ definition:
 ```coq
 Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
-Parameter ModifierSeq : Type.
-Parameter mods_nil : ModifierSeq.
-Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.
+Parameter ModifierSeq : nat -> Type.
+Parameter mods_nil : ModifierSeq 0.
+Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).
 ```
 
 Thus `in(bathroom)` exports as `in_bathroom : Adv`, while ordinary arguments
 such as `John` and `toast` export as `Entity`. Application exports place the
-individual modifier constants into a `ModifierSeq` value. This keeps one verb
-declaration stable when several checked examples use different numbers of
-modifiers.
+individual modifier constants into an indexed `ModifierSeq n` value. This keeps
+one verb declaration stable when several checked examples use different numbers
+of modifiers, while giving Coq an explicit length invariant to check.
 
 ## Lean and Coq Style Export
 

@@ -28,10 +28,16 @@ def main() -> None:
         "coq declarations": "Parameter Entity : Type." in coq,
         "lean PropT alias": "abbrev PropT : Type := Prop" in lean,
         "coq PropT alias": "Definition PropT : Type := Prop." in coq,
-        "lean modifier sequence type": "constant ModifierSeq : Type" in lean,
-        "coq modifier sequence type": "Parameter ModifierSeq : Type." in coq,
-        "lean modifier sequence constructor": "constant mods_cons : Adv -> ModifierSeq -> ModifierSeq" in lean,
-        "coq modifier sequence constructor": "Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq." in coq,
+        "lean indexed modifier sequence type": "constant ModifierSeq : Nat -> Type" in lean,
+        "coq indexed modifier sequence type": "Parameter ModifierSeq : nat -> Type." in coq,
+        "lean indexed modifier sequence constructor": (
+            "constant mods_cons : (n : Nat) -> Adv -> ModifierSeq n -> ModifierSeq (Nat.succ n)"
+            in lean
+        ),
+        "coq indexed modifier sequence constructor": (
+            "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n)."
+            in coq
+        ),
         "lean check commands": "#check example_4" in lean,
         "coq check commands": "Check example_4." in coq,
         "lean unknown state normalized": "Transition vase unknown_state broken" in lean,

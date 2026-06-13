@@ -374,8 +374,10 @@ def export_term(term: Term, target: str) -> str:
 
     def emit_modifier_sequence(modifiers: list[str]) -> str:
         sequence = "mods_nil"
+        tail_length = 0
         for modifier in reversed(modifiers):
-            sequence = f"(mods_cons {export_atom(modifier, target)} {sequence})"
+            sequence = f"(mods_cons {tail_length} {export_atom(modifier, target)} {sequence})"
+            tail_length += 1
         return sequence
 
     def emit(current: Term) -> str:
@@ -514,7 +516,12 @@ def collect_term_declarations(
             functions,
             function,
             (
-                ["nat" if target == "coq" else "Nat", "ModifierSeq"] + argument_types,
+                (
+                    ["forall n : nat, ModifierSeq n"]
+                    if target == "coq"
+                    else ["(n : Nat)", "ModifierSeq n"]
+                )
+                + argument_types,
                 application_result_type(function),
             ),
         )
@@ -612,9 +619,11 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(f"constant {name} : Type" for name in declarations["types"])
         lines.append("abbrev PropT : Type := Prop")
         lines.append("def Adv : Type := (Entity -> PropT) -> Entity -> PropT")
-        lines.append("constant ModifierSeq : Type")
-        lines.append("constant mods_nil : ModifierSeq")
-        lines.append("constant mods_cons : Adv -> ModifierSeq -> ModifierSeq")
+        lines.append("constant ModifierSeq : Nat -> Type")
+        lines.append("constant mods_nil : ModifierSeq 0")
+        lines.append(
+            "constant mods_cons : (n : Nat) -> Adv -> ModifierSeq n -> ModifierSeq (Nat.succ n)"
+        )
         lines.append("")
         lines.extend(
             f"constant {name} : {type_name}" for name, type_name in declarations["constants"]
@@ -657,9 +666,11 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(f"Parameter {name} : Type." for name in declarations["types"])
     lines.append("Definition PropT : Type := Prop.")
     lines.append("Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.")
-    lines.append("Parameter ModifierSeq : Type.")
-    lines.append("Parameter mods_nil : ModifierSeq.")
-    lines.append("Parameter mods_cons : Adv -> ModifierSeq -> ModifierSeq.")
+    lines.append("Parameter ModifierSeq : nat -> Type.")
+    lines.append("Parameter mods_nil : ModifierSeq 0.")
+    lines.append(
+        "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n)."
+    )
     lines.append("")
     lines.extend(
         f"Parameter {name} : {type_name}." for name, type_name in declarations["constants"]
