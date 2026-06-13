@@ -141,10 +141,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["result_states"], ["broken"])
         self.assertEqual(
             result["translation"],
-            "Cause(John, Transition(vase, _, broken))",
+            "Cause(John, Transition(vase, integrity_scale, _, broken))",
         )
         self.assertEqual(result["ast"]["kind"], "cause")
         self.assertEqual(result["ast"]["effect"]["kind"], "transition")
+        self.assertEqual(result["ast"]["effect"]["state_scale"], "integrity_scale")
         self.assertEqual(result["ast"]["activity"]["function"], "break")
         self.assertEqual(
             result["ast"]["activity"]["role_frame"]["roles"],
@@ -156,19 +157,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(
             result["exports"]["coq"],
-            "(Cause John (Transition vase unknown_state broken))",
+            "(Cause John (Transition vase integrity_scale unknown_state broken))",
         )
         coq_module = export_module([result], "coq")
         self.assertIn("Parameter State : Type.", coq_module)
+        self.assertIn("Parameter StateScale : Type.", coq_module)
         self.assertIn("Parameter vase : Entity.", coq_module)
+        self.assertIn("Parameter integrity_scale : StateScale.", coq_module)
         self.assertIn("Parameter broken : State.", coq_module)
         self.assertIn("Parameter unknown_state : State.", coq_module)
         self.assertIn(
-            "Parameter Transition : Entity -> State -> State -> TransitionT.",
+            "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
             coq_module,
         )
         self.assertNotIn(
-            "Parameter Transition : Entity -> Entity -> Entity -> TransitionT.",
+            "Parameter Transition : Entity -> State -> State -> TransitionT.",
             coq_module,
         )
 
@@ -317,6 +320,7 @@ class TranslatorTests(unittest.TestCase):
             {
                 "kind": "transition",
                 "theme": "vase",
+                "state_scale": "integrity_scale",
                 "source_state": "broken",
                 "target_state": "broken",
             }
@@ -332,6 +336,7 @@ class TranslatorTests(unittest.TestCase):
             {
                 "kind": "transition",
                 "theme": "vase",
+                "state_scale": "integrity_scale",
                 "source_state": "_",
                 "target_state": "broken",
             }
@@ -343,6 +348,7 @@ class TranslatorTests(unittest.TestCase):
             {
                 "kind": "transition",
                 "theme": "vase",
+                "state_scale": "integrity_scale",
                 "source_state": "intact",
                 "target_state": "_",
             }
@@ -350,6 +356,26 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertIn(
             "ast: transition.target_state must be known",
+            result["errors"],
+        )
+
+    def test_type_checker_rejects_transition_scale_mismatch(self) -> None:
+        result = check_term(
+            {
+                "kind": "transition",
+                "theme": "vase",
+                "state_scale": "shape_scale",
+                "source_state": "intact",
+                "target_state": "broken",
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "ast: transition.state_scale='shape_scale' does not match target state scale 'integrity_scale'",
+            result["errors"],
+        )
+        self.assertIn(
+            "ast: transition.source_state scale 'integrity_scale' does not match transition.state_scale 'shape_scale'",
             result["errors"],
         )
 
@@ -438,7 +464,7 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
-            "def example_2 : PropT := (Cause John (Transition vase unknown_state broken))",
+            "def example_2 : PropT := (Cause John (Transition vase integrity_scale unknown_state broken))",
             lean_module,
         )
         self.assertIn("#check example_2", lean_module)
@@ -870,7 +896,10 @@ class TranslatorTests(unittest.TestCase):
     def test_web_analyze_sentence_success(self) -> None:
         result = analyze_sentence("John broke the vase")
         self.assertTrue(result["ok"])
-        self.assertIn("Cause(John, Transition(vase, _, broken))", result["dependent_type_translation"])
+        self.assertIn(
+            "Cause(John, Transition(vase, integrity_scale, _, broken))",
+            result["dependent_type_translation"],
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
         self.assertIsNone(result["diagnostics"]["failure_stage"])

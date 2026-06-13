@@ -110,6 +110,7 @@ Represent causal-resultative structure.
   "effect": {
     "kind": "transition",
     "theme": "vase",
+    "state_scale": "integrity_scale",
     "source_state": "_",
     "target_state": "broken"
   },
@@ -131,15 +132,16 @@ Represent causal-resultative structure.
 Renders as:
 
 ```text
-Cause(John, Transition(vase, _, broken))
+Cause(John, Transition(vase, integrity_scale, _, broken))
 ```
 
 The optional `activity` field preserves the original verbal description even
 when the visible rendering focuses on the causal transition. This is useful for
 later proof assistant export, where the causing process and the result
 transition may need separate types. The shallow exporter now gives the
-transition theme type `Entity` and the source/target states type `State`, so
-`Transition` is exported as `Entity -> State -> State -> TransitionT`.
+transition theme type `Entity`, the scale type `StateScale`, and the
+source/target states type `State`, so `Transition` is exported as
+`Entity -> StateScale -> State -> State -> TransitionT`.
 
 ### `timed_after`
 
@@ -331,10 +333,12 @@ Current type rules:
 - `time` has type `t` when its operator is a recognized temporal operator and
   its body has type `t`.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
-  `source_state` and `target_state` are exported as `State`. If both states are
-  known rather than `_`, they must differ. The `target_state` must be known,
-  because a resultative transition without a target state is not a completed
-  change-of-state analysis.
+  `state_scale` is exported as `StateScale`, and `source_state` and
+  `target_state` are exported as `State`. The `state_scale` must match the
+  target state scale, known source-state scales must agree with it, and if both
+  states are known rather than `_`, they must differ. The `target_state` must be
+  known, because a resultative transition without a target state is not a
+  completed change-of-state analysis.
 - `cause` has type `t` only when its `effect` has type `TransitionT`; its
   optional `activity` must have type `t`.
 - `timed_after` has type `Prop` when it binds `t_sing : Time` and
@@ -402,7 +406,7 @@ prefix form:
 
 ```text
 (repeat 2 (knock 0 mods_nil John))
-(Cause John (Transition vase _ broken))
+(Cause John (Transition vase integrity_scale unknown_state broken))
 ```
 
 Names are normalized for proof-assistant friendliness. For example,

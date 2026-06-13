@@ -238,7 +238,8 @@ The current prototype has small, testable rules for:
 
 Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `unknown_state` and `broken` have type `State`,
-and `Transition` has type `Entity -> State -> State -> TransitionT`.
+`integrity_scale` has type `StateScale`, and `Transition` has type
+`Entity -> StateScale -> State -> State -> TransitionT`.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

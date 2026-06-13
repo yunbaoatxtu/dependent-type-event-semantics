@@ -4,6 +4,7 @@
 constant Entity : Type
 constant Food : Type
 constant State : Type
+constant StateScale : Type
 constant TransitionT : Type
 abbrev PropT : Type := Prop
 def Adv : Type := (Entity -> PropT) -> Entity -> PropT
@@ -13,6 +14,7 @@ constant mods_cons : (n : Nat) -> Adv -> ModifierSeq n -> ModifierSeq (Nat.succ 
 
 constant John : Entity
 constant broken : State
+constant integrity_scale : StateScale
 constant noon : Entity
 constant toast : Entity
 constant unknown_state : State
@@ -27,7 +29,7 @@ constant before_T : Entity -> PropT -> PropT
 constant after_T : Entity -> PropT -> PropT
 constant until_T : Entity -> PropT -> PropT
 constant since_T : Entity -> PropT -> PropT
-constant Transition : Entity -> State -> State -> TransitionT
+constant Transition : Entity -> StateScale -> State -> State -> TransitionT
 constant Cause : Entity -> TransitionT -> PropT
 constant break : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
 constant butter : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
@@ -37,7 +39,7 @@ constant knock : (n : Nat) -> ModifierSeq n -> Entity -> PropT
 def example_1 : PropT := (at_T noon (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast))
 def example_2 : Prop := (Exists fun x_theme : Food => (eat 0 mods_nil John x_theme))
 def example_3 : PropT := (repeat 2 (knock 0 mods_nil John))
-def example_4 : PropT := (Cause John (Transition vase unknown_state broken))
+def example_4 : PropT := (Cause John (Transition vase integrity_scale unknown_state broken))
 
 #check example_1
 #check example_2

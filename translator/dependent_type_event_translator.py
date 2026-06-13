@@ -38,6 +38,14 @@ OMITTED_THEME_TYPES = {
     "read": "Readable",
     "drink": "Drinkable",
 }
+STATE_SCALE_BY_STATE = {
+    "broken": "integrity_scale",
+    "intact": "integrity_scale",
+    "flat": "shape_scale",
+    "not_flat": "shape_scale",
+    "open": "access_scale",
+    "closed": "access_scale",
+}
 
 
 @dataclass(frozen=True)
@@ -263,10 +271,17 @@ def time_term(atom: Atom, body: Term) -> Term:
     }
 
 
+def infer_state_scale(state: str) -> str:
+    if state == "_":
+        return "unknown_scale"
+    return STATE_SCALE_BY_STATE.get(state, f"{state}_scale")
+
+
 def transition_term(theme: str, source_state: str, target_state: str) -> Term:
     return {
         "kind": "transition",
         "theme": theme,
+        "state_scale": infer_state_scale(target_state),
         "source_state": source_state,
         "target_state": target_state,
     }
@@ -301,7 +316,7 @@ def render_term(term: Term) -> str:
         return f"{term['operator']}_T({rendered_args}, {render_term(term['body'])})"
     if kind == "transition":
         return (
-            f"Transition({term['theme']}, {term['source_state']}, "
+            f"Transition({term['theme']}, {term['state_scale']}, {term['source_state']}, "
             f"{term['target_state']})"
         )
     if kind == "cause":
@@ -543,10 +558,27 @@ def check_term(term: Term) -> TypeCheck:
             for field in ("theme", "source_state", "target_state"):
                 if not isinstance(current.get(field), str) or not current[field]:
                     errors.append(f"{path}: transition.{field} must be a non-empty string")
+            state_scale = current.get("state_scale")
+            if not isinstance(state_scale, str) or not state_scale:
+                errors.append(f"{path}: transition.state_scale must be a non-empty string")
             source_state = current.get("source_state")
             target_state = current.get("target_state")
             if target_state == "_":
                 errors.append(f"{path}: transition.target_state must be known")
+            if isinstance(target_state, str) and target_state != "_":
+                expected_scale = infer_state_scale(target_state)
+                if state_scale != expected_scale:
+                    errors.append(
+                        f"{path}: transition.state_scale={state_scale!r} does not "
+                        f"match target state scale {expected_scale!r}"
+                    )
+            if isinstance(source_state, str) and source_state in STATE_SCALE_BY_STATE:
+                source_scale = infer_state_scale(source_state)
+                if isinstance(state_scale, str) and state_scale != source_scale:
+                    errors.append(
+                        f"{path}: transition.source_state scale {source_scale!r} "
+                        f"does not match transition.state_scale {state_scale!r}"
+                    )
             if (
                 isinstance(source_state, str)
                 and isinstance(target_state, str)
@@ -658,7 +690,7 @@ def export_term(term: Term, target: str) -> str:
                 "(Transition "
                 + " ".join(
                     export_atom(current[field], target)
-                    for field in ("theme", "source_state", "target_state")
+                    for field in ("theme", "state_scale", "source_state", "target_state")
                 )
                 + ")"
             )
@@ -815,6 +847,9 @@ def collect_term_declarations(
         theme = export_atom(term["theme"], target)
         if theme not in bound_types:
             add_constant_declaration(constants, theme, "Entity")
+        state_scale = export_atom(term["state_scale"], target)
+        if state_scale not in bound_types:
+            add_constant_declaration(constants, state_scale, "StateScale")
         for field in ("source_state", "target_state"):
             exported = export_atom(term[field], target)
             if exported not in bound_types:
@@ -840,7 +875,7 @@ def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str,
     functions: dict[str, tuple[list[str], str]] = {}
     constants: dict[str, str] = {}
     modifiers: set[str] = set()
-    types = {"Entity", "Food", "State", "TransitionT"}
+    types = {"Entity", "Food", "State", "StateScale", "TransitionT"}
     for result in results:
         collect_term_declarations(
             result["ast"], target, functions, constants, modifiers, types
@@ -893,7 +928,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "constant after_T : Entity -> PropT -> PropT",
                 "constant until_T : Entity -> PropT -> PropT",
                 "constant since_T : Entity -> PropT -> PropT",
-                "constant Transition : Entity -> State -> State -> TransitionT",
+                "constant Transition : Entity -> StateScale -> State -> State -> TransitionT",
                 "constant Cause : Entity -> TransitionT -> PropT",
             ]
         )
@@ -940,7 +975,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Parameter after_T : Entity -> PropT -> PropT.",
             "Parameter until_T : Entity -> PropT -> PropT.",
             "Parameter since_T : Entity -> PropT -> PropT.",
-            "Parameter Transition : Entity -> State -> State -> TransitionT.",
+            "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
             "Parameter Cause : Entity -> TransitionT -> PropT.",
         ]
     )
