@@ -156,6 +156,7 @@ scaffold they are exported at type `Adv`, with the current shallow Coq
 definition:
 
 ```coq
+Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
 ```
 

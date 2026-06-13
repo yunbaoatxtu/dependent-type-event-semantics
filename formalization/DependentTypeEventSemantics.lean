@@ -3,8 +3,8 @@
 
 constant Entity : Type
 constant Food : Type
-constant PropT : Type
 constant TransitionT : Type
+abbrev PropT : Type := Prop
 def Adv : Type := (Entity -> PropT) -> Entity -> PropT
 
 constant John : Entity

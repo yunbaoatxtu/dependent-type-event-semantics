@@ -48,6 +48,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["residual_atoms_not_translated"], [])
         coq_module = export_module([result], "coq")
+        self.assertIn("Definition PropT : Type := Prop.", coq_module)
         self.assertIn(
             "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
             coq_module,
@@ -255,6 +256,29 @@ class TranslatorTests(unittest.TestCase):
             drink_result["coq_code"],
         )
         self.assertEqual(drink_result["coq_check"]["status"], "passed")
+
+    def test_time_can_scope_over_lexical_prop_outputs(self) -> None:
+        omitted_result = run_pipeline("John read at noon", require_coq=True)
+        self.assertTrue(omitted_result["ok"])
+        self.assertEqual(
+            omitted_result["dependent_type_translation"],
+            "at_T(noon, Sigma x_theme : Readable. read(0)(john, x_theme))",
+        )
+        self.assertIn("Definition PropT : Type := Prop.", omitted_result["coq_code"])
+        self.assertIn(
+            "Definition example_1 : PropT := (at_T noon (exists x_theme : Readable, (read 0 john x_theme))).",
+            omitted_result["coq_code"],
+        )
+        self.assertEqual(omitted_result["coq_check"]["status"], "passed")
+
+        explicit_result = run_pipeline("Mary read the book at noon", require_coq=True)
+        self.assertTrue(explicit_result["ok"])
+        self.assertEqual(
+            explicit_result["dependent_type_translation"],
+            "at_T(noon, read(0)(mary, book))",
+        )
+        self.assertIn("Parameter book : Readable.", explicit_result["coq_code"])
+        self.assertEqual(explicit_result["coq_check"]["status"], "passed")
 
     def test_natural_language_pipeline_handles_unlisted_sentence(self) -> None:
         result = run_pipeline("Mary admired the painting")

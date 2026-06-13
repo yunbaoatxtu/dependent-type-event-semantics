@@ -550,7 +550,7 @@ def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str,
     functions: dict[str, tuple[list[str], str]] = {}
     constants: dict[str, str] = {}
     modifiers: set[str] = set()
-    types = {"Entity", "Food", "PropT", "TransitionT"}
+    types = {"Entity", "Food", "TransitionT"}
     for result in results:
         collect_term_declarations(
             result["ast"], target, functions, constants, modifiers, types
@@ -579,6 +579,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "",
         ]
         lines.extend(f"constant {name} : Type" for name in declarations["types"])
+        lines.append("abbrev PropT : Type := Prop")
         lines.append("def Adv : Type := (Entity -> PropT) -> Entity -> PropT")
         lines.append("")
         lines.extend(
@@ -620,6 +621,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "",
     ]
     lines.extend(f"Parameter {name} : Type." for name in declarations["types"])
+    lines.append("Definition PropT : Type := Prop.")
     lines.append("Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.")
     lines.append("")
     lines.extend(

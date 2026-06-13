@@ -86,6 +86,7 @@ Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:
 
 ```coq
+Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
 Parameter in_bathroom : Adv.
 Parameter with_knife : Adv.
@@ -210,7 +211,9 @@ boundary. For example, `John read` exports an existential witness
 `x_theme : Readable` and `read : nat -> Entity -> Readable -> Prop`; `John drank`
 analogously uses `Drinkable`. The same lexical object types are used for overt
 objects, so `Mary read the book` declares `book : Readable` and gives the
-example type `Prop`, matching the exported `read` signature.
+example type `Prop`, matching the exported `read` signature. The shallow
+interface defines `PropT` as an alias of Coq `Prop`, so temporal operators such
+as `at_T` can also scope over these existential propositions.
 
 Each translation result includes both a human-readable `translation` string and
 a structured `ast` object. The AST is the intended next bridge toward a proof

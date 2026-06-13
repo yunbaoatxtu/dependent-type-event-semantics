@@ -3,8 +3,8 @@
 
 Parameter Entity : Type.
 Parameter Food : Type.
-Parameter PropT : Type.
 Parameter TransitionT : Type.
+Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
 
 Parameter John : Entity.

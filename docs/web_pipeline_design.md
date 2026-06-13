@@ -184,6 +184,7 @@ Luo-Shi style adverbial and prepositional modifiers are represented at type
 `Adv`, with the shallow Coq interface:
 
 ```coq
+Definition PropT : Type := Prop.
 Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.
 ```
 
