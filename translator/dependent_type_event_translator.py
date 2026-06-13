@@ -61,6 +61,24 @@ STATE_SCALE_BY_STATE = {
     "straight": "shape_scale",
     "wet": "moisture_scale",
 }
+SOURCE_STATE_BY_TARGET_STATE = {
+    "alive": "dead",
+    "broken": "intact",
+    "clean": "dirty",
+    "closed": "open",
+    "dead": "alive",
+    "dirty": "clean",
+    "dry": "wet",
+    "empty": "full",
+    "flat": "not_flat",
+    "frozen": "liquid",
+    "full": "empty",
+    "liquid": "solid",
+    "melted": "solid",
+    "open": "closed",
+    "solid": "liquid",
+    "wet": "dry",
+}
 
 
 @dataclass(frozen=True)
@@ -290,6 +308,10 @@ def infer_state_scale(state: str) -> str:
     if state == "_":
         return "unknown_scale"
     return STATE_SCALE_BY_STATE.get(state, f"{state}_scale")
+
+
+def infer_source_state(target_state: str) -> str:
+    return SOURCE_STATE_BY_TARGET_STATE.get(target_state, "_")
 
 
 def transition_term(theme: str, source_state: str, target_state: str) -> Term:
@@ -1028,7 +1050,7 @@ def resultative_term(analysis: EventAnalysis, base_activity: Term) -> Term:
     )
     return cause_term(
         agent,
-        transition_term(theme, "_", result_state),
+        transition_term(theme, infer_source_state(result_state), result_state),
         activity=base_activity,
     )
 

@@ -14,10 +14,10 @@ constant mods_cons : (n : Nat) -> Adv -> ModifierSeq n -> ModifierSeq (Nat.succ 
 
 constant John : Entity
 constant broken : State
+constant intact : State
 constant integrity_scale : StateScale
 constant noon : Entity
 constant toast : Entity
-constant unknown_state : State
 constant vase : Entity
 constant in_bathroom : Adv
 constant slowly : Adv
@@ -39,7 +39,7 @@ constant knock : (n : Nat) -> ModifierSeq n -> Entity -> PropT
 def example_1 : PropT := (at_T noon (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast))
 def example_2 : Prop := (Exists fun x_theme : Food => (eat 0 mods_nil John x_theme))
 def example_3 : PropT := (repeat 2 (knock 0 mods_nil John))
-def example_4 : PropT := (Cause John (Transition vase integrity_scale unknown_state broken))
+def example_4 : PropT := (Cause John (Transition vase integrity_scale intact broken))
 
 #check example_1
 #check example_2

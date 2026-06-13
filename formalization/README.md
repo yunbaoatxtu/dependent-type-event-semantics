@@ -23,10 +23,12 @@ python3 scripts/check_formalization.py
 
 The checker regenerates the scaffold files and verifies that the committed
 outputs contain the expected declarations, `Check`/`#check` commands, and
-normalized names such as `unknown_state`. It also checks that causal-resultative
-states are not exported as ordinary entities: `unknown_state` and `broken` have
-type `State`, `integrity_scale` has type `StateScale`, and `Transition` has type
-`Entity -> StateScale -> State -> State -> TransitionT`.
+normalized proof-assistant names. It also checks that causal-resultative states
+are not exported as ordinary entities: `intact` and `broken` have type `State`,
+`integrity_scale` has type `StateScale`, and `Transition` has type
+`Entity -> StateScale -> State -> State -> TransitionT`. Resultative examples
+with a known lexical pre-state therefore export that state directly; examples
+without one still normalize `_` as `unknown_state`.
 
 Coq/Rocq is a boundary validator here, not the implementation language of the
 translator. The Python translator is responsible for producing and checking the

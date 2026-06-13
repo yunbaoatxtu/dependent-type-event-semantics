@@ -54,15 +54,15 @@ def main() -> None:
         ),
         "lean result scale": "constant integrity_scale : StateScale" in lean,
         "coq result scale": "Parameter integrity_scale : StateScale." in coq,
-        "lean result states": "constant unknown_state : State" in lean
+        "lean result states": "constant intact : State" in lean
         and "constant broken : State" in lean,
-        "coq result states": "Parameter unknown_state : State." in coq
+        "coq result states": "Parameter intact : State." in coq
         and "Parameter broken : State." in coq,
-        "lean unknown state normalized": (
-            "Transition vase integrity_scale unknown_state broken" in lean
+        "lean inferred source state": (
+            "Transition vase integrity_scale intact broken" in lean
         ),
-        "coq unknown state normalized": (
-            "Transition vase integrity_scale unknown_state broken" in coq
+        "coq inferred source state": (
+            "Transition vase integrity_scale intact broken" in coq
         ),
         "no raw transition placeholder": "Transition vase integrity_scale _ broken" not in lean
         and "Transition vase integrity_scale _ broken" not in coq,

@@ -111,7 +111,7 @@ Represent causal-resultative structure.
     "kind": "transition",
     "theme": "vase",
     "state_scale": "integrity_scale",
-    "source_state": "_",
+    "source_state": "intact",
     "target_state": "broken"
   },
   "activity": {
@@ -132,7 +132,7 @@ Represent causal-resultative structure.
 Renders as:
 
 ```text
-Cause(John, Transition(vase, integrity_scale, _, broken))
+Cause(John, Transition(vase, integrity_scale, intact, broken))
 ```
 
 The optional `activity` field preserves the original verbal description even
@@ -151,6 +151,11 @@ to `color_scale`. The fallback natural-language parser uses the same map to
 recognize simple result phrases such as `John hammered the metal flat` and
 `Mary painted the door red`: the object is kept as an `Entity`, while the final
 result adjective becomes the transition target `State`.
+For target states with a clear opposite or pre-state, the resultative compiler
+also supplies the source state: `broken` is reached from `intact`, `flat` from
+`not_flat`, `open` from `closed`, `wet` from `dry`, and so on. States without a
+safe lexical pre-state, such as the color state `red`, still export `_` as
+`unknown_state`.
 
 ### `timed_after`
 
@@ -416,12 +421,12 @@ prefix form:
 
 ```text
 (repeat 2 (knock 0 mods_nil John))
-(Cause John (Transition vase integrity_scale unknown_state broken))
+(Cause John (Transition vase integrity_scale intact broken))
 ```
 
 Names are normalized for proof-assistant friendliness. For example,
 `in(bathroom)` is exported as `in_bathroom`, and the unknown source state `_`
-is exported as `unknown_state`.
+is exported as `unknown_state` when no lexical pre-state is available.
 
 ## Formalization Files
 

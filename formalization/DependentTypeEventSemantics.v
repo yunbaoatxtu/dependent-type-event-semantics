@@ -14,10 +14,10 @@ Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).
 
 Parameter John : Entity.
 Parameter broken : State.
+Parameter intact : State.
 Parameter integrity_scale : StateScale.
 Parameter noon : Entity.
 Parameter toast : Entity.
-Parameter unknown_state : State.
 Parameter vase : Entity.
 Parameter in_bathroom : Adv.
 Parameter slowly : Adv.
@@ -39,7 +39,7 @@ Parameter knock : forall n : nat, ModifierSeq n -> Entity -> PropT.
 Definition example_1 : PropT := (at_T noon (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)).
 Definition example_2 : Prop := (exists x_theme : Food, (eat 0 mods_nil John x_theme)).
 Definition example_3 : PropT := (repeat 2 (knock 0 mods_nil John)).
-Definition example_4 : PropT := (Cause John (Transition vase integrity_scale unknown_state broken)).
+Definition example_4 : PropT := (Cause John (Transition vase integrity_scale intact broken)).
 
 Check example_1.
 Check example_2.
