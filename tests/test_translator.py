@@ -843,6 +843,42 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["coq_check"]["status"], "failed")
         self.assertIn("forbidden construction fragments", result["coq_check"]["message"])
 
+    def test_registered_rule_skips_coq_when_internal_type_check_fails(self) -> None:
+        def bad_type_analyzer(sentence: str) -> dict:
+            return {
+                "kind": "bad_type_rule",
+                "input_sentence": sentence,
+                "event_semantics": {},
+                "dependent_type_translation": "bad",
+                "ast": {"kind": "bad"},
+                "type_check": {
+                    "ok": False,
+                    "type": None,
+                    "errors": ["synthetic type error"],
+                },
+                "coq_code": "Definition bad : Prop := True.\n",
+            }
+
+        rule = ConstructionRule(
+            rule_id="bad_type_rule",
+            label="Bad type rule",
+            phenomenon="negative type-check test",
+            analyzer=bad_type_analyzer,
+            forbidden_coq_fragments=("Parameter Event : Type.",),
+        )
+        result = run_registered_rule(rule, "bad typed sentence", require_coq=True)
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertFalse(result["ok"])
+        self.assertIsNone(result["construction_hygiene"]["ok"])
+        self.assertFalse(result["construction_hygiene"]["checked"])
+        self.assertEqual(result["coq_check"]["status"], "skipped")
+        self.assertIn("internal type_check failed", result["coq_check"]["message"])
+        diagnostics = build_diagnostics(result)
+        self.assertEqual(diagnostics["failure_stage"], "type_check")
+        self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
+        self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
+
     def test_docs_explain_construction_hygiene_policy_vs_actual_findings(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")

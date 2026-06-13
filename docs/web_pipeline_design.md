@@ -185,6 +185,10 @@ matched construction. `found_forbidden_fragments` reports fragments that were
 actually found in the generated Coq scaffold. A successful replacement can
 therefore display forbidden fragments as policy while still showing `hygiene:
 passed` and `found forbidden fragments: none`.
+If the construction's internal AST `type_check` fails, the pipeline stops before
+construction hygiene and Coq/Rocq validation; those downstream stages are
+reported as `skipped`, so the diagnostics do not blur an AST error into a proof
+assistant error.
 
 ## Type Discipline
 

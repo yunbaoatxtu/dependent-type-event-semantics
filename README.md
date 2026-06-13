@@ -204,7 +204,10 @@ For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 `type_check`, `construction_hygiene`, and `coq_check` failures.
 `diagnostics.recovery_hint` gives a short next-step suggestion for that failure
 stage, while `diagnostics.recovery_actions` exposes the same advice as
-structured actions for frontends and automation.
+structured actions for frontends and automation. Registered construction rules
+stop at the first failed stage: if internal AST `type_check` fails,
+construction hygiene and Coq/Rocq validation are reported as `skipped` rather
+than attempted.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `next-step--<kind>` CSS class for frontend automation.

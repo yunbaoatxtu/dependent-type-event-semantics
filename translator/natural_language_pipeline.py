@@ -746,6 +746,25 @@ def run_registered_rule(
     if analysis is None:
         return None
 
+    if analysis.get("type_check", {}).get("ok") is False:
+        return {
+            **analysis,
+            "ok": False,
+            "construction_rule": construction_rule_payload(rule),
+            "construction_hygiene": {
+                "ok": None,
+                "checked": False,
+                "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+                "found_forbidden_fragments": [],
+            },
+            "coq_check": {
+                "ok": None,
+                "status": "skipped",
+                "message": "Skipped Coq/Rocq validation because internal type_check failed.",
+            },
+            "conclusion": "Translation failed internal type_check before Coq/Rocq validation.",
+        }
+
     forbidden_found = check_forbidden_coq_fragments(
         analysis["coq_code"],
         rule.forbidden_coq_fragments,

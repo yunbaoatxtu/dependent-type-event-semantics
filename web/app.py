@@ -171,11 +171,12 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
         return "No registered construction rule matched; fallback or general translator path was used."
     hygiene = result.get("construction_hygiene", {})
     forbidden = rule.get("forbidden_coq_fragments", [])
+    hygiene_status = check_status(hygiene.get("ok")) if hygiene else "not_applicable"
     lines = [
         f"id: {rule.get('id', '')}",
         f"label: {rule.get('label', '')}",
         f"phenomenon: {rule.get('phenomenon', '')}",
-        f"hygiene: {'passed' if hygiene.get('ok') else 'failed'}",
+        f"hygiene: {hygiene_status}",
         "hygiene policy:",
     ]
     if forbidden:
