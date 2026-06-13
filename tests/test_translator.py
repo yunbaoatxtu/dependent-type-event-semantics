@@ -354,6 +354,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Cause(John, Transition(vase, _, broken))", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertIsNone(result["diagnostics"]["failure_stage"])
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
 
@@ -362,6 +363,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
+        self.assertEqual(result["diagnostics"]["failure_stage"], "input")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
+
+    def test_web_analyze_sentence_reports_parser_failure_stage(self) -> None:
+        result = analyze_sentence("John")
+        self.assertFalse(result["ok"])
+        self.assertIn("at least a subject and a predicate", result["error"])
+        self.assertEqual(result["diagnostics"]["summary"], "translation failed")
+        self.assertEqual(result["diagnostics"]["failure_stage"], "parsing")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
 
     def test_api_analyze_response_contains_diagnostics(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -372,6 +383,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertEqual(result["construction_rule"]["id"], "perception_nominalization")
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertIsNone(result["diagnostics"]["failure_stage"])
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
@@ -382,6 +394,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
+        self.assertEqual(result["diagnostics"]["failure_stage"], "input")
 
     def test_web_page_contains_pipeline_panels(self) -> None:
         page = render_page("John knocked twice")
@@ -419,9 +432,24 @@ class TranslatorTests(unittest.TestCase):
             }
         )
         self.assertEqual(diagnostics["summary"], "construction hygiene failed")
+        self.assertEqual(diagnostics["failure_stage"], "construction_hygiene")
         self.assertEqual(diagnostics["stages"]["type_check"], "passed")
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "failed")
         self.assertEqual(diagnostics["stages"]["coq_check"], "failed")
+
+    def test_web_diagnostics_reports_type_check_failure_stage(self) -> None:
+        diagnostics = build_diagnostics(
+            {
+                "ok": False,
+                "input_sentence": "bad typed sentence",
+                "type_check": {"ok": False},
+                "coq_check": {"ok": None},
+            }
+        )
+        self.assertEqual(diagnostics["summary"], "type check failed")
+        self.assertEqual(diagnostics["failure_stage"], "type_check")
+        self.assertEqual(diagnostics["stages"]["type_check"], "failed")
+        self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
 
     def test_pipeline_reports_construction_hygiene_separately(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
@@ -481,11 +509,15 @@ class TranslatorTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
         self.assertIn('"summary": "translation verified"', readme)
+        self.assertIn('"failure_stage": null', readme)
         self.assertIn('"type_check": "passed"', readme)
         self.assertIn('"construction_hygiene": "passed"', readme)
         self.assertIn('"coq_check": "passed"', readme)
+        self.assertIn("`diagnostics.failure_stage` distinguishes", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
+        self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
+        self.assertIn("one of `input`, `parsing`,", web_design)
 
     def test_docs_explain_api_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -499,6 +531,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`dependent_type_translation`", web_design)
         self.assertIn("`construction_hygiene`", web_design)
         self.assertIn("failure, it must still return `ok: false`", web_design)
+        self.assertIn("The separate `failure_stage` field distinguishes", web_design)
 
 
 if __name__ == "__main__":

@@ -44,7 +44,7 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     construction_hygiene = result.get("construction_hygiene", {})
     coq_check = result.get("coq_check", {})
     stages = {
-        "type_check": check_status(type_check.get("ok", result.get("ok"))),
+        "type_check": check_status(type_check.get("ok")) if type_check else "not_applicable",
         "construction_hygiene": (
             check_status(construction_hygiene.get("ok"))
             if construction_hygiene
@@ -54,13 +54,23 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     }
     if result.get("ok"):
         summary = "translation verified"
+        failure_stage = None
     elif construction_hygiene and construction_hygiene.get("ok") is False:
         summary = "construction hygiene failed"
+        failure_stage = "construction_hygiene"
     elif coq_check and coq_check.get("ok") is False:
         summary = "coq validation failed"
+        failure_stage = "coq_check"
+    elif type_check and type_check.get("ok") is False:
+        summary = "type check failed"
+        failure_stage = "type_check"
+    elif not result.get("input_sentence", "").strip():
+        summary = "translation failed"
+        failure_stage = "input"
     else:
         summary = "translation failed"
-    return {"summary": summary, "stages": stages}
+        failure_stage = "parsing"
+    return {"summary": summary, "failure_stage": failure_stage, "stages": stages}
 
 
 def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:

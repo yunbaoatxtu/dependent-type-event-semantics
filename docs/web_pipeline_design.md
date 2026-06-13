@@ -58,6 +58,10 @@ failure, it must still return `ok: false`, an `error` message when available,
 and a `diagnostics` object so callers can distinguish parser, type-checking,
 construction-hygiene, and Coq/Rocq boundary failures.
 
+`diagnostics.failure_stage` is the machine-readable failure locator. It is
+`null` on successful translations and otherwise one of `input`, `parsing`,
+`type_check`, `construction_hygiene`, or `coq_check`.
+
 ## Successful Response
 
 A successful response should include:
@@ -75,6 +79,8 @@ The diagnostics summary has four stage values: `passed`, `failed`, `skipped`,
 and `not_applicable`. It summarizes `type_check`, `construction_hygiene`, and
 `coq_check` so a user can see whether a failure belongs to internal structure,
 construction-specific hygiene, or the external proof-assistant boundary.
+The separate `failure_stage` field distinguishes input/parsing failures from
+later semantic and proof-assistant failures.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

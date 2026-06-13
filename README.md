@@ -150,6 +150,7 @@ three relevant checks for user interfaces:
 {
   "diagnostics": {
     "summary": "translation verified",
+    "failure_stage": null,
     "stages": {
       "type_check": "passed",
       "construction_hygiene": "passed",
@@ -171,6 +172,9 @@ is available. The response includes the same event-semantics JSON,
 dependent-type rendering, generated Coq, `construction_rule`,
 `construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
 page.
+
+For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
+`type_check`, `construction_hygiene`, and `coq_check` failures.
 
 Run the local web demo:
 
