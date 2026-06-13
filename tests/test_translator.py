@@ -6,8 +6,9 @@ import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from scripts.check_paper_docx_sync import check_sync, format_sync_errors, markdown_text_blocks
-from scripts.sync_paper_docx import build_docx, markdown_inline_segments
+from scripts.check_paper_docx_sync import check_sync, format_sync_errors
+from scripts.paper_markdown import markdown_inline_segments, markdown_text_blocks
+from scripts.sync_paper_docx import build_docx
 from translator.dependent_type_event_translator import (
     check_term,
     export_module,

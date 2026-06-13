@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts.check_paper_docx_sync import is_table_separator, split_table_row
+    from scripts.paper_markdown import is_table_separator, markdown_inline_segments, split_table_row
 except ModuleNotFoundError:  # pragma: no cover - used when run as scripts/sync_paper_docx.py.
-    from check_paper_docx_sync import is_table_separator, split_table_row
+    from paper_markdown import is_table_separator, markdown_inline_segments, split_table_row
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,17 +39,6 @@ def load_docx_tooling() -> DocxTooling:
             "workspace Python runtime or install python-docx."
         ) from exc
     return DocxTooling(Document, WD_ALIGN_PARAGRAPH, Inches, Pt, RGBColor)
-
-
-def markdown_inline_segments(text: str) -> list[tuple[str, bool]]:
-    if "**" not in text:
-        return [(text, False)] if text else []
-
-    parts = text.split("**")
-    if len(parts) % 2 == 0:
-        return [(text, False)]
-
-    return [(part, index % 2 == 1) for index, part in enumerate(parts) if part]
 
 
 def add_markdown_runs(

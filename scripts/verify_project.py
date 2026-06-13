@@ -78,6 +78,7 @@ def main() -> None:
             "tests/test_translator.py",
             "scripts/generate_formalization.py",
             "scripts/check_formalization.py",
+            "scripts/paper_markdown.py",
             "scripts/check_paper_docx_sync.py",
             "scripts/sync_paper_docx.py",
             "scripts/verify_project.py",
