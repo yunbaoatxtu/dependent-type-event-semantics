@@ -26,6 +26,8 @@ def main() -> None:
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
         "coq declarations": "Parameter Entity : Type." in coq,
+        "lean PropT alias": "abbrev PropT : Type := Prop" in lean,
+        "coq PropT alias": "Definition PropT : Type := Prop." in coq,
         "lean check commands": "#check example_4" in lean,
         "coq check commands": "Check example_4." in coq,
         "lean unknown state normalized": "Transition vase unknown_state broken" in lean,
