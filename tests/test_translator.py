@@ -1,5 +1,7 @@
 import json
 import unittest
+import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 from translator.dependent_type_event_translator import (
@@ -24,6 +26,47 @@ EXAMPLES = ROOT / "translator" / "examples"
 
 def load_example(name: str) -> dict:
     return json.loads((EXAMPLES / name).read_text(encoding="utf-8"))
+
+
+def docx_text(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        xml = archive.read("word/document.xml")
+    root = ET.fromstring(xml)
+    namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    paragraphs = []
+    for paragraph in root.findall(".//w:p", namespace):
+        text = "".join(node.text or "" for node in paragraph.findall(".//w:t", namespace))
+        if text:
+            paragraphs.append(text)
+    return "\n".join(paragraphs)
+
+
+def markdown_text_blocks(path: Path) -> list[str]:
+    blocks: list[str] = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("|"):
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if cells and all(set(cell) <= {"-", ":", " "} and "-" in cell for cell in cells):
+                continue
+            blocks.extend(cell for cell in cells if cell)
+            continue
+        if line.startswith("# "):
+            blocks.append(line[2:].strip())
+            continue
+        if line.startswith("## "):
+            blocks.append(line[3:].strip())
+            continue
+        if line.startswith("- "):
+            blocks.append(line[2:].strip())
+            continue
+        if line.startswith("_") and line.endswith("_"):
+            blocks.append(line.strip("_"))
+            continue
+        blocks.append(line.replace("**", ""))
+    return blocks
 
 
 class TranslatorTests(unittest.TestCase):
@@ -577,6 +620,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
+        self.assertIn("python3 scripts/sync_paper_docx.py", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
@@ -613,6 +657,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)
         self.assertIn("stage-local diagnostics", manuscript)
+
+    def test_paper_docx_is_synchronized_with_markdown_order(self) -> None:
+        markdown_path = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.md"
+        docx_path = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.docx"
+        rendered_text = docx_text(docx_path)
+        cursor = 0
+        for block in markdown_text_blocks(markdown_path):
+            with self.subTest(block=block[:80]):
+                position = rendered_text.find(block, cursor)
+                self.assertNotEqual(position, -1)
+                cursor = position + len(block)
 
 
 if __name__ == "__main__":

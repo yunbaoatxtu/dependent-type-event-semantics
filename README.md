@@ -230,6 +230,12 @@ bundled with the Codex runtime:
 sh scripts/render_paper.sh
 ```
 
+Synchronize the Word manuscript from the Markdown source before rendering:
+
+```bash
+python3 scripts/sync_paper_docx.py
+```
+
 Generate Lean/Coq-style formalization scaffolds from the checked examples:
 
 ```bash

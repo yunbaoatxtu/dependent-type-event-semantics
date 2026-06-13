@@ -10,6 +10,7 @@ RENDER_SRC="$HOME/.codex/plugins/cache/openai-primary-runtime/documents/26.601.1
 
 WORK_BIN="$ROOT_DIR/work/bin"
 mkdir -p "$WORK_BIN"
+rm -rf "$ROOT_DIR/work/rendered_paper_fixed"
 
 cat > "$WORK_BIN/soffice" <<EOF
 #!/bin/sh
