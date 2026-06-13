@@ -77,6 +77,16 @@ def check_sync(markdown_path: Path, docx_path: Path) -> list[str]:
     return missing
 
 
+def format_sync_errors(missing: list[str]) -> str:
+    lines = [
+        "DOCX is not synchronized with Markdown.",
+        "Missing or out-of-order blocks:",
+    ]
+    for index, block in enumerate(missing, start=1):
+        lines.append(f"{index}. {block}")
+    return "\n".join(lines)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Check that the paper DOCX matches Markdown order.")
     parser.add_argument("--markdown", type=Path, default=DEFAULT_MARKDOWN)
@@ -85,8 +95,7 @@ def main() -> None:
 
     missing = check_sync(args.markdown, args.docx)
     if missing:
-        print("DOCX is not synchronized with Markdown. First missing/out-of-order block:")
-        print(missing[0])
+        print(format_sync_errors(missing))
         raise SystemExit(1)
     print("paper DOCX is synchronized with Markdown")
 

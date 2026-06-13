@@ -1,8 +1,11 @@
 import json
+import tempfile
 import unittest
+import zipfile
 from pathlib import Path
+from xml.sax.saxutils import escape
 
-from scripts.check_paper_docx_sync import check_sync
+from scripts.check_paper_docx_sync import check_sync, format_sync_errors
 from translator.dependent_type_event_translator import (
     check_term,
     export_module,
@@ -25,6 +28,19 @@ EXAMPLES = ROOT / "translator" / "examples"
 
 def load_example(name: str) -> dict:
     return json.loads((EXAMPLES / name).read_text(encoding="utf-8"))
+
+
+def write_minimal_docx(path: Path, paragraphs: list[str]) -> None:
+    namespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    body = "".join(
+        f"<w:p><w:r><w:t>{escape(paragraph)}</w:t></w:r></w:p>" for paragraph in paragraphs
+    )
+    document = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<w:document xmlns:w="{namespace}"><w:body>{body}</w:body></w:document>'
+    )
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("word/document.xml", document)
 
 
 class TranslatorTests(unittest.TestCase):
@@ -621,6 +637,72 @@ class TranslatorTests(unittest.TestCase):
         markdown_path = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.md"
         docx_path = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.docx"
         self.assertEqual(check_sync(markdown_path, docx_path), [])
+
+    def test_paper_docx_sync_reports_missing_paragraph(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            markdown_path = temp / "paper.md"
+            docx_path = temp / "paper.docx"
+            markdown_path.write_text(
+                "# Title\n\nFirst paragraph.\n\nSecond paragraph.\n",
+                encoding="utf-8",
+            )
+            write_minimal_docx(docx_path, ["Title", "First paragraph."])
+
+            missing = check_sync(markdown_path, docx_path)
+            self.assertEqual(missing, ["Second paragraph."])
+            self.assertIn("1. Second paragraph.", format_sync_errors(missing))
+
+    def test_paper_docx_sync_reports_out_of_order_block(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            markdown_path = temp / "paper.md"
+            docx_path = temp / "paper.docx"
+            markdown_path.write_text(
+                "# Title\n\nFirst block.\n\nSecond block.\n\nThird block.\n",
+                encoding="utf-8",
+            )
+            write_minimal_docx(
+                docx_path,
+                ["Title", "First block.", "Third block.", "Second block."],
+            )
+
+            missing = check_sync(markdown_path, docx_path)
+            self.assertEqual(missing, ["Third block."])
+            self.assertIn("1. Third block.", format_sync_errors(missing))
+
+    def test_paper_docx_sync_reports_missing_table_cell(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            markdown_path = temp / "paper.md"
+            docx_path = temp / "paper.docx"
+            markdown_path.write_text(
+                (
+                    "# Title\n\n"
+                    "| Event-semantic function | Dependent-type replacement | Canonical constructor |\n"
+                    "| --- | --- | --- |\n"
+                    "| Variable polyadicity | Natural-number-indexed verb families | V : Pi n : Nat. Vk-ADV(n) |\n"
+                ),
+                encoding="utf-8",
+            )
+            write_minimal_docx(
+                docx_path,
+                [
+                    "Title",
+                    "Event-semantic function",
+                    "Dependent-type replacement",
+                    "Canonical constructor",
+                    "Variable polyadicity",
+                    "V : Pi n : Nat. Vk-ADV(n)",
+                ],
+            )
+
+            missing = check_sync(markdown_path, docx_path)
+            self.assertEqual(missing, ["Natural-number-indexed verb families"])
+            self.assertIn(
+                "1. Natural-number-indexed verb families",
+                format_sync_errors(missing),
+            )
 
 
 if __name__ == "__main__":
