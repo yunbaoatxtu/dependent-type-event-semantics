@@ -78,12 +78,14 @@ def main() -> None:
             "tests/test_translator.py",
             "scripts/generate_formalization.py",
             "scripts/check_formalization.py",
+            "scripts/check_paper_docx_sync.py",
             "scripts/sync_paper_docx.py",
             "scripts/verify_project.py",
             "web/app.py",
         ],
     )
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])
+    run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")
     else:

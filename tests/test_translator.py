@@ -621,6 +621,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
         self.assertIn("python3 scripts/sync_paper_docx.py", readme)
+        self.assertIn("python3 scripts/check_paper_docx_sync.py", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)

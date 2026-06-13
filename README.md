@@ -236,6 +236,12 @@ Synchronize the Word manuscript from the Markdown source before rendering:
 python3 scripts/sync_paper_docx.py
 ```
 
+Check that the committed Word manuscript still follows the Markdown source:
+
+```bash
+python3 scripts/check_paper_docx_sync.py
+```
+
 Generate Lean/Coq-style formalization scaffolds from the checked examples:
 
 ```bash
