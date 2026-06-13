@@ -310,7 +310,7 @@ class TranslatorTests(unittest.TestCase):
             }
         )
         self.assertFalse(result["ok"])
-        self.assertIn("cause.effect must have type Transition", result["errors"][0])
+        self.assertIn("cause.effect must have type TransitionT", result["errors"][0])
 
     def test_export_rejects_ill_typed_ast(self) -> None:
         bad = {

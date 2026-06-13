@@ -543,7 +543,7 @@ def check_term(term: Term) -> TypeCheck:
             for field in ("theme", "source_state", "target_state"):
                 if not isinstance(current.get(field), str) or not current[field]:
                     errors.append(f"{path}: transition.{field} must be a non-empty string")
-            return "Transition"
+            return "TransitionT"
 
         if kind == "cause":
             if not isinstance(current.get("causer"), str) or not current["causer"]:
@@ -553,9 +553,9 @@ def check_term(term: Term) -> TypeCheck:
                 errors.append(f"{path}: cause.effect must be a term")
             else:
                 effect_type = check(effect, f"{path}.effect")
-                if effect_type != "Transition":
+                if effect_type != "TransitionT":
                     errors.append(
-                        f"{path}: cause.effect must have type Transition, got {effect_type}"
+                        f"{path}: cause.effect must have type TransitionT, got {effect_type}"
                     )
             activity = current.get("activity")
             if activity is not None:

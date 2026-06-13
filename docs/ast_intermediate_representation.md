@@ -330,9 +330,9 @@ Current type rules:
   has type `t`.
 - `time` has type `t` when its operator is a recognized temporal operator and
   its body has type `t`.
-- `transition` has type `Transition`; its `theme` is exported as `Entity`, while
+- `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `source_state` and `target_state` are exported as `State`.
-- `cause` has type `t` only when its `effect` has type `Transition`; its
+- `cause` has type `t` only when its `effect` has type `TransitionT`; its
   optional `activity` must have type `t`.
 - `timed_after` has type `Prop` when it binds `t_sing : Time` and
   `t_salute : Time`, the first predicate has type `Entity -> Time -> Prop`, the
