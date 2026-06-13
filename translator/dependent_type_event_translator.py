@@ -39,12 +39,27 @@ OMITTED_THEME_TYPES = {
     "drink": "Drinkable",
 }
 STATE_SCALE_BY_STATE = {
+    "alive": "life_scale",
     "broken": "integrity_scale",
-    "intact": "integrity_scale",
-    "flat": "shape_scale",
-    "not_flat": "shape_scale",
-    "open": "access_scale",
+    "clean": "cleanliness_scale",
     "closed": "access_scale",
+    "dead": "life_scale",
+    "dirty": "cleanliness_scale",
+    "dry": "moisture_scale",
+    "empty": "content_scale",
+    "flat": "shape_scale",
+    "frozen": "phase_scale",
+    "full": "content_scale",
+    "intact": "integrity_scale",
+    "liquid": "phase_scale",
+    "melted": "phase_scale",
+    "open": "access_scale",
+    "not_flat": "shape_scale",
+    "red": "color_scale",
+    "round": "shape_scale",
+    "solid": "phase_scale",
+    "straight": "shape_scale",
+    "wet": "moisture_scale",
 }
 
 

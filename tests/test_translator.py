@@ -175,6 +175,37 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
 
+    def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
+        formula = sentence_to_event_semantics("John hammered the metal flat")
+        self.assertIn({"pred": "Theme", "args": ["e", "metal"]}, formula["body"]["and"])
+        self.assertIn({"pred": "Result", "args": ["e", "flat"]}, formula["body"]["and"])
+
+        result = run_pipeline("John hammered the metal flat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "Cause(john, Transition(metal, shape_scale, _, flat))",
+        )
+        self.assertEqual(result["ast"]["effect"]["state_scale"], "shape_scale")
+        self.assertIn("Parameter metal : Entity.", result["coq_code"])
+        self.assertIn("Parameter shape_scale : StateScale.", result["coq_code"])
+        self.assertIn("Parameter flat : State.", result["coq_code"])
+        self.assertIn(
+            "Definition example_1 : PropT := (Cause john (Transition metal shape_scale unknown_state flat)).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+        painted = run_pipeline("Mary painted the door red", require_coq=True)
+        self.assertTrue(painted["ok"])
+        self.assertEqual(
+            painted["dependent_type_translation"],
+            "Cause(mary, Transition(door, color_scale, _, red))",
+        )
+        self.assertIn("Parameter color_scale : StateScale.", painted["coq_code"])
+        self.assertIn("Parameter red : State.", painted["coq_code"])
+        self.assertEqual(painted["coq_check"]["status"], "passed")
+
     def test_type_checker_rejects_bad_adverb_count(self) -> None:
         result = check_term(
             {

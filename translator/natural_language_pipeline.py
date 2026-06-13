@@ -14,7 +14,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from translator.dependent_type_event_translator import export_module, translate
+from translator.dependent_type_event_translator import (
+    STATE_SCALE_BY_STATE,
+    export_module,
+    translate,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -884,9 +888,15 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
         object_tokens.append(token)
         idx += 1
 
+    result_state = None
+    if len(object_tokens) >= 2 and object_tokens[-1] in STATE_SCALE_BY_STATE:
+        result_state = object_tokens.pop()
+
     theme = clean_phrase(object_tokens)
     if object_tokens and theme != "entity":
         items.append(atom("Theme", "e", theme))
+    if result_state is not None:
+        items.append(atom("Result", "e", result_state))
     return event_formula(*items)
 
 

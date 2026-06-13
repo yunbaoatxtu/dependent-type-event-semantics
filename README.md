@@ -240,6 +240,12 @@ Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `unknown_state` and `broken` have type `State`,
 `integrity_scale` has type `StateScale`, and `Transition` has type
 `Entity -> StateScale -> State -> State -> TransitionT`.
+The fallback natural-language parser also recognizes simple result phrases
+whose final object-position word is a known result state, so `John hammered the
+metal flat` becomes `Cause(john, Transition(metal, shape_scale, _, flat))`
+rather than treating `metal flat` as a single entity name. The same state-scale
+lexicon covers common dimensions such as integrity, shape, access, phase,
+moisture, fullness, color, cleanliness, and life status.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

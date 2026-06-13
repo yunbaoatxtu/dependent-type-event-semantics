@@ -143,6 +143,15 @@ transition theme type `Entity`, the scale type `StateScale`, and the
 source/target states type `State`, so `Transition` is exported as
 `Entity -> StateScale -> State -> State -> TransitionT`.
 
+The translator infers the `state_scale` from a small lexical map. For example,
+`broken` and `intact` map to `integrity_scale`, `flat`, `not_flat`, `round`, and
+`straight` map to `shape_scale`, `open` and `closed` map to `access_scale`,
+`solid`, `liquid`, `melted`, and `frozen` map to `phase_scale`, and `red` maps
+to `color_scale`. The fallback natural-language parser uses the same map to
+recognize simple result phrases such as `John hammered the metal flat` and
+`Mary painted the door red`: the object is kept as an `Entity`, while the final
+result adjective becomes the transition target `State`.
+
 ### `timed_after`
 
 Represents the Luo-Shi-style replacement for Parsons' temporal event-ordering
@@ -335,10 +344,11 @@ Current type rules:
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the
-  target state scale, known source-state scales must agree with it, and if both
-  states are known rather than `_`, they must differ. The `target_state` must be
-  known, because a resultative transition without a target state is not a
-  completed change-of-state analysis.
+  target state scale inferred from the lexical state map, known source-state
+  scales must agree with it, and if both states are known rather than `_`, they
+  must differ. The `target_state` must be known, because a resultative
+  transition without a target state is not a completed change-of-state
+  analysis.
 - `cause` has type `t` only when its `effect` has type `TransitionT`; its
   optional `activity` must have type `t`.
 - `timed_after` has type `Prop` when it binds `t_sing : Time` and
