@@ -338,6 +338,21 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result, {"ok": True, "type": "TransitionT", "errors": []})
 
+    def test_type_checker_rejects_unknown_transition_target(self) -> None:
+        result = check_term(
+            {
+                "kind": "transition",
+                "theme": "vase",
+                "source_state": "intact",
+                "target_state": "_",
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "ast: transition.target_state must be known",
+            result["errors"],
+        )
+
     def test_export_rejects_ill_typed_ast(self) -> None:
         bad = {
             "kind": "application",

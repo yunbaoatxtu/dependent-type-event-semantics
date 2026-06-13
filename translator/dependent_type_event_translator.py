@@ -545,6 +545,8 @@ def check_term(term: Term) -> TypeCheck:
                     errors.append(f"{path}: transition.{field} must be a non-empty string")
             source_state = current.get("source_state")
             target_state = current.get("target_state")
+            if target_state == "_":
+                errors.append(f"{path}: transition.target_state must be known")
             if (
                 isinstance(source_state, str)
                 and isinstance(target_state, str)
