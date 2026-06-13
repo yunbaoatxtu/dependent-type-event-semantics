@@ -155,7 +155,10 @@ existential formula over two time variables and deliberately does not declare
 The remaining two Parsons/Luo-Shi examples have their own typed routes. `Mary
 saw John leave` uses a nominalizing map `E : Prop -> Entity`, so the perceived
 content is rendered as `see Mary (E (leave John))` rather than as a hidden
-event argument. `In every burning, oxygen is consumed` is rendered as
+event argument. The AST records the nominalized proposition explicitly:
+`see : Entity -> Entity -> Prop` takes Mary and the object produced by
+`E : Prop -> Entity` from `leave John : Prop`. `In every burning, oxygen is
+consumed` is rendered as
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`; the checked
 scaffold therefore avoids both an `Event` type and an event-inclusion predicate
 such as `IN`.

@@ -134,8 +134,10 @@ python3 -m translator.natural_language_pipeline \
 ```
 
 The perception-complement example uses a nominalizing map
-`E : Prop -> Entity`, yielding `see Mary (E (leave John))`. The burning example
-uses universal time quantification:
+`E : Prop -> Entity`, yielding `see Mary (E (leave John))`. Its AST records
+`see : Entity -> Entity -> Prop`, `leave : Entity -> Prop`, and the nominalized
+object produced by `E`, so the construction is type-checked before Coq export.
+The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Both
 generated Coq scaffolds are checked without introducing an `Event` type.
 

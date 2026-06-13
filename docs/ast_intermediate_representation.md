@@ -132,6 +132,42 @@ when the visible rendering focuses on the causal transition. This is useful for
 later proof assistant export, where the causing process and the result
 transition may need separate types.
 
+### `perception_nominalization`
+
+Represents the Luo-Shi-style replacement for perception complements such as
+`Mary saw John leave`. The embedded clause is first checked as a proposition,
+then mapped into an entity-denoting percept by `E : Prop -> Entity`:
+
+```json
+{
+  "kind": "perception_nominalization",
+  "perception": {
+    "predicate": "see",
+    "predicate_type": "Entity -> Entity -> Prop",
+    "experiencer": {
+      "name": "Mary",
+      "type": "Entity"
+    },
+    "object": {
+      "kind": "nominalized_proposition",
+      "nominalizer": "E",
+      "nominalizer_type": "Prop -> Entity",
+      "proposition": {
+        "predicate": "leave",
+        "predicate_type": "Entity -> Prop",
+        "subject": {
+          "name": "John",
+          "type": "Entity"
+        }
+      }
+    }
+  }
+}
+```
+
+This prevents the construction from being represented as a hidden event object
+while still giving the perception verb an entity-denoting object.
+
 ### `scope_ambiguity`
 
 Represents a construction-specific ambiguity that is not forced through the
@@ -202,6 +238,10 @@ Current type rules:
 - `transition` has type `Transition`.
 - `cause` has type `t` only when its `effect` has type `Transition`; its
   optional `activity` must have type `t`.
+- `perception_nominalization` has type `Prop` when the perception predicate has
+  type `Entity -> Entity -> Prop`, the embedded predicate has type
+  `Entity -> Prop`, the embedded subject is an `Entity`, and the nominalizer has
+  type `Prop -> Entity`.
 
 This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being

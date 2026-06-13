@@ -331,6 +331,77 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def perception_nominalization_ast(
+    perception_predicate: str,
+    experiencer: str,
+    embedded_predicate: str,
+    embedded_subject: str,
+) -> dict[str, Any]:
+    return {
+        "kind": "perception_nominalization",
+        "perception": {
+            "predicate": perception_predicate,
+            "predicate_type": "Entity -> Entity -> Prop",
+            "experiencer": {
+                "name": experiencer,
+                "type": "Entity",
+            },
+            "object": {
+                "kind": "nominalized_proposition",
+                "nominalizer": "E",
+                "nominalizer_type": "Prop -> Entity",
+                "proposition": {
+                    "predicate": embedded_predicate,
+                    "predicate_type": "Entity -> Prop",
+                    "subject": {
+                        "name": embedded_subject,
+                        "type": "Entity",
+                    },
+                },
+            },
+        },
+    }
+
+
+def check_perception_nominalization_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    perception = ast.get("perception")
+    if ast.get("kind") != "perception_nominalization":
+        errors.append("ast.kind must be perception_nominalization")
+    if not isinstance(perception, dict):
+        errors.append("ast.perception must be an object")
+    else:
+        if perception.get("predicate_type") != "Entity -> Entity -> Prop":
+            errors.append("perception predicate must have type Entity -> Entity -> Prop")
+        experiencer = perception.get("experiencer")
+        if not isinstance(experiencer, dict) or experiencer.get("type") != "Entity":
+            errors.append("perception.experiencer must have type Entity")
+
+        obj = perception.get("object")
+        if not isinstance(obj, dict):
+            errors.append("perception.object must be a nominalized proposition")
+        else:
+            if obj.get("kind") != "nominalized_proposition":
+                errors.append("perception.object.kind must be nominalized_proposition")
+            if obj.get("nominalizer_type") != "Prop -> Entity":
+                errors.append("nominalizer E must have type Prop -> Entity")
+            proposition = obj.get("proposition")
+            if not isinstance(proposition, dict):
+                errors.append("nominalized object must contain a proposition")
+            else:
+                if proposition.get("predicate_type") != "Entity -> Prop":
+                    errors.append("embedded predicate must have type Entity -> Prop")
+                subject = proposition.get("subject")
+                if not isinstance(subject, dict) or subject.get("type") != "Entity":
+                    errors.append("embedded subject must have type Entity")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
 def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     if tokens not in (["mary", "saw", "john", "leave"], ["mary", "saw", "john", "left"]):
@@ -368,25 +439,21 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         ),
         "typed_replacement": "see(Mary, E(leave(John)))",
     }
+    ast = perception_nominalization_ast(
+        perception_predicate,
+        experiencer,
+        embedded_predicate,
+        embedded_subject,
+    )
+    type_check = check_perception_nominalization_ast(ast)
     return {
         "kind": "perception_nominalization",
         "input_sentence": sentence,
         "event_semantics": event_semantics,
         "dependent_type_translation": event_semantics["typed_replacement"],
-        "ast": {
-            "kind": "perception_nominalization",
-            "perception": perception_predicate,
-            "experiencer": experiencer,
-            "embedded": {
-                "predicate": embedded_predicate,
-                "subject": embedded_subject,
-                "nominalizer": "E",
-            },
-        },
+        "ast": ast,
         "type_check": {
-            "ok": True,
-            "type": "Prop",
-            "errors": [],
+            **type_check,
             "note": "The perceived eventuality is embedded by E : Prop -> Entity, not by an Event argument.",
         },
         "coq_code": coq_code,

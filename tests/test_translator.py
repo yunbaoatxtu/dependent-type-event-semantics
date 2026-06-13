@@ -11,6 +11,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     ConstructionRule,
+    check_perception_nominalization_ast,
     construction_rules,
     run_registered_rule,
     run_pipeline,
@@ -454,7 +455,32 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertNotIn("Parameter Event : Type.", result["coq_code"])
         self.assertNotIn("exists e : Event", result["coq_code"])
+        perception = result["ast"]["perception"]
+        self.assertEqual(perception["predicate"], "see")
+        self.assertEqual(perception["predicate_type"], "Entity -> Entity -> Prop")
+        self.assertEqual(perception["experiencer"], {"name": "Mary", "type": "Entity"})
+        nominalized = perception["object"]
+        self.assertEqual(nominalized["kind"], "nominalized_proposition")
+        self.assertEqual(nominalized["nominalizer"], "E")
+        self.assertEqual(nominalized["nominalizer_type"], "Prop -> Entity")
+        self.assertEqual(
+            nominalized["proposition"],
+            {
+                "predicate": "leave",
+                "predicate_type": "Entity -> Prop",
+                "subject": {"name": "John", "type": "Entity"},
+            },
+        )
+        self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_rejects_bad_nominalizer_type(self) -> None:
+        result = run_pipeline("Mary saw John leave", require_coq=False)
+        ast = result["ast"]
+        ast["perception"]["object"]["nominalizer_type"] = "Entity -> Entity"
+        type_check = check_perception_nominalization_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn("nominalizer E must have type Prop -> Entity", type_check["errors"])
 
     def test_parsons_every_burning_uses_universal_time_not_inclusion(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
