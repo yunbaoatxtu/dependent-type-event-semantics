@@ -44,6 +44,19 @@ def run_optional_coq_check(require_coq: bool) -> None:
     print(f"==> {message}")
 
 
+def check_python_docx_requirement(require_docx: bool) -> None:
+    if not require_docx:
+        return
+    try:
+        import docx  # noqa: F401
+    except ImportError as exc:
+        raise SystemExit(
+            "python-docx is required by --require-docx. Run with the bundled "
+            "Codex workspace Python runtime or install the project docx extra."
+        ) from exc
+    print("==> python-docx available")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run translator, scaffold, and optional proof-assistant checks."
@@ -59,11 +72,17 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Fail if the Coq/Rocq scaffold boundary check cannot be run.",
     )
+    parser.add_argument(
+        "--require-docx",
+        action="store_true",
+        help="Fail if python-docx is unavailable, so Word-generation tests cannot be skipped.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    check_python_docx_requirement(args.require_docx)
     run("unit tests", [sys.executable, "-m", "unittest", "discover", "-v"])
     run(
         "python compile check",

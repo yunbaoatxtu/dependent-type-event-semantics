@@ -257,7 +257,9 @@ python3 scripts/check_formalization.py
 
 The GitHub Actions workflow runs the portable deterministic checks with
 `--skip-coq`, because GitHub's default Ubuntu runner does not provide a local
-Coq/Rocq installation. Use `--require-coq` locally when proof-assistant boundary
+Coq/Rocq installation. It installs the document extra and also passes
+`--require-docx`, so the Word-generation tests must really run instead of being
+silently skipped. Use `--require-coq` locally when proof-assistant boundary
 validation is required.
 
 Run all deterministic project checks through one entry point:
@@ -282,6 +284,15 @@ Use `--skip-coq` to run only the Python and scaffold-consistency checks, or
 ```bash
 python3 scripts/verify_project.py --skip-coq
 python3 scripts/verify_project.py --require-coq
+```
+
+Use `--require-docx` when Word-generation tests must be enforced. If the system
+Python does not provide `python-docx`, run the command with the bundled Codex
+workspace Python runtime or install the project document extra:
+
+```bash
+python3 -m pip install ".[docx]"
+python3 scripts/verify_project.py --skip-coq --require-docx
 ```
 
 ## Scope

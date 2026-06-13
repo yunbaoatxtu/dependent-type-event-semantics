@@ -12,5 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install document test dependency
+        run: python -m pip install ".[docx]"
       - name: Run deterministic checks
-        run: python scripts/verify_project.py --skip-coq
+        run: python scripts/verify_project.py --skip-coq --require-docx
