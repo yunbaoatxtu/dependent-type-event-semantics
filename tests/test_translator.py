@@ -12,6 +12,7 @@ from translator.dependent_type_event_translator import (
 from translator.natural_language_pipeline import (
     ConstructionRule,
     check_perception_nominalization_ast,
+    check_timed_after_ast,
     check_universal_timed_ast,
     construction_rules,
     run_registered_rule,
@@ -437,7 +438,41 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Definition after_singing_salute : Prop :=", result["coq_code"])
         self.assertNotIn("Parameter Event : Type.", result["coq_code"])
         self.assertNotIn("exists e : Event", result["coq_code"])
+        self.assertEqual(
+            result["ast"]["binders"],
+            [
+                {"variable": "t_sing", "type": "Time"},
+                {"variable": "t_salute", "type": "Time"},
+            ],
+        )
+        self.assertEqual(result["ast"]["first"]["predicate_type"], "Entity -> Time -> Prop")
+        self.assertEqual(
+            result["ast"]["second"]["predicate_type"],
+            "Entity -> Entity -> Time -> Prop",
+        )
+        self.assertEqual(
+            result["ast"]["relation"],
+            {
+                "predicate": "before",
+                "predicate_type": "Time -> Time -> Prop",
+                "arguments": ["t_sing", "t_salute"],
+            },
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_timed_after_rejects_reversed_before_relation(self) -> None:
+        result = run_pipeline(
+            "after the singing of the Marseillaise, John saluted the flag",
+            require_coq=False,
+        )
+        ast = result["ast"]
+        ast["relation"]["arguments"] = ["t_salute", "t_sing"]
+        type_check = check_timed_after_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "timed_after.relation must relate t_sing before t_salute",
+            type_check["errors"],
+        )
 
     def test_parsons_perception_complement_uses_nominalizer_not_event(self) -> None:
         result = run_pipeline("Mary saw John leave", require_coq=True)

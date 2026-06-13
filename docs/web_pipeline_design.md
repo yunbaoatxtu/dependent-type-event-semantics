@@ -149,8 +149,9 @@ Marseillaise, John saluted the flag` keeps a visible event-semantics reference
 formula for comparison, but its checked Coq scaffold declares `Time`,
 `before : Time -> Time -> Prop`, `sing : Entity -> Time -> Prop`, and
 `salute : Entity -> Entity -> Time -> Prop`. It defines the translation as an
-existential formula over two time variables and deliberately does not declare
-`Event`.
+existential formula over two time variables. The AST records the two `Time`
+binders and checks that the `before` relation orders `t_sing` before
+`t_salute`; the scaffold deliberately does not declare `Event`.
 
 The remaining two Parsons/Luo-Shi examples have their own typed routes. `Mary
 saw John leave` uses a nominalizing map `E : Prop -> Entity`, so the perceived

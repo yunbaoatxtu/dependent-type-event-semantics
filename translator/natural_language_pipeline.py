@@ -241,6 +241,105 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def timed_after_ast(
+    first_predicate: str,
+    first_theme: str,
+    second_predicate: str,
+    second_agent: str,
+    second_theme: str,
+) -> dict[str, Any]:
+    return {
+        "kind": "timed_after",
+        "binders": [
+            {"variable": "t_sing", "type": "Time"},
+            {"variable": "t_salute", "type": "Time"},
+        ],
+        "first": {
+            "predicate": first_predicate,
+            "predicate_type": "Entity -> Time -> Prop",
+            "theme": {
+                "name": first_theme,
+                "type": "Entity",
+            },
+            "time": "t_sing",
+        },
+        "second": {
+            "predicate": second_predicate,
+            "predicate_type": "Entity -> Entity -> Time -> Prop",
+            "agent": {
+                "name": second_agent,
+                "type": "Entity",
+            },
+            "theme": {
+                "name": second_theme,
+                "type": "Entity",
+            },
+            "time": "t_salute",
+        },
+        "relation": {
+            "predicate": "before",
+            "predicate_type": "Time -> Time -> Prop",
+            "arguments": ["t_sing", "t_salute"],
+        },
+    }
+
+
+def check_timed_after_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "timed_after":
+        errors.append("ast.kind must be timed_after")
+
+    binders = ast.get("binders")
+    expected_binders = [
+        {"variable": "t_sing", "type": "Time"},
+        {"variable": "t_salute", "type": "Time"},
+    ]
+    if binders != expected_binders:
+        errors.append("timed_after.binders must bind t_sing and t_salute as Time")
+
+    first = ast.get("first")
+    if not isinstance(first, dict):
+        errors.append("timed_after.first must be an object")
+    else:
+        if first.get("predicate_type") != "Entity -> Time -> Prop":
+            errors.append("timed_after.first must have type Entity -> Time -> Prop")
+        theme = first.get("theme")
+        if not isinstance(theme, dict) or theme.get("type") != "Entity":
+            errors.append("timed_after.first.theme must have type Entity")
+        if first.get("time") != "t_sing":
+            errors.append("timed_after.first must use bound time t_sing")
+
+    second = ast.get("second")
+    if not isinstance(second, dict):
+        errors.append("timed_after.second must be an object")
+    else:
+        if second.get("predicate_type") != "Entity -> Entity -> Time -> Prop":
+            errors.append(
+                "timed_after.second must have type Entity -> Entity -> Time -> Prop"
+            )
+        for role in ("agent", "theme"):
+            value = second.get(role)
+            if not isinstance(value, dict) or value.get("type") != "Entity":
+                errors.append(f"timed_after.second.{role} must have type Entity")
+        if second.get("time") != "t_salute":
+            errors.append("timed_after.second must use bound time t_salute")
+
+    relation = ast.get("relation")
+    if not isinstance(relation, dict):
+        errors.append("timed_after.relation must be an object")
+    else:
+        if relation.get("predicate_type") != "Time -> Time -> Prop":
+            errors.append("timed_after.relation must have type Time -> Time -> Prop")
+        if relation.get("arguments") != ["t_sing", "t_salute"]:
+            errors.append("timed_after.relation must relate t_sing before t_salute")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
 def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     expected = [
@@ -301,30 +400,22 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
             "and before(t_sing, t_salute)"
         ),
     }
+    ast = timed_after_ast(
+        first_predicate,
+        first_theme,
+        second_predicate,
+        second_agent,
+        second_theme,
+    )
+    type_check = check_timed_after_ast(ast)
     return {
         "kind": "timed_after",
         "input_sentence": sentence,
         "event_semantics": event_semantics,
         "dependent_type_translation": event_semantics["typed_replacement"],
-        "ast": {
-            "kind": "timed_after",
-            "first": {
-                "predicate": first_predicate,
-                "theme": first_theme,
-                "time": "t_sing",
-            },
-            "second": {
-                "predicate": second_predicate,
-                "agent": second_agent,
-                "theme": second_theme,
-                "time": "t_salute",
-            },
-            "relation": "before(t_sing, t_salute)",
-        },
+        "ast": ast,
         "type_check": {
-            "ok": True,
-            "type": "Prop",
-            "errors": [],
+            **type_check,
             "note": "The Parsons-style event relation is represented with Time variables, not an Event parameter.",
         },
         "coq_code": coq_code,

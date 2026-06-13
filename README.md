@@ -118,7 +118,10 @@ python3 -m translator.natural_language_pipeline \
 ```
 
 This stage exports `Time`, `before`, `sing`, and `salute` declarations and
-checks a formula of the form `exists t_sing t_salute : Time, ...`. It does not
+checks a formula of the form `exists t_sing t_salute : Time, ...`. Its AST also
+checks that `sing : Entity -> Time -> Prop`,
+`salute : Entity -> Entity -> Time -> Prop`, and
+`before : Time -> Time -> Prop` relate `t_sing` before `t_salute`. It does not
 introduce a hidden `Event` parameter for this sentence.
 
 Two further Parsons/Luo-Shi examples are now checked by specialized paths:

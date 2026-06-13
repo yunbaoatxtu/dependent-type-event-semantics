@@ -132,6 +132,52 @@ when the visible rendering focuses on the causal transition. This is useful for
 later proof assistant export, where the causing process and the result
 transition may need separate types.
 
+### `timed_after`
+
+Represents the Luo-Shi-style replacement for Parsons' temporal event-ordering
+example `after the singing of the Marseillaise, John saluted the flag`. The AST
+binds two times and checks the lexical predicates and temporal relation:
+
+```json
+{
+  "kind": "timed_after",
+  "binders": [
+    {"variable": "t_sing", "type": "Time"},
+    {"variable": "t_salute", "type": "Time"}
+  ],
+  "first": {
+    "predicate": "sing",
+    "predicate_type": "Entity -> Time -> Prop",
+    "theme": {
+      "name": "Marseillaise",
+      "type": "Entity"
+    },
+    "time": "t_sing"
+  },
+  "second": {
+    "predicate": "salute",
+    "predicate_type": "Entity -> Entity -> Time -> Prop",
+    "agent": {
+      "name": "John",
+      "type": "Entity"
+    },
+    "theme": {
+      "name": "flag",
+      "type": "Entity"
+    },
+    "time": "t_salute"
+  },
+  "relation": {
+    "predicate": "before",
+    "predicate_type": "Time -> Time -> Prop",
+    "arguments": ["t_sing", "t_salute"]
+  }
+}
+```
+
+This captures temporal dependence without introducing an event-to-event
+ordering predicate.
+
 ### `perception_nominalization`
 
 Represents the Luo-Shi-style replacement for perception complements such as
@@ -272,6 +318,10 @@ Current type rules:
 - `transition` has type `Transition`.
 - `cause` has type `t` only when its `effect` has type `Transition`; its
   optional `activity` must have type `t`.
+- `timed_after` has type `Prop` when it binds `t_sing : Time` and
+  `t_salute : Time`, the first predicate has type `Entity -> Time -> Prop`, the
+  second predicate has type `Entity -> Entity -> Time -> Prop`, and
+  `before : Time -> Time -> Prop` relates `t_sing` before `t_salute`.
 - `perception_nominalization` has type `Prop` when the perception predicate has
   type `Entity -> Entity -> Prop`, the embedded predicate has type
   `Entity -> Prop`, the embedded subject is an `Entity`, and the nominalizer has
