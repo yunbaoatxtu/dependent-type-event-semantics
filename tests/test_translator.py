@@ -252,6 +252,29 @@ class TranslatorTests(unittest.TestCase):
             result["errors"],
         )
 
+    def test_type_checker_rejects_role_frame_type_mismatch(self) -> None:
+        result = check_term(
+            {
+                "kind": "application",
+                "function": "read",
+                "adverb_count": 0,
+                "modifiers": [],
+                "modifier_vector": modifier_vector([]),
+                "arguments": ["John", "book"],
+                "role_frame": role_frame(
+                    [
+                        {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                        {"role": "Theme", "value": "book", "type": "Entity", "source": "explicit"},
+                    ]
+                ),
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "ast: application.role_frame role types do not match function argument types",
+            result["errors"],
+        )
+
     def test_type_checker_rejects_bad_cause_effect(self) -> None:
         result = check_term(
             {
@@ -427,6 +450,13 @@ class TranslatorTests(unittest.TestCase):
         read_result = run_pipeline("Mary read the book", require_coq=True)
         self.assertTrue(read_result["ok"])
         self.assertEqual(read_result["dependent_type_translation"], "read(0)(mary, book)")
+        self.assertEqual(
+            read_result["ast"]["role_frame"]["roles"],
+            [
+                {"role": "Agent", "value": "mary", "type": "Entity", "source": "explicit"},
+                {"role": "Theme", "value": "book", "type": "Readable", "source": "explicit"},
+            ],
+        )
         self.assertIn("Parameter book : Readable.", read_result["coq_code"])
         self.assertIn(
             "Parameter read : forall n : nat, ModifierSeq n -> Entity -> Readable -> Prop.",
@@ -440,6 +470,10 @@ class TranslatorTests(unittest.TestCase):
 
         drink_result = run_pipeline("John drank water", require_coq=True)
         self.assertTrue(drink_result["ok"])
+        self.assertEqual(
+            drink_result["ast"]["role_frame"]["roles"][1],
+            {"role": "Theme", "value": "water", "type": "Drinkable", "source": "explicit"},
+        )
         self.assertIn("Parameter water : Drinkable.", drink_result["coq_code"])
         self.assertIn(
             "Definition example_1 : Prop := (drink 0 mods_nil john water).",

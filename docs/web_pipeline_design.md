@@ -211,6 +211,7 @@ two modifiers passed as a `ModifierSeq 2` value. The AST checks the
 natural-number index against both the visible modifier list and a normalized
 `modifier_vector` before export. It also keeps a `role_frame` so Agent and Theme
 labels remain available for diagnostics and are checked against the ordered
-entity arguments in canonical thematic order. The shallow Coq interface now
-gives the external checker the same length invariant while keeping the lexical
-verb declaration stable across different modifier counts.
+entity arguments in canonical thematic order, with each role type checked
+against the function argument type that will be exported. The shallow Coq
+interface now gives the external checker the same length invariant while
+keeping the lexical verb declaration stable across different modifier counts.

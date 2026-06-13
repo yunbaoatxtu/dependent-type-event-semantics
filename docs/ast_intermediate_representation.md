@@ -318,9 +318,11 @@ Current type rules:
   the number of `modifiers`, and when the normalized `modifier_vector` has the
   same length, the same modifier order, and descending `tail_length` fields.
   It must also contain a `role_frame` whose role values match
-  `application.arguments` in canonical thematic order. This preserves
-  thematic-role labels such as `Agent` and `Theme` after the event variable is
-  discharged.
+  `application.arguments` in canonical thematic order and whose role types
+  match the generated function argument types. This preserves thematic-role
+  labels such as `Agent` and `Theme` after the event variable is discharged
+  while still allowing lexically refined object types such as `Food`,
+  `Readable`, and `Drinkable`.
 - `sigma` has type `t` when its body has type `t`.
 - `repeat` has type `t` when `count` is a positive natural number and its body
   has type `t`.

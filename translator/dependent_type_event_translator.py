@@ -142,16 +142,32 @@ def ordered_arguments(roles: dict[str, str]) -> list[str]:
     return args
 
 
-def ordered_role_entries(roles: dict[str, str]) -> list[dict[str, str]]:
+def lexical_role_type(verb: str, role: str) -> str:
+    if verb in OMITTED_THEME_TYPES and role in {"Theme", "Patient", "Object"}:
+        return OMITTED_THEME_TYPES[verb]
+    return "Entity"
+
+
+def ordered_role_entries(roles: dict[str, str], verb: str = "") -> list[dict[str, str]]:
     entries: list[dict[str, str]] = []
     for role in ROLE_ORDER:
         if role in roles:
             entries.append(
-                {"role": role, "value": roles[role], "type": "Entity", "source": "explicit"}
+                {
+                    "role": role,
+                    "value": roles[role],
+                    "type": lexical_role_type(verb, role),
+                    "source": "explicit",
+                }
             )
     for role in sorted(set(roles) - set(ROLE_ORDER)):
         entries.append(
-            {"role": role, "value": roles[role], "type": "Entity", "source": "explicit"}
+            {
+                "role": role,
+                "value": roles[role],
+                "type": lexical_role_type(verb, role),
+                "source": "explicit",
+            }
         )
     return entries
 
@@ -291,12 +307,13 @@ def check_term(term: Term) -> TypeCheck:
     def check(current: Term, path: str) -> str:
         kind = current.get("kind")
         if kind == "application":
+            function = current.get("function")
             modifiers = current.get("modifiers")
             vector = current.get("modifier_vector")
             arguments = current.get("arguments")
             frame = current.get("role_frame")
             adverb_count = current.get("adverb_count")
-            if not isinstance(current.get("function"), str) or not current["function"]:
+            if not isinstance(function, str) or not function:
                 errors.append(f"{path}: application.function must be a non-empty string")
             if not isinstance(modifiers, list) or not all(isinstance(x, str) for x in modifiers):
                 errors.append(f"{path}: application.modifiers must be a list of strings")
@@ -387,6 +404,7 @@ def check_term(term: Term) -> TypeCheck:
                 else:
                     seen_roles: set[str] = set()
                     role_labels: list[str] = []
+                    role_types: list[str] = []
                     for index, role_entry in enumerate(roles):
                         if not isinstance(role_entry, dict):
                             errors.append(
@@ -421,6 +439,8 @@ def check_term(term: Term) -> TypeCheck:
                                 f"{path}: application.role_frame.roles[{index}].type "
                                 "must be a non-empty string"
                             )
+                        else:
+                            role_types.append(role_type)
                         if source not in {"explicit", "omitted"}:
                             errors.append(
                                 f"{path}: application.role_frame.roles[{index}].source "
@@ -437,6 +457,21 @@ def check_term(term: Term) -> TypeCheck:
                             f"{path}: application.role_frame roles must follow canonical "
                             "thematic order"
                         )
+                    if (
+                        valid_arguments
+                        and isinstance(function, str)
+                        and function
+                        and len(role_types) == len(arguments)
+                    ):
+                        expected_role_types = application_argument_types(
+                            function,
+                            len(arguments),
+                        )
+                        if role_types != expected_role_types:
+                            errors.append(
+                                f"{path}: application.role_frame role types do not "
+                                "match function argument types"
+                            )
             if not isinstance(adverb_count, int) or adverb_count < 0:
                 errors.append(f"{path}: application.adverb_count must be a natural number")
             elif adverb_count != len(modifiers):
@@ -925,7 +960,7 @@ def resultative_term(analysis: EventAnalysis, base_activity: Term) -> Term:
 def translate(data: dict[str, Any]) -> dict[str, Any]:
     analysis = analyze_event_formula(data)
     args = ordered_arguments(analysis.roles)
-    role_entries = ordered_role_entries(analysis.roles)
+    role_entries = ordered_role_entries(analysis.roles, analysis.verb)
     omitted_theme = infer_omitted_theme(analysis.verb, analysis.roles)
     if omitted_theme is not None:
         args = args + [omitted_theme[0]]
