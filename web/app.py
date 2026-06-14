@@ -240,16 +240,30 @@ def render_lexicon_patch_text(bundle: dict[str, Any]) -> str:
         lines.append("# Validation errors:")
         lines.extend(f"# - {error}" for error in validation_errors)
         lines.append("")
+    drafts = bundle.get("lexicon_patch_drafts", [])
     patch_lines = [
         state_lexicon_source_line(draft)
-        for draft in bundle.get("lexicon_patch_drafts", [])
+        for draft in drafts
         if draft.get("can_auto_apply")
+    ]
+    pending_drafts = [
+        draft
+        for draft in drafts
+        if not draft.get("can_auto_apply") and draft.get("state_lexicon_patch_line")
     ]
     if not patch_lines:
         lines.append("# No auto-applicable patch lines.")
     else:
         lines.append("# Candidate replacement/addition lines:")
         lines.extend(patch_lines)
+    if pending_drafts:
+        lines.append("")
+        lines.append("# Pending human choices:")
+        for draft in pending_drafts:
+            placeholders = ", ".join(map(str, draft.get("placeholder_fields", []))) or "none"
+            lines.append(f"# draft_id: {draft.get('draft_id', '')}")
+            lines.append(f"# placeholders: {placeholders}")
+            lines.append(f"# preview: {draft.get('state_lexicon_patch_line', '')}")
     return "\n".join(lines) + "\n"
 
 

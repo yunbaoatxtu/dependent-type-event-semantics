@@ -122,7 +122,9 @@ diagnostics summary, the manual-repair flags, and the draft records. The
 bundles report `resolved_patch_count`; malformed or semantically invalid
 choices are reported in `validation_errors`. The optional `--patch-out` path
 writes the same review-only candidate text exposed in `patch_text_preview` and
-does not mutate the lexicon.
+does not mutate the lexicon. When a draft still needs a human source-state
+choice, the preview keeps the pending patch line as a comment instead of
+presenting it as auto-applicable source code.
 
 ## Successful Response
 

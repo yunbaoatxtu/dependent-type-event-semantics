@@ -1206,6 +1206,9 @@ class TranslatorTests(unittest.TestCase):
             "StateLexiconEntry",
             bundle["lexicon_patch_drafts"][0]["state_lexicon_patch_line"],
         )
+        self.assertIn("# Pending human choices:", bundle["patch_text_preview"])
+        self.assertIn("# draft_id: state-red--unknown_source_allowed", bundle["patch_text_preview"])
+        self.assertIn("default_source_state='<choose_source_state>'", bundle["patch_text_preview"])
 
         empty_bundle = build_patch_bundle("John hammered the metal flat", require_coq=True)
         self.assertTrue(empty_bundle["ok"])
@@ -1256,9 +1259,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("expected 'color_scale'", invalid_bundle["validation_errors"][0])
         self.assertIn("# Validation errors:", invalid_bundle["patch_text_preview"])
         self.assertIn("# No auto-applicable patch lines.", invalid_bundle["patch_text_preview"])
+        self.assertIn("# Pending human choices:", invalid_bundle["patch_text_preview"])
         invalid_patch_text = render_lexicon_patch_text(invalid_bundle)
         self.assertIn("# Validation errors:", invalid_patch_text)
         self.assertIn("# No auto-applicable patch lines.", invalid_patch_text)
+        self.assertIn("# Pending human choices:", invalid_patch_text)
 
     def test_api_lexicon_patch_drafts_endpoint(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -1707,6 +1712,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
         self.assertIn("`patch_text_preview`", readme)
+        self.assertIn("pending human-choice lines", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
@@ -1754,6 +1760,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`resolved_patch_count`", web_design)
         self.assertIn("`validation_errors`", web_design)
         self.assertIn("`patch_text_preview`", web_design)
+        self.assertIn("pending patch line as a comment", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
