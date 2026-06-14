@@ -94,6 +94,10 @@ def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
 
+def stable_token(value: str) -> str:
+    return "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in value)
+
+
 def state_lexicon_patch_line(state: str, scale: str, default_source_state: str) -> str:
     return (
         f"{state!r}: StateLexiconEntry("
@@ -104,6 +108,7 @@ def state_lexicon_patch_line(state: str, scale: str, default_source_state: str) 
 def lexicon_entry_draft(policy: str, state: str, scale: str) -> dict[str, Any]:
     default_source_state = "<choose_source_state>"
     return {
+        "draft_id": f"state-{stable_token(state)}--{stable_token(policy)}",
         "state": state,
         "scale": scale,
         "default_source_state": default_source_state,
@@ -356,7 +361,7 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
 
 
 def css_token(value: str) -> str:
-    return "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in value)
+    return stable_token(value)
 
 
 def next_steps_panel(result: dict[str, Any]) -> str:
@@ -509,6 +514,7 @@ def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
             rows.append(
                 '<li '
                 'class="lexicon-draft" '
+                f'data-draft-id="{html.escape(str(draft.get("draft_id", "")))}" '
                 f'data-draft-state="{html.escape(state)}" '
                 f'data-draft-current-policy="{html.escape(current_policy)}">'
                 f'<strong>{html.escape(state)}</strong>'

@@ -308,6 +308,7 @@ class TranslatorTests(unittest.TestCase):
                             "genuinely underspecified."
                         ),
                         "lexicon_entry_draft": {
+                            "draft_id": "state-red--unknown_source_allowed",
                             "state": "red",
                             "scale": "color_scale",
                             "default_source_state": "<choose_source_state>",
@@ -1138,6 +1139,7 @@ class TranslatorTests(unittest.TestCase):
                             "genuinely underspecified."
                         ),
                         "lexicon_entry_draft": {
+                            "draft_id": "state-red--unknown_source_allowed",
                             "state": "red",
                             "scale": "color_scale",
                             "default_source_state": "<choose_source_state>",
@@ -1160,6 +1162,7 @@ class TranslatorTests(unittest.TestCase):
             result["lexicon_patch_drafts"],
             [
                 {
+                    "draft_id": "state-red--unknown_source_allowed",
                     "state": "red",
                     "scale": "color_scale",
                     "default_source_state": "<choose_source_state>",
@@ -1238,7 +1241,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>draft source</dt><dd>&lt;choose_source_state&gt;</dd>", warning_page)
         self.assertIn("<dt>after policy</dt><dd>lexical_prestate</dd>", warning_page)
         self.assertIn("Lexicon Patch Drafts", warning_page)
-        self.assertIn('class="lexicon-draft" data-draft-state="red"', warning_page)
+        self.assertIn(
+            'class="lexicon-draft" data-draft-id="state-red--unknown_source_allowed" '
+            'data-draft-state="red"',
+            warning_page,
+        )
         self.assertIn("<dt>current</dt><dd>unknown_source_allowed</dd>", warning_page)
         self.assertIn("<dt>auto apply</dt><dd>no</dd>", warning_page)
         self.assertIn("<dt>placeholders</dt><dd>default_source_state</dd>", warning_page)
@@ -1317,6 +1324,7 @@ class TranslatorTests(unittest.TestCase):
                         "if justified, a default_source_state."
                     ),
                     "lexicon_entry_draft": {
+                        "draft_id": "state-cerulean--derived_scale_no_known_prestate",
                         "state": "cerulean",
                         "scale": "cerulean_scale",
                         "default_source_state": "<choose_source_state>",
@@ -1352,6 +1360,7 @@ class TranslatorTests(unittest.TestCase):
                         "if so, add a default source state."
                     ),
                     "lexicon_entry_draft": {
+                        "draft_id": "state-intact--source_state_only",
                         "state": "intact",
                         "scale": "integrity_scale",
                         "default_source_state": "<choose_source_state>",
@@ -1571,6 +1580,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`add_state_prestate`", readme)
         self.assertIn("`lexicon_entry_draft`", readme)
         self.assertIn("`lexicon_patch_drafts`", readme)
+        self.assertIn("`draft_id`", readme)
         self.assertIn("`source_policy_after_update`", readme)
         self.assertIn("`state_lexicon_patch_line`", readme)
         self.assertIn("`requires_human_choice`", readme)
@@ -1607,7 +1617,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-warning-action-kind`", web_design)
         self.assertIn("`lexicon_entry_draft`", web_design)
         self.assertIn("`lexicon_patch_drafts`", web_design)
+        self.assertIn("`draft_id`", web_design)
         self.assertIn("`current_source_policy`", web_design)
+        self.assertIn("`data-draft-id`", web_design)
         self.assertIn("`state_lexicon_patch_line`", web_design)
         self.assertIn("`placeholder_fields`", web_design)
         self.assertIn("`can_auto_apply`", web_design)

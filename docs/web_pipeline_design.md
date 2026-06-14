@@ -85,9 +85,9 @@ those warnings produce human-gated lexicon repair drafts.
 Each warning includes a `suggested_action` object with `kind`, `label`, and
 `detail` fields; warning actions currently include `add_state_prestate`,
 `register_state_lexicon_entry`, and `license_state_as_target`. Suggested
-actions also include a `lexicon_entry_draft` object with `state`, `scale`,
-`default_source_state`, `allow_unknown_source`, `current_source_policy`, and
-`source_policy_after_update` fields. They also include
+actions also include a `lexicon_entry_draft` object with `draft_id`, `state`,
+`scale`, `default_source_state`, `allow_unknown_source`,
+`current_source_policy`, and `source_policy_after_update` fields. They also include
 `state_lexicon_patch_line`, a candidate `StateLexiconEntry` text preview with a
 placeholder pre-state rather than an automatically applied lexicon mutation.
 The accompanying `requires_human_choice`, `placeholder_fields`, and
@@ -133,7 +133,7 @@ warning has `suggested_action`, the rendered action exposes
 `data-warning-action-kind` for UI automation and displays the
 `lexicon_entry_draft` fields as a compact draft record.
 The page also renders a `Lexicon Patch Drafts` panel from top-level
-`lexicon_patch_drafts`, with stable `data-draft-state` and
+`lexicon_patch_drafts`, with stable `data-draft-id`, `data-draft-state`, and
 `data-draft-current-policy` hooks for future repair controls. The panel shows
 the same `state_lexicon_patch_line` preview that JSON clients receive, together
 with the `placeholder_fields` and `can_auto_apply` status.
