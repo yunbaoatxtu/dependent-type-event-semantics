@@ -563,6 +563,13 @@ def check_term(term: Term) -> TypeCheck:
                                     f"{path}: application.modifier_roles.roles[{index}].semantic_role "
                                     "must be a non-empty string"
                                 )
+                            elif isinstance(modifier, str) and modifier:
+                                expected_role = modifier_semantic_role(modifier)
+                                if semantic_role != expected_role:
+                                    errors.append(
+                                        f"{path}: application.modifier_roles.roles[{index}].semantic_role "
+                                        f"must be {expected_role} for {modifier}"
+                                    )
                             if source != "modifier":
                                 errors.append(
                                     f"{path}: application.modifier_roles.roles[{index}].source "

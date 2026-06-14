@@ -401,8 +401,10 @@ Modifier entries are not entity-denoting arguments. The AST records this twice:
 records the semantic class of each modifier as an `Adv` value. For example,
 `in(bathroom)` receives `semantic_role: "Location"`, `with(knife)` receives
 `semantic_role: "Instrument"`, and ordinary adverbs such as `slowly` receive
-`semantic_role: "Manner"`. In the proof-assistant scaffold all of these are
-still exported at type `Adv`, with the current shallow Coq definition:
+`semantic_role: "Manner"`. The checker verifies this metadata against the
+modifier predicate, so an instrumental `with(...)` modifier cannot be labeled as
+`Location`. In the proof-assistant scaffold all of these are still exported at
+type `Adv`, with the current shallow Coq definition:
 
 ```coq
 Definition PropT : Type := Prop.

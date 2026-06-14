@@ -104,7 +104,9 @@ The generated AST records both the surface modifier list and a normalized
 natural-number count, the surface list, and the vector. It also records
 `modifier_roles`, so `in(bathroom)` is a Location-like `Adv`, `with(knife)` is
 an Instrument-like `Adv`, and ordinary adverbs such as `slowly` are Manner-like
-`Adv` values rather than entity arguments. The AST also carries a `role_frame`
+`Adv` values rather than entity arguments. The type checker verifies these
+roles against the modifier predicate, so `with(knife)` cannot be mislabeled as a
+Location modifier. The AST also carries a `role_frame`
 that preserves thematic labels such as `Agent` and `Theme` and checks that those
 role values match the ordered entity arguments in canonical thematic order, with
 role types aligned to the generated function argument types. Thus an overt

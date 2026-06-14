@@ -439,6 +439,38 @@ class TranslatorTests(unittest.TestCase):
             )
         )
 
+        wrong_role = check_term(
+            {
+                "kind": "application",
+                "function": "butter",
+                "adverb_count": 1,
+                "modifiers": ["with(knife)"],
+                "modifier_vector": modifier_vector(["with(knife)"]),
+                "modifier_roles": {
+                    "kind": "modifier_roles",
+                    "roles": [
+                        {
+                            "modifier": "with(knife)",
+                            "type": "Adv",
+                            "semantic_role": "Location",
+                            "source": "modifier",
+                        },
+                    ],
+                },
+                "arguments": ["John", "toast"],
+                "role_frame": role_frame(
+                    [
+                        {"role": "Agent", "value": "John", "type": "Entity", "source": "explicit"},
+                        {"role": "Theme", "value": "toast", "type": "Entity", "source": "explicit"},
+                    ]
+                ),
+            }
+        )
+        self.assertFalse(wrong_role["ok"])
+        self.assertTrue(
+            any("must be Instrument for with(knife)" in error for error in wrong_role["errors"])
+        )
+
     def test_type_checker_rejects_role_frame_argument_mismatch(self) -> None:
         result = check_term(
             {
@@ -2024,9 +2056,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`modifier_roles`", readme)
         self.assertIn("Instrument-like `Adv`", readme)
+        self.assertIn("cannot be mislabeled as a", readme)
         self.assertIn("`modifier_roles`", ast_docs)
         self.assertIn('`semantic_role: "Location"`', ast_docs)
         self.assertIn('`semantic_role: "Instrument"`', ast_docs)
+        self.assertIn("cannot be labeled as", ast_docs)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
 
