@@ -188,6 +188,29 @@ def result_state_warnings(result: dict[str, Any]) -> list[dict[str, Any]]:
     return warnings
 
 
+def lexicon_patch_drafts(result: dict[str, Any]) -> list[dict[str, Any]]:
+    diagnostics = result.get("diagnostics", {})
+    warnings = diagnostics.get("warnings") or result_state_warnings(result)
+    drafts = []
+    seen = set()
+    for warning in warnings:
+        action = warning.get("suggested_action") or {}
+        draft = action.get("lexicon_entry_draft")
+        if not draft:
+            continue
+        key = (
+            draft.get("state"),
+            draft.get("scale"),
+            draft.get("current_source_policy"),
+            draft.get("source_policy_after_update"),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        drafts.append(dict(draft))
+    return drafts
+
+
 def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     type_check = result.get("type_check", {})
     construction_hygiene = result.get("construction_hygiene", {})
@@ -234,6 +257,7 @@ def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     enriched = {**result}
     enriched.setdefault("result_state_lexicon", [])
     enriched["diagnostics"] = build_diagnostics(enriched)
+    enriched["lexicon_patch_drafts"] = lexicon_patch_drafts(enriched)
     return enriched
 
 
@@ -438,6 +462,41 @@ def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     )
 
 
+def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
+    drafts = result.get("lexicon_patch_drafts", [])
+    if not drafts:
+        body = '<p class="lexicon-draft-empty">No lexicon patch drafts.</p>'
+    else:
+        rows = []
+        for draft in drafts:
+            state = str(draft.get("state", ""))
+            scale = str(draft.get("scale", ""))
+            source = str(draft.get("default_source_state", ""))
+            current_policy = str(draft.get("current_source_policy", ""))
+            next_policy = str(draft.get("source_policy_after_update", ""))
+            rows.append(
+                '<li '
+                'class="lexicon-draft" '
+                f'data-draft-state="{html.escape(state)}" '
+                f'data-draft-current-policy="{html.escape(current_policy)}">'
+                f'<strong>{html.escape(state)}</strong>'
+                '<dl>'
+                f'<dt>scale</dt><dd>{html.escape(scale)}</dd>'
+                f'<dt>source</dt><dd>{html.escape(source)}</dd>'
+                f'<dt>current</dt><dd>{html.escape(current_policy)}</dd>'
+                f'<dt>after</dt><dd>{html.escape(next_policy)}</dd>'
+                '</dl>'
+                '</li>'
+            )
+        body = '<ul class="lexicon-draft-list">' + "".join(rows) + "</ul>"
+    return (
+        '<section class="panel lexicon-drafts-panel">'
+        "<h2>Lexicon Patch Drafts</h2>"
+        f'<div class="lexicon-drafts">{body}</div>'
+        "</section>"
+    )
+
+
 def panel(title: str, body: str) -> str:
     return (
         '<section class="panel">'
@@ -453,6 +512,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
+    patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
     coq_code = result.get("coq_code", "")
@@ -573,6 +633,9 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     .semantic-warnings {{
       padding: 12px;
     }}
+    .lexicon-drafts {{
+      padding: 12px;
+    }}
     .next-step-list {{
       list-style: none;
       margin: 0;
@@ -581,6 +644,13 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       gap: 10px;
     }}
     .semantic-warning-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }}
+    .lexicon-draft-list {{
       list-style: none;
       margin: 0;
       padding: 0;
@@ -606,7 +676,8 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     .next-step p,
     .next-step-empty,
     .semantic-warning-empty,
-    .lexicon-empty {{
+    .lexicon-empty,
+    .lexicon-draft-empty {{
       margin: 0;
       color: var(--muted);
       line-height: 1.45;
@@ -705,6 +776,31 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       color: var(--warning);
       font-size: 13px;
     }}
+    .lexicon-draft {{
+      border-left: 3px solid var(--warning);
+      background: #ffffff;
+      padding: 9px 10px;
+    }}
+    .lexicon-draft strong {{
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }}
+    .lexicon-draft dl {{
+      display: grid;
+      grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .lexicon-draft dt {{
+      color: var(--muted);
+    }}
+    .lexicon-draft dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
+    }}
     h2 {{
       font-size: 14px;
       margin: 0;
@@ -749,10 +845,12 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
       {semantic_warnings_panel(result)}
+      {lexicon_patch_drafts_panel(result)}
       {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}
       {panel("Result State Lexicon JSON", result_lexicon)}
+      {panel("Lexicon Patch Drafts JSON", patch_drafts)}
       {panel("Coq/Rocq Check", coq_check)}
       {panel("Generated Coq", coq_code)}
     </div>

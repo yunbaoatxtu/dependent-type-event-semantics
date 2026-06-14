@@ -230,7 +230,9 @@ for UI tests and later controls. Each warning also carries a `suggested_action`
 object, such as `add_state_prestate`, so clients can distinguish a semantic
 caveat from the concrete lexicon repair it invites. Suggested actions include a
 `lexicon_entry_draft` template with `state`, `scale`, `default_source_state`,
-and `source_policy_after_update` fields.
+and `source_policy_after_update` fields. The API also lifts these templates to
+top-level `lexicon_patch_drafts`, giving clients a direct repair queue without
+requiring them to traverse warning records.
 
 Run the local web demo:
 
@@ -279,7 +281,8 @@ derived from the target name and states that are currently licensed only as
 transition sources. The separate Semantic Warnings panel mirrors the same
 records for readers who need the semantic caveat without opening the raw JSON,
 and shows the warning's suggested action and lexicon-entry draft next to the
-warning message.
+warning message. A separate Lexicon Patch Drafts panel mirrors the top-level
+`lexicon_patch_drafts` queue for the same repairs.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

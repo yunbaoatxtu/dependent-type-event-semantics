@@ -56,15 +56,14 @@ The request has two stable query parameters:
 
 The response is a single JSON object. On success, it must expose the same
 semantic artifacts shown on the page: `event_semantics`,
-`dependent_type_translation`, `result_state_lexicon`, `ast`, `coq_code`,
-`construction_rule`, `construction_hygiene`, `coq_check`, `diagnostics`, and
-`conclusion`. `result_state_lexicon` is a list of audit records for resultative
-targets; each record includes the target `state`, its `scale`, an optional
-`default_source_state`, and a `source_policy` such as `lexical_prestate` or
-`unknown_source_allowed`. On failure, it must still return `ok: false`, an
-`error` message when available, and a `diagnostics` object so callers can
-distinguish parser, type-checking, construction-hygiene, and Coq/Rocq boundary
-failures.
+`dependent_type_translation`, `result_state_lexicon`, `lexicon_patch_drafts`,
+`ast`, `coq_code`, `construction_rule`, `construction_hygiene`, `coq_check`,
+`diagnostics`, and `conclusion`. `result_state_lexicon` is a list of audit
+records for resultative targets; each record includes the target `state`, its
+`scale`, an optional `default_source_state`, and a `source_policy` such as
+`lexical_prestate` or `unknown_source_allowed`. `lexicon_patch_drafts` lifts
+the repair templates from warning actions into a top-level list that clients
+can treat as a candidate STATE_LEXICON patch queue. On any failure, it must still return `ok: false`, an `error` message when available, and a `diagnostics` object so callers can distinguish parser, type-checking, construction-hygiene, and Coq/Rocq boundary failures.
 
 `diagnostics.failure_stage` is the machine-readable failure locator. It is
 `null` on successful translations and otherwise one of `input`, `parsing`,
@@ -125,6 +124,9 @@ so the interface can distinguish semantic caveats from recovery actions. If a
 warning has `suggested_action`, the rendered action exposes
 `data-warning-action-kind` for UI automation and displays the
 `lexicon_entry_draft` fields as a compact draft record.
+The page also renders a `Lexicon Patch Drafts` panel from top-level
+`lexicon_patch_drafts`, with stable `data-draft-state` and
+`data-draft-current-policy` hooks for future repair controls.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

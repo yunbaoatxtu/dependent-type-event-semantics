@@ -1098,6 +1098,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+        self.assertEqual(result["lexicon_patch_drafts"], [])
 
     def test_api_analyze_response_contains_result_state_warnings(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -1140,6 +1141,19 @@ class TranslatorTests(unittest.TestCase):
             ],
         )
         self.assertEqual(
+            result["lexicon_patch_drafts"],
+            [
+                {
+                    "state": "red",
+                    "scale": "color_scale",
+                    "default_source_state": "<choose_source_state>",
+                    "allow_unknown_source": False,
+                    "current_source_policy": "unknown_source_allowed",
+                    "source_policy_after_update": "lexical_prestate",
+                }
+            ],
+        )
+        self.assertEqual(
             result["result_state_lexicon"][0]["source_policy"],
             "unknown_source_allowed",
         )
@@ -1164,6 +1178,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Diagnostics", page)
         self.assertIn("Semantic Warnings", page)
         self.assertIn("No semantic warnings.", page)
+        self.assertIn("Lexicon Patch Drafts", page)
+        self.assertIn("No lexicon patch drafts.", page)
         self.assertIn("Next Steps", page)
         self.assertIn("No recovery actions needed.", page)
         self.assertIn("Construction Rule", page)
@@ -1195,6 +1211,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>state</dt><dd>red</dd>", warning_page)
         self.assertIn("<dt>draft source</dt><dd>&lt;choose_source_state&gt;</dd>", warning_page)
         self.assertIn("<dt>after policy</dt><dd>lexical_prestate</dd>", warning_page)
+        self.assertIn("Lexicon Patch Drafts", warning_page)
+        self.assertIn('class="lexicon-draft" data-draft-state="red"', warning_page)
+        self.assertIn("<dt>current</dt><dd>unknown_source_allowed</dd>", warning_page)
+        self.assertIn("Lexicon Patch Drafts JSON", warning_page)
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
         page = render_page("Mary saw John leave", require_coq=True)
@@ -1499,6 +1519,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`suggested_action`", readme)
         self.assertIn("`add_state_prestate`", readme)
         self.assertIn("`lexicon_entry_draft`", readme)
+        self.assertIn("`lexicon_patch_drafts`", readme)
         self.assertIn("`source_policy_after_update`", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
@@ -1529,6 +1550,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`license_state_as_target`", web_design)
         self.assertIn("`data-warning-action-kind`", web_design)
         self.assertIn("`lexicon_entry_draft`", web_design)
+        self.assertIn("`lexicon_patch_drafts`", web_design)
         self.assertIn("`current_source_policy`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
