@@ -112,14 +112,16 @@ The same repair queue is available outside the page through:
 python3 scripts/export_lexicon_patch_drafts.py \
   --sentence "Mary painted the door red" \
   --require-coq \
-  --resolve state-red--unknown_source_allowed=not_red
+  --resolve state-red--unknown_source_allowed=not_red \
+  --patch-out work/red_state_lexicon.patch
 ```
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
 diagnostics summary, the manual-repair flags, and the draft records. The
 `/api/lexicon-patch-drafts` endpoint returns the same bundle shape. Resolved
 bundles report `resolved_patch_count`; malformed or semantically invalid
-choices are reported in `validation_errors`.
+choices are reported in `validation_errors`. The optional `--patch-out` path
+writes a review-only candidate patch text and does not mutate the lexicon.
 
 ## Successful Response
 

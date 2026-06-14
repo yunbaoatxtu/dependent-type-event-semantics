@@ -32,6 +32,7 @@ from web.app import (
     analyze_sentence,
     build_diagnostics,
     render_page,
+    render_lexicon_patch_text,
     result_state_warning_for_entry,
     result_state_warnings,
 )
@@ -1233,6 +1234,13 @@ class TranslatorTests(unittest.TestCase):
             "default_source_state='not_red'",
             resolved_bundle["lexicon_patch_drafts"][0]["state_lexicon_patch_line"],
         )
+        patch_text = render_lexicon_patch_text(resolved_bundle)
+        self.assertIn("# Candidate STATE_LEXICON patch", patch_text)
+        self.assertIn("# Review before applying. This file is not applied automatically.", patch_text)
+        self.assertIn(
+            '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
+            patch_text,
+        )
 
         invalid_bundle = build_patch_bundle(
             "Mary painted the door red",
@@ -1242,6 +1250,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(invalid_bundle["can_auto_apply"])
         self.assertTrue(invalid_bundle["requires_human_choice"])
         self.assertIn("expected 'color_scale'", invalid_bundle["validation_errors"][0])
+        invalid_patch_text = render_lexicon_patch_text(invalid_bundle)
+        self.assertIn("# Validation errors:", invalid_patch_text)
+        self.assertIn("# No auto-applicable patch lines.", invalid_patch_text)
 
     def test_api_lexicon_patch_drafts_endpoint(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -1682,6 +1693,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`can_auto_apply`", readme)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", readme)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", readme)
+        self.assertIn("--patch-out", readme)
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
@@ -1725,6 +1737,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`can_auto_apply`", web_design)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", web_design)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", web_design)
+        self.assertIn("--patch-out", web_design)
         self.assertIn("/api/lexicon-patch-drafts", web_design)
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("`resolved_patch_count`", web_design)

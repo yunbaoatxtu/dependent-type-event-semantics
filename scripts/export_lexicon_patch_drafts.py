@@ -16,6 +16,7 @@ from web.app import (  # noqa: E402
     LEXICON_PATCH_DRAFTS_SCHEMA,
     build_lexicon_patch_bundle,
     parse_patch_resolution_items,
+    render_lexicon_patch_text,
 )
 
 
@@ -52,6 +53,11 @@ def parse_args() -> argparse.Namespace:
         help="Optional JSON output path. Defaults to stdout.",
     )
     parser.add_argument(
+        "--patch-out",
+        type=Path,
+        help="Optional candidate patch-text output path for resolved drafts.",
+    )
+    parser.add_argument(
         "--resolve",
         action="append",
         default=[],
@@ -73,6 +79,8 @@ def main() -> None:
         args.out.write_text(encoded, encoding="utf-8")
     else:
         sys.stdout.write(encoded)
+    if args.patch_out:
+        args.patch_out.write_text(render_lexicon_patch_text(bundle), encoding="utf-8")
     if bundle.get("validation_errors"):
         raise SystemExit(1)
 

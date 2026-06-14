@@ -255,7 +255,8 @@ After choosing a source state, resolve the draft without mutating the lexicon:
 python3 scripts/export_lexicon_patch_drafts.py \
   --sentence "Mary painted the door red" \
   --require-coq \
-  --resolve state-red--unknown_source_allowed=not_red
+  --resolve state-red--unknown_source_allowed=not_red \
+  --patch-out work/red_state_lexicon.patch
 ```
 
 The same bundle is available from the web service at
@@ -312,7 +313,9 @@ warning message. A separate Lexicon Patch Drafts panel mirrors the top-level
 `lexicon_patch_drafts` queue for the same repairs. The same queue can also be
 exported as a standalone JSON bundle with
 `scripts/export_lexicon_patch_drafts.py` or `/api/lexicon-patch-drafts`.
-Resolved bundles report `resolved_patch_count` and `validation_errors`.
+Resolved bundles report `resolved_patch_count` and `validation_errors`; the
+command-line exporter can additionally write a review-only candidate patch text
+with `--patch-out`.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

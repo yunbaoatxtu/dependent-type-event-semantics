@@ -214,6 +214,43 @@ def state_lexicon_patch_line(state: str, scale: str, default_source_state: str) 
     )
 
 
+def state_lexicon_source_line(draft: dict[str, Any]) -> str:
+    state = str(draft.get("state", ""))
+    scale = str(draft.get("scale", ""))
+    source_state = str(draft.get("default_source_state", ""))
+    return (
+        f'    "{state}": StateLexiconEntry('
+        f'"{scale}", default_source_state="{source_state}"),'
+    )
+
+
+def render_lexicon_patch_text(bundle: dict[str, Any]) -> str:
+    lines = [
+        "# Candidate STATE_LEXICON patch",
+        f"# schema_version: {bundle.get('schema_version', LEXICON_PATCH_DRAFTS_SCHEMA)}",
+        f"# input_sentence: {bundle.get('input_sentence', '')}",
+        "# Review before applying. This file is not applied automatically.",
+        "# Target: translator/dependent_type_event_translator.py::STATE_LEXICON",
+        "",
+    ]
+    validation_errors = bundle.get("validation_errors", [])
+    if validation_errors:
+        lines.append("# Validation errors:")
+        lines.extend(f"# - {error}" for error in validation_errors)
+        lines.append("")
+    patch_lines = [
+        state_lexicon_source_line(draft)
+        for draft in bundle.get("lexicon_patch_drafts", [])
+        if draft.get("can_auto_apply")
+    ]
+    if not patch_lines:
+        lines.append("# No auto-applicable patch lines.")
+    else:
+        lines.append("# Candidate replacement/addition lines:")
+        lines.extend(patch_lines)
+    return "\n".join(lines) + "\n"
+
+
 def lexicon_entry_draft(policy: str, state: str, scale: str) -> dict[str, Any]:
     default_source_state = LEXICON_SOURCE_PLACEHOLDER
     return {
