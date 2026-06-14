@@ -269,7 +269,7 @@ def render_lexicon_patch_text(bundle: dict[str, Any]) -> str:
     patch_lines = [
         state_lexicon_source_line(draft)
         for draft in drafts
-        if draft.get("can_auto_apply")
+        if draft.get("can_auto_apply") and not validation_errors
     ]
     pending_drafts = [
         draft
@@ -278,6 +278,8 @@ def render_lexicon_patch_text(bundle: dict[str, Any]) -> str:
     ]
     if not patch_lines:
         lines.append("# No auto-applicable patch lines.")
+        if validation_errors:
+            lines.append("# Resolve validation errors before copying any candidate line.")
     else:
         lines.append("# Candidate replacement/addition lines:")
         lines.extend(patch_lines)

@@ -1431,6 +1431,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(bundle["can_auto_apply"])
         self.assertFalse(bundle["requires_human_choice"])
         self.assertIn("Conflicting resolution", bundle["validation_errors"][0])
+        self.assertIn("# No auto-applicable patch lines.", bundle["patch_text_preview"])
+        self.assertIn(
+            "# Resolve validation errors before copying any candidate line.",
+            bundle["patch_text_preview"],
+        )
+        self.assertNotIn(
+            '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
+            bundle["patch_text_preview"],
+        )
 
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -1861,6 +1870,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("--source-state not_red", readme)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", readme)
         self.assertIn("conflicting source-state choice", readme)
+        self.assertIn("review patch text suppresses", readme)
+        self.assertIn("candidate replacement lines until", readme)
         self.assertIn("--patch-out", readme)
         self.assertIn("`format=patch`", readme)
         self.assertIn("`resolved_patch_count`", readme)
@@ -1917,6 +1928,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("--source-state not_red", web_design)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", web_design)
         self.assertIn("conflicting source-state choices", web_design)
+        self.assertIn("suppresses candidate replacement", web_design)
         self.assertIn("--patch-out", web_design)
         self.assertIn("`format=patch`", web_design)
         self.assertIn("`text/plain`", web_design)

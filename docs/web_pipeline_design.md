@@ -135,6 +135,8 @@ For compact shell calls, the older equivalent
 If a client supplies repeated resolutions for the same draft, they must agree;
 conflicting source-state choices are reported in `validation_errors` and make
 the bundle non-auto-applicable.
+Patch text for a bundle with validation errors suppresses candidate replacement
+lines until the client fixes those errors.
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
 diagnostics summary, the manual-repair flags, and the draft records. The

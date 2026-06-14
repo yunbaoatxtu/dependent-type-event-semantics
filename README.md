@@ -266,6 +266,8 @@ is also accepted for shell use.
 Repeated resolutions for the same draft are allowed only when they agree; a
 conflicting source-state choice is reported in `validation_errors` and is never
 auto-applied.
+When `validation_errors` is non-empty, the review patch text suppresses
+candidate replacement lines until the errors are resolved.
 
 The same bundle is available from the web service at
 `/api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1`.
