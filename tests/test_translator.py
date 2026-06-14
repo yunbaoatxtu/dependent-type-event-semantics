@@ -1376,6 +1376,9 @@ class TranslatorTests(unittest.TestCase):
             warning_page,
         )
         self.assertIn("Lexicon Patch Drafts JSON", warning_page)
+        self.assertIn("Lexicon Patch Text Preview", warning_page)
+        self.assertIn("# Pending human choices:", warning_page)
+        self.assertIn("# placeholders: default_source_state", warning_page)
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
         page = render_page("Mary saw John leave", require_coq=True)
@@ -1712,6 +1715,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
         self.assertIn("`patch_text_preview`", readme)
+        self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("pending human-choice lines", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
         self.assertIn("separate `Next Steps`", readme)
@@ -1760,6 +1764,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`resolved_patch_count`", web_design)
         self.assertIn("`validation_errors`", web_design)
         self.assertIn("`patch_text_preview`", web_design)
+        self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("pending patch line as a comment", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)

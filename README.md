@@ -316,6 +316,7 @@ exported as a standalone JSON bundle with
 Resolved bundles report `resolved_patch_count`, `validation_errors`, and a
 `patch_text_preview`; unresolved previews keep pending human-choice lines as
 comments, while resolved previews show candidate replacement lines. The
+web page renders the same text in a `Lexicon Patch Text Preview` panel, and the
 command-line exporter can additionally write that review-only candidate patch
 text with `--patch-out`.
 

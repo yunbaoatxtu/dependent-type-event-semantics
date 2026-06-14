@@ -169,7 +169,10 @@ The page also renders a `Lexicon Patch Drafts` panel from top-level
 `lexicon_patch_drafts`, with stable `data-draft-id`, `data-draft-state`, and
 `data-draft-current-policy` hooks for future repair controls. The panel shows
 the same `state_lexicon_patch_line` preview that JSON clients receive, together
-with the `placeholder_fields` and `can_auto_apply` status.
+with the `placeholder_fields` and `can_auto_apply` status. A separate
+`Lexicon Patch Text Preview` panel shows the review-only patch text generated
+from the current result, including commented pending lines when a human source
+state is still required.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

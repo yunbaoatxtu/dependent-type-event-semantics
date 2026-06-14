@@ -709,6 +709,17 @@ def panel(title: str, body: str) -> str:
     )
 
 
+def lexicon_patch_text_preview_for_result(result: dict[str, Any]) -> str:
+    return render_lexicon_patch_text(
+        {
+            "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
+            "input_sentence": result.get("input_sentence", ""),
+            "validation_errors": [],
+            "lexicon_patch_drafts": result.get("lexicon_patch_drafts", []),
+        }
+    )
+
+
 def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> str:
     result = analyze_sentence(sentence, require_coq=require_coq)
     event_semantics = compact_json(result.get("event_semantics", result.get("error", "")))
@@ -716,6 +727,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     ast = compact_json(result.get("ast", {}))
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
     patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
+    patch_text_preview = lexicon_patch_text_preview_for_result(result)
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
     coq_code = result.get("coq_code", "")
@@ -1054,6 +1066,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("AST", ast)}
       {panel("Result State Lexicon JSON", result_lexicon)}
       {panel("Lexicon Patch Drafts JSON", patch_drafts)}
+      {panel("Lexicon Patch Text Preview", patch_text_preview)}
       {panel("Coq/Rocq Check", coq_check)}
       {panel("Generated Coq", coq_code)}
     </div>
