@@ -54,6 +54,13 @@ It also exposes the lexicon repair queue alone:
 GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1
 ```
 
+After a reviewer chooses a source state, the same endpoint can validate the
+choice without changing the repository:
+
+```text
+GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1&resolve=state-red--unknown_source_allowed=not_red
+```
+
 The request has two stable query parameters:
 
 - `sentence`: required natural-language input;
@@ -104,12 +111,15 @@ The same repair queue is available outside the page through:
 ```bash
 python3 scripts/export_lexicon_patch_drafts.py \
   --sentence "Mary painted the door red" \
-  --require-coq
+  --require-coq \
+  --resolve state-red--unknown_source_allowed=not_red
 ```
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
 diagnostics summary, the manual-repair flags, and the draft records. The
-`/api/lexicon-patch-drafts` endpoint returns the same bundle shape.
+`/api/lexicon-patch-drafts` endpoint returns the same bundle shape. Resolved
+bundles report `resolved_patch_count`; malformed or semantically invalid
+choices are reported in `validation_errors`.
 
 ## Successful Response
 

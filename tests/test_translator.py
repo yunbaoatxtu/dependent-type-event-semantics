@@ -1214,6 +1214,35 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(empty_bundle["can_auto_apply"])
         self.assertEqual(empty_bundle["lexicon_patch_drafts"], [])
 
+        resolved_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=not_red"],
+        )
+        self.assertTrue(resolved_bundle["ok"])
+        self.assertFalse(resolved_bundle["requires_human_choice"])
+        self.assertTrue(resolved_bundle["can_auto_apply"])
+        self.assertEqual(resolved_bundle["resolved_patch_count"], 1)
+        self.assertEqual(resolved_bundle["validation_errors"], [])
+        self.assertEqual(
+            resolved_bundle["lexicon_patch_drafts"][0]["default_source_state"],
+            "not_red",
+        )
+        self.assertEqual(resolved_bundle["lexicon_patch_drafts"][0]["placeholder_fields"], [])
+        self.assertIn(
+            "default_source_state='not_red'",
+            resolved_bundle["lexicon_patch_drafts"][0]["state_lexicon_patch_line"],
+        )
+
+        invalid_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=intact"],
+        )
+        self.assertFalse(invalid_bundle["can_auto_apply"])
+        self.assertTrue(invalid_bundle["requires_human_choice"])
+        self.assertIn("expected 'color_scale'", invalid_bundle["validation_errors"][0])
+
     def test_api_lexicon_patch_drafts_endpoint(self) -> None:
         handler = object.__new__(PipelineHandler)
         bundle = PipelineHandler.handle_patch_api(
@@ -1228,6 +1257,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             bundle["lexicon_patch_drafts"][0]["draft_id"],
             "state-red--unknown_source_allowed",
+        )
+
+        resolved_bundle = PipelineHandler.handle_patch_api(
+            handler,
+            (
+                "sentence=Mary+painted+the+door+red&require_coq=1"
+                "&resolve=state-red--unknown_source_allowed=not_red"
+            ),
+        )
+        self.assertTrue(resolved_bundle["can_auto_apply"])
+        self.assertEqual(resolved_bundle["resolved_patch_count"], 1)
+        self.assertEqual(resolved_bundle["validation_errors"], [])
+        self.assertEqual(
+            resolved_bundle["lexicon_patch_drafts"][0]["default_source_state"],
+            "not_red",
         )
 
         no_draft_bundle = PipelineHandler.handle_patch_api(
@@ -1637,6 +1681,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`requires_human_choice`", readme)
         self.assertIn("`can_auto_apply`", readme)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", readme)
+        self.assertIn("--resolve state-red--unknown_source_allowed=not_red", readme)
+        self.assertIn("`resolved_patch_count`", readme)
+        self.assertIn("`validation_errors`", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
@@ -1677,8 +1724,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`placeholder_fields`", web_design)
         self.assertIn("`can_auto_apply`", web_design)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", web_design)
+        self.assertIn("--resolve state-red--unknown_source_allowed=not_red", web_design)
         self.assertIn("/api/lexicon-patch-drafts", web_design)
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
+        self.assertIn("`resolved_patch_count`", web_design)
+        self.assertIn("`validation_errors`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)

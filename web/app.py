@@ -12,11 +12,13 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from translator.dependent_type_event_translator import STATE_LEXICON
 from translator.natural_language_pipeline import run_pipeline
 
 
 DEFAULT_SENTENCE = "John knocked twice"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
+LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 FAILURE_STAGE_LABELS = {
     "input": "empty input",
     "parsing": "natural-language parsing",
@@ -83,10 +85,88 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
     return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
 
 
-def build_lexicon_patch_bundle(sentence: str, require_coq: bool = False) -> dict[str, Any]:
+def parse_patch_resolution_items(items: list[str]) -> tuple[dict[str, str], list[str]]:
+    resolutions = {}
+    errors = []
+    for item in items:
+        if "=" not in item:
+            errors.append(f"Malformed resolution {item!r}; expected draft_id=source_state.")
+            continue
+        draft_id, source_state = item.split("=", 1)
+        draft_id = draft_id.strip()
+        source_state = source_state.strip()
+        if not draft_id or not source_state:
+            errors.append(f"Malformed resolution {item!r}; draft_id and source_state are required.")
+            continue
+        resolutions[draft_id] = source_state
+    return resolutions, errors
+
+
+def validate_patch_resolution(draft: dict[str, Any], source_state: str) -> list[str]:
+    errors = []
+    draft_id = str(draft.get("draft_id", ""))
+    target_state = str(draft.get("state", ""))
+    scale = str(draft.get("scale", ""))
+    if source_state == LEXICON_SOURCE_PLACEHOLDER:
+        errors.append(f"{draft_id}: source_state is still the placeholder.")
+    if source_state == target_state:
+        errors.append(f"{draft_id}: source_state must differ from target state {target_state!r}.")
+    source_entry = STATE_LEXICON.get(source_state)
+    if source_entry is not None and source_entry.scale != scale:
+        errors.append(
+            f"{draft_id}: source_state {source_state!r} has scale "
+            f"{source_entry.scale!r}, expected {scale!r}."
+        )
+    return errors
+
+
+def resolve_lexicon_patch_drafts(
+    drafts: list[dict[str, Any]],
+    resolutions: dict[str, str],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not resolutions:
+        return [dict(draft) for draft in drafts], []
+    resolved = []
+    errors = []
+    seen_draft_ids = set()
+    for draft in drafts:
+        draft_copy = dict(draft)
+        draft_id = str(draft_copy.get("draft_id", ""))
+        if draft_id in resolutions:
+            seen_draft_ids.add(draft_id)
+            source_state = resolutions[draft_id]
+            resolution_errors = validate_patch_resolution(draft_copy, source_state)
+            if resolution_errors:
+                errors.extend(resolution_errors)
+            else:
+                draft_copy["default_source_state"] = source_state
+                draft_copy["requires_human_choice"] = False
+                draft_copy["placeholder_fields"] = []
+                draft_copy["can_auto_apply"] = True
+                draft_copy["state_lexicon_patch_line"] = state_lexicon_patch_line(
+                    str(draft_copy.get("state", "")),
+                    str(draft_copy.get("scale", "")),
+                    source_state,
+                )
+        resolved.append(draft_copy)
+    for draft_id in sorted(set(resolutions) - seen_draft_ids):
+        errors.append(f"{draft_id}: no matching lexicon patch draft.")
+    return resolved, errors
+
+
+def build_lexicon_patch_bundle(
+    sentence: str,
+    require_coq: bool = False,
+    resolutions: dict[str, str] | None = None,
+    resolution_errors: list[str] | None = None,
+) -> dict[str, Any]:
     result = analyze_sentence(sentence, require_coq=require_coq)
     diagnostics = result.get("diagnostics", {})
-    drafts = result.get("lexicon_patch_drafts", [])
+    drafts, validation_errors = resolve_lexicon_patch_drafts(
+        result.get("lexicon_patch_drafts", []),
+        resolutions or {},
+    )
+    all_errors = [*(resolution_errors or []), *validation_errors]
     return {
         "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
         "input_sentence": result.get("input_sentence", sentence.strip()),
@@ -101,7 +181,10 @@ def build_lexicon_patch_bundle(sentence: str, require_coq: bool = False) -> dict
             draft.get("requires_human_choice") for draft in drafts
         ),
         "can_auto_apply": bool(drafts)
+        and not all_errors
         and all(draft.get("can_auto_apply") for draft in drafts),
+        "resolved_patch_count": sum(1 for draft in drafts if draft.get("can_auto_apply")),
+        "validation_errors": all_errors,
         "lexicon_patch_drafts": drafts,
         "conclusion": result.get("conclusion", ""),
         "error": result.get("error"),
@@ -132,7 +215,7 @@ def state_lexicon_patch_line(state: str, scale: str, default_source_state: str) 
 
 
 def lexicon_entry_draft(policy: str, state: str, scale: str) -> dict[str, Any]:
-    default_source_state = "<choose_source_state>"
+    default_source_state = LEXICON_SOURCE_PLACEHOLDER
     return {
         "draft_id": f"state-{stable_token(state)}--{stable_token(policy)}",
         "state": state,
@@ -954,7 +1037,13 @@ class PipelineHandler(BaseHTTPRequestHandler):
         params = parse_qs(query)
         sentence = params.get("sentence", [""])[0]
         require_coq = params.get("require_coq", ["0"])[0] == "1"
-        return build_lexicon_patch_bundle(sentence, require_coq=require_coq)
+        resolutions, resolution_errors = parse_patch_resolution_items(params.get("resolve", []))
+        return build_lexicon_patch_bundle(
+            sentence,
+            require_coq=require_coq,
+            resolutions=resolutions,
+            resolution_errors=resolution_errors,
+        )
 
     def write_html_response(self, content: str) -> None:
         encoded = content.encode("utf-8")

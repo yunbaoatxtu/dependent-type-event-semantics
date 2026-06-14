@@ -12,14 +12,28 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from web.app import LEXICON_PATCH_DRAFTS_SCHEMA, build_lexicon_patch_bundle  # noqa: E402
+from web.app import (  # noqa: E402
+    LEXICON_PATCH_DRAFTS_SCHEMA,
+    build_lexicon_patch_bundle,
+    parse_patch_resolution_items,
+)
 
 
 SCHEMA_VERSION = LEXICON_PATCH_DRAFTS_SCHEMA
 
 
-def build_patch_bundle(sentence: str, require_coq: bool = False) -> dict:
-    return build_lexicon_patch_bundle(sentence, require_coq=require_coq)
+def build_patch_bundle(
+    sentence: str,
+    require_coq: bool = False,
+    resolution_items: list[str] | None = None,
+) -> dict:
+    resolutions, resolution_errors = parse_patch_resolution_items(resolution_items or [])
+    return build_lexicon_patch_bundle(
+        sentence,
+        require_coq=require_coq,
+        resolutions=resolutions,
+        resolution_errors=resolution_errors,
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,17 +51,30 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Optional JSON output path. Defaults to stdout.",
     )
+    parser.add_argument(
+        "--resolve",
+        action="append",
+        default=[],
+        metavar="DRAFT_ID=SOURCE_STATE",
+        help="Resolve one draft placeholder with a chosen source state.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    bundle = build_patch_bundle(args.sentence, require_coq=args.require_coq)
+    bundle = build_patch_bundle(
+        args.sentence,
+        require_coq=args.require_coq,
+        resolution_items=args.resolve,
+    )
     encoded = json.dumps(bundle, ensure_ascii=False, indent=2) + "\n"
     if args.out:
         args.out.write_text(encoded, encoding="utf-8")
     else:
         sys.stdout.write(encoded)
+    if bundle.get("validation_errors"):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
