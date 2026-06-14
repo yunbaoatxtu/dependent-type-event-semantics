@@ -1082,6 +1082,35 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
 
+    def test_api_analyze_response_contains_result_state_warnings(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=Mary+painted+the+door+red&require_coq=1",
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertIsNone(result["diagnostics"]["failure_stage"])
+        self.assertEqual(
+            result["diagnostics"]["warnings"],
+            [
+                {
+                    "kind": "unknown_result_source",
+                    "state": "red",
+                    "scale": "color_scale",
+                    "message": (
+                        "Result state red has no unique lexical pre-state; "
+                        "source remains unknown_state."
+                    ),
+                }
+            ],
+        )
+        self.assertEqual(
+            result["result_state_lexicon"][0]["source_policy"],
+            "unknown_source_allowed",
+        )
+        self.assertIn("unknown_state", result["coq_code"])
+
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
