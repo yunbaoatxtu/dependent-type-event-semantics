@@ -121,7 +121,8 @@ diagnostics summary, the manual-repair flags, and the draft records. The
 `/api/lexicon-patch-drafts` endpoint returns the same bundle shape. Resolved
 bundles report `resolved_patch_count`; malformed or semantically invalid
 choices are reported in `validation_errors`. The optional `--patch-out` path
-writes a review-only candidate patch text and does not mutate the lexicon.
+writes the same review-only candidate text exposed in `patch_text_preview` and
+does not mutate the lexicon.
 
 ## Successful Response
 

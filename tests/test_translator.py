@@ -1225,6 +1225,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(resolved_bundle["can_auto_apply"])
         self.assertEqual(resolved_bundle["resolved_patch_count"], 1)
         self.assertEqual(resolved_bundle["validation_errors"], [])
+        self.assertIn(
+            '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
+            resolved_bundle["patch_text_preview"],
+        )
         self.assertEqual(
             resolved_bundle["lexicon_patch_drafts"][0]["default_source_state"],
             "not_red",
@@ -1250,6 +1254,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(invalid_bundle["can_auto_apply"])
         self.assertTrue(invalid_bundle["requires_human_choice"])
         self.assertIn("expected 'color_scale'", invalid_bundle["validation_errors"][0])
+        self.assertIn("# Validation errors:", invalid_bundle["patch_text_preview"])
+        self.assertIn("# No auto-applicable patch lines.", invalid_bundle["patch_text_preview"])
         invalid_patch_text = render_lexicon_patch_text(invalid_bundle)
         self.assertIn("# Validation errors:", invalid_patch_text)
         self.assertIn("# No auto-applicable patch lines.", invalid_patch_text)
@@ -1280,6 +1286,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(resolved_bundle["can_auto_apply"])
         self.assertEqual(resolved_bundle["resolved_patch_count"], 1)
         self.assertEqual(resolved_bundle["validation_errors"], [])
+        self.assertIn(
+            '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
+            resolved_bundle["patch_text_preview"],
+        )
         self.assertEqual(
             resolved_bundle["lexicon_patch_drafts"][0]["default_source_state"],
             "not_red",
@@ -1696,6 +1706,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("--patch-out", readme)
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
+        self.assertIn("`patch_text_preview`", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
@@ -1742,6 +1753,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("`resolved_patch_count`", web_design)
         self.assertIn("`validation_errors`", web_design)
+        self.assertIn("`patch_text_preview`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)

@@ -167,7 +167,7 @@ def build_lexicon_patch_bundle(
         resolutions or {},
     )
     all_errors = [*(resolution_errors or []), *validation_errors]
-    return {
+    bundle = {
         "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
         "input_sentence": result.get("input_sentence", sentence.strip()),
         "ok": bool(result.get("ok")),
@@ -189,6 +189,8 @@ def build_lexicon_patch_bundle(
         "conclusion": result.get("conclusion", ""),
         "error": result.get("error"),
     }
+    bundle["patch_text_preview"] = render_lexicon_patch_text(bundle)
+    return bundle
 
 
 def check_status(ok: Any) -> str:
