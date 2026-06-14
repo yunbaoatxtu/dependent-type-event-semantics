@@ -1113,6 +1113,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("unknown_source_allowed", warning_page)
         self.assertIn("source remains unknown_state", warning_page)
         self.assertIn("lexicon-entry--warning", warning_page)
+        self.assertIn("Translation verified with warnings", warning_page)
+        self.assertIn("Warnings: Result state red has no unique lexical pre-state", warning_page)
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
         page = render_page("Mary saw John leave", require_coq=True)
@@ -1301,6 +1303,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
+        self.assertIn("`Translation verified with warnings`", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1315,6 +1318,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_hint` is `null` on success", web_design)
         self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
         self.assertIn("`diagnostics.warnings` is an array", web_design)
+        self.assertIn("verified with warnings", web_design)
         self.assertIn("`kind`, `label`, and `detail` fields", web_design)
         self.assertIn("render the same actions in a `Next Steps` panel", web_design)
         self.assertIn("`data-action-kind`", web_design)

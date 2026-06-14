@@ -100,7 +100,9 @@ construction-specific hygiene, or the external proof-assistant boundary.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not
-have to inspect raw JSON before trying the next repair.
+have to inspect raw JSON before trying the next repair. For successful
+translations with non-fatal warnings, it should state that the translation is
+verified with warnings and include the warning message in the status detail.
 Machine clients should prefer `recovery_actions` when they need stable action
 names or button labels, and `warnings` when they need to flag underspecified but
 still successfully checked translations.

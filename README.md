@@ -220,7 +220,9 @@ panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `diagnostics.warnings` records non-fatal semantic audit notices. For example,
 `Mary painted the door red` can pass type checking and Coq/Rocq validation while
 still warning that `red` has no unique lexical pre-state, so the transition
-source remains `unknown_state`.
+source remains `unknown_state`. The page status banner reports this as
+`Translation verified with warnings`, keeping the successful proof-assistant
+boundary result separate from the semantic audit notice.
 
 Run the local web demo:
 

@@ -195,17 +195,29 @@ def compact_json(data: Any) -> str:
 
 def status_label(result: dict[str, Any]) -> str:
     if result.get("ok"):
+        warnings = result.get("diagnostics", {}).get("warnings", [])
         coq = result.get("coq_check", {})
         if coq.get("status") == "skipped":
+            if warnings:
+                return "Internally checked with warnings; Coq/Rocq skipped"
             return "Internally checked; Coq/Rocq skipped"
+        if warnings:
+            return "Translation verified with warnings"
         return "Translation verified"
     return "Needs attention"
 
 
 def status_detail(result: dict[str, Any]) -> str:
+    warnings = result.get("diagnostics", {}).get("warnings", [])
     failure_stage = result.get("diagnostics", {}).get("failure_stage")
     if not failure_stage:
-        return result.get("conclusion", "")
+        conclusion = result.get("conclusion", "")
+        if warnings:
+            warning_text = "; ".join(warning["message"] for warning in warnings)
+            if conclusion:
+                return f"{conclusion} Warnings: {warning_text}"
+            return f"Warnings: {warning_text}"
+        return conclusion
     label = FAILURE_STAGE_LABELS.get(failure_stage, failure_stage)
     conclusion = result.get("conclusion", "")
     hint = result.get("diagnostics", {}).get("recovery_hint")
