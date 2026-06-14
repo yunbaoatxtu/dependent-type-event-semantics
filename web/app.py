@@ -16,6 +16,7 @@ from translator.natural_language_pipeline import run_pipeline
 
 
 DEFAULT_SENTENCE = "John knocked twice"
+LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 FAILURE_STAGE_LABELS = {
     "input": "empty input",
     "parsing": "natural-language parsing",
@@ -80,6 +81,31 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
         }
         return add_diagnostics(result)
     return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
+
+
+def build_lexicon_patch_bundle(sentence: str, require_coq: bool = False) -> dict[str, Any]:
+    result = analyze_sentence(sentence, require_coq=require_coq)
+    diagnostics = result.get("diagnostics", {})
+    drafts = result.get("lexicon_patch_drafts", [])
+    return {
+        "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
+        "input_sentence": result.get("input_sentence", sentence.strip()),
+        "ok": bool(result.get("ok")),
+        "diagnostics": {
+            "summary": diagnostics.get("summary"),
+            "failure_stage": diagnostics.get("failure_stage"),
+            "manual_repair_required": diagnostics.get("manual_repair_required", False),
+            "lexicon_patch_draft_count": diagnostics.get("lexicon_patch_draft_count", 0),
+        },
+        "requires_human_choice": any(
+            draft.get("requires_human_choice") for draft in drafts
+        ),
+        "can_auto_apply": bool(drafts)
+        and all(draft.get("can_auto_apply") for draft in drafts),
+        "lexicon_patch_drafts": drafts,
+        "conclusion": result.get("conclusion", ""),
+        "error": result.get("error"),
+    }
 
 
 def check_status(ok: Any) -> str:
@@ -907,6 +933,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/analyze":
             self.write_json_response(self.handle_api(parsed.query))
             return
+        if parsed.path == "/api/lexicon-patch-drafts":
+            self.write_json_response(self.handle_patch_api(parsed.query))
+            return
         if parsed.path not in {"/", ""}:
             self.send_error(HTTPStatus.NOT_FOUND)
             return
@@ -920,6 +949,12 @@ class PipelineHandler(BaseHTTPRequestHandler):
         sentence = params.get("sentence", [""])[0]
         require_coq = params.get("require_coq", ["0"])[0] == "1"
         return analyze_sentence(sentence, require_coq=require_coq)
+
+    def handle_patch_api(self, query: str) -> dict[str, Any]:
+        params = parse_qs(query)
+        sentence = params.get("sentence", [""])[0]
+        require_coq = params.get("require_coq", ["0"])[0] == "1"
+        return build_lexicon_patch_bundle(sentence, require_coq=require_coq)
 
     def write_html_response(self, content: str) -> None:
         encoded = content.encode("utf-8")

@@ -48,6 +48,12 @@ The web demo exposes the same checked pipeline as a JSON endpoint:
 GET /api/analyze?sentence=Mary+saw+John+leave&require_coq=1
 ```
 
+It also exposes the lexicon repair queue alone:
+
+```text
+GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1
+```
+
 The request has two stable query parameters:
 
 - `sentence`: required natural-language input;
@@ -102,7 +108,8 @@ python3 scripts/export_lexicon_patch_drafts.py \
 ```
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
-diagnostics summary, the manual-repair flags, and the draft records.
+diagnostics summary, the manual-repair flags, and the draft records. The
+`/api/lexicon-patch-drafts` endpoint returns the same bundle shape.
 
 ## Successful Response
 

@@ -1214,6 +1214,30 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(empty_bundle["can_auto_apply"])
         self.assertEqual(empty_bundle["lexicon_patch_drafts"], [])
 
+    def test_api_lexicon_patch_drafts_endpoint(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        bundle = PipelineHandler.handle_patch_api(
+            handler,
+            "sentence=Mary+painted+the+door+red&require_coq=1",
+        )
+        self.assertEqual(bundle["schema_version"], "lexicon_patch_drafts.v1")
+        self.assertTrue(bundle["ok"])
+        self.assertTrue(bundle["requires_human_choice"])
+        self.assertFalse(bundle["can_auto_apply"])
+        self.assertEqual(bundle["diagnostics"]["lexicon_patch_draft_count"], 1)
+        self.assertEqual(
+            bundle["lexicon_patch_drafts"][0]["draft_id"],
+            "state-red--unknown_source_allowed",
+        )
+
+        no_draft_bundle = PipelineHandler.handle_patch_api(
+            handler,
+            "sentence=John+hammered+the+metal+flat&require_coq=1",
+        )
+        self.assertTrue(no_draft_bundle["ok"])
+        self.assertFalse(no_draft_bundle["requires_human_choice"])
+        self.assertEqual(no_draft_bundle["lexicon_patch_drafts"], [])
+
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
@@ -1613,6 +1637,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`requires_human_choice`", readme)
         self.assertIn("`can_auto_apply`", readme)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", readme)
+        self.assertIn("/api/lexicon-patch-drafts", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1652,6 +1677,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`placeholder_fields`", web_design)
         self.assertIn("`can_auto_apply`", web_design)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", web_design)
+        self.assertIn("/api/lexicon-patch-drafts", web_design)
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)

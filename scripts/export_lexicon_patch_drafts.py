@@ -7,41 +7,19 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from web.app import analyze_sentence  # noqa: E402
+from web.app import LEXICON_PATCH_DRAFTS_SCHEMA, build_lexicon_patch_bundle  # noqa: E402
 
 
-SCHEMA_VERSION = "lexicon_patch_drafts.v1"
+SCHEMA_VERSION = LEXICON_PATCH_DRAFTS_SCHEMA
 
 
-def build_patch_bundle(sentence: str, require_coq: bool = False) -> dict[str, Any]:
-    result = analyze_sentence(sentence, require_coq=require_coq)
-    diagnostics = result.get("diagnostics", {})
-    drafts = result.get("lexicon_patch_drafts", [])
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "input_sentence": result.get("input_sentence", sentence.strip()),
-        "ok": bool(result.get("ok")),
-        "diagnostics": {
-            "summary": diagnostics.get("summary"),
-            "failure_stage": diagnostics.get("failure_stage"),
-            "manual_repair_required": diagnostics.get("manual_repair_required", False),
-            "lexicon_patch_draft_count": diagnostics.get("lexicon_patch_draft_count", 0),
-        },
-        "requires_human_choice": any(
-            draft.get("requires_human_choice") for draft in drafts
-        ),
-        "can_auto_apply": bool(drafts)
-        and all(draft.get("can_auto_apply") for draft in drafts),
-        "lexicon_patch_drafts": drafts,
-        "conclusion": result.get("conclusion", ""),
-        "error": result.get("error"),
-    }
+def build_patch_bundle(sentence: str, require_coq: bool = False) -> dict:
+    return build_lexicon_patch_bundle(sentence, require_coq=require_coq)
 
 
 def parse_args() -> argparse.Namespace:
