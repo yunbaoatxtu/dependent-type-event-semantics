@@ -203,8 +203,9 @@ The `sentence` parameter carries the natural-language input. `require_coq=1`
 asks the server to run the external Coq/Rocq boundary check when the toolchain
 is available. The response includes the same event-semantics JSON,
 dependent-type rendering, generated Coq, `result_state_lexicon`,
-`construction_rule`, `construction_hygiene`, `coq_check`, and `diagnostics`
-fields used by the web page.
+`lexicon_patch_drafts`, `patch_text_preview`, `construction_rule`,
+`construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
+page.
 
 For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 `type_check`, `construction_hygiene`, and `coq_check` failures.

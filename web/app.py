@@ -447,6 +447,7 @@ def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     enriched.setdefault("result_state_lexicon", [])
     enriched["diagnostics"] = build_diagnostics(enriched)
     enriched["lexicon_patch_drafts"] = lexicon_patch_drafts(enriched)
+    enriched["patch_text_preview"] = lexicon_patch_text_preview_for_result(enriched)
     return enriched
 
 
@@ -727,7 +728,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     ast = compact_json(result.get("ast", {}))
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
     patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
-    patch_text_preview = lexicon_patch_text_preview_for_result(result)
+    patch_text_preview = result.get("patch_text_preview") or lexicon_patch_text_preview_for_result(result)
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
     coq_code = result.get("coq_code", "")

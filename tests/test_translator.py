@@ -1188,6 +1188,8 @@ class TranslatorTests(unittest.TestCase):
             result["result_state_lexicon"][0]["source_policy"],
             "unknown_source_allowed",
         )
+        self.assertIn("# Pending human choices:", result["patch_text_preview"])
+        self.assertIn("# placeholders: default_source_state", result["patch_text_preview"])
         self.assertIn("unknown_state", result["coq_code"])
 
     def test_export_lexicon_patch_drafts_bundle(self) -> None:
@@ -1711,6 +1713,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`add_state_prestate`", readme)
         self.assertIn("`lexicon_entry_draft`", readme)
         self.assertIn("`lexicon_patch_drafts`", readme)
+        self.assertIn("`patch_text_preview`", readme)
         self.assertIn("`draft_id`", readme)
         self.assertIn("`source_policy_after_update`", readme)
         self.assertIn("`state_lexicon_patch_line`", readme)
@@ -1721,7 +1724,6 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("--patch-out", readme)
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
-        self.assertIn("`patch_text_preview`", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("pending human-choice lines", readme)
         self.assertIn("create missing parent directories", readme)
@@ -1758,6 +1760,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-warning-action-kind`", web_design)
         self.assertIn("`lexicon_entry_draft`", web_design)
         self.assertIn("`lexicon_patch_drafts`", web_design)
+        self.assertIn("`patch_text_preview`", web_design)
         self.assertIn("`draft_id`", web_design)
         self.assertIn("`current_source_policy`", web_design)
         self.assertIn("`data-draft-id`", web_design)
@@ -1771,7 +1774,6 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("`resolved_patch_count`", web_design)
         self.assertIn("`validation_errors`", web_design)
-        self.assertIn("`patch_text_preview`", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("pending patch line as a comment", web_design)
         self.assertIn("create missing parent directories", web_design)

@@ -70,8 +70,9 @@ The request has two stable query parameters:
 The response is a single JSON object. On success, it must expose the same
 semantic artifacts shown on the page: `event_semantics`,
 `dependent_type_translation`, `result_state_lexicon`, `lexicon_patch_drafts`,
-`ast`, `coq_code`, `construction_rule`, `construction_hygiene`, `coq_check`,
-`diagnostics`, and `conclusion`. `result_state_lexicon` is a list of audit
+`patch_text_preview`, `ast`, `coq_code`, `construction_rule`,
+`construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
+`result_state_lexicon` is a list of audit
 records for resultative targets; each record includes the target `state`, its
 `scale`, an optional `default_source_state`, and a `source_policy` such as
 `lexical_prestate` or `unknown_source_allowed`. `lexicon_patch_drafts` lifts
