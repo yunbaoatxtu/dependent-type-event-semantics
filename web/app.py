@@ -287,6 +287,39 @@ def next_steps_panel(result: dict[str, Any]) -> str:
     )
 
 
+def semantic_warnings_panel(result: dict[str, Any]) -> str:
+    warnings = result.get("diagnostics", {}).get("warnings", [])
+    if not warnings:
+        body = '<p class="semantic-warning-empty">No semantic warnings.</p>'
+    else:
+        items = []
+        for warning in warnings:
+            kind = str(warning.get("kind", ""))
+            state = str(warning.get("state", ""))
+            scale = str(warning.get("scale", ""))
+            message = str(warning.get("message", ""))
+            kind_class = css_token(kind)
+            items.append(
+                '<li '
+                f'class="semantic-warning semantic-warning--{html.escape(kind_class)}" '
+                f'data-warning-kind="{html.escape(kind)}">'
+                f'<strong>{html.escape(kind)}</strong>'
+                '<dl>'
+                f'<dt>state</dt><dd>{html.escape(state)}</dd>'
+                f'<dt>scale</dt><dd>{html.escape(scale)}</dd>'
+                '</dl>'
+                f'<p>{html.escape(message)}</p>'
+                "</li>"
+            )
+        body = '<ul class="semantic-warning-list">' + "".join(items) + "</ul>"
+    return (
+        '<section class="panel semantic-warnings-panel">'
+        "<h2>Semantic Warnings</h2>"
+        f'<div class="semantic-warnings">{body}</div>'
+        "</section>"
+    )
+
+
 def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     entries = result.get("result_state_lexicon", [])
     if not entries:
@@ -458,7 +491,17 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     .result-lexicon {{
       padding: 12px;
     }}
+    .semantic-warnings {{
+      padding: 12px;
+    }}
     .next-step-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }}
+    .semantic-warning-list {{
       list-style: none;
       margin: 0;
       padding: 0;
@@ -483,10 +526,43 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     }}
     .next-step p,
     .next-step-empty,
+    .semantic-warning-empty,
     .lexicon-empty {{
       margin: 0;
       color: var(--muted);
       line-height: 1.45;
+    }}
+    .semantic-warning {{
+      border-left: 3px solid var(--warning);
+      background: var(--warning-soft);
+      padding: 9px 10px;
+      display: grid;
+      gap: 6px;
+    }}
+    .semantic-warning strong {{
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }}
+    .semantic-warning dl {{
+      display: grid;
+      grid-template-columns: minmax(56px, auto) minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .semantic-warning dt {{
+      color: var(--muted);
+    }}
+    .semantic-warning dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
+    }}
+    .semantic-warning p {{
+      margin: 0;
+      color: var(--warning);
+      line-height: 1.45;
+      font-size: 13px;
     }}
     .lexicon-list {{
       list-style: none;
@@ -572,6 +648,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("Dependent-Type Translation", dependent)}
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
+      {semantic_warnings_panel(result)}
       {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}

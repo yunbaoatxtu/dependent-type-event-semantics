@@ -113,6 +113,9 @@ The page should render the same actions in a `Next Steps` panel, keeping
 human-facing guidance and machine-facing API output aligned.
 Each rendered action must expose `data-action-kind` and a `next-step--<kind>`
 CSS class so later UI controls and browser tests have stable hooks.
+Warnings are rendered separately in a `Semantic Warnings` panel. Each rendered
+warning exposes `data-warning-kind` and a `semantic-warning--<kind>` CSS class
+so the interface can distinguish semantic caveats from recovery actions.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal
