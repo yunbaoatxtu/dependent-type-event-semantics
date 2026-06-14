@@ -1411,6 +1411,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Lexicon Patch Text Preview", warning_page)
         self.assertIn("# Pending human choices:", warning_page)
         self.assertIn("# placeholders: default_source_state", warning_page)
+        self.assertIn('data-patch-format="text"', warning_page)
+        self.assertIn('download="state_lexicon.patch"', warning_page)
+        self.assertIn(
+            (
+                'href="/api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red'
+                '&amp;format=patch&amp;require_coq=1"'
+            ),
+            warning_page,
+        )
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
         page = render_page("Mary saw John leave", require_coq=True)
@@ -1749,6 +1758,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
+        self.assertIn("`Open patch text` link", readme)
         self.assertIn("pending human-choice lines", readme)
         self.assertIn("create missing parent directories", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
@@ -1802,6 +1812,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`resolved_patch_count`", web_design)
         self.assertIn("`validation_errors`", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
+        self.assertIn("`Open patch text` link", web_design)
+        self.assertIn('`data-patch-format="text"`', web_design)
         self.assertIn("pending patch line as a comment", web_design)
         self.assertIn("create missing parent directories", web_design)
         self.assertIn("smoke check for this exporter", web_design)

@@ -10,7 +10,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from translator.dependent_type_event_translator import STATE_LEXICON
 from translator.natural_language_pipeline import run_pipeline
@@ -710,6 +710,29 @@ def panel(title: str, body: str) -> str:
     )
 
 
+def patch_text_api_href(sentence: str, require_coq: bool) -> str:
+    params = {"sentence": sentence, "format": "patch"}
+    if require_coq:
+        params["require_coq"] = "1"
+    return f"/api/lexicon-patch-drafts?{urlencode(params)}"
+
+
+def patch_text_panel(body: str, href: str) -> str:
+    escaped_href = html.escape(href, quote=True)
+    return (
+        '<section class="panel patch-text-panel">'
+        "<h2>Lexicon Patch Text Preview</h2>"
+        '<div class="panel-action">'
+        f'<a class="patch-text-link" href="{escaped_href}" '
+        'data-patch-format="text" download="state_lexicon.patch">'
+        "Open patch text"
+        "</a>"
+        "</div>"
+        f"<pre>{html.escape(body)}</pre>"
+        "</section>"
+    )
+
+
 def lexicon_patch_text_preview_for_result(result: dict[str, Any]) -> str:
     return render_lexicon_patch_text(
         {
@@ -729,6 +752,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
     patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
     patch_text_preview = result.get("patch_text_preview") or lexicon_patch_text_preview_for_result(result)
+    patch_text_href = patch_text_api_href(sentence, require_coq)
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
     coq_code = result.get("coq_code", "")
@@ -851,6 +875,28 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     }}
     .lexicon-drafts {{
       padding: 12px;
+    }}
+    .panel-action {{
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      padding: 9px 12px;
+    }}
+    .patch-text-link {{
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      color: var(--accent);
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 650;
+      text-decoration: none;
+    }}
+    .patch-text-link:focus,
+    .patch-text-link:hover {{
+      background: var(--accent-soft);
     }}
     .next-step-list {{
       list-style: none;
@@ -1067,7 +1113,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("AST", ast)}
       {panel("Result State Lexicon JSON", result_lexicon)}
       {panel("Lexicon Patch Drafts JSON", patch_drafts)}
-      {panel("Lexicon Patch Text Preview", patch_text_preview)}
+      {patch_text_panel(patch_text_preview, patch_text_href)}
       {panel("Coq/Rocq Check", coq_check)}
       {panel("Generated Coq", coq_code)}
     </div>
