@@ -100,6 +100,7 @@ def main() -> None:
             "scripts/check_formalization.py",
             "scripts/paper_markdown.py",
             "scripts/check_paper_docx_sync.py",
+            "scripts/export_lexicon_patch_drafts.py",
             "scripts/sync_paper_docx.py",
             "scripts/verify_project.py",
             "web/app.py",

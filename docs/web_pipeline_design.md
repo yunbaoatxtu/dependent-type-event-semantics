@@ -93,6 +93,17 @@ placeholder pre-state rather than an automatically applied lexicon mutation.
 The accompanying `requires_human_choice`, `placeholder_fields`, and
 `can_auto_apply` fields make that non-automatic status machine-readable.
 
+The same repair queue is available outside the page through:
+
+```bash
+python3 scripts/export_lexicon_patch_drafts.py \
+  --sentence "Mary painted the door red" \
+  --require-coq
+```
+
+The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
+diagnostics summary, the manual-repair flags, and the draft records.
+
 ## Successful Response
 
 A successful response should include:

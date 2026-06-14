@@ -2,6 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
+from scripts.export_lexicon_patch_drafts import build_patch_bundle
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_LEXICON,
@@ -1187,6 +1188,32 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("unknown_state", result["coq_code"])
 
+    def test_export_lexicon_patch_drafts_bundle(self) -> None:
+        bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        self.assertEqual(bundle["schema_version"], "lexicon_patch_drafts.v1")
+        self.assertTrue(bundle["ok"])
+        self.assertEqual(bundle["input_sentence"], "Mary painted the door red")
+        self.assertTrue(bundle["diagnostics"]["manual_repair_required"])
+        self.assertEqual(bundle["diagnostics"]["lexicon_patch_draft_count"], 1)
+        self.assertTrue(bundle["requires_human_choice"])
+        self.assertFalse(bundle["can_auto_apply"])
+        self.assertEqual(
+            bundle["lexicon_patch_drafts"][0]["draft_id"],
+            "state-red--unknown_source_allowed",
+        )
+        self.assertIn(
+            "StateLexiconEntry",
+            bundle["lexicon_patch_drafts"][0]["state_lexicon_patch_line"],
+        )
+
+        empty_bundle = build_patch_bundle("John hammered the metal flat", require_coq=True)
+        self.assertTrue(empty_bundle["ok"])
+        self.assertFalse(empty_bundle["diagnostics"]["manual_repair_required"])
+        self.assertEqual(empty_bundle["diagnostics"]["lexicon_patch_draft_count"], 0)
+        self.assertFalse(empty_bundle["requires_human_choice"])
+        self.assertFalse(empty_bundle["can_auto_apply"])
+        self.assertEqual(empty_bundle["lexicon_patch_drafts"], [])
+
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
@@ -1585,6 +1612,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`state_lexicon_patch_line`", readme)
         self.assertIn("`requires_human_choice`", readme)
         self.assertIn("`can_auto_apply`", readme)
+        self.assertIn("scripts/export_lexicon_patch_drafts.py", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1623,6 +1651,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`state_lexicon_patch_line`", web_design)
         self.assertIn("`placeholder_fields`", web_design)
         self.assertIn("`can_auto_apply`", web_design)
+        self.assertIn("scripts/export_lexicon_patch_drafts.py", web_design)
+        self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
