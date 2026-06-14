@@ -1105,6 +1105,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+        self.assertFalse(result["diagnostics"]["manual_repair_required"])
+        self.assertEqual(result["diagnostics"]["lexicon_patch_draft_count"], 0)
         self.assertEqual(result["lexicon_patch_drafts"], [])
 
     def test_api_analyze_response_contains_result_state_warnings(self) -> None:
@@ -1174,6 +1176,8 @@ class TranslatorTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertTrue(result["diagnostics"]["manual_repair_required"])
+        self.assertEqual(result["diagnostics"]["lexicon_patch_draft_count"], 1)
         self.assertEqual(
             result["result_state_lexicon"][0]["source_policy"],
             "unknown_source_allowed",
@@ -1224,6 +1228,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("lexicon-entry--warning", warning_page)
         self.assertIn("Translation verified with warnings", warning_page)
         self.assertIn("Warnings: Result state red has no unique lexical pre-state", warning_page)
+        self.assertIn("Manual lexicon repair drafts: 1.", warning_page)
         self.assertIn("Semantic Warnings", warning_page)
         self.assertIn('class="semantic-warning semantic-warning--unknown_result_source"', warning_page)
         self.assertIn('data-warning-kind="unknown_result_source"', warning_page)
@@ -1396,6 +1401,8 @@ class TranslatorTests(unittest.TestCase):
             [warning["suggested_action"]["kind"] for warning in diagnostics["warnings"]],
             ["register_state_lexicon_entry", "license_state_as_target"],
         )
+        self.assertTrue(diagnostics["manual_repair_required"])
+        self.assertEqual(diagnostics["lexicon_patch_draft_count"], 2)
         self.assertEqual(
             [
                 warning["suggested_action"]["lexicon_entry_draft"]["state"]
@@ -1553,6 +1560,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
+        self.assertIn("`manual_repair_required`", readme)
+        self.assertIn("`lexicon_patch_draft_count`", readme)
         self.assertIn("`Translation verified with warnings`", readme)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
@@ -1580,6 +1589,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_hint` is `null` on success", web_design)
         self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
         self.assertIn("`diagnostics.warnings` is an array", web_design)
+        self.assertIn("`manual_repair_required`", web_design)
+        self.assertIn("`lexicon_patch_draft_count`", web_design)
         self.assertIn("verified with warnings", web_design)
         self.assertIn("`derived_result_scale`", web_design)
         self.assertIn("`source_state_used_as_target`", web_design)

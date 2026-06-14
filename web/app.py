@@ -231,6 +231,8 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     type_check = result.get("type_check", {})
     construction_hygiene = result.get("construction_hygiene", {})
     coq_check = result.get("coq_check", {})
+    warnings = result_state_warnings(result)
+    drafts = lexicon_patch_drafts({"diagnostics": {"warnings": warnings}})
     stages = {
         "type_check": check_status(type_check.get("ok")) if type_check else "not_applicable",
         "construction_hygiene": (
@@ -265,7 +267,11 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "recovery_hint": recovery_hint,
         "recovery_actions": recovery_actions_for(failure_stage),
         "stages": stages,
-        "warnings": result_state_warnings(result),
+        "warnings": warnings,
+        "manual_repair_required": any(
+            draft.get("requires_human_choice") for draft in drafts
+        ),
+        "lexicon_patch_draft_count": len(drafts),
     }
 
 
@@ -296,15 +302,22 @@ def status_label(result: dict[str, Any]) -> str:
 
 
 def status_detail(result: dict[str, Any]) -> str:
-    warnings = result.get("diagnostics", {}).get("warnings", [])
-    failure_stage = result.get("diagnostics", {}).get("failure_stage")
+    diagnostics = result.get("diagnostics", {})
+    warnings = diagnostics.get("warnings", [])
+    failure_stage = diagnostics.get("failure_stage")
     if not failure_stage:
         conclusion = result.get("conclusion", "")
         if warnings:
             warning_text = "; ".join(warning["message"] for warning in warnings)
+            repair_count = diagnostics.get("lexicon_patch_draft_count", 0)
+            repair_text = (
+                f" Manual lexicon repair drafts: {repair_count}."
+                if repair_count
+                else ""
+            )
             if conclusion:
-                return f"{conclusion} Warnings: {warning_text}"
-            return f"Warnings: {warning_text}"
+                return f"{conclusion} Warnings: {warning_text}{repair_text}"
+            return f"Warnings: {warning_text}{repair_text}"
         return conclusion
     label = FAILURE_STAGE_LABELS.get(failure_stage, failure_stage)
     conclusion = result.get("conclusion", "")

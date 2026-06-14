@@ -80,6 +80,8 @@ checked while the source state remains `unknown_state`. Warning kinds currently
 cover `unknown_result_source`, `derived_result_scale`, and
 `source_state_used_as_target`, corresponding to `unknown_source_allowed`,
 `derived_scale_no_known_prestate`, and `source_state_only` lexicon policies.
+`manual_repair_required` and `lexicon_patch_draft_count` summarize whether
+those warnings produce human-gated lexicon repair drafts.
 Each warning includes a `suggested_action` object with `kind`, `label`, and
 `detail` fields; warning actions currently include `add_state_prestate`,
 `register_state_lexicon_entry`, and `license_state_as_target`. Suggested
@@ -115,6 +117,8 @@ The web status line should surface `recovery_hint` directly so users do not
 have to inspect raw JSON before trying the next repair. For successful
 translations with non-fatal warnings, it should state that the translation is
 verified with warnings and include the warning message in the status detail.
+When manual lexicon drafts exist, the status detail should also show the draft
+count rather than forcing the user to inspect raw JSON first.
 Machine clients should prefer `recovery_actions` when they need stable action
 names or button labels, and `warnings` when they need to flag underspecified but
 still successfully checked translations.

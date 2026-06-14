@@ -220,23 +220,25 @@ panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `diagnostics.warnings` records non-fatal semantic audit notices. For example,
 `Mary painted the door red` can pass type checking and Coq/Rocq validation while
 still warning that `red` has no unique lexical pre-state, so the transition
-source remains `unknown_state`. The page status banner reports this as
-`Translation verified with warnings`, keeping the successful proof-assistant
-boundary result separate from the semantic audit notice. The current warning
-policy distinguishes `unknown_source_allowed`, `derived_scale_no_known_prestate`,
-and `source_state_only` result-state records. The same notices are rendered in
-a dedicated `Semantic Warnings` panel with stable `data-warning-kind` attributes
-for UI tests and later controls. Each warning also carries a `suggested_action`
-object, such as `add_state_prestate`, so clients can distinguish a semantic
-caveat from the concrete lexicon repair it invites. Suggested actions include a
-`lexicon_entry_draft` template with `state`, `scale`, `default_source_state`,
-and `source_policy_after_update` fields. The API also lifts these templates to
-top-level `lexicon_patch_drafts`, giving clients a direct repair queue without
-requiring them to traverse warning records. Each draft includes a
-`state_lexicon_patch_line` preview of the candidate `StateLexiconEntry`, with a
-placeholder source state that must be resolved before changing the lexicon.
-The draft records this explicitly with `requires_human_choice`,
-`placeholder_fields`, and `can_auto_apply`.
+source remains `unknown_state`. Diagnostics also expose
+`manual_repair_required` and `lexicon_patch_draft_count` so clients can tell
+whether a successful translation still needs a human lexical decision. The page
+status banner reports this as `Translation verified with warnings`, keeping the
+successful proof-assistant boundary result separate from the semantic audit
+notice. The current warning policy distinguishes `unknown_source_allowed`,
+`derived_scale_no_known_prestate`, and `source_state_only` result-state records.
+The same notices are rendered in a dedicated `Semantic Warnings` panel with
+stable `data-warning-kind` attributes for UI tests and later controls. Each
+warning also carries a `suggested_action` object, such as `add_state_prestate`,
+so clients can distinguish a semantic caveat from the concrete lexicon repair
+it invites. Suggested actions include a `lexicon_entry_draft` template with
+`state`, `scale`, `default_source_state`, and `source_policy_after_update`
+fields. The API also lifts these templates to top-level `lexicon_patch_drafts`,
+giving clients a direct repair queue without requiring them to traverse warning
+records. Each draft includes a `state_lexicon_patch_line` preview of the
+candidate `StateLexiconEntry`, with a placeholder source state that must be
+resolved before changing the lexicon. The draft records this explicitly with
+`requires_human_choice`, `placeholder_fields`, and `can_auto_apply`.
 
 Run the local web demo:
 
