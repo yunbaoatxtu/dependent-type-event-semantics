@@ -1,8 +1,9 @@
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.export_lexicon_patch_drafts import build_patch_bundle
+from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_LEXICON,
@@ -1265,6 +1266,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("# No auto-applicable patch lines.", invalid_patch_text)
         self.assertIn("# Pending human choices:", invalid_patch_text)
 
+    def test_export_lexicon_patch_drafts_creates_output_parent_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "nested" / "review" / "patch.txt"
+            write_output_file(output_path, "candidate patch\n")
+            self.assertEqual(output_path.read_text(encoding="utf-8"), "candidate patch\n")
+
     def test_api_lexicon_patch_drafts_endpoint(self) -> None:
         handler = object.__new__(PipelineHandler)
         bundle = PipelineHandler.handle_patch_api(
@@ -1717,6 +1724,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`patch_text_preview`", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("pending human-choice lines", readme)
+        self.assertIn("create missing parent directories", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
@@ -1766,6 +1774,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`patch_text_preview`", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("pending patch line as a comment", web_design)
+        self.assertIn("create missing parent directories", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)

@@ -318,7 +318,8 @@ Resolved bundles report `resolved_patch_count`, `validation_errors`, and a
 comments, while resolved previews show candidate replacement lines. The
 web page renders the same text in a `Lexicon Patch Text Preview` panel, and the
 command-line exporter can additionally write that review-only candidate patch
-text with `--patch-out`.
+text with `--patch-out`. File outputs create missing parent directories, so
+review bundles and patch previews can be written into a fresh `work/` tree.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

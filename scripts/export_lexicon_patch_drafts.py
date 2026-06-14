@@ -23,6 +23,11 @@ from web.app import (  # noqa: E402
 SCHEMA_VERSION = LEXICON_PATCH_DRAFTS_SCHEMA
 
 
+def write_output_file(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
 def build_patch_bundle(
     sentence: str,
     require_coq: bool = False,
@@ -76,11 +81,11 @@ def main() -> None:
     )
     encoded = json.dumps(bundle, ensure_ascii=False, indent=2) + "\n"
     if args.out:
-        args.out.write_text(encoded, encoding="utf-8")
+        write_output_file(args.out, encoded)
     else:
         sys.stdout.write(encoded)
     if args.patch_out:
-        args.patch_out.write_text(render_lexicon_patch_text(bundle), encoding="utf-8")
+        write_output_file(args.patch_out, render_lexicon_patch_text(bundle))
     if bundle.get("validation_errors"):
         raise SystemExit(1)
 

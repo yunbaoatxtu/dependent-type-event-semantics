@@ -124,7 +124,8 @@ choices are reported in `validation_errors`. The optional `--patch-out` path
 writes the same review-only candidate text exposed in `patch_text_preview` and
 does not mutate the lexicon. When a draft still needs a human source-state
 choice, the preview keeps the pending patch line as a comment instead of
-presenting it as auto-applicable source code.
+presenting it as auto-applicable source code. Both JSON and patch-text file
+exports create missing parent directories before writing.
 
 ## Successful Response
 
