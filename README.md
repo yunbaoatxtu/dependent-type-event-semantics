@@ -117,6 +117,9 @@ the same vector into an indexed
 length `n`. One lexical constant such as `butter` can therefore occur in the
 same Coq file with zero, two, or three modifiers without producing conflicting
 shallow function declarations.
+The web/API layer also lifts these records to `modifier_role_audit`, and the
+page renders them in a dedicated `Modifier Role Audit` panel for quick
+inspection.
 
 Parsons-style event talk can also be routed through typed replacements. For
 example:
@@ -208,7 +211,7 @@ The `sentence` parameter carries the natural-language input. `require_coq=1`
 asks the server to run the external Coq/Rocq boundary check when the toolchain
 is available. The response includes the same event-semantics JSON,
 dependent-type rendering, generated Coq, `result_state_lexicon`,
-`lexicon_patch_drafts`, `patch_text_preview`, `construction_rule`,
+`modifier_role_audit`, `lexicon_patch_drafts`, `patch_text_preview`, `construction_rule`,
 `construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
 page.
 

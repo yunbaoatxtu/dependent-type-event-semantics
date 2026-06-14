@@ -32,6 +32,7 @@ from web.app import (
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
+    modifier_role_audit,
     parse_patch_resolution_params,
     render_page,
     render_lexicon_patch_text,
@@ -924,6 +925,43 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter in_bathroom : Entity.", result["coq_code"])
         self.assertNotIn("Parameter with_knife : Entity.", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_modifier_role_audit_is_exposed_for_api_and_page(self) -> None:
+        result = analyze_sentence(
+            "john buttered the toast in the bathroom with a knife",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["modifier_role_audit"],
+            [
+                {
+                    "path": "ast",
+                    "function": "butter",
+                    "modifier": "in(bathroom)",
+                    "type": "Adv",
+                    "semantic_role": "Location",
+                    "source": "modifier",
+                },
+                {
+                    "path": "ast",
+                    "function": "butter",
+                    "modifier": "with(knife)",
+                    "type": "Adv",
+                    "semantic_role": "Instrument",
+                    "source": "modifier",
+                },
+            ],
+        )
+        self.assertEqual(modifier_role_audit(result["ast"]), result["modifier_role_audit"])
+
+        page = render_page(
+            "john buttered the toast in the bathroom with a knife",
+            require_coq=True,
+        )
+        self.assertIn("Modifier Role Audit", page)
+        self.assertIn("&quot;semantic_role&quot;: &quot;Location&quot;", page)
+        self.assertIn("&quot;semantic_role&quot;: &quot;Instrument&quot;", page)
 
     def test_parsons_after_singing_uses_time_not_event(self) -> None:
         result = run_pipeline(
@@ -1959,6 +1997,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`manual_repair_required`", readme)
         self.assertIn("`lexicon_patch_draft_count`", readme)
         self.assertIn("`Translation verified with warnings`", readme)
+        self.assertIn("`modifier_role_audit`", readme)
+        self.assertIn("`Modifier Role Audit` panel", readme)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)
@@ -2008,6 +2048,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.warnings` is an array", web_design)
         self.assertIn("`manual_repair_required`", web_design)
         self.assertIn("`lexicon_patch_draft_count`", web_design)
+        self.assertIn("`modifier_role_audit`", web_design)
+        self.assertIn("`Modifier Role Audit` panel", web_design)
         self.assertIn("verified with warnings", web_design)
         self.assertIn("`derived_result_scale`", web_design)
         self.assertIn("`source_state_used_as_target`", web_design)

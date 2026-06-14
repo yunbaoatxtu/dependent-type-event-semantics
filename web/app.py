@@ -472,10 +472,40 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
 def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     enriched = {**result}
     enriched.setdefault("result_state_lexicon", [])
+    enriched["modifier_role_audit"] = modifier_role_audit(enriched.get("ast", {}))
     enriched["diagnostics"] = build_diagnostics(enriched)
     enriched["lexicon_patch_drafts"] = lexicon_patch_drafts(enriched)
     enriched["patch_text_preview"] = lexicon_patch_text_preview_for_result(enriched)
     return enriched
+
+
+def modifier_role_audit(ast: Any) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+
+    def visit(node: Any, path: str) -> None:
+        if isinstance(node, dict):
+            if node.get("kind") == "application":
+                modifier_roles = node.get("modifier_roles", {})
+                if isinstance(modifier_roles, dict):
+                    roles = modifier_roles.get("roles", [])
+                    if isinstance(roles, list):
+                        for entry in roles:
+                            if isinstance(entry, dict):
+                                records.append(
+                                    {
+                                        "path": path,
+                                        "function": node.get("function", ""),
+                                        **entry,
+                                    }
+                                )
+            for key, value in node.items():
+                visit(value, f"{path}.{key}")
+        elif isinstance(node, list):
+            for index, value in enumerate(node):
+                visit(value, f"{path}[{index}]")
+
+    visit(ast, "ast")
+    return records
 
 
 def compact_json(data: Any) -> str:
@@ -811,6 +841,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     event_semantics = compact_json(result.get("event_semantics", result.get("error", "")))
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
+    modifier_roles = compact_json(result.get("modifier_role_audit", []))
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
     patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
     patch_text_preview = result.get("patch_text_preview") or lexicon_patch_text_preview_for_result(result)
@@ -1189,6 +1220,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {lexicon_patch_drafts_panel(result, sentence, require_coq)}
       {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
+      {panel("Modifier Role Audit", modifier_roles)}
       {panel("AST", ast)}
       {panel("Result State Lexicon JSON", result_lexicon)}
       {panel("Lexicon Patch Drafts JSON", patch_drafts)}

@@ -81,8 +81,8 @@ The request has two stable query parameters:
 
 The response is a single JSON object. On success, it must expose the same
 semantic artifacts shown on the page: `event_semantics`,
-`dependent_type_translation`, `result_state_lexicon`, `lexicon_patch_drafts`,
-`patch_text_preview`, `ast`, `coq_code`, `construction_rule`,
+`dependent_type_translation`, `result_state_lexicon`, `modifier_role_audit`,
+`lexicon_patch_drafts`, `patch_text_preview`, `ast`, `coq_code`, `construction_rule`,
 `construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
 `result_state_lexicon` is a list of audit
 records for resultative targets; each record includes the target `state`, its
@@ -90,6 +90,11 @@ records for resultative targets; each record includes the target `state`, its
 `lexical_prestate` or `unknown_source_allowed`. `lexicon_patch_drafts` lifts
 the repair templates from warning actions into a top-level list that clients
 can treat as a candidate STATE_LEXICON patch queue. On any failure, it must still return `ok: false`, an `error` message when available, and a `diagnostics` object so callers can distinguish parser, type-checking, construction-hygiene, and Coq/Rocq boundary failures.
+
+`modifier_role_audit` is a flat list extracted from the AST. Each record gives
+the application path, function, modifier string, `Adv` type, and semantic role,
+so the page can show a `Modifier Role Audit` panel without making the frontend
+traverse the full AST.
 
 `diagnostics.failure_stage` is the machine-readable failure locator. It is
 `null` on successful translations and otherwise one of `input`, `parsing`,
