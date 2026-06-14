@@ -26,6 +26,13 @@ Represents a dependent verb-family application.
       {"modifier": "in(bathroom)", "tail_length": 0}
     ]
   },
+  "modifier_roles": {
+    "kind": "modifier_roles",
+    "roles": [
+      {"modifier": "slowly", "type": "Adv", "semantic_role": "Manner", "source": "modifier"},
+      {"modifier": "in(bathroom)", "type": "Adv", "semantic_role": "Location", "source": "modifier"}
+    ]
+  },
   "arguments": ["John", "toast"],
   "role_frame": {
     "kind": "role_frame",
@@ -389,9 +396,13 @@ This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being
 silently rendered as plausible formulas.
 
-Modifier entries are not entity-denoting arguments. In the proof-assistant
-scaffold they are exported at type `Adv`, with the current shallow Coq
-definition:
+Modifier entries are not entity-denoting arguments. The AST records this twice:
+`modifier_vector` preserves the dependent length index, while `modifier_roles`
+records the semantic class of each modifier as an `Adv` value. For example,
+`in(bathroom)` receives `semantic_role: "Location"`, `with(knife)` receives
+`semantic_role: "Instrument"`, and ordinary adverbs such as `slowly` receive
+`semantic_role: "Manner"`. In the proof-assistant scaffold all of these are
+still exported at type `Adv`, with the current shallow Coq definition:
 
 ```coq
 Definition PropT : Type := Prop.

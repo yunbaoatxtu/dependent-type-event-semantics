@@ -247,6 +247,38 @@ def modifier_vector(adverbs: list[str]) -> Term:
     }
 
 
+def modifier_predicate(modifier: str) -> str:
+    return modifier.split("(", 1)[0]
+
+
+def modifier_semantic_role(modifier: str) -> str:
+    predicate = modifier_predicate(modifier)
+    if predicate == "with":
+        return "Instrument"
+    if predicate in {"in", "on", "under", "over", "near", "beside"}:
+        return "Location"
+    if predicate == "from":
+        return "Source"
+    if predicate in {"to", "into"}:
+        return "Goal"
+    return "Manner"
+
+
+def modifier_roles(modifiers: list[str]) -> Term:
+    return {
+        "kind": "modifier_roles",
+        "roles": [
+            {
+                "modifier": modifier,
+                "type": "Adv",
+                "semantic_role": modifier_semantic_role(modifier),
+                "source": "modifier",
+            }
+            for modifier in modifiers
+        ],
+    }
+
+
 def role_frame(entries: list[dict[str, str]]) -> Term:
     return {
         "kind": "role_frame",
@@ -272,6 +304,7 @@ def application_term(
         "adverb_count": len(adverbs),
         "modifiers": adverbs,
         "modifier_vector": modifier_vector(adverbs),
+        "modifier_roles": modifier_roles(adverbs),
         "arguments": args,
         "role_frame": role_frame(role_entries),
     }
@@ -403,6 +436,7 @@ def check_term(term: Term) -> TypeCheck:
             function = current.get("function")
             modifiers = current.get("modifiers")
             vector = current.get("modifier_vector")
+            modifier_role_info = current.get("modifier_roles")
             arguments = current.get("arguments")
             frame = current.get("role_frame")
             adverb_count = current.get("adverb_count")
@@ -479,6 +513,61 @@ def check_term(term: Term) -> TypeCheck:
                             f"{item.get('tail_length')} does not match expected "
                             f"tail length {expected_tail}"
                         )
+            if modifier_role_info is not None:
+                if not isinstance(modifier_role_info, dict):
+                    errors.append(f"{path}: application.modifier_roles must be an object")
+                else:
+                    if modifier_role_info.get("kind") != "modifier_roles":
+                        errors.append(
+                            f"{path}: application.modifier_roles.kind must be modifier_roles"
+                        )
+                    modifier_role_entries = modifier_role_info.get("roles")
+                    if not isinstance(modifier_role_entries, list):
+                        errors.append(
+                            f"{path}: application.modifier_roles.roles must be a list"
+                        )
+                    else:
+                        if len(modifier_role_entries) != len(modifiers):
+                            errors.append(
+                                f"{path}: application.modifier_roles has "
+                                f"{len(modifier_role_entries)} role(s) for {len(modifiers)} modifier(s)"
+                            )
+                        for index, entry in enumerate(modifier_role_entries):
+                            if not isinstance(entry, dict):
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}] "
+                                    "must be an object"
+                                )
+                                continue
+                            modifier = entry.get("modifier")
+                            modifier_type = entry.get("type")
+                            semantic_role = entry.get("semantic_role")
+                            source = entry.get("source")
+                            if not isinstance(modifier, str) or not modifier:
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}].modifier "
+                                    "must be a non-empty string"
+                                )
+                            elif index < len(modifiers) and modifier != modifiers[index]:
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}].modifier "
+                                    "does not match application.modifiers"
+                                )
+                            if modifier_type != "Adv":
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}].type "
+                                    "must be Adv"
+                                )
+                            if not isinstance(semantic_role, str) or not semantic_role:
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}].semantic_role "
+                                    "must be a non-empty string"
+                                )
+                            if source != "modifier":
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}].source "
+                                    "must be modifier"
+                                )
             valid_arguments = isinstance(arguments, list) and all(
                 isinstance(x, str) for x in arguments
             )
