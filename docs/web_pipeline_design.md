@@ -54,6 +54,12 @@ It also exposes the lexicon repair queue alone:
 GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1
 ```
 
+For clients that only need the review patch text:
+
+```text
+GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1&format=patch
+```
+
 After a reviewer chooses a source state, the same endpoint can validate the
 choice without changing the repository:
 
@@ -119,14 +125,15 @@ python3 scripts/export_lexicon_patch_drafts.py \
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
 diagnostics summary, the manual-repair flags, and the draft records. The
-`/api/lexicon-patch-drafts` endpoint returns the same bundle shape. Resolved
-bundles report `resolved_patch_count`; malformed or semantically invalid
-choices are reported in `validation_errors`. The optional `--patch-out` path
-writes the same review-only candidate text exposed in `patch_text_preview` and
-does not mutate the lexicon. When a draft still needs a human source-state
-choice, the preview keeps the pending patch line as a comment instead of
-presenting it as auto-applicable source code. Both JSON and patch-text file
-exports create missing parent directories before writing.
+`/api/lexicon-patch-drafts` endpoint returns the same bundle shape, or returns
+the `patch_text_preview` as `text/plain` when called with `format=patch`.
+Resolved bundles report `resolved_patch_count`; malformed or semantically
+invalid choices are reported in `validation_errors`. The optional `--patch-out`
+path writes the same review-only candidate text exposed in
+`patch_text_preview` and does not mutate the lexicon. When a draft still needs
+a human source-state choice, the preview keeps the pending patch line as a comment
+instead of presenting it as auto-applicable source code. Both JSON and
+patch-text file exports create missing parent directories before writing.
 The project-level verification script includes a smoke check for this exporter
 so the file-output path is exercised alongside unit tests and formalization
 checks.

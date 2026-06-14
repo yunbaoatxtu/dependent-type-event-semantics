@@ -1317,6 +1317,29 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(no_draft_bundle["requires_human_choice"])
         self.assertEqual(no_draft_bundle["lexicon_patch_drafts"], [])
 
+    def test_api_lexicon_patch_drafts_patch_format(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        pending_text = PipelineHandler.handle_patch_text_api(
+            handler,
+            "sentence=Mary+painted+the+door+red&require_coq=1&format=patch",
+        )
+        self.assertIn("# Candidate STATE_LEXICON patch", pending_text)
+        self.assertIn("# Pending human choices:", pending_text)
+        self.assertIn("# placeholders: default_source_state", pending_text)
+
+        resolved_text = PipelineHandler.handle_patch_text_api(
+            handler,
+            (
+                "sentence=Mary+painted+the+door+red&require_coq=1&format=patch"
+                "&resolve=state-red--unknown_source_allowed=not_red"
+            ),
+        )
+        self.assertIn("# Candidate replacement/addition lines:", resolved_text)
+        self.assertIn(
+            '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
+            resolved_text,
+        )
+
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
@@ -1722,6 +1745,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("scripts/export_lexicon_patch_drafts.py", readme)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", readme)
         self.assertIn("--patch-out", readme)
+        self.assertIn("`format=patch`", readme)
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
@@ -1771,6 +1795,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("scripts/export_lexicon_patch_drafts.py", web_design)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", web_design)
         self.assertIn("--patch-out", web_design)
+        self.assertIn("`format=patch`", web_design)
+        self.assertIn("`text/plain`", web_design)
         self.assertIn("/api/lexicon-patch-drafts", web_design)
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("`resolved_patch_count`", web_design)

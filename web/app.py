@@ -1084,6 +1084,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
             self.write_json_response(self.handle_api(parsed.query))
             return
         if parsed.path == "/api/lexicon-patch-drafts":
+            if self.patch_response_format(parsed.query) == "patch":
+                self.write_text_response(self.handle_patch_text_api(parsed.query))
+                return
             self.write_json_response(self.handle_patch_api(parsed.query))
             return
         if parsed.path not in {"/", ""}:
@@ -1112,10 +1115,25 @@ class PipelineHandler(BaseHTTPRequestHandler):
             resolution_errors=resolution_errors,
         )
 
+    def handle_patch_text_api(self, query: str) -> str:
+        return str(self.handle_patch_api(query).get("patch_text_preview", ""))
+
+    def patch_response_format(self, query: str) -> str:
+        params = parse_qs(query)
+        return params.get("format", ["json"])[0]
+
     def write_html_response(self, content: str) -> None:
         encoded = content.encode("utf-8")
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    def write_text_response(self, content: str) -> None:
+        encoded = content.encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
         self.wfile.write(encoded)
