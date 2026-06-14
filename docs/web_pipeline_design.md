@@ -83,7 +83,10 @@ cover `unknown_result_source`, `derived_result_scale`, and
 `derived_scale_no_known_prestate`, and `source_state_only` lexicon policies.
 Each warning includes a `suggested_action` object with `kind`, `label`, and
 `detail` fields; warning actions currently include `add_state_prestate`,
-`register_state_lexicon_entry`, and `license_state_as_target`.
+`register_state_lexicon_entry`, and `license_state_as_target`. Suggested
+actions also include a `lexicon_entry_draft` object with `state`, `scale`,
+`default_source_state`, `allow_unknown_source`, `current_source_policy`, and
+`source_policy_after_update` fields.
 
 ## Successful Response
 
@@ -120,7 +123,8 @@ Warnings are rendered separately in a `Semantic Warnings` panel. Each rendered
 warning exposes `data-warning-kind` and a `semantic-warning--<kind>` CSS class
 so the interface can distinguish semantic caveats from recovery actions. If a
 warning has `suggested_action`, the rendered action exposes
-`data-warning-action-kind` for UI automation.
+`data-warning-action-kind` for UI automation and displays the
+`lexicon_entry_draft` fields as a compact draft record.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

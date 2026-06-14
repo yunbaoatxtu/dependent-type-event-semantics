@@ -94,7 +94,18 @@ def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
 
-def warning_action_for_entry(policy: str, state: str, scale: str) -> dict[str, str] | None:
+def lexicon_entry_draft(policy: str, state: str, scale: str) -> dict[str, Any]:
+    return {
+        "state": state,
+        "scale": scale,
+        "default_source_state": "<choose_source_state>",
+        "allow_unknown_source": False,
+        "current_source_policy": policy,
+        "source_policy_after_update": "lexical_prestate",
+    }
+
+
+def warning_action_for_entry(policy: str, state: str, scale: str) -> dict[str, Any] | None:
     if policy == "unknown_source_allowed":
         return {
             "kind": "add_state_prestate",
@@ -103,6 +114,7 @@ def warning_action_for_entry(policy: str, state: str, scale: str) -> dict[str, s
                 f"Choose a contextually justified source state for {state} on {scale}, "
                 "or keep unknown_state when the source is genuinely underspecified."
             ),
+            "lexicon_entry_draft": lexicon_entry_draft(policy, state, scale),
         }
     if policy == "derived_scale_no_known_prestate":
         return {
@@ -112,6 +124,7 @@ def warning_action_for_entry(policy: str, state: str, scale: str) -> dict[str, s
                 f"Add {state} to STATE_LEXICON with a stable scale and, if justified, "
                 "a default_source_state."
             ),
+            "lexicon_entry_draft": lexicon_entry_draft(policy, state, scale),
         }
     if policy == "source_state_only":
         return {
@@ -121,6 +134,7 @@ def warning_action_for_entry(policy: str, state: str, scale: str) -> dict[str, s
                 f"Decide whether {state} can be a result target on {scale}; if so, "
                 "add a default source state."
             ),
+            "lexicon_entry_draft": lexicon_entry_draft(policy, state, scale),
         }
     return None
 
@@ -336,6 +350,19 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
             action_kind = str(action.get("kind", ""))
             action_label = str(action.get("label", ""))
             action_detail = str(action.get("detail", ""))
+            draft = action.get("lexicon_entry_draft") or {}
+            draft_html = ""
+            if draft:
+                draft_html = (
+                    '<dl class="semantic-warning-draft">'
+                    f'<dt>draft state</dt><dd>{html.escape(str(draft.get("state", "")))}</dd>'
+                    f'<dt>draft scale</dt><dd>{html.escape(str(draft.get("scale", "")))}</dd>'
+                    '<dt>draft source</dt>'
+                    f'<dd>{html.escape(str(draft.get("default_source_state", "")))}</dd>'
+                    '<dt>after policy</dt>'
+                    f'<dd>{html.escape(str(draft.get("source_policy_after_update", "")))}</dd>'
+                    '</dl>'
+                )
             action_html = ""
             if action_kind or action_label or action_detail:
                 action_class = css_token(action_kind)
@@ -346,6 +373,7 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
                     f'<strong>{html.escape(action_label)}</strong>'
                     f'<code>{html.escape(action_kind)}</code>'
                     f'<p>{html.escape(action_detail)}</p>'
+                    f"{draft_html}"
                     '</div>'
                 )
             kind_class = css_token(kind)
@@ -632,6 +660,9 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     }}
     .semantic-warning-action p {{
       color: var(--muted);
+    }}
+    .semantic-warning-action .semantic-warning-draft {{
+      margin-top: 2px;
     }}
     .lexicon-list {{
       list-style: none;

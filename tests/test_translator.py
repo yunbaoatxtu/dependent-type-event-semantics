@@ -307,6 +307,14 @@ class TranslatorTests(unittest.TestCase):
                             "color_scale, or keep unknown_state when the source is "
                             "genuinely underspecified."
                         ),
+                        "lexicon_entry_draft": {
+                            "state": "red",
+                            "scale": "color_scale",
+                            "default_source_state": "<choose_source_state>",
+                            "allow_unknown_source": False,
+                            "current_source_policy": "unknown_source_allowed",
+                            "source_policy_after_update": "lexical_prestate",
+                        },
                     },
                 }
             ],
@@ -1119,6 +1127,14 @@ class TranslatorTests(unittest.TestCase):
                             "color_scale, or keep unknown_state when the source is "
                             "genuinely underspecified."
                         ),
+                        "lexicon_entry_draft": {
+                            "state": "red",
+                            "scale": "color_scale",
+                            "default_source_state": "<choose_source_state>",
+                            "allow_unknown_source": False,
+                            "current_source_policy": "unknown_source_allowed",
+                            "source_policy_after_update": "lexical_prestate",
+                        },
                     },
                 }
             ],
@@ -1177,6 +1193,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-warning-action-kind="add_state_prestate"', warning_page)
         self.assertIn("<strong>Add lexical pre-state</strong>", warning_page)
         self.assertIn("<dt>state</dt><dd>red</dd>", warning_page)
+        self.assertIn("<dt>draft source</dt><dd>&lt;choose_source_state&gt;</dd>", warning_page)
+        self.assertIn("<dt>after policy</dt><dd>lexical_prestate</dd>", warning_page)
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
         page = render_page("Mary saw John leave", require_coq=True)
@@ -1245,6 +1263,14 @@ class TranslatorTests(unittest.TestCase):
                         "Add cerulean to STATE_LEXICON with a stable scale and, "
                         "if justified, a default_source_state."
                     ),
+                    "lexicon_entry_draft": {
+                        "state": "cerulean",
+                        "scale": "cerulean_scale",
+                        "default_source_state": "<choose_source_state>",
+                        "allow_unknown_source": False,
+                        "current_source_policy": "derived_scale_no_known_prestate",
+                        "source_policy_after_update": "lexical_prestate",
+                    },
                 },
             },
         )
@@ -1265,6 +1291,14 @@ class TranslatorTests(unittest.TestCase):
                         "Decide whether intact can be a result target on integrity_scale; "
                         "if so, add a default source state."
                     ),
+                    "lexicon_entry_draft": {
+                        "state": "intact",
+                        "scale": "integrity_scale",
+                        "default_source_state": "<choose_source_state>",
+                        "allow_unknown_source": False,
+                        "current_source_policy": "source_state_only",
+                        "source_policy_after_update": "lexical_prestate",
+                    },
                 },
             },
         )
@@ -1299,6 +1333,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             [warning["suggested_action"]["kind"] for warning in diagnostics["warnings"]],
             ["register_state_lexicon_entry", "license_state_as_target"],
+        )
+        self.assertEqual(
+            [
+                warning["suggested_action"]["lexicon_entry_draft"]["state"]
+                for warning in diagnostics["warnings"]
+            ],
+            ["cerulean", "intact"],
         )
 
     def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
@@ -1457,6 +1498,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-warning-kind`", readme)
         self.assertIn("`suggested_action`", readme)
         self.assertIn("`add_state_prestate`", readme)
+        self.assertIn("`lexicon_entry_draft`", readme)
+        self.assertIn("`source_policy_after_update`", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1485,6 +1528,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`register_state_lexicon_entry`", web_design)
         self.assertIn("`license_state_as_target`", web_design)
         self.assertIn("`data-warning-action-kind`", web_design)
+        self.assertIn("`lexicon_entry_draft`", web_design)
+        self.assertIn("`current_source_policy`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
