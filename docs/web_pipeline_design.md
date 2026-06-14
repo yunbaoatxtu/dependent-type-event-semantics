@@ -125,9 +125,13 @@ The same repair queue is available outside the page through:
 python3 scripts/export_lexicon_patch_drafts.py \
   --sentence "Mary painted the door red" \
   --require-coq \
-  --resolve state-red--unknown_source_allowed=not_red \
+  --resolve-draft-id state-red--unknown_source_allowed \
+  --source-state not_red \
   --patch-out work/red_state_lexicon.patch
 ```
+
+For compact shell calls, the older equivalent
+`--resolve state-red--unknown_source_allowed=not_red` remains accepted.
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
 diagnostics summary, the manual-repair flags, and the draft records. The

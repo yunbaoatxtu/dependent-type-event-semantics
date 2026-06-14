@@ -1253,6 +1253,32 @@ class TranslatorTests(unittest.TestCase):
             patch_text,
         )
 
+        structured_resolved_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolve_draft_ids=["state-red--unknown_source_allowed"],
+            source_states=["not_red"],
+        )
+        self.assertTrue(structured_resolved_bundle["can_auto_apply"])
+        self.assertEqual(structured_resolved_bundle["validation_errors"], [])
+        self.assertEqual(structured_resolved_bundle["resolved_patch_count"], 1)
+        self.assertEqual(
+            structured_resolved_bundle["lexicon_patch_drafts"][0]["default_source_state"],
+            "not_red",
+        )
+
+        mismatched_structured_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolve_draft_ids=["state-red--unknown_source_allowed"],
+            source_states=[],
+        )
+        self.assertFalse(mismatched_structured_bundle["can_auto_apply"])
+        self.assertIn(
+            "resolve_draft_id and source_state counts differ",
+            mismatched_structured_bundle["validation_errors"][0],
+        )
+
         invalid_bundle = build_patch_bundle(
             "Mary painted the door red",
             require_coq=True,
@@ -1804,6 +1830,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`requires_human_choice`", readme)
         self.assertIn("`can_auto_apply`", readme)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", readme)
+        self.assertIn("--resolve-draft-id state-red--unknown_source_allowed", readme)
+        self.assertIn("--source-state not_red", readme)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", readme)
         self.assertIn("--patch-out", readme)
         self.assertIn("`format=patch`", readme)
@@ -1857,6 +1885,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`placeholder_fields`", web_design)
         self.assertIn("`can_auto_apply`", web_design)
         self.assertIn("scripts/export_lexicon_patch_drafts.py", web_design)
+        self.assertIn("--resolve-draft-id state-red--unknown_source_allowed", web_design)
+        self.assertIn("--source-state not_red", web_design)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", web_design)
         self.assertIn("--patch-out", web_design)
         self.assertIn("`format=patch`", web_design)

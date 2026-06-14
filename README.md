@@ -256,9 +256,13 @@ After choosing a source state, resolve the draft without mutating the lexicon:
 python3 scripts/export_lexicon_patch_drafts.py \
   --sentence "Mary painted the door red" \
   --require-coq \
-  --resolve state-red--unknown_source_allowed=not_red \
+  --resolve-draft-id state-red--unknown_source_allowed \
+  --source-state not_red \
   --patch-out work/red_state_lexicon.patch
 ```
+
+The compact legacy spelling `--resolve state-red--unknown_source_allowed=not_red`
+is also accepted for shell use.
 
 The same bundle is available from the web service at
 `/api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1`.
