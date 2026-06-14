@@ -232,7 +232,9 @@ caveat from the concrete lexicon repair it invites. Suggested actions include a
 `lexicon_entry_draft` template with `state`, `scale`, `default_source_state`,
 and `source_policy_after_update` fields. The API also lifts these templates to
 top-level `lexicon_patch_drafts`, giving clients a direct repair queue without
-requiring them to traverse warning records.
+requiring them to traverse warning records. Each draft includes a
+`state_lexicon_patch_line` preview of the candidate `StateLexiconEntry`, with a
+placeholder source state that must be resolved before changing the lexicon.
 
 Run the local web demo:
 

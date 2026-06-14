@@ -94,14 +94,27 @@ def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
 
+def state_lexicon_patch_line(state: str, scale: str, default_source_state: str) -> str:
+    return (
+        f"{state!r}: StateLexiconEntry("
+        f"{scale!r}, default_source_state={default_source_state!r}),"
+    )
+
+
 def lexicon_entry_draft(policy: str, state: str, scale: str) -> dict[str, Any]:
+    default_source_state = "<choose_source_state>"
     return {
         "state": state,
         "scale": scale,
-        "default_source_state": "<choose_source_state>",
+        "default_source_state": default_source_state,
         "allow_unknown_source": False,
         "current_source_policy": policy,
         "source_policy_after_update": "lexical_prestate",
+        "state_lexicon_patch_line": state_lexicon_patch_line(
+            state,
+            scale,
+            default_source_state,
+        ),
     }
 
 
@@ -474,6 +487,7 @@ def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
             source = str(draft.get("default_source_state", ""))
             current_policy = str(draft.get("current_source_policy", ""))
             next_policy = str(draft.get("source_policy_after_update", ""))
+            patch_line = str(draft.get("state_lexicon_patch_line", ""))
             rows.append(
                 '<li '
                 'class="lexicon-draft" '
@@ -485,6 +499,7 @@ def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
                 f'<dt>source</dt><dd>{html.escape(source)}</dd>'
                 f'<dt>current</dt><dd>{html.escape(current_policy)}</dd>'
                 f'<dt>after</dt><dd>{html.escape(next_policy)}</dd>'
+                f'<dt>entry</dt><dd>{html.escape(patch_line)}</dd>'
                 '</dl>'
                 '</li>'
             )

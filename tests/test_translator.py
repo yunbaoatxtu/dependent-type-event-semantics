@@ -314,6 +314,10 @@ class TranslatorTests(unittest.TestCase):
                             "allow_unknown_source": False,
                             "current_source_policy": "unknown_source_allowed",
                             "source_policy_after_update": "lexical_prestate",
+                            "state_lexicon_patch_line": (
+                                "'red': StateLexiconEntry('color_scale', "
+                                "default_source_state='<choose_source_state>'),"
+                            ),
                         },
                     },
                 }
@@ -1135,6 +1139,10 @@ class TranslatorTests(unittest.TestCase):
                             "allow_unknown_source": False,
                             "current_source_policy": "unknown_source_allowed",
                             "source_policy_after_update": "lexical_prestate",
+                            "state_lexicon_patch_line": (
+                                "'red': StateLexiconEntry('color_scale', "
+                                "default_source_state='<choose_source_state>'),"
+                            ),
                         },
                     },
                 }
@@ -1150,6 +1158,10 @@ class TranslatorTests(unittest.TestCase):
                     "allow_unknown_source": False,
                     "current_source_policy": "unknown_source_allowed",
                     "source_policy_after_update": "lexical_prestate",
+                    "state_lexicon_patch_line": (
+                        "'red': StateLexiconEntry('color_scale', "
+                        "default_source_state='<choose_source_state>'),"
+                    ),
                 }
             ],
         )
@@ -1214,6 +1226,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Lexicon Patch Drafts", warning_page)
         self.assertIn('class="lexicon-draft" data-draft-state="red"', warning_page)
         self.assertIn("<dt>current</dt><dd>unknown_source_allowed</dd>", warning_page)
+        self.assertIn(
+            "<dt>entry</dt><dd>&#x27;red&#x27;: StateLexiconEntry(&#x27;color_scale&#x27;, "
+            "default_source_state=&#x27;&lt;choose_source_state&gt;&#x27;),</dd>",
+            warning_page,
+        )
         self.assertIn("Lexicon Patch Drafts JSON", warning_page)
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
@@ -1290,6 +1307,10 @@ class TranslatorTests(unittest.TestCase):
                         "allow_unknown_source": False,
                         "current_source_policy": "derived_scale_no_known_prestate",
                         "source_policy_after_update": "lexical_prestate",
+                        "state_lexicon_patch_line": (
+                            "'cerulean': StateLexiconEntry('cerulean_scale', "
+                            "default_source_state='<choose_source_state>'),"
+                        ),
                     },
                 },
             },
@@ -1318,6 +1339,10 @@ class TranslatorTests(unittest.TestCase):
                         "allow_unknown_source": False,
                         "current_source_policy": "source_state_only",
                         "source_policy_after_update": "lexical_prestate",
+                        "state_lexicon_patch_line": (
+                            "'intact': StateLexiconEntry('integrity_scale', "
+                            "default_source_state='<choose_source_state>'),"
+                        ),
                     },
                 },
             },
@@ -1521,6 +1546,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`lexicon_entry_draft`", readme)
         self.assertIn("`lexicon_patch_drafts`", readme)
         self.assertIn("`source_policy_after_update`", readme)
+        self.assertIn("`state_lexicon_patch_line`", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1552,6 +1578,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`lexicon_entry_draft`", web_design)
         self.assertIn("`lexicon_patch_drafts`", web_design)
         self.assertIn("`current_source_policy`", web_design)
+        self.assertIn("`state_lexicon_patch_line`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
