@@ -299,6 +299,15 @@ class TranslatorTests(unittest.TestCase):
                         "Result state red has no unique lexical pre-state; "
                         "source remains unknown_state."
                     ),
+                    "suggested_action": {
+                        "kind": "add_state_prestate",
+                        "label": "Add lexical pre-state",
+                        "detail": (
+                            "Choose a contextually justified source state for red on "
+                            "color_scale, or keep unknown_state when the source is "
+                            "genuinely underspecified."
+                        ),
+                    },
                 }
             ],
         )
@@ -1102,6 +1111,15 @@ class TranslatorTests(unittest.TestCase):
                         "Result state red has no unique lexical pre-state; "
                         "source remains unknown_state."
                     ),
+                    "suggested_action": {
+                        "kind": "add_state_prestate",
+                        "label": "Add lexical pre-state",
+                        "detail": (
+                            "Choose a contextually justified source state for red on "
+                            "color_scale, or keep unknown_state when the source is "
+                            "genuinely underspecified."
+                        ),
+                    },
                 }
             ],
         )
@@ -1156,6 +1174,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Semantic Warnings", warning_page)
         self.assertIn('class="semantic-warning semantic-warning--unknown_result_source"', warning_page)
         self.assertIn('data-warning-kind="unknown_result_source"', warning_page)
+        self.assertIn('data-warning-action-kind="add_state_prestate"', warning_page)
+        self.assertIn("<strong>Add lexical pre-state</strong>", warning_page)
         self.assertIn("<dt>state</dt><dd>red</dd>", warning_page)
 
     def test_web_page_shows_registered_construction_rule_metadata(self) -> None:
@@ -1218,6 +1238,14 @@ class TranslatorTests(unittest.TestCase):
                     "Result state cerulean uses a derived scale without a known lexical "
                     "pre-state; source remains unknown_state."
                 ),
+                "suggested_action": {
+                    "kind": "register_state_lexicon_entry",
+                    "label": "Register result state",
+                    "detail": (
+                        "Add cerulean to STATE_LEXICON with a stable scale and, "
+                        "if justified, a default_source_state."
+                    ),
+                },
             },
         )
         self.assertEqual(
@@ -1230,6 +1258,14 @@ class TranslatorTests(unittest.TestCase):
                     "Result state intact is currently licensed only as a source state; "
                     "source remains unknown_state."
                 ),
+                "suggested_action": {
+                    "kind": "license_state_as_target",
+                    "label": "License target state",
+                    "detail": (
+                        "Decide whether intact can be a result target on integrity_scale; "
+                        "if so, add a default source state."
+                    ),
+                },
             },
         )
         self.assertIsNone(result_state_warning_for_entry(lexical_entry))
@@ -1259,6 +1295,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             [warning["kind"] for warning in diagnostics["warnings"]],
             ["derived_result_scale", "source_state_used_as_target"],
+        )
+        self.assertEqual(
+            [warning["suggested_action"]["kind"] for warning in diagnostics["warnings"]],
+            ["register_state_lexicon_entry", "license_state_as_target"],
         )
 
     def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
@@ -1415,6 +1455,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)
         self.assertIn("`data-warning-kind`", readme)
+        self.assertIn("`suggested_action`", readme)
+        self.assertIn("`add_state_prestate`", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1439,6 +1481,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Semantic Warnings` panel", web_design)
         self.assertIn("`data-warning-kind`", web_design)
         self.assertIn("`semantic-warning--<kind>`", web_design)
+        self.assertIn("`suggested_action`", web_design)
+        self.assertIn("`register_state_lexicon_entry`", web_design)
+        self.assertIn("`license_state_as_target`", web_design)
+        self.assertIn("`data-warning-action-kind`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)

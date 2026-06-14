@@ -226,7 +226,9 @@ boundary result separate from the semantic audit notice. The current warning
 policy distinguishes `unknown_source_allowed`, `derived_scale_no_known_prestate`,
 and `source_state_only` result-state records. The same notices are rendered in
 a dedicated `Semantic Warnings` panel with stable `data-warning-kind` attributes
-for UI tests and later controls.
+for UI tests and later controls. Each warning also carries a `suggested_action`
+object, such as `add_state_prestate`, so clients can distinguish a semantic
+caveat from the concrete lexicon repair it invites.
 
 Run the local web demo:
 
@@ -273,7 +275,8 @@ successful translation can still report that the lexical state model is
 underspecified. The same warning channel covers states whose scale is only
 derived from the target name and states that are currently licensed only as
 transition sources. The separate Semantic Warnings panel mirrors the same
-records for readers who need the semantic caveat without opening the raw JSON.
+records for readers who need the semantic caveat without opening the raw JSON,
+and shows the warning's suggested action next to the warning message.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

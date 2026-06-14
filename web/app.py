@@ -94,7 +94,38 @@ def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
 
-def result_state_warning_for_entry(entry: dict[str, Any]) -> dict[str, str] | None:
+def warning_action_for_entry(policy: str, state: str, scale: str) -> dict[str, str] | None:
+    if policy == "unknown_source_allowed":
+        return {
+            "kind": "add_state_prestate",
+            "label": "Add lexical pre-state",
+            "detail": (
+                f"Choose a contextually justified source state for {state} on {scale}, "
+                "or keep unknown_state when the source is genuinely underspecified."
+            ),
+        }
+    if policy == "derived_scale_no_known_prestate":
+        return {
+            "kind": "register_state_lexicon_entry",
+            "label": "Register result state",
+            "detail": (
+                f"Add {state} to STATE_LEXICON with a stable scale and, if justified, "
+                "a default_source_state."
+            ),
+        }
+    if policy == "source_state_only":
+        return {
+            "kind": "license_state_as_target",
+            "label": "License target state",
+            "detail": (
+                f"Decide whether {state} can be a result target on {scale}; if so, "
+                "add a default source state."
+            ),
+        }
+    return None
+
+
+def result_state_warning_for_entry(entry: dict[str, Any]) -> dict[str, Any] | None:
     policy = str(entry.get("source_policy", ""))
     state = str(entry.get("state", ""))
     scale = str(entry.get("scale", ""))
@@ -107,6 +138,7 @@ def result_state_warning_for_entry(entry: dict[str, Any]) -> dict[str, str] | No
                 f"Result state {state} has no unique lexical pre-state; "
                 "source remains unknown_state."
             ),
+            "suggested_action": warning_action_for_entry(policy, state, scale),
         }
     if policy == "derived_scale_no_known_prestate":
         return {
@@ -117,6 +149,7 @@ def result_state_warning_for_entry(entry: dict[str, Any]) -> dict[str, str] | No
                 f"Result state {state} uses a derived scale without a known lexical "
                 "pre-state; source remains unknown_state."
             ),
+            "suggested_action": warning_action_for_entry(policy, state, scale),
         }
     if policy == "source_state_only":
         return {
@@ -127,11 +160,12 @@ def result_state_warning_for_entry(entry: dict[str, Any]) -> dict[str, str] | No
                 f"Result state {state} is currently licensed only as a source state; "
                 "source remains unknown_state."
             ),
+            "suggested_action": warning_action_for_entry(policy, state, scale),
         }
     return None
 
 
-def result_state_warnings(result: dict[str, Any]) -> list[dict[str, str]]:
+def result_state_warnings(result: dict[str, Any]) -> list[dict[str, Any]]:
     warnings = []
     for entry in result.get("result_state_lexicon", []):
         warning = result_state_warning_for_entry(entry)
@@ -298,6 +332,22 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
             state = str(warning.get("state", ""))
             scale = str(warning.get("scale", ""))
             message = str(warning.get("message", ""))
+            action = warning.get("suggested_action") or {}
+            action_kind = str(action.get("kind", ""))
+            action_label = str(action.get("label", ""))
+            action_detail = str(action.get("detail", ""))
+            action_html = ""
+            if action_kind or action_label or action_detail:
+                action_class = css_token(action_kind)
+                action_html = (
+                    '<div '
+                    f'class="semantic-warning-action semantic-warning-action--{html.escape(action_class)}" '
+                    f'data-warning-action-kind="{html.escape(action_kind)}">'
+                    f'<strong>{html.escape(action_label)}</strong>'
+                    f'<code>{html.escape(action_kind)}</code>'
+                    f'<p>{html.escape(action_detail)}</p>'
+                    '</div>'
+                )
             kind_class = css_token(kind)
             items.append(
                 '<li '
@@ -309,6 +359,7 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
                 f'<dt>scale</dt><dd>{html.escape(scale)}</dd>'
                 '</dl>'
                 f'<p>{html.escape(message)}</p>'
+                f"{action_html}"
                 "</li>"
             )
         body = '<ul class="semantic-warning-list">' + "".join(items) + "</ul>"
@@ -563,6 +614,24 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       color: var(--warning);
       line-height: 1.45;
       font-size: 13px;
+    }}
+    .semantic-warning-action {{
+      border-top: 1px solid #fde68a;
+      padding-top: 7px;
+      display: grid;
+      gap: 4px;
+    }}
+    .semantic-warning-action strong {{
+      font-size: 13px;
+      font-family: inherit;
+    }}
+    .semantic-warning-action code {{
+      width: fit-content;
+      color: var(--muted);
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }}
+    .semantic-warning-action p {{
+      color: var(--muted);
     }}
     .lexicon-list {{
       list-style: none;
