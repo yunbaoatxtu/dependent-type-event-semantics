@@ -67,6 +67,12 @@ choice without changing the repository:
 GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1&resolve=state-red--unknown_source_allowed=not_red
 ```
 
+The same resolution can be submitted as structured query fields:
+
+```text
+GET /api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1&format=patch&resolve_draft_id=state-red--unknown_source_allowed&source_state=not_red
+```
+
 The request has two stable query parameters:
 
 - `sentence`: required natural-language input;
@@ -186,7 +192,9 @@ with the `placeholder_fields` and `can_auto_apply` status. A separate
 from the current result, including commented pending lines when a human source
 state is still required. The panel includes an `Open patch text` link whose
 `data-patch-format="text"` hook targets the same `format=patch` endpoint for
-download or inspection.
+download or inspection. Pending drafts also render a source-state form with a
+stable `data-resolve-draft-id` hook; the form posts `resolve_draft_id` and
+`source_state` to preview a resolved patch without changing the repository.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

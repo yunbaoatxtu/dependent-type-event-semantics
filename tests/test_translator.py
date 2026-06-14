@@ -32,6 +32,7 @@ from web.app import (
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
+    parse_patch_resolution_params,
     render_page,
     render_lexicon_patch_text,
     result_state_warning_for_entry,
@@ -1309,6 +1310,21 @@ class TranslatorTests(unittest.TestCase):
             "not_red",
         )
 
+        structured_bundle = PipelineHandler.handle_patch_api(
+            handler,
+            (
+                "sentence=Mary+painted+the+door+red&require_coq=1"
+                "&resolve_draft_id=state-red--unknown_source_allowed"
+                "&source_state=not_red"
+            ),
+        )
+        self.assertTrue(structured_bundle["can_auto_apply"])
+        self.assertEqual(structured_bundle["validation_errors"], [])
+        self.assertEqual(
+            structured_bundle["lexicon_patch_drafts"][0]["default_source_state"],
+            "not_red",
+        )
+
         no_draft_bundle = PipelineHandler.handle_patch_api(
             handler,
             "sentence=John+hammered+the+metal+flat&require_coq=1",
@@ -1339,6 +1355,29 @@ class TranslatorTests(unittest.TestCase):
             '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
             resolved_text,
         )
+
+        structured_resolved_text = PipelineHandler.handle_patch_text_api(
+            handler,
+            (
+                "sentence=Mary+painted+the+door+red&require_coq=1&format=patch"
+                "&resolve_draft_id=state-red--unknown_source_allowed"
+                "&source_state=not_red"
+            ),
+        )
+        self.assertIn(
+            '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
+            structured_resolved_text,
+        )
+
+    def test_api_lexicon_patch_drafts_rejects_mismatched_structured_resolution(self) -> None:
+        resolutions, errors = parse_patch_resolution_params(
+            {
+                "resolve_draft_id": ["state-red--unknown_source_allowed"],
+                "source_state": [],
+            }
+        )
+        self.assertEqual(resolutions, {})
+        self.assertIn("resolve_draft_id and source_state counts differ", errors[0])
 
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -1407,6 +1446,19 @@ class TranslatorTests(unittest.TestCase):
             "default_source_state=&#x27;&lt;choose_source_state&gt;&#x27;),</dd>",
             warning_page,
         )
+        self.assertIn(
+            (
+                '<form class="lexicon-resolve-form" method="get" '
+                'action="/api/lexicon-patch-drafts" '
+                'data-resolve-draft-id="state-red--unknown_source_allowed">'
+            ),
+            warning_page,
+        )
+        self.assertIn('name="resolve_draft_id" value="state-red--unknown_source_allowed"', warning_page)
+        self.assertIn('name="source_state" type="text"', warning_page)
+        self.assertIn('name="format" value="patch"', warning_page)
+        self.assertIn('name="require_coq" value="1"', warning_page)
+        self.assertIn("Preview resolved patch", warning_page)
         self.assertIn("Lexicon Patch Drafts JSON", warning_page)
         self.assertIn("Lexicon Patch Text Preview", warning_page)
         self.assertIn("# Pending human choices:", warning_page)
@@ -1759,6 +1811,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`validation_errors`", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
+        self.assertIn("`resolve_draft_id`", readme)
+        self.assertIn("`source_state`", readme)
         self.assertIn("pending human-choice lines", readme)
         self.assertIn("create missing parent directories", readme)
         self.assertIn("/api/lexicon-patch-drafts", readme)
@@ -1814,6 +1868,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)
+        self.assertIn("`data-resolve-draft-id`", web_design)
+        self.assertIn("`resolve_draft_id`", web_design)
+        self.assertIn("`source_state`", web_design)
         self.assertIn("pending patch line as a comment", web_design)
         self.assertIn("create missing parent directories", web_design)
         self.assertIn("smoke check for this exporter", web_design)

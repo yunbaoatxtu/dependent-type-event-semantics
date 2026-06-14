@@ -263,7 +263,9 @@ python3 scripts/export_lexicon_patch_drafts.py \
 The same bundle is available from the web service at
 `/api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1`.
 Use `format=patch` on that endpoint to receive the review-only patch text as
-`text/plain`.
+`text/plain`. The web page also renders a source-state form for each pending
+draft; submitting it previews the resolved patch through structured
+`resolve_draft_id` and `source_state` parameters without mutating the lexicon.
 
 Run the local web demo:
 

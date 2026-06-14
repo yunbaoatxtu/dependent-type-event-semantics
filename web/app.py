@@ -102,6 +102,24 @@ def parse_patch_resolution_items(items: list[str]) -> tuple[dict[str, str], list
     return resolutions, errors
 
 
+def parse_patch_resolution_params(params: dict[str, list[str]]) -> tuple[dict[str, str], list[str]]:
+    resolutions, errors = parse_patch_resolution_items(params.get("resolve", []))
+    draft_ids = params.get("resolve_draft_id", [])
+    source_states = params.get("source_state", [])
+    if draft_ids or source_states:
+        if len(draft_ids) != len(source_states):
+            errors.append(
+                "Malformed structured resolution; resolve_draft_id and source_state counts differ."
+            )
+        else:
+            structured_resolutions, structured_errors = parse_patch_resolution_items(
+                [f"{draft_id}={source_state}" for draft_id, source_state in zip(draft_ids, source_states)]
+            )
+            resolutions.update(structured_resolutions)
+            errors.extend(structured_errors)
+    return resolutions, errors
+
+
 def validate_patch_resolution(draft: dict[str, Any], source_state: str) -> list[str]:
     errors = []
     draft_id = str(draft.get("draft_id", ""))
@@ -659,7 +677,41 @@ def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     )
 
 
-def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
+def hidden_input(name: str, value: str) -> str:
+    return (
+        f'<input type="hidden" name="{html.escape(name, quote=True)}" '
+        f'value="{html.escape(value, quote=True)}">'
+    )
+
+
+def lexicon_resolve_form(draft: dict[str, Any], sentence: str, require_coq: bool) -> str:
+    if not draft.get("requires_human_choice"):
+        return ""
+    draft_id = str(draft.get("draft_id", ""))
+    hidden_fields = [
+        hidden_input("sentence", sentence),
+        hidden_input("format", "patch"),
+        hidden_input("resolve_draft_id", draft_id),
+    ]
+    if require_coq:
+        hidden_fields.append(hidden_input("require_coq", "1"))
+    return (
+        '<form class="lexicon-resolve-form" method="get" '
+        'action="/api/lexicon-patch-drafts" '
+        f'data-resolve-draft-id="{html.escape(draft_id, quote=True)}">'
+        f"{''.join(hidden_fields)}"
+        '<input name="source_state" type="text" '
+        'placeholder="source state" aria-label="Source state">'
+        '<button type="submit">Preview resolved patch</button>'
+        "</form>"
+    )
+
+
+def lexicon_patch_drafts_panel(
+    result: dict[str, Any],
+    sentence: str = "",
+    require_coq: bool = False,
+) -> str:
     drafts = result.get("lexicon_patch_drafts", [])
     if not drafts:
         body = '<p class="lexicon-draft-empty">No lexicon patch drafts.</p>'
@@ -690,6 +742,7 @@ def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
                 f'<dt>placeholders</dt><dd>{html.escape(placeholders)}</dd>'
                 f'<dt>entry</dt><dd>{html.escape(patch_line)}</dd>'
                 '</dl>'
+                f"{lexicon_resolve_form(draft, sentence, require_coq)}"
                 '</li>'
             )
         body = '<ul class="lexicon-draft-list">' + "".join(rows) + "</ul>"
@@ -810,7 +863,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       color: var(--muted);
       line-height: 1.45;
     }}
-    form {{
+    .analysis-form {{
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto auto;
       gap: 10px;
@@ -1063,6 +1116,22 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       word-break: break-word;
     }}
+    .lexicon-resolve-form {{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 10px;
+    }}
+    .lexicon-resolve-form input[type="text"] {{
+      min-height: 34px;
+      font-size: 13px;
+      padding: 7px 9px;
+    }}
+    .lexicon-resolve-form button {{
+      min-height: 34px;
+      font-size: 13px;
+      padding: 0 10px;
+    }}
     h2 {{
       font-size: 14px;
       margin: 0;
@@ -1082,7 +1151,8 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }}
     @media (max-width: 760px) {{
-      header, form, .grid {{ grid-template-columns: 1fr; display: grid; }}
+      header, .analysis-form, .grid {{ grid-template-columns: 1fr; display: grid; }}
+      .lexicon-resolve-form {{ grid-template-columns: 1fr; }}
       label {{ white-space: normal; }}
     }}
   </style>
@@ -1095,7 +1165,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
         <p>Natural-language input to event semantics, dependent-type translation, and Coq/Rocq validation.</p>
       </div>
     </header>
-    <form method="get" action="/">
+    <form class="analysis-form" method="get" action="/">
       <input name="sentence" type="text" value="{html.escape(sentence)}" aria-label="Sentence">
       <label><input name="require_coq" type="checkbox" value="1"{checked}> require Coq/Rocq</label>
       <button type="submit">Analyze</button>
@@ -1107,7 +1177,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
       {semantic_warnings_panel(result)}
-      {lexicon_patch_drafts_panel(result)}
+      {lexicon_patch_drafts_panel(result, sentence, require_coq)}
       {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("AST", ast)}
@@ -1153,7 +1223,7 @@ class PipelineHandler(BaseHTTPRequestHandler):
         params = parse_qs(query)
         sentence = params.get("sentence", [""])[0]
         require_coq = params.get("require_coq", ["0"])[0] == "1"
-        resolutions, resolution_errors = parse_patch_resolution_items(params.get("resolve", []))
+        resolutions, resolution_errors = parse_patch_resolution_params(params)
         return build_lexicon_patch_bundle(
             sentence,
             require_coq=require_coq,
