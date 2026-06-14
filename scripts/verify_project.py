@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -57,6 +58,35 @@ def check_python_docx_requirement(require_docx: bool) -> None:
     print("==> python-docx available")
 
 
+def run_lexicon_export_smoke_check() -> None:
+    output_dir = ROOT / "work" / "verify_lexicon_patch_export"
+    bundle_path = output_dir / "bundle" / "red.json"
+    patch_path = output_dir / "patch" / "red.patch"
+    run(
+        "lexicon patch exporter smoke check",
+        [
+            sys.executable,
+            "scripts/export_lexicon_patch_drafts.py",
+            "--sentence",
+            "Mary painted the door red",
+            "--resolve",
+            "state-red--unknown_source_allowed=not_red",
+            "--out",
+            str(bundle_path),
+            "--patch-out",
+            str(patch_path),
+        ],
+    )
+    bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    patch_text = patch_path.read_text(encoding="utf-8")
+    if not bundle.get("can_auto_apply"):
+        raise SystemExit("lexicon patch exporter smoke check failed: bundle is not auto-applicable")
+    if "patch_text_preview" not in bundle:
+        raise SystemExit("lexicon patch exporter smoke check failed: missing patch_text_preview")
+    if 'StateLexiconEntry("color_scale", default_source_state="not_red")' not in patch_text:
+        raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run translator, scaffold, and optional proof-assistant checks."
@@ -108,6 +138,7 @@ def main() -> None:
     )
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
+    run_lexicon_export_smoke_check()
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")
     else:
