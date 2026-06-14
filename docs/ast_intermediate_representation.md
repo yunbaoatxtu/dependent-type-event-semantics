@@ -156,6 +156,10 @@ also supplies the source state: `broken` is reached from `intact`, `flat` from
 `not_flat`, `open` from `closed`, `wet` from `dry`, and so on. States without a
 safe lexical pre-state, such as the color state `red`, still export `_` as
 `unknown_state`.
+Their `source_policy` values are also used by the web diagnostics layer:
+`lexical_prestate` is fully specified, while `unknown_source_allowed`,
+`derived_scale_no_known_prestate`, and `source_state_only` generate non-fatal
+warnings.
 
 The same information is exposed as `result_state_lexicon` in pipeline output:
 

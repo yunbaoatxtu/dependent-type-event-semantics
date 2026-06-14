@@ -26,7 +26,14 @@ from translator.natural_language_pipeline import (
     sentence_to_event_semantics,
     verify_coq_code,
 )
-from web.app import PipelineHandler, analyze_sentence, build_diagnostics, render_page
+from web.app import (
+    PipelineHandler,
+    analyze_sentence,
+    build_diagnostics,
+    render_page,
+    result_state_warning_for_entry,
+    result_state_warnings,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1157,6 +1164,68 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<code>edit_input</code>", page)
         self.assertIn("Type a non-empty natural-language sentence before analyzing.", page)
 
+    def test_web_result_state_warnings_cover_nonlexical_source_policies(self) -> None:
+        derived_entry = state_lexicon_metadata("cerulean")
+        source_only_entry = state_lexicon_metadata("intact")
+        lexical_entry = state_lexicon_metadata("broken")
+
+        self.assertEqual(derived_entry["source_policy"], "derived_scale_no_known_prestate")
+        self.assertEqual(source_only_entry["source_policy"], "source_state_only")
+        self.assertEqual(lexical_entry["source_policy"], "lexical_prestate")
+
+        self.assertEqual(
+            result_state_warning_for_entry(derived_entry),
+            {
+                "kind": "derived_result_scale",
+                "state": "cerulean",
+                "scale": "cerulean_scale",
+                "message": (
+                    "Result state cerulean uses a derived scale without a known lexical "
+                    "pre-state; source remains unknown_state."
+                ),
+            },
+        )
+        self.assertEqual(
+            result_state_warning_for_entry(source_only_entry),
+            {
+                "kind": "source_state_used_as_target",
+                "state": "intact",
+                "scale": "integrity_scale",
+                "message": (
+                    "Result state intact is currently licensed only as a source state; "
+                    "source remains unknown_state."
+                ),
+            },
+        )
+        self.assertIsNone(result_state_warning_for_entry(lexical_entry))
+
+        self.assertEqual(
+            [
+                warning["kind"]
+                for warning in result_state_warnings(
+                    {"result_state_lexicon": [derived_entry, source_only_entry, lexical_entry]}
+                )
+            ],
+            ["derived_result_scale", "source_state_used_as_target"],
+        )
+
+        diagnostics = build_diagnostics(
+            {
+                "ok": True,
+                "input_sentence": "synthetic result-state audit",
+                "type_check": {"ok": True},
+                "construction_hygiene": {"ok": True},
+                "coq_check": {"ok": True},
+                "result_state_lexicon": [derived_entry, source_only_entry, lexical_entry],
+            }
+        )
+        self.assertEqual(diagnostics["summary"], "translation verified")
+        self.assertIsNone(diagnostics["failure_stage"])
+        self.assertEqual(
+            [warning["kind"] for warning in diagnostics["warnings"]],
+            ["derived_result_scale", "source_state_used_as_target"],
+        )
+
     def test_web_diagnostics_reports_construction_hygiene_failure(self) -> None:
         diagnostics = build_diagnostics(
             {
@@ -1291,6 +1360,9 @@ class TranslatorTests(unittest.TestCase):
     def test_docs_explain_web_diagnostics_summary(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
+        ast_docs = (ROOT / "docs" / "ast_intermediate_representation.md").read_text(
+            encoding="utf-8"
+        )
         self.assertIn('"summary": "translation verified"', readme)
         self.assertIn('"failure_stage": null', readme)
         self.assertIn('"recovery_hint": null', readme)
@@ -1304,6 +1376,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
         self.assertIn("`Translation verified with warnings`", readme)
+        self.assertIn("`derived_scale_no_known_prestate`", readme)
+        self.assertIn("`source_state_only`", readme)
         self.assertIn("separate `Next Steps`", readme)
         self.assertIn("stable `data-action-kind`", readme)
         self.assertIn("`next-step--<kind>` CSS class", readme)
@@ -1319,11 +1393,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_actions` is an array", web_design)
         self.assertIn("`diagnostics.warnings` is an array", web_design)
         self.assertIn("verified with warnings", web_design)
+        self.assertIn("`derived_result_scale`", web_design)
+        self.assertIn("`source_state_used_as_target`", web_design)
         self.assertIn("`kind`, `label`, and `detail` fields", web_design)
         self.assertIn("render the same actions in a `Next Steps` panel", web_design)
         self.assertIn("`data-action-kind`", web_design)
         self.assertIn("`next-step--<kind>`", web_design)
         self.assertIn("one of `input`, `parsing`,", web_design)
+        self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
+        self.assertIn("`source_state_only`", ast_docs)
 
     def test_docs_explain_api_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

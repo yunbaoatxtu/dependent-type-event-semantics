@@ -222,7 +222,9 @@ panel. Each rendered action carries a stable `data-action-kind` attribute and a
 still warning that `red` has no unique lexical pre-state, so the transition
 source remains `unknown_state`. The page status banner reports this as
 `Translation verified with warnings`, keeping the successful proof-assistant
-boundary result separate from the semantic audit notice.
+boundary result separate from the semantic audit notice. The current warning
+policy distinguishes `unknown_source_allowed`, `derived_scale_no_known_prestate`,
+and `source_state_only` result-state records.
 
 Run the local web demo:
 
@@ -266,7 +268,9 @@ The web page renders these records in a dedicated Result State Lexicon panel
 and also exposes the raw JSON for exact auditing. Entries whose source is
 licensed as unknown are also surfaced through `diagnostics.warnings`, so a
 successful translation can still report that the lexical state model is
-underspecified.
+underspecified. The same warning channel covers states whose scale is only
+derived from the target name and states that are currently licensed only as
+transition sources.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

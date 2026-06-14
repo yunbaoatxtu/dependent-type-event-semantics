@@ -77,7 +77,10 @@ without parsing prose.
 `diagnostics.warnings` is an array of non-fatal semantic audit notices. It is
 empty for fully specified result-state transitions such as `hammered ... flat`,
 but records cases such as `painted ... red` where the target state is typed and
-checked while the source state remains `unknown_state`.
+checked while the source state remains `unknown_state`. Warning kinds currently
+cover `unknown_result_source`, `derived_result_scale`, and
+`source_state_used_as_target`, corresponding to `unknown_source_allowed`,
+`derived_scale_no_known_prestate`, and `source_state_only` lexicon policies.
 
 ## Successful Response
 
