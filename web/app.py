@@ -110,6 +110,9 @@ def lexicon_entry_draft(policy: str, state: str, scale: str) -> dict[str, Any]:
         "allow_unknown_source": False,
         "current_source_policy": policy,
         "source_policy_after_update": "lexical_prestate",
+        "requires_human_choice": True,
+        "placeholder_fields": ["default_source_state"],
+        "can_auto_apply": False,
         "state_lexicon_patch_line": state_lexicon_patch_line(
             state,
             scale,
@@ -488,6 +491,8 @@ def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
             current_policy = str(draft.get("current_source_policy", ""))
             next_policy = str(draft.get("source_policy_after_update", ""))
             patch_line = str(draft.get("state_lexicon_patch_line", ""))
+            auto_apply = "yes" if draft.get("can_auto_apply") else "no"
+            placeholders = ", ".join(map(str, draft.get("placeholder_fields", []))) or "none"
             rows.append(
                 '<li '
                 'class="lexicon-draft" '
@@ -499,6 +504,8 @@ def lexicon_patch_drafts_panel(result: dict[str, Any]) -> str:
                 f'<dt>source</dt><dd>{html.escape(source)}</dd>'
                 f'<dt>current</dt><dd>{html.escape(current_policy)}</dd>'
                 f'<dt>after</dt><dd>{html.escape(next_policy)}</dd>'
+                f'<dt>auto apply</dt><dd>{html.escape(auto_apply)}</dd>'
+                f'<dt>placeholders</dt><dd>{html.escape(placeholders)}</dd>'
                 f'<dt>entry</dt><dd>{html.escape(patch_line)}</dd>'
                 '</dl>'
                 '</li>'

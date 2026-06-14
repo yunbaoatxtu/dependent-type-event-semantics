@@ -88,6 +88,8 @@ actions also include a `lexicon_entry_draft` object with `state`, `scale`,
 `source_policy_after_update` fields. They also include
 `state_lexicon_patch_line`, a candidate `StateLexiconEntry` text preview with a
 placeholder pre-state rather than an automatically applied lexicon mutation.
+The accompanying `requires_human_choice`, `placeholder_fields`, and
+`can_auto_apply` fields make that non-automatic status machine-readable.
 
 ## Successful Response
 
@@ -129,7 +131,8 @@ warning has `suggested_action`, the rendered action exposes
 The page also renders a `Lexicon Patch Drafts` panel from top-level
 `lexicon_patch_drafts`, with stable `data-draft-state` and
 `data-draft-current-policy` hooks for future repair controls. The panel shows
-the same `state_lexicon_patch_line` preview that JSON clients receive.
+the same `state_lexicon_patch_line` preview that JSON clients receive, together
+with the `placeholder_fields` and `can_auto_apply` status.
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal

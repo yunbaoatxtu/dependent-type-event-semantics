@@ -235,6 +235,8 @@ top-level `lexicon_patch_drafts`, giving clients a direct repair queue without
 requiring them to traverse warning records. Each draft includes a
 `state_lexicon_patch_line` preview of the candidate `StateLexiconEntry`, with a
 placeholder source state that must be resolved before changing the lexicon.
+The draft records this explicitly with `requires_human_choice`,
+`placeholder_fields`, and `can_auto_apply`.
 
 Run the local web demo:
 
