@@ -1405,6 +1405,33 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(resolutions, {})
         self.assertIn("resolve_draft_id and source_state counts differ", errors[0])
 
+    def test_api_lexicon_patch_drafts_rejects_conflicting_resolution_values(self) -> None:
+        resolutions, errors = parse_patch_resolution_params(
+            {
+                "resolve": ["state-red--unknown_source_allowed=not_red"],
+                "resolve_draft_id": ["state-red--unknown_source_allowed"],
+                "source_state": ["dry"],
+            }
+        )
+        self.assertEqual(resolutions, {"state-red--unknown_source_allowed": "not_red"})
+        self.assertIn("Conflicting resolution", errors[0])
+        self.assertIn("not_red", errors[0])
+        self.assertIn("dry", errors[0])
+
+        handler = object.__new__(PipelineHandler)
+        bundle = PipelineHandler.handle_patch_api(
+            handler,
+            (
+                "sentence=Mary+painted+the+door+red&require_coq=1"
+                "&resolve=state-red--unknown_source_allowed=not_red"
+                "&resolve_draft_id=state-red--unknown_source_allowed"
+                "&source_state=dry"
+            ),
+        )
+        self.assertFalse(bundle["can_auto_apply"])
+        self.assertFalse(bundle["requires_human_choice"])
+        self.assertIn("Conflicting resolution", bundle["validation_errors"][0])
+
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
@@ -1833,6 +1860,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("--resolve-draft-id state-red--unknown_source_allowed", readme)
         self.assertIn("--source-state not_red", readme)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", readme)
+        self.assertIn("conflicting source-state choice", readme)
         self.assertIn("--patch-out", readme)
         self.assertIn("`format=patch`", readme)
         self.assertIn("`resolved_patch_count`", readme)
@@ -1888,6 +1916,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("--resolve-draft-id state-red--unknown_source_allowed", web_design)
         self.assertIn("--source-state not_red", web_design)
         self.assertIn("--resolve state-red--unknown_source_allowed=not_red", web_design)
+        self.assertIn("conflicting source-state choices", web_design)
         self.assertIn("--patch-out", web_design)
         self.assertIn("`format=patch`", web_design)
         self.assertIn("`text/plain`", web_design)

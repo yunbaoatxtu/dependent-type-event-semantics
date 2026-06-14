@@ -263,6 +263,9 @@ python3 scripts/export_lexicon_patch_drafts.py \
 
 The compact legacy spelling `--resolve state-red--unknown_source_allowed=not_red`
 is also accepted for shell use.
+Repeated resolutions for the same draft are allowed only when they agree; a
+conflicting source-state choice is reported in `validation_errors` and is never
+auto-applied.
 
 The same bundle is available from the web service at
 `/api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1`.

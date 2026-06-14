@@ -132,6 +132,9 @@ python3 scripts/export_lexicon_patch_drafts.py \
 
 For compact shell calls, the older equivalent
 `--resolve state-red--unknown_source_allowed=not_red` remains accepted.
+If a client supplies repeated resolutions for the same draft, they must agree;
+conflicting source-state choices are reported in `validation_errors` and make
+the bundle non-auto-applicable.
 
 The script returns a `lexicon_patch_drafts.v1` JSON bundle with the compact
 diagnostics summary, the manual-repair flags, and the draft records. The

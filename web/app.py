@@ -98,12 +98,19 @@ def parse_patch_resolution_items(items: list[str]) -> tuple[dict[str, str], list
         if not draft_id or not source_state:
             errors.append(f"Malformed resolution {item!r}; draft_id and source_state are required.")
             continue
+        if draft_id in resolutions and resolutions[draft_id] != source_state:
+            errors.append(
+                f"Conflicting resolution for {draft_id!r}: "
+                f"{resolutions[draft_id]!r} vs {source_state!r}."
+            )
+            continue
         resolutions[draft_id] = source_state
     return resolutions, errors
 
 
 def parse_patch_resolution_params(params: dict[str, list[str]]) -> tuple[dict[str, str], list[str]]:
-    resolutions, errors = parse_patch_resolution_items(params.get("resolve", []))
+    resolution_items = list(params.get("resolve", []))
+    errors = []
     draft_ids = params.get("resolve_draft_id", [])
     source_states = params.get("source_state", [])
     if draft_ids or source_states:
@@ -112,11 +119,11 @@ def parse_patch_resolution_params(params: dict[str, list[str]]) -> tuple[dict[st
                 "Malformed structured resolution; resolve_draft_id and source_state counts differ."
             )
         else:
-            structured_resolutions, structured_errors = parse_patch_resolution_items(
-                [f"{draft_id}={source_state}" for draft_id, source_state in zip(draft_ids, source_states)]
+            resolution_items.extend(
+                f"{draft_id}={source_state}" for draft_id, source_state in zip(draft_ids, source_states)
             )
-            resolutions.update(structured_resolutions)
-            errors.extend(structured_errors)
+    resolutions, item_errors = parse_patch_resolution_items(resolution_items)
+    errors.extend(item_errors)
     return resolutions, errors
 
 
