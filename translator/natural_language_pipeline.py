@@ -673,8 +673,173 @@ def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def passive_argument_omission_ast(
+    predicate: str,
+    patient: str,
+    agent: str | None,
+) -> dict[str, Any]:
+    agent_record = (
+        {"name": agent, "type": "Entity", "source": "by_phrase"}
+        if agent is not None
+        else {"variable": "x_agent", "type": "Entity", "source": "omitted_existential"}
+    )
+    return {
+        "kind": "passive_argument_omission",
+        "predicate": predicate,
+        "predicate_type": "Entity -> Entity -> Prop",
+        "argument_order": ["Agent", "Patient"],
+        "patient": {
+            "name": patient,
+            "type": "Entity",
+            "surface_role": "subject",
+        },
+        "agent": agent_record,
+    }
+
+
+def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "passive_argument_omission":
+        errors.append("ast.kind must be passive_argument_omission")
+    if not isinstance(ast.get("predicate"), str) or not ast.get("predicate"):
+        errors.append("passive predicate must be a non-empty string")
+    if ast.get("predicate_type") != "Entity -> Entity -> Prop":
+        errors.append("passive predicate must have type Entity -> Entity -> Prop")
+    if ast.get("argument_order") != ["Agent", "Patient"]:
+        errors.append("passive argument_order must be Agent before Patient")
+
+    patient = ast.get("patient")
+    if not isinstance(patient, dict):
+        errors.append("passive patient must be an object")
+    else:
+        if not isinstance(patient.get("name"), str) or not patient.get("name"):
+            errors.append("passive patient.name must be a non-empty string")
+        if patient.get("type") != "Entity":
+            errors.append("passive patient must have type Entity")
+        if patient.get("surface_role") != "subject":
+            errors.append("passive patient must be the surface subject")
+
+    agent = ast.get("agent")
+    if not isinstance(agent, dict):
+        errors.append("passive agent must be an object")
+    else:
+        source = agent.get("source")
+        if source == "by_phrase":
+            if not isinstance(agent.get("name"), str) or not agent.get("name"):
+                errors.append("passive by-phrase agent.name must be a non-empty string")
+            if agent.get("type") != "Entity":
+                errors.append("passive by-phrase agent must have type Entity")
+        elif source == "omitted_existential":
+            if agent.get("variable") != "x_agent":
+                errors.append("passive omitted agent must bind x_agent")
+            if agent.get("type") != "Entity":
+                errors.append("passive omitted agent must have type Entity")
+        else:
+            errors.append("passive agent.source must be by_phrase or omitted_existential")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if len(tokens) < 4 or "was" not in tokens:
+        return None
+    was_index = tokens.index("was")
+    if was_index == 0 or was_index + 1 >= len(tokens):
+        return None
+
+    patient = clean_phrase(tokens[:was_index])
+    predicate = lemma_verb(tokens[was_index + 1])
+    rest = tokens[was_index + 2:]
+    agent = None
+    if rest:
+        if rest[0] != "by" or len(rest) == 1:
+            return None
+        agent = clean_phrase(rest[1:])
+
+    ast = passive_argument_omission_ast(predicate, patient, agent)
+    type_check = check_passive_argument_omission_ast(ast)
+    if agent is None:
+        typed_replacement = f"exists x_agent : Entity. {predicate}(x_agent, {patient})"
+        definition_name = f"passive_{predicate}_omitted_agent"
+        body_lines = [
+            f"Definition {definition_name} : Prop :=",
+            "  exists x_agent : Entity,",
+            f"    {predicate} x_agent {patient}.",
+        ]
+        agent_parameters: list[str] = []
+        event_reference = (
+            f"exists e. {predicate}ing(e) and Theme(e, {patient}) and "
+            "exists x. Agent(e, x)"
+        )
+    else:
+        typed_replacement = f"{predicate}({agent}, {patient})"
+        definition_name = f"passive_{predicate}_by_agent"
+        body_lines = [
+            f"Definition {definition_name} : Prop :=",
+            f"  {predicate} {agent} {patient}.",
+        ]
+        agent_parameters = [f"Parameter {agent} : Entity."]
+        event_reference = (
+            f"exists e. {predicate}ing(e) and Theme(e, {patient}) and Agent(e, {agent})"
+        )
+
+    coq_code = "\n".join(
+        [
+            "(* Passive argument-omission replacement without an event variable. *)",
+            "Parameter Entity : Type.",
+            "",
+            f"Parameter {patient} : Entity.",
+            *agent_parameters,
+            "",
+            f"Parameter {predicate} : Entity -> Entity -> Prop.",
+            "",
+            *body_lines,
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return {
+        "kind": "passive_argument_omission",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "passive-argument-omission",
+            "source": sentence,
+            "event_style_reference": event_reference,
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "A passive without by-phrase introduces an existential Entity "
+                "agent; no Event, Agent(e, ...), or Theme(e, ...) declaration is exported."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def construction_rules() -> list[ConstructionRule]:
     return [
+        ConstructionRule(
+            rule_id="passive_argument_omission",
+            label="Passive argument omission",
+            phenomenon="Argument deletion without hidden event variables",
+            analyzer=passive_argument_omission_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
         ConstructionRule(
             rule_id="perception_nominalization",
             label="Perception complement nominalization",

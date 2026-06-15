@@ -159,11 +159,32 @@ stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and
 `consume` have type `Entity -> Time -> Prop` and share the same time variable.
 Both generated Coq scaffolds are checked without introducing an `Event` type.
 
+The argument-omission path now also covers a passive slice:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "the toast was buttered by John" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "the toast was buttered" \
+  --require-coq
+```
+
+The explicit by-phrase version checks as `butter(john, toast)`. The omitted
+agent version checks as
+`exists x_agent : Entity. butter(x_agent, toast)`. The AST records
+`toast : Entity` as the surface subject but the logical Patient, records either
+`john : Entity` from the by-phrase or the existential `x_agent : Entity`, and
+keeps the predicate type fixed as `Entity -> Entity -> Prop`. The generated Coq
+does not introduce `Event`, `Agent`, or `Theme` declarations.
+
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments
-that must not appear in the generated scaffold. For example, the three
-Parsons/Luo-Shi replacements forbid hidden `Event` declarations, and the
-burning example additionally forbids `IN`.
+that must not appear in the generated scaffold. For example, the Parsons/Luo-Shi
+replacements forbid hidden `Event` declarations, the burning example
+additionally forbids `IN`, and the passive omission rule also forbids exported
+`Agent` and `Theme` role predicates.
 
 The web/API result separates the rule's hygiene policy from the actual
 generated output. `forbidden_coq_fragments` is the policy list; it does not mean
@@ -300,6 +321,7 @@ The current prototype has small, testable rules for:
 
 - variable polyadicity plus temporal modification;
 - lexically licensed argument omission;
+- passive argument omission with an existential typed agent;
 - event counting with `once`/`twice`/`thrice` or explicit `count`;
 - causal-resultative translation into a typed state transition.
 

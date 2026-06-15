@@ -297,6 +297,38 @@ predicates:
 The structural check requires the antecedent and consequent to share the bound
 time variable `t`.
 
+### `passive_argument_omission`
+
+Represents passive clauses with either an explicit by-phrase or an omitted
+agent. The construction does not export event-role predicates. Instead, the
+surface subject is stored as the logical Patient, while the Agent is either a
+named entity from the by-phrase or an existentially bound entity:
+
+```json
+{
+  "kind": "passive_argument_omission",
+  "predicate": "butter",
+  "predicate_type": "Entity -> Entity -> Prop",
+  "argument_order": ["Agent", "Patient"],
+  "patient": {
+    "name": "toast",
+    "type": "Entity",
+    "surface_role": "subject"
+  },
+  "agent": {
+    "variable": "x_agent",
+    "type": "Entity",
+    "source": "omitted_existential"
+  }
+}
+```
+
+The structural check requires the predicate to keep the order
+`Entity -> Entity -> Prop`, with the Agent before the Patient. If the by-phrase
+is present, `agent.source` is `by_phrase` and `agent.name` stores the overt
+individual; otherwise `agent.source` is `omitted_existential` and the exported
+Coq scaffold binds `x_agent : Entity`.
+
 ### `scope_ambiguity`
 
 Represents a construction-specific ambiguity that is not forced through the

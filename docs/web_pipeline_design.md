@@ -294,6 +294,14 @@ construction. This keeps the web pipeline honest: a rule may compile in Coq and
 still fail if it reintroduces a hidden `Event` declaration or an unwanted
 event-inclusion predicate.
 
+The same registry also covers the passive argument-omission slice. For `the
+toast was buttered by John`, the web/API result reports `butter(john, toast)`;
+for `the toast was buttered`, it reports
+`exists x_agent : Entity. butter(x_agent, toast)`. Its hygiene policy forbids
+`Event`, `Agent`, and `Theme` declarations, because the replacement is an
+ordinary typed existential over entities rather than a hidden event-role
+analysis.
+
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the
 matched construction. `found_forbidden_fragments` reports fragments that were

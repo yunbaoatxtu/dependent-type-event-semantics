@@ -18,6 +18,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     ConstructionRule,
+    check_passive_argument_omission_ast,
     check_perception_nominalization_ast,
     check_quantifier_scope_readings,
     check_timed_after_ast,
@@ -963,6 +964,61 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;semantic_role&quot;: &quot;Location&quot;", page)
         self.assertIn("&quot;semantic_role&quot;: &quot;Instrument&quot;", page)
 
+    def test_passive_argument_omission_uses_existential_agent_not_event(self) -> None:
+        explicit = run_pipeline("the toast was buttered by John", require_coq=True)
+        self.assertTrue(explicit["ok"])
+        self.assertEqual(explicit["kind"], "passive_argument_omission")
+        self.assertEqual(explicit["construction_rule"]["id"], "passive_argument_omission")
+        self.assertEqual(explicit["dependent_type_translation"], "butter(john, toast)")
+        self.assertEqual(
+            explicit["ast"],
+            {
+                "kind": "passive_argument_omission",
+                "predicate": "butter",
+                "predicate_type": "Entity -> Entity -> Prop",
+                "argument_order": ["Agent", "Patient"],
+                "patient": {"name": "toast", "type": "Entity", "surface_role": "subject"},
+                "agent": {"name": "john", "type": "Entity", "source": "by_phrase"},
+            },
+        )
+        self.assertIn("Parameter toast : Entity.", explicit["coq_code"])
+        self.assertIn("Parameter john : Entity.", explicit["coq_code"])
+        self.assertIn("Parameter butter : Entity -> Entity -> Prop.", explicit["coq_code"])
+        self.assertIn("Definition passive_butter_by_agent : Prop :=", explicit["coq_code"])
+        self.assertIn("butter john toast.", explicit["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", explicit["coq_code"])
+        self.assertNotIn("Parameter Agent :", explicit["coq_code"])
+        self.assertNotIn("Parameter Theme :", explicit["coq_code"])
+        self.assertEqual(explicit["coq_check"]["status"], "passed")
+
+        omitted = run_pipeline("the toast was buttered", require_coq=True)
+        self.assertTrue(omitted["ok"])
+        self.assertEqual(
+            omitted["dependent_type_translation"],
+            "exists x_agent : Entity. butter(x_agent, toast)",
+        )
+        self.assertEqual(
+            omitted["ast"]["agent"],
+            {"variable": "x_agent", "type": "Entity", "source": "omitted_existential"},
+        )
+        self.assertIn("exists x_agent : Entity", omitted["coq_code"])
+        self.assertIn("butter x_agent toast.", omitted["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", omitted["coq_code"])
+        self.assertNotIn("Parameter Agent :", omitted["coq_code"])
+        self.assertNotIn("Parameter Theme :", omitted["coq_code"])
+        self.assertEqual(omitted["coq_check"]["status"], "passed")
+
+    def test_passive_argument_omission_rejects_bad_agent_source(self) -> None:
+        result = run_pipeline("the toast was buttered", require_coq=False)
+        ast = result["ast"]
+        ast["agent"]["source"] = "event_role"
+        type_check = check_passive_argument_omission_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "passive agent.source must be by_phrase or omitted_existential",
+            type_check["errors"],
+        )
+
     def test_parsons_after_singing_uses_time_not_event(self) -> None:
         result = run_pipeline(
             "after the singing of the Marseillaise, John saluted the flag",
@@ -1169,12 +1225,15 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
         rules = {rule.rule_id: rule for rule in construction_rules()}
         expected = {
+            "passive_argument_omission",
             "timed_after",
             "perception_nominalization",
             "universal_timed_burning",
             "quantifier_scope_ambiguity",
         }
         self.assertTrue(expected.issubset(rules))
+        self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["passive_argument_omission"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["perception_nominalization"].forbidden_coq_fragments)
         self.assertIn("IN", rules["universal_timed_burning"].forbidden_coq_fragments)
@@ -1183,6 +1242,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
+            "passive_argument_omission": "the toast was buttered",
             "timed_after": "after the singing of the Marseillaise, John saluted the flag",
             "perception_nominalization": "Mary saw John leave",
             "universal_timed_burning": "In every burning, oxygen is consumed",
@@ -1975,6 +2035,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"found_forbidden_fragments": []', readme)
         self.assertIn("must distinguish a rule's policy from an actual", web_design)
         self.assertIn("found forbidden fragments: none", web_design)
+        self.assertIn("passive argument-omission slice", web_design)
+        self.assertIn("`exists x_agent : Entity. butter(x_agent, toast)`", web_design)
+        self.assertIn("`Event`, `Agent`, and `Theme` declarations", web_design)
 
     def test_docs_explain_web_diagnostics_summary(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -1999,6 +2062,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Translation verified with warnings`", readme)
         self.assertIn("`modifier_role_audit`", readme)
         self.assertIn("`Modifier Role Audit` panel", readme)
+        self.assertIn("the toast was buttered by John", readme)
+        self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
+        self.assertIn("passive argument omission with an existential typed agent", readme)
+        self.assertIn("passive_argument_omission", ast_docs)
+        self.assertIn('"source": "omitted_existential"', ast_docs)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)
