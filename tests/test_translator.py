@@ -976,6 +976,7 @@ class TranslatorTests(unittest.TestCase):
                 "kind": "passive_argument_omission",
                 "predicate": "butter",
                 "predicate_type": "Entity -> Entity -> Prop",
+                "auxiliary": "was",
                 "argument_order": ["Agent", "Patient"],
                 "patient": {"name": "toast", "type": "Entity", "surface_role": "subject"},
                 "agent": {"name": "john", "type": "Entity", "source": "by_phrase"},
@@ -1008,6 +1009,26 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter Theme :", omitted["coq_code"])
         self.assertEqual(omitted["coq_check"]["status"], "passed")
 
+        present = run_pipeline("the toast is buttered", require_coq=True)
+        self.assertTrue(present["ok"])
+        self.assertEqual(present["kind"], "passive_argument_omission")
+        self.assertEqual(present["ast"]["auxiliary"], "is")
+        self.assertEqual(
+            present["dependent_type_translation"],
+            "exists x_agent : Entity. butter(x_agent, toast)",
+        )
+        self.assertIn("Definition passive_butter_omitted_agent : Prop :=", present["coq_code"])
+        self.assertEqual(present["coq_check"]["status"], "passed")
+
+        plural_auxiliary = run_pipeline("the doors were opened by John", require_coq=True)
+        self.assertTrue(plural_auxiliary["ok"])
+        self.assertEqual(plural_auxiliary["kind"], "passive_argument_omission")
+        self.assertEqual(plural_auxiliary["ast"]["auxiliary"], "were")
+        self.assertEqual(plural_auxiliary["dependent_type_translation"], "open(john, doors)")
+        self.assertIn("Parameter doors : Entity.", plural_auxiliary["coq_code"])
+        self.assertIn("Parameter open : Entity -> Entity -> Prop.", plural_auxiliary["coq_code"])
+        self.assertEqual(plural_auxiliary["coq_check"]["status"], "passed")
+
     def test_passive_argument_omission_rejects_bad_agent_source(self) -> None:
         result = run_pipeline("the toast was buttered", require_coq=False)
         ast = result["ast"]
@@ -1016,6 +1037,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "passive agent.source must be by_phrase or omitted_existential",
+            type_check["errors"],
+        )
+
+    def test_passive_argument_omission_rejects_bad_auxiliary(self) -> None:
+        result = run_pipeline("the toast was buttered", require_coq=False)
+        ast = result["ast"]
+        ast["auxiliary"] = "did"
+        type_check = check_passive_argument_omission_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "passive auxiliary must be is, was, are, or were",
             type_check["errors"],
         )
 
@@ -2038,6 +2070,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("passive argument-omission slice", web_design)
         self.assertIn("`exists x_agent : Entity. butter(x_agent, toast)`", web_design)
         self.assertIn("`Event`, `Agent`, and `Theme` declarations", web_design)
+        self.assertIn("finite passive auxiliaries", web_design)
 
     def test_docs_explain_web_diagnostics_summary(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -2063,9 +2096,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`modifier_role_audit`", readme)
         self.assertIn("`Modifier Role Audit` panel", readme)
         self.assertIn("the toast was buttered by John", readme)
+        self.assertIn("the doors were opened by John", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
+        self.assertIn("the passive auxiliary (`is`, `was`, `are`, or `were`)", readme)
         self.assertIn("passive_argument_omission", ast_docs)
+        self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)

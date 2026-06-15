@@ -169,6 +169,10 @@ python3 -m translator.natural_language_pipeline \
 python3 -m translator.natural_language_pipeline \
   "the toast was buttered" \
   --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "the doors were opened by John" \
+  --require-coq
 ```
 
 The explicit by-phrase version checks as `butter(john, toast)`. The omitted
@@ -176,8 +180,11 @@ agent version checks as
 `exists x_agent : Entity. butter(x_agent, toast)`. The AST records
 `toast : Entity` as the surface subject but the logical Patient, records either
 `john : Entity` from the by-phrase or the existential `x_agent : Entity`, and
-keeps the predicate type fixed as `Entity -> Entity -> Prop`. The generated Coq
-does not introduce `Event`, `Agent`, or `Theme` declarations.
+keeps the predicate type fixed as `Entity -> Entity -> Prop`. It also records
+the passive auxiliary (`is`, `was`, `are`, or `were`) so that finite passive
+forms are recognized before the generic fallback parser can misread them as
+ordinary verbs. The generated Coq does not introduce `Event`, `Agent`, or
+`Theme` declarations.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments

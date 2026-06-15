@@ -26,6 +26,10 @@ ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
 ARTICLES = {"a", "an", "the"}
+PASSIVE_AUXILIARIES = {"is", "was", "are", "were"}
+PASSIVE_PARTICIPLE_FORMS = {
+    "broken", "eaten", "drunk", "seen", "known", "left", "written", "read",
+}
 PREPOSITIONS = {
     "at", "in", "on", "under", "over", "near", "beside", "with", "from", "to", "into",
 }
@@ -677,6 +681,7 @@ def passive_argument_omission_ast(
     predicate: str,
     patient: str,
     agent: str | None,
+    auxiliary: str,
 ) -> dict[str, Any]:
     agent_record = (
         {"name": agent, "type": "Entity", "source": "by_phrase"}
@@ -687,6 +692,7 @@ def passive_argument_omission_ast(
         "kind": "passive_argument_omission",
         "predicate": predicate,
         "predicate_type": "Entity -> Entity -> Prop",
+        "auxiliary": auxiliary,
         "argument_order": ["Agent", "Patient"],
         "patient": {
             "name": patient,
@@ -705,6 +711,8 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
         errors.append("passive predicate must be a non-empty string")
     if ast.get("predicate_type") != "Entity -> Entity -> Prop":
         errors.append("passive predicate must have type Entity -> Entity -> Prop")
+    if ast.get("auxiliary") not in PASSIVE_AUXILIARIES:
+        errors.append("passive auxiliary must be is, was, are, or were")
     if ast.get("argument_order") != ["Agent", "Patient"]:
         errors.append("passive argument_order must be Agent before Patient")
 
@@ -744,24 +752,35 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def is_passive_participle(token: str) -> bool:
+    return token.endswith("ed") or token in PASSIVE_PARTICIPLE_FORMS
+
+
 def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
-    if len(tokens) < 4 or "was" not in tokens:
+    auxiliary_indices = [
+        index for index, token in enumerate(tokens) if token in PASSIVE_AUXILIARIES
+    ]
+    if len(tokens) < 3 or not auxiliary_indices:
         return None
-    was_index = tokens.index("was")
-    if was_index == 0 or was_index + 1 >= len(tokens):
+    auxiliary_index = auxiliary_indices[0]
+    auxiliary = tokens[auxiliary_index]
+    if auxiliary_index == 0 or auxiliary_index + 1 >= len(tokens):
+        return None
+    participle = tokens[auxiliary_index + 1]
+    if not is_passive_participle(participle):
         return None
 
-    patient = clean_phrase(tokens[:was_index])
-    predicate = lemma_verb(tokens[was_index + 1])
-    rest = tokens[was_index + 2:]
+    patient = clean_phrase(tokens[:auxiliary_index])
+    predicate = lemma_verb(participle)
+    rest = tokens[auxiliary_index + 2:]
     agent = None
     if rest:
         if rest[0] != "by" or len(rest) == 1:
             return None
         agent = clean_phrase(rest[1:])
 
-    ast = passive_argument_omission_ast(predicate, patient, agent)
+    ast = passive_argument_omission_ast(predicate, patient, agent, auxiliary)
     type_check = check_passive_argument_omission_ast(ast)
     if agent is None:
         typed_replacement = f"exists x_agent : Entity. {predicate}(x_agent, {patient})"
@@ -829,18 +848,6 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
 def construction_rules() -> list[ConstructionRule]:
     return [
         ConstructionRule(
-            rule_id="passive_argument_omission",
-            label="Passive argument omission",
-            phenomenon="Argument deletion without hidden event variables",
-            analyzer=passive_argument_omission_pipeline,
-            forbidden_coq_fragments=(
-                "Parameter Event : Type.",
-                "exists e : Event",
-                "Parameter Agent :",
-                "Parameter Theme :",
-            ),
-        ),
-        ConstructionRule(
             rule_id="perception_nominalization",
             label="Perception complement nominalization",
             phenomenon="Parsons/Luo-Shi perception complement",
@@ -873,6 +880,18 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Theme :",
                 "Parameter some : Entity.",
                 "Parameter boy : nat ->",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="passive_argument_omission",
+            label="Passive argument omission",
+            phenomenon="Argument deletion without hidden event variables",
+            analyzer=passive_argument_omission_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
             ),
         ),
     ]

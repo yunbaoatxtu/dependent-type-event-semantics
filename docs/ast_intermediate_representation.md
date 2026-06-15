@@ -309,6 +309,7 @@ named entity from the by-phrase or an existentially bound entity:
   "kind": "passive_argument_omission",
   "predicate": "butter",
   "predicate_type": "Entity -> Entity -> Prop",
+  "auxiliary": "was",
   "argument_order": ["Agent", "Patient"],
   "patient": {
     "name": "toast",
@@ -324,8 +325,9 @@ named entity from the by-phrase or an existentially bound entity:
 ```
 
 The structural check requires the predicate to keep the order
-`Entity -> Entity -> Prop`, with the Agent before the Patient. If the by-phrase
-is present, `agent.source` is `by_phrase` and `agent.name` stores the overt
+`Entity -> Entity -> Prop`, with the Agent before the Patient, and it requires
+the auxiliary to be one of `is`, `was`, `are`, or `were`. If the by-phrase is
+present, `agent.source` is `by_phrase` and `agent.name` stores the overt
 individual; otherwise `agent.source` is `omitted_existential` and the exported
 Coq scaffold binds `x_agent : Entity`.
 

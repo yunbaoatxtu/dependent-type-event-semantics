@@ -300,7 +300,9 @@ for `the toast was buttered`, it reports
 `exists x_agent : Entity. butter(x_agent, toast)`. Its hygiene policy forbids
 `Event`, `Agent`, and `Theme` declarations, because the replacement is an
 ordinary typed existential over entities rather than a hidden event-role
-analysis.
+analysis. The rule recognizes finite passive auxiliaries `is`, `was`, `are`,
+and `were`, and stores the auxiliary in the AST so that the fallback parser does
+not misclassify those words as lexical verbs.
 
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the
