@@ -409,6 +409,12 @@ The same registered construction now draws from the broader state lexicon:
 `Cause(mary, Transition(room, cleanliness_scale, dirty, clean))`.
 Content-scale alternations such as `the tank emptied` and
 `John filled the glass` likewise map to transitions over `full` and `empty`.
+Internally these verbs are registered as structured `StateChangeVerbEntry`
+records, not as loose string rewrites. Each entry names the target state and
+the licensed inchoative, causative, and instrumental frames, and the emitted
+result includes `state_change_verb_entry` so clients can audit the lexical
+choice that selected the transition. The AST type checker rejects a mismatch
+such as pairing the registered verb `open` with the target state `closed`.
 This prevents `the door opened` and similar inchoatives from being misread as
 one-place predicates whose changing themes are Agents, while still preserving
 the same typed transition used by resultative translations.

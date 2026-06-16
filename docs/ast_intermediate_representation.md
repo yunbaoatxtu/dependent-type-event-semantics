@@ -336,6 +336,26 @@ check requires `state_scale` and `source_state` to match the state lexicon, so
 `the clothes dried` receives `moisture_scale` with source `wet`, while `the
 water froze` receives `phase_scale` with source `liquid`.
 
+The surrounding pipeline result also includes the lexical registration record
+that selected the transition:
+
+```json
+{
+  "state_change_verb_entry": {
+    "verb": "dry",
+    "target_state": "dry",
+    "allow_inchoative": true,
+    "allow_causative": true,
+    "allow_instrument": true
+  }
+}
+```
+
+The AST checker uses this registration as an additional guard: a malformed AST
+whose verb is `open` but whose target state is `closed` is rejected even though
+both states are valid members of the access scale, because the registered verb
+and target state disagree (`registered_verb_target_state_mismatch`).
+
 ### `stative_result_state`
 
 Represents copular result-state clauses such as `the vase is broken`. The

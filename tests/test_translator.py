@@ -29,6 +29,7 @@ from translator.natural_language_pipeline import (
     run_registered_rule,
     run_pipeline,
     sentence_to_event_semantics,
+    state_change_verb_metadata,
     verify_coq_code,
 )
 from web.app import (
@@ -1072,6 +1073,17 @@ class TranslatorTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertEqual(
+            dried["state_change_verb_entry"],
+            {
+                "verb": "dry",
+                "target_state": "dry",
+                "allow_inchoative": True,
+                "allow_causative": True,
+                "allow_instrument": True,
+            },
+        )
+        self.assertEqual(dried["state_change_verb_entry"], state_change_verb_metadata("dry"))
         self.assertEqual(dried["coq_check"]["status"], "passed")
 
         instrumental = run_pipeline("John dried the clothes with a towel", require_coq=True)
@@ -1138,6 +1150,18 @@ class TranslatorTests(unittest.TestCase):
         type_check = check_lexical_state_change_ast(ast)
         self.assertFalse(type_check["ok"])
         self.assertIn("state-change source_state must match the state lexicon", type_check["errors"])
+
+    def test_lexical_state_change_rejects_registered_target_mismatch(self) -> None:
+        result = run_pipeline("the door opened", require_coq=False)
+        ast = result["ast"]
+        ast["transition"]["source_state"] = "open"
+        ast["transition"]["target_state"]["name"] = "closed"
+        type_check = check_lexical_state_change_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "state-change target_state must match the registered verb target",
+            type_check["errors"],
+        )
 
     def test_stative_result_state_uses_state_not_omitted_agent(self) -> None:
         broken = run_pipeline("the vase is broken", require_coq=True)
@@ -2371,6 +2395,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary cleaned the room", readme)
         self.assertIn("the tank emptied", readme)
         self.assertIn("John filled the glass", readme)
+        self.assertIn("StateChangeVerbEntry", readme)
+        self.assertIn("state_change_verb_entry", readme)
         self.assertIn("Change(Transition(door, access_scale, closed, open))", readme)
         self.assertIn("Change(Transition(clothes, moisture_scale, wet, dry))", readme)
         self.assertIn("Change(Transition(water, phase_scale, liquid, frozen))", readme)
@@ -2388,6 +2414,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("phase_scale", ast_docs)
         self.assertIn("cleanliness_scale", ast_docs)
         self.assertIn("content_scale", ast_docs)
+        self.assertIn('"state_change_verb_entry"', ast_docs)
+        self.assertIn("registered_verb_target_state_mismatch", ast_docs)
+        self.assertIn("state_change_verb_entry", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)

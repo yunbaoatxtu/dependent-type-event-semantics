@@ -65,20 +65,6 @@ IRREGULAR_VERBS = {
     "known": "know",
     "written": "write",
 }
-STATE_CHANGE_VERB_TARGETS = {
-    "clean": "clean",
-    "dirty": "dirty",
-    "dry": "dry",
-    "empty": "empty",
-    "fill": "full",
-    "freeze": "frozen",
-    "melt": "melted",
-    "open": "open",
-    "close": "closed",
-    "wet": "wet",
-}
-
-
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -86,6 +72,42 @@ class ConstructionRule:
     phenomenon: str
     analyzer: Callable[[str], dict[str, Any] | None]
     forbidden_coq_fragments: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class StateChangeVerbEntry:
+    target_state: str
+    allow_inchoative: bool = True
+    allow_causative: bool = True
+    allow_instrument: bool = True
+
+
+STATE_CHANGE_VERB_REGISTRY = {
+    "clean": StateChangeVerbEntry("clean"),
+    "dirty": StateChangeVerbEntry("dirty"),
+    "dry": StateChangeVerbEntry("dry"),
+    "empty": StateChangeVerbEntry("empty"),
+    "fill": StateChangeVerbEntry("full"),
+    "freeze": StateChangeVerbEntry("frozen"),
+    "melt": StateChangeVerbEntry("melted"),
+    "open": StateChangeVerbEntry("open"),
+    "close": StateChangeVerbEntry("closed"),
+    "wet": StateChangeVerbEntry("wet"),
+}
+STATE_CHANGE_VERB_TARGETS = {
+    verb: entry.target_state for verb, entry in STATE_CHANGE_VERB_REGISTRY.items()
+}
+
+
+def state_change_verb_metadata(verb: str) -> dict[str, Any]:
+    entry = STATE_CHANGE_VERB_REGISTRY[verb]
+    return {
+        "verb": verb,
+        "target_state": entry.target_state,
+        "allow_inchoative": entry.allow_inchoative,
+        "allow_causative": entry.allow_causative,
+        "allow_instrument": entry.allow_instrument,
+    }
 
 
 def atom(pred: str, *args: str) -> dict[str, Any]:
@@ -738,8 +760,9 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
     if ast.get("kind") != "lexical_state_change":
         errors.append("ast.kind must be lexical_state_change")
     verb = ast.get("verb")
-    if verb not in STATE_CHANGE_VERB_TARGETS:
-        errors.append("state-change verb must be registered in STATE_CHANGE_VERB_TARGETS")
+    entry = STATE_CHANGE_VERB_REGISTRY.get(verb)
+    if entry is None:
+        errors.append("state-change verb must be registered in STATE_CHANGE_VERB_REGISTRY")
 
     transition = ast.get("transition")
     if not isinstance(transition, dict):
@@ -765,6 +788,8 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append("state-change target_state.name must be a non-empty string")
             elif target_name not in SOURCE_STATE_BY_TARGET_STATE:
                 errors.append(f"state-change target has no lexical source state: {target_name}")
+            elif entry is not None and target_name != entry.target_state:
+                errors.append("state-change target_state must match the registered verb target")
             if target.get("type") != "State":
                 errors.append("state-change target_state must have type State")
         if isinstance(target_name, str) and target_name in SOURCE_STATE_BY_TARGET_STATE:
@@ -774,7 +799,11 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append("state-change source_state must match the state lexicon")
 
     causer = ast.get("causer")
+    if causer is None and entry is not None and not entry.allow_inchoative:
+        errors.append("state-change verb does not license the inchoative frame")
     if causer is not None:
+        if entry is not None and not entry.allow_causative:
+            errors.append("state-change verb does not license the causative frame")
         if not isinstance(causer, dict):
             errors.append("state-change causer must be an object")
         else:
@@ -789,6 +818,8 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
     if instrument is not None:
         if causer is None:
             errors.append("state-change instrument requires a causer")
+        if entry is not None and not entry.allow_instrument:
+            errors.append("state-change verb does not license the instrumental frame")
         if not isinstance(instrument, dict):
             errors.append("state-change instrument must be an object")
         else:
@@ -828,25 +859,32 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
         return None
     for verb_index, token in enumerate(tokens):
         verb = lemma_verb(token)
-        if verb not in STATE_CHANGE_VERB_TARGETS:
+        entry = STATE_CHANGE_VERB_REGISTRY.get(verb)
+        if entry is None:
             continue
         if any(auxiliary in tokens[:verb_index] for auxiliary in PASSIVE_AUXILIARIES):
             return None
-        target_state = STATE_CHANGE_VERB_TARGETS[verb]
+        target_state = entry.target_state
         if target_state not in SOURCE_STATE_BY_TARGET_STATE:
             return None
 
         if verb_index == len(tokens) - 1 and verb_index > 0:
+            if not entry.allow_inchoative:
+                return None
             theme = clean_phrase(tokens[:verb_index])
             ast = lexical_state_change_ast(verb, theme, target_state)
             break
 
         if verb_index == 0 or verb_index + 1 >= len(tokens):
             return None
+        if not entry.allow_causative:
+            return None
         causer = clean_phrase(tokens[:verb_index])
         rest = tokens[verb_index + 1:]
         instrument = None
         if "with" in rest:
+            if not entry.allow_instrument:
+                return None
             with_index = rest.index("with")
             object_tokens = rest[:with_index]
             instrument_tokens = rest[with_index + 1:]
@@ -930,6 +968,7 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
         },
         "dependent_type_translation": typed_replacement,
         "result_state_lexicon": [state_lexicon_metadata(target_state)],
+        "state_change_verb_entry": state_change_verb_metadata(ast["verb"]),
         "ast": ast,
         "type_check": {
             **type_check,

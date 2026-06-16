@@ -325,7 +325,12 @@ reports `Change(Transition(water, phase_scale, liquid, frozen))`, and
 `Mary cleaned the room` reports
 `Cause(mary, Transition(room, cleanliness_scale, dirty, clean))`. Content-scale
 sentences such as `the tank emptied` and `John filled the glass` are treated in
-the same way over `full` and `empty`.
+the same way over `full` and `empty`. The response also carries
+`state_change_verb_entry`, a structured record with the selected target state
+and the licensed inchoative, causative, and instrumental frames. This gives the
+web/API layer a stable audit field for explaining why a given verb selected a
+given transition, and it lets the type checker reject an internally malformed
+state-change AST whose registered verb and target state disagree.
 
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the
