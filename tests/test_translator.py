@@ -1049,6 +1049,88 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(closed["coq_check"]["status"], "passed")
 
+    def test_lexical_state_change_uses_extended_state_verb_lexicon(self) -> None:
+        dried = run_pipeline("the clothes dried", require_coq=True)
+        self.assertTrue(dried["ok"])
+        self.assertEqual(dried["kind"], "lexical_state_change")
+        self.assertEqual(
+            dried["dependent_type_translation"],
+            "Change(Transition(clothes, moisture_scale, wet, dry))",
+        )
+        self.assertEqual(dried["ast"]["transition"]["theme"]["name"], "clothes")
+        self.assertEqual(dried["ast"]["transition"]["state_scale"], "moisture_scale")
+        self.assertEqual(dried["ast"]["transition"]["source_state"], "wet")
+        self.assertEqual(dried["ast"]["transition"]["target_state"]["name"], "dry")
+        self.assertEqual(
+            dried["result_state_lexicon"],
+            [
+                {
+                    "state": "dry",
+                    "scale": "moisture_scale",
+                    "default_source_state": "wet",
+                    "source_policy": "lexical_prestate",
+                }
+            ],
+        )
+        self.assertEqual(dried["coq_check"]["status"], "passed")
+
+        instrumental = run_pipeline("John dried the clothes with a towel", require_coq=True)
+        self.assertTrue(instrumental["ok"])
+        self.assertEqual(
+            instrumental["dependent_type_translation"],
+            "CauseWithInstrument(john, towel, Transition(clothes, moisture_scale, wet, dry))",
+        )
+        self.assertEqual(
+            instrumental["ast"]["causer"],
+            {"name": "john", "type": "Entity", "source": "subject"},
+        )
+        self.assertEqual(
+            instrumental["ast"]["instrument"],
+            {"name": "towel", "type": "Entity", "source": "with_phrase"},
+        )
+        self.assertEqual(instrumental["coq_check"]["status"], "passed")
+
+        froze = run_pipeline("the water froze", require_coq=True)
+        self.assertTrue(froze["ok"])
+        self.assertEqual(
+            froze["dependent_type_translation"],
+            "Change(Transition(water, phase_scale, liquid, frozen))",
+        )
+        self.assertEqual(froze["ast"]["transition"]["target_state"]["name"], "frozen")
+        self.assertEqual(froze["coq_check"]["status"], "passed")
+
+        melted = run_pipeline("John melted the ice", require_coq=True)
+        self.assertTrue(melted["ok"])
+        self.assertEqual(
+            melted["dependent_type_translation"],
+            "Cause(john, Transition(ice, phase_scale, solid, melted))",
+        )
+        self.assertEqual(melted["coq_check"]["status"], "passed")
+
+        cleaned = run_pipeline("Mary cleaned the room", require_coq=True)
+        self.assertTrue(cleaned["ok"])
+        self.assertEqual(
+            cleaned["dependent_type_translation"],
+            "Cause(mary, Transition(room, cleanliness_scale, dirty, clean))",
+        )
+        self.assertEqual(cleaned["coq_check"]["status"], "passed")
+
+        emptied = run_pipeline("the tank emptied", require_coq=True)
+        self.assertTrue(emptied["ok"])
+        self.assertEqual(
+            emptied["dependent_type_translation"],
+            "Change(Transition(tank, content_scale, full, empty))",
+        )
+        self.assertEqual(emptied["coq_check"]["status"], "passed")
+
+        filled = run_pipeline("John filled the glass", require_coq=True)
+        self.assertTrue(filled["ok"])
+        self.assertEqual(
+            filled["dependent_type_translation"],
+            "Cause(john, Transition(glass, content_scale, empty, full))",
+        )
+        self.assertEqual(filled["coq_check"]["status"], "passed")
+
     def test_lexical_state_change_rejects_bad_source_state(self) -> None:
         result = run_pipeline("the door opened", require_coq=False)
         ast = result["ast"]
@@ -2283,7 +2365,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the vase was broken by John", readme)
         self.assertIn("the door opened", readme)
         self.assertIn("John opened the door with a key", readme)
+        self.assertIn("the clothes dried", readme)
+        self.assertIn("John dried the clothes with a towel", readme)
+        self.assertIn("the water froze", readme)
+        self.assertIn("Mary cleaned the room", readme)
+        self.assertIn("the tank emptied", readme)
+        self.assertIn("John filled the glass", readme)
         self.assertIn("Change(Transition(door, access_scale, closed, open))", readme)
+        self.assertIn("Change(Transition(clothes, moisture_scale, wet, dry))", readme)
+        self.assertIn("Change(Transition(water, phase_scale, liquid, frozen))", readme)
+        self.assertIn("Cause(mary, Transition(room, cleanliness_scale, dirty, clean))", readme)
         self.assertIn("CauseWithInstrument(john, key, Transition", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
@@ -2293,6 +2384,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"predicate": "holds_state"', ast_docs)
         self.assertIn("lexical_state_change", ast_docs)
         self.assertIn("CauseWithInstrument(causer, instrument, Transition(...))", ast_docs)
+        self.assertIn("moisture_scale", ast_docs)
+        self.assertIn("phase_scale", ast_docs)
+        self.assertIn("cleanliness_scale", ast_docs)
+        self.assertIn("content_scale", ast_docs)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)

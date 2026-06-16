@@ -318,7 +318,14 @@ door` reports `Cause(john, Transition(door, access_scale, closed, open))`.
 Instrumental `with` phrases are preserved as typed Instrument entities through
 `CauseWithInstrument(john, key, Transition(...))`. This prevents the web/API
 layer from displaying `door` as an Agent merely because the sentence is
-intransitive.
+intransitive. The same path now uses the broader result-state lexicon for other
+change-of-state verbs: `the clothes dried` reports
+`Change(Transition(clothes, moisture_scale, wet, dry))`, `the water froze`
+reports `Change(Transition(water, phase_scale, liquid, frozen))`, and
+`Mary cleaned the room` reports
+`Cause(mary, Transition(room, cleanliness_scale, dirty, clean))`. Content-scale
+sentences such as `the tank emptied` and `John filled the glass` are treated in
+the same way over `full` and `empty`.
 
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the

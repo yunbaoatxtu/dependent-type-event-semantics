@@ -375,6 +375,22 @@ python3 -m translator.natural_language_pipeline \
 python3 -m translator.natural_language_pipeline \
   "John opened the door with a key" \
   --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "the clothes dried" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "John dried the clothes with a towel" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "the water froze" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "Mary cleaned the room" \
+  --require-coq
 ```
 
 The inchoative version checks as
@@ -382,9 +398,20 @@ The inchoative version checks as
 checks as `Cause(john, Transition(door, access_scale, closed, open))`; and the
 instrumental version checks as
 `CauseWithInstrument(john, key, Transition(door, access_scale, closed, open))`.
-This prevents `the door opened` from being misread as a one-place predicate
-whose Agent is `door`, while still preserving the same typed transition used by
-resultative translations.
+The same registered construction now draws from the broader state lexicon:
+`the clothes dried` checks as
+`Change(Transition(clothes, moisture_scale, wet, dry))`,
+`John dried the clothes with a towel` checks as
+`CauseWithInstrument(john, towel, Transition(clothes, moisture_scale, wet, dry))`,
+`the water froze` checks as
+`Change(Transition(water, phase_scale, liquid, frozen))`, and
+`Mary cleaned the room` checks as
+`Cause(mary, Transition(room, cleanliness_scale, dirty, clean))`.
+Content-scale alternations such as `the tank emptied` and
+`John filled the glass` likewise map to transitions over `full` and `empty`.
+This prevents `the door opened` and similar inchoatives from being misread as
+one-place predicates whose changing themes are Agents, while still preserving
+the same typed transition used by resultative translations.
 The fallback natural-language parser also recognizes simple result phrases
 whose final object-position word is a known result state, so `John hammered the
 metal flat` becomes

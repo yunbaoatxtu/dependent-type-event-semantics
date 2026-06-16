@@ -50,6 +50,12 @@ IRREGULAR_VERBS = {
     "loves": "love",
     "broke": "break",
     "broken": "break",
+    "dried": "dry",
+    "emptied": "empty",
+    "filled": "fill",
+    "froze": "freeze",
+    "frozen": "freeze",
+    "melted": "melt",
     "closed": "close",
     "drank": "drink",
     "drunk": "drink",
@@ -60,8 +66,16 @@ IRREGULAR_VERBS = {
     "written": "write",
 }
 STATE_CHANGE_VERB_TARGETS = {
+    "clean": "clean",
+    "dirty": "dirty",
+    "dry": "dry",
+    "empty": "empty",
+    "fill": "full",
+    "freeze": "frozen",
+    "melt": "melted",
     "open": "open",
     "close": "closed",
+    "wet": "wet",
 }
 
 
@@ -725,7 +739,7 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
         errors.append("ast.kind must be lexical_state_change")
     verb = ast.get("verb")
     if verb not in STATE_CHANGE_VERB_TARGETS:
-        errors.append("state-change verb must be open or close")
+        errors.append("state-change verb must be registered in STATE_CHANGE_VERB_TARGETS")
 
     transition = ast.get("transition")
     if not isinstance(transition, dict):

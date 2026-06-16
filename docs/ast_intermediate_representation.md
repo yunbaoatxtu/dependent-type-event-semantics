@@ -153,11 +153,13 @@ source/target states type `State`, so `Transition` is exported as
 The translator infers the `state_scale` from a small lexical map. For example,
 `broken` and `intact` map to `integrity_scale`, `flat`, `not_flat`, `round`, and
 `straight` map to `shape_scale`, `open` and `closed` map to `access_scale`,
-`solid`, `liquid`, `melted`, and `frozen` map to `phase_scale`, and `red` maps
-to `color_scale`. The fallback natural-language parser uses the same map to
-recognize simple result phrases such as `John hammered the metal flat` and
-`Mary painted the door red`: the object is kept as an `Entity`, while the final
-result adjective becomes the transition target `State`.
+`solid`, `liquid`, `melted`, and `frozen` map to `phase_scale`, `dry` and `wet`
+map to `moisture_scale`, `clean` and `dirty` map to `cleanliness_scale`,
+`empty` and `full` map to `content_scale`, and `red` maps to `color_scale`. The
+fallback natural-language parser uses the same map to recognize simple result
+phrases such as `John hammered the metal flat` and `Mary painted the door red`:
+the object is kept as an `Entity`, while the final result adjective becomes the
+transition target `State`.
 For target states with a clear opposite or pre-state, the resultative compiler
 also supplies the source state: `broken` is reached from `intact`, `flat` from
 `not_flat`, `open` from `closed`, `wet` from `dry`, and so on. States without a
@@ -300,9 +302,10 @@ time variable `t`.
 ### `lexical_state_change`
 
 Represents lexical change-of-state alternations such as `the door opened`,
-`John opened the door`, and `John opened the door with a key`. The construction
-uses the state lexicon to build a transition directly, without treating the
-changing object as an Agent:
+`John opened the door`, `John opened the door with a key`, `the clothes dried`,
+`the water froze`, `Mary cleaned the room`, `the tank emptied`, and `John
+filled the glass`. The construction uses the state lexicon to build a
+transition directly, without treating the changing object as an Agent:
 
 ```json
 {
@@ -329,7 +332,9 @@ The inchoative form renders as
 the AST adds `causer : Entity` and renders `Cause(causer, Transition(...))`.
 If a `with` phrase is present, the AST adds an Instrument entity and renders
 `CauseWithInstrument(causer, instrument, Transition(...))`. The structural
-check requires `state_scale` and `source_state` to match the state lexicon.
+check requires `state_scale` and `source_state` to match the state lexicon, so
+`the clothes dried` receives `moisture_scale` with source `wet`, while `the
+water froze` receives `phase_scale` with source `liquid`.
 
 ### `stative_result_state`
 
