@@ -26,52 +26,21 @@ from translator.state_change_lexicon import (
     STATE_CHANGE_VERB_TARGETS,
     state_change_verb_metadata,
 )
+from translator.surface_lexicon import (
+    ARTICLES,
+    COMMON_ADVERBS,
+    COUNT_WORDS,
+    PASSIVE_AUXILIARIES,
+    PREPOSITIONS,
+    is_passive_participle,
+    lemma_verb,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
-ARTICLES = {"a", "an", "the"}
-PASSIVE_AUXILIARIES = {"is", "was", "are", "were"}
-PASSIVE_PARTICIPLE_FORMS = {
-    "broken", "eaten", "drunk", "seen", "known", "left", "written", "read",
-}
-PREPOSITIONS = {
-    "at", "in", "on", "under", "over", "near", "beside", "with", "from", "to", "into",
-}
-COUNT_WORDS = {"once", "twice", "thrice"}
-COMMON_ADVERBS = {
-    "slowly", "quickly", "quietly", "loudly", "carefully", "happily", "sadly",
-}
-IRREGULAR_VERBS = {
-    "admired": "admire",
-    "ate": "eat",
-    "eaten": "eat",
-    "saw": "see",
-    "seen": "see",
-    "sat": "sit",
-    "saluted": "salute",
-    "loves": "love",
-    "broke": "break",
-    "broken": "break",
-    "died": "die",
-    "dried": "dry",
-    "emptied": "empty",
-    "filled": "fill",
-    "froze": "freeze",
-    "frozen": "freeze",
-    "melted": "melt",
-    "closed": "close",
-    "drank": "drink",
-    "drunk": "drink",
-    "went": "go",
-    "ran": "run",
-    "left": "leave",
-    "known": "know",
-    "killed": "kill",
-    "written": "write",
-}
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -1190,10 +1159,6 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def is_passive_participle(token: str) -> bool:
-    return token.endswith("ed") or token in PASSIVE_PARTICIPLE_FORMS
-
-
 def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     auxiliary_indices = [
@@ -1467,28 +1432,6 @@ def clean_phrase(tokens: list[str]) -> str:
     if not content:
         return "entity"
     return "_".join(content)
-
-
-def lemma_verb(token: str) -> str:
-    if token in IRREGULAR_VERBS:
-        return IRREGULAR_VERBS[token]
-    if token.endswith("ies") and len(token) > 3:
-        return token[:-3] + "y"
-    if token.endswith("es") and len(token) > 3:
-        return token[:-2]
-    if token.endswith("s") and len(token) > 2:
-        return token[:-1]
-    if token.endswith("ed") and len(token) > 3:
-        stem = token[:-2]
-        if len(stem) > 1 and stem[-1] == stem[-2]:
-            return stem[:-1]
-        return stem
-    if token.endswith("ing") and len(token) > 4:
-        stem = token[:-3]
-        if len(stem) > 1 and stem[-1] == stem[-2]:
-            return stem[:-1]
-        return stem
-    return token
 
 
 def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:

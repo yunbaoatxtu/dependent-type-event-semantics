@@ -595,7 +595,10 @@ prefix form:
 
 Names are normalized for proof-assistant friendliness. For example,
 `in(bathroom)` is exported as `in_bathroom`, and the unknown source state `_`
-is exported as `unknown_state` when no lexical pre-state is available.
+is exported as `unknown_state` when no lexical pre-state is available. Surface
+verb lemmatization and passive participle recognition live in
+`translator/surface_lexicon.py`, so irregular forms such as `seen`, `written`,
+and `froze` are normalized before the semantic AST is checked or exported.
 
 ## Formalization Files
 

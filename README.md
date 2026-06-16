@@ -24,6 +24,7 @@ paper/
 
 translator/
   dependent_type_event_translator.py
+  surface_lexicon.py
   state_change_lexicon.py
   examples/
     example_butter.json
@@ -190,8 +191,9 @@ the passive auxiliary (`is`, `was`, `are`, or `were`) so that finite passive
 forms are recognized before the generic fallback parser can misread them as
 ordinary verbs. The generated Coq does not introduce `Event`, `Agent`, or
 `Theme` declarations. Irregular passive participles are normalized through the
-same lexical lemmatizer, so `seen` exports `see : Entity -> Entity -> Prop` and
-`written` exports `write : Entity -> Entity -> Prop`.
+shared surface lexicon in `translator/surface_lexicon.py`, so `seen` exports
+`see : Entity -> Entity -> Prop` and `written` exports
+`write : Entity -> Entity -> Prop`.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments

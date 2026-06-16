@@ -36,6 +36,11 @@ from translator.state_change_lexicon import (
     STATE_CHANGE_VERB_REGISTRY,
     STATE_CHANGE_VERB_TARGETS,
 )
+from translator.surface_lexicon import (
+    PASSIVE_AUXILIARIES,
+    is_passive_participle,
+    lemma_verb,
+)
 from web.app import (
     PipelineHandler,
     analyze_sentence,
@@ -275,6 +280,18 @@ class TranslatorTests(unittest.TestCase):
             with self.subTest(verb=verb):
                 self.assertIn(target_state, SOURCE_STATE_BY_TARGET_STATE)
                 self.assertIn(SOURCE_STATE_BY_TARGET_STATE[target_state], STATE_LEXICON)
+
+    def test_surface_lexicon_normalizes_irregular_passives(self) -> None:
+        self.assertEqual(PASSIVE_AUXILIARIES, {"is", "was", "are", "were"})
+        self.assertTrue(is_passive_participle("seen"))
+        self.assertTrue(is_passive_participle("written"))
+        self.assertTrue(is_passive_participle("opened"))
+        self.assertFalse(is_passive_participle("opening"))
+        self.assertEqual(lemma_verb("seen"), "see")
+        self.assertEqual(lemma_verb("written"), "write")
+        self.assertEqual(lemma_verb("died"), "die")
+        self.assertEqual(lemma_verb("opened"), "open")
+        self.assertEqual(lemma_verb("froze"), "freeze")
 
     def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
         formula = sentence_to_event_semantics("John hammered the metal flat")
@@ -2564,6 +2581,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("passive argument omission with an existential typed agent", readme)
         self.assertIn("the passive auxiliary (`is`, `was`, `are`, or `were`)", readme)
         self.assertIn("Irregular passive participles are normalized", readme)
+        self.assertIn("translator/surface_lexicon.py", readme)
         self.assertIn("stative_result_state", ast_docs)
         self.assertIn('"predicate": "holds_state"', ast_docs)
         self.assertIn("lexical_state_change", ast_docs)
@@ -2574,12 +2592,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("content_scale", ast_docs)
         self.assertIn('"state_change_verb_entry"', ast_docs)
         self.assertIn("translator/state_change_lexicon.py", ast_docs)
+        self.assertIn("translator/surface_lexicon.py", ast_docs)
         self.assertIn('"frame": "inchoative"', ast_docs)
         self.assertIn("causative `die` frame", ast_docs)
         self.assertIn("inchoative `kill` frame", ast_docs)
         self.assertIn("registered_verb_target_state_mismatch", ast_docs)
         self.assertIn("state_change_verb_entry", web_design)
         self.assertIn("translator/state_change_lexicon.py", web_design)
+        self.assertIn("translator/surface_lexicon.py", web_design)
         self.assertIn("AST `frame` field", web_design)
         self.assertIn("`the plant killed` is not accepted", web_design)
         self.assertIn("Type Check panel", web_design)
