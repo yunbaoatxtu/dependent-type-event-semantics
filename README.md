@@ -437,10 +437,12 @@ records in `translator/state_change_lexicon.py`, not as loose string rewrites
 inside the parser. Each entry names the target state and the licensed
 inchoative, causative, and instrumental frames, and the emitted result includes
 `state_change_verb_entry` so clients can audit the lexical choice that selected
-the transition. The AST carries an explicit `frame` (`inchoative`, `causative`,
-or `instrumental`), and the type checker rejects a mismatch such as pairing the
-registered verb `open` with the target state `closed`, or assigning a causative
-frame without a causer.
+the transition. The AST also carries a `surface_lexicon` audit object for the
+surface verb and lemma, so `died`, `killed`, `dried`, and `froze` remain visible
+after lemmatization. The AST carries an explicit `frame` (`inchoative`,
+`causative`, or `instrumental`), and the type checker rejects a mismatch such
+as pairing the registered verb `open` with the target state `closed`, or
+assigning a causative frame without a causer.
 This prevents `the door opened` and similar inchoatives from being misread as
 one-place predicates whose changing themes are Agents, while still preserving
 the same typed transition used by resultative translations.

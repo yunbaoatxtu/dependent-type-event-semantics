@@ -669,6 +669,7 @@ def lexical_state_change_ast(
     verb: str,
     theme: str,
     target_state: str,
+    surface_verb: str,
     causer: str | None = None,
     instrument: str | None = None,
 ) -> dict[str, Any]:
@@ -682,6 +683,11 @@ def lexical_state_change_ast(
     ast: dict[str, Any] = {
         "kind": "lexical_state_change",
         "verb": verb,
+        "surface_lexicon": {
+            "surface_verb": surface_verb,
+            "lemma": verb,
+            "source": "translator/surface_lexicon.py",
+        },
         "frame": "inchoative",
         "transition": transition,
     }
@@ -706,6 +712,19 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
     entry = STATE_CHANGE_VERB_REGISTRY.get(verb)
     if entry is None:
         errors.append("state-change verb must be registered in STATE_CHANGE_VERB_REGISTRY")
+    surface_lexicon = ast.get("surface_lexicon")
+    if not isinstance(surface_lexicon, dict):
+        errors.append("state-change surface_lexicon must be an object")
+    else:
+        surface_verb = surface_lexicon.get("surface_verb")
+        if not isinstance(surface_verb, str) or not surface_verb:
+            errors.append("state-change surface_lexicon.surface_verb must be a non-empty string")
+        if surface_lexicon.get("lemma") != verb:
+            errors.append("state-change surface_lexicon.lemma must match verb")
+        elif isinstance(surface_verb, str) and lemma_verb(surface_verb) != verb:
+            errors.append("state-change surface_lexicon.lemma must match lemmatized surface verb")
+        if surface_lexicon.get("source") != "translator/surface_lexicon.py":
+            errors.append("state-change surface_lexicon.source must identify the surface lexicon")
     frame = ast.get("frame")
     if frame not in {"inchoative", "causative", "instrumental"}:
         errors.append("state-change frame must be inchoative, causative, or instrumental")
@@ -848,7 +867,7 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
 
         if verb_index == len(tokens) - 1 and verb_index > 0:
             theme = clean_phrase(tokens[:verb_index])
-            ast = lexical_state_change_ast(verb, theme, target_state)
+            ast = lexical_state_change_ast(verb, theme, target_state, token)
             if not entry.allow_inchoative:
                 return lexical_state_change_failure(sentence, ast)
             break
@@ -870,7 +889,14 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
         if not object_tokens:
             return None
         theme = clean_phrase(object_tokens)
-        ast = lexical_state_change_ast(verb, theme, target_state, causer, instrument)
+        ast = lexical_state_change_ast(
+            verb,
+            theme,
+            target_state,
+            token,
+            causer,
+            instrument,
+        )
         if not entry.allow_causative or (instrument is not None and not entry.allow_instrument):
             return lexical_state_change_failure(sentence, ast)
         break

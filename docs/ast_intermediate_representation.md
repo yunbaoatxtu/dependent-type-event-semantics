@@ -313,6 +313,11 @@ object as an Agent:
 {
   "kind": "lexical_state_change",
   "verb": "open",
+  "surface_lexicon": {
+    "surface_verb": "opened",
+    "lemma": "open",
+    "source": "translator/surface_lexicon.py"
+  },
   "frame": "inchoative",
   "transition": {
     "kind": "transition",
@@ -357,7 +362,11 @@ outside the natural-language parsing rule:
 }
 ```
 
-The AST checker uses this registration as an additional guard: a malformed AST
+The AST also carries a `surface_lexicon` audit object, distinct from the
+state-change registration, so the checker can verify that a surface form such
+as `died` or `froze` was lemmatized to the registered verb before the transition
+was selected. The AST checker uses the registration as an additional guard: a
+malformed AST
 whose verb is `open` but whose target state is `closed` is rejected even though
 both states are valid members of the access scale, because the registered verb
 and target state disagree (`registered_verb_target_state_mismatch`).

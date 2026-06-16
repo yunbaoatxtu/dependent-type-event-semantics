@@ -1023,6 +1023,11 @@ class TranslatorTests(unittest.TestCase):
             {
                 "kind": "lexical_state_change",
                 "verb": "open",
+                "surface_lexicon": {
+                    "surface_verb": "opened",
+                    "lemma": "open",
+                    "source": "translator/surface_lexicon.py",
+                },
                 "frame": "inchoative",
                 "transition": {
                     "kind": "transition",
@@ -1109,6 +1114,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(dried["ast"]["transition"]["target_state"]["name"], "dry")
         self.assertEqual(dried["ast"]["frame"], "inchoative")
         self.assertEqual(
+            dried["ast"]["surface_lexicon"],
+            {
+                "surface_verb": "dried",
+                "lemma": "dry",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+        self.assertEqual(
             dried["result_state_lexicon"],
             [
                 {
@@ -1156,6 +1169,14 @@ class TranslatorTests(unittest.TestCase):
             "Change(Transition(water, phase_scale, liquid, frozen))",
         )
         self.assertEqual(froze["ast"]["transition"]["target_state"]["name"], "frozen")
+        self.assertEqual(
+            froze["ast"]["surface_lexicon"],
+            {
+                "surface_verb": "froze",
+                "lemma": "freeze",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
         self.assertEqual(froze["coq_check"]["status"], "passed")
 
         melted = run_pipeline("John melted the ice", require_coq=True)
@@ -1195,6 +1216,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(died["ok"])
         self.assertEqual(died["ast"]["frame"], "inchoative")
         self.assertEqual(
+            died["ast"]["surface_lexicon"],
+            {
+                "surface_verb": "died",
+                "lemma": "die",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+        self.assertEqual(
             died["dependent_type_translation"],
             "Change(Transition(john, life_scale, alive, dead))",
         )
@@ -1213,6 +1242,14 @@ class TranslatorTests(unittest.TestCase):
         killed = run_pipeline("Mary killed the plant", require_coq=True)
         self.assertTrue(killed["ok"])
         self.assertEqual(killed["ast"]["frame"], "causative")
+        self.assertEqual(
+            killed["ast"]["surface_lexicon"],
+            {
+                "surface_verb": "killed",
+                "lemma": "kill",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
         self.assertEqual(
             killed["dependent_type_translation"],
             "Cause(mary, Transition(plant, life_scale, alive, dead))",
@@ -1308,6 +1345,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "state-change verb does not license the causative frame",
+            type_check["errors"],
+        )
+
+    def test_lexical_state_change_rejects_bad_surface_lexicon_audit(self) -> None:
+        result = run_pipeline("the water froze", require_coq=False)
+        ast = result["ast"]
+        ast["surface_lexicon"]["lemma"] = "frost"
+        type_check = check_lexical_state_change_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "state-change surface_lexicon.lemma must match verb",
             type_check["errors"],
         )
 
@@ -2592,6 +2640,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary killed the plant with poison", readme)
         self.assertIn("StateChangeVerbEntry", readme)
         self.assertIn("translator/state_change_lexicon.py", readme)
+        self.assertIn("`surface_lexicon` audit object for the", readme)
+        self.assertIn("`died`, `killed`, `dried`, and `froze`", readme)
         self.assertIn("state_change_verb_entry", readme)
         self.assertIn("explicit `frame`", readme)
         self.assertIn("Change(Transition(door, access_scale, closed, open))", readme)
@@ -2618,6 +2668,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"state_change_verb_entry"', ast_docs)
         self.assertIn("translator/state_change_lexicon.py", ast_docs)
         self.assertIn("translator/surface_lexicon.py", ast_docs)
+        self.assertIn('"surface_verb": "opened"', ast_docs)
+        self.assertIn("`died` or `froze`", ast_docs)
         self.assertIn('"surface_lexicon"', ast_docs)
         self.assertIn('"participle": "buttered"', ast_docs)
         self.assertIn('"lemma": "butter"', ast_docs)
@@ -2628,6 +2680,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("state_change_verb_entry", web_design)
         self.assertIn("translator/state_change_lexicon.py", web_design)
         self.assertIn("translator/surface_lexicon.py", web_design)
+        self.assertIn("surface verb and selected lemma", web_design)
         self.assertIn("`surface_lexicon` audit object", web_design)
         self.assertIn("AST `frame` field", web_design)
         self.assertIn("`the plant killed` is not accepted", web_design)
