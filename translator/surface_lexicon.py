@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import re
+
 
 ARTICLES = {"a", "an", "the"}
 PASSIVE_AUXILIARIES = {"is", "was", "are", "were"}
@@ -109,5 +111,28 @@ def passive_participle_audit(participle: str) -> dict[str, str]:
     return {
         "participle": participle,
         "lemma": lemma_verb(participle),
+        "source": SURFACE_LEXICON_SOURCE,
+    }
+
+
+def normalize_surface_name(name: str) -> str:
+    normalized = re.sub(r"[^0-9A-Za-z_]+", "_", name).strip("_")
+    if not normalized:
+        return "unnamed"
+    if normalized[0].isdigit():
+        normalized = "x_" + normalized
+    return normalized
+
+
+def modifier_surface_audit(
+    modifier: str,
+    modifier_type: str,
+    semantic_role: str,
+) -> dict[str, str]:
+    return {
+        "surface_modifier": modifier,
+        "normalized_modifier": normalize_surface_name(modifier),
+        "type": modifier_type,
+        "semantic_role": semantic_role,
         "source": SURFACE_LEXICON_SOURCE,
     }

@@ -29,8 +29,32 @@ Represents a dependent verb-family application.
   "modifier_roles": {
     "kind": "modifier_roles",
     "roles": [
-      {"modifier": "slowly", "type": "Adv", "semantic_role": "Manner", "source": "modifier"},
-      {"modifier": "in(bathroom)", "type": "Adv", "semantic_role": "Location", "source": "modifier"}
+      {
+        "modifier": "slowly",
+        "type": "Adv",
+        "semantic_role": "Manner",
+        "source": "modifier",
+        "surface_lexicon": {
+          "surface_modifier": "slowly",
+          "normalized_modifier": "slowly",
+          "type": "Adv",
+          "semantic_role": "Manner",
+          "source": "translator/surface_lexicon.py"
+        }
+      },
+      {
+        "modifier": "in(bathroom)",
+        "type": "Adv",
+        "semantic_role": "Location",
+        "source": "modifier",
+        "surface_lexicon": {
+          "surface_modifier": "in(bathroom)",
+          "normalized_modifier": "in_bathroom",
+          "type": "Adv",
+          "semantic_role": "Location",
+          "source": "translator/surface_lexicon.py"
+        }
+      }
     ]
   },
   "arguments": ["John", "toast"],
@@ -560,8 +584,14 @@ records the semantic class of each modifier as an `Adv` value. For example,
 `semantic_role: "Instrument"`, and ordinary adverbs such as `slowly` receive
 `semantic_role: "Manner"`. The checker verifies this metadata against the
 modifier predicate, so an instrumental `with(...)` modifier cannot be labeled as
-`Location`. In the proof-assistant scaffold all of these are still exported at
-type `Adv`, with the current shallow Coq definition:
+`Location`. Each role entry also carries a nested `surface_lexicon` audit:
+`surface_modifier` preserves the original modifier string, while
+`normalized_modifier` records the constant name that will be exported to the
+proof-assistant scaffold, such as `in_bathroom` or `with_knife`. The checker
+validates that this audit agrees with the modifier, the `Adv` type, the semantic
+role, and the shared surface-lexicon module source. In the proof-assistant
+scaffold all of these are still exported at type `Adv`, with the current shallow
+Coq definition:
 
 ```coq
 Definition PropT : Type := Prop.

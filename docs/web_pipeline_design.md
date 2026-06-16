@@ -96,7 +96,10 @@ can treat as a candidate STATE_LEXICON patch queue. On any failure, it must stil
 `modifier_role_audit` is a flat list extracted from the AST. Each record gives
 the application path, function, modifier string, `Adv` type, and semantic role,
 so the page can show a `Modifier Role Audit` panel without making the frontend
-traverse the full AST.
+traverse the full AST. Each record also carries the nested `surface_lexicon`
+audit from the AST, including `surface_modifier`, `normalized_modifier`,
+`type`, `semantic_role`, and the source module, so API clients can confirm that
+the displayed modifier is the same `Adv` constant exported to Coq/Rocq.
 
 `diagnostics.failure_stage` is the machine-readable failure locator. It is
 `null` on successful translations and otherwise one of `input`, `parsing`,
@@ -383,3 +386,9 @@ entity arguments in canonical thematic order, with each role type checked
 against the function argument type that will be exported. The shallow Coq
 interface now gives the external checker the same length invariant while
 keeping the lexical verb declaration stable across different modifier counts.
+The web/API result also exposes the modifier-level `surface_lexicon` audit:
+`in(bathroom)` must normalize to `in_bathroom`, `with(knife)` must normalize to
+`with_knife`, and both must remain typed as `Adv` with the expected semantic
+role. This prevents a successful-looking page from hiding the exact mistake that
+motivated the typed modifier layer, namely treating a modifier expression as an
+entity constant.

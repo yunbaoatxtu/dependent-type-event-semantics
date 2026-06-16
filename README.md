@@ -108,7 +108,11 @@ natural-number count, the surface list, and the vector. It also records
 an Instrument-like `Adv`, and ordinary adverbs such as `slowly` are Manner-like
 `Adv` values rather than entity arguments. The type checker verifies these
 roles against the modifier predicate, so `with(knife)` cannot be mislabeled as a
-Location modifier. The AST also carries a `role_frame`
+Location modifier. Each modifier-role entry also carries a `surface_lexicon`
+audit object with the surface modifier, its normalized proof-assistant name
+such as `in_bathroom` or `with_knife`, its `Adv` type, semantic role, and source
+module; the checker rejects mismatches between the surface modifier and the
+`normalized_modifier` constant. The AST also carries a `role_frame`
 that preserves thematic labels such as `Agent` and `Theme` and checks that those
 role values match the ordered entity arguments in canonical thematic order, with
 role types aligned to the generated function argument types. Thus an overt
@@ -121,7 +125,9 @@ same Coq file with zero, two, or three modifiers without producing conflicting
 shallow function declarations.
 The web/API layer also lifts these records to `modifier_role_audit`, and the
 page renders them in a dedicated `Modifier Role Audit` panel for quick
-inspection.
+inspection. That panel includes the nested `surface_lexicon` audit, so a reader
+can see both the semantic role and the normalized `Adv` constant used by the
+generated Coq/Rocq scaffold.
 
 Parsons-style event talk can also be routed through typed replacements. For
 example:

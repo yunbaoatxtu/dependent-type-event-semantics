@@ -38,6 +38,7 @@ from translator.state_change_lexicon import (
 )
 from translator.surface_lexicon import (
     PASSIVE_AUXILIARIES,
+    modifier_surface_audit,
     passive_participle_audit,
     is_passive_participle,
     lemma_verb,
@@ -106,12 +107,16 @@ class TranslatorTests(unittest.TestCase):
                         "type": "Adv",
                         "semantic_role": "Manner",
                         "source": "modifier",
+                        "surface_lexicon": modifier_surface_audit("slowly", "Adv", "Manner"),
                     },
                     {
                         "modifier": "in(bathroom)",
                         "type": "Adv",
                         "semantic_role": "Location",
                         "source": "modifier",
+                        "surface_lexicon": modifier_surface_audit(
+                            "in(bathroom)", "Adv", "Location"
+                        ),
                     },
                 ],
             },
@@ -307,6 +312,26 @@ class TranslatorTests(unittest.TestCase):
             {
                 "surface_verb": "froze",
                 "lemma": "freeze",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+        self.assertEqual(
+            modifier_surface_audit("in(bathroom)", "Adv", "Location"),
+            {
+                "surface_modifier": "in(bathroom)",
+                "normalized_modifier": "in_bathroom",
+                "type": "Adv",
+                "semantic_role": "Location",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+        self.assertEqual(
+            modifier_surface_audit("with(knife)", "Adv", "Instrument"),
+            {
+                "surface_modifier": "with(knife)",
+                "normalized_modifier": "with_knife",
+                "type": "Adv",
+                "semantic_role": "Instrument",
                 "source": "translator/surface_lexicon.py",
             },
         )
@@ -534,6 +559,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(wrong_role["ok"])
         self.assertTrue(
             any("must be Instrument for with(knife)" in error for error in wrong_role["errors"])
+        )
+
+    def test_type_checker_rejects_bad_modifier_surface_lexicon_audit(self) -> None:
+        result = run_pipeline(
+            "john buttered the toast in the bathroom with a knife",
+            require_coq=False,
+        )
+        ast = result["ast"]
+        ast["modifier_roles"]["roles"][0]["surface_lexicon"]["normalized_modifier"] = "bathroom"
+        type_check = check_term(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "ast: application.modifier_roles.roles[0].surface_lexicon.normalized_modifier "
+            "must be in_bathroom",
+            type_check["errors"],
         )
 
     def test_type_checker_rejects_role_frame_argument_mismatch(self) -> None:
@@ -969,12 +1009,18 @@ class TranslatorTests(unittest.TestCase):
                     "type": "Adv",
                     "semantic_role": "Location",
                     "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "in(bathroom)", "Adv", "Location"
+                    ),
                 },
                 {
                     "modifier": "with(knife)",
                     "type": "Adv",
                     "semantic_role": "Instrument",
                     "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "with(knife)", "Adv", "Instrument"
+                    ),
                 },
             ],
         )
@@ -1006,6 +1052,9 @@ class TranslatorTests(unittest.TestCase):
                     "type": "Adv",
                     "semantic_role": "Location",
                     "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "in(bathroom)", "Adv", "Location"
+                    ),
                 },
                 {
                     "path": "ast",
@@ -1014,6 +1063,9 @@ class TranslatorTests(unittest.TestCase):
                     "type": "Adv",
                     "semantic_role": "Instrument",
                     "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "with(knife)", "Adv", "Instrument"
+                    ),
                 },
             ],
         )
@@ -1026,6 +1078,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Modifier Role Audit", page)
         self.assertIn("&quot;semantic_role&quot;: &quot;Location&quot;", page)
         self.assertIn("&quot;semantic_role&quot;: &quot;Instrument&quot;", page)
+        self.assertIn("&quot;normalized_modifier&quot;: &quot;in_bathroom&quot;", page)
+        self.assertIn("&quot;normalized_modifier&quot;: &quot;with_knife&quot;", page)
 
     def test_lexical_state_change_distinguishes_inchoative_and_causative(self) -> None:
         inchoative = run_pipeline("the door opened", require_coq=True)
@@ -2673,6 +2727,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Translation verified with warnings`", readme)
         self.assertIn("`modifier_role_audit`", readme)
         self.assertIn("`Modifier Role Audit` panel", readme)
+        self.assertIn("`normalized_modifier`", readme)
+        self.assertIn("`in_bathroom`", readme)
+        self.assertIn("`with_knife`", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("the doors were opened by John", readme)
         self.assertIn("John was seen by Mary", readme)
@@ -2722,6 +2779,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"surface_verb": "opened"', ast_docs)
         self.assertIn("`died` or `froze`", ast_docs)
         self.assertIn('"surface_lexicon"', ast_docs)
+        self.assertIn('"surface_modifier": "in(bathroom)"', ast_docs)
+        self.assertIn('"normalized_modifier": "in_bathroom"', ast_docs)
         self.assertIn('"participle": "buttered"', ast_docs)
         self.assertIn('"lemma": "butter"', ast_docs)
         self.assertIn('"frame": "inchoative"', ast_docs)
@@ -2733,6 +2792,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("translator/surface_lexicon.py", web_design)
         self.assertIn("surface verb and selected lemma", web_design)
         self.assertIn("`surface_lexicon` audit object", web_design)
+        self.assertIn("`normalized_modifier`", web_design)
+        self.assertIn("`in_bathroom`", web_design)
+        self.assertIn("`with_knife`", web_design)
         self.assertIn("AST `frame` field", web_design)
         self.assertIn("`the plant killed` is not accepted", web_design)
         self.assertIn("Type Check panel", web_design)
@@ -2843,6 +2905,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('`semantic_role: "Location"`', ast_docs)
         self.assertIn('`semantic_role: "Instrument"`', ast_docs)
         self.assertIn("cannot be labeled as", ast_docs)
+        self.assertIn("`surface_lexicon` audit", ast_docs)
+        self.assertIn("`normalized_modifier` records", ast_docs)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
 

@@ -16,6 +16,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from translator.surface_lexicon import (
+    SURFACE_LEXICON_SOURCE,
+    modifier_surface_audit,
+)
+
 ENTITY = "e"
 PROP = "t"
 ADV = "ADV"
@@ -265,17 +270,23 @@ def modifier_semantic_role(modifier: str) -> str:
 
 
 def modifier_roles(modifiers: list[str]) -> Term:
+    def entry_for(modifier: str) -> dict[str, Any]:
+        semantic_role = modifier_semantic_role(modifier)
+        return {
+            "modifier": modifier,
+            "type": "Adv",
+            "semantic_role": semantic_role,
+            "source": "modifier",
+            "surface_lexicon": modifier_surface_audit(
+                modifier,
+                "Adv",
+                semantic_role,
+            ),
+        }
+
     return {
         "kind": "modifier_roles",
-        "roles": [
-            {
-                "modifier": modifier,
-                "type": "Adv",
-                "semantic_role": modifier_semantic_role(modifier),
-                "source": "modifier",
-            }
-            for modifier in modifiers
-        ],
+        "roles": [entry_for(modifier) for modifier in modifiers],
     }
 
 
@@ -575,6 +586,40 @@ def check_term(term: Term) -> TypeCheck:
                                     f"{path}: application.modifier_roles.roles[{index}].source "
                                     "must be modifier"
                                 )
+                            surface_lexicon = entry.get("surface_lexicon")
+                            if not isinstance(surface_lexicon, dict):
+                                errors.append(
+                                    f"{path}: application.modifier_roles.roles[{index}].surface_lexicon "
+                                    "must be an object"
+                                )
+                            else:
+                                if surface_lexicon.get("surface_modifier") != modifier:
+                                    errors.append(
+                                        f"{path}: application.modifier_roles.roles[{index}].surface_lexicon.surface_modifier "
+                                        "must match modifier"
+                                    )
+                                if isinstance(modifier, str) and modifier:
+                                    expected_normalized = export_atom(modifier, "coq")
+                                    if surface_lexicon.get("normalized_modifier") != expected_normalized:
+                                        errors.append(
+                                            f"{path}: application.modifier_roles.roles[{index}].surface_lexicon.normalized_modifier "
+                                            f"must be {expected_normalized}"
+                                        )
+                                if surface_lexicon.get("type") != modifier_type:
+                                    errors.append(
+                                        f"{path}: application.modifier_roles.roles[{index}].surface_lexicon.type "
+                                        "must match modifier type"
+                                    )
+                                if surface_lexicon.get("semantic_role") != semantic_role:
+                                    errors.append(
+                                        f"{path}: application.modifier_roles.roles[{index}].surface_lexicon.semantic_role "
+                                        "must match semantic_role"
+                                    )
+                                if surface_lexicon.get("source") != SURFACE_LEXICON_SOURCE:
+                                    errors.append(
+                                        f"{path}: application.modifier_roles.roles[{index}].surface_lexicon.source "
+                                        "must identify the surface lexicon"
+                                    )
             valid_arguments = isinstance(arguments, list) and all(
                 isinstance(x, str) for x in arguments
             )
