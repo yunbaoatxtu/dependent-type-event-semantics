@@ -297,6 +297,36 @@ predicates:
 The structural check requires the antecedent and consequent to share the bound
 time variable `t`.
 
+### `stative_result_state`
+
+Represents copular result-state clauses such as `the vase is broken`. The
+construction uses the result-state lexicon and asserts that an entity holds a
+state on the relevant scale. It does not introduce an event variable or an
+omitted Agent:
+
+```json
+{
+  "kind": "stative_result_state",
+  "subject": {
+    "name": "vase",
+    "type": "Entity"
+  },
+  "state": {
+    "name": "broken",
+    "type": "State"
+  },
+  "state_scale": "integrity_scale",
+  "predicate": "holds_state",
+  "predicate_type": "Entity -> StateScale -> State -> Prop",
+  "auxiliary": "is"
+}
+```
+
+The structural check requires the state to occur in the state lexicon, requires
+`state_scale` to match that lexical entry, and requires the auxiliary to be one
+of `is`, `was`, `are`, or `were`. A by-phrase keeps the sentence in the
+agentive passive rule instead.
+
 ### `passive_argument_omission`
 
 Represents passive clauses with either an explicit by-phrase or an omitted

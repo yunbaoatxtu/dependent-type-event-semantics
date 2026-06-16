@@ -342,6 +342,24 @@ Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `intact` and `broken` have type `State`,
 `integrity_scale` has type `StateScale`, and `Transition` has type
 `Entity -> StateScale -> State -> State -> TransitionT`.
+Copular result-state clauses now use the same lexicon without forcing an
+omitted Agent. For example:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "the vase is broken" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "the door is open" \
+  --require-coq
+```
+
+These check as `holds_state(vase, integrity_scale, broken)` and
+`holds_state(door, access_scale, open)`. If a by-phrase is present, as in
+`the vase was broken by John`, the passive rule still applies and yields
+`break(john, vase)`. This keeps stative result assertions distinct from
+agentive passive clauses.
 The fallback natural-language parser also recognizes simple result phrases
 whose final object-position word is a known result state, so `John hammered the
 metal flat` becomes

@@ -304,6 +304,13 @@ analysis. The rule recognizes finite passive auxiliaries `is`, `was`, `are`,
 and `were`, and stores the auxiliary in the AST so that the fallback parser does
 not misclassify those words as lexical verbs.
 
+Copular result-state clauses use a narrower registered rule before the passive
+fallback. For `the vase is broken`, the web/API result reports
+`holds_state(vase, integrity_scale, broken)` with `broken : State` and
+`integrity_scale : StateScale`, not an existential omitted Agent. A by-phrase,
+as in `the vase was broken by John`, keeps the sentence in the agentive passive
+analysis.
+
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the
 matched construction. `found_forbidden_fragments` reports fragments that were

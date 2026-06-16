@@ -682,6 +682,133 @@ def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def stative_result_state_ast(
+    subject: str,
+    state: str,
+    auxiliary: str,
+) -> dict[str, Any]:
+    return {
+        "kind": "stative_result_state",
+        "subject": {"name": subject, "type": "Entity"},
+        "state": {"name": state, "type": "State"},
+        "state_scale": STATE_SCALE_BY_STATE[state],
+        "predicate": "holds_state",
+        "predicate_type": "Entity -> StateScale -> State -> Prop",
+        "auxiliary": auxiliary,
+    }
+
+
+def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "stative_result_state":
+        errors.append("ast.kind must be stative_result_state")
+    subject = ast.get("subject")
+    if not isinstance(subject, dict):
+        errors.append("stative subject must be an object")
+    else:
+        if not isinstance(subject.get("name"), str) or not subject.get("name"):
+            errors.append("stative subject.name must be a non-empty string")
+        if subject.get("type") != "Entity":
+            errors.append("stative subject must have type Entity")
+
+    state = ast.get("state")
+    if not isinstance(state, dict):
+        errors.append("stative state must be an object")
+    else:
+        state_name = state.get("name")
+        if not isinstance(state_name, str) or not state_name:
+            errors.append("stative state.name must be a non-empty string")
+        elif state_name not in STATE_SCALE_BY_STATE:
+            errors.append(f"unknown stative result state: {state_name}")
+        if state.get("type") != "State":
+            errors.append("stative state must have type State")
+        if (
+            isinstance(state_name, str)
+            and state_name in STATE_SCALE_BY_STATE
+            and ast.get("state_scale") != STATE_SCALE_BY_STATE[state_name]
+        ):
+            errors.append("stative state_scale must match the state lexicon")
+
+    if ast.get("predicate") != "holds_state":
+        errors.append("stative predicate must be holds_state")
+    if ast.get("predicate_type") != "Entity -> StateScale -> State -> Prop":
+        errors.append("stative predicate must have type Entity -> StateScale -> State -> Prop")
+    if ast.get("auxiliary") not in PASSIVE_AUXILIARIES:
+        errors.append("stative auxiliary must be is, was, are, or were")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    auxiliary_indices = [
+        index for index, token in enumerate(tokens) if token in PASSIVE_AUXILIARIES
+    ]
+    if len(tokens) < 3 or not auxiliary_indices:
+        return None
+    auxiliary_index = auxiliary_indices[0]
+    auxiliary = tokens[auxiliary_index]
+    if auxiliary_index == 0 or auxiliary_index + 1 >= len(tokens):
+        return None
+    subject = clean_phrase(tokens[:auxiliary_index])
+    state = tokens[auxiliary_index + 1]
+    rest = tokens[auxiliary_index + 2:]
+    if rest or state not in STATE_SCALE_BY_STATE:
+        return None
+
+    state_scale = STATE_SCALE_BY_STATE[state]
+    ast = stative_result_state_ast(subject, state, auxiliary)
+    type_check = check_stative_result_state_ast(ast)
+    definition_name = f"stative_{state}_state"
+    typed_replacement = f"holds_state({subject}, {state_scale}, {state})"
+    coq_code = "\n".join(
+        [
+            "(* Stative result-state replacement without an event variable. *)",
+            "Parameter Entity : Type.",
+            "Parameter State : Type.",
+            "Parameter StateScale : Type.",
+            "",
+            f"Parameter {subject} : Entity.",
+            f"Parameter {state} : State.",
+            f"Parameter {state_scale} : StateScale.",
+            "",
+            "Parameter holds_state : Entity -> StateScale -> State -> Prop.",
+            "",
+            f"Definition {definition_name} : Prop :=",
+            f"  holds_state {subject} {state_scale} {state}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return {
+        "kind": "stative_result_state",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "stative-result-state",
+            "source": sentence,
+            "event_style_reference": (
+                f"exists e. ResultState(e, {state}) and Theme(e, {subject})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "A copular result state is represented as a typed state "
+                "assertion, not as an omitted Agent event."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -885,6 +1012,18 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Theme :",
                 "Parameter some : Entity.",
                 "Parameter boy : nat ->",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="stative_result_state",
+            label="Stative result state",
+            phenomenon="Result state without hidden event or omitted agent",
+            analyzer=stative_result_state_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
             ),
         ),
         ConstructionRule(

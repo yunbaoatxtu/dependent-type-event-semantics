@@ -21,6 +21,7 @@ from translator.natural_language_pipeline import (
     check_passive_argument_omission_ast,
     check_perception_nominalization_ast,
     check_quantifier_scope_readings,
+    check_stative_result_state_ast,
     check_timed_after_ast,
     check_universal_timed_ast,
     construction_rules,
@@ -964,6 +965,63 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;semantic_role&quot;: &quot;Location&quot;", page)
         self.assertIn("&quot;semantic_role&quot;: &quot;Instrument&quot;", page)
 
+    def test_stative_result_state_uses_state_not_omitted_agent(self) -> None:
+        broken = run_pipeline("the vase is broken", require_coq=True)
+        self.assertTrue(broken["ok"])
+        self.assertEqual(broken["kind"], "stative_result_state")
+        self.assertEqual(broken["construction_rule"]["id"], "stative_result_state")
+        self.assertEqual(
+            broken["dependent_type_translation"],
+            "holds_state(vase, integrity_scale, broken)",
+        )
+        self.assertEqual(
+            broken["ast"],
+            {
+                "kind": "stative_result_state",
+                "subject": {"name": "vase", "type": "Entity"},
+                "state": {"name": "broken", "type": "State"},
+                "state_scale": "integrity_scale",
+                "predicate": "holds_state",
+                "predicate_type": "Entity -> StateScale -> State -> Prop",
+                "auxiliary": "is",
+            },
+        )
+        self.assertIn("Parameter broken : State.", broken["coq_code"])
+        self.assertIn("Parameter integrity_scale : StateScale.", broken["coq_code"])
+        self.assertIn(
+            "Parameter holds_state : Entity -> StateScale -> State -> Prop.",
+            broken["coq_code"],
+        )
+        self.assertIn("holds_state vase integrity_scale broken.", broken["coq_code"])
+        self.assertNotIn("exists x_agent", broken["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", broken["coq_code"])
+        self.assertNotIn("Parameter Agent :", broken["coq_code"])
+        self.assertNotIn("Parameter Theme :", broken["coq_code"])
+        self.assertEqual(broken["coq_check"]["status"], "passed")
+
+        open_state = run_pipeline("the door is open", require_coq=True)
+        self.assertTrue(open_state["ok"])
+        self.assertEqual(open_state["kind"], "stative_result_state")
+        self.assertEqual(
+            open_state["dependent_type_translation"],
+            "holds_state(door, access_scale, open)",
+        )
+        self.assertIn("Parameter open : State.", open_state["coq_code"])
+        self.assertEqual(open_state["coq_check"]["status"], "passed")
+
+        agentive = run_pipeline("the vase was broken by John", require_coq=True)
+        self.assertTrue(agentive["ok"])
+        self.assertEqual(agentive["kind"], "passive_argument_omission")
+        self.assertEqual(agentive["dependent_type_translation"], "break(john, vase)")
+
+    def test_stative_result_state_rejects_bad_scale(self) -> None:
+        result = run_pipeline("the vase is broken", require_coq=False)
+        ast = result["ast"]
+        ast["state_scale"] = "access_scale"
+        type_check = check_stative_result_state_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn("stative state_scale must match the state lexicon", type_check["errors"])
+
     def test_passive_argument_omission_uses_existential_agent_not_event(self) -> None:
         explicit = run_pipeline("the toast was buttered by John", require_coq=True)
         self.assertTrue(explicit["ok"])
@@ -1276,6 +1334,7 @@ class TranslatorTests(unittest.TestCase):
         rules = {rule.rule_id: rule for rule in construction_rules()}
         expected = {
             "passive_argument_omission",
+            "stative_result_state",
             "timed_after",
             "perception_nominalization",
             "universal_timed_burning",
@@ -1284,6 +1343,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(expected.issubset(rules))
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["passive_argument_omission"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["stative_result_state"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["stative_result_state"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["perception_nominalization"].forbidden_coq_fragments)
         self.assertIn("IN", rules["universal_timed_burning"].forbidden_coq_fragments)
@@ -1293,6 +1354,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
             "passive_argument_omission": "the toast was buttered",
+            "stative_result_state": "the vase is broken",
             "timed_after": "after the singing of the Marseillaise, John saluted the flag",
             "perception_nominalization": "Mary saw John leave",
             "universal_timed_burning": "In every burning, oxygen is consumed",
@@ -2089,6 +2151,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`exists x_agent : Entity. butter(x_agent, toast)`", web_design)
         self.assertIn("`Event`, `Agent`, and `Theme` declarations", web_design)
         self.assertIn("finite passive auxiliaries", web_design)
+        self.assertIn("Copular result-state clauses", web_design)
+        self.assertIn("`holds_state(vase, integrity_scale, broken)`", web_design)
 
     def test_docs_explain_web_diagnostics_summary(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -2116,10 +2180,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("the doors were opened by John", readme)
         self.assertIn("John was seen by Mary", readme)
+        self.assertIn("the vase is broken", readme)
+        self.assertIn("holds_state(vase, integrity_scale, broken)", readme)
+        self.assertIn("the vase was broken by John", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
         self.assertIn("the passive auxiliary (`is`, `was`, `are`, or `were`)", readme)
         self.assertIn("Irregular passive participles are normalized", readme)
+        self.assertIn("stative_result_state", ast_docs)
+        self.assertIn('"predicate": "holds_state"', ast_docs)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
