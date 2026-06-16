@@ -577,15 +577,45 @@ class TranslatorTests(unittest.TestCase):
             "john buttered the toast in the bathroom with a knife",
             require_coq=False,
         )
-        ast = result["ast"]
-        ast["modifier_roles"]["roles"][0]["surface_lexicon"]["normalized_modifier"] = "bathroom"
-        type_check = check_term(ast)
-        self.assertFalse(type_check["ok"])
-        self.assertIn(
-            "ast: application.modifier_roles.roles[0].surface_lexicon.normalized_modifier "
-            "must be in_bathroom",
-            type_check["errors"],
-        )
+        cases = [
+            (
+                "surface_modifier",
+                "in(room)",
+                "ast: application.modifier_roles.roles[0].surface_lexicon.surface_modifier "
+                "must match modifier",
+            ),
+            (
+                "normalized_modifier",
+                "bathroom",
+                "ast: application.modifier_roles.roles[0].surface_lexicon.normalized_modifier "
+                "must be in_bathroom",
+            ),
+            (
+                "type",
+                "Entity",
+                "ast: application.modifier_roles.roles[0].surface_lexicon.type "
+                "must match modifier type",
+            ),
+            (
+                "semantic_role",
+                "Instrument",
+                "ast: application.modifier_roles.roles[0].surface_lexicon.semantic_role "
+                "must match semantic_role",
+            ),
+            (
+                "source",
+                "local",
+                "ast: application.modifier_roles.roles[0].surface_lexicon.source "
+                "must identify the surface lexicon",
+            ),
+        ]
+        for field, bad_value, expected_error in cases:
+            with self.subTest(field=field):
+                ast = json.loads(json.dumps(result["ast"]))
+                ast["modifier_roles"]["roles"][0]["surface_lexicon"][field] = bad_value
+                type_check = check_term(ast)
+                self.assertFalse(type_check["ok"])
+                self.assertIn(expected_error, type_check["errors"])
 
     def test_type_checker_rejects_role_frame_argument_mismatch(self) -> None:
         result = check_term(
