@@ -113,6 +113,12 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("data-action-kind", manuscript)
         self.assertIn("stage-local diagnostics", manuscript)
 
+    def test_render_paper_script_finds_current_documents_renderer(self) -> None:
+        script = (ROOT / "scripts" / "render_paper.sh").read_text(encoding="utf-8")
+        self.assertIn('root.glob("*/skills/documents/render_docx.py")', script)
+        self.assertIn("could not find render_docx.py", script)
+        self.assertNotIn("26.601.10930", script)
+
     def test_paper_docx_is_synchronized_with_markdown_order(self) -> None:
         markdown_path = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.md"
         docx_path = ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.docx"

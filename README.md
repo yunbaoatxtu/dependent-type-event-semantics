@@ -173,6 +173,10 @@ python3 -m translator.natural_language_pipeline \
 python3 -m translator.natural_language_pipeline \
   "the doors were opened by John" \
   --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "John was seen by Mary" \
+  --require-coq
 ```
 
 The explicit by-phrase version checks as `butter(john, toast)`. The omitted
@@ -184,7 +188,9 @@ keeps the predicate type fixed as `Entity -> Entity -> Prop`. It also records
 the passive auxiliary (`is`, `was`, `are`, or `were`) so that finite passive
 forms are recognized before the generic fallback parser can misread them as
 ordinary verbs. The generated Coq does not introduce `Event`, `Agent`, or
-`Theme` declarations.
+`Theme` declarations. Irregular passive participles are normalized through the
+same lexical lemmatizer, so `seen` exports `see : Entity -> Entity -> Prop` and
+`written` exports `write : Entity -> Entity -> Prop`.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments

@@ -6,7 +6,16 @@ RUNTIME_ROOT="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies"
 PYTHON="$RUNTIME_ROOT/python/bin/python3"
 SOFFICE_REAL="$RUNTIME_ROOT/native/libreoffice-headless/libreoffice/LibreOfficeDev.app/Contents/MacOS/soffice"
 LCMS_LIB="$RUNTIME_ROOT/native/poppler/poppler/lib"
-RENDER_SRC="$HOME/.codex/plugins/cache/openai-primary-runtime/documents/26.601.10930/skills/documents/render_docx.py"
+RENDER_SRC=$("$PYTHON" - <<'PY'
+from pathlib import Path
+
+root = Path.home() / ".codex/plugins/cache/openai-primary-runtime/documents"
+matches = sorted(root.glob("*/skills/documents/render_docx.py"))
+if not matches:
+    raise SystemExit(f"could not find render_docx.py under {root}")
+print(matches[-1])
+PY
+)
 
 WORK_BIN="$ROOT_DIR/work/bin"
 mkdir -p "$WORK_BIN"

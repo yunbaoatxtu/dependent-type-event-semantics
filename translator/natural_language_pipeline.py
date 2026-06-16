@@ -40,16 +40,21 @@ COMMON_ADVERBS = {
 IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
+    "eaten": "eat",
     "saw": "see",
+    "seen": "see",
     "sat": "sit",
     "saluted": "salute",
     "loves": "love",
     "broke": "break",
     "broken": "break",
     "drank": "drink",
+    "drunk": "drink",
     "went": "go",
     "ran": "run",
     "left": "leave",
+    "known": "know",
+    "written": "write",
 }
 
 

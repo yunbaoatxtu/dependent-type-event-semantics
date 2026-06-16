@@ -1029,6 +1029,24 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter open : Entity -> Entity -> Prop.", plural_auxiliary["coq_code"])
         self.assertEqual(plural_auxiliary["coq_check"]["status"], "passed")
 
+        irregular_participle = run_pipeline("John was seen by Mary", require_coq=True)
+        self.assertTrue(irregular_participle["ok"])
+        self.assertEqual(irregular_participle["kind"], "passive_argument_omission")
+        self.assertEqual(irregular_participle["ast"]["predicate"], "see")
+        self.assertEqual(irregular_participle["dependent_type_translation"], "see(mary, john)")
+        self.assertIn("Parameter see : Entity -> Entity -> Prop.", irregular_participle["coq_code"])
+        self.assertEqual(irregular_participle["coq_check"]["status"], "passed")
+
+        omitted_irregular = run_pipeline("the letter was written", require_coq=True)
+        self.assertTrue(omitted_irregular["ok"])
+        self.assertEqual(omitted_irregular["ast"]["predicate"], "write")
+        self.assertEqual(
+            omitted_irregular["dependent_type_translation"],
+            "exists x_agent : Entity. write(x_agent, letter)",
+        )
+        self.assertIn("Parameter write : Entity -> Entity -> Prop.", omitted_irregular["coq_code"])
+        self.assertEqual(omitted_irregular["coq_check"]["status"], "passed")
+
     def test_passive_argument_omission_rejects_bad_agent_source(self) -> None:
         result = run_pipeline("the toast was buttered", require_coq=False)
         ast = result["ast"]
@@ -2097,9 +2115,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Modifier Role Audit` panel", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("the doors were opened by John", readme)
+        self.assertIn("John was seen by Mary", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
         self.assertIn("the passive auxiliary (`is`, `was`, `are`, or `were`)", readme)
+        self.assertIn("Irregular passive participles are normalized", readme)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
