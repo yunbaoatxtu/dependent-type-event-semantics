@@ -112,7 +112,11 @@ Location modifier. Each modifier-role entry also carries a `surface_lexicon`
 audit object with the surface modifier, its normalized proof-assistant name
 such as `in_bathroom` or `with_knife`, its `Adv` type, semantic role, and source
 module; the checker rejects mismatches between the surface modifier and the
-`normalized_modifier` constant. The AST also carries a `role_frame`
+`normalized_modifier` constant. The role mapping itself lives in the shared
+surface lexicon (`MODIFIER_ROLE_BY_PREDICATE` in
+`translator/surface_lexicon.py`), so modifier classification is maintained with
+the same lexical resources that normalize surface forms. The AST also carries a
+`role_frame`
 that preserves thematic labels such as `Agent` and `Theme` and checks that those
 role values match the ordered entity arguments in canonical thematic order, with
 role types aligned to the generated function argument types. Thus an overt

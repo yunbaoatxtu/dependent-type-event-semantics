@@ -389,6 +389,7 @@ keeping the lexical verb declaration stable across different modifier counts.
 The web/API result also exposes the modifier-level `surface_lexicon` audit:
 `in(bathroom)` must normalize to `in_bathroom`, `with(knife)` must normalize to
 `with_knife`, and both must remain typed as `Adv` with the expected semantic
-role. This prevents a successful-looking page from hiding the exact mistake that
-motivated the typed modifier layer, namely treating a modifier expression as an
-entity constant.
+role. Those expected roles come from the shared surface lexicon's
+`MODIFIER_ROLE_BY_PREDICATE` table, not from a one-off web rule. This prevents a
+successful-looking page from hiding the exact mistake that motivated the typed
+modifier layer, namely treating a modifier expression as an entity constant.

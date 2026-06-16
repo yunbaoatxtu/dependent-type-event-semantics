@@ -589,9 +589,11 @@ modifier predicate, so an instrumental `with(...)` modifier cannot be labeled as
 `normalized_modifier` records the constant name that will be exported to the
 proof-assistant scaffold, such as `in_bathroom` or `with_knife`. The checker
 validates that this audit agrees with the modifier, the `Adv` type, the semantic
-role, and the shared surface-lexicon module source. In the proof-assistant
-scaffold all of these are still exported at type `Adv`, with the current shallow
-Coq definition:
+role, and the shared surface-lexicon module source. The role classification is
+also supplied by the same module through `MODIFIER_ROLE_BY_PREDICATE`, keeping
+the Location/Instrument/Source/Goal/Manner choice with the lexical resources
+that normalize surface forms. In the proof-assistant scaffold all of these are
+still exported at type `Adv`, with the current shallow Coq definition:
 
 ```coq
 Definition PropT : Type := Prop.

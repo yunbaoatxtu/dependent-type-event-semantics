@@ -37,7 +37,10 @@ from translator.state_change_lexicon import (
     STATE_CHANGE_VERB_TARGETS,
 )
 from translator.surface_lexicon import (
+    MODIFIER_ROLE_BY_PREDICATE,
     PASSIVE_AUXILIARIES,
+    modifier_predicate,
+    modifier_semantic_role,
     modifier_surface_audit,
     passive_participle_audit,
     is_passive_participle,
@@ -335,6 +338,14 @@ class TranslatorTests(unittest.TestCase):
                 "source": "translator/surface_lexicon.py",
             },
         )
+        self.assertEqual(MODIFIER_ROLE_BY_PREDICATE["with"], "Instrument")
+        self.assertEqual(modifier_predicate("in(bathroom)"), "in")
+        self.assertEqual(modifier_semantic_role("in(bathroom)"), "Location")
+        self.assertEqual(modifier_semantic_role("on(mat)"), "Location")
+        self.assertEqual(modifier_semantic_role("with(knife)"), "Instrument")
+        self.assertEqual(modifier_semantic_role("from(home)"), "Source")
+        self.assertEqual(modifier_semantic_role("to(school)"), "Goal")
+        self.assertEqual(modifier_semantic_role("slowly"), "Manner")
 
     def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
         formula = sentence_to_event_semantics("John hammered the metal flat")
@@ -2730,6 +2741,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`normalized_modifier`", readme)
         self.assertIn("`in_bathroom`", readme)
         self.assertIn("`with_knife`", readme)
+        self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("the doors were opened by John", readme)
         self.assertIn("John was seen by Mary", readme)
@@ -2907,6 +2919,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("cannot be labeled as", ast_docs)
         self.assertIn("`surface_lexicon` audit", ast_docs)
         self.assertIn("`normalized_modifier` records", ast_docs)
+        self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", ast_docs)
+        self.assertIn("Location/Instrument/Source/Goal/Manner", ast_docs)
+        self.assertIn("`MODIFIER_ROLE_BY_PREDICATE` table", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
 

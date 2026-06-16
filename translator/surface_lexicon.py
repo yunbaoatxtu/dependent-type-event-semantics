@@ -31,6 +31,18 @@ PREPOSITIONS = {
     "to",
     "into",
 }
+MODIFIER_ROLE_BY_PREDICATE = {
+    "with": "Instrument",
+    "in": "Location",
+    "on": "Location",
+    "under": "Location",
+    "over": "Location",
+    "near": "Location",
+    "beside": "Location",
+    "from": "Source",
+    "to": "Goal",
+    "into": "Goal",
+}
 COUNT_WORDS = {"once", "twice", "thrice"}
 COMMON_ADVERBS = {
     "slowly",
@@ -122,6 +134,14 @@ def normalize_surface_name(name: str) -> str:
     if normalized[0].isdigit():
         normalized = "x_" + normalized
     return normalized
+
+
+def modifier_predicate(modifier: str) -> str:
+    return modifier.split("(", 1)[0]
+
+
+def modifier_semantic_role(modifier: str) -> str:
+    return MODIFIER_ROLE_BY_PREDICATE.get(modifier_predicate(modifier), "Manner")
 
 
 def modifier_surface_audit(

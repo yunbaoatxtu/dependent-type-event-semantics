@@ -18,6 +18,7 @@ from typing import Any
 
 from translator.surface_lexicon import (
     SURFACE_LEXICON_SOURCE,
+    modifier_semantic_role,
     modifier_surface_audit,
 )
 
@@ -250,23 +251,6 @@ def modifier_vector(adverbs: list[str]) -> Term:
             for index, modifier in enumerate(adverbs)
         ],
     }
-
-
-def modifier_predicate(modifier: str) -> str:
-    return modifier.split("(", 1)[0]
-
-
-def modifier_semantic_role(modifier: str) -> str:
-    predicate = modifier_predicate(modifier)
-    if predicate == "with":
-        return "Instrument"
-    if predicate in {"in", "on", "under", "over", "near", "beside"}:
-        return "Location"
-    if predicate == "from":
-        return "Source"
-    if predicate in {"to", "into"}:
-        return "Goal"
-    return "Manner"
 
 
 def modifier_roles(modifiers: list[str]) -> Term:
