@@ -131,7 +131,10 @@ The web/API layer also lifts these records to `modifier_role_audit`, and the
 page renders them in a dedicated `Modifier Role Audit` panel for quick
 inspection. That panel includes the nested `surface_lexicon` audit, so a reader
 can see both the semantic role and the normalized `Adv` constant used by the
-generated Coq/Rocq scaffold.
+generated Coq/Rocq scaffold. Directional fallback sentences use the same path:
+`John went from home to school` exports `from_home : Adv` with role `Source`
+and `to_school : Adv` with role `Goal`, then checks `go` with a
+`ModifierSeq 2`.
 
 Parsons-style event talk can also be routed through typed replacements. For
 example:

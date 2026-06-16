@@ -1002,6 +1002,79 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_directional_modifiers_use_source_goal_adv_roles(self) -> None:
+        result = run_pipeline("John went from home to school", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "go(2)(from(home), to(school), john)",
+        )
+        self.assertEqual(
+            result["ast"]["modifier_roles"]["roles"],
+            [
+                {
+                    "modifier": "from(home)",
+                    "type": "Adv",
+                    "semantic_role": "Source",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "from(home)", "Adv", "Source"
+                    ),
+                },
+                {
+                    "modifier": "to(school)",
+                    "type": "Adv",
+                    "semantic_role": "Goal",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "to(school)", "Adv", "Goal"
+                    ),
+                },
+            ],
+        )
+        self.assertIn("Parameter from_home : Adv.", result["coq_code"])
+        self.assertIn("Parameter to_school : Adv.", result["coq_code"])
+        self.assertNotIn("Parameter from_home : Entity.", result["coq_code"])
+        self.assertNotIn("Parameter to_school : Entity.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+        page_result = analyze_sentence(
+            "John went from home to school",
+            require_coq=True,
+        )
+        self.assertEqual(
+            page_result["modifier_role_audit"],
+            [
+                {
+                    "path": "ast",
+                    "function": "go",
+                    "modifier": "from(home)",
+                    "type": "Adv",
+                    "semantic_role": "Source",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "from(home)", "Adv", "Source"
+                    ),
+                },
+                {
+                    "path": "ast",
+                    "function": "go",
+                    "modifier": "to(school)",
+                    "type": "Adv",
+                    "semantic_role": "Goal",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "to(school)", "Adv", "Goal"
+                    ),
+                },
+            ],
+        )
+        page = render_page("John went from home to school", require_coq=True)
+        self.assertIn("&quot;semantic_role&quot;: &quot;Source&quot;", page)
+        self.assertIn("&quot;semantic_role&quot;: &quot;Goal&quot;", page)
+        self.assertIn("&quot;normalized_modifier&quot;: &quot;from_home&quot;", page)
+        self.assertIn("&quot;normalized_modifier&quot;: &quot;to_school&quot;", page)
+
     def test_luo_shi_modifier_types_for_classic_sentence(self) -> None:
         result = run_pipeline(
             "john buttered the toast in the bathroom with a knife",
@@ -2742,6 +2815,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`in_bathroom`", readme)
         self.assertIn("`with_knife`", readme)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", readme)
+        self.assertIn("`John went from home to school`", readme)
+        self.assertIn("`from_home : Adv`", readme)
+        self.assertIn("`to_school : Adv`", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("the doors were opened by John", readme)
         self.assertIn("John was seen by Mary", readme)
@@ -2921,7 +2997,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`normalized_modifier` records", ast_docs)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", ast_docs)
         self.assertIn("Location/Instrument/Source/Goal/Manner", ast_docs)
+        self.assertIn("`from(home)` is a Source-like `Adv`", ast_docs)
+        self.assertIn("`to(school)` is a Goal-like `Adv`", ast_docs)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE` table", web_design)
+        self.assertIn("`from(home)` normalizes", web_design)
+        self.assertIn("`to(school)` normalizes", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
 

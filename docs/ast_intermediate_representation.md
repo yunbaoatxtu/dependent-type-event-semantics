@@ -592,8 +592,10 @@ validates that this audit agrees with the modifier, the `Adv` type, the semantic
 role, and the shared surface-lexicon module source. The role classification is
 also supplied by the same module through `MODIFIER_ROLE_BY_PREDICATE`, keeping
 the Location/Instrument/Source/Goal/Manner choice with the lexical resources
-that normalize surface forms. In the proof-assistant scaffold all of these are
-still exported at type `Adv`, with the current shallow Coq definition:
+that normalize surface forms. Thus `from(home)` is a Source-like `Adv` exported
+as `from_home`, while `to(school)` is a Goal-like `Adv` exported as
+`to_school`. In the proof-assistant scaffold all of these are still exported at
+type `Adv`, with the current shallow Coq definition:
 
 ```coq
 Definition PropT : Type := Prop.
