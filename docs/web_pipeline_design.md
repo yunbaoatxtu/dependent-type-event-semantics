@@ -335,8 +335,11 @@ analysis. The response carries both an AST `frame` field and
 `state_change_verb_entry`, a structured record with the selected target state
 and the licensed inchoative, causative, and instrumental frames. This gives the
 web/API layer stable audit fields for explaining why a given verb selected a
-given transition, and it lets the type checker reject an internally malformed
-state-change AST whose registered verb, target state, or frame disagree.
+given transition. The registrations are maintained in
+`translator/state_change_lexicon.py`, separate from the parser rule that
+recognizes the surface construction, and the type checker rejects an internally
+malformed state-change AST whose registered verb, target state, or frame
+disagree.
 
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the

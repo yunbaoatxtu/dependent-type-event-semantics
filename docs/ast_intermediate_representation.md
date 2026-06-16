@@ -341,7 +341,9 @@ check requires `state_scale` and `source_state` to match the state lexicon, so
 water froze` receives `phase_scale` with source `liquid`.
 
 The surrounding pipeline result also includes the lexical registration record
-that selected the transition:
+that selected the transition. These records live in
+`translator/state_change_lexicon.py`, so the lexical inventory is maintained
+outside the natural-language parsing rule:
 
 ```json
 {

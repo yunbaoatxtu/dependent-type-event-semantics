@@ -24,6 +24,7 @@ paper/
 
 translator/
   dependent_type_event_translator.py
+  state_change_lexicon.py
   examples/
     example_butter.json
 
@@ -428,13 +429,14 @@ The registered verb `die` licenses only the inchoative frame; `kill` licenses
 causative and instrumental frames but not an inchoative frame such as
 `the plant killed`.
 Internally these verbs are registered as structured `StateChangeVerbEntry`
-records, not as loose string rewrites. Each entry names the target state and
-the licensed inchoative, causative, and instrumental frames, and the emitted
-result includes `state_change_verb_entry` so clients can audit the lexical
-choice that selected the transition. The AST carries an explicit `frame`
-(`inchoative`, `causative`, or `instrumental`), and the type checker rejects a
-mismatch such as pairing the registered verb `open` with the target state
-`closed`, or assigning a causative frame without a causer.
+records in `translator/state_change_lexicon.py`, not as loose string rewrites
+inside the parser. Each entry names the target state and the licensed
+inchoative, causative, and instrumental frames, and the emitted result includes
+`state_change_verb_entry` so clients can audit the lexical choice that selected
+the transition. The AST carries an explicit `frame` (`inchoative`, `causative`,
+or `instrumental`), and the type checker rejects a mismatch such as pairing the
+registered verb `open` with the target state `closed`, or assigning a causative
+frame without a causer.
 This prevents `the door opened` and similar inchoatives from being misread as
 one-place predicates whose changing themes are Agents, while still preserving
 the same typed transition used by resultative translations.

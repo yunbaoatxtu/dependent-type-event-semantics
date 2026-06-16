@@ -32,6 +32,10 @@ from translator.natural_language_pipeline import (
     state_change_verb_metadata,
     verify_coq_code,
 )
+from translator.state_change_lexicon import (
+    STATE_CHANGE_VERB_REGISTRY,
+    STATE_CHANGE_VERB_TARGETS,
+)
 from web.app import (
     PipelineHandler,
     analyze_sentence,
@@ -250,6 +254,27 @@ class TranslatorTests(unittest.TestCase):
                     STATE_LEXICON[source_state].scale,
                     STATE_LEXICON[target_state].scale,
                 )
+
+    def test_state_change_verb_registry_is_external_and_consistent(self) -> None:
+        self.assertEqual(STATE_CHANGE_VERB_TARGETS["die"], "dead")
+        self.assertEqual(STATE_CHANGE_VERB_TARGETS["kill"], "dead")
+        self.assertFalse(STATE_CHANGE_VERB_REGISTRY["die"].allow_causative)
+        self.assertFalse(STATE_CHANGE_VERB_REGISTRY["die"].allow_instrument)
+        self.assertFalse(STATE_CHANGE_VERB_REGISTRY["kill"].allow_inchoative)
+        self.assertEqual(
+            state_change_verb_metadata("kill"),
+            {
+                "verb": "kill",
+                "target_state": "dead",
+                "allow_inchoative": False,
+                "allow_causative": True,
+                "allow_instrument": True,
+            },
+        )
+        for verb, target_state in STATE_CHANGE_VERB_TARGETS.items():
+            with self.subTest(verb=verb):
+                self.assertIn(target_state, SOURCE_STATE_BY_TARGET_STATE)
+                self.assertIn(SOURCE_STATE_BY_TARGET_STATE[target_state], STATE_LEXICON)
 
     def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
         formula = sentence_to_event_semantics("John hammered the metal flat")
@@ -2525,6 +2550,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John died", readme)
         self.assertIn("Mary killed the plant with poison", readme)
         self.assertIn("StateChangeVerbEntry", readme)
+        self.assertIn("translator/state_change_lexicon.py", readme)
         self.assertIn("state_change_verb_entry", readme)
         self.assertIn("explicit `frame`", readme)
         self.assertIn("Change(Transition(door, access_scale, closed, open))", readme)
@@ -2547,11 +2573,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("cleanliness_scale", ast_docs)
         self.assertIn("content_scale", ast_docs)
         self.assertIn('"state_change_verb_entry"', ast_docs)
+        self.assertIn("translator/state_change_lexicon.py", ast_docs)
         self.assertIn('"frame": "inchoative"', ast_docs)
         self.assertIn("causative `die` frame", ast_docs)
         self.assertIn("inchoative `kill` frame", ast_docs)
         self.assertIn("registered_verb_target_state_mismatch", ast_docs)
         self.assertIn("state_change_verb_entry", web_design)
+        self.assertIn("translator/state_change_lexicon.py", web_design)
         self.assertIn("AST `frame` field", web_design)
         self.assertIn("`the plant killed` is not accepted", web_design)
         self.assertIn("Type Check panel", web_design)
