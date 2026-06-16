@@ -1824,6 +1824,39 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
 
+    def test_web_api_and_page_expose_surface_lexicon_audits(self) -> None:
+        passive = analyze_sentence("John was seen by Mary", require_coq=True)
+        self.assertTrue(passive["ok"])
+        self.assertEqual(
+            passive["ast"]["surface_lexicon"],
+            {
+                "participle": "seen",
+                "lemma": "see",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+
+        state_change = analyze_sentence("the water froze", require_coq=True)
+        self.assertTrue(state_change["ok"])
+        self.assertEqual(
+            state_change["ast"]["surface_lexicon"],
+            {
+                "surface_verb": "froze",
+                "lemma": "freeze",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+
+        passive_page = render_page("John was seen by Mary", require_coq=True)
+        self.assertIn("&quot;participle&quot;: &quot;seen&quot;", passive_page)
+        self.assertIn("&quot;lemma&quot;: &quot;see&quot;", passive_page)
+        self.assertIn("translator/surface_lexicon.py", passive_page)
+
+        state_page = render_page("the water froze", require_coq=True)
+        self.assertIn("&quot;surface_verb&quot;: &quot;froze&quot;", state_page)
+        self.assertIn("&quot;lemma&quot;: &quot;freeze&quot;", state_page)
+        self.assertIn("translator/surface_lexicon.py", state_page)
+
     def test_web_analyze_sentence_empty_input(self) -> None:
         result = analyze_sentence("  ")
         self.assertFalse(result["ok"])
