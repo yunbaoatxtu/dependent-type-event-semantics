@@ -1195,6 +1195,35 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;normalized_modifier&quot;: &quot;in_bathroom&quot;", page)
         self.assertIn("&quot;normalized_modifier&quot;: &quot;with_knife&quot;", page)
 
+    def test_modifier_role_audit_recurses_into_nested_applications(self) -> None:
+        result = translate(load_example("example_butter.json"))
+        self.assertEqual(result["ast"]["kind"], "time")
+        self.assertEqual(
+            modifier_role_audit(result["ast"]),
+            [
+                {
+                    "path": "ast.body",
+                    "function": "butter",
+                    "modifier": "slowly",
+                    "type": "Adv",
+                    "semantic_role": "Manner",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit("slowly", "Adv", "Manner"),
+                },
+                {
+                    "path": "ast.body",
+                    "function": "butter",
+                    "modifier": "in(bathroom)",
+                    "type": "Adv",
+                    "semantic_role": "Location",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "in(bathroom)", "Adv", "Location"
+                    ),
+                },
+            ],
+        )
+
     def test_lexical_state_change_distinguishes_inchoative_and_causative(self) -> None:
         inchoative = run_pipeline("the door opened", require_coq=True)
         self.assertTrue(inchoative["ok"])
