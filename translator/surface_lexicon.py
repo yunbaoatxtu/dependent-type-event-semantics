@@ -68,6 +68,8 @@ IRREGULAR_VERBS = {
     "written": "write",
 }
 
+SURFACE_LEXICON_SOURCE = "translator/surface_lexicon.py"
+
 
 def lemma_verb(token: str) -> str:
     if token in IRREGULAR_VERBS:
@@ -93,3 +95,19 @@ def lemma_verb(token: str) -> str:
 
 def is_passive_participle(token: str) -> bool:
     return token.endswith("ed") or token in PASSIVE_PARTICIPLE_FORMS
+
+
+def surface_verb_audit(surface_verb: str) -> dict[str, str]:
+    return {
+        "surface_verb": surface_verb,
+        "lemma": lemma_verb(surface_verb),
+        "source": SURFACE_LEXICON_SOURCE,
+    }
+
+
+def passive_participle_audit(participle: str) -> dict[str, str]:
+    return {
+        "participle": participle,
+        "lemma": lemma_verb(participle),
+        "source": SURFACE_LEXICON_SOURCE,
+    }

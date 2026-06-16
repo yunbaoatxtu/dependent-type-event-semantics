@@ -32,8 +32,11 @@ from translator.surface_lexicon import (
     COUNT_WORDS,
     PASSIVE_AUXILIARIES,
     PREPOSITIONS,
+    SURFACE_LEXICON_SOURCE,
     is_passive_participle,
     lemma_verb,
+    passive_participle_audit,
+    surface_verb_audit,
 )
 
 
@@ -683,11 +686,7 @@ def lexical_state_change_ast(
     ast: dict[str, Any] = {
         "kind": "lexical_state_change",
         "verb": verb,
-        "surface_lexicon": {
-            "surface_verb": surface_verb,
-            "lemma": verb,
-            "source": "translator/surface_lexicon.py",
-        },
+        "surface_lexicon": surface_verb_audit(surface_verb),
         "frame": "inchoative",
         "transition": transition,
     }
@@ -723,7 +722,7 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
             errors.append("state-change surface_lexicon.lemma must match verb")
         elif isinstance(surface_verb, str) and lemma_verb(surface_verb) != verb:
             errors.append("state-change surface_lexicon.lemma must match lemmatized surface verb")
-        if surface_lexicon.get("source") != "translator/surface_lexicon.py":
+        if surface_lexicon.get("source") != SURFACE_LEXICON_SOURCE:
             errors.append("state-change surface_lexicon.source must identify the surface lexicon")
     frame = ast.get("frame")
     if frame not in {"inchoative", "causative", "instrumental"}:
@@ -1127,11 +1126,7 @@ def passive_argument_omission_ast(
         "predicate": predicate,
         "predicate_type": "Entity -> Entity -> Prop",
         "auxiliary": auxiliary,
-        "surface_lexicon": {
-            "participle": participle,
-            "lemma": predicate,
-            "source": "translator/surface_lexicon.py",
-        },
+        "surface_lexicon": passive_participle_audit(participle),
         "argument_order": ["Agent", "Patient"],
         "patient": {
             "name": patient,
@@ -1165,7 +1160,7 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
             errors.append("passive surface_lexicon.lemma must match predicate")
         elif isinstance(participle, str) and lemma_verb(participle) != ast.get("predicate"):
             errors.append("passive surface_lexicon.lemma must match lemmatized participle")
-        if surface_lexicon.get("source") != "translator/surface_lexicon.py":
+        if surface_lexicon.get("source") != SURFACE_LEXICON_SOURCE:
             errors.append("passive surface_lexicon.source must identify the surface lexicon")
     if ast.get("argument_order") != ["Agent", "Patient"]:
         errors.append("passive argument_order must be Agent before Patient")

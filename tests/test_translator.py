@@ -38,8 +38,10 @@ from translator.state_change_lexicon import (
 )
 from translator.surface_lexicon import (
     PASSIVE_AUXILIARIES,
+    passive_participle_audit,
     is_passive_participle,
     lemma_verb,
+    surface_verb_audit,
 )
 from web.app import (
     PipelineHandler,
@@ -292,6 +294,22 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("died"), "die")
         self.assertEqual(lemma_verb("opened"), "open")
         self.assertEqual(lemma_verb("froze"), "freeze")
+        self.assertEqual(
+            passive_participle_audit("written"),
+            {
+                "participle": "written",
+                "lemma": "write",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+        self.assertEqual(
+            surface_verb_audit("froze"),
+            {
+                "surface_verb": "froze",
+                "lemma": "freeze",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
 
     def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
         formula = sentence_to_event_semantics("John hammered the metal flat")
