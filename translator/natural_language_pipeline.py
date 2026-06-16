@@ -1089,6 +1089,7 @@ def passive_argument_omission_ast(
     patient: str,
     agent: str | None,
     auxiliary: str,
+    participle: str,
 ) -> dict[str, Any]:
     agent_record = (
         {"name": agent, "type": "Entity", "source": "by_phrase"}
@@ -1100,6 +1101,11 @@ def passive_argument_omission_ast(
         "predicate": predicate,
         "predicate_type": "Entity -> Entity -> Prop",
         "auxiliary": auxiliary,
+        "surface_lexicon": {
+            "participle": participle,
+            "lemma": predicate,
+            "source": "translator/surface_lexicon.py",
+        },
         "argument_order": ["Agent", "Patient"],
         "patient": {
             "name": patient,
@@ -1120,6 +1126,21 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
         errors.append("passive predicate must have type Entity -> Entity -> Prop")
     if ast.get("auxiliary") not in PASSIVE_AUXILIARIES:
         errors.append("passive auxiliary must be is, was, are, or were")
+    surface_lexicon = ast.get("surface_lexicon")
+    if not isinstance(surface_lexicon, dict):
+        errors.append("passive surface_lexicon must be an object")
+    else:
+        participle = surface_lexicon.get("participle")
+        if not isinstance(participle, str) or not participle:
+            errors.append("passive surface_lexicon.participle must be a non-empty string")
+        elif not is_passive_participle(participle):
+            errors.append("passive surface_lexicon.participle must be a passive participle")
+        if surface_lexicon.get("lemma") != ast.get("predicate"):
+            errors.append("passive surface_lexicon.lemma must match predicate")
+        elif isinstance(participle, str) and lemma_verb(participle) != ast.get("predicate"):
+            errors.append("passive surface_lexicon.lemma must match lemmatized participle")
+        if surface_lexicon.get("source") != "translator/surface_lexicon.py":
+            errors.append("passive surface_lexicon.source must identify the surface lexicon")
     if ast.get("argument_order") != ["Agent", "Patient"]:
         errors.append("passive argument_order must be Agent before Patient")
 
@@ -1183,7 +1204,7 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
             return None
         agent = clean_phrase(rest[1:])
 
-    ast = passive_argument_omission_ast(predicate, patient, agent, auxiliary)
+    ast = passive_argument_omission_ast(predicate, patient, agent, auxiliary, participle)
     type_check = check_passive_argument_omission_ast(ast)
     if agent is None:
         typed_replacement = f"exists x_agent : Entity. {predicate}(x_agent, {patient})"

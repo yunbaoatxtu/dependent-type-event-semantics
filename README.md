@@ -193,7 +193,9 @@ ordinary verbs. The generated Coq does not introduce `Event`, `Agent`, or
 `Theme` declarations. Irregular passive participles are normalized through the
 shared surface lexicon in `translator/surface_lexicon.py`, so `seen` exports
 `see : Entity -> Entity -> Prop` and `written` exports
-`write : Entity -> Entity -> Prop`.
+`write : Entity -> Entity -> Prop`. The AST exposes this step as a
+`surface_lexicon` audit object recording the surface participle, the selected
+lemma, and the lexicon module that supplied the mapping.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments

@@ -1381,6 +1381,11 @@ class TranslatorTests(unittest.TestCase):
                 "predicate": "butter",
                 "predicate_type": "Entity -> Entity -> Prop",
                 "auxiliary": "was",
+                "surface_lexicon": {
+                    "participle": "buttered",
+                    "lemma": "butter",
+                    "source": "translator/surface_lexicon.py",
+                },
                 "argument_order": ["Agent", "Patient"],
                 "patient": {"name": "toast", "type": "Entity", "surface_role": "subject"},
                 "agent": {"name": "john", "type": "Entity", "source": "by_phrase"},
@@ -1445,6 +1450,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(omitted_irregular["ok"])
         self.assertEqual(omitted_irregular["ast"]["predicate"], "write")
         self.assertEqual(
+            omitted_irregular["ast"]["surface_lexicon"],
+            {
+                "participle": "written",
+                "lemma": "write",
+                "source": "translator/surface_lexicon.py",
+            },
+        )
+        self.assertEqual(
             omitted_irregular["dependent_type_translation"],
             "exists x_agent : Entity. write(x_agent, letter)",
         )
@@ -1470,6 +1483,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "passive auxiliary must be is, was, are, or were",
+            type_check["errors"],
+        )
+
+    def test_passive_argument_omission_rejects_bad_surface_lexicon_audit(self) -> None:
+        result = run_pipeline("John was seen by Mary", require_coq=False)
+        ast = result["ast"]
+        ast["surface_lexicon"]["lemma"] = "watch"
+        type_check = check_passive_argument_omission_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "passive surface_lexicon.lemma must match predicate",
             type_check["errors"],
         )
 
@@ -2582,6 +2606,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the passive auxiliary (`is`, `was`, `are`, or `were`)", readme)
         self.assertIn("Irregular passive participles are normalized", readme)
         self.assertIn("translator/surface_lexicon.py", readme)
+        self.assertIn("`surface_lexicon` audit object", readme)
         self.assertIn("stative_result_state", ast_docs)
         self.assertIn('"predicate": "holds_state"', ast_docs)
         self.assertIn("lexical_state_change", ast_docs)
@@ -2593,6 +2618,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"state_change_verb_entry"', ast_docs)
         self.assertIn("translator/state_change_lexicon.py", ast_docs)
         self.assertIn("translator/surface_lexicon.py", ast_docs)
+        self.assertIn('"surface_lexicon"', ast_docs)
+        self.assertIn('"participle": "buttered"', ast_docs)
+        self.assertIn('"lemma": "butter"', ast_docs)
         self.assertIn('"frame": "inchoative"', ast_docs)
         self.assertIn("causative `die` frame", ast_docs)
         self.assertIn("inchoative `kill` frame", ast_docs)
@@ -2600,6 +2628,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("state_change_verb_entry", web_design)
         self.assertIn("translator/state_change_lexicon.py", web_design)
         self.assertIn("translator/surface_lexicon.py", web_design)
+        self.assertIn("`surface_lexicon` audit object", web_design)
         self.assertIn("AST `frame` field", web_design)
         self.assertIn("`the plant killed` is not accepted", web_design)
         self.assertIn("Type Check panel", web_design)

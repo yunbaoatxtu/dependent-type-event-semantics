@@ -306,7 +306,9 @@ analysis. The rule recognizes finite passive auxiliaries `is`, `was`, `are`,
 and `were`, and stores the auxiliary in the AST so that the fallback parser does
 not misclassify those words as lexical verbs. Passive participle recognition and
 irregular lemmatization are supplied by `translator/surface_lexicon.py`, keeping
-surface morphology separate from the construction-specific semantic rule.
+surface morphology separate from the construction-specific semantic rule. The
+AST shown by the web/API result includes a `surface_lexicon` audit object with
+the original participle, selected lemma, and lexicon source module.
 
 Copular result-state clauses use a narrower registered rule before the passive
 fallback. For `the vase is broken`, the web/API result reports
