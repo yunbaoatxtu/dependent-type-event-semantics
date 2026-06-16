@@ -18,6 +18,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     ConstructionRule,
+    check_lexical_state_change_ast,
     check_passive_argument_omission_ast,
     check_perception_nominalization_ast,
     check_quantifier_scope_readings,
@@ -965,6 +966,97 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;semantic_role&quot;: &quot;Location&quot;", page)
         self.assertIn("&quot;semantic_role&quot;: &quot;Instrument&quot;", page)
 
+    def test_lexical_state_change_distinguishes_inchoative_and_causative(self) -> None:
+        inchoative = run_pipeline("the door opened", require_coq=True)
+        self.assertTrue(inchoative["ok"])
+        self.assertEqual(inchoative["kind"], "lexical_state_change")
+        self.assertEqual(inchoative["construction_rule"]["id"], "lexical_state_change")
+        self.assertEqual(
+            inchoative["dependent_type_translation"],
+            "Change(Transition(door, access_scale, closed, open))",
+        )
+        self.assertEqual(
+            inchoative["ast"],
+            {
+                "kind": "lexical_state_change",
+                "verb": "open",
+                "transition": {
+                    "kind": "transition",
+                    "theme": {"name": "door", "type": "Entity"},
+                    "state_scale": "access_scale",
+                    "source_state": "closed",
+                    "target_state": {"name": "open", "type": "State"},
+                },
+            },
+        )
+        self.assertEqual(
+            inchoative["result_state_lexicon"],
+            [
+                {
+                    "state": "open",
+                    "scale": "access_scale",
+                    "default_source_state": "closed",
+                    "source_policy": "lexical_prestate",
+                }
+            ],
+        )
+        self.assertIn("Parameter Change : TransitionT -> Prop.", inchoative["coq_code"])
+        self.assertIn("Change (Transition door access_scale closed open).", inchoative["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", inchoative["coq_code"])
+        self.assertNotIn("Parameter Agent :", inchoative["coq_code"])
+        self.assertNotIn("Parameter Theme :", inchoative["coq_code"])
+        self.assertEqual(inchoative["coq_check"]["status"], "passed")
+
+        causative = run_pipeline("John opened the door", require_coq=True)
+        self.assertTrue(causative["ok"])
+        self.assertEqual(causative["kind"], "lexical_state_change")
+        self.assertEqual(
+            causative["dependent_type_translation"],
+            "Cause(john, Transition(door, access_scale, closed, open))",
+        )
+        self.assertEqual(
+            causative["ast"]["causer"],
+            {"name": "john", "type": "Entity", "source": "subject"},
+        )
+        self.assertIn("Cause john (Transition door access_scale closed open).", causative["coq_code"])
+        self.assertEqual(causative["coq_check"]["status"], "passed")
+
+        instrumental = run_pipeline("John opened the door with a key", require_coq=True)
+        self.assertTrue(instrumental["ok"])
+        self.assertEqual(
+            instrumental["dependent_type_translation"],
+            "CauseWithInstrument(john, key, Transition(door, access_scale, closed, open))",
+        )
+        self.assertEqual(
+            instrumental["ast"]["instrument"],
+            {"name": "key", "type": "Entity", "source": "with_phrase"},
+        )
+        self.assertIn(
+            "Parameter CauseWithInstrument : Entity -> Entity -> TransitionT -> Prop.",
+            instrumental["coq_code"],
+        )
+        self.assertIn(
+            "CauseWithInstrument john key (Transition door access_scale closed open).",
+            instrumental["coq_code"],
+        )
+        self.assertEqual(instrumental["coq_check"]["status"], "passed")
+
+        closed = run_pipeline("the door closed", require_coq=True)
+        self.assertTrue(closed["ok"])
+        self.assertEqual(
+            closed["dependent_type_translation"],
+            "Change(Transition(door, access_scale, open, closed))",
+        )
+        self.assertEqual(closed["coq_check"]["status"], "passed")
+
+    def test_lexical_state_change_rejects_bad_source_state(self) -> None:
+        result = run_pipeline("the door opened", require_coq=False)
+        ast = result["ast"]
+        ast["transition"]["source_state"] = "open"
+        type_check = check_lexical_state_change_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn("state-change source_state must match the state lexicon", type_check["errors"])
+
     def test_stative_result_state_uses_state_not_omitted_agent(self) -> None:
         broken = run_pipeline("the vase is broken", require_coq=True)
         self.assertTrue(broken["ok"])
@@ -1334,6 +1426,7 @@ class TranslatorTests(unittest.TestCase):
         rules = {rule.rule_id: rule for rule in construction_rules()}
         expected = {
             "passive_argument_omission",
+            "lexical_state_change",
             "stative_result_state",
             "timed_after",
             "perception_nominalization",
@@ -1343,6 +1436,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(expected.issubset(rules))
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["passive_argument_omission"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["lexical_state_change"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["lexical_state_change"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["stative_result_state"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["stative_result_state"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
@@ -1354,6 +1449,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
             "passive_argument_omission": "the toast was buttered",
+            "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
             "timed_after": "after the singing of the Marseillaise, John saluted the flag",
             "perception_nominalization": "Mary saw John leave",
@@ -2153,6 +2249,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("finite passive auxiliaries", web_design)
         self.assertIn("Copular result-state clauses", web_design)
         self.assertIn("`holds_state(vase, integrity_scale, broken)`", web_design)
+        self.assertIn("Lexical change-of-state verbs", web_design)
+        self.assertIn("`Change(Transition(door, access_scale, closed, open))`", web_design)
 
     def test_docs_explain_web_diagnostics_summary(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -2183,12 +2281,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the vase is broken", readme)
         self.assertIn("holds_state(vase, integrity_scale, broken)", readme)
         self.assertIn("the vase was broken by John", readme)
+        self.assertIn("the door opened", readme)
+        self.assertIn("John opened the door with a key", readme)
+        self.assertIn("Change(Transition(door, access_scale, closed, open))", readme)
+        self.assertIn("CauseWithInstrument(john, key, Transition", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
         self.assertIn("the passive auxiliary (`is`, `was`, `are`, or `were`)", readme)
         self.assertIn("Irregular passive participles are normalized", readme)
         self.assertIn("stative_result_state", ast_docs)
         self.assertIn('"predicate": "holds_state"', ast_docs)
+        self.assertIn("lexical_state_change", ast_docs)
+        self.assertIn("CauseWithInstrument(causer, instrument, Transition(...))", ast_docs)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)

@@ -297,6 +297,40 @@ predicates:
 The structural check requires the antecedent and consequent to share the bound
 time variable `t`.
 
+### `lexical_state_change`
+
+Represents lexical change-of-state alternations such as `the door opened`,
+`John opened the door`, and `John opened the door with a key`. The construction
+uses the state lexicon to build a transition directly, without treating the
+changing object as an Agent:
+
+```json
+{
+  "kind": "lexical_state_change",
+  "verb": "open",
+  "transition": {
+    "kind": "transition",
+    "theme": {
+      "name": "door",
+      "type": "Entity"
+    },
+    "state_scale": "access_scale",
+    "source_state": "closed",
+    "target_state": {
+      "name": "open",
+      "type": "State"
+    }
+  }
+}
+```
+
+The inchoative form renders as
+`Change(Transition(door, access_scale, closed, open))`. If a causer is present,
+the AST adds `causer : Entity` and renders `Cause(causer, Transition(...))`.
+If a `with` phrase is present, the AST adds an Instrument entity and renders
+`CauseWithInstrument(causer, instrument, Transition(...))`. The structural
+check requires `state_scale` and `source_state` to match the state lexicon.
+
 ### `stative_result_state`
 
 Represents copular result-state clauses such as `the vase is broken`. The

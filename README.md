@@ -360,6 +360,31 @@ These check as `holds_state(vase, integrity_scale, broken)` and
 `the vase was broken by John`, the passive rule still applies and yields
 `break(john, vase)`. This keeps stative result assertions distinct from
 agentive passive clauses.
+
+Lexical change-of-state verbs are also separated from the generic fallback:
+
+```bash
+python3 -m translator.natural_language_pipeline \
+  "the door opened" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "John opened the door" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "John opened the door with a key" \
+  --require-coq
+```
+
+The inchoative version checks as
+`Change(Transition(door, access_scale, closed, open))`; the causative version
+checks as `Cause(john, Transition(door, access_scale, closed, open))`; and the
+instrumental version checks as
+`CauseWithInstrument(john, key, Transition(door, access_scale, closed, open))`.
+This prevents `the door opened` from being misread as a one-place predicate
+whose Agent is `door`, while still preserving the same typed transition used by
+resultative translations.
 The fallback natural-language parser also recognizes simple result phrases
 whose final object-position word is a known result state, so `John hammered the
 metal flat` becomes

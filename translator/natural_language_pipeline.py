@@ -15,8 +15,10 @@ from pathlib import Path
 from typing import Any
 
 from translator.dependent_type_event_translator import (
+    SOURCE_STATE_BY_TARGET_STATE,
     STATE_SCALE_BY_STATE,
     export_module,
+    state_lexicon_metadata,
     translate,
 )
 
@@ -48,6 +50,7 @@ IRREGULAR_VERBS = {
     "loves": "love",
     "broke": "break",
     "broken": "break",
+    "closed": "close",
     "drank": "drink",
     "drunk": "drink",
     "went": "go",
@@ -55,6 +58,10 @@ IRREGULAR_VERBS = {
     "left": "leave",
     "known": "know",
     "written": "write",
+}
+STATE_CHANGE_VERB_TARGETS = {
+    "open": "open",
+    "close": "closed",
 }
 
 
@@ -682,6 +689,245 @@ def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def lexical_state_change_ast(
+    verb: str,
+    theme: str,
+    target_state: str,
+    causer: str | None = None,
+    instrument: str | None = None,
+) -> dict[str, Any]:
+    transition = {
+        "kind": "transition",
+        "theme": {"name": theme, "type": "Entity"},
+        "state_scale": STATE_SCALE_BY_STATE[target_state],
+        "source_state": SOURCE_STATE_BY_TARGET_STATE[target_state],
+        "target_state": {"name": target_state, "type": "State"},
+    }
+    ast: dict[str, Any] = {
+        "kind": "lexical_state_change",
+        "verb": verb,
+        "transition": transition,
+    }
+    if causer is not None:
+        ast["causer"] = {"name": causer, "type": "Entity", "source": "subject"}
+    if instrument is not None:
+        ast["instrument"] = {
+            "name": instrument,
+            "type": "Entity",
+            "source": "with_phrase",
+        }
+    return ast
+
+
+def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "lexical_state_change":
+        errors.append("ast.kind must be lexical_state_change")
+    verb = ast.get("verb")
+    if verb not in STATE_CHANGE_VERB_TARGETS:
+        errors.append("state-change verb must be open or close")
+
+    transition = ast.get("transition")
+    if not isinstance(transition, dict):
+        errors.append("state-change transition must be an object")
+    else:
+        if transition.get("kind") != "transition":
+            errors.append("state-change transition.kind must be transition")
+        theme = transition.get("theme")
+        if not isinstance(theme, dict):
+            errors.append("state-change theme must be an object")
+        else:
+            if not isinstance(theme.get("name"), str) or not theme.get("name"):
+                errors.append("state-change theme.name must be a non-empty string")
+            if theme.get("type") != "Entity":
+                errors.append("state-change theme must have type Entity")
+        target = transition.get("target_state")
+        if not isinstance(target, dict):
+            errors.append("state-change target_state must be an object")
+            target_name = None
+        else:
+            target_name = target.get("name")
+            if not isinstance(target_name, str) or not target_name:
+                errors.append("state-change target_state.name must be a non-empty string")
+            elif target_name not in SOURCE_STATE_BY_TARGET_STATE:
+                errors.append(f"state-change target has no lexical source state: {target_name}")
+            if target.get("type") != "State":
+                errors.append("state-change target_state must have type State")
+        if isinstance(target_name, str) and target_name in SOURCE_STATE_BY_TARGET_STATE:
+            if transition.get("state_scale") != STATE_SCALE_BY_STATE[target_name]:
+                errors.append("state-change state_scale must match the state lexicon")
+            if transition.get("source_state") != SOURCE_STATE_BY_TARGET_STATE[target_name]:
+                errors.append("state-change source_state must match the state lexicon")
+
+    causer = ast.get("causer")
+    if causer is not None:
+        if not isinstance(causer, dict):
+            errors.append("state-change causer must be an object")
+        else:
+            if not isinstance(causer.get("name"), str) or not causer.get("name"):
+                errors.append("state-change causer.name must be a non-empty string")
+            if causer.get("type") != "Entity":
+                errors.append("state-change causer must have type Entity")
+            if causer.get("source") != "subject":
+                errors.append("state-change causer.source must be subject")
+
+    instrument = ast.get("instrument")
+    if instrument is not None:
+        if causer is None:
+            errors.append("state-change instrument requires a causer")
+        if not isinstance(instrument, dict):
+            errors.append("state-change instrument must be an object")
+        else:
+            if not isinstance(instrument.get("name"), str) or not instrument.get("name"):
+                errors.append("state-change instrument.name must be a non-empty string")
+            if instrument.get("type") != "Entity":
+                errors.append("state-change instrument must have type Entity")
+            if instrument.get("source") != "with_phrase":
+                errors.append("state-change instrument.source must be with_phrase")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def render_state_change_translation(ast: dict[str, Any]) -> str:
+    transition = ast["transition"]
+    theme = transition["theme"]["name"]
+    state_scale = transition["state_scale"]
+    source_state = transition["source_state"]
+    target_state = transition["target_state"]["name"]
+    transition_text = f"Transition({theme}, {state_scale}, {source_state}, {target_state})"
+    instrument = ast.get("instrument")
+    causer = ast.get("causer")
+    if instrument is not None and causer is not None:
+        return f"CauseWithInstrument({causer['name']}, {instrument['name']}, {transition_text})"
+    if causer is not None:
+        return f"Cause({causer['name']}, {transition_text})"
+    return f"Change({transition_text})"
+
+
+def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if len(tokens) < 2:
+        return None
+    for verb_index, token in enumerate(tokens):
+        verb = lemma_verb(token)
+        if verb not in STATE_CHANGE_VERB_TARGETS:
+            continue
+        if any(auxiliary in tokens[:verb_index] for auxiliary in PASSIVE_AUXILIARIES):
+            return None
+        target_state = STATE_CHANGE_VERB_TARGETS[verb]
+        if target_state not in SOURCE_STATE_BY_TARGET_STATE:
+            return None
+
+        if verb_index == len(tokens) - 1 and verb_index > 0:
+            theme = clean_phrase(tokens[:verb_index])
+            ast = lexical_state_change_ast(verb, theme, target_state)
+            break
+
+        if verb_index == 0 or verb_index + 1 >= len(tokens):
+            return None
+        causer = clean_phrase(tokens[:verb_index])
+        rest = tokens[verb_index + 1:]
+        instrument = None
+        if "with" in rest:
+            with_index = rest.index("with")
+            object_tokens = rest[:with_index]
+            instrument_tokens = rest[with_index + 1:]
+            if not object_tokens or not instrument_tokens:
+                return None
+            instrument = clean_phrase(instrument_tokens)
+        else:
+            object_tokens = rest
+        if not object_tokens:
+            return None
+        theme = clean_phrase(object_tokens)
+        ast = lexical_state_change_ast(verb, theme, target_state, causer, instrument)
+        break
+    else:
+        return None
+
+    type_check = check_lexical_state_change_ast(ast)
+    transition = ast["transition"]
+    theme = transition["theme"]["name"]
+    state_scale = transition["state_scale"]
+    source_state = transition["source_state"]
+    target_state = transition["target_state"]["name"]
+    typed_replacement = render_state_change_translation(ast)
+    definition_name = f"lexical_{ast['verb']}_state_change"
+    coq_parameters = [
+        "(* Lexical state-change replacement without an event variable. *)",
+        "Parameter Entity : Type.",
+        "Parameter State : Type.",
+        "Parameter StateScale : Type.",
+        "Parameter TransitionT : Type.",
+        "",
+        f"Parameter {theme} : Entity.",
+        f"Parameter {source_state} : State.",
+        f"Parameter {target_state} : State.",
+        f"Parameter {state_scale} : StateScale.",
+    ]
+    causer = ast.get("causer")
+    instrument = ast.get("instrument")
+    if causer is not None:
+        coq_parameters.append(f"Parameter {causer['name']} : Entity.")
+    if instrument is not None:
+        coq_parameters.append(f"Parameter {instrument['name']} : Entity.")
+    coq_parameters.extend(
+        [
+            "",
+            "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
+            "Parameter Change : TransitionT -> Prop.",
+            "Parameter Cause : Entity -> TransitionT -> Prop.",
+            "Parameter CauseWithInstrument : Entity -> Entity -> TransitionT -> Prop.",
+            "",
+        ]
+    )
+    transition_coq = f"Transition {theme} {state_scale} {source_state} {target_state}"
+    if instrument is not None and causer is not None:
+        body = f"CauseWithInstrument {causer['name']} {instrument['name']} ({transition_coq})"
+    elif causer is not None:
+        body = f"Cause {causer['name']} ({transition_coq})"
+    else:
+        body = f"Change ({transition_coq})"
+    coq_code = "\n".join(
+        [
+            *coq_parameters,
+            f"Definition {definition_name} : Prop :=",
+            f"  {body}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return {
+        "kind": "lexical_state_change",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "lexical-state-change",
+            "source": sentence,
+            "event_style_reference": (
+                f"exists e. {ast['verb']}ing(e) and Theme(e, {theme}) "
+                f"and ResultState(e, {target_state})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "result_state_lexicon": [state_lexicon_metadata(target_state)],
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "A lexical change-of-state verb maps directly to a typed "
+                "state transition; the changing object is not treated as an Agent."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def stative_result_state_ast(
     subject: str,
     state: str,
@@ -1012,6 +1258,18 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Theme :",
                 "Parameter some : Entity.",
                 "Parameter boy : nat ->",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="lexical_state_change",
+            label="Lexical state change",
+            phenomenon="Inchoative/causative state transition without event arguments",
+            analyzer=lexical_state_change_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
             ),
         ),
         ConstructionRule(

@@ -311,6 +311,15 @@ fallback. For `the vase is broken`, the web/API result reports
 as in `the vase was broken by John`, keeps the sentence in the agentive passive
 analysis.
 
+Lexical change-of-state verbs are handled by another registered rule before the
+generic fallback. `the door opened` reports
+`Change(Transition(door, access_scale, closed, open))`, while `John opened the
+door` reports `Cause(john, Transition(door, access_scale, closed, open))`.
+Instrumental `with` phrases are preserved as typed Instrument entities through
+`CauseWithInstrument(john, key, Transition(...))`. This prevents the web/API
+layer from displaying `door` as an Agent merely because the sentence is
+intransitive.
+
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the
 matched construction. `found_forbidden_fragments` reports fragments that were
