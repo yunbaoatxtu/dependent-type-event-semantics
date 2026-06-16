@@ -981,6 +981,7 @@ class TranslatorTests(unittest.TestCase):
             {
                 "kind": "lexical_state_change",
                 "verb": "open",
+                "frame": "inchoative",
                 "transition": {
                     "kind": "transition",
                     "theme": {"name": "door", "type": "Entity"},
@@ -1015,6 +1016,7 @@ class TranslatorTests(unittest.TestCase):
             causative["dependent_type_translation"],
             "Cause(john, Transition(door, access_scale, closed, open))",
         )
+        self.assertEqual(causative["ast"]["frame"], "causative")
         self.assertEqual(
             causative["ast"]["causer"],
             {"name": "john", "type": "Entity", "source": "subject"},
@@ -1028,6 +1030,7 @@ class TranslatorTests(unittest.TestCase):
             instrumental["dependent_type_translation"],
             "CauseWithInstrument(john, key, Transition(door, access_scale, closed, open))",
         )
+        self.assertEqual(instrumental["ast"]["frame"], "instrumental")
         self.assertEqual(
             instrumental["ast"]["instrument"],
             {"name": "key", "type": "Entity", "source": "with_phrase"},
@@ -1062,6 +1065,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(dried["ast"]["transition"]["state_scale"], "moisture_scale")
         self.assertEqual(dried["ast"]["transition"]["source_state"], "wet")
         self.assertEqual(dried["ast"]["transition"]["target_state"]["name"], "dry")
+        self.assertEqual(dried["ast"]["frame"], "inchoative")
         self.assertEqual(
             dried["result_state_lexicon"],
             [
@@ -1088,6 +1092,7 @@ class TranslatorTests(unittest.TestCase):
 
         instrumental = run_pipeline("John dried the clothes with a towel", require_coq=True)
         self.assertTrue(instrumental["ok"])
+        self.assertEqual(instrumental["ast"]["frame"], "instrumental")
         self.assertEqual(
             instrumental["dependent_type_translation"],
             "CauseWithInstrument(john, towel, Transition(clothes, moisture_scale, wet, dry))",
@@ -1143,6 +1148,74 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(filled["coq_check"]["status"], "passed")
 
+    def test_lexical_state_change_enforces_frame_licensing(self) -> None:
+        died = run_pipeline("John died", require_coq=True)
+        self.assertTrue(died["ok"])
+        self.assertEqual(died["ast"]["frame"], "inchoative")
+        self.assertEqual(
+            died["dependent_type_translation"],
+            "Change(Transition(john, life_scale, alive, dead))",
+        )
+        self.assertEqual(
+            died["state_change_verb_entry"],
+            {
+                "verb": "die",
+                "target_state": "dead",
+                "allow_inchoative": True,
+                "allow_causative": False,
+                "allow_instrument": False,
+            },
+        )
+        self.assertEqual(died["coq_check"]["status"], "passed")
+
+        killed = run_pipeline("Mary killed the plant", require_coq=True)
+        self.assertTrue(killed["ok"])
+        self.assertEqual(killed["ast"]["frame"], "causative")
+        self.assertEqual(
+            killed["dependent_type_translation"],
+            "Cause(mary, Transition(plant, life_scale, alive, dead))",
+        )
+        self.assertEqual(
+            killed["state_change_verb_entry"],
+            {
+                "verb": "kill",
+                "target_state": "dead",
+                "allow_inchoative": False,
+                "allow_causative": True,
+                "allow_instrument": True,
+            },
+        )
+        self.assertEqual(killed["coq_check"]["status"], "passed")
+
+        killed_with = run_pipeline("Mary killed the plant with poison", require_coq=True)
+        self.assertTrue(killed_with["ok"])
+        self.assertEqual(killed_with["ast"]["frame"], "instrumental")
+        self.assertEqual(
+            killed_with["dependent_type_translation"],
+            "CauseWithInstrument(mary, poison, Transition(plant, life_scale, alive, dead))",
+        )
+        self.assertEqual(killed_with["coq_check"]["status"], "passed")
+
+        unlicensed_inchoative = run_pipeline("the plant killed", require_coq=False)
+        self.assertFalse(unlicensed_inchoative["ok"])
+        self.assertEqual(unlicensed_inchoative["kind"], "lexical_state_change")
+        self.assertEqual(unlicensed_inchoative["ast"]["frame"], "inchoative")
+        self.assertIn(
+            "state-change verb does not license the inchoative frame",
+            unlicensed_inchoative["type_check"]["errors"],
+        )
+        self.assertEqual(unlicensed_inchoative["coq_check"]["status"], "skipped")
+
+        unlicensed_causative = run_pipeline("Mary died the plant", require_coq=False)
+        self.assertFalse(unlicensed_causative["ok"])
+        self.assertEqual(unlicensed_causative["kind"], "lexical_state_change")
+        self.assertEqual(unlicensed_causative["ast"]["frame"], "causative")
+        self.assertIn(
+            "state-change verb does not license the causative frame",
+            unlicensed_causative["type_check"]["errors"],
+        )
+        self.assertEqual(unlicensed_causative["coq_check"]["status"], "skipped")
+
     def test_lexical_state_change_rejects_bad_source_state(self) -> None:
         result = run_pipeline("the door opened", require_coq=False)
         ast = result["ast"]
@@ -1160,6 +1233,39 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "state-change target_state must match the registered verb target",
+            type_check["errors"],
+        )
+
+    def test_lexical_state_change_rejects_frame_mismatch_and_unlicensed_frames(self) -> None:
+        result = run_pipeline("the door opened", require_coq=False)
+        ast = result["ast"]
+        ast["frame"] = "causative"
+        type_check = check_lexical_state_change_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "state-change frame must match its causer and instrument fields",
+            type_check["errors"],
+        )
+
+        killed = run_pipeline("Mary killed the plant", require_coq=False)
+        killed_ast = killed["ast"]
+        killed_ast["frame"] = "inchoative"
+        killed_ast.pop("causer")
+        type_check = check_lexical_state_change_ast(killed_ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "state-change verb does not license the inchoative frame",
+            type_check["errors"],
+        )
+
+        died = run_pipeline("John died", require_coq=False)
+        died_ast = died["ast"]
+        died_ast["frame"] = "causative"
+        died_ast["causer"] = {"name": "mary", "type": "Entity", "source": "subject"}
+        type_check = check_lexical_state_change_ast(died_ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "state-change verb does not license the causative frame",
             type_check["errors"],
         )
 
@@ -1985,6 +2091,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Next Steps", page)
         self.assertIn("No recovery actions needed.", page)
         self.assertIn("Construction Rule", page)
+        self.assertIn("Type Check", page)
         self.assertIn("Generated Coq", page)
         self.assertIn("repeat(2, knock(0)(John))", page)
 
@@ -2260,6 +2367,25 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(diagnostics["stages"]["type_check"], "failed")
         self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
 
+    def test_web_analyze_sentence_reports_unlicensed_state_change_frame(self) -> None:
+        result = analyze_sentence("the plant killed", require_coq=True)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["kind"], "lexical_state_change")
+        self.assertEqual(result["ast"]["frame"], "inchoative")
+        self.assertIn(
+            "state-change verb does not license the inchoative frame",
+            result["type_check"]["errors"],
+        )
+        self.assertEqual(result["diagnostics"]["failure_stage"], "type_check")
+        self.assertEqual(result["coq_check"]["status"], "skipped")
+
+        page = render_page("the plant killed", require_coq=True)
+        self.assertIn("Needs attention", page)
+        self.assertIn("Failure stage: dependent-type checking.", page)
+        self.assertIn("Type Check", page)
+        self.assertIn("state-change verb does not license the inchoative frame", page)
+        self.assertNotIn("No registered construction rule matched", page)
+
     def test_pipeline_reports_construction_hygiene_separately(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
         self.assertTrue(result["ok"])
@@ -2376,6 +2502,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
+        self.assertIn("`Type Check` panel", readme)
         self.assertIn("`manual_repair_required`", readme)
         self.assertIn("`lexicon_patch_draft_count`", readme)
         self.assertIn("`Translation verified with warnings`", readme)
@@ -2395,12 +2522,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary cleaned the room", readme)
         self.assertIn("the tank emptied", readme)
         self.assertIn("John filled the glass", readme)
+        self.assertIn("John died", readme)
+        self.assertIn("Mary killed the plant with poison", readme)
         self.assertIn("StateChangeVerbEntry", readme)
         self.assertIn("state_change_verb_entry", readme)
+        self.assertIn("explicit `frame`", readme)
         self.assertIn("Change(Transition(door, access_scale, closed, open))", readme)
         self.assertIn("Change(Transition(clothes, moisture_scale, wet, dry))", readme)
         self.assertIn("Change(Transition(water, phase_scale, liquid, frozen))", readme)
+        self.assertIn("Change(Transition(john, life_scale, alive, dead))", readme)
         self.assertIn("Cause(mary, Transition(room, cleanliness_scale, dirty, clean))", readme)
+        self.assertIn("CauseWithInstrument(mary, poison, Transition", readme)
         self.assertIn("CauseWithInstrument(john, key, Transition", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
@@ -2415,8 +2547,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("cleanliness_scale", ast_docs)
         self.assertIn("content_scale", ast_docs)
         self.assertIn('"state_change_verb_entry"', ast_docs)
+        self.assertIn('"frame": "inchoative"', ast_docs)
+        self.assertIn("causative `die` frame", ast_docs)
+        self.assertIn("inchoative `kill` frame", ast_docs)
         self.assertIn("registered_verb_target_state_mismatch", ast_docs)
         self.assertIn("state_change_verb_entry", web_design)
+        self.assertIn("AST `frame` field", web_design)
+        self.assertIn("`the plant killed` is not accepted", web_design)
+        self.assertIn("Type Check panel", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)

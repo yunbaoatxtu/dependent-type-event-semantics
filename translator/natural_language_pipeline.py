@@ -50,6 +50,7 @@ IRREGULAR_VERBS = {
     "loves": "love",
     "broke": "break",
     "broken": "break",
+    "died": "die",
     "dried": "dry",
     "emptied": "empty",
     "filled": "fill",
@@ -63,6 +64,7 @@ IRREGULAR_VERBS = {
     "ran": "run",
     "left": "leave",
     "known": "know",
+    "killed": "kill",
     "written": "write",
 }
 @dataclass(frozen=True)
@@ -84,11 +86,13 @@ class StateChangeVerbEntry:
 
 STATE_CHANGE_VERB_REGISTRY = {
     "clean": StateChangeVerbEntry("clean"),
+    "die": StateChangeVerbEntry("dead", allow_causative=False, allow_instrument=False),
     "dirty": StateChangeVerbEntry("dirty"),
     "dry": StateChangeVerbEntry("dry"),
     "empty": StateChangeVerbEntry("empty"),
     "fill": StateChangeVerbEntry("full"),
     "freeze": StateChangeVerbEntry("frozen"),
+    "kill": StateChangeVerbEntry("dead", allow_inchoative=False),
     "melt": StateChangeVerbEntry("melted"),
     "open": StateChangeVerbEntry("open"),
     "close": StateChangeVerbEntry("closed"),
@@ -742,11 +746,14 @@ def lexical_state_change_ast(
     ast: dict[str, Any] = {
         "kind": "lexical_state_change",
         "verb": verb,
+        "frame": "inchoative",
         "transition": transition,
     }
     if causer is not None:
+        ast["frame"] = "causative"
         ast["causer"] = {"name": causer, "type": "Entity", "source": "subject"}
     if instrument is not None:
+        ast["frame"] = "instrumental"
         ast["instrument"] = {
             "name": instrument,
             "type": "Entity",
@@ -763,6 +770,9 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
     entry = STATE_CHANGE_VERB_REGISTRY.get(verb)
     if entry is None:
         errors.append("state-change verb must be registered in STATE_CHANGE_VERB_REGISTRY")
+    frame = ast.get("frame")
+    if frame not in {"inchoative", "causative", "instrumental"}:
+        errors.append("state-change frame must be inchoative, causative, or instrumental")
 
     transition = ast.get("transition")
     if not isinstance(transition, dict):
@@ -799,10 +809,15 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append("state-change source_state must match the state lexicon")
 
     causer = ast.get("causer")
-    if causer is None and entry is not None and not entry.allow_inchoative:
+    instrument = ast.get("instrument")
+    expected_frame = "instrumental" if instrument is not None else "causative" if causer is not None else "inchoative"
+    if frame != expected_frame:
+        errors.append("state-change frame must match its causer and instrument fields")
+
+    if frame == "inchoative" and entry is not None and not entry.allow_inchoative:
         errors.append("state-change verb does not license the inchoative frame")
     if causer is not None:
-        if entry is not None and not entry.allow_causative:
+        if frame == "causative" and entry is not None and not entry.allow_causative:
             errors.append("state-change verb does not license the causative frame")
         if not isinstance(causer, dict):
             errors.append("state-change causer must be an object")
@@ -814,11 +829,10 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
             if causer.get("source") != "subject":
                 errors.append("state-change causer.source must be subject")
 
-    instrument = ast.get("instrument")
     if instrument is not None:
         if causer is None:
             errors.append("state-change instrument requires a causer")
-        if entry is not None and not entry.allow_instrument:
+        if frame == "instrumental" and entry is not None and not entry.allow_instrument:
             errors.append("state-change verb does not license the instrumental frame")
         if not isinstance(instrument, dict):
             errors.append("state-change instrument must be an object")
@@ -853,6 +867,34 @@ def render_state_change_translation(ast: dict[str, Any]) -> str:
     return f"Change({transition_text})"
 
 
+def lexical_state_change_failure(sentence: str, ast: dict[str, Any]) -> dict[str, Any]:
+    type_check = check_lexical_state_change_ast(ast)
+    return {
+        "kind": "lexical_state_change",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "lexical-state-change",
+            "source": sentence,
+            "event_style_reference": "blocked before event-style fallback",
+            "typed_replacement": None,
+        },
+        "dependent_type_translation": "No licensed lexical state-change frame.",
+        "result_state_lexicon": [
+            state_lexicon_metadata(ast["transition"]["target_state"]["name"])
+        ],
+        "state_change_verb_entry": state_change_verb_metadata(ast["verb"]),
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "A registered state-change verb was recognized, but the surface "
+                "frame is not licensed by its lexical registration."
+            ),
+        },
+        "coq_code": "",
+    }
+
+
 def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     if len(tokens) < 2:
@@ -869,22 +911,18 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
             return None
 
         if verb_index == len(tokens) - 1 and verb_index > 0:
-            if not entry.allow_inchoative:
-                return None
             theme = clean_phrase(tokens[:verb_index])
             ast = lexical_state_change_ast(verb, theme, target_state)
+            if not entry.allow_inchoative:
+                return lexical_state_change_failure(sentence, ast)
             break
 
         if verb_index == 0 or verb_index + 1 >= len(tokens):
-            return None
-        if not entry.allow_causative:
             return None
         causer = clean_phrase(tokens[:verb_index])
         rest = tokens[verb_index + 1:]
         instrument = None
         if "with" in rest:
-            if not entry.allow_instrument:
-                return None
             with_index = rest.index("with")
             object_tokens = rest[:with_index]
             instrument_tokens = rest[with_index + 1:]
@@ -897,6 +935,8 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
             return None
         theme = clean_phrase(object_tokens)
         ast = lexical_state_change_ast(verb, theme, target_state, causer, instrument)
+        if not entry.allow_causative or (instrument is not None and not entry.allow_instrument):
+            return lexical_state_change_failure(sentence, ast)
         break
     else:
         return None

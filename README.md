@@ -260,6 +260,9 @@ than attempted.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `next-step--<kind>` CSS class for frontend automation.
+It also renders a dedicated `Type Check` panel, so construction-specific AST
+errors such as an unlicensed lexical state-change frame are visible beside the
+AST instead of being hidden behind the status banner.
 `diagnostics.warnings` records non-fatal semantic audit notices. For example,
 `Mary painted the door red` can pass type checking and Coq/Rocq validation while
 still warning that `red` has no unique lexical pre-state, so the transition
@@ -391,6 +394,14 @@ python3 -m translator.natural_language_pipeline \
 python3 -m translator.natural_language_pipeline \
   "Mary cleaned the room" \
   --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "John died" \
+  --require-coq
+
+python3 -m translator.natural_language_pipeline \
+  "Mary killed the plant with poison" \
+  --require-coq
 ```
 
 The inchoative version checks as
@@ -409,12 +420,21 @@ The same registered construction now draws from the broader state lexicon:
 `Cause(mary, Transition(room, cleanliness_scale, dirty, clean))`.
 Content-scale alternations such as `the tank emptied` and
 `John filled the glass` likewise map to transitions over `full` and `empty`.
+Life-scale alternations demonstrate asymmetric frame licensing:
+`John died` checks as `Change(Transition(john, life_scale, alive, dead))`,
+while `Mary killed the plant with poison` checks as
+`CauseWithInstrument(mary, poison, Transition(plant, life_scale, alive, dead))`.
+The registered verb `die` licenses only the inchoative frame; `kill` licenses
+causative and instrumental frames but not an inchoative frame such as
+`the plant killed`.
 Internally these verbs are registered as structured `StateChangeVerbEntry`
 records, not as loose string rewrites. Each entry names the target state and
 the licensed inchoative, causative, and instrumental frames, and the emitted
 result includes `state_change_verb_entry` so clients can audit the lexical
-choice that selected the transition. The AST type checker rejects a mismatch
-such as pairing the registered verb `open` with the target state `closed`.
+choice that selected the transition. The AST carries an explicit `frame`
+(`inchoative`, `causative`, or `instrumental`), and the type checker rejects a
+mismatch such as pairing the registered verb `open` with the target state
+`closed`, or assigning a causative frame without a causer.
 This prevents `the door opened` and similar inchoatives from being misread as
 one-place predicates whose changing themes are Agents, while still preserving
 the same typed transition used by resultative translations.

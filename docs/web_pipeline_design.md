@@ -21,7 +21,9 @@ The repository also includes a small dependency-free local web demo in
 `web/app.py`. It is intended as a thin interface over the verified backend, not
 as a separate semantic implementation. The page renders `result_state_lexicon`
 twice: a compact human-readable Result State Lexicon panel and a raw JSON panel
-for exact audit data.
+for exact audit data. It also renders a dedicated Type Check panel, so failed
+construction-specific AST checks expose their error list directly instead of
+forcing users to infer the problem from the status banner alone.
 
 ## Proposed Request Flow
 
@@ -325,12 +327,16 @@ reports `Change(Transition(water, phase_scale, liquid, frozen))`, and
 `Mary cleaned the room` reports
 `Cause(mary, Transition(room, cleanliness_scale, dirty, clean))`. Content-scale
 sentences such as `the tank emptied` and `John filled the glass` are treated in
-the same way over `full` and `empty`. The response also carries
+the same way over `full` and `empty`. Life-scale verbs exercise asymmetric
+frame licensing: `John died` is inchoative over `alive -> dead`, while
+`Mary killed the plant with poison` is instrumental-causative over the same
+scale, and `the plant killed` is not accepted as a lexical state-change
+analysis. The response carries both an AST `frame` field and
 `state_change_verb_entry`, a structured record with the selected target state
 and the licensed inchoative, causative, and instrumental frames. This gives the
-web/API layer a stable audit field for explaining why a given verb selected a
+web/API layer stable audit fields for explaining why a given verb selected a
 given transition, and it lets the type checker reject an internally malformed
-state-change AST whose registered verb and target state disagree.
+state-change AST whose registered verb, target state, or frame disagree.
 
 The `Construction Rule` panel must distinguish a rule's policy from an actual
 failure. `forbidden_coq_fragments` names fragments that would be illegal for the

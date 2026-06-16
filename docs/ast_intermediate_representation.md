@@ -304,13 +304,16 @@ time variable `t`.
 Represents lexical change-of-state alternations such as `the door opened`,
 `John opened the door`, `John opened the door with a key`, `the clothes dried`,
 `the water froze`, `Mary cleaned the room`, `the tank emptied`, and `John
-filled the glass`. The construction uses the state lexicon to build a
-transition directly, without treating the changing object as an Agent:
+filled the glass`. It also supports asymmetric life-scale registrations such as
+`John died` and `Mary killed the plant with poison`. The construction uses the
+state lexicon to build a transition directly, without treating the changing
+object as an Agent:
 
 ```json
 {
   "kind": "lexical_state_change",
   "verb": "open",
+  "frame": "inchoative",
   "transition": {
     "kind": "transition",
     "theme": {
@@ -329,8 +332,9 @@ transition directly, without treating the changing object as an Agent:
 
 The inchoative form renders as
 `Change(Transition(door, access_scale, closed, open))`. If a causer is present,
-the AST adds `causer : Entity` and renders `Cause(causer, Transition(...))`.
-If a `with` phrase is present, the AST adds an Instrument entity and renders
+the AST records `frame: "causative"`, adds `causer : Entity`, and renders
+`Cause(causer, Transition(...))`. If a `with` phrase is present, the AST records
+`frame: "instrumental"`, adds an Instrument entity, and renders
 `CauseWithInstrument(causer, instrument, Transition(...))`. The structural
 check requires `state_scale` and `source_state` to match the state lexicon, so
 `the clothes dried` receives `moisture_scale` with source `wet`, while `the
@@ -355,6 +359,12 @@ The AST checker uses this registration as an additional guard: a malformed AST
 whose verb is `open` but whose target state is `closed` is rejected even though
 both states are valid members of the access scale, because the registered verb
 and target state disagree (`registered_verb_target_state_mismatch`).
+The same checker requires `frame` to agree with the presence or absence of
+`causer` and `instrument`, and it enforces lexical frame licensing. Thus
+`die` licenses `Change(Transition(john, life_scale, alive, dead))` but rejects a
+causative `die` frame, while `kill` licenses
+`CauseWithInstrument(mary, poison, Transition(plant, life_scale, alive, dead))`
+but rejects an inchoative `kill` frame.
 
 ### `stative_result_state`
 
@@ -503,6 +513,10 @@ Current type rules:
   analysis.
 - `cause` has type `t` only when its `effect` has type `TransitionT`; its
   optional `activity` must have type `t`.
+- `lexical_state_change` has type `Prop` when its `frame` is one of
+  `inchoative`, `causative`, or `instrumental`, the frame matches the `causer`
+  and `instrument` fields, the registered verb licenses that frame, and the
+  transition target matches both the state lexicon and the verb registration.
 - `timed_after` has type `Prop` when it binds `t_sing : Time` and
   `t_salute : Time`, the first predicate has type `Entity -> Time -> Prop`, the
   second predicate has type `Entity -> Entity -> Time -> Prop`, and
