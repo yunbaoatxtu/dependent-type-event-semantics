@@ -96,10 +96,13 @@ can treat as a candidate STATE_LEXICON patch queue. On any failure, it must stil
 `modifier_role_audit` is a flat list extracted from the AST. Each record gives
 the application path, function, modifier string, `Adv` type, and semantic role,
 so the page can show a `Modifier Role Audit` panel without making the frontend
-traverse the full AST. Each record also carries the nested `surface_lexicon`
-audit from the AST, including `surface_modifier`, `normalized_modifier`,
-`type`, `semantic_role`, and the source module, so API clients can confirm that
-the displayed modifier is the same `Adv` constant exported to Coq/Rocq.
+traverse the full AST. The path is structural: a modifier inside a temporal
+wrapper is reported at a nested path such as `ast.body`, rather than being
+dropped or flattened into an ambiguous top-level record. Each record also
+carries the nested `surface_lexicon` audit from the AST, including
+`surface_modifier`, `normalized_modifier`, `type`, `semantic_role`, and the
+source module, so API clients can confirm that the displayed modifier is the
+same `Adv` constant exported to Coq/Rocq.
 
 `diagnostics.failure_stage` is the machine-readable failure locator. It is
 `null` on successful translations and otherwise one of `input`, `parsing`,

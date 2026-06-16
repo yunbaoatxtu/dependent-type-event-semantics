@@ -2877,6 +2877,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`John went from home to school`", readme)
         self.assertIn("`from_home : Adv`", readme)
         self.assertIn("`to_school : Adv`", readme)
+        self.assertIn("paths like `ast.body`", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("the doors were opened by John", readme)
         self.assertIn("John was seen by Mary", readme)
@@ -3061,6 +3062,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE` table", web_design)
         self.assertIn("`from(home)` normalizes", web_design)
         self.assertIn("`to(school)` normalizes", web_design)
+        self.assertIn("nested path such as `ast.body`", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", ast_docs)
         self.assertIn("`source_state_only`", ast_docs)
 
