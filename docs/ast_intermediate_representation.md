@@ -726,8 +726,11 @@ Current type rules:
   its body has type `t`.
 - `not` has type `t` when its body has type `t`. Simple do-support negation
   such as `John did not walk` is compiled by wrapping the positive-clause AST in
-  this constructor; coordinated do-support negation is rejected before fallback
-  so it cannot be misread as a malformed subject or object.
+  this constructor. Right-branch coordinated do-support negation, as in `John
+  walked and did not talk`, records `negated: true` on the second checked
+  coordinate and renders `and_T(walk(john), not_T(talk(john)))`. Scope-ambiguous
+  coordinated do-support negation is still rejected before fallback so it cannot
+  be misread as a malformed subject or object.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the

@@ -61,6 +61,8 @@ ROCQ_ENV = Path(
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
+
+
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -282,6 +284,9 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
         return None
 
     if "and" in tokens:
+        coordinated = coordinated_do_support_negation_pipeline(sentence)
+        if coordinated is not None:
+            return coordinated
         return {
             "kind": "do_support_negation",
             "input_sentence": sentence,
@@ -361,6 +366,49 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
         },
         "coq_code": coq_code,
     }
+
+
+def wrap_negated_translation(term: str, negated: bool) -> str:
+    return f"not_T({term})" if negated else term
+
+
+def wrap_negated_coq(term: str, negated: bool) -> str:
+    return f"not_T ({term})" if negated else term
+
+
+def coordinated_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
+    tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
+    if tokens.count("and") != 1:
+        return None
+    and_index = tokens.index("and")
+    if and_index + 3 >= len(tokens):
+        return None
+    auxiliary = tokens[and_index + 1]
+    if auxiliary not in DO_SUPPORT_AUXILIARIES or tokens[and_index + 2] != "not":
+        return None
+    right_surface = tokens[and_index + 3]
+    if not is_likely_surface_verb(right_surface):
+        return None
+
+    transitive = coordinated_transitive_do_support_negation(
+        sentence,
+        tokens,
+        and_index,
+        right_surface,
+        fronted_adv_modifiers,
+        fronted_time_modifiers,
+    )
+    if transitive is not None:
+        return transitive
+    return coordinated_intransitive_do_support_negation(
+        sentence,
+        tokens,
+        and_index,
+        right_surface,
+        fronted_adv_modifiers,
+        fronted_time_modifiers,
+    )
 
 
 def timed_after_ast(
@@ -1951,6 +1999,10 @@ def check_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append(
                     f"predicate coordination predicates[{index}].name must match its surface lemma"
                 )
+            if "negated" in predicate and not isinstance(predicate["negated"], bool):
+                errors.append(
+                    f"predicate coordination predicates[{index}].negated must be boolean"
+                )
             if predicate.get("predicate_type") != expected_predicate_type:
                 errors.append(
                     "predicate coordination "
@@ -2010,6 +2062,8 @@ def render_predicate_coordination_translation(ast: dict[str, Any]) -> str:
     else:
         left = f"{predicates[0]['name']}({subject})"
         right = f"{predicates[1]['name']}({subject})"
+    left = wrap_negated_translation(left, bool(predicates[0].get("negated")))
+    right = wrap_negated_translation(right, bool(predicates[1].get("negated")))
     proposition = f"and_T({left}, {right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
@@ -2031,6 +2085,8 @@ def render_predicate_coordination_coq(
     else:
         left = f"{predicates[0]['name']} {subject}"
         right = f"{predicates[1]['name']} {subject}"
+    left = wrap_negated_coq(left, bool(predicates[0].get("negated")))
+    right = wrap_negated_coq(right, bool(predicates[1].get("negated")))
     proposition = f"and_T ({left}) ({right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
@@ -2058,9 +2114,13 @@ def render_predicate_coordination_coq(
             f"Parameter {predicate} : forall n : nat, ModifierSeq n -> Entity -> PropT."
             for predicate in predicate_names
         )
+        if any(predicate.get("negated") for predicate in predicates):
+            lines.append("Parameter not_T : PropT -> PropT.")
         lines.append("Parameter and_T : PropT -> PropT -> PropT.")
     else:
         lines.extend(f"Parameter {predicate} : Entity -> Prop." for predicate in predicate_names)
+        if any(predicate.get("negated") for predicate in predicates):
+            lines.append("Parameter not_T : Prop -> Prop.")
         lines.append("Parameter and_T : Prop -> Prop -> Prop.")
     if ast["time_modifiers"]:
         lines.extend(
@@ -2262,6 +2322,11 @@ def check_transitive_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str
                     "transitive predicate coordination "
                     f"clauses[{index}].predicate.name must match its surface lemma"
                 )
+            if "negated" in clause and not isinstance(clause["negated"], bool):
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].negated must be boolean"
+                )
             obj = clause.get("object")
             if not isinstance(obj, dict):
                 errors.append(
@@ -2374,6 +2439,8 @@ def render_transitive_predicate_coordination_translation(ast: dict[str, Any]) ->
     else:
         left = f"{clauses[0]['predicate']['name']}({subject}, {clauses[0]['object']['name']})"
         right = f"{clauses[1]['predicate']['name']}({subject}, {clauses[1]['object']['name']})"
+    left = wrap_negated_translation(left, bool(clauses[0].get("negated")))
+    right = wrap_negated_translation(right, bool(clauses[1].get("negated")))
     proposition = f"and_T({left}, {right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
@@ -2401,6 +2468,8 @@ def render_transitive_predicate_coordination_coq(
     else:
         left = f"{clauses[0]['predicate']['name']} {subject} {clauses[0]['object']['name']}"
         right = f"{clauses[1]['predicate']['name']} {subject} {clauses[1]['object']['name']}"
+    left = wrap_negated_coq(left, bool(clauses[0].get("negated")))
+    right = wrap_negated_coq(right, bool(clauses[1].get("negated")))
     proposition = f"and_T ({left}) ({right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
@@ -2451,8 +2520,12 @@ def render_transitive_predicate_coordination_coq(
             f"{predicate_type}."
         )
     if modifiers:
+        if any(clause.get("negated") for clause in clauses):
+            lines.append("Parameter not_T : PropT -> PropT.")
         lines.append("Parameter and_T : PropT -> PropT -> PropT.")
     else:
+        if any(clause.get("negated") for clause in clauses):
+            lines.append("Parameter not_T : Prop -> Prop.")
         lines.append("Parameter and_T : Prop -> Prop -> Prop.")
     if ast["time_modifiers"]:
         lines.extend(
@@ -2494,6 +2567,196 @@ def split_object_tokens_and_modifiers(
             adv_modifiers, time_modifiers = modifier_parse
             return tokens[:split_index], adv_modifiers, time_modifiers
     return None
+
+
+def coordinated_intransitive_do_support_negation(
+    sentence: str,
+    tokens: list[str],
+    and_index: int,
+    right_surface: str,
+    fronted_adv_modifiers: list[dict[str, Any]],
+    fronted_time_modifiers: list[dict[str, str]],
+) -> dict[str, Any] | None:
+    left_predicate_index = and_index - 1
+    if left_predicate_index <= 0:
+        return None
+    left_surface = tokens[left_predicate_index]
+    if not is_likely_surface_verb(left_surface):
+        return None
+    subject = clean_phrase(tokens[:left_predicate_index])
+    if subject == "entity":
+        return None
+    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[and_index + 4 :])
+    if trailing_modifiers is None:
+        return None
+    trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+    predicate_type = (
+        "forall n : nat, ModifierSeq n -> Entity -> PropT"
+        if shared_adv_modifiers
+        else "Entity -> Prop"
+    )
+    predicates = [
+        {
+            "surface": left_surface,
+            "name": lemma_verb(left_surface),
+            "predicate_type": predicate_type,
+        },
+        {
+            "surface": right_surface,
+            "name": lemma_verb(right_surface),
+            "predicate_type": predicate_type,
+            "negated": True,
+        },
+    ]
+    ast = predicate_coordination_ast(
+        subject,
+        predicates,
+        shared_adv_modifiers,
+        time_modifiers,
+    )
+    type_check = check_predicate_coordination_ast(ast)
+    typed_replacement = render_predicate_coordination_translation(ast)
+    coq_code = render_predicate_coordination_coq(
+        "coordinated_do_support_negation_assertion",
+        ast,
+    )
+    return {
+        "kind": "coordinated_do_support_negation",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} coordinates {predicates[0]['name']} with "
+            f"the right-branch do-support negation not {predicates[1]['name']}."
+        ),
+        "event_semantics": {
+            "analysis": "right-branch-do-support-negation",
+            "source": sentence,
+            "event_style_reference": (
+                "exists e1. "
+                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) and "
+                "not(exists e2. "
+                f"{predicates[1]['name']}(e2) and Agent(e2, {subject}))"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Right-branch do-support negation is represented by wrapping "
+                "only the second checked coordinate in not_T; no Event, Agent, "
+                "or Theme predicate is exported."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
+def coordinated_transitive_do_support_negation(
+    sentence: str,
+    tokens: list[str],
+    and_index: int,
+    right_surface: str,
+    fronted_adv_modifiers: list[dict[str, Any]],
+    fronted_time_modifiers: list[dict[str, str]],
+) -> dict[str, Any] | None:
+    left_verb_indices = [
+        index
+        for index in range(1, and_index)
+        if is_likely_surface_verb(tokens[index])
+    ]
+    if len(left_verb_indices) != 1:
+        return None
+    left_verb_index = left_verb_indices[0]
+    if left_verb_index == 0 or left_verb_index + 1 >= and_index:
+        return None
+    subject = clean_phrase(tokens[:left_verb_index])
+    if subject == "entity":
+        return None
+    left_surface = tokens[left_verb_index]
+    left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
+    right_tail = split_object_tokens_and_modifiers(tokens[and_index + 4 :])
+    if right_tail is None:
+        return None
+    right_object_tokens, trailing_adv_modifiers, trailing_time_modifiers = right_tail
+    right_object = clean_phrase(right_object_tokens)
+    if left_object == "entity" or right_object == "entity":
+        return None
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+
+    clauses: list[dict[str, Any]] = []
+    for surface, obj, negated in (
+        (left_surface, left_object, False),
+        (right_surface, right_object, True),
+    ):
+        predicate = lemma_verb(surface)
+        object_type = object_type_for_transitive_predicate(predicate)
+        clauses.append(
+            {
+                "predicate": {
+                    "surface": surface,
+                    "name": predicate,
+                    "predicate_type": (
+                        "forall n : nat, ModifierSeq n -> "
+                        f"Entity -> {object_type} -> PropT"
+                        if shared_adv_modifiers
+                        else f"Entity -> {object_type} -> Prop"
+                    ),
+                },
+                "object": {"name": obj, "type": object_type},
+                "negated": negated,
+            }
+        )
+
+    ast = transitive_predicate_coordination_ast(
+        subject,
+        clauses,
+        shared_adv_modifiers,
+        time_modifiers,
+    )
+    type_check = check_transitive_predicate_coordination_ast(ast)
+    typed_replacement = render_transitive_predicate_coordination_translation(ast)
+    coq_code = render_transitive_predicate_coordination_coq(
+        "coordinated_transitive_do_support_negation_assertion",
+        ast,
+    )
+    return {
+        "kind": "coordinated_do_support_negation",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} coordinates "
+            f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
+            f"{clauses[0]['object']['type']}) with right-branch negation not "
+            f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
+            f"{clauses[1]['object']['type']})."
+        ),
+        "event_semantics": {
+            "analysis": "right-branch-do-support-negation",
+            "source": sentence,
+            "event_style_reference": (
+                "exists e1. "
+                f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                f"Theme(e1, {clauses[0]['object']['name']}) and not(exists e2. "
+                f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                f"Theme(e2, {clauses[1]['object']['name']}))"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Right-branch transitive do-support negation is represented by "
+                "wrapping only the second typed coordinate in not_T; object "
+                "lexical types are still checked before Coq."
+            ),
+        },
+        "coq_code": coq_code,
+    }
 
 
 def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:

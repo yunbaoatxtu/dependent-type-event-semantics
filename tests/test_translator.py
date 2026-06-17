@@ -2493,11 +2493,47 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter bread : Food.", transitive["coq_code"])
         self.assertEqual(transitive["coq_check"]["status"], "passed")
 
-    def test_do_support_negation_rejects_coordination_before_fallback(self) -> None:
+    def test_do_support_negation_handles_right_branch_coordination(self) -> None:
+        intransitive = run_pipeline("John walked and did not talk", require_coq=True)
+        self.assertTrue(intransitive["ok"])
+        self.assertEqual(intransitive["kind"], "coordinated_do_support_negation")
+        self.assertEqual(intransitive["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(
+            intransitive["dependent_type_translation"],
+            "and_T(walk(john), not_T(talk(john)))",
+        )
+        self.assertIn("Parameter not_T : Prop -> Prop.", intransitive["coq_code"])
+        self.assertIn(
+            "Definition coordinated_do_support_negation_assertion : Prop :=",
+            intransitive["coq_code"],
+        )
+        self.assertIn(
+            "and_T (walk john) (not_T (talk john))",
+            intransitive["coq_code"],
+        )
+        self.assertEqual(intransitive["coq_check"]["status"], "passed")
+
+        transitive = run_pipeline(
+            "John ate bread and did not drink water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(transitive["kind"], "coordinated_do_support_negation")
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            "and_T(eat(john, bread), not_T(drink(john, water)))",
+        )
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertIn(
+            "and_T (eat john bread) (not_T (drink john water))",
+            transitive["coq_code"],
+        )
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+
+    def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
         for sentence in (
             "John did not walk and talk",
-            "John walked and did not talk",
-            "John ate bread and did not drink water",
             "John did not eat bread and drank water",
         ):
             with self.subTest(sentence=sentence):
@@ -4769,6 +4805,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary killed the plant with poison", readme)
         self.assertIn("John did not walk", readme)
         self.assertIn("not_T(walk(0)(john))", readme)
+        self.assertIn("and_T(walk(john), not_T(talk(john)))", readme)
         self.assertIn("and_did_not_talk", readme)
         self.assertIn("StateChangeVerbEntry", readme)
         self.assertIn("translator/state_change_lexicon.py", readme)
@@ -4827,7 +4864,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"source": "omitted_existential"', ast_docs)
         self.assertIn("predicate_coordination", ast_docs)
         self.assertIn("### `not`", ast_docs)
-        self.assertIn("coordinated do-support negation is rejected", ast_docs)
+        self.assertIn("negated: true", ast_docs)
+        self.assertIn("Scope-ambiguous", ast_docs)
+        self.assertIn("coordinated do-support negation is still rejected", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Prop"', ast_docs)
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)
