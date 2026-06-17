@@ -59,6 +59,22 @@ COMMON_ADVERBS = {
     "happily",
     "sadly",
 }
+COMMON_VERB_LEMMAS = {
+    "admire",
+    "break",
+    "butter",
+    "chase",
+    "drink",
+    "eat",
+    "fly",
+    "go",
+    "knock",
+    "love",
+    "read",
+    "sit",
+    "visit",
+    "walk",
+}
 TEMPORAL_ADVERBS = {
     "today",
     "tomorrow",
@@ -139,6 +155,10 @@ def lemma_verb(token: str) -> str:
             return stem[:-1]
         return stem
     return token
+
+
+def is_likely_surface_verb(token: str) -> bool:
+    return lemma_verb(token) in COMMON_VERB_LEMMAS
 
 
 def is_passive_participle(token: str) -> bool:

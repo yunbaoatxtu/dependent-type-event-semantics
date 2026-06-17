@@ -67,10 +67,13 @@ translation and AST, and generated Coq code with an optional Coq/Rocq boundary
 check. For unlisted sentences, the fallback analysis is intentionally shallow:
 it identifies a subject, predicate, possible object, common adverbs, count
 words, simple word or digit `time(s)` count phrases, single-word and multi-word
-temporal expressions, and simple prepositional modifiers. The shared surface
-lexicon also normalizes common past-tense forms before translation, so examples
-such as `a dog chased a cat` export `chase` rather than a truncated predicate
-name.
+temporal expressions, and simple prepositional modifiers. It also uses a small
+shared verb-lemma table to avoid splitting simple adjective+noun subjects at the
+wrong point: `a black cat sits on a mat` becomes
+`sit(1)(on(mat), black_cat)`, not `cat(1)(on(mat), black, sits)`. The shared
+surface lexicon also normalizes common past-tense forms before translation, so
+examples such as `a dog chased a cat` export `chase` rather than a truncated
+predicate name.
 
 Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
 translation, so `Mary admired the painting yesterday` becomes

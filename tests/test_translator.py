@@ -41,11 +41,13 @@ from translator.state_change_lexicon import (
 from translator.surface_lexicon import (
     COUNT_NOUNS,
     COUNT_PHRASE_WORDS,
+    COMMON_VERB_LEMMAS,
     MODIFIER_ROLE_BY_PREDICATE,
     PASSIVE_AUXILIARIES,
     TEMPORAL_ADVERBS,
     TEMPORAL_PHRASES,
     count_phrase_value,
+    is_likely_surface_verb,
     modifier_predicate,
     modifier_semantic_role,
     modifier_surface_audit,
@@ -323,6 +325,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(count_phrase_value("2"), "2")
         self.assertEqual(count_phrase_value("03"), "3")
         self.assertIsNone(count_phrase_value("several"))
+        self.assertIn("sit", COMMON_VERB_LEMMAS)
+        self.assertTrue(is_likely_surface_verb("sits"))
+        self.assertTrue(is_likely_surface_verb("chased"))
+        self.assertTrue(is_likely_surface_verb("flew"))
+        self.assertFalse(is_likely_surface_verb("cat"))
         self.assertEqual(
             TEMPORAL_PHRASES,
             {("last", "night"): "last_night", ("this", "morning"): "this_morning"},
@@ -1083,6 +1090,51 @@ class TranslatorTests(unittest.TestCase):
             "Parameter sit : forall n : nat, ModifierSeq n -> Entity -> PropT.",
             result["coq_code"],
         )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_handles_adjective_subject_phrase(self) -> None:
+        result = run_pipeline("a black cat sits on a mat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "sit(1)(on(mat), black_cat)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "sit", "args": ["e"]}, atoms)
+        self.assertIn({"pred": "Agent", "args": ["e", "black_cat"]}, atoms)
+        self.assertNotIn({"pred": "cat", "args": ["e"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_adjective_subject_preserves_object_theme(self) -> None:
+        result = run_pipeline("the old dog chased a cat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "chase(0)(old_dog, cat)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "chase", "args": ["e"]}, atoms)
+        self.assertIn({"pred": "Agent", "args": ["e", "old_dog"]}, atoms)
+        self.assertIn({"pred": "Theme", "args": ["e", "cat"]}, atoms)
+        self.assertNotIn({"pred": "dog", "args": ["e"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_adjective_subject_preserves_directional_modifiers(self) -> None:
+        result = run_pipeline(
+            "the little bird flew from the tree to the roof",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "fly(2)(from(tree), to(roof), little_bird)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "fly", "args": ["e"]}, atoms)
+        self.assertIn({"pred": "Agent", "args": ["e", "little_bird"]}, atoms)
+        self.assertIn({"pred": "from", "args": ["e", "tree"]}, atoms)
+        self.assertIn({"pred": "to", "args": ["e", "roof"]}, atoms)
+        self.assertNotIn({"pred": "bird", "args": ["e"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_natural_language_pipeline_lemmatizes_regular_past_tense(self) -> None:

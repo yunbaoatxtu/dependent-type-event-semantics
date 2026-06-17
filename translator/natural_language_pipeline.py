@@ -37,6 +37,7 @@ from translator.surface_lexicon import (
     TEMPORAL_ADVERBS,
     count_phrase_value,
     is_passive_participle,
+    is_likely_surface_verb,
     lemma_verb,
     passive_participle_audit,
     surface_verb_audit,
@@ -1485,13 +1486,24 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     if len(tokens) < 2:
         raise ValueError("Please enter at least a subject and a predicate.")
 
-    subject_tokens: list[str] = []
     idx = 0
     while idx < len(tokens) and tokens[idx] in ARTICLES:
         idx += 1
-    if idx < len(tokens):
-        subject_tokens.append(tokens[idx])
+    if idx >= len(tokens):
+        raise ValueError("Could not identify a predicate after the subject.")
+
+    subject_start = idx
+    predicate_index = None
+    for candidate in range(subject_start + 1, len(tokens)):
+        if is_likely_surface_verb(tokens[candidate]):
+            predicate_index = candidate
+            break
+    if predicate_index is None:
+        subject_tokens = [tokens[idx]]
         idx += 1
+    else:
+        subject_tokens = tokens[subject_start:predicate_index]
+        idx = predicate_index
     if idx >= len(tokens):
         raise ValueError("Could not identify a predicate after the subject.")
 
