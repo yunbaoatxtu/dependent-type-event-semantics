@@ -117,6 +117,13 @@ The fronted boundary also keeps short multi-word PP objects together:
 `butter(1)(in(old_bathroom), mary, toast)`, `With a sharp knife John buttered
 the toast` becomes `butter(1)(with(sharp_knife), john, toast)`, and `At the
 train station Mary waited` becomes `wait(1)(at(train_station), mary)`.
+Simple copular location sentences are normalized to `be` and keep the located
+entity as `Theme`, not `Agent`: `a cat is on a mat` becomes
+`be(1)(on(mat), cat)`, `the old dog is near the door` becomes
+`be(1)(near(door), old_dog)`, and `In the park the old dog is near the door`
+becomes `be(2)(in(park), near(door), old_dog)`. Specialized stative-result and
+passive rules still take priority for sentences such as `the vase is broken`
+and `the toast is buttered`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

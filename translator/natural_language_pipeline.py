@@ -1507,7 +1507,7 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             return False
 
         def is_boundary_predicate(token: str) -> bool:
-            return is_likely_surface_verb(token) or (
+            return token in PASSIVE_AUXILIARIES or is_likely_surface_verb(token) or (
                 token.endswith("ed") and len(token) > 3
             )
 
@@ -1579,7 +1579,7 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     subject_start = idx
     predicate_index = None
     for candidate in range(subject_start + 1, len(tokens)):
-        if is_likely_surface_verb(tokens[candidate]):
+        if tokens[candidate] in PASSIVE_AUXILIARIES or is_likely_surface_verb(tokens[candidate]):
             predicate_index = candidate
             break
     if predicate_index is None:
@@ -1591,11 +1591,17 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     if idx >= len(tokens):
         raise ValueError("Could not identify a predicate after the subject.")
 
-    verb = lemma_verb(tokens[idx])
+    raw_verb = tokens[idx]
+    verb = "be" if raw_verb in PASSIVE_AUXILIARIES else lemma_verb(raw_verb)
     idx += 1
+    subject_role = (
+        "Theme"
+        if verb == "be" and idx < len(tokens) and tokens[idx] in PREPOSITIONS
+        else "Agent"
+    )
     items = [
         atom(verb, "e"),
-        atom("Agent", "e", clean_phrase(subject_tokens)),
+        atom(subject_role, "e", clean_phrase(subject_tokens)),
         *leading_atoms,
     ]
     object_tokens: list[str] = []

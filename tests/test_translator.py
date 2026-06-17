@@ -1527,6 +1527,56 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn({"pred": "Agent", "args": ["e", "on_mat_cat"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_fallback_copular_location_uses_theme_not_agent(self) -> None:
+        result = run_pipeline("a cat is on a mat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "be(1)(on(mat), cat)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "be", "args": ["e"]}, atoms)
+        self.assertIn({"pred": "Theme", "args": ["e", "cat"]}, atoms)
+        self.assertIn({"pred": "on", "args": ["e", "mat"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "cat"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_copular_location_preserves_adjective_subject(self) -> None:
+        result = run_pipeline("the old dog is near the door", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "be(1)(near(door), old_dog)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Theme", "args": ["e", "old_dog"]}, atoms)
+        self.assertIn({"pred": "near", "args": ["e", "door"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "old"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_modifier_allows_copular_location(self) -> None:
+        result = run_pipeline("In the park the old dog is near the door", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "be(2)(in(park), near(door), old_dog)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Theme", "args": ["e", "old_dog"]}, atoms)
+        self.assertIn({"pred": "in", "args": ["e", "park"]}, atoms)
+        self.assertIn({"pred": "near", "args": ["e", "door"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "old_dog"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_copular_location_keeps_specialized_state_and_passive_rules(self) -> None:
+        state = run_pipeline("the vase is broken", require_coq=True)
+        self.assertTrue(state["ok"])
+        self.assertEqual(state["kind"], "stative_result_state")
+
+        passive = run_pipeline("the toast is buttered", require_coq=True)
+        self.assertTrue(passive["ok"])
+        self.assertEqual(passive["kind"], "passive_argument_omission")
+
     def test_fallback_count_phrase_becomes_repeat(self) -> None:
         result = run_pipeline("John knocked two times", require_coq=True)
         self.assertTrue(result["ok"])
