@@ -46,6 +46,8 @@ from translator.surface_lexicon import (
     PASSIVE_AUXILIARIES,
     TEMPORAL_ADVERBS,
     TEMPORAL_PHRASES,
+    TEMPORAL_PREPOSITION_NOUNS,
+    TEMPORAL_PREPOSITION_OPERATORS,
     count_phrase_value,
     is_likely_surface_verb,
     modifier_predicate,
@@ -56,6 +58,7 @@ from translator.surface_lexicon import (
     lemma_verb,
     surface_verb_audit,
     temporal_phrase_value,
+    temporal_prepositional_phrase_value,
 )
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
@@ -343,6 +346,23 @@ class TranslatorTests(unittest.TestCase):
             ("this_morning", 2),
         )
         self.assertIsNone(temporal_phrase_value(["last", "book"], 0))
+        self.assertEqual(
+            TEMPORAL_PREPOSITION_OPERATORS,
+            {"at": "at", "on": "at", "in": "during"},
+        )
+        self.assertIn("noon", TEMPORAL_PREPOSITION_NOUNS)
+        self.assertIn("monday", TEMPORAL_PREPOSITION_NOUNS)
+        self.assertEqual(
+            temporal_prepositional_phrase_value(["at", "noon", "mary"], 0),
+            ("at", "noon", 2),
+        )
+        self.assertEqual(
+            temporal_prepositional_phrase_value(["in", "the", "morning", "john"], 0),
+            ("during", "morning", 3),
+        )
+        self.assertIsNone(
+            temporal_prepositional_phrase_value(["in", "the", "bathroom"], 0)
+        )
         self.assertEqual(
             passive_participle_audit("written"),
             {
@@ -1254,6 +1274,59 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn({"pred": "to", "args": ["e", "school"]}, atoms)
         self.assertIn({"pred": "at", "args": ["e", "this_morning"]}, atoms)
         self.assertNotIn({"pred": "Agent", "args": ["e", "this_morning_john"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_at_phrase_scopes_over_sentence(self) -> None:
+        result = run_pipeline("At noon Mary admired the painting", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(noon, admire(0)(mary, painting))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "mary"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "noon"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "at_noon_mary"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_at_phrase_can_stack_with_temporal_adverb(self) -> None:
+        result = run_pipeline(
+            "At noon yesterday Mary admired the painting",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, at_T(noon, admire(0)(mary, painting)))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "at", "args": ["e", "noon"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "at_noon_yesterday_mary"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_in_temporal_phrase_uses_during(self) -> None:
+        result = run_pipeline("In the morning John walked to school", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "during_T(morning, walk(1)(to(school), john))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "during", "args": ["e", "morning"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "in_morning_john"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_on_temporal_phrase_uses_at(self) -> None:
+        result = run_pipeline("On Monday Mary visited Paris", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(monday, visit(0)(mary, paris))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "at", "args": ["e", "monday"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "on_monday_mary"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_fallback_count_phrase_becomes_repeat(self) -> None:

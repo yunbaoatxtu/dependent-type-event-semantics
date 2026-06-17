@@ -89,6 +89,12 @@ last night` becomes `at_T(last_night, admire(0)(mary, painting))`, and
 The same temporal boundary applies at the beginning of a sentence: `Yesterday
 Mary admired the painting` becomes `at_T(yesterday, admire(0)(mary, painting))`
 rather than assigning the subject `yesterday_mary`.
+Restricted fronted prepositional time phrases are also recognized:
+`At noon Mary admired the painting` becomes
+`at_T(noon, admire(0)(mary, painting))`, `At noon yesterday Mary admired the
+painting` becomes `at_T(yesterday, at_T(noon, admire(0)(mary, painting)))`, and
+`In the morning John walked to school` becomes
+`during_T(morning, walk(1)(to(school), john))`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

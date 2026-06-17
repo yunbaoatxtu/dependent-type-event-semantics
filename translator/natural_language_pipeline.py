@@ -42,6 +42,7 @@ from translator.surface_lexicon import (
     passive_participle_audit,
     surface_verb_audit,
     temporal_phrase_value,
+    temporal_prepositional_phrase_value,
 )
 
 
@@ -1495,10 +1496,16 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             idx += 1
             continue
         temporal_phrase = temporal_phrase_value(tokens, idx)
-        if temporal_phrase is None:
+        if temporal_phrase is not None:
+            normalized_time, consumed = temporal_phrase
+            leading_time_atoms.append(atom("at", "e", normalized_time))
+            idx += consumed
+            continue
+        temporal_prep_phrase = temporal_prepositional_phrase_value(tokens, idx)
+        if temporal_prep_phrase is None:
             break
-        normalized_time, consumed = temporal_phrase
-        leading_time_atoms.append(atom("at", "e", normalized_time))
+        operator, normalized_time, consumed = temporal_prep_phrase
+        leading_time_atoms.append(atom(operator, "e", normalized_time))
         idx += consumed
 
     while idx < len(tokens) and tokens[idx] in ARTICLES:

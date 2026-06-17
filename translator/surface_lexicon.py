@@ -84,6 +84,25 @@ TEMPORAL_PHRASES = {
     ("last", "night"): "last_night",
     ("this", "morning"): "this_morning",
 }
+TEMPORAL_PREPOSITION_OPERATORS = {
+    "at": "at",
+    "on": "at",
+    "in": "during",
+}
+TEMPORAL_PREPOSITION_NOUNS = {
+    "afternoon",
+    "evening",
+    "monday",
+    "morning",
+    "night",
+    "noon",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+}
 IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
@@ -131,6 +150,26 @@ def temporal_phrase_value(tokens: list[str] | tuple[str, ...], position: int) ->
         if tuple(tokens[position:end]) == phrase:
             return normalized, len(phrase)
     return None
+
+
+def temporal_prepositional_phrase_value(
+    tokens: list[str] | tuple[str, ...],
+    position: int,
+) -> tuple[str, str, int] | None:
+    if position >= len(tokens):
+        return None
+    operator = TEMPORAL_PREPOSITION_OPERATORS.get(tokens[position])
+    if operator is None:
+        return None
+    idx = position + 1
+    phrase_tokens: list[str] = []
+    while idx < len(tokens) and tokens[idx] in ARTICLES:
+        idx += 1
+    if idx >= len(tokens) or tokens[idx] not in TEMPORAL_PREPOSITION_NOUNS:
+        return None
+    phrase_tokens.append(tokens[idx])
+    idx += 1
+    return operator, "_".join(phrase_tokens), idx - position
 
 
 def lemma_verb(token: str) -> str:
