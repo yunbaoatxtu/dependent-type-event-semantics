@@ -29,6 +29,7 @@ Parameter before_T : Entity -> PropT -> PropT.
 Parameter after_T : Entity -> PropT -> PropT.
 Parameter until_T : Entity -> PropT -> PropT.
 Parameter since_T : Entity -> PropT -> PropT.
+Parameter not_T : PropT -> PropT.
 Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.
 Parameter Cause : Entity -> TransitionT -> PropT.
 Parameter break : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.

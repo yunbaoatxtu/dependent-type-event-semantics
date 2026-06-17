@@ -137,6 +137,14 @@ happy` combines both wrappers. Registered state predicates keep their state
 type under negation, so `the door is not red` becomes
 `not_T(holds_state(door, color_scale, red))` rather than introducing
 `not_red : Property`.
+Simple do-support negation is now a separate proposition-level wrapper:
+`John did not walk` becomes `not_T(walk(0)(john))`, while `John does not walk
+slowly in the park` becomes `not_T(walk(2)(slowly, in(park), john))`. The rule
+also preserves lexical object types, so `John did not eat bread` becomes
+`not_T(eat(0)(john, bread))` with `bread : Food`. Coordinated do-support
+negation is deliberately rejected for now, so examples such as `John walked and
+did not talk` fail at internal type checking rather than being misread as a
+subject `john_did_not` or an object `and_did_not_talk`.
 Simple copular coordination is structured with `and_T`: `Mary is happy and
 calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,
 and `Mary is happy and very calm` keeps the degree only on the second conjunct.

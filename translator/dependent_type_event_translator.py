@@ -333,6 +333,13 @@ def time_term(atom: Atom, body: Term) -> Term:
     }
 
 
+def not_term(body: Term) -> Term:
+    return {
+        "kind": "not",
+        "body": body,
+    }
+
+
 def infer_state_scale(state: str) -> str:
     if state == "_":
         return "unknown_scale"
@@ -414,6 +421,8 @@ def render_term(term: Term) -> str:
         args = term["arguments"]
         rendered_args = args[0] if len(args) == 1 else "(" + ", ".join(args) + ")"
         return f"{term['operator']}_T({rendered_args}, {render_term(term['body'])})"
+    if kind == "not":
+        return f"not_T({render_term(term['body'])})"
     if kind == "transition":
         return (
             f"Transition({term['theme']}, {term['state_scale']}, {term['source_state']}, "
@@ -751,6 +760,16 @@ def check_term(term: Term) -> TypeCheck:
                 errors.append(f"{path}: time.body must have type {PROP}, got {body_type}")
             return PROP
 
+        if kind == "not":
+            body = current.get("body")
+            if not isinstance(body, dict):
+                errors.append(f"{path}: not.body must be a term")
+                return PROP
+            body_type = check(body, f"{path}.body")
+            if body_type != PROP:
+                errors.append(f"{path}: not.body must have type {PROP}, got {body_type}")
+            return PROP
+
         if kind == "transition":
             for field in ("theme", "source_state", "target_state"):
                 if not isinstance(current.get(field), str) or not current[field]:
@@ -882,6 +901,8 @@ def export_term(term: Term, target: str) -> str:
             args = [export_atom(x, target) for x in current["arguments"]]
             args.append(emit(current["body"]))
             return "(" + " ".join([op] + args) + ")"
+        if kind == "not":
+            return f"(not_T {emit(current['body'])})"
         if kind == "transition":
             return (
                 "(Transition "
@@ -910,7 +931,7 @@ def export_result_type(term: Term) -> str:
         return application_result_type(term["function"])
     if kind == "sigma":
         return "Prop"
-    if kind in {"repeat", "time", "cause"}:
+    if kind in {"repeat", "time", "not", "cause"}:
         return "PropT"
     if kind == "transition":
         return "TransitionT"
@@ -1040,6 +1061,11 @@ def collect_term_declarations(
             term["body"], target, functions, constants, modifiers, types, bound_types
         )
         return
+    if kind == "not":
+        collect_term_declarations(
+            term["body"], target, functions, constants, modifiers, types, bound_types
+        )
+        return
     if kind == "transition":
         theme = export_atom(term["theme"], target)
         if theme not in bound_types:
@@ -1125,6 +1151,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "constant after_T : Entity -> PropT -> PropT",
                 "constant until_T : Entity -> PropT -> PropT",
                 "constant since_T : Entity -> PropT -> PropT",
+                "constant not_T : PropT -> PropT",
                 "constant Transition : Entity -> StateScale -> State -> State -> TransitionT",
                 "constant Cause : Entity -> TransitionT -> PropT",
             ]
@@ -1172,6 +1199,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Parameter after_T : Entity -> PropT -> PropT.",
             "Parameter until_T : Entity -> PropT -> PropT.",
             "Parameter since_T : Entity -> PropT -> PropT.",
+            "Parameter not_T : PropT -> PropT.",
             "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
             "Parameter Cause : Entity -> TransitionT -> PropT.",
         ]

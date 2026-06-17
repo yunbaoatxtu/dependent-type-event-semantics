@@ -18,7 +18,11 @@ from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_SCALE_BY_STATE,
     application_argument_types,
+    check_term,
     export_module,
+    export_term,
+    not_term,
+    render_term,
     state_lexicon_metadata,
     translate,
 )
@@ -56,6 +60,7 @@ ROCQ_ENV = Path(
 )
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
+DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -246,6 +251,112 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             "note": (
                 "Both scope readings are represented with entity predicates "
                 "and a binary relation; no Event argument is introduced."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
+def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    negation_index = None
+    for index, token in enumerate(tokens):
+        if (
+            token == "not"
+            and index > 0
+            and tokens[index - 1] in DO_SUPPORT_AUXILIARIES
+        ):
+            negation_index = index
+            break
+    if negation_index is None:
+        return None
+
+    auxiliary_index = negation_index - 1
+    auxiliary = tokens[auxiliary_index]
+    subject_tokens = tokens[:auxiliary_index]
+    if not subject_tokens or negation_index + 1 >= len(tokens):
+        return None
+
+    subject = clean_phrase(subject_tokens)
+    if subject == "entity":
+        return None
+
+    if "and" in tokens:
+        return {
+            "kind": "do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Do-support negation with {auxiliary} not was detected, "
+                "but coordination under negation is not implemented in this "
+                "controlled rule yet."
+            ),
+            "event_semantics": {
+                "analysis": "do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "not(exists e. P(e) ...), with coordination left unresolved"
+                ),
+            },
+            "dependent_type_translation": "",
+            "ast": {
+                "kind": "do_support_negation",
+                "auxiliary": auxiliary,
+                "subject": {"name": subject, "type": "Entity"},
+                "unsupported": "coordination_under_negation",
+            },
+            "type_check": {
+                "ok": False,
+                "type": None,
+                "errors": [
+                    "do-support negation with coordination is not yet supported"
+                ],
+                "note": (
+                    "The sentence contains do-support negation and coordination; "
+                    "the parser refuses to turn it into a malformed subject or object."
+                ),
+            },
+            "coq_code": "",
+        }
+
+    positive_sentence = " ".join(
+        [*subject_tokens, lemma_verb(tokens[negation_index + 1]), *tokens[negation_index + 2 :]]
+    )
+    positive_translation = translate(sentence_to_event_semantics(positive_sentence))
+    ast = not_term(positive_translation["ast"])
+    type_check = check_term(ast)
+    exports = (
+        {target: export_term(ast, target) for target in ("lean", "coq")}
+        if type_check["ok"]
+        else {}
+    )
+    coq_code = export_module(
+        [{"ast": ast, "type_check": type_check, "exports": exports}],
+        "coq",
+    ) if type_check["ok"] else ""
+    typed_replacement = render_term(ast)
+    return {
+        "kind": "do_support_negation",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Do-support negation maps {auxiliary} not to not_T over the "
+            f"positive clause {positive_sentence}."
+        ),
+        "event_semantics": {
+            "analysis": "do-support-negation",
+            "source": sentence,
+            "positive_clause": positive_translation["translation"],
+            "event_style_reference": (
+                f"not(exists e. {positive_translation['translation']})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Do-support negation is represented as a proposition-level "
+                "not_T wrapper around the checked positive-clause AST."
             ),
         },
         "coq_code": coq_code,
@@ -2767,6 +2878,18 @@ def construction_rules() -> list[ConstructionRule]:
             label="Copular property",
             phenomenon="Property predication without hidden event variables",
             analyzer=copular_property_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="do_support_negation",
+            label="Do-support negation",
+            phenomenon="Proposition-level negation without hidden event variables",
+            analyzer=do_support_negation_pipeline,
             forbidden_coq_fragments=(
                 "Parameter Event : Type.",
                 "exists e : Event",

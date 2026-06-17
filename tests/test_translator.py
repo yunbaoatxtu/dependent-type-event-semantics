@@ -14,6 +14,7 @@ from translator.dependent_type_event_translator import (
     export_module,
     export_term,
     modifier_vector,
+    not_term,
     role_frame,
     state_lexicon_metadata,
     translate,
@@ -169,6 +170,43 @@ class TranslatorTests(unittest.TestCase):
             "Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
             coq_module,
         )
+
+    def test_not_term_wraps_checked_proposition(self) -> None:
+        positive = translate(
+            {
+                "exists": ["e"],
+                "body": {
+                    "and": [
+                        {"pred": "walk", "args": ["e"]},
+                        {"pred": "Agent", "args": ["e", "John"]},
+                    ]
+                },
+            }
+        )
+        negated_ast = not_term(positive["ast"])
+        type_check = check_term(negated_ast)
+        self.assertEqual(type_check, {"ok": True, "type": "t", "errors": []})
+        self.assertEqual(export_term(negated_ast, "coq"), "(not_T (walk 0 mods_nil John))")
+        coq_module = export_module(
+            [
+                {
+                    "ast": negated_ast,
+                    "type_check": type_check,
+                    "exports": {
+                        "lean": export_term(negated_ast, "lean"),
+                        "coq": export_term(negated_ast, "coq"),
+                    },
+                }
+            ],
+            "coq",
+        )
+        self.assertIn("Parameter not_T : PropT -> PropT.", coq_module)
+        self.assertIn(
+            "Definition example_1 : PropT := (not_T (walk 0 mods_nil John)).",
+            coq_module,
+        )
+        coq_check = verify_coq_code(coq_module, require_coq=True)
+        self.assertEqual(coq_check["status"], "passed", coq_check["message"])
 
     def test_argument_omission_introduces_sigma_witness(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -2416,6 +2454,67 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_do_support_negation_wraps_simple_intransitive_clause(self) -> None:
+        result = run_pipeline("John did not walk", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "do_support_negation")
+        self.assertEqual(result["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(result["dependent_type_translation"], "not_T(walk(0)(john))")
+        self.assertEqual(result["ast"]["kind"], "not")
+        self.assertEqual(result["ast"]["body"]["function"], "walk")
+        self.assertIn("Parameter not_T : PropT -> PropT.", result["coq_code"])
+        self.assertIn(
+            "Definition example_1 : PropT := (not_T (walk 0 mods_nil john)).",
+            result["coq_code"],
+        )
+        self.assertNotIn("john_did_not", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_do_support_negation_preserves_modifiers_and_objects(self) -> None:
+        modified = run_pipeline(
+            "John does not walk slowly in the park",
+            require_coq=True,
+        )
+        self.assertTrue(modified["ok"])
+        self.assertEqual(
+            modified["dependent_type_translation"],
+            "not_T(walk(2)(slowly, in(park), john))",
+        )
+        self.assertIn(
+            "not_T (walk 2 (mods_cons 1 slowly (mods_cons 0 in_park mods_nil)) john)",
+            modified["coq_code"],
+        )
+        transitive = run_pipeline("John did not eat bread", require_coq=True)
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            "not_T(eat(0)(john, bread))",
+        )
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+
+    def test_do_support_negation_rejects_coordination_before_fallback(self) -> None:
+        for sentence in (
+            "John did not walk and talk",
+            "John walked and did not talk",
+            "John ate bread and did not drink water",
+            "John did not eat bread and drank water",
+        ):
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertFalse(result["ok"])
+                self.assertEqual(result["kind"], "do_support_negation")
+                self.assertIn(
+                    "do-support negation with coordination is not yet supported",
+                    result["type_check"]["errors"],
+                )
+                self.assertEqual(result["coq_check"]["status"], "skipped")
+                self.assertEqual(
+                    result["conclusion"],
+                    "Translation failed internal type_check before Coq/Rocq validation.",
+                )
+                self.assertNotIn("john_did_not", result.get("dependent_type_translation", ""))
+
     def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
         result = run_pipeline("John walked and talked", require_coq=True)
         self.assertTrue(result["ok"])
@@ -3611,6 +3710,7 @@ class TranslatorTests(unittest.TestCase):
             "universal_timed_burning",
             "quantifier_scope_ambiguity",
             "copular_property",
+            "do_support_negation",
             "predicate_coordination",
             "transitive_predicate_coordination",
         }
@@ -3628,6 +3728,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter some : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["copular_property"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["copular_property"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["do_support_negation"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["do_support_negation"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["predicate_coordination"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["predicate_coordination"].forbidden_coq_fragments)
         self.assertIn(
@@ -3649,6 +3751,7 @@ class TranslatorTests(unittest.TestCase):
             "universal_timed_burning": "In every burning, oxygen is consumed",
             "quantifier_scope_ambiguity": "some boy loves some girl",
             "copular_property": "Mary is happy",
+            "do_support_negation": "John did not walk",
             "predicate_coordination": "John walked and talked",
             "transitive_predicate_coordination": "John ate bread and drank water",
         }
@@ -4664,6 +4767,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John filled the glass", readme)
         self.assertIn("John died", readme)
         self.assertIn("Mary killed the plant with poison", readme)
+        self.assertIn("John did not walk", readme)
+        self.assertIn("not_T(walk(0)(john))", readme)
+        self.assertIn("and_did_not_talk", readme)
         self.assertIn("StateChangeVerbEntry", readme)
         self.assertIn("translator/state_change_lexicon.py", readme)
         self.assertIn("`surface_lexicon` audit object for the", readme)
@@ -4720,6 +4826,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
         self.assertIn("predicate_coordination", ast_docs)
+        self.assertIn("### `not`", ast_docs)
+        self.assertIn("coordinated do-support negation is rejected", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Prop"', ast_docs)
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)

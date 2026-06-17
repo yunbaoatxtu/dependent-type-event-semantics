@@ -29,6 +29,7 @@ constant before_T : Entity -> PropT -> PropT
 constant after_T : Entity -> PropT -> PropT
 constant until_T : Entity -> PropT -> PropT
 constant since_T : Entity -> PropT -> PropT
+constant not_T : PropT -> PropT
 constant Transition : Entity -> StateScale -> State -> State -> TransitionT
 constant Cause : Entity -> TransitionT -> PropT
 constant break : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
