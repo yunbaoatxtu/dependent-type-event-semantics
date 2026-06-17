@@ -1467,6 +1467,8 @@ def split_fronted_adv_modifiers(
             if any(token not in ARTICLES for token in phrase):
                 if tokens[cursor] in FRONTED_MODIFIER_PREPOSITIONS:
                     break
+                if tokens[cursor] in COMMON_ADVERBS:
+                    break
                 if tokens[cursor] in TEMPORAL_ADVERBS:
                     break
                 if temporal_phrase_value(tokens, cursor) is not None:

@@ -590,6 +590,13 @@ Single-word manner adverbs use the same field: `John walked and talked slowly`
 stores `slowly : Adv` and renders as `and_T(walk(1)(slowly, john),
 talk(1)(slowly, john))`.
 
+When multiple shared modifiers appear, their order is preserved in the same
+sequence. Thus `John walked and talked slowly in the park` renders as
+`and_T(walk(2)(slowly, in(park), john), talk(2)(slowly, in(park), john))`,
+whereas `John walked and talked in the park slowly` renders as
+`and_T(walk(2)(in(park), slowly, john), talk(2)(in(park), slowly, john))`.
+The Coq scaffold mirrors this order with `mods_cons 1 ... (mods_cons 0 ... mods_nil)`.
+
 ### `transitive_predicate_coordination`
 
 Represents same-subject transitive VP coordination such as `John ate bread and
@@ -647,6 +654,9 @@ ate bread and drank water in the park` both render as
 `and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))`.
 Single-word manner adverbs behave the same way: `John ate bread and drank water
 quickly` keeps `water` as the right-hand object and stores `quickly : Adv`.
+Multiple shared modifiers remain order-sensitive here as well; for example,
+`John ate bread and drank water quickly in the park` uses the modifier sequence
+`quickly, in(park)` across both transitive conjuncts.
 
 This construction is deliberately separate from object coordination. `Mary
 visited Paris and London` remains an ordinary transitive fallback with

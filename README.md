@@ -165,6 +165,12 @@ Single-word manner adverbs use the same shared-Adv path: `John walked and
 talked slowly` and `Slowly John walked and talked` both become
 `and_T(walk(1)(slowly, john), talk(1)(slowly, john))`, not a fallback with
 `and_talked` or a subject `slowly_john`.
+Multiple shared modifiers preserve surface order in the indexed sequence:
+`John walked and talked slowly in the park` becomes
+`and_T(walk(2)(slowly, in(park), john), talk(2)(slowly, in(park), john))`,
+while `John walked and talked in the park slowly` becomes
+`and_T(walk(2)(in(park), slowly, john), talk(2)(in(park), slowly, john))`,
+not `in_park_slowly`.
 The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while
@@ -186,6 +192,9 @@ Shared manner adverbs keep the right-hand object intact as well:
 `John ate bread and drank water quickly` becomes
 `and_T(eat(1)(quickly, john, bread), drink(1)(quickly, john, water))`, not a
 right-hand object `water_quickly`.
+The order-sensitive modifier vector is shared across transitive conjuncts too:
+`John ate bread and drank water quickly in the park` becomes
+`and_T(eat(2)(quickly, in(park), john, bread), drink(2)(quickly, in(park), john, water))`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
