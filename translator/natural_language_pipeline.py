@@ -17,6 +17,7 @@ from typing import Any
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_SCALE_BY_STATE,
+    application_argument_types,
     export_module,
     state_lexicon_metadata,
     translate,
@@ -1780,6 +1781,313 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def transitive_predicate_coordination_ast(
+    subject: str,
+    clauses: list[dict[str, Any]],
+    time_modifiers: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "kind": "transitive_predicate_coordination",
+        "subject": {"name": subject, "type": "Entity"},
+        "clauses": clauses,
+        "connective": "and_T",
+        "connective_type": "Prop -> Prop -> Prop",
+        "time_modifiers": time_modifiers,
+    }
+
+
+def check_transitive_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "transitive_predicate_coordination":
+        errors.append("ast.kind must be transitive_predicate_coordination")
+
+    subject = ast.get("subject")
+    if not isinstance(subject, dict):
+        errors.append("transitive predicate coordination subject must be an object")
+    else:
+        if not isinstance(subject.get("name"), str) or not subject.get("name"):
+            errors.append(
+                "transitive predicate coordination subject.name must be a non-empty string"
+            )
+        if subject.get("type") != "Entity":
+            errors.append("transitive predicate coordination subject must have type Entity")
+
+    clauses = ast.get("clauses")
+    if not isinstance(clauses, list) or len(clauses) != 2:
+        errors.append("transitive predicate coordination clauses must contain exactly two items")
+    else:
+        for index, clause in enumerate(clauses):
+            if not isinstance(clause, dict):
+                errors.append(f"transitive predicate coordination clauses[{index}] must be an object")
+                continue
+            predicate = clause.get("predicate")
+            if not isinstance(predicate, dict):
+                errors.append(
+                    f"transitive predicate coordination clauses[{index}].predicate must be an object"
+                )
+                continue
+            surface = predicate.get("surface")
+            if not isinstance(surface, str) or not surface:
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].predicate.surface must be a non-empty string"
+                )
+            name = predicate.get("name")
+            if not isinstance(name, str) or not name:
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].predicate.name must be a non-empty string"
+                )
+            elif surface and lemma_verb(str(surface)) != name:
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].predicate.name must match its surface lemma"
+                )
+            obj = clause.get("object")
+            if not isinstance(obj, dict):
+                errors.append(
+                    f"transitive predicate coordination clauses[{index}].object must be an object"
+                )
+                continue
+            object_name = obj.get("name")
+            object_type = obj.get("type")
+            if not isinstance(object_name, str) or not object_name:
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].object.name must be a non-empty string"
+                )
+            if not isinstance(object_type, str) or not object_type:
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].object.type must be a non-empty string"
+                )
+            expected_predicate_type = (
+                f"Entity -> {object_type} -> Prop"
+                if isinstance(object_type, str) and object_type
+                else None
+            )
+            if (
+                expected_predicate_type is not None
+                and predicate.get("predicate_type") != expected_predicate_type
+            ):
+                errors.append(
+                    "transitive predicate coordination "
+                    f"clauses[{index}].predicate must have type {expected_predicate_type}"
+                )
+
+    if ast.get("connective") != "and_T":
+        errors.append("transitive predicate coordination connective must be and_T")
+    if ast.get("connective_type") != "Prop -> Prop -> Prop":
+        errors.append(
+            "transitive predicate coordination connective must have type Prop -> Prop -> Prop"
+        )
+
+    time_modifiers = ast.get("time_modifiers")
+    if not isinstance(time_modifiers, list):
+        errors.append("transitive predicate coordination time_modifiers must be a list")
+    else:
+        for index, modifier in enumerate(time_modifiers):
+            if not isinstance(modifier, dict):
+                errors.append(
+                    f"transitive predicate coordination time_modifiers[{index}] must be an object"
+                )
+                continue
+            if modifier.get("operator") not in {"at", "during"}:
+                errors.append(
+                    "transitive predicate coordination "
+                    f"time_modifiers[{index}].operator must be at or during"
+                )
+            if not isinstance(modifier.get("argument"), str) or not modifier.get("argument"):
+                errors.append(
+                    "transitive predicate coordination "
+                    f"time_modifiers[{index}].argument must be a non-empty string"
+                )
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def render_transitive_predicate_coordination_translation(ast: dict[str, Any]) -> str:
+    subject = ast["subject"]["name"]
+    clauses = ast["clauses"]
+    proposition = (
+        f"and_T({clauses[0]['predicate']['name']}({subject}, {clauses[0]['object']['name']}), "
+        f"{clauses[1]['predicate']['name']}({subject}, {clauses[1]['object']['name']}))"
+    )
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
+
+
+def render_transitive_predicate_coordination_coq(
+    definition_name: str,
+    ast: dict[str, Any],
+) -> str:
+    subject = ast["subject"]["name"]
+    clauses = ast["clauses"]
+    proposition = (
+        "and_T "
+        f"({clauses[0]['predicate']['name']} {subject} {clauses[0]['object']['name']}) "
+        f"({clauses[1]['predicate']['name']} {subject} {clauses[1]['object']['name']})"
+    )
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+    object_types = list(
+        dict.fromkeys(
+            clause["object"]["type"]
+            for clause in clauses
+            if clause["object"]["type"] != "Entity"
+        )
+    )
+    lines = [
+        "(* Same-subject transitive VP coordination without event variables. *)",
+        "Parameter Entity : Type.",
+    ]
+    lines.extend(f"Parameter {object_type} : Type." for object_type in object_types)
+    lines.extend(
+        [
+            "",
+            f"Parameter {subject} : Entity.",
+        ]
+    )
+    for clause in clauses:
+        lines.append(f"Parameter {clause['object']['name']} : {clause['object']['type']}.")
+    for clause in clauses:
+        lines.append(
+            "Parameter "
+            f"{clause['predicate']['name']} : "
+            f"{clause['predicate']['predicate_type']}."
+        )
+    lines.append("Parameter and_T : Prop -> Prop -> Prop.")
+    if ast["time_modifiers"]:
+        lines.extend(
+            f"Parameter {modifier['argument']} : Entity."
+            for modifier in ast["time_modifiers"]
+        )
+        lines.extend(
+            [
+                "",
+                "Parameter at_T : Entity -> Prop -> Prop.",
+                "Parameter during_T : Entity -> Prop -> Prop.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            f"Definition {definition_name} : Prop :=",
+            f"  {proposition}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def object_type_for_transitive_predicate(predicate: str) -> str:
+    return application_argument_types(predicate, 2)[1]
+
+
+def split_object_tokens_and_time_modifiers(
+    tokens: list[str],
+) -> tuple[list[str], list[dict[str, str]]] | None:
+    for split_index in range(1, len(tokens) + 1):
+        time_modifiers = copular_property_time_modifiers(tokens[split_index:])
+        if time_modifiers is not None:
+            return tokens[:split_index], time_modifiers
+    return None
+
+
+def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if tokens.count("and") != 1:
+        return None
+    and_index = tokens.index("and")
+    if and_index < 3 or and_index + 2 >= len(tokens):
+        return None
+    if not is_likely_surface_verb(tokens[and_index + 1]):
+        return None
+
+    left_verb_indices = [
+        index
+        for index in range(1, and_index)
+        if is_likely_surface_verb(tokens[index])
+    ]
+    if len(left_verb_indices) != 1:
+        return None
+    left_verb_index = left_verb_indices[0]
+    if left_verb_index == 0 or left_verb_index + 1 >= and_index:
+        return None
+
+    subject = clean_phrase(tokens[:left_verb_index])
+    if subject == "entity":
+        return None
+    left_surface = tokens[left_verb_index]
+    right_surface = tokens[and_index + 1]
+    left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
+    right_tail = split_object_tokens_and_time_modifiers(tokens[and_index + 2 :])
+    if right_tail is None:
+        return None
+    right_object_tokens, time_modifiers = right_tail
+    right_object = clean_phrase(right_object_tokens)
+    if left_object == "entity" or right_object == "entity":
+        return None
+
+    clauses: list[dict[str, Any]] = []
+    for surface, obj in ((left_surface, left_object), (right_surface, right_object)):
+        predicate = lemma_verb(surface)
+        object_type = object_type_for_transitive_predicate(predicate)
+        clauses.append(
+            {
+                "predicate": {
+                    "surface": surface,
+                    "name": predicate,
+                    "predicate_type": f"Entity -> {object_type} -> Prop",
+                },
+                "object": {"name": obj, "type": object_type},
+            }
+        )
+
+    ast = transitive_predicate_coordination_ast(subject, clauses, time_modifiers)
+    type_check = check_transitive_predicate_coordination_ast(ast)
+    typed_replacement = render_transitive_predicate_coordination_translation(ast)
+    coq_code = render_transitive_predicate_coordination_coq(
+        "transitive_predicate_coordination_assertion",
+        ast,
+    )
+    return {
+        "kind": "transitive_predicate_coordination",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "same-subject-transitive-vp-coordination",
+            "source": sentence,
+            "event_style_reference": (
+                "exists e1 e2. "
+                f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                f"Theme(e1, {clauses[0]['object']['name']}) and "
+                f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                f"Theme(e2, {clauses[1]['object']['name']})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Same-subject transitive VP coordination is represented as a typed "
+                "conjunction of Entity -> ObjectType -> Prop predicates; each "
+                "object keeps its lexical type, and no Event/Agent/Theme Coq "
+                "predicates are exported."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -2051,6 +2359,18 @@ def construction_rules() -> list[ConstructionRule]:
             label="Predicate coordination",
             phenomenon="Same-subject intransitive predicate coordination without event variables",
             analyzer=predicate_coordination_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="transitive_predicate_coordination",
+            label="Transitive predicate coordination",
+            phenomenon="Same-subject transitive VP coordination without event variables",
+            analyzer=transitive_predicate_coordination_pipeline,
             forbidden_coq_fragments=(
                 "Parameter Event : Type.",
                 "exists e : Event",

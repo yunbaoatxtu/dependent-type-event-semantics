@@ -28,6 +28,7 @@ from translator.natural_language_pipeline import (
     check_quantifier_scope_readings,
     check_stative_result_state_ast,
     check_timed_after_ast,
+    check_transitive_predicate_coordination_ast,
     check_universal_timed_ast,
     construction_rules,
     run_registered_rule,
@@ -325,6 +326,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("stopped"), "stop")
         self.assertEqual(lemma_verb("ran"), "run")
         self.assertEqual(lemma_verb("slept"), "sleep")
+        self.assertEqual(lemma_verb("wrote"), "write")
         self.assertEqual(TEMPORAL_ADVERBS, {"today", "tomorrow", "yesterday"})
         self.assertEqual(COUNT_PHRASE_WORDS, {"one": "1", "two": "2", "three": "3"})
         self.assertEqual(COUNT_NOUNS, {"time", "times"})
@@ -335,10 +337,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("sit", COMMON_VERB_LEMMAS)
         self.assertIn("talk", COMMON_VERB_LEMMAS)
         self.assertIn("sleep", COMMON_VERB_LEMMAS)
+        self.assertIn("write", COMMON_VERB_LEMMAS)
         self.assertTrue(is_likely_surface_verb("sits"))
         self.assertTrue(is_likely_surface_verb("talked"))
         self.assertTrue(is_likely_surface_verb("ran"))
         self.assertTrue(is_likely_surface_verb("slept"))
+        self.assertTrue(is_likely_surface_verb("wrote"))
         self.assertTrue(is_likely_surface_verb("chased"))
         self.assertTrue(is_likely_surface_verb("flew"))
         self.assertFalse(is_likely_surface_verb("cat"))
@@ -2507,6 +2511,105 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_transitive_predicate_coordination_keeps_separate_typed_objects(self) -> None:
+        result = run_pipeline("John ate bread and drank water", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "transitive_predicate_coordination")
+        self.assertEqual(
+            result["construction_rule"]["id"],
+            "transitive_predicate_coordination",
+        )
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(eat(john, bread), drink(john, water))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["clauses"],
+            [
+                {
+                    "predicate": {
+                        "surface": "ate",
+                        "name": "eat",
+                        "predicate_type": "Entity -> Food -> Prop",
+                    },
+                    "object": {"name": "bread", "type": "Food"},
+                },
+                {
+                    "predicate": {
+                        "surface": "drank",
+                        "name": "drink",
+                        "predicate_type": "Entity -> Drinkable -> Prop",
+                    },
+                    "object": {"name": "water", "type": "Drinkable"},
+                },
+            ],
+        )
+        self.assertIn("Parameter Food : Type.", result["coq_code"])
+        self.assertIn("Parameter Drinkable : Type.", result["coq_code"])
+        self.assertIn("Parameter bread : Food.", result["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", result["coq_code"])
+        self.assertIn("Parameter eat : Entity -> Food -> Prop.", result["coq_code"])
+        self.assertIn(
+            "Parameter drink : Entity -> Drinkable -> Prop.",
+            result["coq_code"],
+        )
+        self.assertNotIn("bread_and_drank_water", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("Parameter Agent :", result["coq_code"])
+        self.assertNotIn("Parameter Theme :", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_handles_read_and_write(self) -> None:
+        result = run_pipeline("Mary read a book and wrote a letter", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(read(mary, book), write(mary, letter))",
+        )
+        self.assertEqual(result["ast"]["clauses"][0]["object"]["type"], "Readable")
+        self.assertEqual(result["ast"]["clauses"][1]["object"]["type"], "Entity")
+        self.assertIn("Parameter book : Readable.", result["coq_code"])
+        self.assertIn("Parameter letter : Entity.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_allows_trailing_time(self) -> None:
+        result = run_pipeline("John ate bread and drank water yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(eat(john, bread), drink(john, water)))",
+        )
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn(
+            "at_T yesterday (and_T (eat john bread) (drink john water)).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_does_not_capture_object_coordination(self) -> None:
+        result = run_pipeline("Mary visited Paris and London", require_coq=False)
+        self.assertTrue(result["ok"])
+        self.assertNotEqual(result.get("kind"), "transitive_predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "visit(0)(mary, paris_and_london)",
+        )
+
+    def test_transitive_predicate_coordination_rejects_bad_object_type(self) -> None:
+        result = run_pipeline("John ate bread and drank water", require_coq=False)
+        ast = result["ast"]
+        ast["clauses"][0]["object"]["type"] = "Entity"
+        type_check = check_transitive_predicate_coordination_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "transitive predicate coordination clauses[0].predicate must have type Entity -> Entity -> Prop",
+            type_check["errors"],
+        )
+
     def test_stative_result_state_uses_state_not_omitted_agent(self) -> None:
         broken = run_pipeline("the vase is broken", require_coq=True)
         self.assertTrue(broken["ok"])
@@ -2908,6 +3011,7 @@ class TranslatorTests(unittest.TestCase):
             "quantifier_scope_ambiguity",
             "copular_property",
             "predicate_coordination",
+            "transitive_predicate_coordination",
         }
         self.assertTrue(expected.issubset(rules))
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
@@ -2925,6 +3029,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter Agent :", rules["copular_property"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["predicate_coordination"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["predicate_coordination"].forbidden_coq_fragments)
+        self.assertIn(
+            "Parameter Event : Type.",
+            rules["transitive_predicate_coordination"].forbidden_coq_fragments,
+        )
+        self.assertIn(
+            "Parameter Agent :",
+            rules["transitive_predicate_coordination"].forbidden_coq_fragments,
+        )
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
@@ -2937,6 +3049,7 @@ class TranslatorTests(unittest.TestCase):
             "quantifier_scope_ambiguity": "some boy loves some girl",
             "copular_property": "Mary is happy",
             "predicate_coordination": "John walked and talked",
+            "transitive_predicate_coordination": "John ate bread and drank water",
         }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):

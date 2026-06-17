@@ -79,6 +79,7 @@ COMMON_VERB_LEMMAS = {
     "talk",
     "visit",
     "walk",
+    "write",
 }
 TEMPORAL_ADVERBS = {
     "today",
@@ -132,6 +133,7 @@ IRREGULAR_VERBS = {
     "drunk": "drink",
     "went": "go",
     "ran": "run",
+    "wrote": "write",
     "left": "leave",
     "known": "know",
     "killed": "kill",

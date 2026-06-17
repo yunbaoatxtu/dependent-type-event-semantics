@@ -152,6 +152,15 @@ declared as `Entity -> Prop`, so the analysis does not invent a Theme such as
 declarations. This rule is intentionally narrow: object coordination such as
 `Mary visited Paris and London` remains a transitive fallback case rather than a
 predicate-coordination reading.
+The next controlled coordination layer handles two transitive verb phrases with
+the same subject. `John ate bread and drank water` becomes
+`and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while
+`water` is typed as `Drinkable`, following the existing lexical argument types.
+Sentence-final time still scopes over the whole conjunction, so `John ate bread
+and drank water yesterday` becomes
+`at_T(yesterday, and_T(eat(john, bread), drink(john, water)))`. This rule also
+stays separate from object coordination: `Mary visited Paris and London` is not
+treated as two verb phrases.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
