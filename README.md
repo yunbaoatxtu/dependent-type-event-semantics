@@ -585,8 +585,9 @@ Run all deterministic project checks through one entry point:
 python3 scripts/verify_project.py
 ```
 
-This includes a smoke check for the lexicon patch exporter, verifying that it
-can write both the JSON bundle and review-only patch text.
+This includes a package-build smoke check that runs `pip wheel --no-deps`, plus
+a smoke check for the lexicon patch exporter, verifying that it can write both
+the JSON bundle and review-only patch text.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the

@@ -2941,6 +2941,9 @@ class TranslatorTests(unittest.TestCase):
         ast_docs = (ROOT / "docs" / "ast_intermediate_representation.md").read_text(
             encoding="utf-8"
         )
+        manuscript = (
+            ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.md"
+        ).read_text(encoding="utf-8")
         self.assertIn('"summary": "translation verified"', readme)
         self.assertIn('"failure_stage": null', readme)
         self.assertIn('"recovery_hint": null', readme)
@@ -3075,6 +3078,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`next-step--<kind>` CSS class", readme)
         self.assertIn("python3 scripts/sync_paper_docx.py", readme)
         self.assertIn("python3 scripts/check_paper_docx_sync.py", readme)
+        self.assertIn("package-build smoke check", readme)
+        self.assertIn("package-build smoke check", manuscript)
         self.assertIn("smoke check for the lexicon patch exporter", readme)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)

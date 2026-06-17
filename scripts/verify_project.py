@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PYCACHE = ROOT / ".pycache"
 COQ_FILE = ROOT / "formalization" / "DependentTypeEventSemantics.v"
+PACKAGE_WHEEL_DIR = ROOT / "work" / "verify_package_build"
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
@@ -56,6 +57,25 @@ def check_python_docx_requirement(require_docx: bool) -> None:
             "Codex workspace Python runtime or install the project docx extra."
         ) from exc
     print("==> python-docx available")
+
+
+def run_package_build_smoke_check() -> None:
+    PACKAGE_WHEEL_DIR.mkdir(parents=True, exist_ok=True)
+    run(
+        "package build smoke check",
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "wheel",
+            "--no-deps",
+            "--wheel-dir",
+            str(PACKAGE_WHEEL_DIR),
+            ".",
+        ],
+    )
+    if not any(PACKAGE_WHEEL_DIR.glob("dependent_type_event_semantics-*.whl")):
+        raise SystemExit("package build smoke check failed: wheel was not created")
 
 
 def run_lexicon_export_smoke_check() -> None:
@@ -138,6 +158,7 @@ def main() -> None:
             "web/app.py",
         ],
     )
+    run_package_build_smoke_check()
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
