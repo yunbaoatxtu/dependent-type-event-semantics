@@ -163,6 +163,8 @@ The web/API layer now makes that diagnostic structure explicit. Each analysis re
 
 The same interface now exposes construction_summary for matched construction rules. This is a short sentence-local explanation of the typed structure that has been recognized, displayed in the Construction Rule panel and returned by the API. For example, a transitive VP-coordination result can say that the same subject john coordinates eat(bread : Food) and drink(water : Drinkable). This does not replace the AST; it gives a human reader a quick audit hook before opening the full structured term or generated Coq.
 
+The implementation documentation now mirrors these two coordination AST forms explicitly. The AST reference includes predicate_coordination and transitive_predicate_coordination examples, their rendered formulas, and the shallow invariants checked for predicate types, object types, and temporal scoping. This keeps the scientific exposition, implementation, web interface, and test oracle aligned as new construction-specific replacements are added.
+
 ## 12. Discussion
 
 The framework does not claim that natural language never refers to events. Rather, it denies that every predicate must introduce a hidden event argument. Event-denoting nominals, explicit event anaphora, counting constructions, and discourse reference may still introduce episode or situation objects. The difference is architectural: event-like objects are licensed by specific constructions, not by the lexical semantics of every verb.

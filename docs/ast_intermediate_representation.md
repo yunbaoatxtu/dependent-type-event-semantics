@@ -516,6 +516,99 @@ The paired object-wide reading has the same relation arguments but reverses the
 `scope_order`. This makes the ambiguity auditable before the Coq formula is
 rendered.
 
+### `predicate_coordination`
+
+Represents same-subject intransitive predicate coordination such as `John walked
+and talked`. The construction records both surface forms and their lemmatized
+`Entity -> Prop` predicates. It does not introduce a Theme such as
+`and_talked`:
+
+```json
+{
+  "kind": "predicate_coordination",
+  "subject": {
+    "name": "john",
+    "type": "Entity"
+  },
+  "predicates": [
+    {
+      "surface": "walked",
+      "name": "walk",
+      "predicate_type": "Entity -> Prop"
+    },
+    {
+      "surface": "talked",
+      "name": "talk",
+      "predicate_type": "Entity -> Prop"
+    }
+  ],
+  "connective": "and_T",
+  "connective_type": "Prop -> Prop -> Prop",
+  "time_modifiers": []
+}
+```
+
+Renders as:
+
+```text
+and_T(walk(john), talk(john))
+```
+
+If a trailing time expression is present, the time operator scopes over the
+whole conjunction.
+
+### `transitive_predicate_coordination`
+
+Represents same-subject transitive VP coordination such as `John ate bread and
+drank water`. Each conjunct keeps its own object and lexical object type:
+
+```json
+{
+  "kind": "transitive_predicate_coordination",
+  "subject": {
+    "name": "john",
+    "type": "Entity"
+  },
+  "clauses": [
+    {
+      "predicate": {
+        "surface": "ate",
+        "name": "eat",
+        "predicate_type": "Entity -> Food -> Prop"
+      },
+      "object": {
+        "name": "bread",
+        "type": "Food"
+      }
+    },
+    {
+      "predicate": {
+        "surface": "drank",
+        "name": "drink",
+        "predicate_type": "Entity -> Drinkable -> Prop"
+      },
+      "object": {
+        "name": "water",
+        "type": "Drinkable"
+      }
+    }
+  ],
+  "connective": "and_T",
+  "connective_type": "Prop -> Prop -> Prop",
+  "time_modifiers": []
+}
+```
+
+Renders as:
+
+```text
+and_T(eat(john, bread), drink(john, water))
+```
+
+This construction is deliberately separate from object coordination. `Mary
+visited Paris and London` remains an ordinary transitive fallback with
+`paris_and_london` as the Theme, not a VP coordination.
+
 ## Type Checking
 
 The translator runs a lightweight structural type check over every emitted AST.
@@ -572,6 +665,12 @@ Current type rules:
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.
+- `predicate_coordination` has type `Prop` when the subject has type `Entity`,
+  the connective is `and_T : Prop -> Prop -> Prop`, and each coordinated
+  predicate has type `Entity -> Prop` with a lemma that matches its surface form.
+- `transitive_predicate_coordination` has type `Prop` when the shared subject has
+  type `Entity`, each clause supplies an object with a stable lexical type, and
+  each predicate has the corresponding type `Entity -> ObjectType -> Prop`.
 
 This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being
