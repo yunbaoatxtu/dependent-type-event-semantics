@@ -373,6 +373,11 @@ If the construction's internal AST `type_check` fails, the pipeline stops before
 construction hygiene and Coq/Rocq validation; those downstream stages are
 reported as `skipped`, so the diagnostics do not blur an AST error into a proof
 assistant error.
+For example, `John ate bread and drank bread` is a transitive VP-coordination
+analysis whose two object positions require incompatible lexical types for the
+same surface constant. The web/API layer reports this as `failure_stage:
+type_check`, shows the `Food vs Drinkable` conflict in the `Type Check` panel,
+and does not call Coq/Rocq.
 
 ## Type Discipline
 

@@ -430,6 +430,10 @@ panel. Each rendered action carries a stable `data-action-kind` attribute and a
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.
+The same stage-local reporting covers lexical declaration conflicts: `John ate
+bread and drank bread` is reported as a dependent-type checking failure because
+`bread` would need both `Food` and `Drinkable`, and the Coq/Rocq stage is
+marked as skipped.
 `diagnostics.warnings` records non-fatal semantic audit notices. For example,
 `Mary painted the door red` can pass type checking and Coq/Rocq validation while
 still warning that `red` has no unique lexical pre-state, so the transition

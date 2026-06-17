@@ -3758,6 +3758,26 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["lexicon_patch_draft_count"], 0)
         self.assertEqual(result["lexicon_patch_drafts"], [])
 
+    def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+ate+bread+and+drank+bread&require_coq=1",
+        )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["kind"], "transitive_predicate_coordination")
+        self.assertEqual(result["diagnostics"]["summary"], "type check failed")
+        self.assertEqual(result["diagnostics"]["failure_stage"], "type_check")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "failed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "skipped")
+        self.assertIn(
+            "transitive predicate coordination object bread has conflicting lexical types: Food vs Drinkable",
+            result["type_check"]["errors"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "skipped")
+        self.assertIn("internal type_check failed", result["coq_check"]["message"])
+
     def test_api_analyze_response_contract_for_modifier_audit(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -4486,6 +4506,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("state-change verb does not license the inchoative frame", page)
         self.assertNotIn("No registered construction rule matched", page)
 
+    def test_web_page_reports_coordination_type_conflict(self) -> None:
+        page = render_page("John ate bread and drank bread", require_coq=True)
+        self.assertIn("Needs attention", page)
+        self.assertIn("Failure stage: dependent-type checking.", page)
+        self.assertIn("Type Check", page)
+        self.assertIn("Food vs Drinkable", page)
+        self.assertIn("Skipped Coq/Rocq validation because internal type_check failed.", page)
+        self.assertIn("Same subject john coordinates eat(bread : Food)", page)
+
     def test_pipeline_reports_construction_hygiene_separately(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
         self.assertTrue(result["ok"])
@@ -4718,6 +4747,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John ate bread and ate bread", ast_docs)
         self.assertIn("drank bread", ast_docs)
         self.assertIn("incompatible lexical types", ast_docs)
+        self.assertIn("dependent-type checking failure", readme)
+        self.assertIn("Food` and `Drinkable", readme)
+        self.assertIn("Food vs Drinkable", web_design)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)
