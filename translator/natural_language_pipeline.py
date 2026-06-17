@@ -50,7 +50,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
-FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS - {"at"}
+FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -1483,6 +1483,12 @@ def clean_phrase(tokens: list[str]) -> str:
     return "_".join(content)
 
 
+def locative_preposition_predicate(preposition: str) -> str:
+    if preposition == "at":
+        return "at_loc"
+    return preposition
+
+
 def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     tokens = tokenize(sentence)
     if len(tokens) < 2:
@@ -1497,11 +1503,17 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             subject_start += 1
         if subject_start >= len(tokens):
             return False
+
+        def is_boundary_predicate(token: str) -> bool:
+            return is_likely_surface_verb(token) or (
+                token.endswith("ed") and len(token) > 3
+            )
+
         for subject_width in (1, 2):
             predicate_position = subject_start + subject_width
             if (
                 predicate_position < len(tokens)
-                and is_likely_surface_verb(tokens[predicate_position])
+                and is_boundary_predicate(tokens[predicate_position])
             ):
                 return True
         return False
@@ -1527,7 +1539,7 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             idx += 1
         if not has_phrase_content(phrase):
             return None
-        return atom(prep, "e", clean_phrase(phrase)), idx - position
+        return atom(locative_preposition_predicate(prep), "e", clean_phrase(phrase)), idx - position
 
     leading_atoms: list[dict[str, Any]] = []
     idx = 0
@@ -1646,7 +1658,7 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
                 phrase.append(tokens[idx])
                 idx += 1
             if phrase:
-                items.append(atom(prep, "e", clean_phrase(phrase)))
+                items.append(atom(locative_preposition_predicate(prep), "e", clean_phrase(phrase)))
             continue
         object_tokens.append(token)
         idx += 1

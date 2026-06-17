@@ -401,6 +401,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(MODIFIER_ROLE_BY_PREDICATE["with"], "Instrument")
         self.assertEqual(modifier_predicate("in(bathroom)"), "in")
+        self.assertEqual(modifier_semantic_role("at(station)"), "Location")
         self.assertEqual(modifier_semantic_role("in(bathroom)"), "Location")
         self.assertEqual(modifier_semantic_role("on(mat)"), "Location")
         self.assertEqual(modifier_semantic_role("with(knife)"), "Instrument")
@@ -1363,6 +1364,48 @@ class TranslatorTests(unittest.TestCase):
         atoms = result["event_semantics"]["body"]["and"]
         self.assertIn({"pred": "at", "args": ["e", "monday"]}, atoms)
         self.assertNotIn({"pred": "on", "args": ["e", "monday"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_sentence_final_at_location_stays_modifier(self) -> None:
+        result = run_pipeline("Mary waited at the station", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "wait(1)(at(station), mary)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "at_loc", "args": ["e", "station"]}, atoms)
+        self.assertNotIn({"pred": "at", "args": ["e", "station"]}, atoms)
+        self.assertEqual(result["ast"]["modifier_roles"]["roles"][0]["semantic_role"], "Location")
+        self.assertEqual(
+            result["ast"]["modifier_roles"]["roles"][0]["surface_lexicon"],
+            modifier_surface_audit("at(station)", "Adv", "Location"),
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_sentence_final_at_location_does_not_scope_as_time(self) -> None:
+        result = run_pipeline("John buttered the toast at the table", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "butter(1)(at(table), john, toast)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "at_loc", "args": ["e", "table"]}, atoms)
+        self.assertNotIn({"pred": "at", "args": ["e", "table"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_at_location_preserves_agent(self) -> None:
+        result = run_pipeline("At the station Mary waited", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "wait(1)(at(station), mary)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "mary"]}, atoms)
+        self.assertIn({"pred": "at_loc", "args": ["e", "station"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "at_station_mary"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_fallback_fronted_location_modifier_preserves_agent(self) -> None:

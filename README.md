@@ -99,6 +99,10 @@ painting` becomes `at_T(yesterday, at_T(noon, admire(0)(mary, painting)))`;
 in the morning` becomes `during_T(morning, admire(0)(mary, painting))`. The
 same whitelist keeps ordinary locatives such as `in the bathroom` as Adv
 modifiers.
+The ambiguous preposition `at` is split by the same boundary: `Mary waited at
+noon` becomes `at_T(noon, wait(0)(mary))`, while `Mary waited at the station`
+becomes `wait(1)(at(station), mary)` and `John buttered the toast at the table`
+becomes `butter(1)(at(table), john, toast)`.
 Fronted non-temporal modifiers use the same Adv path: `In the bathroom Mary
 buttered the toast with a knife` becomes
 `butter(2)(in(bathroom), with(knife), mary, toast)`, `With a knife John
@@ -106,7 +110,8 @@ buttered the toast in the bathroom` becomes
 `butter(2)(with(knife), in(bathroom), john, toast)`, and `From home John walked
 to school` becomes `walk(2)(from(home), to(school), john)`. This keeps the
 fronted modifier from being folded into an entity constant such as
-`in_bathroom_mary`.
+`in_bathroom_mary`; likewise, `At the station Mary waited` becomes
+`wait(1)(at(station), mary)` rather than a temporal `at_T(station, ...)`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

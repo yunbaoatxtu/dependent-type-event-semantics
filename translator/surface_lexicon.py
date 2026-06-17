@@ -32,6 +32,7 @@ PREPOSITIONS = {
     "into",
 }
 MODIFIER_ROLE_BY_PREDICATE = {
+    "at": "Location",
     "with": "Instrument",
     "in": "Location",
     "on": "Location",

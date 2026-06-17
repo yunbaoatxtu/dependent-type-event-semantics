@@ -228,6 +228,8 @@ def ordered_role_entries(roles: dict[str, str], verb: str = "") -> list[dict[str
 
 def render_modifier(atom: Atom) -> str:
     rest = ", ".join(atom.args[1:])
+    if atom.pred == "at_loc":
+        return f"at({rest})" if rest else "at"
     return f"{atom.pred}({rest})" if rest else atom.pred
 
 
