@@ -57,6 +57,7 @@ IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
     "eaten": "eat",
+    "flew": "fly",
     "saw": "see",
     "seen": "see",
     "sat": "sit",
@@ -96,8 +97,10 @@ def lemma_verb(token: str) -> str:
         return token[:-1]
     if token.endswith("ed") and len(token) > 3:
         stem = token[:-2]
-        if len(stem) > 1 and stem[-1] == stem[-2]:
+        if len(stem) > 1 and stem[-1] == stem[-2] and not stem.endswith("ss"):
             return stem[:-1]
+        if token.endswith("sed") and not stem.endswith("ss"):
+            return stem + "e"
         return stem
     if token.endswith("ing") and len(token) > 4:
         stem = token[:-3]

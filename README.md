@@ -66,7 +66,9 @@ the natural-language input, an event-semantics JSON formula, the dependent-type
 translation and AST, and generated Coq code with an optional Coq/Rocq boundary
 check. For unlisted sentences, the fallback analysis is intentionally shallow:
 it identifies a subject, predicate, possible object, common adverbs, count
-words, and simple prepositional modifiers.
+words, and simple prepositional modifiers. The shared surface lexicon also
+normalizes common past-tense forms before translation, so examples such as
+`a dog chased a cat` export `chase` rather than a truncated predicate name.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

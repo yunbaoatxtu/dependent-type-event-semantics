@@ -305,6 +305,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("died"), "die")
         self.assertEqual(lemma_verb("opened"), "open")
         self.assertEqual(lemma_verb("froze"), "freeze")
+        self.assertEqual(lemma_verb("flew"), "fly")
+        self.assertEqual(lemma_verb("chased"), "chase")
+        self.assertEqual(lemma_verb("passed"), "pass")
+        self.assertEqual(lemma_verb("missed"), "miss")
+        self.assertEqual(lemma_verb("stopped"), "stop")
         self.assertEqual(
             passive_participle_audit("written"),
             {
@@ -1052,6 +1057,20 @@ class TranslatorTests(unittest.TestCase):
             "Parameter sit : forall n : nat, ModifierSeq n -> Entity -> PropT.",
             result["coq_code"],
         )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_natural_language_pipeline_lemmatizes_regular_past_tense(self) -> None:
+        result = run_pipeline("a dog chased a cat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "chase(0)(dog, cat)",
+        )
+        self.assertIn(
+            {"pred": "chase", "args": ["e"]},
+            result["event_semantics"]["body"]["and"],
+        )
+        self.assertIn("Parameter chase", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_directional_modifiers_use_source_goal_adv_roles(self) -> None:
