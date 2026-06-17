@@ -154,6 +154,12 @@ declared as `Entity -> Prop`, so the analysis does not invent a Theme such as
 declarations. This rule is intentionally narrow: object coordination such as
 `Mary visited Paris and London` remains a transitive fallback case rather than a
 predicate-coordination reading.
+Fronted non-temporal prepositional phrases stay in the Luo-Shi modifier layer:
+`In the park John walked and talked` becomes
+`and_T(walk(1)(in(park), john), talk(1)(in(park), john))`, with shared modifier
+`in_park : Adv`. The predicates have type
+`forall n : nat, ModifierSeq n -> Entity -> PropT`, rather than using the
+malformed subject `in_park_john`.
 The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while
@@ -165,6 +171,10 @@ does the same, so `Yesterday John ate bread and drank water` no longer creates
 the malformed subject `yesterday_john`. This rule also stays separate from
 object coordination: `Mary visited Paris and London` is not treated as two verb
 phrases.
+The same shared-Adv treatment applies to fronted locations in this transitive
+coordination slice: `In the park John ate bread and drank water` becomes
+`and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))`, while
+`bread : Food` and `water : Drinkable` remain distinct object types.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

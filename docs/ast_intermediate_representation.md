@@ -530,6 +530,7 @@ and talked`. The construction records both surface forms and their lemmatized
     "name": "john",
     "type": "Entity"
   },
+  "modifiers": [],
   "predicates": [
     {
       "surface": "walked",
@@ -557,6 +558,33 @@ and_T(walk(john), talk(john))
 If a fronted or trailing time expression is present, the time operator scopes
 over the whole conjunction rather than being folded into the subject.
 
+Fronted non-temporal prepositional material is instead represented as shared
+`Adv` material. For example, `In the park John walked and talked` keeps `john`
+as the subject and stores the fronted phrase as:
+
+```json
+"modifiers": [
+  {
+    "expression": "in(park)",
+    "name": "in_park",
+    "type": "Adv",
+    "semantic_role": "Location",
+    "surface_lexicon": {
+      "surface_modifier": "in(park)",
+      "normalized_modifier": "in_park",
+      "type": "Adv",
+      "semantic_role": "Location",
+      "source": "translator/surface_lexicon.py"
+    }
+  }
+]
+```
+
+The rendered replacement is `and_T(walk(1)(in(park), john),
+talk(1)(in(park), john))`. Its predicate type is therefore
+`forall n : nat, ModifierSeq n -> Entity -> PropT`, not just
+`Entity -> Prop`.
+
 ### `transitive_predicate_coordination`
 
 Represents same-subject transitive VP coordination such as `John ate bread and
@@ -569,6 +597,7 @@ drank water`. Each conjunct keeps its own object and lexical object type:
     "name": "john",
     "type": "Entity"
   },
+  "modifiers": [],
   "clauses": [
     {
       "predicate": {
@@ -607,6 +636,9 @@ and_T(eat(john, bread), drink(john, water))
 
 Fronted and trailing time expressions use the same `time_modifiers` field and
 therefore scope over the whole conjunction, e.g. `at_T(yesterday, and_T(...))`.
+Fronted non-temporal prepositional phrases use the shared `modifiers` field, so
+`In the park John ate bread and drank water` renders as
+`and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))`.
 
 This construction is deliberately separate from object coordination. `Mary
 visited Paris and London` remains an ordinary transitive fallback with
@@ -669,11 +701,15 @@ Current type rules:
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.
 - `predicate_coordination` has type `Prop` when the subject has type `Entity`,
-  the connective is `and_T : Prop -> Prop -> Prop`, and each coordinated
-  predicate has type `Entity -> Prop` with a lemma that matches its surface form.
+  the connective type matches the proposition type of the conjuncts, each
+  coordinated predicate has either type `Entity -> Prop` or, when shared `Adv`
+  modifiers are present, `forall n : nat, ModifierSeq n -> Entity -> PropT`, and
+  every predicate lemma matches its surface form.
 - `transitive_predicate_coordination` has type `Prop` when the shared subject has
   type `Entity`, each clause supplies an object with a stable lexical type, and
-  each predicate has the corresponding type `Entity -> ObjectType -> Prop`.
+  each predicate has the corresponding type `Entity -> ObjectType -> Prop` or,
+  with shared `Adv` modifiers, `forall n : nat, ModifierSeq n -> Entity ->
+  ObjectType -> PropT`.
 
 This is intentionally a shallow type layer. It does not yet prove semantic
 validity, but it prevents malformed intermediate representations from being

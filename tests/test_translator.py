@@ -2517,6 +2517,59 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("at_noon_john", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_predicate_coordination_keeps_fronted_location_as_adv(self) -> None:
+        result = run_pipeline("In the park John walked and talked", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(1)(in(park), john), talk(1)(in(park), john))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["modifiers"],
+            [
+                {
+                    "expression": "in(park)",
+                    "name": "in_park",
+                    "type": "Adv",
+                    "semantic_role": "Location",
+                    "surface_lexicon": modifier_surface_audit(
+                        "in(park)",
+                        "Adv",
+                        "Location",
+                    ),
+                }
+            ],
+        )
+        self.assertEqual(
+            result["ast"]["predicates"][0]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> PropT",
+        )
+        self.assertEqual(result["ast"]["connective_type"], "PropT -> PropT -> PropT")
+        self.assertIn("Parameter in_park : Adv.", result["coq_code"])
+        self.assertIn(
+            "Parameter walk : forall n : nat, ModifierSeq n -> Entity -> PropT.",
+            result["coq_code"],
+        )
+        self.assertIn(
+            "walk 1 (mods_cons 0 in_park mods_nil) john",
+            result["coq_code"],
+        )
+        self.assertNotIn("in_park_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
+        result = run_pipeline("In the park John walked and talked", require_coq=False)
+        ast = result["ast"]
+        ast["modifiers"][0]["type"] = "Entity"
+        type_check = check_predicate_coordination_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "predicate coordination modifiers[0] must have type Adv",
+            type_check["errors"],
+        )
+
     def test_predicate_coordination_does_not_capture_object_coordination(self) -> None:
         result = run_pipeline("Mary visited Paris and London", require_coq=False)
         self.assertTrue(result["ok"])
@@ -2668,6 +2721,65 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertNotIn("in_morning_john", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_keeps_fronted_location_as_adv(self) -> None:
+        result = run_pipeline(
+            "In the park John ate bread and drank water",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "transitive_predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["modifiers"],
+            [
+                {
+                    "expression": "in(park)",
+                    "name": "in_park",
+                    "type": "Adv",
+                    "semantic_role": "Location",
+                    "surface_lexicon": modifier_surface_audit(
+                        "in(park)",
+                        "Adv",
+                        "Location",
+                    ),
+                }
+            ],
+        )
+        self.assertEqual(
+            result["ast"]["clauses"][0]["predicate"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> Food -> PropT",
+        )
+        self.assertEqual(
+            result["ast"]["clauses"][1]["predicate"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> Drinkable -> PropT",
+        )
+        self.assertIn("Parameter in_park : Adv.", result["coq_code"])
+        self.assertIn(
+            "Parameter eat : forall n : nat, ModifierSeq n -> Entity -> Food -> PropT.",
+            result["coq_code"],
+        )
+        self.assertIn(
+            "eat 1 (mods_cons 0 in_park mods_nil) john bread",
+            result["coq_code"],
+        )
+        self.assertNotIn("in_park_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
+        result = run_pipeline("In the park John ate bread and drank water", require_coq=False)
+        ast = result["ast"]
+        ast["modifiers"][0]["type"] = "Entity"
+        type_check = check_transitive_predicate_coordination_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "transitive predicate coordination modifiers[0] must have type Adv",
+            type_check["errors"],
+        )
 
     def test_transitive_predicate_coordination_does_not_capture_object_coordination(self) -> None:
         result = run_pipeline("Mary visited Paris and London", require_coq=False)
@@ -4173,8 +4285,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)
         self.assertIn('"type": "Drinkable"', ast_docs)
+        self.assertIn('"expression": "in(park)"', ast_docs)
+        self.assertIn('"name": "in_park"', ast_docs)
+        self.assertIn("ModifierSeq n -> Entity -> PropT", ast_docs)
         self.assertIn("`construction_summary`", readme)
         self.assertIn("Same subject john coordinates eat(bread : Food)", readme)
+        self.assertIn("In the park John walked and talked", readme)
+        self.assertIn("`in_park : Adv`", readme)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)
