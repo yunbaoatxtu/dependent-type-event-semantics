@@ -124,6 +124,11 @@ entity as `Theme`, not `Agent`: `a cat is on a mat` becomes
 becomes `be(2)(in(park), near(door), old_dog)`. Specialized stative-result and
 passive rules still take priority for sentences such as `the vase is broken`
 and `the toast is buttered`.
+Ordinary copular property sentences now use a separate `Property` type:
+`Mary is happy` becomes `holds_property(mary, happy)`, and `Mary was happy
+yesterday` becomes `at_T(yesterday, holds_property(mary, happy))`. Registered
+state words such as `red`, `open`, and `broken` remain `State` values rather
+than generic `Property` values.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

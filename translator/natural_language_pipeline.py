@@ -1116,6 +1116,237 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def copular_property_ast(
+    subject: str,
+    property_name: str,
+    auxiliary: str,
+    time_modifiers: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "kind": "copular_property",
+        "subject": {"name": subject, "type": "Entity"},
+        "property": {"name": property_name, "type": "Property"},
+        "predicate": "holds_property",
+        "predicate_type": "Entity -> Property -> Prop",
+        "auxiliary": auxiliary,
+        "time_modifiers": time_modifiers,
+    }
+
+
+def check_copular_property_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "copular_property":
+        errors.append("ast.kind must be copular_property")
+
+    subject = ast.get("subject")
+    if not isinstance(subject, dict):
+        errors.append("copular property subject must be an object")
+    else:
+        if not isinstance(subject.get("name"), str) or not subject.get("name"):
+            errors.append("copular property subject.name must be a non-empty string")
+        if subject.get("type") != "Entity":
+            errors.append("copular property subject must have type Entity")
+
+    property_info = ast.get("property")
+    if not isinstance(property_info, dict):
+        errors.append("copular property must be an object")
+    else:
+        property_name = property_info.get("name")
+        if not isinstance(property_name, str) or not property_name:
+            errors.append("copular property.name must be a non-empty string")
+        elif property_name in STATE_SCALE_BY_STATE:
+            errors.append("copular property must not duplicate a registered State")
+        if property_info.get("type") != "Property":
+            errors.append("copular property must have type Property")
+
+    if ast.get("predicate") != "holds_property":
+        errors.append("copular property predicate must be holds_property")
+    if ast.get("predicate_type") != "Entity -> Property -> Prop":
+        errors.append("copular property predicate must have type Entity -> Property -> Prop")
+    if ast.get("auxiliary") not in PASSIVE_AUXILIARIES:
+        errors.append("copular property auxiliary must be is, was, are, or were")
+
+    time_modifiers = ast.get("time_modifiers")
+    if not isinstance(time_modifiers, list):
+        errors.append("copular property time_modifiers must be a list")
+    else:
+        for index, modifier in enumerate(time_modifiers):
+            if not isinstance(modifier, dict):
+                errors.append(f"copular property time_modifiers[{index}] must be an object")
+                continue
+            if modifier.get("operator") not in {"at", "during"}:
+                errors.append(
+                    f"copular property time_modifiers[{index}].operator must be at or during"
+                )
+            if not isinstance(modifier.get("argument"), str) or not modifier.get("argument"):
+                errors.append(
+                    f"copular property time_modifiers[{index}].argument must be a non-empty string"
+                )
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def copular_property_time_modifiers(tokens: list[str]) -> list[dict[str, str]] | None:
+    modifiers: list[dict[str, str]] = []
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token in TEMPORAL_ADVERBS:
+            modifiers.append({"operator": "at", "argument": token})
+            idx += 1
+            continue
+        temporal_phrase = temporal_phrase_value(tokens, idx)
+        if temporal_phrase is not None:
+            normalized_time, consumed = temporal_phrase
+            modifiers.append({"operator": "at", "argument": normalized_time})
+            idx += consumed
+            continue
+        temporal_prep_phrase = temporal_prepositional_phrase_value(tokens, idx)
+        if temporal_prep_phrase is not None:
+            operator, normalized_time, consumed = temporal_prep_phrase
+            modifiers.append({"operator": operator, "argument": normalized_time})
+            idx += consumed
+            continue
+        return None
+    return modifiers
+
+
+def render_copular_property_translation(
+    subject: str,
+    property_name: str,
+    time_modifiers: list[dict[str, str]],
+) -> str:
+    proposition = f"holds_property({subject}, {property_name})"
+    for modifier in time_modifiers:
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
+
+
+def render_copular_property_coq(
+    definition_name: str,
+    subject: str,
+    property_name: str,
+    time_modifiers: list[dict[str, str]],
+) -> str:
+    proposition = f"holds_property {subject} {property_name}"
+    for modifier in time_modifiers:
+        proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+    lines = [
+        "(* Copular property replacement without an event variable. *)",
+        "Parameter Entity : Type.",
+        "Parameter Property : Type.",
+        "",
+        f"Parameter {subject} : Entity.",
+        f"Parameter {property_name} : Property.",
+    ]
+    if time_modifiers:
+        lines.extend(
+            f"Parameter {modifier['argument']} : Entity."
+            for modifier in time_modifiers
+        )
+        lines.extend(
+            [
+                "",
+                "Parameter at_T : Entity -> Prop -> Prop.",
+                "Parameter during_T : Entity -> Prop -> Prop.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Parameter holds_property : Entity -> Property -> Prop.",
+            "",
+            f"Definition {definition_name} : Prop :=",
+            f"  {proposition}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def copular_property_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    auxiliary_indices = [
+        index for index, token in enumerate(tokens) if token in PASSIVE_AUXILIARIES
+    ]
+    if len(tokens) < 3 or not auxiliary_indices:
+        return None
+    auxiliary_index = auxiliary_indices[0]
+    auxiliary = tokens[auxiliary_index]
+    if auxiliary_index == 0 or auxiliary_index + 1 >= len(tokens):
+        return None
+    if tokens[auxiliary_index + 1] in PREPOSITIONS:
+        return None
+
+    subject = clean_phrase(tokens[:auxiliary_index])
+    property_tokens: list[str] = []
+    idx = auxiliary_index + 1
+    while idx < len(tokens):
+        if (
+            tokens[idx] in TEMPORAL_ADVERBS
+            or temporal_phrase_value(tokens, idx) is not None
+            or temporal_prepositional_phrase_value(tokens, idx) is not None
+        ):
+            break
+        property_tokens.append(tokens[idx])
+        idx += 1
+    if not property_tokens:
+        return None
+    if len(property_tokens) == 1 and is_passive_participle(property_tokens[0]):
+        return None
+
+    property_name = clean_phrase(property_tokens)
+    if property_name in STATE_SCALE_BY_STATE:
+        return None
+    time_modifiers = copular_property_time_modifiers(tokens[idx:])
+    if time_modifiers is None:
+        return None
+
+    ast = copular_property_ast(subject, property_name, auxiliary, time_modifiers)
+    type_check = check_copular_property_ast(ast)
+    definition_name = f"property_{property_name}"
+    typed_replacement = render_copular_property_translation(
+        subject,
+        property_name,
+        time_modifiers,
+    )
+    coq_code = render_copular_property_coq(
+        definition_name,
+        subject,
+        property_name,
+        time_modifiers,
+    )
+    return {
+        "kind": "copular_property",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "copular-property",
+            "source": sentence,
+            "event_style_reference": (
+                f"Property({subject}, {property_name}) without Agent(e, {subject})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "A copular property is represented as Entity -> Property -> Prop; "
+                "registered states and passive participles are handled by more "
+                "specific construction rules."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -1363,6 +1594,18 @@ def construction_rules() -> list[ConstructionRule]:
             label="Passive argument omission",
             phenomenon="Argument deletion without hidden event variables",
             analyzer=passive_argument_omission_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="copular_property",
+            label="Copular property",
+            phenomenon="Property predication without hidden event variables",
+            analyzer=copular_property_pipeline,
             forbidden_coq_fragments=(
                 "Parameter Event : Type.",
                 "exists e : Event",

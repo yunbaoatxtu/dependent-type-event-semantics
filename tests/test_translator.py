@@ -20,6 +20,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     ConstructionRule,
+    check_copular_property_ast,
     check_lexical_state_change_ast,
     check_passive_argument_omission_ast,
     check_perception_nominalization_ast,
@@ -2171,6 +2172,82 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_copular_property_uses_property_not_agent_or_theme(self) -> None:
+        result = run_pipeline("Mary is happy", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "copular_property")
+        self.assertEqual(result["construction_rule"]["id"], "copular_property")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "holds_property(mary, happy)",
+        )
+        self.assertEqual(
+            result["ast"],
+            {
+                "kind": "copular_property",
+                "subject": {"name": "mary", "type": "Entity"},
+                "property": {"name": "happy", "type": "Property"},
+                "predicate": "holds_property",
+                "predicate_type": "Entity -> Property -> Prop",
+                "auxiliary": "is",
+                "time_modifiers": [],
+            },
+        )
+        self.assertIn("Parameter Property : Type.", result["coq_code"])
+        self.assertIn("Parameter happy : Property.", result["coq_code"])
+        self.assertIn(
+            "Parameter holds_property : Entity -> Property -> Prop.",
+            result["coq_code"],
+        )
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("Parameter Agent :", result["coq_code"])
+        self.assertNotIn("Parameter Theme :", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_copular_property_allows_temporal_operator(self) -> None:
+        result = run_pipeline("Mary was happy yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "copular_property")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, holds_property(mary, happy))",
+        )
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn("Parameter yesterday : Entity.", result["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", result["coq_code"])
+        self.assertIn(
+            "at_T yesterday (holds_property mary happy).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_copular_property_keeps_state_and_passive_rules_more_specific(self) -> None:
+        state = run_pipeline("the door is red", require_coq=True)
+        self.assertTrue(state["ok"])
+        self.assertEqual(state["kind"], "stative_result_state")
+        self.assertEqual(
+            state["dependent_type_translation"],
+            "holds_state(door, color_scale, red)",
+        )
+
+        passive = run_pipeline("the toast is buttered", require_coq=True)
+        self.assertTrue(passive["ok"])
+        self.assertEqual(passive["kind"], "passive_argument_omission")
+
+    def test_copular_property_rejects_bad_property_type(self) -> None:
+        result = run_pipeline("Mary is happy", require_coq=False)
+        ast = result["ast"]
+        ast["property"]["type"] = "Entity"
+        type_check = check_copular_property_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "copular property must have type Property",
+            type_check["errors"],
+        )
+
     def test_stative_result_state_uses_state_not_omitted_agent(self) -> None:
         broken = run_pipeline("the vase is broken", require_coq=True)
         self.assertTrue(broken["ok"])
@@ -2570,6 +2647,7 @@ class TranslatorTests(unittest.TestCase):
             "perception_nominalization",
             "universal_timed_burning",
             "quantifier_scope_ambiguity",
+            "copular_property",
         }
         self.assertTrue(expected.issubset(rules))
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
@@ -2583,6 +2661,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("IN", rules["universal_timed_burning"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter some : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["copular_property"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["copular_property"].forbidden_coq_fragments)
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
@@ -2593,6 +2673,7 @@ class TranslatorTests(unittest.TestCase):
             "perception_nominalization": "Mary saw John leave",
             "universal_timed_burning": "In every burning, oxygen is consumed",
             "quantifier_scope_ambiguity": "some boy loves some girl",
+            "copular_property": "Mary is happy",
         }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):
