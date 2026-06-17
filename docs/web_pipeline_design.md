@@ -89,7 +89,9 @@ must expose the same semantic artifacts shown on the page: `event_semantics`,
 `construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
 The page mirrors that version in a compact `API Contract` panel, including the
 `/api/analyze` endpoint, so a browser screenshot and a JSON client can refer to
-the same response contract.
+the same response contract. It also renders the response `conclusion` in a
+dedicated `Conclusion` panel so the final outcome is visible outside the status
+line.
 `result_state_lexicon` is a list of audit
 records for resultative targets; each record includes the target `state`, its
 `scale`, an optional `default_source_state`, and a `source_policy` such as

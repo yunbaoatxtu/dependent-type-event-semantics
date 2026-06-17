@@ -270,7 +270,8 @@ dependent-type rendering, generated Coq, `result_state_lexicon`,
 `construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
 page. The page also renders an `API Contract` panel with the same schema
 version and endpoint, so browser users and automated clients can check the
-contract without inspecting raw network traffic.
+contract without inspecting raw network traffic, and a `Conclusion` panel with
+the same short outcome string returned by the API.
 
 For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
 `type_check`, `construction_hygiene`, and `coq_check` failures.

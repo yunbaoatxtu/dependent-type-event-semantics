@@ -851,6 +851,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     patch_text_href = patch_text_api_href(sentence, require_coq)
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
+    conclusion = result.get("conclusion", "")
     api_contract = compact_json(
         {
             "schema_version": result.get("schema_version", ANALYZE_RESPONSE_SCHEMA),
@@ -1227,6 +1228,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
       {panel("API Contract", api_contract)}
+      {panel("Conclusion", conclusion)}
       {semantic_warnings_panel(result)}
       {lexicon_patch_drafts_panel(result, sentence, require_coq)}
       {next_steps_panel(result)}
