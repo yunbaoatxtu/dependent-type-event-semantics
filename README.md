@@ -112,6 +112,11 @@ to school` becomes `walk(2)(from(home), to(school), john)`. This keeps the
 fronted modifier from being folded into an entity constant such as
 `in_bathroom_mary`; likewise, `At the station Mary waited` becomes
 `wait(1)(at(station), mary)` rather than a temporal `at_T(station, ...)`.
+The fronted boundary also keeps short multi-word PP objects together:
+`In the old bathroom Mary buttered the toast` becomes
+`butter(1)(in(old_bathroom), mary, toast)`, `With a sharp knife John buttered
+the toast` becomes `butter(1)(with(sharp_knife), john, toast)`, and `At the
+train station Mary waited` becomes `wait(1)(at(train_station), mary)`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

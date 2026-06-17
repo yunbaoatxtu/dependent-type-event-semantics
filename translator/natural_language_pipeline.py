@@ -1499,7 +1499,9 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
 
     def starts_subject_boundary(position: int) -> bool:
         subject_start = position
+        starts_with_article = False
         if subject_start < len(tokens) and tokens[subject_start] in ARTICLES:
+            starts_with_article = True
             subject_start += 1
         if subject_start >= len(tokens):
             return False
@@ -1509,7 +1511,8 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
                 token.endswith("ed") and len(token) > 3
             )
 
-        for subject_width in (1, 2):
+        subject_widths = (1, 2) if starts_with_article else (1,)
+        for subject_width in subject_widths:
             predicate_position = subject_start + subject_width
             if (
                 predicate_position < len(tokens)
