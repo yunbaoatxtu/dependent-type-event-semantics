@@ -66,14 +66,17 @@ the natural-language input, an event-semantics JSON formula, the dependent-type
 translation and AST, and generated Coq code with an optional Coq/Rocq boundary
 check. For unlisted sentences, the fallback analysis is intentionally shallow:
 it identifies a subject, predicate, possible object, common adverbs, count
-words, common temporal adverbs, and simple prepositional modifiers. The shared
-surface lexicon also normalizes common past-tense forms before translation, so
-examples such as `a dog chased a cat` export `chase` rather than a truncated
-predicate name.
+words, simple `one/two/three time(s)` count phrases, common temporal adverbs,
+and simple prepositional modifiers. The shared surface lexicon also normalizes
+common past-tense forms before translation, so examples such as
+`a dog chased a cat` export `chase` rather than a truncated predicate name.
+
 Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
 translation, so `Mary admired the painting yesterday` becomes
 `at_T(yesterday, admire(0)(mary, painting))` rather than treating
 `painting_yesterday` as one entity.
+Count phrases behave similarly: `Mary visited Paris three times` becomes
+`repeat(3, visit(0)(mary, paris))`, not `visit(0)(mary, paris_three_times)`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
@@ -369,7 +372,8 @@ The current prototype has small, testable rules for:
 - variable polyadicity plus temporal modification;
 - lexically licensed argument omission;
 - passive argument omission with an existential typed agent;
-- event counting with `once`/`twice`/`thrice` or explicit `count`;
+- event counting with `once`/`twice`/`thrice`, `one/two/three time(s)`, or
+  explicit `count`;
 - causal-resultative translation into a typed state transition.
 
 Resultatives now export result states separately from ordinary individuals:

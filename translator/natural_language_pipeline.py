@@ -28,6 +28,8 @@ from translator.state_change_lexicon import (
 )
 from translator.surface_lexicon import (
     ARTICLES,
+    COUNT_NOUNS,
+    COUNT_PHRASE_WORDS,
     COMMON_ADVERBS,
     COUNT_WORDS,
     PASSIVE_AUXILIARIES,
@@ -1503,6 +1505,14 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             items.append(atom(token, "e"))
             idx += 1
             continue
+        if (
+            token in COUNT_PHRASE_WORDS
+            and idx + 1 < len(tokens)
+            and tokens[idx + 1] in COUNT_NOUNS
+        ):
+            items.append(atom("times", "e", COUNT_PHRASE_WORDS[token]))
+            idx += 2
+            continue
         if token in COMMON_ADVERBS:
             items.append(atom(token, "e"))
             idx += 1
@@ -1516,7 +1526,12 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             idx += 1
             phrase: list[str] = []
             modifier_boundaries = (
-                PREPOSITIONS | COUNT_WORDS | COMMON_ADVERBS | TEMPORAL_ADVERBS
+                PREPOSITIONS
+                | COUNT_WORDS
+                | set(COUNT_PHRASE_WORDS)
+                | COUNT_NOUNS
+                | COMMON_ADVERBS
+                | TEMPORAL_ADVERBS
             )
             while idx < len(tokens) and tokens[idx] not in modifier_boundaries:
                 phrase.append(tokens[idx])

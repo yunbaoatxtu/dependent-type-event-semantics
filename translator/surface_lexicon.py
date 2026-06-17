@@ -44,6 +44,12 @@ MODIFIER_ROLE_BY_PREDICATE = {
     "into": "Goal",
 }
 COUNT_WORDS = {"once", "twice", "thrice"}
+COUNT_PHRASE_WORDS = {
+    "one": "1",
+    "two": "2",
+    "three": "3",
+}
+COUNT_NOUNS = {"time", "times"}
 COMMON_ADVERBS = {
     "slowly",
     "quickly",
