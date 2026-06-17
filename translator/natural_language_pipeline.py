@@ -1480,6 +1480,18 @@ def split_fronted_adv_modifiers(
     return tokens[idx:], modifiers
 
 
+def split_shared_adv_and_time_modifiers(
+    tokens: list[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]] | None:
+    if not tokens:
+        return [], []
+    remaining_tokens, adv_modifiers = split_fronted_adv_modifiers(tokens)
+    time_modifiers = copular_property_time_modifiers(remaining_tokens)
+    if time_modifiers is None:
+        return None
+    return adv_modifiers, time_modifiers
+
+
 def check_coordination_modifiers(
     errors: list[str],
     modifiers: Any,
@@ -1943,11 +1955,13 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     subject = clean_phrase(tokens[:left_predicate_index])
     if subject == "entity":
         return None
-    trailing_time_modifiers = copular_property_time_modifiers(
+    trailing_modifiers = split_shared_adv_and_time_modifiers(
         tokens[right_predicate_index + 1 :]
     )
-    if trailing_time_modifiers is None:
+    if trailing_modifiers is None:
         return None
+    trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
 
     predicates = [
@@ -1956,7 +1970,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
             "name": lemma_verb(left_surface),
             "predicate_type": (
                 "forall n : nat, ModifierSeq n -> Entity -> PropT"
-                if fronted_adv_modifiers
+                if shared_adv_modifiers
                 else "Entity -> Prop"
             ),
         },
@@ -1965,7 +1979,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
             "name": lemma_verb(right_surface),
             "predicate_type": (
                 "forall n : nat, ModifierSeq n -> Entity -> PropT"
-                if fronted_adv_modifiers
+                if shared_adv_modifiers
                 else "Entity -> Prop"
             ),
         },
@@ -1973,7 +1987,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     ast = predicate_coordination_ast(
         subject,
         predicates,
-        fronted_adv_modifiers,
+        shared_adv_modifiers,
         time_modifiers,
     )
     type_check = check_predicate_coordination_ast(ast)
@@ -1988,8 +2002,8 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
             f"{predicates[1]['name']} : {predicates[1]['predicate_type']}"
             + (
                 " with shared Adv modifiers "
-                + ", ".join(modifier["expression"] for modifier in fronted_adv_modifiers)
-                if fronted_adv_modifiers
+                + ", ".join(modifier["expression"] for modifier in shared_adv_modifiers)
+                if shared_adv_modifiers
                 else ""
             )
             + "."
@@ -2015,7 +2029,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
                     "predicates and a typed conjunction; no shared event "
                     "variable or Theme argument is introduced."
                 )
-                if fronted_adv_modifiers
+                if shared_adv_modifiers
                 else (
                     "Same-subject intransitive coordination is represented as a "
                     "typed conjunction of Entity -> Prop predicates; no shared "
@@ -2295,13 +2309,14 @@ def object_type_for_transitive_predicate(predicate: str) -> str:
     return application_argument_types(predicate, 2)[1]
 
 
-def split_object_tokens_and_time_modifiers(
+def split_object_tokens_and_modifiers(
     tokens: list[str],
-) -> tuple[list[str], list[dict[str, str]]] | None:
+) -> tuple[list[str], list[dict[str, Any]], list[dict[str, str]]] | None:
     for split_index in range(1, len(tokens) + 1):
-        time_modifiers = copular_property_time_modifiers(tokens[split_index:])
-        if time_modifiers is not None:
-            return tokens[:split_index], time_modifiers
+        modifier_parse = split_shared_adv_and_time_modifiers(tokens[split_index:])
+        if modifier_parse is not None:
+            adv_modifiers, time_modifiers = modifier_parse
+            return tokens[:split_index], adv_modifiers, time_modifiers
     return None
 
 
@@ -2333,10 +2348,11 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
     left_surface = tokens[left_verb_index]
     right_surface = tokens[and_index + 1]
     left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
-    right_tail = split_object_tokens_and_time_modifiers(tokens[and_index + 2 :])
+    right_tail = split_object_tokens_and_modifiers(tokens[and_index + 2 :])
     if right_tail is None:
         return None
-    right_object_tokens, trailing_time_modifiers = right_tail
+    right_object_tokens, trailing_adv_modifiers, trailing_time_modifiers = right_tail
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     right_object = clean_phrase(right_object_tokens)
     if left_object == "entity" or right_object == "entity":
@@ -2354,7 +2370,7 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
                     "predicate_type": (
                         "forall n : nat, ModifierSeq n -> "
                         f"Entity -> {object_type} -> PropT"
-                        if fronted_adv_modifiers
+                        if shared_adv_modifiers
                         else f"Entity -> {object_type} -> Prop"
                     ),
                 },
@@ -2365,7 +2381,7 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
     ast = transitive_predicate_coordination_ast(
         subject,
         clauses,
-        fronted_adv_modifiers,
+        shared_adv_modifiers,
         time_modifiers,
     )
     type_check = check_transitive_predicate_coordination_ast(ast)
@@ -2385,8 +2401,8 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
             f"{clauses[1]['object']['type']})"
             + (
                 " with shared Adv modifiers "
-                + ", ".join(modifier["expression"] for modifier in fronted_adv_modifiers)
-                if fronted_adv_modifiers
+                + ", ".join(modifier["expression"] for modifier in shared_adv_modifiers)
+                if shared_adv_modifiers
                 else ""
             )
             + "."
@@ -2414,7 +2430,7 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
                     "predicates; each object keeps its lexical type, and no "
                     "Event/Agent/Theme Coq predicates are exported."
                 )
-                if fronted_adv_modifiers
+                if shared_adv_modifiers
                 else (
                     "Same-subject transitive VP coordination is represented as a typed "
                     "conjunction of Entity -> ObjectType -> Prop predicates; each "

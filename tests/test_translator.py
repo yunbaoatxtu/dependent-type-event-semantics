@@ -2559,6 +2559,37 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("in_park_john", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_predicate_coordination_keeps_trailing_location_as_shared_adv(self) -> None:
+        result = run_pipeline("John walked and talked in the park", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(1)(in(park), john), talk(1)(in(park), john))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertEqual(result["ast"]["time_modifiers"], [])
+        self.assertNotIn("and_talked", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_combines_trailing_location_and_time(self) -> None:
+        result = run_pipeline(
+            "John walked and talked in the park yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(walk(1)(in(park), john), talk(1)(in(park), john)))",
+        )
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
         result = run_pipeline("In the park John walked and talked", require_coq=False)
         ast = result["ast"]
@@ -2768,6 +2799,44 @@ class TranslatorTests(unittest.TestCase):
             result["coq_code"],
         )
         self.assertNotIn("in_park_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_keeps_trailing_location_as_shared_adv(self) -> None:
+        result = run_pipeline(
+            "John ate bread and drank water in the park",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "transitive_predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(result["ast"]["clauses"][1]["object"], {"name": "water", "type": "Drinkable"})
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertNotIn("water_in_park", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_combines_trailing_location_and_time(self) -> None:
+        result = run_pipeline(
+            "John ate bread and drank water in the park yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "at_T(yesterday, and_T(eat(1)(in(park), john, bread), "
+                "drink(1)(in(park), john, water)))"
+            ),
+        )
+        self.assertEqual(result["ast"]["clauses"][1]["object"], {"name": "water", "type": "Drinkable"})
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_transitive_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
@@ -4291,6 +4360,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`construction_summary`", readme)
         self.assertIn("Same subject john coordinates eat(bread : Food)", readme)
         self.assertIn("In the park John walked and talked", readme)
+        self.assertIn("John walked and talked in the park", ast_docs)
+        self.assertIn("John ate bread and drank water in the park", readme)
+        self.assertIn("`water_in_park`", readme)
         self.assertIn("`in_park : Adv`", readme)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)

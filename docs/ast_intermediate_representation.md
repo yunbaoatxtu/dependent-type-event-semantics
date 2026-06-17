@@ -558,9 +558,10 @@ and_T(walk(john), talk(john))
 If a fronted or trailing time expression is present, the time operator scopes
 over the whole conjunction rather than being folded into the subject.
 
-Fronted non-temporal prepositional material is instead represented as shared
-`Adv` material. For example, `In the park John walked and talked` keeps `john`
-as the subject and stores the fronted phrase as:
+Fronted or trailing non-temporal prepositional material is instead represented
+as shared `Adv` material. For example, both `In the park John walked and talked`
+and `John walked and talked in the park` keep `john` as the subject and store
+the prepositional phrase as:
 
 ```json
 "modifiers": [
@@ -636,8 +637,9 @@ and_T(eat(john, bread), drink(john, water))
 
 Fronted and trailing time expressions use the same `time_modifiers` field and
 therefore scope over the whole conjunction, e.g. `at_T(yesterday, and_T(...))`.
-Fronted non-temporal prepositional phrases use the shared `modifiers` field, so
-`In the park John ate bread and drank water` renders as
+Fronted or trailing non-temporal prepositional phrases use the shared
+`modifiers` field, so `In the park John ate bread and drank water` and `John
+ate bread and drank water in the park` both render as
 `and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))`.
 
 This construction is deliberately separate from object coordination. `Mary
