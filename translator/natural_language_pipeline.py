@@ -61,6 +61,7 @@ ROCQ_ENV = Path(
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
+CONTRASTIVE_COORDINATORS = {"but"}
 
 
 @dataclass(frozen=True)
@@ -323,6 +324,46 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
             "coq_code": "",
         }
 
+    if any(token in CONTRASTIVE_COORDINATORS for token in tokens):
+        contrastive = contrastive_do_support_negation_pipeline(sentence)
+        if contrastive is not None:
+            return contrastive
+        return {
+            "kind": "do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Do-support negation with {auxiliary} not and contrastive "
+                "coordination was detected, but this surface pattern is not "
+                "implemented in the controlled rule yet."
+            ),
+            "event_semantics": {
+                "analysis": "do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "not(exists e. P(e) ...) with contrastive coordination unresolved"
+                ),
+            },
+            "dependent_type_translation": "",
+            "ast": {
+                "kind": "do_support_negation",
+                "auxiliary": auxiliary,
+                "subject": {"name": subject, "type": "Entity"},
+                "unsupported": "contrastive_coordination_under_negation",
+            },
+            "type_check": {
+                "ok": False,
+                "type": None,
+                "errors": [
+                    "do-support negation with contrastive coordination is not yet supported"
+                ],
+                "note": (
+                    "The parser refuses to turn contrastive coordination into "
+                    "a malformed object inside the negated positive clause."
+                ),
+            },
+            "coq_code": "",
+        }
+
     positive_sentence = " ".join(
         [*subject_tokens, lemma_verb(tokens[negation_index + 1]), *tokens[negation_index + 2 :]]
     )
@@ -405,6 +446,56 @@ def coordinated_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | 
         sentence,
         tokens,
         and_index,
+        right_surface,
+        fronted_adv_modifiers,
+        fronted_time_modifiers,
+    )
+
+
+def contrastive_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
+    tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
+    if sum(1 for token in tokens if token in CONTRASTIVE_COORDINATORS) != 1:
+        return None
+    but_index = next(
+        index for index, token in enumerate(tokens) if token in CONTRASTIVE_COORDINATORS
+    )
+    negation_index = None
+    for index, token in enumerate(tokens[:but_index]):
+        if (
+            token == "not"
+            and index > 0
+            and tokens[index - 1] in DO_SUPPORT_AUXILIARIES
+        ):
+            negation_index = index
+            break
+    if negation_index is None or negation_index + 1 >= but_index:
+        return None
+    if but_index + 1 >= len(tokens):
+        return None
+    left_surface = tokens[negation_index + 1]
+    right_surface = tokens[but_index + 1]
+    if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
+        return None
+
+    transitive = contrastive_transitive_do_support_negation(
+        sentence,
+        tokens,
+        negation_index,
+        but_index,
+        left_surface,
+        right_surface,
+        fronted_adv_modifiers,
+        fronted_time_modifiers,
+    )
+    if transitive is not None:
+        return transitive
+    return contrastive_intransitive_do_support_negation(
+        sentence,
+        tokens,
+        negation_index,
+        but_index,
+        left_surface,
         right_surface,
         fronted_adv_modifiers,
         fronted_time_modifiers,
@@ -2753,6 +2844,181 @@ def coordinated_transitive_do_support_negation(
                 "Right-branch transitive do-support negation is represented by "
                 "wrapping only the second typed coordinate in not_T; object "
                 "lexical types are still checked before Coq."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
+def contrastive_intransitive_do_support_negation(
+    sentence: str,
+    tokens: list[str],
+    negation_index: int,
+    but_index: int,
+    left_surface: str,
+    right_surface: str,
+    fronted_adv_modifiers: list[dict[str, Any]],
+    fronted_time_modifiers: list[dict[str, str]],
+) -> dict[str, Any] | None:
+    auxiliary_index = negation_index - 1
+    subject = clean_phrase(tokens[:auxiliary_index])
+    if subject == "entity":
+        return None
+    if tokens[negation_index + 2 : but_index]:
+        return None
+    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[but_index + 2 :])
+    if trailing_modifiers is None:
+        return None
+    trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    if fronted_adv_modifiers or trailing_adv_modifiers:
+        return None
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+    predicates = [
+        {
+            "surface": left_surface,
+            "name": lemma_verb(left_surface),
+            "predicate_type": "Entity -> Prop",
+            "negated": True,
+        },
+        {
+            "surface": right_surface,
+            "name": lemma_verb(right_surface),
+            "predicate_type": "Entity -> Prop",
+        },
+    ]
+    ast = predicate_coordination_ast(
+        subject,
+        predicates,
+        [],
+        time_modifiers,
+    )
+    type_check = check_predicate_coordination_ast(ast)
+    typed_replacement = render_predicate_coordination_translation(ast)
+    coq_code = render_predicate_coordination_coq(
+        "contrastive_do_support_negation_assertion",
+        ast,
+    )
+    return {
+        "kind": "contrastive_do_support_negation",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} contrasts not {predicates[0]['name']} with "
+            f"{predicates[1]['name']} using a typed conjunction."
+        ),
+        "event_semantics": {
+            "analysis": "contrastive-do-support-negation",
+            "source": sentence,
+            "event_style_reference": (
+                "not(exists e1. "
+                f"{predicates[0]['name']}(e1) and Agent(e1, {subject})) and "
+                "exists e2. "
+                f"{predicates[1]['name']}(e2) and Agent(e2, {subject})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Contrastive do-support negation with but is represented by "
+                "wrapping the first coordinate in not_T and conjoining it with "
+                "the positive second coordinate."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
+def contrastive_transitive_do_support_negation(
+    sentence: str,
+    tokens: list[str],
+    negation_index: int,
+    but_index: int,
+    left_surface: str,
+    right_surface: str,
+    fronted_adv_modifiers: list[dict[str, Any]],
+    fronted_time_modifiers: list[dict[str, str]],
+) -> dict[str, Any] | None:
+    auxiliary_index = negation_index - 1
+    subject = clean_phrase(tokens[:auxiliary_index])
+    if subject == "entity":
+        return None
+    left_object = clean_phrase(tokens[negation_index + 2 : but_index])
+    if left_object == "entity":
+        return None
+    right_tail = split_object_tokens_and_modifiers(tokens[but_index + 2 :])
+    if right_tail is None:
+        return None
+    right_object_tokens, trailing_adv_modifiers, trailing_time_modifiers = right_tail
+    right_object = clean_phrase(right_object_tokens)
+    if right_object == "entity":
+        return None
+    if fronted_adv_modifiers or trailing_adv_modifiers:
+        return None
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+
+    clauses: list[dict[str, Any]] = []
+    for surface, obj, negated in (
+        (left_surface, left_object, True),
+        (right_surface, right_object, False),
+    ):
+        predicate = lemma_verb(surface)
+        object_type = object_type_for_transitive_predicate(predicate)
+        clauses.append(
+            {
+                "predicate": {
+                    "surface": surface,
+                    "name": predicate,
+                    "predicate_type": f"Entity -> {object_type} -> Prop",
+                },
+                "object": {"name": obj, "type": object_type},
+                "negated": negated,
+            }
+        )
+
+    ast = transitive_predicate_coordination_ast(
+        subject,
+        clauses,
+        [],
+        time_modifiers,
+    )
+    type_check = check_transitive_predicate_coordination_ast(ast)
+    typed_replacement = render_transitive_predicate_coordination_translation(ast)
+    coq_code = render_transitive_predicate_coordination_coq(
+        "contrastive_transitive_do_support_negation_assertion",
+        ast,
+    )
+    return {
+        "kind": "contrastive_do_support_negation",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} contrasts not "
+            f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
+            f"{clauses[0]['object']['type']}) with "
+            f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
+            f"{clauses[1]['object']['type']})."
+        ),
+        "event_semantics": {
+            "analysis": "contrastive-do-support-negation",
+            "source": sentence,
+            "event_style_reference": (
+                "not(exists e1. "
+                f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                f"Theme(e1, {clauses[0]['object']['name']})) and exists e2. "
+                f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                f"Theme(e2, {clauses[1]['object']['name']})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Contrastive transitive do-support negation with but wraps only "
+                "the first typed coordinate in not_T and keeps both object "
+                "lexical types checked before Coq."
             ),
         },
         "coq_code": coq_code,

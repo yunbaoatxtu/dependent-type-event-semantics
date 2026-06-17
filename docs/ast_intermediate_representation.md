@@ -733,6 +733,9 @@ Current type rules:
   be misread as a malformed subject or object.
   Time modifiers scope over the resulting conjunction, and shared Adv modifiers
   remain typed modifier entries rather than entities.
+  Clear contrastive `but` cases use the same local marker on the first
+  coordinate: `John did not walk but talked` renders as
+  `and_T(not_T(walk(john)), talk(john))`.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the

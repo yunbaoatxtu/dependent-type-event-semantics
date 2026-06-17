@@ -2579,6 +2579,69 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter bread : Food.", transitive_location["coq_code"])
         self.assertIn("Parameter water : Drinkable.", transitive_location["coq_code"])
 
+    def test_do_support_negation_handles_contrastive_but_coordination(self) -> None:
+        intransitive = run_pipeline("John did not walk but talked", require_coq=True)
+        self.assertTrue(intransitive["ok"])
+        self.assertEqual(intransitive["kind"], "contrastive_do_support_negation")
+        self.assertEqual(intransitive["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(
+            intransitive["dependent_type_translation"],
+            "and_T(not_T(walk(john)), talk(john))",
+        )
+        self.assertIn("Parameter not_T : Prop -> Prop.", intransitive["coq_code"])
+        self.assertIn(
+            "and_T (not_T (walk john)) (talk john)",
+            intransitive["coq_code"],
+        )
+        self.assertEqual(intransitive["coq_check"]["status"], "passed")
+
+        transitive = run_pipeline(
+            "John did not eat bread but drank water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(transitive["kind"], "contrastive_do_support_negation")
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            "and_T(not_T(eat(john, bread)), drink(john, water))",
+        )
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+
+        timed = run_pipeline(
+            "Yesterday John did not walk but talked",
+            require_coq=True,
+        )
+        self.assertTrue(timed["ok"])
+        self.assertEqual(
+            timed["dependent_type_translation"],
+            "at_T(yesterday, and_T(not_T(walk(john)), talk(john)))",
+        )
+
+    def test_do_support_negation_rejects_bad_contrastive_but_before_fallback(self) -> None:
+        conflict = run_pipeline("John did not eat bread but drank bread", require_coq=True)
+        self.assertFalse(conflict["ok"])
+        self.assertEqual(conflict["kind"], "contrastive_do_support_negation")
+        self.assertEqual(conflict["coq_check"]["status"], "skipped")
+        self.assertIn(
+            "transitive predicate coordination object bread has conflicting lexical types: Food vs Drinkable",
+            conflict["type_check"]["errors"],
+        )
+
+        unsupported_modifier = run_pipeline(
+            "John did not walk but talked in the park",
+            require_coq=True,
+        )
+        self.assertFalse(unsupported_modifier["ok"])
+        self.assertEqual(unsupported_modifier["kind"], "do_support_negation")
+        self.assertIn(
+            "do-support negation with contrastive coordination is not yet supported",
+            unsupported_modifier["type_check"]["errors"],
+        )
+        self.assertEqual(unsupported_modifier["coq_check"]["status"], "skipped")
+        self.assertNotIn("but_talked", unsupported_modifier.get("dependent_type_translation", ""))
+
     def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
         for sentence in (
             "John did not walk and talk",
@@ -4880,6 +4943,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John did not walk", readme)
         self.assertIn("not_T(walk(0)(john))", readme)
         self.assertIn("and_T(walk(john), not_T(talk(john)))", readme)
+        self.assertIn("John did not walk but talked", readme)
+        self.assertIn("and_T(not_T(walk(john)), talk(john))", readme)
         self.assertIn("and_did_not_talk", readme)
         self.assertIn("StateChangeVerbEntry", readme)
         self.assertIn("translator/state_change_lexicon.py", readme)
@@ -4941,6 +5006,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("negated: true", ast_docs)
         self.assertIn("Scope-ambiguous", ast_docs)
         self.assertIn("coordinated do-support negation is still rejected", ast_docs)
+        self.assertIn("Clear contrastive `but` cases", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Prop"', ast_docs)
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)
