@@ -200,6 +200,13 @@ The order-sensitive modifier vector is shared across transitive conjuncts too:
 `and_T(eat(2)(quickly, in(park), john, bread), drink(2)(quickly, in(park), john, water))`.
 With a fronted modifier plus a trailing modifier, `Quickly John ate bread and
 drank water in the park` uses that same `quickly, in(park)` sequence.
+The Coq declaration layer separates repeated semantic occurrences from
+repeated declarations: `John walked and talked slowly slowly`,
+`John walked and talked yesterday yesterday`, and `John ate bread and ate bread`
+retain the repeated modifier, time operator, or conjunct in the formula but
+declare `slowly`, `yesterday`, `bread`, and `eat` only once. A genuine lexical
+type conflict is still rejected before Coq; for example, `John ate bread and
+drank bread` tries to use `bread` as both `Food` and `Drinkable`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
@@ -661,6 +668,11 @@ name at incompatible types or exporting one shallow function name with
 incompatible signatures. This includes cross-category clashes: a result-state
 constant such as `broken : State` cannot be reused in the same generated module
 as an entity-denoting constant `broken : Entity`.
+Construction-specific exporters also de-duplicate identical declarations before
+Coq/Rocq is called, so repeated occurrences of the same modifier, time
+constant, object, or predicate do not become spurious `already exists` errors.
+Incompatible repeated declarations remain type-checking failures rather than
+being silently merged.
 
 Run the test suite:
 

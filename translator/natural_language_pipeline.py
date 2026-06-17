@@ -1542,6 +1542,38 @@ def coq_modifier_sequence(modifiers: list[dict[str, Any]]) -> str:
     return sequence
 
 
+def unique_names(names: list[str]) -> list[str]:
+    return list(dict.fromkeys(names))
+
+
+def unique_typed_declarations(declarations: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    unique: list[tuple[str, str]] = []
+    seen: dict[str, str] = {}
+    for name, type_name in declarations:
+        if name in seen:
+            continue
+        seen[name] = type_name
+        unique.append((name, type_name))
+    return unique
+
+
+def check_declaration_type_conflicts(
+    errors: list[str],
+    declarations: list[tuple[str, str]],
+    context: str,
+) -> None:
+    seen: dict[str, str] = {}
+    for name, type_name in declarations:
+        previous_type = seen.get(name)
+        if previous_type is None:
+            seen[name] = type_name
+        elif previous_type != type_name:
+            errors.append(
+                f"{context} {name} has conflicting lexical types: "
+                f"{previous_type} vs {type_name}"
+            )
+
+
 def render_copular_property_translation(
     subject: str,
     property_conjuncts: list[dict[str, str | None]],
@@ -1906,7 +1938,9 @@ def render_predicate_coordination_coq(
                 "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
             ]
         )
-        lines.extend(f"Parameter {modifier['name']} : Adv." for modifier in modifiers)
+        lines.extend(f"Parameter {name} : Adv." for name in unique_names([
+            modifier["name"] for modifier in modifiers
+        ]))
     lines.extend(["", f"Parameter {subject} : Entity."])
     if modifiers:
         lines.extend(
@@ -1919,8 +1953,10 @@ def render_predicate_coordination_coq(
         lines.append("Parameter and_T : Prop -> Prop -> Prop.")
     if ast["time_modifiers"]:
         lines.extend(
-            f"Parameter {modifier['argument']} : Entity."
-            for modifier in ast["time_modifiers"]
+            f"Parameter {name} : Entity."
+            for name in unique_names([
+                modifier["argument"] for modifier in ast["time_modifiers"]
+            ])
         )
         lines.extend(
             [
@@ -2150,6 +2186,19 @@ def check_transitive_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str
                     "transitive predicate coordination "
                     f"clauses[{index}].predicate must have type {expected_predicate_type}"
                 )
+        object_declarations = [
+            (clause["object"]["name"], clause["object"]["type"])
+            for clause in clauses
+            if isinstance(clause, dict)
+            and isinstance(clause.get("object"), dict)
+            and isinstance(clause["object"].get("name"), str)
+            and isinstance(clause["object"].get("type"), str)
+        ]
+        check_declaration_type_conflicts(
+            errors,
+            object_declarations,
+            "transitive predicate coordination object",
+        )
 
     if ast.get("connective") != "and_T":
         errors.append("transitive predicate coordination connective must be and_T")
@@ -2267,20 +2316,28 @@ def render_transitive_predicate_coordination_coq(
         )
     lines.extend(f"Parameter {object_type} : Type." for object_type in object_types)
     if modifiers:
-        lines.extend(f"Parameter {modifier['name']} : Adv." for modifier in modifiers)
+        lines.extend(f"Parameter {name} : Adv." for name in unique_names([
+            modifier["name"] for modifier in modifiers
+        ]))
     lines.extend(
         [
             "",
             f"Parameter {subject} : Entity.",
         ]
     )
-    for clause in clauses:
-        lines.append(f"Parameter {clause['object']['name']} : {clause['object']['type']}.")
-    for clause in clauses:
+    for name, type_name in unique_typed_declarations([
+        (clause["object"]["name"], clause["object"]["type"])
+        for clause in clauses
+    ]):
+        lines.append(f"Parameter {name} : {type_name}.")
+    for name, predicate_type in unique_typed_declarations([
+        (clause["predicate"]["name"], clause["predicate"]["predicate_type"])
+        for clause in clauses
+    ]):
         lines.append(
             "Parameter "
-            f"{clause['predicate']['name']} : "
-            f"{clause['predicate']['predicate_type']}."
+            f"{name} : "
+            f"{predicate_type}."
         )
     if modifiers:
         lines.append("Parameter and_T : PropT -> PropT -> PropT.")
@@ -2288,8 +2345,10 @@ def render_transitive_predicate_coordination_coq(
         lines.append("Parameter and_T : Prop -> Prop -> Prop.")
     if ast["time_modifiers"]:
         lines.extend(
-            f"Parameter {modifier['argument']} : Entity."
-            for modifier in ast["time_modifiers"]
+            f"Parameter {name} : Entity."
+            for name in unique_names([
+                modifier["argument"] for modifier in ast["time_modifiers"]
+            ])
         )
         lines.extend(
             [

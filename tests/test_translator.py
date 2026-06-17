@@ -2722,6 +2722,45 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_predicate_coordination_deduplicates_repeated_modifier_declarations(self) -> None:
+        result = run_pipeline("John walked and talked slowly slowly", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(2)(slowly, slowly, john), talk(2)(slowly, slowly, john))",
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in result["ast"]["modifiers"]],
+            ["slowly", "slowly"],
+        )
+        self.assertEqual(result["coq_code"].count("Parameter slowly : Adv."), 1)
+        self.assertIn(
+            "walk 2 (mods_cons 1 slowly (mods_cons 0 slowly mods_nil)) john",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_deduplicates_repeated_time_declarations(self) -> None:
+        result = run_pipeline("John walked and talked yesterday yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, at_T(yesterday, and_T(walk(john), talk(john))))",
+        )
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [
+                {"operator": "at", "argument": "yesterday"},
+                {"operator": "at", "argument": "yesterday"},
+            ],
+        )
+        self.assertEqual(result["coq_code"].count("Parameter yesterday : Entity."), 1)
+        self.assertIn(
+            "at_T yesterday (at_T yesterday (and_T (walk john) (talk john))).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
         result = run_pipeline("In the park John walked and talked", require_coq=False)
         ast = result["ast"]
@@ -3097,6 +3136,49 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertNotIn("water_quickly", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_deduplicates_repeated_declarations(self) -> None:
+        result = run_pipeline("John ate bread and ate bread", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(eat(john, bread), eat(john, bread))",
+        )
+        self.assertEqual(result["coq_code"].count("Parameter bread : Food."), 1)
+        self.assertEqual(
+            result["coq_code"].count("Parameter eat : Entity -> Food -> Prop."),
+            1,
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_deduplicates_repeated_time_declarations(self) -> None:
+        result = run_pipeline(
+            "John ate bread and drank water yesterday yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "at_T(yesterday, at_T(yesterday, "
+                "and_T(eat(john, bread), drink(john, water))))"
+            ),
+        )
+        self.assertEqual(result["coq_code"].count("Parameter yesterday : Entity."), 1)
+        self.assertIn(
+            "at_T yesterday (at_T yesterday (and_T (eat john bread) (drink john water))).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_rejects_conflicting_object_types(self) -> None:
+        result = run_pipeline("John ate bread and drank bread", require_coq=True)
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "transitive predicate coordination object bread has conflicting lexical types: Food vs Drinkable",
+            result["type_check"]["errors"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "skipped")
 
     def test_transitive_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
         result = run_pipeline("In the park John ate bread and drank water", require_coq=False)
@@ -4632,6 +4714,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John ate bread and drank water quickly in the park", readme)
         self.assertIn("Slowly John walked and talked in the park", readme)
         self.assertIn("Quickly John ate bread and", ast_docs)
+        self.assertIn("John walked and talked slowly slowly", readme)
+        self.assertIn("John ate bread and ate bread", ast_docs)
+        self.assertIn("drank bread", ast_docs)
+        self.assertIn("incompatible lexical types", ast_docs)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)

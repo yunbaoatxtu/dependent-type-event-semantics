@@ -667,6 +667,14 @@ This construction is deliberately separate from object coordination. `Mary
 visited Paris and London` remains an ordinary transitive fallback with
 `paris_and_london` as the Theme, not a VP coordination.
 
+Repeated semantic occurrences are not treated as repeated declarations. Thus
+`John ate bread and ate bread` keeps two conjuncts in the formula but exports
+only one `bread : Food` and one `eat : Entity -> Food -> Prop` declaration.
+Likewise, repeated time modifiers such as `yesterday yesterday` keep nested
+temporal operators while declaring `yesterday : Entity` once. If the same
+surface object would need incompatible lexical types, as in `John ate bread and
+drank bread`, the AST type check reports the conflict before Coq is attempted.
+
 ## Type Checking
 
 The translator runs a lightweight structural type check over every emitted AST.
