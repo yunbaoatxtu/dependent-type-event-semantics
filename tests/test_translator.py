@@ -2486,6 +2486,37 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_predicate_coordination_allows_fronted_time(self) -> None:
+        result = run_pipeline("Yesterday John walked and talked", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(walk(john), talk(john)))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertNotIn("yesterday_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_allows_fronted_prepositional_time(self) -> None:
+        result = run_pipeline("At noon John walked and talked", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(noon, and_T(walk(john), talk(john)))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "noon"}],
+        )
+        self.assertNotIn("at_noon_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_does_not_capture_object_coordination(self) -> None:
         result = run_pipeline("Mary visited Paris and London", require_coq=False)
         self.assertTrue(result["ok"])
@@ -2599,6 +2630,43 @@ class TranslatorTests(unittest.TestCase):
             "at_T yesterday (and_T (eat john bread) (drink john water)).",
             result["coq_code"],
         )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_allows_fronted_time(self) -> None:
+        result = run_pipeline(
+            "Yesterday John ate bread and drank water",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "transitive_predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(eat(john, bread), drink(john, water)))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertNotIn("yesterday_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_allows_fronted_during_time(self) -> None:
+        result = run_pipeline(
+            "In the morning John ate bread and drank water",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "during_T(morning, and_T(eat(john, bread), drink(john, water)))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "during", "argument": "morning"}],
+        )
+        self.assertNotIn("in_morning_john", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_transitive_predicate_coordination_does_not_capture_object_coordination(self) -> None:

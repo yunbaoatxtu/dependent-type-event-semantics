@@ -554,8 +554,8 @@ Renders as:
 and_T(walk(john), talk(john))
 ```
 
-If a trailing time expression is present, the time operator scopes over the
-whole conjunction.
+If a fronted or trailing time expression is present, the time operator scopes
+over the whole conjunction rather than being folded into the subject.
 
 ### `transitive_predicate_coordination`
 
@@ -604,6 +604,9 @@ Renders as:
 ```text
 and_T(eat(john, bread), drink(john, water))
 ```
+
+Fronted and trailing time expressions use the same `time_modifiers` field and
+therefore scope over the whole conjunction, e.g. `at_T(yesterday, and_T(...))`.
 
 This construction is deliberately separate from object coordination. `Mary
 visited Paris and London` remains an ordinary transitive fallback with

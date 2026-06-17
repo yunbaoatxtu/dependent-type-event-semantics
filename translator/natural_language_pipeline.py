@@ -1375,6 +1375,33 @@ def copular_property_time_modifiers(tokens: list[str]) -> list[dict[str, str]] |
     return modifiers
 
 
+def split_fronted_time_modifiers(
+    tokens: list[str],
+) -> tuple[list[str], list[dict[str, str]]]:
+    modifiers: list[dict[str, str]] = []
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token in TEMPORAL_ADVERBS:
+            modifiers.append({"operator": "at", "argument": token})
+            idx += 1
+            continue
+        temporal_phrase = temporal_phrase_value(tokens, idx)
+        if temporal_phrase is not None:
+            normalized_time, consumed = temporal_phrase
+            modifiers.append({"operator": "at", "argument": normalized_time})
+            idx += consumed
+            continue
+        temporal_prep_phrase = temporal_prepositional_phrase_value(tokens, idx)
+        if temporal_prep_phrase is not None:
+            operator, normalized_time, consumed = temporal_prep_phrase
+            modifiers.append({"operator": operator, "argument": normalized_time})
+            idx += consumed
+            continue
+        break
+    return tokens[idx:], modifiers
+
+
 def render_copular_property_translation(
     subject: str,
     property_conjuncts: list[dict[str, str | None]],
@@ -1717,7 +1744,7 @@ def render_predicate_coordination_coq(
 
 
 def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
-    tokens = tokenize(sentence)
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     if tokens.count("and") != 1:
         return None
     and_index = tokens.index("and")
@@ -1734,9 +1761,12 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     subject = clean_phrase(tokens[:left_predicate_index])
     if subject == "entity":
         return None
-    time_modifiers = copular_property_time_modifiers(tokens[right_predicate_index + 1 :])
-    if time_modifiers is None:
+    trailing_time_modifiers = copular_property_time_modifiers(
+        tokens[right_predicate_index + 1 :]
+    )
+    if trailing_time_modifiers is None:
         return None
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
 
     predicates = [
         {
@@ -2007,7 +2037,7 @@ def split_object_tokens_and_time_modifiers(
 
 
 def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
-    tokens = tokenize(sentence)
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     if tokens.count("and") != 1:
         return None
     and_index = tokens.index("and")
@@ -2036,7 +2066,8 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
     right_tail = split_object_tokens_and_time_modifiers(tokens[and_index + 2 :])
     if right_tail is None:
         return None
-    right_object_tokens, time_modifiers = right_tail
+    right_object_tokens, trailing_time_modifiers = right_tail
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     right_object = clean_phrase(right_object_tokens)
     if left_object == "entity" or right_object == "entity":
         return None

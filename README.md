@@ -146,7 +146,9 @@ holds_state(door, access_scale, open))`, not `red_and_open : Property`.
 Same-subject intransitive predicate coordination is also handled before the
 generic fallback. `John walked and talked` becomes
 `and_T(walk(john), talk(john))`, and `John walked and talked yesterday` becomes
-`at_T(yesterday, and_T(walk(john), talk(john)))`. The two predicates are
+`at_T(yesterday, and_T(walk(john), talk(john)))`. The same temporal scoping now
+holds sentence-initially: `Yesterday John walked and talked` keeps `john` as
+the subject and puts `yesterday` outside the conjunction. The two predicates are
 declared as `Entity -> Prop`, so the analysis does not invent a Theme such as
 `and_talked` and does not export hidden `Event`, `Agent`, or `Theme`
 declarations. This rule is intentionally narrow: object coordination such as
@@ -158,9 +160,11 @@ the same subject. `John ate bread and drank water` becomes
 `water` is typed as `Drinkable`, following the existing lexical argument types.
 Sentence-final time still scopes over the whole conjunction, so `John ate bread
 and drank water yesterday` becomes
-`at_T(yesterday, and_T(eat(john, bread), drink(john, water)))`. This rule also
-stays separate from object coordination: `Mary visited Paris and London` is not
-treated as two verb phrases.
+`at_T(yesterday, and_T(eat(john, bread), drink(john, water)))`; fronted time
+does the same, so `Yesterday John ate bread and drank water` no longer creates
+the malformed subject `yesterday_john`. This rule also stays separate from
+object coordination: `Mary visited Paris and London` is not treated as two verb
+phrases.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
