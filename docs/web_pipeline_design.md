@@ -86,7 +86,8 @@ clients can distinguish this contract from later API revisions. On success, it
 must expose the same semantic artifacts shown on the page: `event_semantics`,
 `dependent_type_translation`, `result_state_lexicon`, `modifier_role_audit`,
 `lexicon_patch_drafts`, `patch_text_preview`, `ast`, `coq_code`, `construction_rule`,
-`construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
+`construction_summary`, `construction_hygiene`, `coq_check`, `diagnostics`, and
+`conclusion`.
 The page mirrors that version in a compact `API Contract` panel, including the
 `/api/analyze` endpoint, so a browser screenshot and a JSON client can refer to
 the same response contract. It also renders the response `conclusion` in a
@@ -364,7 +365,10 @@ failure. `forbidden_coq_fragments` names fragments that would be illegal for the
 matched construction. `found_forbidden_fragments` reports fragments that were
 actually found in the generated Coq scaffold. A successful replacement can
 therefore display forbidden fragments as policy while still showing `hygiene:
-passed` and `found forbidden fragments: none`.
+passed` and `found forbidden fragments: none`. When a rule supplies
+`construction_summary`, the panel also shows an instance summary, for example
+that a same-subject VP coordination shares `john` while keeping `bread : Food`
+and `water : Drinkable` in separate conjuncts.
 If the construction's internal AST `type_check` fails, the pipeline stops before
 construction hygiene and Coq/Rocq validation; those downstream stages are
 reported as `skipped`, so the diagnostics do not blur an AST error into a proof

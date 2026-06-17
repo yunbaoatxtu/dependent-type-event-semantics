@@ -1757,6 +1757,11 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     return {
         "kind": "predicate_coordination",
         "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} coordinates "
+            f"{predicates[0]['name']} : Entity -> Prop and "
+            f"{predicates[1]['name']} : Entity -> Prop."
+        ),
         "event_semantics": {
             "analysis": "same-subject-predicate-coordination",
             "source": sentence,
@@ -2061,6 +2066,13 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
     return {
         "kind": "transitive_predicate_coordination",
         "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} coordinates "
+            f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
+            f"{clauses[0]['object']['type']}) and "
+            f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
+            f"{clauses[1]['object']['type']})."
+        ),
         "event_semantics": {
             "analysis": "same-subject-transitive-vp-coordination",
             "source": sentence,

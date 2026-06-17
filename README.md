@@ -361,8 +361,11 @@ is available. The response includes `schema_version: "analyze.v1"` plus the
 same event-semantics JSON,
 dependent-type rendering, generated Coq, `result_state_lexicon`,
 `modifier_role_audit`, `lexicon_patch_drafts`, `patch_text_preview`, `construction_rule`,
-`construction_hygiene`, `coq_check`, and `diagnostics` fields used by the web
-page. The page also renders an `API Contract` panel with the same schema
+`construction_summary`, `construction_hygiene`, `coq_check`, and `diagnostics`
+fields used by the web page. For registered construction rules,
+`construction_summary` gives a sentence-local explanation such as
+`Same subject john coordinates eat(bread : Food) and drink(water : Drinkable).`
+The page also renders an `API Contract` panel with the same schema
 version and endpoint, so browser users and automated clients can check the
 contract without inspecting raw network traffic, and a `Conclusion` panel with
 the same short outcome string returned by the API.

@@ -567,8 +567,11 @@ def construction_rule_summary(result: dict[str, Any]) -> str:
         f"label: {rule.get('label', '')}",
         f"phenomenon: {rule.get('phenomenon', '')}",
         f"hygiene: {hygiene_status}",
-        "hygiene policy:",
     ]
+    summary = result.get("construction_summary")
+    if summary:
+        lines.extend(["instance summary:", str(summary)])
+    lines.append("hygiene policy:")
     if forbidden:
         lines.extend(f"- {fragment}" for fragment in forbidden)
     else:

@@ -2425,6 +2425,10 @@ class TranslatorTests(unittest.TestCase):
             result["dependent_type_translation"],
             "and_T(walk(john), talk(john))",
         )
+        self.assertEqual(
+            result["construction_summary"],
+            "Same subject john coordinates walk : Entity -> Prop and talk : Entity -> Prop.",
+        )
         self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
         self.assertEqual(
             result["ast"]["predicates"],
@@ -2522,6 +2526,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             result["dependent_type_translation"],
             "and_T(eat(john, bread), drink(john, water))",
+        )
+        self.assertEqual(
+            result["construction_summary"],
+            (
+                "Same subject john coordinates eat(bread : Food) and "
+                "drink(water : Drinkable)."
+            ),
         )
         self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
         self.assertEqual(
@@ -3656,6 +3667,22 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("- Parameter Event : Type.", page)
         self.assertIn("found forbidden fragments:", page)
         self.assertIn("- none", page)
+
+    def test_web_page_shows_construction_instance_summary(self) -> None:
+        result = analyze_sentence("John ate bread and drank water", require_coq=True)
+        self.assertEqual(
+            result["construction_summary"],
+            (
+                "Same subject john coordinates eat(bread : Food) and "
+                "drink(water : Drinkable)."
+            ),
+        )
+        page = render_page("John ate bread and drank water", require_coq=True)
+        self.assertIn("instance summary:", page)
+        self.assertIn(
+            "Same subject john coordinates eat(bread : Food) and drink(water : Drinkable).",
+            page,
+        )
 
     def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
         page = render_page("a cat sits on a mat", require_coq=True)
