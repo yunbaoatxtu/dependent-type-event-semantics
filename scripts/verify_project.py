@@ -61,6 +61,8 @@ def check_python_docx_requirement(require_docx: bool) -> None:
 
 def run_package_build_smoke_check() -> None:
     PACKAGE_WHEEL_DIR.mkdir(parents=True, exist_ok=True)
+    for wheel in PACKAGE_WHEEL_DIR.glob("dependent_type_event_semantics-*.whl"):
+        wheel.unlink()
     run(
         "package build smoke check",
         [

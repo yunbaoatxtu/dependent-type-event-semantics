@@ -3191,5 +3191,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('include = ["translator*", "web*"]', pyproject)
         self.assertIn('license = "MIT"', pyproject)
 
+    def test_verification_package_build_removes_stale_wheels(self) -> None:
+        verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
+        self.assertIn('PACKAGE_WHEEL_DIR.glob("dependent_type_event_semantics-*.whl")', verifier)
+        self.assertIn("wheel.unlink()", verifier)
+        self.assertIn('"package build smoke check"', verifier)
+
 if __name__ == "__main__":
     unittest.main()
