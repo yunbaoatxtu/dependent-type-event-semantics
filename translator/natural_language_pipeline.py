@@ -51,6 +51,7 @@ ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
+PROPERTY_DEGREES = {"very"}
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -993,8 +994,9 @@ def stative_result_state_ast(
     subject: str,
     state: str,
     auxiliary: str,
+    polarity: str = "positive",
 ) -> dict[str, Any]:
-    return {
+    ast = {
         "kind": "stative_result_state",
         "subject": {"name": subject, "type": "Entity"},
         "state": {"name": state, "type": "State"},
@@ -1003,6 +1005,9 @@ def stative_result_state_ast(
         "predicate_type": "Entity -> StateScale -> State -> Prop",
         "auxiliary": auxiliary,
     }
+    if polarity != "positive":
+        ast["polarity"] = polarity
+    return ast
 
 
 def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
@@ -1042,6 +1047,8 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
         errors.append("stative predicate must have type Entity -> StateScale -> State -> Prop")
     if ast.get("auxiliary") not in PASSIVE_AUXILIARIES:
         errors.append("stative auxiliary must be is, was, are, or were")
+    if ast.get("polarity", "positive") not in {"positive", "negative"}:
+        errors.append("stative polarity must be positive or negative")
 
     return {
         "ok": not errors,
@@ -1062,16 +1069,30 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
     if auxiliary_index == 0 or auxiliary_index + 1 >= len(tokens):
         return None
     subject = clean_phrase(tokens[:auxiliary_index])
-    state = tokens[auxiliary_index + 1]
-    rest = tokens[auxiliary_index + 2:]
+    state_index = auxiliary_index + 1
+    polarity = "positive"
+    if tokens[state_index] == "not":
+        polarity = "negative"
+        state_index += 1
+        if state_index >= len(tokens):
+            return None
+    state = tokens[state_index]
+    rest = tokens[state_index + 1:]
     if rest or state not in STATE_SCALE_BY_STATE:
         return None
 
     state_scale = STATE_SCALE_BY_STATE[state]
-    ast = stative_result_state_ast(subject, state, auxiliary)
+    ast = stative_result_state_ast(subject, state, auxiliary, polarity)
     type_check = check_stative_result_state_ast(ast)
-    definition_name = f"stative_{state}_state"
-    typed_replacement = f"holds_state({subject}, {state_scale}, {state})"
+    definition_name = (
+        f"stative_not_{state}_state" if polarity == "negative" else f"stative_{state}_state"
+    )
+    state_assertion = f"holds_state({subject}, {state_scale}, {state})"
+    typed_replacement = (
+        f"not_T({state_assertion})" if polarity == "negative" else state_assertion
+    )
+    coq_assertion = f"holds_state {subject} {state_scale} {state}"
+    coq_body = f"not_T ({coq_assertion})" if polarity == "negative" else coq_assertion
     coq_code = "\n".join(
         [
             "(* Stative result-state replacement without an event variable. *)",
@@ -1084,9 +1105,14 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
             f"Parameter {state_scale} : StateScale.",
             "",
             "Parameter holds_state : Entity -> StateScale -> State -> Prop.",
+            *(
+                ["Parameter not_T : Prop -> Prop."]
+                if polarity == "negative"
+                else []
+            ),
             "",
             f"Definition {definition_name} : Prop :=",
-            f"  holds_state {subject} {state_scale} {state}.",
+            f"  {coq_body}.",
             "",
             f"Check {definition_name}.",
             "",
@@ -1121,16 +1147,22 @@ def copular_property_ast(
     property_name: str,
     auxiliary: str,
     time_modifiers: list[dict[str, str]],
+    negated: bool = False,
+    degree: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    ast = {
         "kind": "copular_property",
         "subject": {"name": subject, "type": "Entity"},
         "property": {"name": property_name, "type": "Property"},
         "predicate": "holds_property",
         "predicate_type": "Entity -> Property -> Prop",
         "auxiliary": auxiliary,
+        "negated": negated,
         "time_modifiers": time_modifiers,
     }
+    if degree is not None:
+        ast["degree"] = {"name": degree, "type": "Degree"}
+    return ast
 
 
 def check_copular_property_ast(ast: dict[str, Any]) -> dict[str, Any]:
@@ -1165,6 +1197,19 @@ def check_copular_property_ast(ast: dict[str, Any]) -> dict[str, Any]:
         errors.append("copular property predicate must have type Entity -> Property -> Prop")
     if ast.get("auxiliary") not in PASSIVE_AUXILIARIES:
         errors.append("copular property auxiliary must be is, was, are, or were")
+    if not isinstance(ast.get("negated"), bool):
+        errors.append("copular property negated must be a boolean")
+
+    degree = ast.get("degree")
+    if degree is not None:
+        if not isinstance(degree, dict):
+            errors.append("copular property degree must be an object")
+        else:
+            degree_name = degree.get("name")
+            if degree_name not in PROPERTY_DEGREES:
+                errors.append("copular property degree.name must be a registered Degree")
+            if degree.get("type") != "Degree":
+                errors.append("copular property degree must have type Degree")
 
     time_modifiers = ast.get("time_modifiers")
     if not isinstance(time_modifiers, list):
@@ -1219,8 +1264,17 @@ def render_copular_property_translation(
     subject: str,
     property_name: str,
     time_modifiers: list[dict[str, str]],
+    negated: bool = False,
+    degree: str | None = None,
 ) -> str:
-    proposition = f"holds_property({subject}, {property_name})"
+    property_expr = (
+        f"degree_property({degree}, {property_name})"
+        if degree is not None
+        else property_name
+    )
+    proposition = f"holds_property({subject}, {property_expr})"
+    if negated:
+        proposition = f"not_T({proposition})"
     for modifier in time_modifiers:
         proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
     return proposition
@@ -1231,8 +1285,17 @@ def render_copular_property_coq(
     subject: str,
     property_name: str,
     time_modifiers: list[dict[str, str]],
+    negated: bool = False,
+    degree: str | None = None,
 ) -> str:
-    proposition = f"holds_property {subject} {property_name}"
+    property_expr = (
+        f"(degree_property {degree} {property_name})"
+        if degree is not None
+        else property_name
+    )
+    proposition = f"holds_property {subject} {property_expr}"
+    if negated:
+        proposition = f"not_T ({proposition})"
     for modifier in time_modifiers:
         proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
     lines = [
@@ -1243,6 +1306,16 @@ def render_copular_property_coq(
         f"Parameter {subject} : Entity.",
         f"Parameter {property_name} : Property.",
     ]
+    if degree is not None:
+        lines.extend(
+            [
+                "Parameter Degree : Type.",
+                f"Parameter {degree} : Degree.",
+                "Parameter degree_property : Degree -> Property -> Property.",
+            ]
+        )
+    if negated:
+        lines.append("Parameter not_T : Prop -> Prop.")
     if time_modifiers:
         lines.extend(
             f"Parameter {modifier['argument']} : Entity."
@@ -1298,6 +1371,17 @@ def copular_property_pipeline(sentence: str) -> dict[str, Any] | None:
         idx += 1
     if not property_tokens:
         return None
+
+    negated = False
+    if property_tokens and property_tokens[0] == "not":
+        negated = True
+        property_tokens = property_tokens[1:]
+    degree = None
+    if property_tokens and property_tokens[0] in PROPERTY_DEGREES:
+        degree = property_tokens[0]
+        property_tokens = property_tokens[1:]
+    if not property_tokens:
+        return None
     if len(property_tokens) == 1 and is_passive_participle(property_tokens[0]):
         return None
 
@@ -1308,19 +1392,30 @@ def copular_property_pipeline(sentence: str) -> dict[str, Any] | None:
     if time_modifiers is None:
         return None
 
-    ast = copular_property_ast(subject, property_name, auxiliary, time_modifiers)
+    ast = copular_property_ast(
+        subject,
+        property_name,
+        auxiliary,
+        time_modifiers,
+        negated=negated,
+        degree=degree,
+    )
     type_check = check_copular_property_ast(ast)
-    definition_name = f"property_{property_name}"
+    definition_name = f"property_{property_name}_assertion"
     typed_replacement = render_copular_property_translation(
         subject,
         property_name,
         time_modifiers,
+        negated=negated,
+        degree=degree,
     )
     coq_code = render_copular_property_coq(
         definition_name,
         subject,
         property_name,
         time_modifiers,
+        negated=negated,
+        degree=degree,
     )
     return {
         "kind": "copular_property",

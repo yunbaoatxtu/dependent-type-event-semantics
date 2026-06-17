@@ -129,6 +129,14 @@ Ordinary copular property sentences now use a separate `Property` type:
 yesterday` becomes `at_T(yesterday, holds_property(mary, happy))`. Registered
 state words such as `red`, `open`, and `broken` remain `State` values rather
 than generic `Property` values.
+Negation and degree modifiers are structured rather than folded into a new
+atomic property: `Mary is not happy` becomes
+`not_T(holds_property(mary, happy))`, `Mary is very happy` becomes
+`holds_property(mary, degree_property(very, happy))`, and `Mary is not very
+happy` combines both wrappers. Registered state predicates keep their state
+type under negation, so `the door is not red` becomes
+`not_T(holds_state(door, color_scale, red))` rather than introducing
+`not_red : Property`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
