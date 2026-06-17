@@ -3197,5 +3197,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("wheel.unlink()", verifier)
         self.assertIn('"package build smoke check"', verifier)
 
+    def test_github_workflow_runs_docx_verification_entrypoint(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "verify.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('python -m pip install ".[docx]"', workflow)
+        self.assertIn("python scripts/verify_project.py --skip-coq --require-docx", workflow)
+        self.assertIn("Run deterministic checks", workflow)
+
 if __name__ == "__main__":
     unittest.main()
