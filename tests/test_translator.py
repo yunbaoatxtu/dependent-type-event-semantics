@@ -2663,6 +2663,42 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("in_park_slowly", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_predicate_coordination_combines_fronted_and_trailing_shared_adv(self) -> None:
+        result = run_pipeline("Slowly John walked and talked in the park", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(2)(slowly, in(park), john), talk(2)(slowly, in(park), john))",
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in result["ast"]["modifiers"]],
+            ["slowly", "in_park"],
+        )
+        self.assertIn(
+            "walk 2 (mods_cons 1 slowly (mods_cons 0 in_park mods_nil)) john",
+            result["coq_code"],
+        )
+        self.assertNotIn("slowly_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_combines_fronted_location_and_trailing_manner_adv(self) -> None:
+        result = run_pipeline("In the park John walked and talked slowly", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(2)(in(park), slowly, john), talk(2)(in(park), slowly, john))",
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in result["ast"]["modifiers"]],
+            ["in_park", "slowly"],
+        )
+        self.assertIn(
+            "talk 2 (mods_cons 1 in_park (mods_cons 0 slowly mods_nil)) john",
+            result["coq_code"],
+        )
+        self.assertNotIn("in_park_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_combines_multiple_shared_adv_and_time(self) -> None:
         result = run_pipeline(
             "John walked and talked in the park slowly yesterday",
@@ -3012,6 +3048,54 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertNotIn("water_in_park_quickly", result["coq_code"])
         self.assertNotIn("in_park_quickly", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_combines_fronted_and_trailing_shared_adv(self) -> None:
+        result = run_pipeline(
+            "Quickly John ate bread and drank water in the park",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "and_T(eat(2)(quickly, in(park), john, bread), "
+                "drink(2)(quickly, in(park), john, water))"
+            ),
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in result["ast"]["modifiers"]],
+            ["quickly", "in_park"],
+        )
+        self.assertIn(
+            "drink 2 (mods_cons 1 quickly (mods_cons 0 in_park mods_nil)) john water",
+            result["coq_code"],
+        )
+        self.assertNotIn("quickly_john", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_combines_fronted_location_and_trailing_manner_adv(self) -> None:
+        result = run_pipeline(
+            "In the park John ate bread and drank water quickly",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "and_T(eat(2)(in(park), quickly, john, bread), "
+                "drink(2)(in(park), quickly, john, water))"
+            ),
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in result["ast"]["modifiers"]],
+            ["in_park", "quickly"],
+        )
+        self.assertIn(
+            "eat 2 (mods_cons 1 in_park (mods_cons 0 quickly mods_nil)) john bread",
+            result["coq_code"],
+        )
+        self.assertNotIn("water_quickly", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_transitive_predicate_coordination_rejects_bad_shared_adv_type(self) -> None:
@@ -4546,6 +4630,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("not `in_park_slowly`", readme)
         self.assertIn("mods_cons 1", ast_docs)
         self.assertIn("John ate bread and drank water quickly in the park", readme)
+        self.assertIn("Slowly John walked and talked in the park", readme)
+        self.assertIn("Quickly John ate bread and", ast_docs)
         self.assertIn("`derived_scale_no_known_prestate`", readme)
         self.assertIn("`source_state_only`", readme)
         self.assertIn("`Semantic Warnings` panel", readme)

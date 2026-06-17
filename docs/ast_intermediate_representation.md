@@ -596,6 +596,9 @@ sequence. Thus `John walked and talked slowly in the park` renders as
 whereas `John walked and talked in the park slowly` renders as
 `and_T(walk(2)(in(park), slowly, john), talk(2)(in(park), slowly, john))`.
 The Coq scaffold mirrors this order with `mods_cons 1 ... (mods_cons 0 ... mods_nil)`.
+The same invariant holds when one modifier is fronted and another is trailing:
+`Slowly John walked and talked in the park` stores the sequence
+`slowly, in(park)`.
 
 ### `transitive_predicate_coordination`
 
@@ -657,6 +660,8 @@ quickly` keeps `water` as the right-hand object and stores `quickly : Adv`.
 Multiple shared modifiers remain order-sensitive here as well; for example,
 `John ate bread and drank water quickly in the park` uses the modifier sequence
 `quickly, in(park)` across both transitive conjuncts.
+`Quickly John ate bread and drank water in the park` uses the same sequence,
+because fronted and trailing shared modifiers are concatenated before Coq export.
 
 This construction is deliberately separate from object coordination. `Mary
 visited Paris and London` remains an ordinary transitive fallback with

@@ -171,6 +171,9 @@ Multiple shared modifiers preserve surface order in the indexed sequence:
 while `John walked and talked in the park slowly` becomes
 `and_T(walk(2)(in(park), slowly, john), talk(2)(in(park), slowly, john))`,
 not `in_park_slowly`.
+The same order rule applies when one modifier is fronted and another is
+trailing: `Slowly John walked and talked in the park` still yields the sequence
+`slowly, in(park)`.
 The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while
@@ -195,6 +198,8 @@ right-hand object `water_quickly`.
 The order-sensitive modifier vector is shared across transitive conjuncts too:
 `John ate bread and drank water quickly in the park` becomes
 `and_T(eat(2)(quickly, in(park), john, bread), drink(2)(quickly, in(park), john, water))`.
+With a fronted modifier plus a trailing modifier, `Quickly John ate bread and
+drank water in the park` uses that same `quickly, in(park)` sequence.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
