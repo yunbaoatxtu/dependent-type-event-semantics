@@ -29,13 +29,13 @@ from translator.state_change_lexicon import (
 from translator.surface_lexicon import (
     ARTICLES,
     COUNT_NOUNS,
-    COUNT_PHRASE_WORDS,
     COMMON_ADVERBS,
     COUNT_WORDS,
     PASSIVE_AUXILIARIES,
     PREPOSITIONS,
     SURFACE_LEXICON_SOURCE,
     TEMPORAL_ADVERBS,
+    count_phrase_value,
     is_passive_participle,
     lemma_verb,
     passive_participle_audit,
@@ -1499,18 +1499,22 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     items = [atom(verb, "e"), atom("Agent", "e", clean_phrase(subject_tokens))]
     object_tokens: list[str] = []
 
+    def is_count_phrase_at(position: int) -> bool:
+        return (
+            count_phrase_value(tokens[position]) is not None
+            and position + 1 < len(tokens)
+            and tokens[position + 1] in COUNT_NOUNS
+        )
+
     while idx < len(tokens):
         token = tokens[idx]
         if token in COUNT_WORDS:
             items.append(atom(token, "e"))
             idx += 1
             continue
-        if (
-            token in COUNT_PHRASE_WORDS
-            and idx + 1 < len(tokens)
-            and tokens[idx + 1] in COUNT_NOUNS
-        ):
-            items.append(atom("times", "e", COUNT_PHRASE_WORDS[token]))
+        count_value = count_phrase_value(token)
+        if count_value is not None and is_count_phrase_at(idx):
+            items.append(atom("times", "e", count_value))
             idx += 2
             continue
         if token in COMMON_ADVERBS:
@@ -1528,12 +1532,15 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             modifier_boundaries = (
                 PREPOSITIONS
                 | COUNT_WORDS
-                | set(COUNT_PHRASE_WORDS)
                 | COUNT_NOUNS
                 | COMMON_ADVERBS
                 | TEMPORAL_ADVERBS
             )
-            while idx < len(tokens) and tokens[idx] not in modifier_boundaries:
+            while (
+                idx < len(tokens)
+                and tokens[idx] not in modifier_boundaries
+                and not is_count_phrase_at(idx)
+            ):
                 phrase.append(tokens[idx])
                 idx += 1
             if phrase:

@@ -44,6 +44,7 @@ from translator.surface_lexicon import (
     MODIFIER_ROLE_BY_PREDICATE,
     PASSIVE_AUXILIARIES,
     TEMPORAL_ADVERBS,
+    count_phrase_value,
     modifier_predicate,
     modifier_semantic_role,
     modifier_surface_audit,
@@ -316,6 +317,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(TEMPORAL_ADVERBS, {"today", "tomorrow", "yesterday"})
         self.assertEqual(COUNT_PHRASE_WORDS, {"one": "1", "two": "2", "three": "3"})
         self.assertEqual(COUNT_NOUNS, {"time", "times"})
+        self.assertEqual(count_phrase_value("two"), "2")
+        self.assertEqual(count_phrase_value("2"), "2")
+        self.assertEqual(count_phrase_value("03"), "3")
+        self.assertIsNone(count_phrase_value("several"))
         self.assertEqual(
             passive_participle_audit("written"),
             {
@@ -1130,6 +1135,32 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn({"pred": "Theme", "args": ["e", "paris"]}, atoms)
         self.assertIn({"pred": "times", "args": ["e", "3"]}, atoms)
         self.assertNotIn({"pred": "Theme", "args": ["e", "paris_three_times"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_numeric_count_phrase_becomes_repeat(self) -> None:
+        result = run_pipeline("Mary visited Paris 3 times", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "repeat(3, visit(0)(mary, paris))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Theme", "args": ["e", "paris"]}, atoms)
+        self.assertIn({"pred": "times", "args": ["e", "3"]}, atoms)
+        self.assertNotIn({"pred": "Theme", "args": ["e", "paris_3_times"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_numeric_count_phrase_stops_prepositional_phrase(self) -> None:
+        result = run_pipeline("a cat sits on a mat 2 times", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "repeat(2, sit(1)(on(mat), cat))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "on", "args": ["e", "mat"]}, atoms)
+        self.assertIn({"pred": "times", "args": ["e", "2"]}, atoms)
+        self.assertNotIn({"pred": "on", "args": ["e", "mat_2_times"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_directional_modifiers_use_source_goal_adv_roles(self) -> None:

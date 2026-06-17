@@ -97,6 +97,14 @@ IRREGULAR_VERBS = {
 SURFACE_LEXICON_SOURCE = "translator/surface_lexicon.py"
 
 
+def count_phrase_value(token: str) -> str | None:
+    if token in COUNT_PHRASE_WORDS:
+        return COUNT_PHRASE_WORDS[token]
+    if re.fullmatch(r"[0-9]+", token):
+        return str(int(token))
+    return None
+
+
 def lemma_verb(token: str) -> str:
     if token in IRREGULAR_VERBS:
         return IRREGULAR_VERBS[token]
