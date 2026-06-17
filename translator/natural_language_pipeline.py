@@ -1572,6 +1572,12 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             items.append(atom("at", "e", normalized_time))
             idx += consumed
             continue
+        temporal_prep_phrase = temporal_prepositional_phrase_value(tokens, idx)
+        if temporal_prep_phrase is not None:
+            operator, normalized_time, consumed = temporal_prep_phrase
+            items.append(atom(operator, "e", normalized_time))
+            idx += consumed
+            continue
         if token in PREPOSITIONS:
             prep = token
             idx += 1

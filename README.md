@@ -89,12 +89,16 @@ last night` becomes `at_T(last_night, admire(0)(mary, painting))`, and
 The same temporal boundary applies at the beginning of a sentence: `Yesterday
 Mary admired the painting` becomes `at_T(yesterday, admire(0)(mary, painting))`
 rather than assigning the subject `yesterday_mary`.
-Restricted fronted prepositional time phrases are also recognized:
-`At noon Mary admired the painting` becomes
-`at_T(noon, admire(0)(mary, painting))`, `At noon yesterday Mary admired the
-painting` becomes `at_T(yesterday, at_T(noon, admire(0)(mary, painting)))`, and
+Restricted prepositional time phrases are also recognized at the beginning and
+end of a sentence: `At noon Mary admired the painting`, including the comma
+variant `At noon, Mary admired the painting`, becomes
+`at_T(noon, admire(0)(mary, painting))`; `At noon yesterday Mary admired the
+painting` becomes `at_T(yesterday, at_T(noon, admire(0)(mary, painting)))`;
 `In the morning John walked to school` becomes
-`during_T(morning, walk(1)(to(school), john))`.
+`during_T(morning, walk(1)(to(school), john))`; and `Mary admired the painting
+in the morning` becomes `during_T(morning, admire(0)(mary, painting))`. The
+same whitelist keeps ordinary locatives such as `in the bathroom` as Adv
+modifiers.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
