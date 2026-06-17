@@ -53,6 +53,11 @@ COMMON_ADVERBS = {
     "happily",
     "sadly",
 }
+TEMPORAL_ADVERBS = {
+    "today",
+    "tomorrow",
+    "yesterday",
+}
 IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",

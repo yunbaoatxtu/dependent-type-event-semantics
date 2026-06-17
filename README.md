@@ -66,9 +66,14 @@ the natural-language input, an event-semantics JSON formula, the dependent-type
 translation and AST, and generated Coq code with an optional Coq/Rocq boundary
 check. For unlisted sentences, the fallback analysis is intentionally shallow:
 it identifies a subject, predicate, possible object, common adverbs, count
-words, and simple prepositional modifiers. The shared surface lexicon also
-normalizes common past-tense forms before translation, so examples such as
-`a dog chased a cat` export `chase` rather than a truncated predicate name.
+words, common temporal adverbs, and simple prepositional modifiers. The shared
+surface lexicon also normalizes common past-tense forms before translation, so
+examples such as `a dog chased a cat` export `chase` rather than a truncated
+predicate name.
+Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
+translation, so `Mary admired the painting yesterday` becomes
+`at_T(yesterday, admire(0)(mary, painting))` rather than treating
+`painting_yesterday` as one entity.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
@@ -587,9 +592,11 @@ Run all deterministic project checks through one entry point:
 python3 scripts/verify_project.py
 ```
 
-This includes a package-build smoke check that runs `pip wheel --no-deps`, plus
-a smoke check for the lexicon patch exporter, verifying that it can write both
-the JSON bundle and review-only patch text.
+This includes a package-build smoke check that runs
+`pip wheel --no-build-isolation --no-deps`, using the active Python
+environment's local build tooling rather than requiring a network fetch for
+build dependencies. It also runs a smoke check for the lexicon patch exporter,
+verifying that it can write both the JSON bundle and review-only patch text.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the

@@ -41,6 +41,7 @@ from translator.state_change_lexicon import (
 from translator.surface_lexicon import (
     MODIFIER_ROLE_BY_PREDICATE,
     PASSIVE_AUXILIARIES,
+    TEMPORAL_ADVERBS,
     modifier_predicate,
     modifier_semantic_role,
     modifier_surface_audit,
@@ -310,6 +311,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("passed"), "pass")
         self.assertEqual(lemma_verb("missed"), "miss")
         self.assertEqual(lemma_verb("stopped"), "stop")
+        self.assertEqual(TEMPORAL_ADVERBS, {"today", "tomorrow", "yesterday"})
         self.assertEqual(
             passive_participle_audit("written"),
             {
@@ -1071,6 +1073,33 @@ class TranslatorTests(unittest.TestCase):
             result["event_semantics"]["body"]["and"],
         )
         self.assertIn("Parameter chase", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_temporal_adverb_scopes_over_simple_sentence(self) -> None:
+        result = run_pipeline("Mary admired the painting yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, admire(0)(mary, painting))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Theme", "args": ["e", "painting"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
+        self.assertIn("Parameter yesterday : Entity.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_temporal_adverb_stops_prepositional_phrase(self) -> None:
+        result = run_pipeline("a cat sits on a mat yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, sit(1)(on(mat), cat))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "on", "args": ["e", "mat"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
+        self.assertNotIn({"pred": "on", "args": ["e", "mat_yesterday"]}, atoms)
+        self.assertIn("Parameter on_mat : Adv.", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_directional_modifiers_use_source_goal_adv_roles(self) -> None:
@@ -3215,6 +3244,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('PACKAGE_WHEEL_DIR.glob("dependent_type_event_semantics-*.whl")', verifier)
         self.assertIn("wheel.unlink()", verifier)
         self.assertIn('"package build smoke check"', verifier)
+
+    def test_verification_package_build_uses_local_build_environment(self) -> None:
+        verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
+        self.assertIn('"--no-build-isolation"', verifier)
+        self.assertLess(
+            verifier.index('"--no-build-isolation"'),
+            verifier.index('"--no-deps"'),
+        )
 
     def test_github_workflow_runs_docx_verification_entrypoint(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "verify.yml").read_text(

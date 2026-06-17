@@ -33,6 +33,7 @@ from translator.surface_lexicon import (
     PASSIVE_AUXILIARIES,
     PREPOSITIONS,
     SURFACE_LEXICON_SOURCE,
+    TEMPORAL_ADVERBS,
     is_passive_participle,
     lemma_verb,
     passive_participle_audit,
@@ -1506,11 +1507,18 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             items.append(atom(token, "e"))
             idx += 1
             continue
+        if token in TEMPORAL_ADVERBS:
+            items.append(atom("at", "e", token))
+            idx += 1
+            continue
         if token in PREPOSITIONS:
             prep = token
             idx += 1
             phrase: list[str] = []
-            while idx < len(tokens) and tokens[idx] not in PREPOSITIONS | COUNT_WORDS | COMMON_ADVERBS:
+            modifier_boundaries = (
+                PREPOSITIONS | COUNT_WORDS | COMMON_ADVERBS | TEMPORAL_ADVERBS
+            )
+            while idx < len(tokens) and tokens[idx] not in modifier_boundaries:
                 phrase.append(tokens[idx])
                 idx += 1
             if phrase:

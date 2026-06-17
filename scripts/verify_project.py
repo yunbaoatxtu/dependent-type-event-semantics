@@ -70,6 +70,7 @@ def run_package_build_smoke_check() -> None:
             "-m",
             "pip",
             "wheel",
+            "--no-build-isolation",
             "--no-deps",
             "--wheel-dir",
             str(PACKAGE_WHEEL_DIR),
