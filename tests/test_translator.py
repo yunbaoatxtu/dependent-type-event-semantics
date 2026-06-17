@@ -2278,6 +2278,55 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("not_very_happy", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_copular_property_structures_property_conjunction(self) -> None:
+        result = run_pipeline("Mary is happy and calm", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "copular_property")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(holds_property(mary, happy), holds_property(mary, calm))",
+        )
+        self.assertEqual(
+            result["ast"]["property_conjuncts"],
+            [
+                {"property": {"name": "happy", "type": "Property"}},
+                {"property": {"name": "calm", "type": "Property"}},
+            ],
+        )
+        self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertIn("Parameter happy : Property.", result["coq_code"])
+        self.assertIn("Parameter calm : Property.", result["coq_code"])
+        self.assertNotIn("happy_and_calm", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_copular_property_structures_mixed_degree_conjunction(self) -> None:
+        result = run_pipeline("Mary is happy and very calm", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "and_T(holds_property(mary, happy), "
+                "holds_property(mary, degree_property(very, calm)))"
+            ),
+        )
+        self.assertEqual(
+            result["ast"]["property_conjuncts"][1]["degree"],
+            {"name": "very", "type": "Degree"},
+        )
+        self.assertNotIn("happy_and_very_calm", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_copular_property_negates_whole_property_conjunction(self) -> None:
+        result = run_pipeline("Mary is not happy and calm", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "not_T(and_T(holds_property(mary, happy), holds_property(mary, calm)))",
+        )
+        self.assertTrue(result["ast"]["negated"])
+        self.assertNotIn("not_happy_and_calm", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_copular_property_keeps_state_and_passive_rules_more_specific(self) -> None:
         state = run_pipeline("the door is red", require_coq=True)
         self.assertTrue(state["ok"])
@@ -2298,6 +2347,25 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter red : State.", negative_state["coq_code"])
         self.assertIn("Parameter not_T : Prop -> Prop.", negative_state["coq_code"])
         self.assertNotIn("Parameter red : Property.", negative_state["coq_code"])
+
+        state_conjunction = run_pipeline("the door is red and open", require_coq=True)
+        self.assertTrue(state_conjunction["ok"])
+        self.assertEqual(state_conjunction["kind"], "stative_result_state")
+        self.assertEqual(
+            state_conjunction["dependent_type_translation"],
+            "and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open))",
+        )
+        self.assertEqual(
+            state_conjunction["ast"]["states"],
+            [
+                {"name": "red", "type": "State", "state_scale": "color_scale"},
+                {"name": "open", "type": "State", "state_scale": "access_scale"},
+            ],
+        )
+        self.assertIn("Parameter red : State.", state_conjunction["coq_code"])
+        self.assertIn("Parameter open : State.", state_conjunction["coq_code"])
+        self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", state_conjunction["coq_code"])
+        self.assertNotIn("Parameter red_and_open : Property.", state_conjunction["coq_code"])
 
         passive = run_pipeline("the toast is buttered", require_coq=True)
         self.assertTrue(passive["ok"])
@@ -2322,6 +2390,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "copular property degree must have type Degree",
+            type_check["errors"],
+        )
+
+    def test_copular_property_rejects_bad_conjunct_property_type(self) -> None:
+        result = run_pipeline("Mary is happy and calm", require_coq=False)
+        ast = result["ast"]
+        ast["property_conjuncts"][1]["property"]["type"] = "Entity"
+        type_check = check_copular_property_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "copular property_conjuncts[1].property must have type Property",
             type_check["errors"],
         )
 

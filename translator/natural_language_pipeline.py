@@ -992,19 +992,30 @@ def lexical_state_change_pipeline(sentence: str) -> dict[str, Any] | None:
 
 def stative_result_state_ast(
     subject: str,
-    state: str,
+    states: str | list[str],
     auxiliary: str,
     polarity: str = "positive",
 ) -> dict[str, Any]:
+    state_names = [states] if isinstance(states, str) else states
+    first_state = state_names[0]
     ast = {
         "kind": "stative_result_state",
         "subject": {"name": subject, "type": "Entity"},
-        "state": {"name": state, "type": "State"},
-        "state_scale": STATE_SCALE_BY_STATE[state],
+        "state": {"name": first_state, "type": "State"},
+        "state_scale": STATE_SCALE_BY_STATE[first_state],
         "predicate": "holds_state",
         "predicate_type": "Entity -> StateScale -> State -> Prop",
         "auxiliary": auxiliary,
     }
+    if len(state_names) > 1:
+        ast["states"] = [
+            {
+                "name": state_name,
+                "type": "State",
+                "state_scale": STATE_SCALE_BY_STATE[state_name],
+            }
+            for state_name in state_names
+        ]
     if polarity != "positive":
         ast["polarity"] = polarity
     return ast
@@ -1041,6 +1052,29 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
         ):
             errors.append("stative state_scale must match the state lexicon")
 
+    states = ast.get("states")
+    if states is not None:
+        if not isinstance(states, list) or not states:
+            errors.append("stative states must be a non-empty list")
+        else:
+            for index, state_item in enumerate(states):
+                if not isinstance(state_item, dict):
+                    errors.append(f"stative states[{index}] must be an object")
+                    continue
+                item_name = state_item.get("name")
+                if not isinstance(item_name, str) or not item_name:
+                    errors.append(f"stative states[{index}].name must be a non-empty string")
+                elif item_name not in STATE_SCALE_BY_STATE:
+                    errors.append(f"unknown stative result state: {item_name}")
+                if state_item.get("type") != "State":
+                    errors.append(f"stative states[{index}] must have type State")
+                if (
+                    isinstance(item_name, str)
+                    and item_name in STATE_SCALE_BY_STATE
+                    and state_item.get("state_scale") != STATE_SCALE_BY_STATE[item_name]
+                ):
+                    errors.append(f"stative states[{index}].state_scale must match the state lexicon")
+
     if ast.get("predicate") != "holds_state":
         errors.append("stative predicate must be holds_state")
     if ast.get("predicate_type") != "Entity -> StateScale -> State -> Prop":
@@ -1076,23 +1110,46 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
         state_index += 1
         if state_index >= len(tokens):
             return None
-    state = tokens[state_index]
-    rest = tokens[state_index + 1:]
-    if rest or state not in STATE_SCALE_BY_STATE:
+    state_tokens = tokens[state_index:]
+    state_groups = split_coordinate_tokens(state_tokens)
+    if state_groups is None:
+        return None
+    state_names = [clean_phrase(group) for group in state_groups]
+    if any(len(group) != 1 for group in state_groups):
+        return None
+    if any(state_name not in STATE_SCALE_BY_STATE for state_name in state_names):
         return None
 
-    state_scale = STATE_SCALE_BY_STATE[state]
-    ast = stative_result_state_ast(subject, state, auxiliary, polarity)
+    ast = stative_result_state_ast(subject, state_names, auxiliary, polarity)
     type_check = check_stative_result_state_ast(ast)
+    state_label = "_and_".join(state_names)
     definition_name = (
-        f"stative_not_{state}_state" if polarity == "negative" else f"stative_{state}_state"
+        f"stative_not_{state_label}_state"
+        if polarity == "negative"
+        else f"stative_{state_label}_state"
     )
-    state_assertion = f"holds_state({subject}, {state_scale}, {state})"
+    state_assertions = [
+        f"holds_state({subject}, {STATE_SCALE_BY_STATE[state_name]}, {state_name})"
+        for state_name in state_names
+    ]
+    state_assertion = state_assertions[0]
+    for next_assertion in state_assertions[1:]:
+        state_assertion = f"and_T({state_assertion}, {next_assertion})"
     typed_replacement = (
         f"not_T({state_assertion})" if polarity == "negative" else state_assertion
     )
-    coq_assertion = f"holds_state {subject} {state_scale} {state}"
+    coq_assertions = [
+        f"holds_state {subject} {STATE_SCALE_BY_STATE[state_name]} {state_name}"
+        for state_name in state_names
+    ]
+    coq_assertion = coq_assertions[0]
+    for next_assertion in coq_assertions[1:]:
+        coq_assertion = f"and_T ({coq_assertion}) ({next_assertion})"
     coq_body = f"not_T ({coq_assertion})" if polarity == "negative" else coq_assertion
+    state_declarations: list[str] = []
+    for state_name in state_names:
+        state_declarations.append(f"Parameter {state_name} : State.")
+        state_declarations.append(f"Parameter {STATE_SCALE_BY_STATE[state_name]} : StateScale.")
     coq_code = "\n".join(
         [
             "(* Stative result-state replacement without an event variable. *)",
@@ -1101,10 +1158,14 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
             "Parameter StateScale : Type.",
             "",
             f"Parameter {subject} : Entity.",
-            f"Parameter {state} : State.",
-            f"Parameter {state_scale} : StateScale.",
+            *state_declarations,
             "",
             "Parameter holds_state : Entity -> StateScale -> State -> Prop.",
+            *(
+                ["Parameter and_T : Prop -> Prop -> Prop."]
+                if len(state_names) > 1
+                else []
+            ),
             *(
                 ["Parameter not_T : Prop -> Prop."]
                 if polarity == "negative"
@@ -1125,7 +1186,7 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
             "analysis": "stative-result-state",
             "source": sentence,
             "event_style_reference": (
-                f"exists e. ResultState(e, {state}) and Theme(e, {subject})"
+                f"exists e. ResultState(e, {state_label}) and Theme(e, {subject})"
             ),
             "typed_replacement": typed_replacement,
         },
@@ -1144,24 +1205,36 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
 
 def copular_property_ast(
     subject: str,
-    property_name: str,
+    property_conjuncts: list[dict[str, str | None]],
     auxiliary: str,
     time_modifiers: list[dict[str, str]],
     negated: bool = False,
-    degree: str | None = None,
 ) -> dict[str, Any]:
+    first = property_conjuncts[0]
     ast = {
         "kind": "copular_property",
         "subject": {"name": subject, "type": "Entity"},
-        "property": {"name": property_name, "type": "Property"},
+        "property": {"name": first["property"], "type": "Property"},
         "predicate": "holds_property",
         "predicate_type": "Entity -> Property -> Prop",
         "auxiliary": auxiliary,
         "negated": negated,
         "time_modifiers": time_modifiers,
     }
-    if degree is not None:
-        ast["degree"] = {"name": degree, "type": "Degree"}
+    if first.get("degree") is not None:
+        ast["degree"] = {"name": first["degree"], "type": "Degree"}
+    if len(property_conjuncts) > 1:
+        ast["property_conjuncts"] = [
+            {
+                "property": {"name": conjunct["property"], "type": "Property"},
+                **(
+                    {"degree": {"name": conjunct["degree"], "type": "Degree"}}
+                    if conjunct.get("degree") is not None
+                    else {}
+                ),
+            }
+            for conjunct in property_conjuncts
+        ]
     return ast
 
 
@@ -1210,6 +1283,47 @@ def check_copular_property_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append("copular property degree.name must be a registered Degree")
             if degree.get("type") != "Degree":
                 errors.append("copular property degree must have type Degree")
+
+    property_conjuncts = ast.get("property_conjuncts")
+    if property_conjuncts is not None:
+        if not isinstance(property_conjuncts, list) or len(property_conjuncts) < 2:
+            errors.append("copular property_conjuncts must be a list with at least two items")
+        else:
+            for index, conjunct in enumerate(property_conjuncts):
+                if not isinstance(conjunct, dict):
+                    errors.append(f"copular property_conjuncts[{index}] must be an object")
+                    continue
+                conjunct_property = conjunct.get("property")
+                if not isinstance(conjunct_property, dict):
+                    errors.append(f"copular property_conjuncts[{index}].property must be an object")
+                else:
+                    conjunct_name = conjunct_property.get("name")
+                    if not isinstance(conjunct_name, str) or not conjunct_name:
+                        errors.append(
+                            f"copular property_conjuncts[{index}].property.name must be a non-empty string"
+                        )
+                    elif conjunct_name in STATE_SCALE_BY_STATE:
+                        errors.append(
+                            f"copular property_conjuncts[{index}] must not duplicate a registered State"
+                        )
+                    if conjunct_property.get("type") != "Property":
+                        errors.append(
+                            f"copular property_conjuncts[{index}].property must have type Property"
+                        )
+                conjunct_degree = conjunct.get("degree")
+                if conjunct_degree is not None:
+                    if not isinstance(conjunct_degree, dict):
+                        errors.append(f"copular property_conjuncts[{index}].degree must be an object")
+                    else:
+                        degree_name = conjunct_degree.get("name")
+                        if degree_name not in PROPERTY_DEGREES:
+                            errors.append(
+                                f"copular property_conjuncts[{index}].degree.name must be a registered Degree"
+                            )
+                        if conjunct_degree.get("type") != "Degree":
+                            errors.append(
+                                f"copular property_conjuncts[{index}].degree must have type Degree"
+                            )
 
     time_modifiers = ast.get("time_modifiers")
     if not isinstance(time_modifiers, list):
@@ -1262,17 +1376,23 @@ def copular_property_time_modifiers(tokens: list[str]) -> list[dict[str, str]] |
 
 def render_copular_property_translation(
     subject: str,
-    property_name: str,
+    property_conjuncts: list[dict[str, str | None]],
     time_modifiers: list[dict[str, str]],
     negated: bool = False,
-    degree: str | None = None,
 ) -> str:
-    property_expr = (
-        f"degree_property({degree}, {property_name})"
-        if degree is not None
-        else property_name
-    )
-    proposition = f"holds_property({subject}, {property_expr})"
+    assertions: list[str] = []
+    for conjunct in property_conjuncts:
+        property_name = str(conjunct["property"])
+        degree = conjunct.get("degree")
+        property_expr = (
+            f"degree_property({degree}, {property_name})"
+            if degree is not None
+            else property_name
+        )
+        assertions.append(f"holds_property({subject}, {property_expr})")
+    proposition = assertions[0]
+    for next_assertion in assertions[1:]:
+        proposition = f"and_T({proposition}, {next_assertion})"
     if negated:
         proposition = f"not_T({proposition})"
     for modifier in time_modifiers:
@@ -1283,37 +1403,49 @@ def render_copular_property_translation(
 def render_copular_property_coq(
     definition_name: str,
     subject: str,
-    property_name: str,
+    property_conjuncts: list[dict[str, str | None]],
     time_modifiers: list[dict[str, str]],
     negated: bool = False,
-    degree: str | None = None,
 ) -> str:
-    property_expr = (
-        f"(degree_property {degree} {property_name})"
-        if degree is not None
-        else property_name
-    )
-    proposition = f"holds_property {subject} {property_expr}"
+    assertions: list[str] = []
+    for conjunct in property_conjuncts:
+        property_name = str(conjunct["property"])
+        degree = conjunct.get("degree")
+        property_expr = (
+            f"(degree_property {degree} {property_name})"
+            if degree is not None
+            else property_name
+        )
+        assertions.append(f"holds_property {subject} {property_expr}")
+    proposition = assertions[0]
+    for next_assertion in assertions[1:]:
+        proposition = f"and_T ({proposition}) ({next_assertion})"
     if negated:
         proposition = f"not_T ({proposition})"
     for modifier in time_modifiers:
         proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+    property_names = list(dict.fromkeys(str(item["property"]) for item in property_conjuncts))
+    degree_names = list(
+        dict.fromkeys(str(item["degree"]) for item in property_conjuncts if item.get("degree") is not None)
+    )
     lines = [
         "(* Copular property replacement without an event variable. *)",
         "Parameter Entity : Type.",
         "Parameter Property : Type.",
         "",
         f"Parameter {subject} : Entity.",
-        f"Parameter {property_name} : Property.",
     ]
-    if degree is not None:
+    lines.extend(f"Parameter {property_name} : Property." for property_name in property_names)
+    if degree_names:
         lines.extend(
             [
                 "Parameter Degree : Type.",
-                f"Parameter {degree} : Degree.",
+                *(f"Parameter {degree} : Degree." for degree in degree_names),
                 "Parameter degree_property : Degree -> Property -> Property.",
             ]
         )
+    if len(property_conjuncts) > 1:
+        lines.append("Parameter and_T : Prop -> Prop -> Prop.")
     if negated:
         lines.append("Parameter not_T : Prop -> Prop.")
     if time_modifiers:
@@ -1376,46 +1508,50 @@ def copular_property_pipeline(sentence: str) -> dict[str, Any] | None:
     if property_tokens and property_tokens[0] == "not":
         negated = True
         property_tokens = property_tokens[1:]
-    degree = None
-    if property_tokens and property_tokens[0] in PROPERTY_DEGREES:
-        degree = property_tokens[0]
-        property_tokens = property_tokens[1:]
     if not property_tokens:
         return None
-    if len(property_tokens) == 1 and is_passive_participle(property_tokens[0]):
+    property_groups = split_coordinate_tokens(property_tokens)
+    if property_groups is None:
         return None
-
-    property_name = clean_phrase(property_tokens)
-    if property_name in STATE_SCALE_BY_STATE:
-        return None
+    property_conjuncts: list[dict[str, str | None]] = []
+    for group in property_groups:
+        degree = None
+        if group and group[0] in PROPERTY_DEGREES:
+            degree = group[0]
+            group = group[1:]
+        if not group:
+            return None
+        if len(group) == 1 and is_passive_participle(group[0]):
+            return None
+        property_name = clean_phrase(group)
+        if property_name in STATE_SCALE_BY_STATE:
+            return None
+        property_conjuncts.append({"property": property_name, "degree": degree})
     time_modifiers = copular_property_time_modifiers(tokens[idx:])
     if time_modifiers is None:
         return None
 
     ast = copular_property_ast(
         subject,
-        property_name,
+        property_conjuncts,
         auxiliary,
         time_modifiers,
         negated=negated,
-        degree=degree,
     )
     type_check = check_copular_property_ast(ast)
-    definition_name = f"property_{property_name}_assertion"
+    definition_name = f"property_{property_conjuncts[0]['property']}_assertion"
     typed_replacement = render_copular_property_translation(
         subject,
-        property_name,
+        property_conjuncts,
         time_modifiers,
         negated=negated,
-        degree=degree,
     )
     coq_code = render_copular_property_coq(
         definition_name,
         subject,
-        property_name,
+        property_conjuncts,
         time_modifiers,
         negated=negated,
-        degree=degree,
     )
     return {
         "kind": "copular_property",
@@ -1819,6 +1955,22 @@ def clean_phrase(tokens: list[str]) -> str:
     if not content:
         return "entity"
     return "_".join(content)
+
+
+def split_coordinate_tokens(tokens: list[str]) -> list[list[str]] | None:
+    if not tokens or tokens[0] == "and" or tokens[-1] == "and":
+        return None
+    groups: list[list[str]] = [[]]
+    for token in tokens:
+        if token == "and":
+            if not groups[-1]:
+                return None
+            groups.append([])
+            continue
+        groups[-1].append(token)
+    if any(not group for group in groups):
+        return None
+    return groups
 
 
 def locative_preposition_predicate(preposition: str) -> str:

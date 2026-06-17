@@ -137,6 +137,12 @@ happy` combines both wrappers. Registered state predicates keep their state
 type under negation, so `the door is not red` becomes
 `not_T(holds_state(door, color_scale, red))` rather than introducing
 `not_red : Property`.
+Simple copular coordination is structured with `and_T`: `Mary is happy and
+calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,
+and `Mary is happy and very calm` keeps the degree only on the second conjunct.
+Registered state coordination stays in the state layer, so `the door is red and
+open` becomes `and_T(holds_state(door, color_scale, red),
+holds_state(door, access_scale, open))`, not `red_and_open : Property`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
