@@ -1365,6 +1365,67 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn({"pred": "on", "args": ["e", "monday"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_fallback_fronted_location_modifier_preserves_agent(self) -> None:
+        result = run_pipeline(
+            "In the bathroom Mary buttered the toast with a knife",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "butter(2)(in(bathroom), with(knife), mary, toast)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "mary"]}, atoms)
+        self.assertIn({"pred": "in", "args": ["e", "bathroom"]}, atoms)
+        self.assertIn({"pred": "with", "args": ["e", "knife"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "in_bathroom_mary"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_instrument_modifier_preserves_agent(self) -> None:
+        result = run_pipeline(
+            "With a knife John buttered the toast in the bathroom",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "butter(2)(with(knife), in(bathroom), john, toast)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "john"]}, atoms)
+        self.assertIn({"pred": "with", "args": ["e", "knife"]}, atoms)
+        self.assertIn({"pred": "in", "args": ["e", "bathroom"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "with_knife_john"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_directional_modifier_preserves_agent(self) -> None:
+        result = run_pipeline("From home John walked to school", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "walk(2)(from(home), to(school), john)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "john"]}, atoms)
+        self.assertIn({"pred": "from", "args": ["e", "home"]}, atoms)
+        self.assertIn({"pred": "to", "args": ["e", "school"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "from_home_john"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_on_location_preserves_article_subject(self) -> None:
+        result = run_pipeline("On the mat a cat sits", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "sit(1)(on(mat), cat)",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "cat"]}, atoms)
+        self.assertIn({"pred": "on", "args": ["e", "mat"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "on_mat_cat"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_fallback_count_phrase_becomes_repeat(self) -> None:
         result = run_pipeline("John knocked two times", require_coq=True)
         self.assertTrue(result["ok"])

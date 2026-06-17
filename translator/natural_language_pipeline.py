@@ -50,6 +50,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
+FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS - {"at"}
 @dataclass(frozen=True)
 class ConstructionRule:
     rule_id: str
@@ -1487,25 +1488,72 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     if len(tokens) < 2:
         raise ValueError("Please enter at least a subject and a predicate.")
 
-    leading_time_atoms: list[dict[str, Any]] = []
+    def has_phrase_content(phrase: list[str]) -> bool:
+        return any(token not in ARTICLES for token in phrase)
+
+    def starts_subject_boundary(position: int) -> bool:
+        subject_start = position
+        if subject_start < len(tokens) and tokens[subject_start] in ARTICLES:
+            subject_start += 1
+        if subject_start >= len(tokens):
+            return False
+        for subject_width in (1, 2):
+            predicate_position = subject_start + subject_width
+            if (
+                predicate_position < len(tokens)
+                and is_likely_surface_verb(tokens[predicate_position])
+            ):
+                return True
+        return False
+
+    def leading_prepositional_modifier_at(position: int) -> tuple[dict[str, Any], int] | None:
+        prep = tokens[position]
+        if prep not in FRONTED_MODIFIER_PREPOSITIONS:
+            return None
+        idx = position + 1
+        phrase: list[str] = []
+        modifier_boundaries = (
+            PREPOSITIONS | COUNT_WORDS | COUNT_NOUNS | COMMON_ADVERBS | TEMPORAL_ADVERBS
+        )
+        while idx < len(tokens):
+            if has_phrase_content(phrase):
+                if tokens[idx] in modifier_boundaries:
+                    break
+                if temporal_phrase_value(tokens, idx) is not None:
+                    break
+                if starts_subject_boundary(idx):
+                    break
+            phrase.append(tokens[idx])
+            idx += 1
+        if not has_phrase_content(phrase):
+            return None
+        return atom(prep, "e", clean_phrase(phrase)), idx - position
+
+    leading_atoms: list[dict[str, Any]] = []
     idx = 0
     while idx < len(tokens):
         token = tokens[idx]
         if token in TEMPORAL_ADVERBS:
-            leading_time_atoms.append(atom("at", "e", token))
+            leading_atoms.append(atom("at", "e", token))
             idx += 1
             continue
         temporal_phrase = temporal_phrase_value(tokens, idx)
         if temporal_phrase is not None:
             normalized_time, consumed = temporal_phrase
-            leading_time_atoms.append(atom("at", "e", normalized_time))
+            leading_atoms.append(atom("at", "e", normalized_time))
             idx += consumed
             continue
         temporal_prep_phrase = temporal_prepositional_phrase_value(tokens, idx)
-        if temporal_prep_phrase is None:
+        if temporal_prep_phrase is not None:
+            operator, normalized_time, consumed = temporal_prep_phrase
+            leading_atoms.append(atom(operator, "e", normalized_time))
+            idx += consumed
+            continue
+        leading_modifier = leading_prepositional_modifier_at(idx)
+        if leading_modifier is None:
             break
-        operator, normalized_time, consumed = temporal_prep_phrase
-        leading_time_atoms.append(atom(operator, "e", normalized_time))
+        modifier_atom, consumed = leading_modifier
+        leading_atoms.append(modifier_atom)
         idx += consumed
 
     while idx < len(tokens) and tokens[idx] in ARTICLES:
@@ -1533,7 +1581,7 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     items = [
         atom(verb, "e"),
         atom("Agent", "e", clean_phrase(subject_tokens)),
-        *leading_time_atoms,
+        *leading_atoms,
     ]
     object_tokens: list[str] = []
 
