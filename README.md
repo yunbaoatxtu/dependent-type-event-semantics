@@ -145,8 +145,11 @@ also preserves lexical object types, so `John did not eat bread` becomes
 do-support negation is now handled as typed coordination, so `John walked and did
 not talk` becomes `and_T(walk(john), not_T(talk(john)))`, and `John ate bread
 and did not drink water` becomes `and_T(eat(john, bread), not_T(drink(john,
-water)))`. Scope-ambiguous patterns such as `John did not walk and talk` remain
-rejected at internal type checking rather than being misread as a subject
+water)))`. Time expressions still scope outside the conjunction, and shared
+locative/instrumental/manner material remains typed as `Adv`, e.g. `John walked
+and did not talk in the park` keeps `in(park)` as a modifier in both
+coordinates. Scope-ambiguous patterns such as `John did not walk and talk`
+remain rejected at internal type checking rather than being misread as a subject
 `john_did_not` or an object `and_did_not_talk`.
 Simple copular coordination is structured with `and_T`: `Mary is happy and
 calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,

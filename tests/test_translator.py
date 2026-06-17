@@ -2531,6 +2531,54 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(transitive["coq_check"]["status"], "passed")
 
+    def test_do_support_negation_coordination_preserves_time_and_shared_adv(self) -> None:
+        fronted_time = run_pipeline(
+            "Yesterday John walked and did not talk",
+            require_coq=True,
+        )
+        trailing_time = run_pipeline(
+            "John walked and did not talk yesterday",
+            require_coq=True,
+        )
+        expected_time = "at_T(yesterday, and_T(walk(john), not_T(talk(john))))"
+        self.assertTrue(fronted_time["ok"])
+        self.assertTrue(trailing_time["ok"])
+        self.assertEqual(fronted_time["dependent_type_translation"], expected_time)
+        self.assertEqual(trailing_time["dependent_type_translation"], expected_time)
+        self.assertIn(
+            "at_T yesterday (and_T (walk john) (not_T (talk john)))",
+            fronted_time["coq_code"],
+        )
+
+        location = run_pipeline(
+            "John walked and did not talk in the park",
+            require_coq=True,
+        )
+        self.assertTrue(location["ok"])
+        self.assertEqual(
+            location["dependent_type_translation"],
+            "and_T(walk(1)(in(park), john), not_T(talk(1)(in(park), john)))",
+        )
+        self.assertIn("Parameter in_park : Adv.", location["coq_code"])
+        self.assertIn("Parameter not_T : PropT -> PropT.", location["coq_code"])
+        self.assertEqual(location["ast"]["modifiers"][0]["type"], "Adv")
+        self.assertEqual(location["ast"]["modifiers"][0]["semantic_role"], "Location")
+
+        transitive_location = run_pipeline(
+            "In the park John ate bread and did not drink water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_location["ok"])
+        self.assertEqual(
+            transitive_location["dependent_type_translation"],
+            (
+                "and_T(eat(1)(in(park), john, bread), "
+                "not_T(drink(1)(in(park), john, water)))"
+            ),
+        )
+        self.assertIn("Parameter bread : Food.", transitive_location["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive_location["coq_code"])
+
     def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
         for sentence in (
             "John did not walk and talk",
@@ -3916,6 +3964,32 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "skipped")
         self.assertIn("internal type_check failed", result["coq_check"]["message"])
+
+    def test_api_and_page_report_right_branch_do_support_negation_success(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+walked+and+did+not+talk&require_coq=1",
+        )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "coordinated_do_support_negation")
+        self.assertEqual(result["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertIsNone(result["diagnostics"]["failure_stage"])
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(john), not_T(talk(john)))",
+        )
+
+        page = render_page("John walked and did not talk", require_coq=True)
+        self.assertIn("Translation verified", page)
+        self.assertIn("id: do_support_negation", page)
+        self.assertIn("and_T(walk(john), not_T(talk(john)))", page)
+        self.assertIn("hygiene: passed", page)
+        self.assertIn("Coq/Rocq Check", page)
 
     def test_api_analyze_response_contract_for_modifier_audit(self) -> None:
         handler = object.__new__(PipelineHandler)

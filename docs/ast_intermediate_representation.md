@@ -731,6 +731,8 @@ Current type rules:
   coordinate and renders `and_T(walk(john), not_T(talk(john)))`. Scope-ambiguous
   coordinated do-support negation is still rejected before fallback so it cannot
   be misread as a malformed subject or object.
+  Time modifiers scope over the resulting conjunction, and shared Adv modifiers
+  remain typed modifier entries rather than entities.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the
