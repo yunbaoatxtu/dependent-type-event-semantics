@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -877,6 +879,25 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Definition example_1 : Prop :=", coq_module)
         self.assertIn("Check example_1.", coq_module)
         self.assertNotIn("Check example_2.", coq_module)
+
+    def test_packaged_cli_exports_coq_module(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "translator.dependent_type_event_translator",
+                str(EXAMPLES / "example_eat_omission.json"),
+                "--export-module",
+                "coq",
+            ],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("Parameter Food : Type.", completed.stdout)
+        self.assertIn("Definition example_1 : Prop :=", completed.stdout)
+        self.assertIn("Check example_1.", completed.stdout)
 
     def test_rule_based_sentence_to_event_semantics(self) -> None:
         formula = sentence_to_event_semantics("John knocked twice.")
