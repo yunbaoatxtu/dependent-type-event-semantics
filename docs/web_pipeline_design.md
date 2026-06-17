@@ -81,8 +81,9 @@ The request has two stable query parameters:
 - `require_coq`: optional flag, where `1` requests the external Coq/Rocq
   boundary check and the default leaves it skipped when not needed.
 
-The response is a single JSON object. On success, it must expose the same
-semantic artifacts shown on the page: `event_semantics`,
+The response is a single JSON object with `schema_version: "analyze.v1"` so
+clients can distinguish this contract from later API revisions. On success, it
+must expose the same semantic artifacts shown on the page: `event_semantics`,
 `dependent_type_translation`, `result_state_lexicon`, `modifier_role_audit`,
 `lexicon_patch_drafts`, `patch_text_preview`, `ast`, `coq_code`, `construction_rule`,
 `construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.

@@ -48,6 +48,7 @@ from translator.surface_lexicon import (
     surface_verb_audit,
 )
 from web.app import (
+    ANALYZE_RESPONSE_SCHEMA,
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
@@ -2088,6 +2089,7 @@ class TranslatorTests(unittest.TestCase):
             handler,
             "sentence=Mary+saw+John+leave&require_coq=1",
         )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
         self.assertEqual(result["construction_rule"]["id"], "perception_nominalization")
         self.assertEqual(result["result_state_lexicon"], [])
@@ -2102,12 +2104,72 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["lexicon_patch_draft_count"], 0)
         self.assertEqual(result["lexicon_patch_drafts"], [])
 
+    def test_api_analyze_response_contract_for_modifier_audit(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=john+buttered+the+toast+in+the+bathroom+with+a+knife&require_coq=1",
+        )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+        self.assertTrue(result["ok"])
+        self.assertIsInstance(result["event_semantics"], dict)
+        self.assertIsInstance(result["ast"], dict)
+        self.assertEqual(result["type_check"]["ok"], True)
+        self.assertEqual(result["type_check"]["errors"], [])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(
+            result["modifier_role_audit"],
+            [
+                {
+                    "path": "ast",
+                    "function": "butter",
+                    "modifier": "in(bathroom)",
+                    "type": "Adv",
+                    "semantic_role": "Location",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "in(bathroom)", "Adv", "Location"
+                    ),
+                },
+                {
+                    "path": "ast",
+                    "function": "butter",
+                    "modifier": "with(knife)",
+                    "type": "Adv",
+                    "semantic_role": "Instrument",
+                    "source": "modifier",
+                    "surface_lexicon": modifier_surface_audit(
+                        "with(knife)", "Adv", "Instrument"
+                    ),
+                },
+            ],
+        )
+        for audit in result["modifier_role_audit"]:
+            self.assertEqual(
+                set(audit["surface_lexicon"]),
+                {
+                    "surface_modifier",
+                    "normalized_modifier",
+                    "type",
+                    "semantic_role",
+                    "source",
+                },
+            )
+            self.assertEqual(audit["type"], "Adv")
+            self.assertEqual(audit["surface_lexicon"]["type"], "Adv")
+            self.assertEqual(
+                audit["surface_lexicon"]["semantic_role"],
+                audit["semantic_role"],
+            )
+
     def test_api_analyze_response_contains_result_state_warnings(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
             handler,
             "sentence=Mary+painted+the+door+red&require_coq=1",
         )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
         self.assertIsNone(result["diagnostics"]["failure_stage"])
@@ -2432,6 +2494,7 @@ class TranslatorTests(unittest.TestCase):
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
@@ -3071,6 +3134,7 @@ class TranslatorTests(unittest.TestCase):
         web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
         self.assertIn("/api/analyze?sentence=Mary+saw+John+leave&require_coq=1", readme)
         self.assertIn("`sentence` parameter carries the natural-language input", readme)
+        self.assertIn('`schema_version: "analyze.v1"`', readme)
         self.assertIn("`result_state_lexicon`", readme)
         self.assertIn("Result State Lexicon panel", readme)
         self.assertIn("`construction_rule`", readme)
@@ -3078,6 +3142,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
         self.assertIn("`dependent_type_translation`", web_design)
+        self.assertIn('`schema_version: "analyze.v1"`', web_design)
         self.assertIn("`result_state_lexicon`", web_design)
         self.assertIn("`source_policy`", web_design)
         self.assertIn("Result State Lexicon panel", web_design)

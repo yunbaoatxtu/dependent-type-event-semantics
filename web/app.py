@@ -17,6 +17,7 @@ from translator.natural_language_pipeline import run_pipeline
 
 
 DEFAULT_SENTENCE = "John knocked twice"
+ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 FAILURE_STAGE_LABELS = {
@@ -471,6 +472,7 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
 
 def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     enriched = {**result}
+    enriched.setdefault("schema_version", ANALYZE_RESPONSE_SCHEMA)
     enriched.setdefault("result_state_lexicon", [])
     enriched["modifier_role_audit"] = modifier_role_audit(enriched.get("ast", {}))
     enriched["diagnostics"] = build_diagnostics(enriched)
