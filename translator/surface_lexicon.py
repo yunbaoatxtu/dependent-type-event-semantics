@@ -71,8 +71,12 @@ COMMON_VERB_LEMMAS = {
     "go",
     "knock",
     "love",
+    "jump",
     "read",
+    "run",
     "sit",
+    "sleep",
+    "talk",
     "visit",
     "walk",
 }
@@ -131,6 +135,7 @@ IRREGULAR_VERBS = {
     "left": "leave",
     "known": "know",
     "killed": "kill",
+    "slept": "sleep",
     "written": "write",
 }
 

@@ -24,6 +24,7 @@ from translator.natural_language_pipeline import (
     check_lexical_state_change_ast,
     check_passive_argument_omission_ast,
     check_perception_nominalization_ast,
+    check_predicate_coordination_ast,
     check_quantifier_scope_readings,
     check_stative_result_state_ast,
     check_timed_after_ast,
@@ -322,6 +323,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("passed"), "pass")
         self.assertEqual(lemma_verb("missed"), "miss")
         self.assertEqual(lemma_verb("stopped"), "stop")
+        self.assertEqual(lemma_verb("ran"), "run")
+        self.assertEqual(lemma_verb("slept"), "sleep")
         self.assertEqual(TEMPORAL_ADVERBS, {"today", "tomorrow", "yesterday"})
         self.assertEqual(COUNT_PHRASE_WORDS, {"one": "1", "two": "2", "three": "3"})
         self.assertEqual(COUNT_NOUNS, {"time", "times"})
@@ -330,7 +333,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(count_phrase_value("03"), "3")
         self.assertIsNone(count_phrase_value("several"))
         self.assertIn("sit", COMMON_VERB_LEMMAS)
+        self.assertIn("talk", COMMON_VERB_LEMMAS)
+        self.assertIn("sleep", COMMON_VERB_LEMMAS)
         self.assertTrue(is_likely_surface_verb("sits"))
+        self.assertTrue(is_likely_surface_verb("talked"))
+        self.assertTrue(is_likely_surface_verb("ran"))
+        self.assertTrue(is_likely_surface_verb("slept"))
         self.assertTrue(is_likely_surface_verb("chased"))
         self.assertTrue(is_likely_surface_verb("flew"))
         self.assertFalse(is_likely_surface_verb("cat"))
@@ -2404,6 +2412,101 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
+        result = run_pipeline("John walked and talked", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "predicate_coordination")
+        self.assertEqual(result["construction_rule"]["id"], "predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(john), talk(john))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            result["ast"]["predicates"],
+            [
+                {"surface": "walked", "name": "walk", "predicate_type": "Entity -> Prop"},
+                {"surface": "talked", "name": "talk", "predicate_type": "Entity -> Prop"},
+            ],
+        )
+        self.assertIn("Parameter walk : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter talk : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertNotIn("and_talked", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("Parameter Agent :", result["coq_code"])
+        self.assertNotIn("Parameter Theme :", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_lemmatizes_irregular_and_regular_verbs(self) -> None:
+        result = run_pipeline("Mary ran and jumped", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(run(mary), jump(mary))",
+        )
+        self.assertEqual(result["ast"]["predicates"][0]["name"], "run")
+        self.assertEqual(result["ast"]["predicates"][1]["name"], "jump")
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_preserves_adjective_subject_and_irregular_sleep(self) -> None:
+        result = run_pipeline("the old dog walked and slept", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "and_T(walk(old_dog), sleep(old_dog))",
+        )
+        self.assertEqual(result["ast"]["subject"], {"name": "old_dog", "type": "Entity"})
+        self.assertEqual(result["ast"]["predicates"][1]["name"], "sleep")
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_allows_trailing_time(self) -> None:
+        result = run_pipeline("John walked and talked yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(walk(john), talk(john)))",
+        )
+        self.assertEqual(
+            result["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn("Parameter yesterday : Entity.", result["coq_code"])
+        self.assertIn(
+            "at_T yesterday (and_T (walk john) (talk john)).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_does_not_capture_object_coordination(self) -> None:
+        result = run_pipeline("Mary visited Paris and London", require_coq=False)
+        self.assertTrue(result["ok"])
+        self.assertNotEqual(result.get("kind"), "predicate_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "visit(0)(mary, paris_and_london)",
+        )
+        self.assertEqual(
+            result["ast"]["role_frame"]["roles"][1],
+            {
+                "role": "Theme",
+                "value": "paris_and_london",
+                "type": "Entity",
+                "source": "explicit",
+            },
+        )
+
+    def test_predicate_coordination_rejects_bad_predicate_type(self) -> None:
+        result = run_pipeline("John walked and talked", require_coq=False)
+        ast = result["ast"]
+        ast["predicates"][1]["predicate_type"] = "Entity -> Entity -> Prop"
+        type_check = check_predicate_coordination_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "predicate coordination predicates[1] must have type Entity -> Prop",
+            type_check["errors"],
+        )
+
     def test_stative_result_state_uses_state_not_omitted_agent(self) -> None:
         broken = run_pipeline("the vase is broken", require_coq=True)
         self.assertTrue(broken["ok"])
@@ -2804,6 +2907,7 @@ class TranslatorTests(unittest.TestCase):
             "universal_timed_burning",
             "quantifier_scope_ambiguity",
             "copular_property",
+            "predicate_coordination",
         }
         self.assertTrue(expected.issubset(rules))
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
@@ -2819,6 +2923,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter some : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["copular_property"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["copular_property"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["predicate_coordination"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["predicate_coordination"].forbidden_coq_fragments)
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
@@ -2830,6 +2936,7 @@ class TranslatorTests(unittest.TestCase):
             "universal_timed_burning": "In every burning, oxygen is consumed",
             "quantifier_scope_ambiguity": "some boy loves some girl",
             "copular_property": "Mary is happy",
+            "predicate_coordination": "John walked and talked",
         }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):

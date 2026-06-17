@@ -1578,6 +1578,208 @@ def copular_property_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def predicate_coordination_ast(
+    subject: str,
+    predicates: list[dict[str, str]],
+    time_modifiers: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "kind": "predicate_coordination",
+        "subject": {"name": subject, "type": "Entity"},
+        "predicates": predicates,
+        "connective": "and_T",
+        "connective_type": "Prop -> Prop -> Prop",
+        "time_modifiers": time_modifiers,
+    }
+
+
+def check_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "predicate_coordination":
+        errors.append("ast.kind must be predicate_coordination")
+
+    subject = ast.get("subject")
+    if not isinstance(subject, dict):
+        errors.append("predicate coordination subject must be an object")
+    else:
+        if not isinstance(subject.get("name"), str) or not subject.get("name"):
+            errors.append("predicate coordination subject.name must be a non-empty string")
+        if subject.get("type") != "Entity":
+            errors.append("predicate coordination subject must have type Entity")
+
+    predicates = ast.get("predicates")
+    if not isinstance(predicates, list) or len(predicates) != 2:
+        errors.append("predicate coordination predicates must contain exactly two items")
+    else:
+        for index, predicate in enumerate(predicates):
+            if not isinstance(predicate, dict):
+                errors.append(f"predicate coordination predicates[{index}] must be an object")
+                continue
+            surface = predicate.get("surface")
+            if not isinstance(surface, str) or not surface:
+                errors.append(
+                    f"predicate coordination predicates[{index}].surface must be a non-empty string"
+                )
+            name = predicate.get("name")
+            if not isinstance(name, str) or not name:
+                errors.append(
+                    f"predicate coordination predicates[{index}].name must be a non-empty string"
+                )
+            elif surface and lemma_verb(str(surface)) != name:
+                errors.append(
+                    f"predicate coordination predicates[{index}].name must match its surface lemma"
+                )
+            if predicate.get("predicate_type") != "Entity -> Prop":
+                errors.append(
+                    f"predicate coordination predicates[{index}] must have type Entity -> Prop"
+                )
+
+    if ast.get("connective") != "and_T":
+        errors.append("predicate coordination connective must be and_T")
+    if ast.get("connective_type") != "Prop -> Prop -> Prop":
+        errors.append("predicate coordination connective must have type Prop -> Prop -> Prop")
+
+    time_modifiers = ast.get("time_modifiers")
+    if not isinstance(time_modifiers, list):
+        errors.append("predicate coordination time_modifiers must be a list")
+    else:
+        for index, modifier in enumerate(time_modifiers):
+            if not isinstance(modifier, dict):
+                errors.append(f"predicate coordination time_modifiers[{index}] must be an object")
+                continue
+            if modifier.get("operator") not in {"at", "during"}:
+                errors.append(
+                    f"predicate coordination time_modifiers[{index}].operator must be at or during"
+                )
+            if not isinstance(modifier.get("argument"), str) or not modifier.get("argument"):
+                errors.append(
+                    f"predicate coordination time_modifiers[{index}].argument must be a non-empty string"
+                )
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def render_predicate_coordination_translation(ast: dict[str, Any]) -> str:
+    subject = ast["subject"]["name"]
+    predicates = ast["predicates"]
+    proposition = f"and_T({predicates[0]['name']}({subject}), {predicates[1]['name']}({subject}))"
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
+
+
+def render_predicate_coordination_coq(
+    definition_name: str,
+    ast: dict[str, Any],
+) -> str:
+    subject = ast["subject"]["name"]
+    predicates = ast["predicates"]
+    proposition = f"and_T ({predicates[0]['name']} {subject}) ({predicates[1]['name']} {subject})"
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+    predicate_names = list(dict.fromkeys(predicate["name"] for predicate in predicates))
+    lines = [
+        "(* Same-subject predicate coordination without event variables. *)",
+        "Parameter Entity : Type.",
+        "",
+        f"Parameter {subject} : Entity.",
+    ]
+    lines.extend(f"Parameter {predicate} : Entity -> Prop." for predicate in predicate_names)
+    lines.append("Parameter and_T : Prop -> Prop -> Prop.")
+    if ast["time_modifiers"]:
+        lines.extend(
+            f"Parameter {modifier['argument']} : Entity."
+            for modifier in ast["time_modifiers"]
+        )
+        lines.extend(
+            [
+                "",
+                "Parameter at_T : Entity -> Prop -> Prop.",
+                "Parameter during_T : Entity -> Prop -> Prop.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            f"Definition {definition_name} : Prop :=",
+            f"  {proposition}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    if tokens.count("and") != 1:
+        return None
+    and_index = tokens.index("and")
+    left_predicate_index = and_index - 1
+    right_predicate_index = and_index + 1
+    if left_predicate_index <= 0 or right_predicate_index >= len(tokens):
+        return None
+
+    left_surface = tokens[left_predicate_index]
+    right_surface = tokens[right_predicate_index]
+    if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
+        return None
+
+    subject = clean_phrase(tokens[:left_predicate_index])
+    if subject == "entity":
+        return None
+    time_modifiers = copular_property_time_modifiers(tokens[right_predicate_index + 1 :])
+    if time_modifiers is None:
+        return None
+
+    predicates = [
+        {
+            "surface": left_surface,
+            "name": lemma_verb(left_surface),
+            "predicate_type": "Entity -> Prop",
+        },
+        {
+            "surface": right_surface,
+            "name": lemma_verb(right_surface),
+            "predicate_type": "Entity -> Prop",
+        },
+    ]
+    ast = predicate_coordination_ast(subject, predicates, time_modifiers)
+    type_check = check_predicate_coordination_ast(ast)
+    typed_replacement = render_predicate_coordination_translation(ast)
+    coq_code = render_predicate_coordination_coq("predicate_coordination_assertion", ast)
+    return {
+        "kind": "predicate_coordination",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "same-subject-predicate-coordination",
+            "source": sentence,
+            "event_style_reference": (
+                "exists e1 e2. "
+                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) and "
+                f"{predicates[1]['name']}(e2) and Agent(e2, {subject})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "Same-subject intransitive coordination is represented as a "
+                "typed conjunction of Entity -> Prop predicates; no shared "
+                "event variable or Theme argument is introduced."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -1837,6 +2039,18 @@ def construction_rules() -> list[ConstructionRule]:
             label="Copular property",
             phenomenon="Property predication without hidden event variables",
             analyzer=copular_property_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="predicate_coordination",
+            label="Predicate coordination",
+            phenomenon="Same-subject intransitive predicate coordination without event variables",
+            analyzer=predicate_coordination_pipeline,
             forbidden_coq_fragments=(
                 "Parameter Event : Type.",
                 "exists e : Event",

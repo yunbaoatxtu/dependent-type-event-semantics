@@ -143,6 +143,15 @@ and `Mary is happy and very calm` keeps the degree only on the second conjunct.
 Registered state coordination stays in the state layer, so `the door is red and
 open` becomes `and_T(holds_state(door, color_scale, red),
 holds_state(door, access_scale, open))`, not `red_and_open : Property`.
+Same-subject intransitive predicate coordination is also handled before the
+generic fallback. `John walked and talked` becomes
+`and_T(walk(john), talk(john))`, and `John walked and talked yesterday` becomes
+`at_T(yesterday, and_T(walk(john), talk(john)))`. The two predicates are
+declared as `Entity -> Prop`, so the analysis does not invent a Theme such as
+`and_talked` and does not export hidden `Event`, `Agent`, or `Theme`
+declarations. This rule is intentionally narrow: object coordination such as
+`Mary visited Paris and London` remains a transitive fallback case rather than a
+predicate-coordination reading.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
