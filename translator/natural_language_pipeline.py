@@ -1665,8 +1665,11 @@ def starts_surface_subject_boundary(tokens: list[str], position: int) -> bool:
         return False
 
     def is_boundary_predicate(token: str) -> bool:
-        return token in PASSIVE_AUXILIARIES or is_likely_surface_verb(token) or (
-            token.endswith("ed") and len(token) > 3
+        return (
+            token in PASSIVE_AUXILIARIES
+            or token in DO_SUPPORT_AUXILIARIES
+            or is_likely_surface_verb(token)
+            or (token.endswith("ed") and len(token) > 3)
         )
 
     subject_widths = (1, 2) if starts_with_article else (1,)
@@ -2870,26 +2873,30 @@ def contrastive_intransitive_do_support_negation(
     if trailing_modifiers is None:
         return None
     trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
-    if fronted_adv_modifiers or trailing_adv_modifiers:
-        return None
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+    predicate_type = (
+        "forall n : nat, ModifierSeq n -> Entity -> PropT"
+        if shared_adv_modifiers
+        else "Entity -> Prop"
+    )
     predicates = [
         {
             "surface": left_surface,
             "name": lemma_verb(left_surface),
-            "predicate_type": "Entity -> Prop",
+            "predicate_type": predicate_type,
             "negated": True,
         },
         {
             "surface": right_surface,
             "name": lemma_verb(right_surface),
-            "predicate_type": "Entity -> Prop",
+            "predicate_type": predicate_type,
         },
     ]
     ast = predicate_coordination_ast(
         subject,
         predicates,
-        [],
+        shared_adv_modifiers,
         time_modifiers,
     )
     type_check = check_predicate_coordination_ast(ast)
@@ -2923,7 +2930,8 @@ def contrastive_intransitive_do_support_negation(
             "note": (
                 "Contrastive do-support negation with but is represented by "
                 "wrapping the first coordinate in not_T and conjoining it with "
-                "the positive second coordinate."
+                "the positive second coordinate; shared Adv modifiers remain "
+                "typed modifier arguments rather than entities."
             ),
         },
         "coq_code": coq_code,
@@ -2944,7 +2952,13 @@ def contrastive_transitive_do_support_negation(
     subject = clean_phrase(tokens[:auxiliary_index])
     if subject == "entity":
         return None
-    left_object = clean_phrase(tokens[negation_index + 2 : but_index])
+    left_tail = split_object_tokens_and_modifiers(tokens[negation_index + 2 : but_index])
+    if left_tail is None:
+        return None
+    left_object_tokens, left_adv_modifiers, left_time_modifiers = left_tail
+    if left_adv_modifiers or left_time_modifiers:
+        return None
+    left_object = clean_phrase(left_object_tokens)
     if left_object == "entity":
         return None
     right_tail = split_object_tokens_and_modifiers(tokens[but_index + 2 :])
@@ -2954,8 +2968,7 @@ def contrastive_transitive_do_support_negation(
     right_object = clean_phrase(right_object_tokens)
     if right_object == "entity":
         return None
-    if fronted_adv_modifiers or trailing_adv_modifiers:
-        return None
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
 
     clauses: list[dict[str, Any]] = []
@@ -2970,7 +2983,12 @@ def contrastive_transitive_do_support_negation(
                 "predicate": {
                     "surface": surface,
                     "name": predicate,
-                    "predicate_type": f"Entity -> {object_type} -> Prop",
+                    "predicate_type": (
+                        "forall n : nat, ModifierSeq n -> "
+                        f"Entity -> {object_type} -> PropT"
+                        if shared_adv_modifiers
+                        else f"Entity -> {object_type} -> Prop"
+                    ),
                 },
                 "object": {"name": obj, "type": object_type},
                 "negated": negated,
@@ -2980,7 +2998,7 @@ def contrastive_transitive_do_support_negation(
     ast = transitive_predicate_coordination_ast(
         subject,
         clauses,
-        [],
+        shared_adv_modifiers,
         time_modifiers,
     )
     type_check = check_transitive_predicate_coordination_ast(ast)
@@ -3018,7 +3036,8 @@ def contrastive_transitive_do_support_negation(
             "note": (
                 "Contrastive transitive do-support negation with but wraps only "
                 "the first typed coordinate in not_T and keeps both object "
-                "lexical types checked before Coq."
+                "lexical types checked before Coq; shared Adv modifiers remain "
+                "typed modifier arguments rather than entities."
             ),
         },
         "coq_code": coq_code,
@@ -3603,8 +3622,11 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             return False
 
         def is_boundary_predicate(token: str) -> bool:
-            return token in PASSIVE_AUXILIARIES or is_likely_surface_verb(token) or (
-                token.endswith("ed") and len(token) > 3
+            return (
+                token in PASSIVE_AUXILIARIES
+                or token in DO_SUPPORT_AUXILIARIES
+                or is_likely_surface_verb(token)
+                or (token.endswith("ed") and len(token) > 3)
             )
 
         subject_widths = (1, 2) if starts_with_article else (1,)

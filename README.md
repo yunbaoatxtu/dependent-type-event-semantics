@@ -151,10 +151,14 @@ and did not talk in the park` keeps `in(park)` as a modifier in both
 coordinates. Contrastive `but` coordination is handled for simple clear cases:
 `John did not walk but talked` becomes `and_T(not_T(walk(john)), talk(john))`,
 and `John did not eat bread but drank water` becomes
-`and_T(not_T(eat(john, bread)), drink(john, water))`. Scope-ambiguous patterns
-such as `John did not walk and talk` remain rejected at internal type checking
-rather than being misread as a subject `john_did_not` or an object
-`and_did_not_talk`.
+`and_T(not_T(eat(john, bread)), drink(john, water))`. The same shared-modifier
+discipline now applies to clear contrastive examples, so `John did not walk but
+talked in the park` keeps `in(park)` as an `Adv` in both coordinates. Left-branch
+internal modifiers, such as `John did not eat bread in the park but drank water`,
+are still rejected rather than being collapsed into `bread_in_park`. Scope-
+ambiguous patterns such as `John did not walk and talk` remain rejected at
+internal type checking rather than being misread as a subject `john_did_not` or
+an object `and_did_not_talk`.
 Simple copular coordination is structured with `and_T`: `Mary is happy and
 calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,
 and `Mary is happy and very calm` keeps the degree only on the second conjunct.

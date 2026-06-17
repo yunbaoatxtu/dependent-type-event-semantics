@@ -2619,6 +2619,46 @@ class TranslatorTests(unittest.TestCase):
             "at_T(yesterday, and_T(not_T(walk(john)), talk(john)))",
         )
 
+        location = run_pipeline(
+            "John did not walk but talked in the park",
+            require_coq=True,
+        )
+        self.assertTrue(location["ok"])
+        self.assertEqual(location["kind"], "contrastive_do_support_negation")
+        self.assertEqual(
+            location["dependent_type_translation"],
+            "and_T(not_T(walk(1)(in(park), john)), talk(1)(in(park), john))",
+        )
+        self.assertIn("Parameter in_park : Adv.", location["coq_code"])
+        self.assertIn("Parameter not_T : PropT -> PropT.", location["coq_code"])
+        self.assertEqual(location["ast"]["modifiers"][0]["type"], "Adv")
+        self.assertEqual(location["ast"]["modifiers"][0]["semantic_role"], "Location")
+
+        fronted_location = run_pipeline(
+            "In the park John did not walk but talked",
+            require_coq=True,
+        )
+        self.assertTrue(fronted_location["ok"])
+        self.assertEqual(
+            fronted_location["dependent_type_translation"],
+            "and_T(not_T(walk(1)(in(park), john)), talk(1)(in(park), john))",
+        )
+
+        transitive_location = run_pipeline(
+            "John did not eat bread but drank water in the park",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_location["ok"])
+        self.assertEqual(
+            transitive_location["dependent_type_translation"],
+            (
+                "and_T(not_T(eat(1)(in(park), john, bread)), "
+                "drink(1)(in(park), john, water))"
+            ),
+        )
+        self.assertIn("Parameter bread : Food.", transitive_location["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive_location["coq_code"])
+
     def test_do_support_negation_rejects_bad_contrastive_but_before_fallback(self) -> None:
         conflict = run_pipeline("John did not eat bread but drank bread", require_coq=True)
         self.assertFalse(conflict["ok"])
@@ -2629,18 +2669,21 @@ class TranslatorTests(unittest.TestCase):
             conflict["type_check"]["errors"],
         )
 
-        unsupported_modifier = run_pipeline(
-            "John did not walk but talked in the park",
+        left_internal_modifier = run_pipeline(
+            "John did not eat bread in the park but drank water",
             require_coq=True,
         )
-        self.assertFalse(unsupported_modifier["ok"])
-        self.assertEqual(unsupported_modifier["kind"], "do_support_negation")
+        self.assertFalse(left_internal_modifier["ok"])
+        self.assertEqual(left_internal_modifier["kind"], "do_support_negation")
         self.assertIn(
             "do-support negation with contrastive coordination is not yet supported",
-            unsupported_modifier["type_check"]["errors"],
+            left_internal_modifier["type_check"]["errors"],
         )
-        self.assertEqual(unsupported_modifier["coq_check"]["status"], "skipped")
-        self.assertNotIn("but_talked", unsupported_modifier.get("dependent_type_translation", ""))
+        self.assertEqual(left_internal_modifier["coq_check"]["status"], "skipped")
+        self.assertNotIn(
+            "bread_in_park",
+            left_internal_modifier.get("dependent_type_translation", ""),
+        )
 
     def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
         for sentence in (
@@ -4054,6 +4097,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("hygiene: passed", page)
         self.assertIn("Coq/Rocq Check", page)
 
+    def test_page_reports_contrastive_negation_shared_adv_success(self) -> None:
+        page = render_page("John did not walk but talked in the park", require_coq=True)
+        self.assertIn("Translation verified", page)
+        self.assertIn("id: do_support_negation", page)
+        self.assertIn(
+            "and_T(not_T(walk(1)(in(park), john)), talk(1)(in(park), john))",
+            page,
+        )
+        self.assertIn("&quot;name&quot;: &quot;in_park&quot;", page)
+        self.assertIn("Parameter in_park : Adv.", page)
+        self.assertIn("Parameter not_T : PropT -&gt; PropT.", page)
+
     def test_api_analyze_response_contract_for_modifier_audit(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -4945,6 +5000,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("and_T(walk(john), not_T(talk(john)))", readme)
         self.assertIn("John did not walk but talked", readme)
         self.assertIn("and_T(not_T(walk(john)), talk(john))", readme)
+        self.assertIn("John did not walk but", readme)
+        self.assertIn("bread_in_park", readme)
         self.assertIn("and_did_not_talk", readme)
         self.assertIn("StateChangeVerbEntry", readme)
         self.assertIn("translator/state_change_lexicon.py", readme)
@@ -5007,6 +5064,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Scope-ambiguous", ast_docs)
         self.assertIn("coordinated do-support negation is still rejected", ast_docs)
         self.assertIn("Clear contrastive `but` cases", ast_docs)
+        self.assertIn("Left-branch-only modifiers", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Prop"', ast_docs)
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)
