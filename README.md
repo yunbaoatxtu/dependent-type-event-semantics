@@ -86,6 +86,9 @@ Multi-word temporal phrases are also boundary-aware: `Mary admired the painting
 last night` becomes `at_T(last_night, admire(0)(mary, painting))`, and
 `John walked to school this morning` keeps `to(school)` separate from
 `this_morning`.
+The same temporal boundary applies at the beginning of a sentence: `Yesterday
+Mary admired the painting` becomes `at_T(yesterday, admire(0)(mary, painting))`
+rather than assigning the subject `yesterday_mary`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:

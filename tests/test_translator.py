@@ -1216,6 +1216,46 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_fallback_fronted_temporal_adverb_scopes_over_sentence(self) -> None:
+        result = run_pipeline("Yesterday Mary admired the painting", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, admire(0)(mary, painting))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "mary"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "yesterday_mary"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_temporal_phrase_scopes_over_sentence(self) -> None:
+        result = run_pipeline("Last night Mary admired the painting", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(last_night, admire(0)(mary, painting))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "mary"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "last_night"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "last_night_mary"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_fronted_temporal_phrase_preserves_directional_modifier(self) -> None:
+        result = run_pipeline("This morning John walked to school", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(this_morning, walk(1)(to(school), john))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Agent", "args": ["e", "john"]}, atoms)
+        self.assertIn({"pred": "to", "args": ["e", "school"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "this_morning"]}, atoms)
+        self.assertNotIn({"pred": "Agent", "args": ["e", "this_morning_john"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_fallback_count_phrase_becomes_repeat(self) -> None:
         result = run_pipeline("John knocked two times", require_coq=True)
         self.assertTrue(result["ok"])

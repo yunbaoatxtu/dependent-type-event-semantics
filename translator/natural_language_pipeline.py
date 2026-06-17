@@ -1486,7 +1486,21 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
     if len(tokens) < 2:
         raise ValueError("Please enter at least a subject and a predicate.")
 
+    leading_time_atoms: list[dict[str, Any]] = []
     idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token in TEMPORAL_ADVERBS:
+            leading_time_atoms.append(atom("at", "e", token))
+            idx += 1
+            continue
+        temporal_phrase = temporal_phrase_value(tokens, idx)
+        if temporal_phrase is None:
+            break
+        normalized_time, consumed = temporal_phrase
+        leading_time_atoms.append(atom("at", "e", normalized_time))
+        idx += consumed
+
     while idx < len(tokens) and tokens[idx] in ARTICLES:
         idx += 1
     if idx >= len(tokens):
@@ -1509,7 +1523,11 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
 
     verb = lemma_verb(tokens[idx])
     idx += 1
-    items = [atom(verb, "e"), atom("Agent", "e", clean_phrase(subject_tokens))]
+    items = [
+        atom(verb, "e"),
+        atom("Agent", "e", clean_phrase(subject_tokens)),
+        *leading_time_atoms,
+    ]
     object_tokens: list[str] = []
 
     def is_count_phrase_at(position: int) -> bool:
