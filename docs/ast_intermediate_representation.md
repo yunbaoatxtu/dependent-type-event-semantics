@@ -558,8 +558,8 @@ and_T(walk(john), talk(john))
 If a fronted or trailing time expression is present, the time operator scopes
 over the whole conjunction rather than being folded into the subject.
 
-Fronted or trailing non-temporal prepositional material is instead represented
-as shared `Adv` material. For example, both `In the park John walked and talked`
+Fronted or trailing non-temporal modifier material is instead represented as
+shared `Adv` material. For example, both `In the park John walked and talked`
 and `John walked and talked in the park` keep `john` as the subject and store
 the prepositional phrase as:
 
@@ -585,6 +585,10 @@ The rendered replacement is `and_T(walk(1)(in(park), john),
 talk(1)(in(park), john))`. Its predicate type is therefore
 `forall n : nat, ModifierSeq n -> Entity -> PropT`, not just
 `Entity -> Prop`.
+
+Single-word manner adverbs use the same field: `John walked and talked slowly`
+stores `slowly : Adv` and renders as `and_T(walk(1)(slowly, john),
+talk(1)(slowly, john))`.
 
 ### `transitive_predicate_coordination`
 
@@ -641,6 +645,8 @@ Fronted or trailing non-temporal prepositional phrases use the shared
 `modifiers` field, so `In the park John ate bread and drank water` and `John
 ate bread and drank water in the park` both render as
 `and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))`.
+Single-word manner adverbs behave the same way: `John ate bread and drank water
+quickly` keeps `water` as the right-hand object and stores `quickly : Adv`.
 
 This construction is deliberately separate from object coordination. `Mary
 visited Paris and London` remains an ordinary transitive fallback with

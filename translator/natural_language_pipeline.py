@@ -1451,6 +1451,10 @@ def split_fronted_adv_modifiers(
     modifiers: list[dict[str, Any]] = []
     idx = 0
     while idx < len(tokens):
+        if tokens[idx] in COMMON_ADVERBS:
+            modifiers.append(modifier_record(tokens[idx]))
+            idx += 1
+            continue
         preposition = tokens[idx]
         if preposition not in FRONTED_MODIFIER_PREPOSITIONS:
             break

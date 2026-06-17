@@ -161,6 +161,10 @@ modifier layer:
 `in_park : Adv`. The predicates have type
 `forall n : nat, ModifierSeq n -> Entity -> PropT`, rather than using the
 malformed subject `in_park_john`.
+Single-word manner adverbs use the same shared-Adv path: `John walked and
+talked slowly` and `Slowly John walked and talked` both become
+`and_T(walk(1)(slowly, john), talk(1)(slowly, john))`, not a fallback with
+`and_talked` or a subject `slowly_john`.
 The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while
@@ -178,6 +182,10 @@ transitive coordination slice: `In the park John ate bread and drank water` and
 `and_T(eat(1)(in(park), john, bread), drink(1)(in(park), john, water))`, while
 `bread : Food` and `water : Drinkable` remain distinct object types rather than
 creating `water_in_park`.
+Shared manner adverbs keep the right-hand object intact as well:
+`John ate bread and drank water quickly` becomes
+`and_T(eat(1)(quickly, john, bread), drink(1)(quickly, john, water))`, not a
+right-hand object `water_quickly`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
