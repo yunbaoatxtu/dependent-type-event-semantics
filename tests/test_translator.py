@@ -44,6 +44,7 @@ from translator.surface_lexicon import (
     MODIFIER_ROLE_BY_PREDICATE,
     PASSIVE_AUXILIARIES,
     TEMPORAL_ADVERBS,
+    TEMPORAL_PHRASES,
     count_phrase_value,
     modifier_predicate,
     modifier_semantic_role,
@@ -52,6 +53,7 @@ from translator.surface_lexicon import (
     is_passive_participle,
     lemma_verb,
     surface_verb_audit,
+    temporal_phrase_value,
 )
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
@@ -321,6 +323,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(count_phrase_value("2"), "2")
         self.assertEqual(count_phrase_value("03"), "3")
         self.assertIsNone(count_phrase_value("several"))
+        self.assertEqual(
+            TEMPORAL_PHRASES,
+            {("last", "night"): "last_night", ("this", "morning"): "this_morning"},
+        )
+        self.assertEqual(
+            temporal_phrase_value(["last", "night"], 0),
+            ("last_night", 2),
+        )
+        self.assertEqual(
+            temporal_phrase_value(["to", "school", "this", "morning"], 2),
+            ("this_morning", 2),
+        )
+        self.assertIsNone(temporal_phrase_value(["last", "book"], 0))
         self.assertEqual(
             passive_participle_audit("written"),
             {
@@ -1109,6 +1124,44 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
         self.assertNotIn({"pred": "on", "args": ["e", "mat_yesterday"]}, atoms)
         self.assertIn("Parameter on_mat : Adv.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_temporal_phrase_scopes_over_simple_sentence(self) -> None:
+        result = run_pipeline("Mary admired the painting last night", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(last_night, admire(0)(mary, painting))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "Theme", "args": ["e", "painting"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "last_night"]}, atoms)
+        self.assertNotIn({"pred": "Theme", "args": ["e", "painting_last_night"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_temporal_phrase_stops_prepositional_phrase(self) -> None:
+        result = run_pipeline("John walked to school this morning", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(this_morning, walk(1)(to(school), john))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "to", "args": ["e", "school"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "this_morning"]}, atoms)
+        self.assertNotIn({"pred": "to", "args": ["e", "school_this_morning"]}, atoms)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_fallback_multiple_time_atoms_remain_nested_time_terms(self) -> None:
+        result = run_pipeline("Mary read the book at noon yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, at_T(noon, read(0)(mary, book)))",
+        )
+        atoms = result["event_semantics"]["body"]["and"]
+        self.assertIn({"pred": "at", "args": ["e", "noon"]}, atoms)
+        self.assertIn({"pred": "at", "args": ["e", "yesterday"]}, atoms)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_fallback_count_phrase_becomes_repeat(self) -> None:

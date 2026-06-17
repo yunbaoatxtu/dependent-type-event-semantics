@@ -40,6 +40,7 @@ from translator.surface_lexicon import (
     lemma_verb,
     passive_participle_audit,
     surface_verb_audit,
+    temporal_phrase_value,
 )
 
 
@@ -1506,6 +1507,9 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             and tokens[position + 1] in COUNT_NOUNS
         )
 
+    def is_temporal_phrase_at(position: int) -> bool:
+        return temporal_phrase_value(tokens, position) is not None
+
     while idx < len(tokens):
         token = tokens[idx]
         if token in COUNT_WORDS:
@@ -1525,6 +1529,12 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
             items.append(atom("at", "e", token))
             idx += 1
             continue
+        temporal_phrase = temporal_phrase_value(tokens, idx)
+        if temporal_phrase is not None:
+            normalized_time, consumed = temporal_phrase
+            items.append(atom("at", "e", normalized_time))
+            idx += consumed
+            continue
         if token in PREPOSITIONS:
             prep = token
             idx += 1
@@ -1540,6 +1550,7 @@ def fallback_sentence_to_event_semantics(sentence: str) -> dict[str, Any]:
                 idx < len(tokens)
                 and tokens[idx] not in modifier_boundaries
                 and not is_count_phrase_at(idx)
+                and not is_temporal_phrase_at(idx)
             ):
                 phrase.append(tokens[idx])
                 idx += 1

@@ -64,6 +64,10 @@ TEMPORAL_ADVERBS = {
     "tomorrow",
     "yesterday",
 }
+TEMPORAL_PHRASES = {
+    ("last", "night"): "last_night",
+    ("this", "morning"): "this_morning",
+}
 IRREGULAR_VERBS = {
     "admired": "admire",
     "ate": "eat",
@@ -102,6 +106,14 @@ def count_phrase_value(token: str) -> str | None:
         return COUNT_PHRASE_WORDS[token]
     if re.fullmatch(r"[0-9]+", token):
         return str(int(token))
+    return None
+
+
+def temporal_phrase_value(tokens: list[str] | tuple[str, ...], position: int) -> tuple[str, int] | None:
+    for phrase, normalized in TEMPORAL_PHRASES.items():
+        end = position + len(phrase)
+        if tuple(tokens[position:end]) == phrase:
+            return normalized, len(phrase)
     return None
 
 

@@ -66,10 +66,11 @@ the natural-language input, an event-semantics JSON formula, the dependent-type
 translation and AST, and generated Coq code with an optional Coq/Rocq boundary
 check. For unlisted sentences, the fallback analysis is intentionally shallow:
 it identifies a subject, predicate, possible object, common adverbs, count
-words, simple word or digit `time(s)` count phrases, common temporal adverbs,
-and simple prepositional modifiers. The shared surface lexicon also normalizes
-common past-tense forms before translation, so examples such as
-`a dog chased a cat` export `chase` rather than a truncated predicate name.
+words, simple word or digit `time(s)` count phrases, single-word and multi-word
+temporal expressions, and simple prepositional modifiers. The shared surface
+lexicon also normalizes common past-tense forms before translation, so examples
+such as `a dog chased a cat` export `chase` rather than a truncated predicate
+name.
 
 Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
 translation, so `Mary admired the painting yesterday` becomes
@@ -78,6 +79,10 @@ translation, so `Mary admired the painting yesterday` becomes
 Count phrases behave similarly: `Mary visited Paris three times` becomes
 `repeat(3, visit(0)(mary, paris))`, not `visit(0)(mary, paris_three_times)`.
 The digit form `Mary visited Paris 3 times` follows the same path.
+Multi-word temporal phrases are also boundary-aware: `Mary admired the painting
+last night` becomes `at_T(last_night, admire(0)(mary, painting))`, and
+`John walked to school this morning` keeps `to(school)` separate from
+`this_morning`.
 
 Quantifier-scope examples receive a separate ambiguity analysis instead of
 being forced through the fallback parser:
