@@ -3159,5 +3159,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The web status line should surface `recovery_hint` directly", web_design)
         self.assertIn("Machine clients should prefer `recovery_actions`", web_design)
 
+    def test_python_packaging_limits_top_level_package_discovery(self) -> None:
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn("[tool.setuptools.packages.find]", pyproject)
+        self.assertIn('include = ["translator*", "web*"]', pyproject)
+        self.assertIn('license = "MIT"', pyproject)
+
 if __name__ == "__main__":
     unittest.main()
