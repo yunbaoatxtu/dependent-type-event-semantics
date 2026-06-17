@@ -851,6 +851,13 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     patch_text_href = patch_text_api_href(sentence, require_coq)
     construction = construction_rule_summary(result)
     diagnostics = compact_json(result.get("diagnostics", {}))
+    api_contract = compact_json(
+        {
+            "schema_version": result.get("schema_version", ANALYZE_RESPONSE_SCHEMA),
+            "response_kind": "analysis",
+            "endpoint": "/api/analyze",
+        }
+    )
     coq_code = result.get("coq_code", "")
     coq_check = compact_json(result.get("coq_check", {}))
     checked = " checked" if require_coq else ""
@@ -1219,6 +1226,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("Dependent-Type Translation", dependent)}
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
+      {panel("API Contract", api_contract)}
       {semantic_warnings_panel(result)}
       {lexicon_patch_drafts_panel(result, sentence, require_coq)}
       {next_steps_panel(result)}

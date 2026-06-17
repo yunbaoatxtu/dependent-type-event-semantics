@@ -87,6 +87,9 @@ must expose the same semantic artifacts shown on the page: `event_semantics`,
 `dependent_type_translation`, `result_state_lexicon`, `modifier_role_audit`,
 `lexicon_patch_drafts`, `patch_text_preview`, `ast`, `coq_code`, `construction_rule`,
 `construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
+The page mirrors that version in a compact `API Contract` panel, including the
+`/api/analyze` endpoint, so a browser screenshot and a JSON client can refer to
+the same response contract.
 `result_state_lexicon` is a list of audit
 records for resultative targets; each record includes the target `state`, its
 `scale`, an optional `default_source_state`, and a `source_policy` such as
