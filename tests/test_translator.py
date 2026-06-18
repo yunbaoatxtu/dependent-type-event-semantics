@@ -2557,6 +2557,19 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(disjunctive["coq_check"]["status"], "passed")
 
+        either_disjunctive = run_pipeline(
+            "John either walked or did not talk",
+            require_coq=True,
+        )
+        self.assertTrue(either_disjunctive["ok"])
+        self.assertEqual(either_disjunctive["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            either_disjunctive["dependent_type_translation"],
+            "or_T(walk(john), not_T(talk(john)))",
+        )
+        self.assertNotIn("john_either", either_disjunctive["dependent_type_translation"])
+        self.assertEqual(either_disjunctive["coq_check"]["status"], "passed")
+
         transitive_disjunctive = run_pipeline(
             "John ate bread or did not drink water",
             require_coq=True,
@@ -3171,6 +3184,24 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("or_talked", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_predicate_coordination_strips_either_marker_from_subject(self) -> None:
+        for sentence in (
+            "John either walked or talked",
+            "Either John walked or talked",
+        ):
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "predicate_coordination")
+                self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+                self.assertEqual(
+                    result["dependent_type_translation"],
+                    "or_T(walk(john), talk(john))",
+                )
+                self.assertNotIn("john_either", result["dependent_type_translation"])
+                self.assertNotIn("either_john", result["dependent_type_translation"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_transitive_predicate_coordination_supports_or_disjunction(self) -> None:
         result = run_pipeline("John ate bread or drank water", require_coq=True)
         self.assertTrue(result["ok"])
@@ -3185,6 +3216,26 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", result["coq_code"])
         self.assertNotIn("bread_or_drank_water", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_strips_either_marker_from_subject(self) -> None:
+        for sentence in (
+            "John either ate bread or drank water",
+            "Either John ate bread or drank water",
+        ):
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "transitive_predicate_coordination")
+                self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
+                self.assertEqual(
+                    result["dependent_type_translation"],
+                    "or_T(eat(john, bread), drink(john, water))",
+                )
+                self.assertIn("Parameter bread : Food.", result["coq_code"])
+                self.assertIn("Parameter water : Drinkable.", result["coq_code"])
+                self.assertNotIn("john_either", result["dependent_type_translation"])
+                self.assertNotIn("either_john", result["dependent_type_translation"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_repeated_do_support_negation_coordinates_negated_branches(self) -> None:
         intransitive = run_pipeline(

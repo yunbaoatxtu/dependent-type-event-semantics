@@ -197,7 +197,9 @@ the subject and puts `yesterday` outside the conjunction. The two predicates are
 declared as `Entity -> Prop`, so the analysis does not invent a Theme such as
 `and_talked` or `or_talked` and does not export hidden `Event`, `Agent`, or
 `Theme` declarations. The same AST uses `or_T` for disjunction: `John walked or
-talked` becomes `or_T(walk(john), talk(john))`. This rule is intentionally
+talked` and `John either walked or talked` both become
+`or_T(walk(john), talk(john))`; the surface marker `either` is not folded into
+the subject. This rule is intentionally
 narrow: object coordination such as `Mary visited Paris and London` remains a
 transitive fallback case rather than a predicate-coordination reading.
 Fronted and trailing non-temporal prepositional phrases stay in the Luo-Shi
@@ -227,7 +229,8 @@ the same subject. `John ate bread and drank water` becomes
 The disjunctive case uses the same typed objects and replaces the connective:
 `John ate bread or drank water` becomes
 `or_T(eat(john, bread), drink(john, water))`, not a pseudo-object such as
-`bread_or_drank_water`.
+`bread_or_drank_water`. The marked form `John either ate bread or drank water`
+uses the same output and keeps the subject as `john`, not `john_either`.
 Sentence-final time still scopes over the whole conjunction, so `John ate bread
 and drank water yesterday` becomes
 `at_T(yesterday, and_T(eat(john, bread), drink(john, water)))`; fronted time

@@ -575,6 +575,8 @@ and_T(walk(john), talk(john))
 
 The same AST shape licenses disjunction by setting `"connective": "or_T"`:
 `John walked or talked` renders as `or_T(walk(john), talk(john))`.
+The marked surface form `John either walked or talked` uses the same AST and
+keeps `john` as the subject rather than constructing `john_either`.
 
 If a fronted or trailing time expression is present, the time operator scopes
 over the whole conjunction rather than being folded into the subject.
@@ -673,7 +675,9 @@ and_T(eat(john, bread), drink(john, water))
 
 Disjunctive VP coordination sets `"connective": "or_T"`, so `John ate bread or
 drank water` renders as `or_T(eat(john, bread), drink(john, water))` rather than
-forming a pseudo-object such as `bread_or_drank_water`.
+forming a pseudo-object such as `bread_or_drank_water`. `Either` may appear
+before the shared subject or before the first VP; it is treated as a surface
+coordination marker, not as part of the subject.
 
 Fronted and trailing time expressions use the same `time_modifiers` field and
 therefore scope over the whole conjunction, e.g. `at_T(yesterday, and_T(...))`.
