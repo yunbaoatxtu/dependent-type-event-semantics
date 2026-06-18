@@ -3116,6 +3116,55 @@ class TranslatorTests(unittest.TestCase):
             ],
         )
 
+    def test_do_support_negation_ambiguity_preserves_branch_times(self) -> None:
+        result = run_pipeline(
+            "John did not walk yesterday and talk today",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: not_T(and_T("
+                "at_T(yesterday, walk(0)(john)), "
+                "at_T(today, talk(0)(john))))"
+            ),
+            result["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: and_T("
+                "not_T(at_T(yesterday, walk(0)(john))), "
+                "not_T(at_T(today, talk(0)(john))))"
+            ),
+            result["dependent_type_translation"],
+        )
+        self.assertEqual(
+            result["ast"]["readings"][0]["clauses"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            result["ast"]["readings"][0]["clauses"][1]["time_modifiers"],
+            [{"operator": "at", "argument": "today"}],
+        )
+        self.assertIn("Parameter yesterday : Entity.", result["coq_code"])
+        self.assertIn("Parameter today : Entity.", result["coq_code"])
+        self.assertIn(
+            "Parameter at_T : Entity -> PropT -> PropT.",
+            result["coq_code"],
+        )
+        self.assertIn(
+            (
+                "not_T (and_T (at_T yesterday (walk 0 mods_nil john)) "
+                "(at_T today (talk 0 mods_nil john)))"
+            ),
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
         result = run_pipeline("John walked and talked", require_coq=True)
         self.assertTrue(result["ok"])

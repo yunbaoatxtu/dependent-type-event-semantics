@@ -739,8 +739,11 @@ Current type rules:
   `talk(1)(quickly, john)` under the two alternative negation scopes, while
   `John did not eat bread slowly and drink water quickly` keeps `bread : Food`
   and `water : Drinkable` separate from the `slowly` and `quickly` Adv entries.
-  Time modifiers scope over the resulting proposition, and Adv modifiers remain
-  typed modifier entries rather than entities or object-name suffixes.
+  Branch-local time behaves the same way: `John did not walk yesterday and talk
+  today` stores `yesterday` and `today` on the two clause records before the
+  alternative negation scopes are rendered. Time modifiers scope over the
+  resulting proposition, and Adv modifiers remain typed modifier entries rather
+  than entities or object-name suffixes.
   Clear contrastive `but` cases use the same local marker on the first
   coordinate: `John did not walk but talked` renders as
   `and_T(not_T(walk(john)), talk(john))`.
