@@ -773,7 +773,9 @@ Current type rules:
   and did not talk`, is treated as an explicit distributed surface form:
   `and_T(not_T(walk(john)), not_T(talk(john)))`. The same parser boundary keeps
   `john` as the subject rather than accepting a malformed subject like
-  `john_did_not`.
+  `john_did_not`. If the repeated surface connective is `or`, as in
+  `John did not walk or did not talk`, the checked output preserves that
+  disjunction as `or_T(not_T(walk(john)), not_T(talk(john)))`.
   Clear contrastive `but` cases use the same local marker on the first
   coordinate: `John did not walk but talked` renders as
   `and_T(not_T(walk(john)), talk(john))`.

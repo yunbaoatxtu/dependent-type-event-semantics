@@ -3250,6 +3250,51 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter yesterday : Entity.", fronted["coq_code"])
         self.assertEqual(fronted["coq_check"]["status"], "passed")
 
+        disjunctive = run_pipeline(
+            "John did not walk or did not talk",
+            require_coq=True,
+        )
+        self.assertTrue(disjunctive["ok"])
+        self.assertEqual(
+            disjunctive["dependent_type_translation"],
+            "or_T(not_T(walk(john)), not_T(talk(john)))",
+        )
+        self.assertEqual(
+            disjunctive["type_check"]["surface_scope"],
+            "disjunction_of_negations",
+        )
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", disjunctive["coq_code"])
+        self.assertEqual(disjunctive["coq_check"]["status"], "passed")
+
+        transitive_disjunctive = run_pipeline(
+            "John did not eat bread or did not drink water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_disjunctive["ok"])
+        self.assertEqual(
+            transitive_disjunctive["dependent_type_translation"],
+            "or_T(not_T(eat(john, bread)), not_T(drink(john, water)))",
+        )
+        self.assertIn("Parameter bread : Food.", transitive_disjunctive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive_disjunctive["coq_code"])
+        self.assertEqual(transitive_disjunctive["coq_check"]["status"], "passed")
+
+        fronted_disjunctive = run_pipeline(
+            "In the park yesterday John did not walk or did not talk",
+            require_coq=True,
+        )
+        self.assertTrue(fronted_disjunctive["ok"])
+        self.assertEqual(
+            fronted_disjunctive["dependent_type_translation"],
+            (
+                "at_T(yesterday, or_T(not_T(walk(1)(in(park), john)), "
+                "not_T(talk(1)(in(park), john))))"
+            ),
+        )
+        self.assertIn("Parameter in_park : Adv.", fronted_disjunctive["coq_code"])
+        self.assertIn("Parameter yesterday : Entity.", fronted_disjunctive["coq_code"])
+        self.assertEqual(fronted_disjunctive["coq_check"]["status"], "passed")
+
     def test_do_support_negation_ambiguity_rejects_object_type_conflict(self) -> None:
         result = run_pipeline(
             "John did not eat bread and drink bread",

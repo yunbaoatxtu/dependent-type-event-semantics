@@ -178,6 +178,10 @@ returned as two explicit readings, `not_T(and_T(walk(john), talk(john)))` and
 subject `john_did_not` or an object `and_did_not_talk`. Negated disjunction is
 kept structural as well: `John did not walk or talk` becomes
 `not_T(or_T(walk(john), talk(john)))`, not `not_T(walk(0)(john, or_talk))`.
+When both coordinates repeat do-support, the surface connective is preserved:
+`John did not walk and did not talk` becomes
+`and_T(not_T(walk(john)), not_T(talk(john)))`, while `John did not walk or did
+not talk` becomes `or_T(not_T(walk(john)), not_T(talk(john)))`.
 Simple copular coordination is structured with `and_T`: `Mary is happy and
 calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,
 and `Mary is happy and very calm` keeps the degree only on the second conjunct.

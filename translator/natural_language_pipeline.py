@@ -323,6 +323,24 @@ def negated_coordination_readings(
     ]
 
 
+def disjunction_of_negations_reading(
+    subject: str,
+    clauses: list[dict[str, Any]],
+    time_modifiers: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    return {
+        "name": "do_support_negation_disjunction_of_negations",
+        "scope": "disjunction_of_negations",
+        "subject": {"name": subject, "type": "Entity"},
+        "clauses": clauses,
+        "connective": "or_T",
+        "connective_type": "PropT -> PropT -> PropT"
+        if any(negated_coordination_clause_uses_propt(clause) for clause in clauses)
+        else "Prop -> Prop -> Prop",
+        "time_modifiers": list(time_modifiers or []),
+    }
+
+
 def negated_coordination_clause_uses_propt(clause: dict[str, Any]) -> bool:
     predicate_type = str(clause.get("predicate", {}).get("predicate_type", ""))
     return (
@@ -360,9 +378,13 @@ def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[
             errors.append(
                 f"expected one negated disjunction reading, got {len(readings)}"
             )
-        if observed_scopes != {"negation_over_disjunction"}:
+        if observed_scopes not in (
+            {"negation_over_disjunction"},
+            {"disjunction_of_negations"},
+        ):
             errors.append(
-                "negated or-coordination readings must include negation_over_disjunction"
+                "negated or-coordination readings must include "
+                "negation_over_disjunction or disjunction_of_negations"
             )
     else:
         errors.append("negated coordination readings must use one connective: and_T or or_T")
@@ -529,6 +551,8 @@ def render_negated_coordination_reading(
         coordination = f"{connective} ({left}) ({right})"
         if reading["scope"] == "distributed_negation":
             proposition = f"and_T (not_T ({left})) (not_T ({right}))"
+        elif reading["scope"] == "disjunction_of_negations":
+            proposition = f"or_T (not_T ({left})) (not_T ({right}))"
         else:
             proposition = f"not_T ({coordination})"
         for modifier in reading.get("time_modifiers", []):
@@ -537,6 +561,8 @@ def render_negated_coordination_reading(
     coordination = f"{connective}({left}, {right})"
     if reading["scope"] == "distributed_negation":
         proposition = f"and_T(not_T({left}), not_T({right}))"
+    elif reading["scope"] == "disjunction_of_negations":
+        proposition = f"or_T(not_T({left}), not_T({right}))"
     else:
         proposition = f"not_T({coordination})"
     for modifier in reading.get("time_modifiers", []):
@@ -881,61 +907,75 @@ def repeated_do_support_negation_coordination_pipeline(
 ) -> dict[str, Any] | None:
     fronted_adv_modifiers = list(fronted_adv_modifiers or [])
     fronted_time_modifiers = list(fronted_time_modifiers or [])
-    if tokens.count("and") != 1:
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
         return None
-    and_index = tokens.index("and")
-    if and_index <= negation_index + 1 or and_index + 3 >= len(tokens):
+    coordinator, coordinator_index = coordination
+    connective = connective_for_coordinator(coordinator)
+    if coordinator_index <= negation_index + 1 or coordinator_index + 3 >= len(tokens):
         return None
-    if tokens[and_index + 1] not in DO_SUPPORT_AUXILIARIES:
+    if tokens[coordinator_index + 1] not in DO_SUPPORT_AUXILIARIES:
         return None
-    if tokens[and_index + 2] != "not":
+    if tokens[coordinator_index + 2] != "not":
         return None
     left_surface = tokens[negation_index + 1]
-    right_surface = tokens[and_index + 3]
+    right_surface = tokens[coordinator_index + 3]
     if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
         return None
 
     left_clause = negated_coordination_clause_from_tail(
         left_surface,
-        tokens[negation_index + 2 : and_index],
+        tokens[negation_index + 2 : coordinator_index],
         subject,
         fronted_adv_modifiers,
     )
     right_clause = negated_coordination_clause_from_tail(
         right_surface,
-        tokens[and_index + 4 :],
+        tokens[coordinator_index + 4 :],
         subject,
         fronted_adv_modifiers,
     )
     if left_clause is None or right_clause is None:
         return None
     clauses = [left_clause, right_clause]
-    readings = negated_coordination_readings(
-        subject,
-        clauses,
-        fronted_time_modifiers,
-    )
-    distributed_reading = readings[1]
-    type_check = check_negated_coordination_readings(readings)
+    if connective == "or_T":
+        checked_readings = [
+            disjunction_of_negations_reading(
+                subject,
+                clauses,
+                fronted_time_modifiers,
+            )
+        ]
+        exported_reading = checked_readings[0]
+        surface_scope = "disjunction_of_negations"
+    else:
+        checked_readings = negated_coordination_readings(
+            subject,
+            clauses,
+            fronted_time_modifiers,
+        )
+        exported_reading = checked_readings[1]
+        surface_scope = "distributed_negation"
+    type_check = check_negated_coordination_readings(checked_readings)
     type_check = {
         **type_check,
         "reading_count": 1,
-        "surface_scope": "distributed_negation",
+        "surface_scope": surface_scope,
     }
-    typed_replacement = render_negated_coordination_reading(distributed_reading)
-    coq_code = render_negated_coordination_coq([distributed_reading])
+    typed_replacement = render_negated_coordination_reading(exported_reading)
+    coq_code = render_negated_coordination_coq([exported_reading])
     return {
         "kind": "repeated_do_support_negation_coordination",
         "input_sentence": sentence,
         "construction_summary": (
             f"Same subject {subject} coordinates two explicit do-support "
-            "negations, so each typed branch is wrapped in not_T."
+            f"negations with {coordinator}, so each typed branch is wrapped in not_T."
         ),
         "event_semantics": {
             "analysis": "repeated-do-support-negation-coordination",
             "source": sentence,
             "event_style_reference": (
-                "not(P) and not(Q), without introducing Event, Agent, or Theme"
+                f"not(P) {coordinator} not(Q), without introducing Event, Agent, or Theme"
             ),
             "formula": typed_replacement,
         },
@@ -944,7 +984,7 @@ def repeated_do_support_negation_coordination_pipeline(
             "kind": "repeated_do_support_negation_coordination",
             "auxiliary": auxiliary,
             "subject": {"name": subject, "type": "Entity"},
-            "reading": distributed_reading,
+            "reading": exported_reading,
         },
         "type_check": {
             **type_check,
