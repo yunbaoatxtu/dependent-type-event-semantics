@@ -163,8 +163,11 @@ water quickly` becomes `and_T(not_T(eat(1)(in(park), john, bread)),
 drink(1)(quickly, john, water))`. The same rules now require both verbs in a
 transitive coordination slice to be licensed as transitive surface predicates,
 preventing `walk in the park` or `talk quickly` from being compiled as
-entity-object applications. Mixed fronted shared modifiers plus branch-local
-modifiers remain rejected until their scope is licensed explicitly. Scope-
+entity-object applications. Fronted shared modifiers now become a shared
+branch-local prefix, so `In the park John did not eat bread slowly but drank
+water quickly` renders both branches with `in(park)` before their own local
+modifier. Left-branch-internal time modifiers remain rejected until their scope
+is licensed explicitly. Scope-
 ambiguous patterns such as `John did not walk and talk` remain rejected at
 internal type checking rather than being misread as a subject `john_did_not` or
 an object `and_did_not_talk`.

@@ -3248,25 +3248,35 @@ def contrastive_intransitive_do_support_negation(
                 ),
             )
         left_adv_modifiers, left_time_modifiers = left_branch_modifiers
-        if left_time_modifiers or fronted_adv_modifiers:
+        if left_time_modifiers:
             return contrastive_do_support_failure(
                 sentence,
                 subject,
                 tokens[auxiliary_index],
-                "mixed_branch_modifier_under_contrastive_negation",
+                "left_branch_time_modifier_under_contrastive_negation",
                 (
-                    "mixed branch-local and fronted shared modifiers inside contrastive "
+                    "left-branch time modifiers inside contrastive "
                     "do-support negation are not yet supported"
                 ),
                 (
-                    "The parser supports branch-local Adv material on both "
-                    "coordinates, but not an additional fronted shared Adv."
+                    "The parser refuses to assign a branch-internal temporal "
+                    "modifier before a dedicated time-scope rule is implemented."
                 ),
             )
         time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
         clauses = [
-            branch_modifier_clause(left_surface, subject, left_adv_modifiers, True),
-            branch_modifier_clause(right_surface, subject, trailing_adv_modifiers, False),
+            branch_modifier_clause(
+                left_surface,
+                subject,
+                [*fronted_adv_modifiers, *left_adv_modifiers],
+                True,
+            ),
+            branch_modifier_clause(
+                right_surface,
+                subject,
+                [*fronted_adv_modifiers, *trailing_adv_modifiers],
+                False,
+            ),
         ]
         ast = contrastive_branch_modifier_ast(subject, clauses, time_modifiers)
         type_check = check_contrastive_branch_modifier_ast(ast)
@@ -3281,7 +3291,8 @@ def contrastive_intransitive_do_support_negation(
             "construction_summary": (
                 f"Same subject {subject} contrasts not {clauses[0]['predicate']['name']} "
                 f"with local Adv material against {clauses[1]['predicate']['name']} "
-                "with its own branch-local Adv material."
+                "with its own branch-local Adv material; fronted Adv material "
+                "is copied into both branch-local modifier sequences."
             ),
             "event_semantics": {
                 "analysis": "contrastive-do-support-negation",
@@ -3302,7 +3313,8 @@ def contrastive_intransitive_do_support_negation(
                 "note": (
                     "Contrastive do-support negation with a left-branch Adv "
                     "uses branch-local ModifierSeq indices: the negated and "
-                    "positive branches may have independent modifier lengths."
+                    "positive branches may have independent modifier lengths, "
+                    "with fronted Adv material represented as a shared prefix."
                 ),
             },
             "coq_code": coq_code,
@@ -3423,33 +3435,18 @@ def contrastive_transitive_do_support_negation(
     shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     if left_adv_modifiers:
-        if fronted_adv_modifiers:
-            return contrastive_do_support_failure(
-                sentence,
-                subject,
-                tokens[auxiliary_index],
-                "mixed_branch_modifier_under_contrastive_negation",
-                (
-                    "mixed branch-local and fronted shared modifiers inside contrastive "
-                    "do-support negation are not yet supported"
-                ),
-                (
-                    "The parser supports branch-local Adv material on both "
-                    "coordinates, but not an additional fronted shared Adv."
-                ),
-            )
         clauses = [
             branch_modifier_clause(
                 left_surface,
                 subject,
-                left_adv_modifiers,
+                [*fronted_adv_modifiers, *left_adv_modifiers],
                 True,
                 {"name": left_object, "type": object_type_for_transitive_predicate(lemma_verb(left_surface))},
             ),
             branch_modifier_clause(
                 right_surface,
                 subject,
-                trailing_adv_modifiers,
+                [*fronted_adv_modifiers, *trailing_adv_modifiers],
                 False,
                 {"name": right_object, "type": object_type_for_transitive_predicate(lemma_verb(right_surface))},
             ),
@@ -3469,7 +3466,8 @@ def contrastive_transitive_do_support_negation(
                 f"{clauses[0]['predicate']['name']}({left_object} : "
                 f"{clauses[0]['object']['type']}) with local Adv material against "
                 f"{clauses[1]['predicate']['name']}({right_object} : "
-                f"{clauses[1]['object']['type']}) with its own branch-local Adv material."
+                f"{clauses[1]['object']['type']}) with its own branch-local Adv material; "
+                "fronted Adv material is copied into both branch-local modifier sequences."
             ),
             "event_semantics": {
                 "analysis": "contrastive-do-support-negation",
@@ -3491,7 +3489,8 @@ def contrastive_transitive_do_support_negation(
                     "Contrastive transitive do-support negation with a left-branch "
                     "Adv uses branch-local ModifierSeq indices; each coordinate "
                     "may carry its own modifier length while both object lexical "
-                    "types remain checked before Coq."
+                    "types remain checked before Coq. Fronted Adv material becomes "
+                    "a shared prefix in each branch-local sequence."
                 ),
             },
             "coq_code": coq_code,

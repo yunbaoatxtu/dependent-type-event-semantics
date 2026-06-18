@@ -746,9 +746,12 @@ Current type rules:
   as `talk(1)(quickly, john)` or `drink(1)(quickly, john, water)`. Transitive
   coordination rules are additionally gated by the shared surface lexicon's
   transitive-verb list, so intransitive predicates such as `walk` and `talk` do
-  not license pseudo-objects formed from modifiers. Mixed fronted shared Adv
-  material plus branch-local modifiers remains outside the implemented fragment
-  and is rejected before fallback.
+  not license pseudo-objects formed from modifiers. Fronted shared Adv material
+  is represented as a shared prefix in both branch-local modifier lists, e.g.
+  `eat(2)(in(park), slowly, john, bread)` and
+  `drink(2)(in(park), quickly, john, water)`. Left-branch-internal time
+  modifiers remain outside the implemented fragment and are rejected before
+  fallback.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the
