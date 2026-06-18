@@ -23,6 +23,7 @@ from translator.natural_language_pipeline import (
     ConstructionRule,
     check_copular_property_ast,
     check_lexical_state_change_ast,
+    check_negated_coordination_readings,
     check_passive_argument_omission_ast,
     check_perception_nominalization_ast,
     check_predicate_coordination_ast,
@@ -2920,25 +2921,87 @@ class TranslatorTests(unittest.TestCase):
             conflict["type_check"]["errors"],
         )
 
-    def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
-        for sentence in (
-            "John did not walk and talk",
+    def test_do_support_negation_enumerates_ambiguous_coordination(self) -> None:
+        intransitive = run_pipeline("John did not walk and talk", require_coq=True)
+        self.assertTrue(intransitive["ok"])
+        self.assertEqual(
+            intransitive["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertEqual(intransitive["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(intransitive["type_check"]["reading_count"], 2)
+        self.assertIn(
+            "negation_over_conjunction: not_T(and_T(walk(john), talk(john)))",
+            intransitive["dependent_type_translation"],
+        )
+        self.assertIn(
+            "distributed_negation: and_T(not_T(walk(john)), not_T(talk(john)))",
+            intransitive["dependent_type_translation"],
+        )
+        self.assertIn("Definition do_support_negation_wide_scope : Prop :=", intransitive["coq_code"])
+        self.assertIn(
+            "not_T (and_T (walk john) (talk john))",
+            intransitive["coq_code"],
+        )
+        self.assertIn(
+            "and_T (not_T (walk john)) (not_T (talk john))",
+            intransitive["coq_code"],
+        )
+        self.assertNotIn("Parameter Event : Type.", intransitive["coq_code"])
+        self.assertNotIn("Parameter Agent :", intransitive["coq_code"])
+        self.assertNotIn("Parameter Theme :", intransitive["coq_code"])
+        self.assertEqual(intransitive["coq_check"]["status"], "passed")
+
+        transitive = run_pipeline(
             "John did not eat bread and drank water",
-        ):
-            with self.subTest(sentence=sentence):
-                result = run_pipeline(sentence, require_coq=True)
-                self.assertFalse(result["ok"])
-                self.assertEqual(result["kind"], "do_support_negation")
-                self.assertIn(
-                    "do-support negation with coordination is not yet supported",
-                    result["type_check"]["errors"],
-                )
-                self.assertEqual(result["coq_check"]["status"], "skipped")
-                self.assertEqual(
-                    result["conclusion"],
-                    "Translation failed internal type_check before Coq/Rocq validation.",
-                )
-                self.assertNotIn("john_did_not", result.get("dependent_type_translation", ""))
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(
+            transitive["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: "
+                "not_T(and_T(eat(john, bread), drink(john, water)))"
+            ),
+            transitive["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: "
+                "and_T(not_T(eat(john, bread)), not_T(drink(john, water)))"
+            ),
+            transitive["dependent_type_translation"],
+        )
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertIn("Parameter eat : Entity -> Food -> Prop.", transitive["coq_code"])
+        self.assertIn(
+            "Parameter drink : Entity -> Drinkable -> Prop.",
+            transitive["coq_code"],
+        )
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+        for result in (intransitive, transitive):
+            readings = result["ast"]["readings"]
+            self.assertEqual(
+                {reading["scope"] for reading in readings},
+                {"negation_over_conjunction", "distributed_negation"},
+            )
+            for reading in readings:
+                self.assertEqual(reading["subject"]["type"], "Entity")
+
+    def test_do_support_negation_coordination_rejects_duplicate_reading_scope(self) -> None:
+        result = run_pipeline("John did not walk and talk", require_coq=False)
+        readings = result["ast"]["readings"]
+        readings[1]["scope"] = readings[0]["scope"]
+        type_check = check_negated_coordination_readings(readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "negated coordination readings must include wide and distributed negation",
+            type_check["errors"],
+        )
 
     def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
         result = run_pipeline("John walked and talked", require_coq=True)
@@ -5309,7 +5372,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("### `not`", ast_docs)
         self.assertIn("negated: true", ast_docs)
         self.assertIn("Scope-ambiguous", ast_docs)
-        self.assertIn("coordinated do-support negation is still rejected", ast_docs)
+        self.assertIn("do_support_negation_coordination_ambiguity", ast_docs)
+        self.assertIn("negation_over_conjunction", ast_docs)
+        self.assertIn("distributed_negation", ast_docs)
         self.assertIn("Clear contrastive `but` cases", ast_docs)
         self.assertIn("Branch-local Adv modifiers", ast_docs)
         self.assertIn("contrastive_branch_modifier_coordination", ast_docs)

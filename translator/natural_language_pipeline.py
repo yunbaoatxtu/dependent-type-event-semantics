@@ -261,6 +261,325 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def negated_coordination_readings(
+    subject: str,
+    clauses: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "name": "do_support_negation_wide_scope",
+            "scope": "negation_over_conjunction",
+            "subject": {"name": subject, "type": "Entity"},
+            "clauses": clauses,
+        },
+        {
+            "name": "do_support_negation_distributed_scope",
+            "scope": "distributed_negation",
+            "subject": {"name": subject, "type": "Entity"},
+            "clauses": clauses,
+        },
+    ]
+
+
+def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
+    errors: list[str] = []
+    if len(readings) != 2:
+        errors.append(f"expected two negated coordination readings, got {len(readings)}")
+    observed_scopes = {str(reading.get("scope")) for reading in readings}
+    if observed_scopes != {"negation_over_conjunction", "distributed_negation"}:
+        errors.append(
+            "negated coordination readings must include wide and distributed negation"
+        )
+
+    for reading_index, reading in enumerate(readings):
+        subject = reading.get("subject")
+        if not isinstance(subject, dict):
+            errors.append(f"readings[{reading_index}].subject must be an object")
+        else:
+            if subject.get("type") != "Entity":
+                errors.append(f"readings[{reading_index}].subject must have type Entity")
+            if not isinstance(subject.get("name"), str) or not subject.get("name"):
+                errors.append(
+                    f"readings[{reading_index}].subject.name must be non-empty"
+                )
+
+        clauses = reading.get("clauses")
+        if not isinstance(clauses, list) or len(clauses) != 2:
+            errors.append(f"readings[{reading_index}].clauses must contain two items")
+            continue
+        for clause_index, clause in enumerate(clauses):
+            if not isinstance(clause, dict):
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}] must be an object"
+                )
+                continue
+            predicate = clause.get("predicate")
+            if not isinstance(predicate, dict):
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}].predicate must be an object"
+                )
+                continue
+            surface = predicate.get("surface")
+            name = predicate.get("name")
+            if not isinstance(surface, str) or not surface:
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}].predicate.surface must be non-empty"
+                )
+            if not isinstance(name, str) or not name:
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}].predicate.name must be non-empty"
+                )
+            elif surface and lemma_verb(str(surface)) != name:
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}].predicate.name must match its surface lemma"
+                )
+            obj = clause.get("object")
+            if obj is None:
+                expected_type = "Entity -> Prop"
+            elif isinstance(obj, dict):
+                object_name = obj.get("name")
+                object_type = obj.get("type")
+                if not isinstance(object_name, str) or not object_name:
+                    errors.append(
+                        f"readings[{reading_index}].clauses[{clause_index}].object.name must be non-empty"
+                    )
+                if not isinstance(object_type, str) or not object_type:
+                    errors.append(
+                        f"readings[{reading_index}].clauses[{clause_index}].object.type must be non-empty"
+                    )
+                    expected_type = None
+                else:
+                    expected_type = f"Entity -> {object_type} -> Prop"
+            else:
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}].object must be null or object"
+                )
+                expected_type = None
+            if expected_type is not None and predicate.get("predicate_type") != expected_type:
+                errors.append(
+                    f"readings[{reading_index}].clauses[{clause_index}].predicate must have type {expected_type}"
+                )
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+        "reading_count": len(readings),
+    }
+
+
+def render_negated_coordination_clause(
+    clause: dict[str, Any],
+    coq: bool = False,
+) -> str:
+    predicate = clause["predicate"]["name"]
+    subject = clause["subject"]["name"]
+    obj = clause.get("object")
+    if coq:
+        if obj is None:
+            return f"{predicate} {subject}"
+        return f"{predicate} {subject} {obj['name']}"
+    if obj is None:
+        return f"{predicate}({subject})"
+    return f"{predicate}({subject}, {obj['name']})"
+
+
+def render_negated_coordination_reading(
+    reading: dict[str, Any],
+    coq: bool = False,
+) -> str:
+    left = render_negated_coordination_clause(reading["clauses"][0], coq=coq)
+    right = render_negated_coordination_clause(reading["clauses"][1], coq=coq)
+    if coq:
+        conjunction = f"and_T ({left}) ({right})"
+        if reading["scope"] == "negation_over_conjunction":
+            return f"not_T ({conjunction})"
+        return f"and_T (not_T ({left})) (not_T ({right}))"
+    conjunction = f"and_T({left}, {right})"
+    if reading["scope"] == "negation_over_conjunction":
+        return f"not_T({conjunction})"
+    return f"and_T(not_T({left}), not_T({right}))"
+
+
+def render_negated_coordination_coq(
+    readings: list[dict[str, Any]],
+) -> str:
+    clauses = readings[0]["clauses"]
+    subject = readings[0]["subject"]["name"]
+    object_types = list(
+        dict.fromkeys(
+            clause["object"]["type"]
+            for clause in clauses
+            if isinstance(clause.get("object"), dict)
+            and clause["object"]["type"] != "Entity"
+        )
+    )
+    object_declarations = unique_typed_declarations([
+        (clause["object"]["name"], clause["object"]["type"])
+        for clause in clauses
+        if isinstance(clause.get("object"), dict)
+    ])
+    predicate_declarations = unique_typed_declarations([
+        (clause["predicate"]["name"], clause["predicate"]["predicate_type"])
+        for clause in clauses
+    ])
+    lines = [
+        "(* Scope ambiguity for do-support negation over coordination. *)",
+        "Parameter Entity : Type.",
+    ]
+    lines.extend(f"Parameter {object_type} : Type." for object_type in object_types)
+    lines.extend(
+        [
+            "",
+            f"Parameter {subject} : Entity.",
+        ]
+    )
+    lines.extend(f"Parameter {name} : {type_name}." for name, type_name in object_declarations)
+    lines.extend(
+        f"Parameter {name} : {predicate_type}."
+        for name, predicate_type in predicate_declarations
+    )
+    lines.extend(
+        [
+            "Parameter not_T : Prop -> Prop.",
+            "Parameter and_T : Prop -> Prop -> Prop.",
+            "",
+        ]
+    )
+    for reading in readings:
+        lines.extend(
+            [
+                f"Definition {reading['name']} : Prop :=",
+                f"  {render_negated_coordination_reading(reading, coq=True)}.",
+                "",
+            ]
+        )
+    lines.extend(f"Check {reading['name']}." for reading in readings)
+    lines.append("")
+    return "\n".join(lines)
+
+
+def ambiguous_do_support_coordination_pipeline(
+    sentence: str,
+    tokens: list[str],
+    negation_index: int,
+    auxiliary: str,
+    subject: str,
+) -> dict[str, Any] | None:
+    if tokens.count("and") != 1:
+        return None
+    and_index = tokens.index("and")
+    if and_index <= negation_index + 1 or and_index + 1 >= len(tokens):
+        return None
+    left_surface = tokens[negation_index + 1]
+    right_surface = tokens[and_index + 1]
+    if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
+        return None
+
+    clauses: list[dict[str, Any]]
+    left_object_tokens = tokens[negation_index + 2 : and_index]
+    right_object_tokens = tokens[and_index + 2 :]
+    if not left_object_tokens and not right_object_tokens:
+        clauses = [
+            {
+                "predicate": {
+                    "surface": left_surface,
+                    "name": lemma_verb(left_surface),
+                    "predicate_type": "Entity -> Prop",
+                },
+                "subject": {"name": subject, "type": "Entity"},
+                "object": None,
+            },
+            {
+                "predicate": {
+                    "surface": right_surface,
+                    "name": lemma_verb(right_surface),
+                    "predicate_type": "Entity -> Prop",
+                },
+                "subject": {"name": subject, "type": "Entity"},
+                "object": None,
+            },
+        ]
+    elif (
+        left_object_tokens
+        and right_object_tokens
+        and is_likely_transitive_verb(left_surface)
+        and is_likely_transitive_verb(right_surface)
+    ):
+        left_object = clean_phrase(left_object_tokens)
+        right_object = clean_phrase(right_object_tokens)
+        if left_object == "entity" or right_object == "entity":
+            return None
+        left_predicate = lemma_verb(left_surface)
+        right_predicate = lemma_verb(right_surface)
+        left_object_type = object_type_for_transitive_predicate(left_predicate)
+        right_object_type = object_type_for_transitive_predicate(right_predicate)
+        clauses = [
+            {
+                "predicate": {
+                    "surface": left_surface,
+                    "name": left_predicate,
+                    "predicate_type": f"Entity -> {left_object_type} -> Prop",
+                },
+                "subject": {"name": subject, "type": "Entity"},
+                "object": {"name": left_object, "type": left_object_type},
+            },
+            {
+                "predicate": {
+                    "surface": right_surface,
+                    "name": right_predicate,
+                    "predicate_type": f"Entity -> {right_object_type} -> Prop",
+                },
+                "subject": {"name": subject, "type": "Entity"},
+                "object": {"name": right_object, "type": right_object_type},
+            },
+        ]
+    else:
+        return None
+
+    readings = negated_coordination_readings(subject, clauses)
+    type_check = check_negated_coordination_readings(readings)
+    dependent_type_translation = "\n".join(
+        f"{reading['scope']}: {render_negated_coordination_reading(reading)}"
+        for reading in readings
+    )
+    coq_code = render_negated_coordination_coq(readings)
+    return {
+        "kind": "do_support_negation_coordination_ambiguity",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Do-support negation with {auxiliary} not scopes ambiguously over "
+            "coordination; both wide and distributed negation readings are exported."
+        ),
+        "event_semantics": {
+            "analysis": "do-support-negation-coordination-ambiguity",
+            "source": sentence,
+            "event_style_reference": (
+                "not(P and Q) versus not(P) and not(Q), without introducing Event"
+            ),
+            "readings": [
+                {**reading, "formula": render_negated_coordination_reading(reading)}
+                for reading in readings
+            ],
+        },
+        "dependent_type_translation": dependent_type_translation,
+        "ast": {
+            "kind": "do_support_negation_coordination_ambiguity",
+            "auxiliary": auxiliary,
+            "subject": {"name": subject, "type": "Entity"},
+            "readings": readings,
+        },
+        "type_check": {
+            **type_check,
+            "note": (
+                "Ambiguous do-support negation over coordination is represented "
+                "as two typed propositions rather than collapsed into one formula."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     negation_index = None
@@ -289,6 +608,15 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
         coordinated = coordinated_do_support_negation_pipeline(sentence)
         if coordinated is not None:
             return coordinated
+        ambiguous_coordination = ambiguous_do_support_coordination_pipeline(
+            sentence,
+            tokens,
+            negation_index,
+            auxiliary,
+            subject,
+        )
+        if ambiguous_coordination is not None:
+            return ambiguous_coordination
         return {
             "kind": "do_support_negation",
             "input_sentence": sentence,

@@ -729,8 +729,11 @@ Current type rules:
   this constructor. Right-branch coordinated do-support negation, as in `John
   walked and did not talk`, records `negated: true` on the second checked
   coordinate and renders `and_T(walk(john), not_T(talk(john)))`. Scope-ambiguous
-  coordinated do-support negation is still rejected before fallback so it cannot
-  be misread as a malformed subject or object.
+  coordinated do-support negation, as in `John did not walk and talk`, is
+  represented by `do_support_negation_coordination_ambiguity` with two readings:
+  `negation_over_conjunction` renders `not_T(and_T(walk(john), talk(john)))`,
+  while `distributed_negation` renders
+  `and_T(not_T(walk(john)), not_T(talk(john)))`.
   Time modifiers scope over the resulting conjunction, and shared Adv modifiers
   remain typed modifier entries rather than entities.
   Clear contrastive `but` cases use the same local marker on the first

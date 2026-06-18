@@ -169,10 +169,10 @@ water quickly` renders both branches with `in(park)` before their own local
 modifier. Left-branch-internal time modifiers now remain inside their own
 branch, so `John did not eat bread yesterday but drank water quickly` becomes
 `and_T(not_T(at_T(yesterday, eat(0)(john, bread))), drink(1)(quickly, john,
-water))`. Scope-
-ambiguous patterns such as `John did not walk and talk` remain rejected at
-internal type checking rather than being misread as a subject `john_did_not` or
-an object `and_did_not_talk`.
+water))`. Scope-ambiguous patterns such as `John did not walk and talk` are now
+returned as two explicit readings, `not_T(and_T(walk(john), talk(john)))` and
+`and_T(not_T(walk(john)), not_T(talk(john)))`, rather than being misread as a
+subject `john_did_not` or an object `and_did_not_talk`.
 Simple copular coordination is structured with `and_T`: `Mary is happy and
 calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,
 and `Mary is happy and very calm` keeps the degree only on the second conjunct.
