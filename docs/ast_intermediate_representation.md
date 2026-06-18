@@ -745,9 +745,12 @@ Current type rules:
   of the subject: `Yesterday John did not walk and talk` stores `john` as the
   subject and wraps both readings in `at_T(yesterday, ...)`, while `In the park
   John did not walk and talk` copies `in(park) : Adv` into both branch-local
-  modifier vectors. Time modifiers scope over the resulting proposition, and
-  Adv modifiers remain typed modifier entries rather than entities or
-  object-name suffixes.
+  modifier vectors. The do-support ambiguity entry alternates over the fronted
+  prefix, so mixed orders such as `In the park yesterday John did not walk and
+  talk` still keep `john` as the subject, `in(park)` as shared `Adv`, and
+  `yesterday` as a proposition-level time operator. Time modifiers scope over
+  the resulting proposition, and Adv modifiers remain typed modifier entries
+  rather than entities or object-name suffixes.
   Clear contrastive `but` cases use the same local marker on the first
   coordinate: `John did not walk but talked` renders as
   `and_T(not_T(walk(john)), talk(john))`.

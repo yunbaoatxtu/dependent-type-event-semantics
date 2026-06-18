@@ -3243,6 +3243,36 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(fronted_adv["coq_check"]["status"], "passed")
 
+        mixed_fronted = run_pipeline(
+            "In the park yesterday John did not walk and talk",
+            require_coq=True,
+        )
+        self.assertTrue(mixed_fronted["ok"])
+        self.assertEqual(
+            mixed_fronted["ast"]["subject"],
+            {"name": "john", "type": "Entity"},
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: at_T(yesterday, not_T(and_T("
+                "walk(1)(in(park), john), talk(1)(in(park), john))))"
+            ),
+            mixed_fronted["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: at_T(yesterday, and_T("
+                "not_T(walk(1)(in(park), john)), "
+                "not_T(talk(1)(in(park), john))))"
+            ),
+            mixed_fronted["dependent_type_translation"],
+        )
+        self.assertNotIn("yesterday_john", mixed_fronted["dependent_type_translation"])
+        self.assertNotIn("in_park_yesterday_john", mixed_fronted["dependent_type_translation"])
+        self.assertIn("Parameter in_park : Adv.", mixed_fronted["coq_code"])
+        self.assertIn("Parameter yesterday : Entity.", mixed_fronted["coq_code"])
+        self.assertEqual(mixed_fronted["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
         result = run_pipeline("John walked and talked", require_coq=True)
         self.assertTrue(result["ok"])
