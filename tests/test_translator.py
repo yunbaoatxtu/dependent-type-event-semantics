@@ -4395,6 +4395,40 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("hygiene: passed", page)
         self.assertIn("Coq/Rocq Check", page)
 
+    def test_api_and_page_report_ambiguous_do_support_negation_readings(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+did+not+walk+and+talk&require_coq=1",
+        )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertEqual(result["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(result["type_check"]["reading_count"], 2)
+        self.assertIn(
+            "negation_over_conjunction: not_T(and_T(walk(john), talk(john)))",
+            result["dependent_type_translation"],
+        )
+        self.assertIn(
+            "distributed_negation: and_T(not_T(walk(john)), not_T(talk(john)))",
+            result["dependent_type_translation"],
+        )
+
+        page = render_page("John did not walk and talk", require_coq=True)
+        self.assertIn("Translation verified", page)
+        self.assertIn("do_support_negation_coordination_ambiguity", page)
+        self.assertIn("negation_over_conjunction", page)
+        self.assertIn("distributed_negation", page)
+        self.assertIn("not_T(and_T(walk(john), talk(john)))", page)
+        self.assertIn("and_T(not_T(walk(john)), not_T(talk(john)))", page)
+        self.assertIn("do_support_negation_wide_scope", page)
+        self.assertIn("do_support_negation_distributed_scope", page)
+
     def test_page_reports_contrastive_negation_shared_adv_success(self) -> None:
         page = render_page("John did not walk but talked in the park", require_coq=True)
         self.assertIn("Translation verified", page)
