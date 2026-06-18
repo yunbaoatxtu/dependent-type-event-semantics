@@ -548,6 +548,7 @@ def branch_modifier_clause(
     modifiers: list[dict[str, Any]],
     negated: bool,
     obj: dict[str, str] | None = None,
+    time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     predicate = lemma_verb(surface)
     if obj is None:
@@ -566,6 +567,7 @@ def branch_modifier_clause(
         "subject": {"name": subject, "type": "Entity"},
         "object": obj,
         "modifiers": modifiers,
+        "time_modifiers": list(time_modifiers or []),
         "negated": negated,
     }
 
@@ -618,6 +620,17 @@ def check_contrastive_branch_modifier_ast(ast: dict[str, Any]) -> dict[str, Any]
                 modifiers,
                 f"contrastive branch modifier clauses[{index}]",
             )
+            time_modifiers = clause.get("time_modifiers", [])
+            if not isinstance(time_modifiers, list):
+                errors.append(
+                    f"contrastive branch modifier clauses[{index}].time_modifiers must be a list"
+                )
+            else:
+                check_time_modifiers(
+                    errors,
+                    time_modifiers,
+                    f"contrastive branch modifier clauses[{index}]",
+                )
             predicate = clause.get("predicate")
             if not isinstance(predicate, dict):
                 errors.append(
@@ -741,6 +754,8 @@ def render_branch_clause_translation(clause: dict[str, Any]) -> str:
         )
     else:
         term = f"{predicate}(0)({subject}, {obj['name']})"
+    for modifier in clause.get("time_modifiers", []):
+        term = f"{modifier['operator']}_T({modifier['argument']}, {term})"
     return wrap_negated_translation(term, bool(clause.get("negated")))
 
 
@@ -758,6 +773,8 @@ def render_branch_clause_coq(clause: dict[str, Any]) -> str:
             f"{predicate} {modifier_count} {modifier_sequence} "
             f"{subject} {obj['name']}"
         )
+    for modifier in clause.get("time_modifiers", []):
+        term = f"{modifier['operator']}_T {modifier['argument']} ({term})"
     return wrap_negated_coq(term, bool(clause.get("negated")))
 
 
@@ -827,11 +844,19 @@ def render_contrastive_branch_modifier_coq(
             "Parameter and_T : PropT -> PropT -> PropT.",
         ]
     )
-    if ast["time_modifiers"]:
+    all_time_modifiers = [
+        *ast["time_modifiers"],
+        *[
+            modifier
+            for clause in clauses
+            for modifier in clause.get("time_modifiers", [])
+        ],
+    ]
+    if all_time_modifiers:
         lines.extend(
             f"Parameter {name} : Entity."
             for name in unique_names([
-                modifier["argument"] for modifier in ast["time_modifiers"]
+                modifier["argument"] for modifier in all_time_modifiers
             ])
         )
         lines.extend(
@@ -2132,6 +2157,28 @@ def check_coordination_modifiers(
             errors.append(f"{context} modifiers[{index}].surface_lexicon must match modifier")
 
 
+def check_time_modifiers(
+    errors: list[str],
+    modifiers: Any,
+    context: str,
+) -> None:
+    if not isinstance(modifiers, list):
+        errors.append(f"{context} time_modifiers must be a list")
+        return
+    for index, modifier in enumerate(modifiers):
+        if not isinstance(modifier, dict):
+            errors.append(f"{context} time_modifiers[{index}] must be an object")
+            continue
+        if modifier.get("operator") not in {"at", "during"}:
+            errors.append(
+                f"{context} time_modifiers[{index}].operator must be at or during"
+            )
+        if not isinstance(modifier.get("argument"), str) or not modifier.get("argument"):
+            errors.append(
+                f"{context} time_modifiers[{index}].argument must be non-empty"
+            )
+
+
 def readable_modifier_arguments(modifiers: list[dict[str, Any]]) -> str:
     return ", ".join(str(modifier["expression"]) for modifier in modifiers)
 
@@ -3248,21 +3295,6 @@ def contrastive_intransitive_do_support_negation(
                 ),
             )
         left_adv_modifiers, left_time_modifiers = left_branch_modifiers
-        if left_time_modifiers:
-            return contrastive_do_support_failure(
-                sentence,
-                subject,
-                tokens[auxiliary_index],
-                "left_branch_time_modifier_under_contrastive_negation",
-                (
-                    "left-branch time modifiers inside contrastive "
-                    "do-support negation are not yet supported"
-                ),
-                (
-                    "The parser refuses to assign a branch-internal temporal "
-                    "modifier before a dedicated time-scope rule is implemented."
-                ),
-            )
         time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
         clauses = [
             branch_modifier_clause(
@@ -3270,6 +3302,7 @@ def contrastive_intransitive_do_support_negation(
                 subject,
                 [*fronted_adv_modifiers, *left_adv_modifiers],
                 True,
+                time_modifiers=left_time_modifiers,
             ),
             branch_modifier_clause(
                 right_surface,
@@ -3311,10 +3344,10 @@ def contrastive_intransitive_do_support_negation(
             "type_check": {
                 **type_check,
                 "note": (
-                    "Contrastive do-support negation with a left-branch Adv "
-                    "uses branch-local ModifierSeq indices: the negated and "
-                    "positive branches may have independent modifier lengths, "
-                    "with fronted Adv material represented as a shared prefix."
+                    "Contrastive do-support negation with branch-local Adv or "
+                    "time material uses branch-local ModifierSeq indices and "
+                    "clause-local time_modifiers; fronted Adv material is "
+                    "represented as a shared prefix."
                 ),
             },
             "coq_code": coq_code,
@@ -3407,21 +3440,6 @@ def contrastive_transitive_do_support_negation(
     if left_tail is None:
         return None
     left_object_tokens, left_adv_modifiers, left_time_modifiers = left_tail
-    if left_time_modifiers:
-        return contrastive_do_support_failure(
-            sentence,
-            subject,
-            tokens[auxiliary_index],
-            "left_branch_time_modifier_under_contrastive_negation",
-            (
-                "left-branch time modifiers inside contrastive do-support negation "
-                "are not yet supported"
-            ),
-            (
-                "The parser refuses to collapse a left-branch temporal modifier "
-                "into the object name before a dedicated scope rule is implemented."
-            ),
-        )
     left_object = clean_phrase(left_object_tokens)
     if left_object == "entity":
         return None
@@ -3434,7 +3452,7 @@ def contrastive_transitive_do_support_negation(
         return None
     shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
-    if left_adv_modifiers:
+    if left_adv_modifiers or left_time_modifiers:
         clauses = [
             branch_modifier_clause(
                 left_surface,
@@ -3442,6 +3460,7 @@ def contrastive_transitive_do_support_negation(
                 [*fronted_adv_modifiers, *left_adv_modifiers],
                 True,
                 {"name": left_object, "type": object_type_for_transitive_predicate(lemma_verb(left_surface))},
+                time_modifiers=left_time_modifiers,
             ),
             branch_modifier_clause(
                 right_surface,
@@ -3486,11 +3505,12 @@ def contrastive_transitive_do_support_negation(
             "type_check": {
                 **type_check,
                 "note": (
-                    "Contrastive transitive do-support negation with a left-branch "
-                    "Adv uses branch-local ModifierSeq indices; each coordinate "
-                    "may carry its own modifier length while both object lexical "
-                    "types remain checked before Coq. Fronted Adv material becomes "
-                    "a shared prefix in each branch-local sequence."
+                    "Contrastive transitive do-support negation with branch-local "
+                    "Adv or time material uses branch-local ModifierSeq indices "
+                    "and clause-local time_modifiers; each coordinate may carry "
+                    "its own modifier length while both object lexical types remain "
+                    "checked before Coq. Fronted Adv material becomes a shared "
+                    "prefix in each branch-local sequence."
                 ),
             },
             "coq_code": coq_code,

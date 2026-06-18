@@ -2715,6 +2715,29 @@ class TranslatorTests(unittest.TestCase):
             both_branch_local_location["coq_code"],
         )
 
+        left_branch_time_location = run_pipeline(
+            "John did not walk yesterday but talked quickly",
+            require_coq=True,
+        )
+        self.assertTrue(left_branch_time_location["ok"])
+        self.assertEqual(
+            left_branch_time_location["ast"]["kind"],
+            "contrastive_branch_modifier_coordination",
+        )
+        self.assertEqual(
+            left_branch_time_location["dependent_type_translation"],
+            "and_T(not_T(at_T(yesterday, walk(0)(john))), talk(1)(quickly, john))",
+        )
+        self.assertEqual(
+            left_branch_time_location["ast"]["clauses"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn(
+            "and_T (not_T (at_T yesterday (walk 0 mods_nil john))) "
+            "(talk 1 (mods_cons 0 quickly mods_nil) john)",
+            left_branch_time_location["coq_code"],
+        )
+
         fronted_and_branch_local_location = run_pipeline(
             "In the park John did not walk slowly but talked quickly",
             require_coq=True,
@@ -2848,6 +2871,45 @@ class TranslatorTests(unittest.TestCase):
             transitive_fronted_and_branch_local_location["coq_code"],
         )
 
+        transitive_left_branch_time_location = run_pipeline(
+            "John did not eat bread yesterday but drank water quickly",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_left_branch_time_location["ok"])
+        self.assertEqual(
+            transitive_left_branch_time_location["ast"]["kind"],
+            "contrastive_branch_modifier_coordination",
+        )
+        self.assertEqual(
+            transitive_left_branch_time_location["dependent_type_translation"],
+            (
+                "and_T(not_T(at_T(yesterday, eat(0)(john, bread))), "
+                "drink(1)(quickly, john, water))"
+            ),
+        )
+        self.assertEqual(
+            transitive_left_branch_time_location["ast"]["clauses"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn(
+            "and_T (not_T (at_T yesterday (eat 0 mods_nil john bread))) "
+            "(drink 1 (mods_cons 0 quickly mods_nil) john water)",
+            transitive_left_branch_time_location["coq_code"],
+        )
+
+        transitive_fronted_and_left_time_location = run_pipeline(
+            "In the park John did not eat bread yesterday but drank water quickly",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_fronted_and_left_time_location["ok"])
+        self.assertEqual(
+            transitive_fronted_and_left_time_location["dependent_type_translation"],
+            (
+                "and_T(not_T(at_T(yesterday, eat(1)(in(park), john, bread))), "
+                "drink(2)(in(park), quickly, john, water))"
+            ),
+        )
+
     def test_do_support_negation_rejects_bad_contrastive_but_before_fallback(self) -> None:
         conflict = run_pipeline("John did not eat bread but drank bread", require_coq=True)
         self.assertFalse(conflict["ok"])
@@ -2856,32 +2918,6 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "transitive predicate coordination object bread has conflicting lexical types: Food vs Drinkable",
             conflict["type_check"]["errors"],
-        )
-
-        left_branch_time_modifier = run_pipeline(
-            "John did not eat bread yesterday but drank water quickly",
-            require_coq=True,
-        )
-        self.assertFalse(left_branch_time_modifier["ok"])
-        self.assertEqual(
-            left_branch_time_modifier["kind"],
-            "contrastive_do_support_negation",
-        )
-        self.assertEqual(
-            left_branch_time_modifier["ast"]["unsupported"],
-            "left_branch_time_modifier_under_contrastive_negation",
-        )
-        self.assertIn(
-            (
-                "left-branch time modifiers inside contrastive "
-                "do-support negation are not yet supported"
-            ),
-            left_branch_time_modifier["type_check"]["errors"],
-        )
-        self.assertEqual(left_branch_time_modifier["coq_check"]["status"], "skipped")
-        self.assertNotIn(
-            "bread_yesterday",
-            left_branch_time_modifier.get("dependent_type_translation", ""),
         )
 
     def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
@@ -5277,6 +5313,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Clear contrastive `but` cases", ast_docs)
         self.assertIn("Branch-local Adv modifiers", ast_docs)
         self.assertIn("contrastive_branch_modifier_coordination", ast_docs)
+        self.assertIn("Branch-internal time modifiers", ast_docs)
+        self.assertIn("clause in `time_modifiers`", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Prop"', ast_docs)
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)
