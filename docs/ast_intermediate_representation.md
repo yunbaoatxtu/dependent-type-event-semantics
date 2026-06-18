@@ -739,7 +739,9 @@ Current type rules:
   Shared modifiers are preserved for those clear contrastive readings as well,
   so `John did not walk but talked in the park` records `in(park) : Adv` instead
   of introducing an entity-like object. Left-branch-only modifiers remain outside
-  the implemented fragment and are rejected before fallback.
+  the implemented fragment and are rejected before fallback with an explicit
+  `unsupported` value rather than being folded into an object such as
+  `bread_in_park`.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the

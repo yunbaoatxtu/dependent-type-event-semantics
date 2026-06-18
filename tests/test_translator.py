@@ -2674,15 +2674,37 @@ class TranslatorTests(unittest.TestCase):
             require_coq=True,
         )
         self.assertFalse(left_internal_modifier["ok"])
-        self.assertEqual(left_internal_modifier["kind"], "do_support_negation")
+        self.assertEqual(left_internal_modifier["kind"], "contrastive_do_support_negation")
+        self.assertEqual(
+            left_internal_modifier["ast"]["unsupported"],
+            "left_branch_modifier_under_contrastive_negation",
+        )
         self.assertIn(
-            "do-support negation with contrastive coordination is not yet supported",
+            "left-branch modifiers inside contrastive do-support negation are not yet supported",
             left_internal_modifier["type_check"]["errors"],
         )
         self.assertEqual(left_internal_modifier["coq_check"]["status"], "skipped")
         self.assertNotIn(
             "bread_in_park",
             left_internal_modifier.get("dependent_type_translation", ""),
+        )
+
+        intransitive_left_internal_modifier = run_pipeline(
+            "John did not walk in the park but talked",
+            require_coq=True,
+        )
+        self.assertFalse(intransitive_left_internal_modifier["ok"])
+        self.assertEqual(
+            intransitive_left_internal_modifier["kind"],
+            "contrastive_do_support_negation",
+        )
+        self.assertEqual(
+            intransitive_left_internal_modifier["ast"]["unsupported"],
+            "left_branch_material_under_contrastive_negation",
+        )
+        self.assertIn(
+            "left-branch modifiers or objects inside contrastive do-support negation are not yet supported",
+            intransitive_left_internal_modifier["type_check"]["errors"],
         )
 
     def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:

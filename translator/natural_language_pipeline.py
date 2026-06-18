@@ -502,6 +502,45 @@ def contrastive_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | 
     )
 
 
+def contrastive_do_support_failure(
+    sentence: str,
+    subject: str,
+    auxiliary: str,
+    unsupported: str,
+    error: str,
+    note: str,
+) -> dict[str, Any]:
+    return {
+        "kind": "contrastive_do_support_negation",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Contrastive do-support negation with {auxiliary} not was detected, "
+            "but this surface pattern is outside the controlled fragment."
+        ),
+        "event_semantics": {
+            "analysis": "contrastive-do-support-negation",
+            "source": sentence,
+            "event_style_reference": (
+                "not(exists e1. P(e1) ...) and exists e2. Q(e2) ..."
+            ),
+        },
+        "dependent_type_translation": "",
+        "ast": {
+            "kind": "contrastive_do_support_negation",
+            "auxiliary": auxiliary,
+            "subject": {"name": subject, "type": "Entity"},
+            "unsupported": unsupported,
+        },
+        "type_check": {
+            "ok": False,
+            "type": None,
+            "errors": [error],
+            "note": note,
+        },
+        "coq_code": "",
+    }
+
+
 def timed_after_ast(
     first_predicate: str,
     first_theme: str,
@@ -2868,7 +2907,21 @@ def contrastive_intransitive_do_support_negation(
     if subject == "entity":
         return None
     if tokens[negation_index + 2 : but_index]:
-        return None
+        return contrastive_do_support_failure(
+            sentence,
+            subject,
+            tokens[auxiliary_index],
+            "left_branch_material_under_contrastive_negation",
+            (
+                "left-branch modifiers or objects inside contrastive "
+                "do-support negation are not yet supported"
+            ),
+            (
+                "Material between the negated predicate and but is not folded "
+                "into a subject or object; add a dedicated construction before "
+                "exporting this sentence."
+            ),
+        )
     trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[but_index + 2 :])
     if trailing_modifiers is None:
         return None
@@ -2957,7 +3010,20 @@ def contrastive_transitive_do_support_negation(
         return None
     left_object_tokens, left_adv_modifiers, left_time_modifiers = left_tail
     if left_adv_modifiers or left_time_modifiers:
-        return None
+        return contrastive_do_support_failure(
+            sentence,
+            subject,
+            tokens[auxiliary_index],
+            "left_branch_modifier_under_contrastive_negation",
+            (
+                "left-branch modifiers inside contrastive do-support negation "
+                "are not yet supported"
+            ),
+            (
+                "The parser refuses to collapse a left-branch modifier into the "
+                "object name before a dedicated scope rule is implemented."
+            ),
+        )
     left_object = clean_phrase(left_object_tokens)
     if left_object == "entity":
         return None
