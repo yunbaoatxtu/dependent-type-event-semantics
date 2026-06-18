@@ -632,6 +632,54 @@ subjects and the object: `John and Mary ate bread in the park yesterday` renders
 as `at_T(yesterday, and_T(eat(1)(in(park), john, bread), eat(1)(in(park), mary,
 bread)))`.
 
+### `object_coordination`
+
+Represents one subject and one transitive predicate distributed over two typed
+objects, such as `Mary visited Paris and London`, `Mary visited Paris or
+London`, or `Mary visited both Paris and London`:
+
+```json
+{
+  "kind": "object_coordination",
+  "subject": {
+    "name": "mary",
+    "type": "Entity"
+  },
+  "predicate": {
+    "surface": "visited",
+    "name": "visit",
+    "predicate_type": "Entity -> Entity -> Prop"
+  },
+  "objects": [
+    {
+      "name": "paris",
+      "type": "Entity"
+    },
+    {
+      "name": "london",
+      "type": "Entity"
+    }
+  ],
+  "modifiers": [],
+  "connective": "and_T",
+  "connective_type": "Prop -> Prop -> Prop",
+  "time_modifiers": []
+}
+```
+
+Renders as:
+
+```text
+and_T(visit(mary, paris), visit(mary, london))
+```
+
+The object-level marker `both` is stripped only when it marks an `and`
+coordination before the first object, so `Mary visited both Paris and London`
+does not construct `both_paris`. Shared Adv and time material scope over the
+distributed object formula: `Mary visited Paris and London in the park yesterday`
+renders as `at_T(yesterday, and_T(visit(1)(in(park), mary, paris),
+visit(1)(in(park), mary, london)))`.
+
 ### `predicate_coordination`
 
 Represents same-subject intransitive predicate coordination such as `John walked
@@ -796,8 +844,8 @@ Multiple shared modifiers remain order-sensitive here as well; for example,
 because fronted and trailing shared modifiers are concatenated before Coq export.
 
 This construction is deliberately separate from object coordination. `Mary
-visited Paris and London` remains an ordinary transitive fallback with
-`paris_and_london` as the Theme, not a VP coordination.
+visited Paris and London` is handled by `object_coordination`, not as VP
+coordination.
 
 Repeated semantic occurrences are not treated as repeated declarations. Thus
 `John ate bread and ate bread` keeps two conjuncts in the formula but exports
@@ -939,6 +987,10 @@ Current type rules:
 - `transitive_subject_coordination` has type `Prop` when exactly two subjects
   have type `Entity`, the shared object has a stable lexical type, and the
   shared predicate has type `Entity -> ObjectType -> Prop` or, with shared `Adv`
+  modifiers, `forall n : nat, ModifierSeq n -> Entity -> ObjectType -> PropT`.
+- `object_coordination` has type `Prop` when the subject has type `Entity`, both
+  coordinated objects share the predicate's lexical object type, and the shared
+  predicate has type `Entity -> ObjectType -> Prop` or, with shared `Adv`
   modifiers, `forall n : nat, ModifierSeq n -> Entity -> ObjectType -> PropT`.
 - `transitive_predicate_coordination` has type `Prop` when the shared subject has
   type `Entity`, each clause supplies an object with a stable lexical type, and

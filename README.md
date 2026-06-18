@@ -201,8 +201,8 @@ talked` and `John either walked or talked` both become
 `or_T(walk(john), talk(john))`, while `John both walked and talked` becomes
 `and_T(walk(john), talk(john))`; the surface markers `either` and `both` are
 not folded into the subject. This rule is intentionally
-narrow: object coordination such as `Mary visited Paris and London` remains a
-transitive fallback case rather than a predicate-coordination reading.
+narrow: object coordination such as `Mary visited Paris and London` is handled
+by its own object-coordination rule rather than by predicate coordination.
 Fronted and trailing non-temporal prepositional phrases stay in the Luo-Shi
 modifier layer:
 `In the park John walked and talked` becomes
@@ -253,6 +253,15 @@ does the same, so `Yesterday John ate bread and drank water` no longer creates
 the malformed subject `yesterday_john`. This rule also stays separate from
 object coordination: `Mary visited Paris and London` is not treated as two verb
 phrases.
+Object coordination keeps one subject and predicate while distributing over two
+typed objects. `Mary visited Paris and London` becomes
+`and_T(visit(mary, paris), visit(mary, london))`, and `Mary visited Paris or
+London` becomes `or_T(visit(mary, paris), visit(mary, london))`; the marked
+object form `Mary visited both Paris and London` strips `both` rather than
+constructing `both_paris`. Shared modifier/time material scopes over the
+distributed object formula, so `Mary visited Paris and London in the park
+yesterday` becomes `at_T(yesterday, and_T(visit(1)(in(park), mary, paris),
+visit(1)(in(park), mary, london)))`.
 The same shared-Adv treatment applies to fronted and trailing locations in this
 transitive coordination slice: `In the park John ate bread and drank water` and
 `John ate bread and drank water in the park` both become

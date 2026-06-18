@@ -4002,18 +4002,10 @@ class TranslatorTests(unittest.TestCase):
         result = run_pipeline("Mary visited Paris and London", require_coq=False)
         self.assertTrue(result["ok"])
         self.assertNotEqual(result.get("kind"), "predicate_coordination")
+        self.assertEqual(result.get("kind"), "object_coordination")
         self.assertEqual(
             result["dependent_type_translation"],
-            "visit(0)(mary, paris_and_london)",
-        )
-        self.assertEqual(
-            result["ast"]["role_frame"]["roles"][1],
-            {
-                "role": "Theme",
-                "value": "paris_and_london",
-                "type": "Entity",
-                "source": "explicit",
-            },
+            "and_T(visit(mary, paris), visit(mary, london))",
         )
 
     def test_predicate_coordination_rejects_bad_predicate_type(self) -> None:
@@ -4421,10 +4413,69 @@ class TranslatorTests(unittest.TestCase):
         result = run_pipeline("Mary visited Paris and London", require_coq=False)
         self.assertTrue(result["ok"])
         self.assertNotEqual(result.get("kind"), "transitive_predicate_coordination")
+        self.assertEqual(result.get("kind"), "object_coordination")
         self.assertEqual(
             result["dependent_type_translation"],
-            "visit(0)(mary, paris_and_london)",
+            "and_T(visit(mary, paris), visit(mary, london))",
         )
+
+    def test_object_coordination_shares_subject_and_transitive_predicate(self) -> None:
+        cases = (
+            (
+                "Mary visited Paris and London",
+                "and_T(visit(mary, paris), visit(mary, london))",
+                "and_T",
+            ),
+            (
+                "Mary visited both Paris and London",
+                "and_T(visit(mary, paris), visit(mary, london))",
+                "and_T",
+            ),
+            (
+                "Mary visited Paris or London",
+                "or_T(visit(mary, paris), visit(mary, london))",
+                "or_T",
+            ),
+        )
+        for sentence, expected_translation, expected_connective in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "object_coordination")
+                self.assertEqual(result["construction_rule"]["id"], "object_coordination")
+                self.assertEqual(result["ast"]["connective"], expected_connective)
+                self.assertEqual(result["ast"]["subject"], {"name": "mary", "type": "Entity"})
+                self.assertEqual(
+                    result["ast"]["objects"],
+                    [{"name": "paris", "type": "Entity"}, {"name": "london", "type": "Entity"}],
+                )
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                self.assertIn("Parameter mary : Entity.", result["coq_code"])
+                self.assertIn("Parameter paris : Entity.", result["coq_code"])
+                self.assertIn("Parameter london : Entity.", result["coq_code"])
+                self.assertIn("Parameter visit : Entity -> Entity -> Prop.", result["coq_code"])
+                self.assertNotIn("paris_and_london", result["dependent_type_translation"])
+                self.assertNotIn("both_paris", result["dependent_type_translation"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_object_coordination_preserves_shared_modifiers_and_time(self) -> None:
+        result = run_pipeline("Mary visited Paris and London in the park yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "object_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(visit(1)(in(park), mary, paris), visit(1)(in(park), mary, london)))",
+        )
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertEqual(result["ast"]["time_modifiers"], [{"operator": "at", "argument": "yesterday"}])
+        self.assertIn("Parameter in_park : Adv.", result["coq_code"])
+        self.assertIn(
+            "Parameter visit : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_transitive_predicate_coordination_rejects_bad_object_type(self) -> None:
         result = run_pipeline("John ate bread and drank water", require_coq=False)
@@ -4841,6 +4892,7 @@ class TranslatorTests(unittest.TestCase):
             "predicate_coordination",
             "subject_coordination",
             "transitive_subject_coordination",
+            "object_coordination",
             "transitive_predicate_coordination",
         }
         self.assertTrue(expected.issubset(rules))
@@ -4871,6 +4923,8 @@ class TranslatorTests(unittest.TestCase):
             "Parameter Agent :",
             rules["transitive_subject_coordination"].forbidden_coq_fragments,
         )
+        self.assertIn("Parameter Event : Type.", rules["object_coordination"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["object_coordination"].forbidden_coq_fragments)
         self.assertIn(
             "Parameter Event : Type.",
             rules["transitive_predicate_coordination"].forbidden_coq_fragments,
@@ -4894,6 +4948,7 @@ class TranslatorTests(unittest.TestCase):
             "predicate_coordination": "John walked and talked",
             "subject_coordination": "John and Mary walked",
             "transitive_subject_coordination": "John and Mary ate bread",
+            "object_coordination": "Mary visited Paris and London",
             "transitive_predicate_coordination": "John ate bread and drank water",
         }
         for rule in construction_rules():
