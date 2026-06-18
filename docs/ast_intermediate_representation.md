@@ -537,9 +537,9 @@ rendered.
 ### `predicate_coordination`
 
 Represents same-subject intransitive predicate coordination such as `John walked
-and talked`. The construction records both surface forms and their lemmatized
-`Entity -> Prop` predicates. It does not introduce a Theme such as
-`and_talked`:
+and talked` or `John walked or talked`. The construction records both surface
+forms, their lemmatized `Entity -> Prop` predicates, and a typed Boolean
+connective. It does not introduce a Theme such as `and_talked` or `or_talked`:
 
 ```json
 {
@@ -572,6 +572,9 @@ Renders as:
 ```text
 and_T(walk(john), talk(john))
 ```
+
+The same AST shape licenses disjunction by setting `"connective": "or_T"`:
+`John walked or talked` renders as `or_T(walk(john), talk(john))`.
 
 If a fronted or trailing time expression is present, the time operator scopes
 over the whole conjunction rather than being folded into the subject.
@@ -621,7 +624,8 @@ The same invariant holds when one modifier is fronted and another is trailing:
 ### `transitive_predicate_coordination`
 
 Represents same-subject transitive VP coordination such as `John ate bread and
-drank water`. Each conjunct keeps its own object and lexical object type:
+drank water` or `John ate bread or drank water`. Each conjunct keeps its own
+object and lexical object type:
 
 ```json
 {
@@ -666,6 +670,10 @@ Renders as:
 ```text
 and_T(eat(john, bread), drink(john, water))
 ```
+
+Disjunctive VP coordination sets `"connective": "or_T"`, so `John ate bread or
+drank water` renders as `or_T(eat(john, bread), drink(john, water))` rather than
+forming a pseudo-object such as `bread_or_drank_water`.
 
 Fronted and trailing time expressions use the same `time_modifiers` field and
 therefore scope over the whole conjunction, e.g. `at_T(yesterday, and_T(...))`.
@@ -734,6 +742,11 @@ Current type rules:
   `negation_over_conjunction` renders `not_T(and_T(walk(john), talk(john)))`,
   while `distributed_negation` renders
   `and_T(not_T(walk(john)), not_T(talk(john)))`.
+  Negated disjunction is a separate single-reading boundary:
+  `John did not walk or talk` is represented by
+  `do_support_negation_disjunction` and renders
+  `not_T(or_T(walk(john), talk(john)))`, so `or talk` is not consumed as an
+  entity-like object.
   Branch-local modifiers are preserved inside both readings: `John did not walk
   slowly and talk quickly` renders `walk(1)(slowly, john)` and
   `talk(1)(quickly, john)` under the two alternative negation scopes, while

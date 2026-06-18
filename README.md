@@ -172,7 +172,9 @@ branch, so `John did not eat bread yesterday but drank water quickly` becomes
 water))`. Scope-ambiguous patterns such as `John did not walk and talk` are now
 returned as two explicit readings, `not_T(and_T(walk(john), talk(john)))` and
 `and_T(not_T(walk(john)), not_T(talk(john)))`, rather than being misread as a
-subject `john_did_not` or an object `and_did_not_talk`.
+subject `john_did_not` or an object `and_did_not_talk`. Negated disjunction is
+kept structural as well: `John did not walk or talk` becomes
+`not_T(or_T(walk(john), talk(john)))`, not `not_T(walk(0)(john, or_talk))`.
 Simple copular coordination is structured with `and_T`: `Mary is happy and
 calm` becomes `and_T(holds_property(mary, happy), holds_property(mary, calm))`,
 and `Mary is happy and very calm` keeps the degree only on the second conjunct.
@@ -186,10 +188,11 @@ generic fallback. `John walked and talked` becomes
 holds sentence-initially: `Yesterday John walked and talked` keeps `john` as
 the subject and puts `yesterday` outside the conjunction. The two predicates are
 declared as `Entity -> Prop`, so the analysis does not invent a Theme such as
-`and_talked` and does not export hidden `Event`, `Agent`, or `Theme`
-declarations. This rule is intentionally narrow: object coordination such as
-`Mary visited Paris and London` remains a transitive fallback case rather than a
-predicate-coordination reading.
+`and_talked` or `or_talked` and does not export hidden `Event`, `Agent`, or
+`Theme` declarations. The same AST uses `or_T` for disjunction: `John walked or
+talked` becomes `or_T(walk(john), talk(john))`. This rule is intentionally
+narrow: object coordination such as `Mary visited Paris and London` remains a
+transitive fallback case rather than a predicate-coordination reading.
 Fronted and trailing non-temporal prepositional phrases stay in the Luo-Shi
 modifier layer:
 `In the park John walked and talked` becomes
@@ -214,6 +217,10 @@ The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while
 `water` is typed as `Drinkable`, following the existing lexical argument types.
+The disjunctive case uses the same typed objects and replaces the connective:
+`John ate bread or drank water` becomes
+`or_T(eat(john, bread), drink(john, water))`, not a pseudo-object such as
+`bread_or_drank_water`.
 Sentence-final time still scopes over the whole conjunction, so `John ate bread
 and drank water yesterday` becomes
 `at_T(yesterday, and_T(eat(john, bread), drink(john, water)))`; fronted time

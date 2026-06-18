@@ -63,6 +63,7 @@ FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
+BOOLEAN_COORDINATORS = {"and": "and_T", "or": "or_T"}
 
 
 @dataclass(frozen=True)
@@ -80,6 +81,21 @@ def atom(pred: str, *args: str) -> dict[str, Any]:
 
 def event_formula(*items: dict[str, Any]) -> dict[str, Any]:
     return {"exists": ["e"], "body": {"and": list(items)}}
+
+
+def connective_for_coordinator(coordinator: str) -> str:
+    return BOOLEAN_COORDINATORS[coordinator]
+
+
+def single_boolean_coordinator(tokens: list[str]) -> tuple[str, int] | None:
+    matches = [
+        (token, index)
+        for index, token in enumerate(tokens)
+        if token in BOOLEAN_COORDINATORS
+    ]
+    if len(matches) != 1:
+        return None
+    return matches[0]
 
 
 def quantifier_scope_reading(
@@ -265,13 +281,32 @@ def negated_coordination_readings(
     subject: str,
     clauses: list[dict[str, Any]],
     time_modifiers: list[dict[str, str]] | None = None,
+    connective: str = "and_T",
 ) -> list[dict[str, Any]]:
+    if connective == "or_T":
+        return [
+            {
+                "name": "do_support_negation_wide_disjunction",
+                "scope": "negation_over_disjunction",
+                "subject": {"name": subject, "type": "Entity"},
+                "clauses": clauses,
+                "connective": connective,
+                "connective_type": "PropT -> PropT -> PropT"
+                if any(negated_coordination_clause_uses_propt(clause) for clause in clauses)
+                else "Prop -> Prop -> Prop",
+                "time_modifiers": list(time_modifiers or []),
+            }
+        ]
     return [
         {
             "name": "do_support_negation_wide_scope",
             "scope": "negation_over_conjunction",
             "subject": {"name": subject, "type": "Entity"},
             "clauses": clauses,
+            "connective": connective,
+            "connective_type": "PropT -> PropT -> PropT"
+            if any(negated_coordination_clause_uses_propt(clause) for clause in clauses)
+            else "Prop -> Prop -> Prop",
             "time_modifiers": list(time_modifiers or []),
         },
         {
@@ -279,6 +314,10 @@ def negated_coordination_readings(
             "scope": "distributed_negation",
             "subject": {"name": subject, "type": "Entity"},
             "clauses": clauses,
+            "connective": connective,
+            "connective_type": "PropT -> PropT -> PropT"
+            if any(negated_coordination_clause_uses_propt(clause) for clause in clauses)
+            else "Prop -> Prop -> Prop",
             "time_modifiers": list(time_modifiers or []),
         },
     ]
@@ -307,15 +346,33 @@ def negated_coordination_uses_propt(readings: list[dict[str, Any]]) -> bool:
 def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
     errors: list[str] = []
     object_declarations: list[tuple[str, str]] = []
-    if len(readings) != 2:
-        errors.append(f"expected two negated coordination readings, got {len(readings)}")
+    connectives = {str(reading.get("connective", "and_T")) for reading in readings}
     observed_scopes = {str(reading.get("scope")) for reading in readings}
-    if observed_scopes != {"negation_over_conjunction", "distributed_negation"}:
-        errors.append(
-            "negated coordination readings must include wide and distributed negation"
-        )
+    if connectives == {"and_T"}:
+        if len(readings) != 2:
+            errors.append(f"expected two negated coordination readings, got {len(readings)}")
+        if observed_scopes != {"negation_over_conjunction", "distributed_negation"}:
+            errors.append(
+                "negated and-coordination readings must include wide and distributed negation"
+            )
+    elif connectives == {"or_T"}:
+        if len(readings) != 1:
+            errors.append(
+                f"expected one negated disjunction reading, got {len(readings)}"
+            )
+        if observed_scopes != {"negation_over_disjunction"}:
+            errors.append(
+                "negated or-coordination readings must include negation_over_disjunction"
+            )
+    else:
+        errors.append("negated coordination readings must use one connective: and_T or or_T")
 
     for reading_index, reading in enumerate(readings):
+        connective = reading.get("connective", "and_T")
+        if connective not in {"and_T", "or_T"}:
+            errors.append(
+                f"readings[{reading_index}].connective must be and_T or or_T"
+            )
         subject = reading.get("subject")
         if not isinstance(subject, dict):
             errors.append(f"readings[{reading_index}].subject must be an object")
@@ -412,6 +469,20 @@ def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[
                 errors.append(
                     f"readings[{reading_index}].clauses[{clause_index}].predicate must have type {expected_type}"
                 )
+        expected_connective_type = (
+            "PropT -> PropT -> PropT"
+            if any(
+                isinstance(clause, dict)
+                and negated_coordination_clause_uses_propt(clause)
+                for clause in clauses
+            )
+            else "Prop -> Prop -> Prop"
+        )
+        if reading.get("connective_type") != expected_connective_type:
+            errors.append(
+                f"readings[{reading_index}].connective must have type "
+                f"{expected_connective_type}"
+            )
 
     check_declaration_type_conflicts(
         errors,
@@ -453,20 +524,21 @@ def render_negated_coordination_reading(
 ) -> str:
     left = render_negated_coordination_clause(reading["clauses"][0], coq=coq)
     right = render_negated_coordination_clause(reading["clauses"][1], coq=coq)
+    connective = reading.get("connective", "and_T")
     if coq:
-        conjunction = f"and_T ({left}) ({right})"
-        if reading["scope"] == "negation_over_conjunction":
-            proposition = f"not_T ({conjunction})"
-        else:
+        coordination = f"{connective} ({left}) ({right})"
+        if reading["scope"] == "distributed_negation":
             proposition = f"and_T (not_T ({left})) (not_T ({right}))"
+        else:
+            proposition = f"not_T ({coordination})"
         for modifier in reading.get("time_modifiers", []):
             proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
         return proposition
-    conjunction = f"and_T({left}, {right})"
-    if reading["scope"] == "negation_over_conjunction":
-        proposition = f"not_T({conjunction})"
-    else:
+    coordination = f"{connective}({left}, {right})"
+    if reading["scope"] == "distributed_negation":
         proposition = f"and_T(not_T({left}), not_T({right}))"
+    else:
+        proposition = f"not_T({coordination})"
     for modifier in reading.get("time_modifiers", []):
         proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
     return proposition
@@ -531,12 +603,18 @@ def render_negated_coordination_coq(
         f"Parameter {name} : {predicate_type}."
         for name, predicate_type in predicate_declarations
     )
+    connective_names = unique_names([
+        reading.get("connective", "and_T") for reading in readings
+    ])
     if uses_propt:
         lines.extend(
             [
                 "Parameter not_T : PropT -> PropT.",
-                "Parameter and_T : PropT -> PropT -> PropT.",
             ]
+        )
+        lines.extend(
+            f"Parameter {connective} : PropT -> PropT -> PropT."
+            for connective in connective_names
         )
         all_time_modifiers = [
             modifier
@@ -565,8 +643,11 @@ def render_negated_coordination_coq(
         lines.extend(
             [
                 "Parameter not_T : Prop -> Prop.",
-                "Parameter and_T : Prop -> Prop -> Prop.",
             ]
+        )
+        lines.extend(
+            f"Parameter {connective} : Prop -> Prop -> Prop."
+            for connective in connective_names
         )
         all_time_modifiers = [
             modifier
@@ -674,25 +755,27 @@ def ambiguous_do_support_coordination_pipeline(
 ) -> dict[str, Any] | None:
     fronted_adv_modifiers = list(fronted_adv_modifiers or [])
     fronted_time_modifiers = list(fronted_time_modifiers or [])
-    if tokens.count("and") != 1:
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
         return None
-    and_index = tokens.index("and")
-    if and_index <= negation_index + 1 or and_index + 1 >= len(tokens):
+    coordinator, coordinator_index = coordination
+    connective = connective_for_coordinator(coordinator)
+    if coordinator_index <= negation_index + 1 or coordinator_index + 1 >= len(tokens):
         return None
     left_surface = tokens[negation_index + 1]
-    right_surface = tokens[and_index + 1]
+    right_surface = tokens[coordinator_index + 1]
     if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
         return None
 
     left_clause = negated_coordination_clause_from_tail(
         left_surface,
-        tokens[negation_index + 2 : and_index],
+        tokens[negation_index + 2 : coordinator_index],
         subject,
         fronted_adv_modifiers,
     )
     right_clause = negated_coordination_clause_from_tail(
         right_surface,
-        tokens[and_index + 2 :],
+        tokens[coordinator_index + 2 :],
         subject,
         fronted_adv_modifiers,
     )
@@ -704,6 +787,7 @@ def ambiguous_do_support_coordination_pipeline(
         subject,
         clauses,
         fronted_time_modifiers,
+        connective=connective,
     )
     type_check = check_negated_coordination_readings(readings)
     dependent_type_translation = "\n".join(
@@ -711,18 +795,43 @@ def ambiguous_do_support_coordination_pipeline(
         for reading in readings
     )
     coq_code = render_negated_coordination_coq(readings)
-    return {
-        "kind": "do_support_negation_coordination_ambiguity",
-        "input_sentence": sentence,
-        "construction_summary": (
+    kind = (
+        "do_support_negation_disjunction"
+        if connective == "or_T"
+        else "do_support_negation_coordination_ambiguity"
+    )
+    analysis = (
+        "do-support-negation-disjunction"
+        if connective == "or_T"
+        else "do-support-negation-coordination-ambiguity"
+    )
+    summary = (
+        f"Do-support negation with {auxiliary} not scopes over an or-coordination; "
+        "one checked negation-over-disjunction reading is exported."
+        if connective == "or_T"
+        else (
             f"Do-support negation with {auxiliary} not scopes ambiguously over "
-            "coordination; both wide and distributed negation readings are exported."
-        ),
+            "and-coordination; both wide and distributed negation readings are exported."
+        )
+    )
+    note = (
+        "Do-support negation over or-coordination is represented as "
+        "not_T over a typed disjunction rather than as a pseudo-object."
+        if connective == "or_T"
+        else (
+            "Ambiguous do-support negation over and-coordination is represented "
+            "as two typed propositions rather than collapsed into one formula."
+        )
+    )
+    return {
+        "kind": kind,
+        "input_sentence": sentence,
+        "construction_summary": summary,
         "event_semantics": {
-            "analysis": "do-support-negation-coordination-ambiguity",
+            "analysis": analysis,
             "source": sentence,
             "event_style_reference": (
-                "not(P and Q) versus not(P) and not(Q), without introducing Event"
+                "not over typed coordination, without introducing Event"
             ),
             "readings": [
                 {**reading, "formula": render_negated_coordination_reading(reading)}
@@ -738,10 +847,7 @@ def ambiguous_do_support_coordination_pipeline(
         },
         "type_check": {
             **type_check,
-            "note": (
-                "Ambiguous do-support negation over coordination is represented "
-                "as two typed propositions rather than collapsed into one formula."
-            ),
+            "note": note,
         },
         "coq_code": coq_code,
     }
@@ -884,7 +990,7 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
         tokens,
     )
 
-    if "and" in tokens:
+    if any(token in BOOLEAN_COORDINATORS for token in tokens):
         stripped_negation_index = None
         for index, token in enumerate(tokens_without_fronted):
             if (
@@ -3080,13 +3186,14 @@ def predicate_coordination_ast(
     predicates: list[dict[str, str]],
     modifiers: list[dict[str, Any]],
     time_modifiers: list[dict[str, str]],
+    connective: str = "and_T",
 ) -> dict[str, Any]:
     return {
         "kind": "predicate_coordination",
         "subject": {"name": subject, "type": "Entity"},
         "predicates": predicates,
         "modifiers": modifiers,
-        "connective": "and_T",
+        "connective": connective,
         "connective_type": (
             "PropT -> PropT -> PropT" if modifiers else "Prop -> Prop -> Prop"
         ),
@@ -3147,8 +3254,8 @@ def check_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str, Any]:
                     f"predicates[{index}] must have type {expected_predicate_type}"
                 )
 
-    if ast.get("connective") != "and_T":
-        errors.append("predicate coordination connective must be and_T")
+    if ast.get("connective") not in {"and_T", "or_T"}:
+        errors.append("predicate coordination connective must be and_T or or_T")
     expected_connective_type = (
         "PropT -> PropT -> PropT" if has_modifiers else "Prop -> Prop -> Prop"
     )
@@ -3202,7 +3309,7 @@ def render_predicate_coordination_translation(ast: dict[str, Any]) -> str:
         right = f"{predicates[1]['name']}({subject})"
     left = wrap_negated_translation(left, bool(predicates[0].get("negated")))
     right = wrap_negated_translation(right, bool(predicates[1].get("negated")))
-    proposition = f"and_T({left}, {right})"
+    proposition = f"{ast['connective']}({left}, {right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
     return proposition
@@ -3225,7 +3332,7 @@ def render_predicate_coordination_coq(
         right = f"{predicates[1]['name']} {subject}"
     left = wrap_negated_coq(left, bool(predicates[0].get("negated")))
     right = wrap_negated_coq(right, bool(predicates[1].get("negated")))
-    proposition = f"and_T ({left}) ({right})"
+    proposition = f"{ast['connective']} ({left}) ({right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
     predicate_names = list(dict.fromkeys(predicate["name"] for predicate in predicates))
@@ -3254,12 +3361,12 @@ def render_predicate_coordination_coq(
         )
         if any(predicate.get("negated") for predicate in predicates):
             lines.append("Parameter not_T : PropT -> PropT.")
-        lines.append("Parameter and_T : PropT -> PropT -> PropT.")
+        lines.append(f"Parameter {ast['connective']} : PropT -> PropT -> PropT.")
     else:
         lines.extend(f"Parameter {predicate} : Entity -> Prop." for predicate in predicate_names)
         if any(predicate.get("negated") for predicate in predicates):
             lines.append("Parameter not_T : Prop -> Prop.")
-        lines.append("Parameter and_T : Prop -> Prop -> Prop.")
+        lines.append(f"Parameter {ast['connective']} : Prop -> Prop -> Prop.")
     if ast["time_modifiers"]:
         lines.extend(
             f"Parameter {name} : Entity."
@@ -3290,11 +3397,13 @@ def render_predicate_coordination_coq(
 def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
-    if tokens.count("and") != 1:
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
         return None
-    and_index = tokens.index("and")
-    left_predicate_index = and_index - 1
-    right_predicate_index = and_index + 1
+    coordinator, coordinator_index = coordination
+    connective = connective_for_coordinator(coordinator)
+    left_predicate_index = coordinator_index - 1
+    right_predicate_index = coordinator_index + 1
     if left_predicate_index <= 0 or right_predicate_index >= len(tokens):
         return None
 
@@ -3340,6 +3449,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
         predicates,
         shared_adv_modifiers,
         time_modifiers,
+        connective=connective,
     )
     type_check = check_predicate_coordination_ast(ast)
     typed_replacement = render_predicate_coordination_translation(ast)
@@ -3349,7 +3459,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
         "input_sentence": sentence,
         "construction_summary": (
             f"Same subject {subject} coordinates "
-            f"{predicates[0]['name']} : {predicates[0]['predicate_type']} and "
+            f"{predicates[0]['name']} : {predicates[0]['predicate_type']} {coordinator} "
             f"{predicates[1]['name']} : {predicates[1]['predicate_type']}"
             + (
                 " with shared Adv modifiers "
@@ -3364,7 +3474,7 @@ def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
             "source": sentence,
             "event_style_reference": (
                 "exists e1 e2. "
-                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) and "
+                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) {coordinator} "
                 f"{predicates[1]['name']}(e2) and Agent(e2, {subject})"
             ),
             "typed_replacement": typed_replacement,
@@ -3397,13 +3507,14 @@ def transitive_predicate_coordination_ast(
     clauses: list[dict[str, Any]],
     modifiers: list[dict[str, Any]],
     time_modifiers: list[dict[str, str]],
+    connective: str = "and_T",
 ) -> dict[str, Any]:
     return {
         "kind": "transitive_predicate_coordination",
         "subject": {"name": subject, "type": "Entity"},
         "clauses": clauses,
         "modifiers": modifiers,
-        "connective": "and_T",
+        "connective": connective,
         "connective_type": (
             "PropT -> PropT -> PropT" if modifiers else "Prop -> Prop -> Prop"
         ),
@@ -3514,8 +3625,10 @@ def check_transitive_predicate_coordination_ast(ast: dict[str, Any]) -> dict[str
             "transitive predicate coordination object",
         )
 
-    if ast.get("connective") != "and_T":
-        errors.append("transitive predicate coordination connective must be and_T")
+    if ast.get("connective") not in {"and_T", "or_T"}:
+        errors.append(
+            "transitive predicate coordination connective must be and_T or or_T"
+        )
     expected_connective_type = (
         "PropT -> PropT -> PropT" if has_modifiers else "Prop -> Prop -> Prop"
     )
@@ -3579,7 +3692,7 @@ def render_transitive_predicate_coordination_translation(ast: dict[str, Any]) ->
         right = f"{clauses[1]['predicate']['name']}({subject}, {clauses[1]['object']['name']})"
     left = wrap_negated_translation(left, bool(clauses[0].get("negated")))
     right = wrap_negated_translation(right, bool(clauses[1].get("negated")))
-    proposition = f"and_T({left}, {right})"
+    proposition = f"{ast['connective']}({left}, {right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
     return proposition
@@ -3608,7 +3721,7 @@ def render_transitive_predicate_coordination_coq(
         right = f"{clauses[1]['predicate']['name']} {subject} {clauses[1]['object']['name']}"
     left = wrap_negated_coq(left, bool(clauses[0].get("negated")))
     right = wrap_negated_coq(right, bool(clauses[1].get("negated")))
-    proposition = f"and_T ({left}) ({right})"
+    proposition = f"{ast['connective']} ({left}) ({right})"
     for modifier in ast["time_modifiers"]:
         proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
     object_types = list(
@@ -3660,11 +3773,11 @@ def render_transitive_predicate_coordination_coq(
     if modifiers:
         if any(clause.get("negated") for clause in clauses):
             lines.append("Parameter not_T : PropT -> PropT.")
-        lines.append("Parameter and_T : PropT -> PropT -> PropT.")
+        lines.append(f"Parameter {ast['connective']} : PropT -> PropT -> PropT.")
     else:
         if any(clause.get("negated") for clause in clauses):
             lines.append("Parameter not_T : Prop -> Prop.")
-        lines.append("Parameter and_T : Prop -> Prop -> Prop.")
+        lines.append(f"Parameter {ast['connective']} : Prop -> Prop -> Prop.")
     if ast["time_modifiers"]:
         lines.extend(
             f"Parameter {name} : Entity."
@@ -4237,37 +4350,39 @@ def contrastive_transitive_do_support_negation(
 def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
-    if tokens.count("and") != 1:
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
         return None
-    and_index = tokens.index("and")
-    if and_index < 3 or and_index + 2 >= len(tokens):
+    coordinator, coordinator_index = coordination
+    connective = connective_for_coordinator(coordinator)
+    if coordinator_index < 3 or coordinator_index + 2 >= len(tokens):
         return None
-    if not is_likely_surface_verb(tokens[and_index + 1]):
+    if not is_likely_surface_verb(tokens[coordinator_index + 1]):
         return None
 
     left_verb_indices = [
         index
-        for index in range(1, and_index)
+        for index in range(1, coordinator_index)
         if is_likely_surface_verb(tokens[index])
     ]
     if len(left_verb_indices) != 1:
         return None
     left_verb_index = left_verb_indices[0]
-    if left_verb_index == 0 or left_verb_index + 1 >= and_index:
+    if left_verb_index == 0 or left_verb_index + 1 >= coordinator_index:
         return None
 
     subject = clean_phrase(tokens[:left_verb_index])
     if subject == "entity":
         return None
     left_surface = tokens[left_verb_index]
-    right_surface = tokens[and_index + 1]
+    right_surface = tokens[coordinator_index + 1]
     if not (
         is_likely_transitive_verb(left_surface)
         and is_likely_transitive_verb(right_surface)
     ):
         return None
-    left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
-    right_tail = split_object_tokens_and_modifiers(tokens[and_index + 2 :])
+    left_object = clean_phrase(tokens[left_verb_index + 1 : coordinator_index])
+    right_tail = split_object_tokens_and_modifiers(tokens[coordinator_index + 2 :])
     if right_tail is None:
         return None
     right_object_tokens, trailing_adv_modifiers, trailing_time_modifiers = right_tail
@@ -4302,6 +4417,7 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
         clauses,
         shared_adv_modifiers,
         time_modifiers,
+        connective=connective,
     )
     type_check = check_transitive_predicate_coordination_ast(ast)
     typed_replacement = render_transitive_predicate_coordination_translation(ast)
@@ -4315,7 +4431,7 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
         "construction_summary": (
             f"Same subject {subject} coordinates "
             f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
-            f"{clauses[0]['object']['type']}) and "
+            f"{clauses[0]['object']['type']}) {coordinator} "
             f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
             f"{clauses[1]['object']['type']})"
             + (
@@ -4332,7 +4448,7 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
             "event_style_reference": (
                 "exists e1 e2. "
                 f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
-                f"Theme(e1, {clauses[0]['object']['name']}) and "
+                f"Theme(e1, {clauses[0]['object']['name']}) {coordinator} "
                 f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
                 f"Theme(e2, {clauses[1]['object']['name']})"
             ),

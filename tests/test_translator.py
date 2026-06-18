@@ -3091,9 +3091,67 @@ class TranslatorTests(unittest.TestCase):
         type_check = check_negated_coordination_readings(readings)
         self.assertFalse(type_check["ok"])
         self.assertIn(
-            "negated coordination readings must include wide and distributed negation",
+            "negated and-coordination readings must include wide and distributed negation",
             type_check["errors"],
         )
+
+    def test_do_support_negation_disjunction_does_not_build_pseudo_object(self) -> None:
+        intransitive = run_pipeline("John did not walk or talk", require_coq=True)
+        self.assertTrue(intransitive["ok"])
+        self.assertEqual(
+            intransitive["kind"],
+            "do_support_negation_disjunction",
+        )
+        self.assertEqual(
+            intransitive["dependent_type_translation"],
+            "negation_over_disjunction: not_T(or_T(walk(john), talk(john)))",
+        )
+        self.assertEqual(intransitive["type_check"]["reading_count"], 1)
+        self.assertEqual(intransitive["coq_check"]["status"], "passed")
+        self.assertNotIn("or_talk", intransitive["dependent_type_translation"])
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", intransitive["coq_code"])
+
+        transitive = run_pipeline(
+            "John did not eat bread or drink water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            (
+                "negation_over_disjunction: "
+                "not_T(or_T(eat(john, bread), drink(john, water)))"
+            ),
+        )
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertNotIn("bread_or_drink_water", transitive["dependent_type_translation"])
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_supports_or_disjunction(self) -> None:
+        result = run_pipeline("John walked or talked", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "predicate_coordination")
+        self.assertEqual(result["ast"]["connective"], "or_T")
+        self.assertEqual(result["dependent_type_translation"], "or_T(walk(john), talk(john))")
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertNotIn("or_talked", result["dependent_type_translation"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_predicate_coordination_supports_or_disjunction(self) -> None:
+        result = run_pipeline("John ate bread or drank water", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "transitive_predicate_coordination")
+        self.assertEqual(result["ast"]["connective"], "or_T")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "or_T(eat(john, bread), drink(john, water))",
+        )
+        self.assertIn("Parameter bread : Food.", result["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", result["coq_code"])
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertNotIn("bread_or_drank_water", result["dependent_type_translation"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_repeated_do_support_negation_coordinates_negated_branches(self) -> None:
         intransitive = run_pipeline(
@@ -4762,6 +4820,34 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("and_T(not_T(walk(john)), not_T(talk(john)))", page)
         self.assertIn("do_support_negation_wide_scope", page)
         self.assertIn("do_support_negation_distributed_scope", page)
+
+    def test_api_and_page_report_negated_disjunction_without_pseudo_object(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+did+not+walk+or+talk&require_coq=1",
+        )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["kind"],
+            "do_support_negation_disjunction",
+        )
+        self.assertEqual(result["construction_rule"]["id"], "do_support_negation")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(result["type_check"]["reading_count"], 1)
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "negation_over_disjunction: not_T(or_T(walk(john), talk(john)))",
+        )
+        self.assertNotIn("or_talk", result["dependent_type_translation"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+        page = render_page("John did not walk or talk", require_coq=True)
+        self.assertIn("Translation verified", page)
+        self.assertIn("negation_over_disjunction", page)
+        self.assertIn("not_T(or_T(walk(john), talk(john)))", page)
+        self.assertIn("Parameter or_T : Prop -&gt; Prop -&gt; Prop.", page)
 
     def test_page_reports_contrastive_negation_shared_adv_success(self) -> None:
         page = render_page("John did not walk but talked in the park", require_coq=True)
