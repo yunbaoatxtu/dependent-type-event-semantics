@@ -2659,6 +2659,57 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter bread : Food.", transitive_location["coq_code"])
         self.assertIn("Parameter water : Drinkable.", transitive_location["coq_code"])
 
+        left_local_location = run_pipeline(
+            "John did not walk in the park but talked",
+            require_coq=True,
+        )
+        self.assertTrue(left_local_location["ok"])
+        self.assertEqual(
+            left_local_location["ast"]["kind"],
+            "contrastive_branch_modifier_coordination",
+        )
+        self.assertEqual(
+            left_local_location["dependent_type_translation"],
+            "and_T(not_T(walk(1)(in(park), john)), talk(0)(john))",
+        )
+        self.assertIn(
+            "and_T (not_T (walk 1 (mods_cons 0 in_park mods_nil) john)) "
+            "(talk 0 mods_nil john)",
+            left_local_location["coq_code"],
+        )
+
+        transitive_left_local_location = run_pipeline(
+            "John did not eat bread in the park but drank water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_left_local_location["ok"])
+        self.assertEqual(
+            transitive_left_local_location["ast"]["kind"],
+            "contrastive_branch_modifier_coordination",
+        )
+        self.assertEqual(
+            transitive_left_local_location["dependent_type_translation"],
+            (
+                "and_T(not_T(eat(1)(in(park), john, bread)), "
+                "drink(0)(john, water))"
+            ),
+        )
+        self.assertIn("Parameter bread : Food.", transitive_left_local_location["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive_left_local_location["coq_code"])
+
+        timed_left_local_location = run_pipeline(
+            "Yesterday John did not eat bread in the park but drank water",
+            require_coq=True,
+        )
+        self.assertTrue(timed_left_local_location["ok"])
+        self.assertEqual(
+            timed_left_local_location["dependent_type_translation"],
+            (
+                "at_T(yesterday, and_T(not_T(eat(1)(in(park), john, bread)), "
+                "drink(0)(john, water)))"
+            ),
+        )
+
     def test_do_support_negation_rejects_bad_contrastive_but_before_fallback(self) -> None:
         conflict = run_pipeline("John did not eat bread but drank bread", require_coq=True)
         self.assertFalse(conflict["ok"])
@@ -2669,42 +2720,27 @@ class TranslatorTests(unittest.TestCase):
             conflict["type_check"]["errors"],
         )
 
-        left_internal_modifier = run_pipeline(
-            "John did not eat bread in the park but drank water",
+        mixed_local_and_right_modifier = run_pipeline(
+            "John did not eat bread in the park but drank water quickly",
             require_coq=True,
         )
-        self.assertFalse(left_internal_modifier["ok"])
-        self.assertEqual(left_internal_modifier["kind"], "contrastive_do_support_negation")
+        self.assertFalse(mixed_local_and_right_modifier["ok"])
         self.assertEqual(
-            left_internal_modifier["ast"]["unsupported"],
-            "left_branch_modifier_under_contrastive_negation",
-        )
-        self.assertIn(
-            "left-branch modifiers inside contrastive do-support negation are not yet supported",
-            left_internal_modifier["type_check"]["errors"],
-        )
-        self.assertEqual(left_internal_modifier["coq_check"]["status"], "skipped")
-        self.assertNotIn(
-            "bread_in_park",
-            left_internal_modifier.get("dependent_type_translation", ""),
-        )
-
-        intransitive_left_internal_modifier = run_pipeline(
-            "John did not walk in the park but talked",
-            require_coq=True,
-        )
-        self.assertFalse(intransitive_left_internal_modifier["ok"])
-        self.assertEqual(
-            intransitive_left_internal_modifier["kind"],
+            mixed_local_and_right_modifier["kind"],
             "contrastive_do_support_negation",
         )
         self.assertEqual(
-            intransitive_left_internal_modifier["ast"]["unsupported"],
-            "left_branch_material_under_contrastive_negation",
+            mixed_local_and_right_modifier["ast"]["unsupported"],
+            "mixed_branch_modifier_under_contrastive_negation",
         )
         self.assertIn(
-            "left-branch modifiers or objects inside contrastive do-support negation are not yet supported",
-            intransitive_left_internal_modifier["type_check"]["errors"],
+            "mixed local and shared modifiers inside contrastive do-support negation are not yet supported",
+            mixed_local_and_right_modifier["type_check"]["errors"],
+        )
+        self.assertEqual(mixed_local_and_right_modifier["coq_check"]["status"], "skipped")
+        self.assertNotIn(
+            "bread_in_park",
+            mixed_local_and_right_modifier.get("dependent_type_translation", ""),
         )
 
     def test_do_support_negation_rejects_ambiguous_coordination_before_fallback(self) -> None:
@@ -4131,6 +4167,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter in_park : Adv.", page)
         self.assertIn("Parameter not_T : PropT -&gt; PropT.", page)
 
+        local_page = render_page(
+            "John did not walk in the park but talked",
+            require_coq=True,
+        )
+        self.assertIn("Translation verified", local_page)
+        self.assertIn("contrastive_branch_modifier_coordination", local_page)
+        self.assertIn(
+            "and_T(not_T(walk(1)(in(park), john)), talk(0)(john))",
+            local_page,
+        )
+        self.assertIn("talk 0 mods_nil john", local_page)
+
     def test_api_analyze_response_contract_for_modifier_audit(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -5086,7 +5134,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Scope-ambiguous", ast_docs)
         self.assertIn("coordinated do-support negation is still rejected", ast_docs)
         self.assertIn("Clear contrastive `but` cases", ast_docs)
-        self.assertIn("Left-branch-only modifiers", ast_docs)
+        self.assertIn("Left-branch-only Adv modifiers", ast_docs)
+        self.assertIn("contrastive_branch_modifier_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Prop"', ast_docs)
         self.assertIn("transitive_predicate_coordination", ast_docs)
         self.assertIn('"predicate_type": "Entity -> Food -> Prop"', ast_docs)

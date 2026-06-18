@@ -541,6 +541,318 @@ def contrastive_do_support_failure(
     }
 
 
+def branch_modifier_clause(
+    surface: str,
+    subject: str,
+    modifiers: list[dict[str, Any]],
+    negated: bool,
+    obj: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    predicate = lemma_verb(surface)
+    if obj is None:
+        predicate_type = "forall n : nat, ModifierSeq n -> Entity -> PropT"
+    else:
+        predicate_type = (
+            "forall n : nat, ModifierSeq n -> "
+            f"Entity -> {obj['type']} -> PropT"
+        )
+    return {
+        "predicate": {
+            "surface": surface,
+            "name": predicate,
+            "predicate_type": predicate_type,
+        },
+        "subject": {"name": subject, "type": "Entity"},
+        "object": obj,
+        "modifiers": modifiers,
+        "negated": negated,
+    }
+
+
+def contrastive_branch_modifier_ast(
+    subject: str,
+    clauses: list[dict[str, Any]],
+    time_modifiers: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "kind": "contrastive_branch_modifier_coordination",
+        "subject": {"name": subject, "type": "Entity"},
+        "clauses": clauses,
+        "connective": "and_T",
+        "connective_type": "PropT -> PropT -> PropT",
+        "time_modifiers": time_modifiers,
+    }
+
+
+def check_contrastive_branch_modifier_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "contrastive_branch_modifier_coordination":
+        errors.append("ast.kind must be contrastive_branch_modifier_coordination")
+
+    subject = ast.get("subject")
+    if not isinstance(subject, dict):
+        errors.append("contrastive branch modifier subject must be an object")
+    else:
+        if not isinstance(subject.get("name"), str) or not subject.get("name"):
+            errors.append("contrastive branch modifier subject.name must be non-empty")
+        if subject.get("type") != "Entity":
+            errors.append("contrastive branch modifier subject must have type Entity")
+
+    clauses = ast.get("clauses")
+    object_declarations: list[tuple[str, str]] = []
+    if not isinstance(clauses, list) or len(clauses) != 2:
+        errors.append("contrastive branch modifier clauses must contain exactly two items")
+    else:
+        for index, clause in enumerate(clauses):
+            if not isinstance(clause, dict):
+                errors.append(f"contrastive branch modifier clauses[{index}] must be an object")
+                continue
+            if "negated" in clause and not isinstance(clause["negated"], bool):
+                errors.append(
+                    f"contrastive branch modifier clauses[{index}].negated must be boolean"
+                )
+            modifiers = clause.get("modifiers")
+            check_coordination_modifiers(
+                errors,
+                modifiers,
+                f"contrastive branch modifier clauses[{index}]",
+            )
+            predicate = clause.get("predicate")
+            if not isinstance(predicate, dict):
+                errors.append(
+                    f"contrastive branch modifier clauses[{index}].predicate must be an object"
+                )
+                continue
+            surface = predicate.get("surface")
+            name = predicate.get("name")
+            if not isinstance(surface, str) or not surface:
+                errors.append(
+                    "contrastive branch modifier "
+                    f"clauses[{index}].predicate.surface must be non-empty"
+                )
+            if not isinstance(name, str) or not name:
+                errors.append(
+                    "contrastive branch modifier "
+                    f"clauses[{index}].predicate.name must be non-empty"
+                )
+            elif surface and lemma_verb(str(surface)) != name:
+                errors.append(
+                    "contrastive branch modifier "
+                    f"clauses[{index}].predicate.name must match its surface lemma"
+                )
+
+            obj = clause.get("object")
+            if obj is None:
+                expected_predicate_type = (
+                    "forall n : nat, ModifierSeq n -> Entity -> PropT"
+                )
+            elif isinstance(obj, dict):
+                object_name = obj.get("name")
+                object_type = obj.get("type")
+                if not isinstance(object_name, str) or not object_name:
+                    errors.append(
+                        "contrastive branch modifier "
+                        f"clauses[{index}].object.name must be non-empty"
+                    )
+                if not isinstance(object_type, str) or not object_type:
+                    errors.append(
+                        "contrastive branch modifier "
+                        f"clauses[{index}].object.type must be non-empty"
+                    )
+                    expected_predicate_type = None
+                else:
+                    expected_predicate_type = (
+                        "forall n : nat, ModifierSeq n -> "
+                        f"Entity -> {object_type} -> PropT"
+                    )
+                    object_declarations.append((str(object_name), object_type))
+            else:
+                errors.append(
+                    f"contrastive branch modifier clauses[{index}].object must be null or object"
+                )
+                expected_predicate_type = None
+            if (
+                expected_predicate_type is not None
+                and predicate.get("predicate_type") != expected_predicate_type
+            ):
+                errors.append(
+                    "contrastive branch modifier "
+                    f"clauses[{index}].predicate must have type {expected_predicate_type}"
+                )
+
+    check_declaration_type_conflicts(
+        errors,
+        object_declarations,
+        "contrastive branch modifier object",
+    )
+
+    if ast.get("connective") != "and_T":
+        errors.append("contrastive branch modifier connective must be and_T")
+    if ast.get("connective_type") != "PropT -> PropT -> PropT":
+        errors.append(
+            "contrastive branch modifier connective must have type PropT -> PropT -> PropT"
+        )
+
+    time_modifiers = ast.get("time_modifiers")
+    if not isinstance(time_modifiers, list):
+        errors.append("contrastive branch modifier time_modifiers must be a list")
+    else:
+        for index, modifier in enumerate(time_modifiers):
+            if not isinstance(modifier, dict):
+                errors.append(
+                    f"contrastive branch modifier time_modifiers[{index}] must be an object"
+                )
+                continue
+            if modifier.get("operator") not in {"at", "during"}:
+                errors.append(
+                    "contrastive branch modifier "
+                    f"time_modifiers[{index}].operator must be at or during"
+                )
+            if not isinstance(modifier.get("argument"), str) or not modifier.get("argument"):
+                errors.append(
+                    "contrastive branch modifier "
+                    f"time_modifiers[{index}].argument must be non-empty"
+                )
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def render_branch_clause_translation(clause: dict[str, Any]) -> str:
+    predicate = clause["predicate"]["name"]
+    subject = clause["subject"]["name"]
+    modifiers = clause.get("modifiers", [])
+    modifier_args = readable_modifier_arguments(modifiers)
+    modifier_count = len(modifiers)
+    obj = clause.get("object")
+    if obj is None:
+        if modifiers:
+            term = f"{predicate}({modifier_count})({modifier_args}, {subject})"
+        else:
+            term = f"{predicate}(0)({subject})"
+    elif modifiers:
+        term = (
+            f"{predicate}({modifier_count})"
+            f"({modifier_args}, {subject}, {obj['name']})"
+        )
+    else:
+        term = f"{predicate}(0)({subject}, {obj['name']})"
+    return wrap_negated_translation(term, bool(clause.get("negated")))
+
+
+def render_branch_clause_coq(clause: dict[str, Any]) -> str:
+    predicate = clause["predicate"]["name"]
+    subject = clause["subject"]["name"]
+    modifiers = clause.get("modifiers", [])
+    modifier_count = len(modifiers)
+    modifier_sequence = coq_modifier_sequence(modifiers)
+    obj = clause.get("object")
+    if obj is None:
+        term = f"{predicate} {modifier_count} {modifier_sequence} {subject}"
+    else:
+        term = (
+            f"{predicate} {modifier_count} {modifier_sequence} "
+            f"{subject} {obj['name']}"
+        )
+    return wrap_negated_coq(term, bool(clause.get("negated")))
+
+
+def render_contrastive_branch_modifier_translation(ast: dict[str, Any]) -> str:
+    left = render_branch_clause_translation(ast["clauses"][0])
+    right = render_branch_clause_translation(ast["clauses"][1])
+    proposition = f"and_T({left}, {right})"
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
+
+
+def render_contrastive_branch_modifier_coq(
+    definition_name: str,
+    ast: dict[str, Any],
+) -> str:
+    clauses = ast["clauses"]
+    subject = ast["subject"]["name"]
+    left = render_branch_clause_coq(clauses[0])
+    right = render_branch_clause_coq(clauses[1])
+    proposition = f"and_T ({left}) ({right})"
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+
+    all_modifiers = [
+        modifier
+        for clause in clauses
+        for modifier in clause.get("modifiers", [])
+    ]
+    object_types = list(
+        dict.fromkeys(
+            clause["object"]["type"]
+            for clause in clauses
+            if isinstance(clause.get("object"), dict)
+            and clause["object"]["type"] != "Entity"
+        )
+    )
+    lines = [
+        "(* Contrastive do-support negation with branch-local modifiers. *)",
+        "Parameter Entity : Type.",
+        "Definition PropT : Type := Prop.",
+        "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+        "Parameter ModifierSeq : nat -> Type.",
+        "Parameter mods_nil : ModifierSeq 0.",
+        "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
+    ]
+    lines.extend(f"Parameter {object_type} : Type." for object_type in object_types)
+    lines.extend(
+        f"Parameter {name} : Adv."
+        for name in unique_names([modifier["name"] for modifier in all_modifiers])
+    )
+    lines.extend(["", f"Parameter {subject} : Entity."])
+    for name, type_name in unique_typed_declarations([
+        (clause["object"]["name"], clause["object"]["type"])
+        for clause in clauses
+        if isinstance(clause.get("object"), dict)
+    ]):
+        lines.append(f"Parameter {name} : {type_name}.")
+    for name, predicate_type in unique_typed_declarations([
+        (clause["predicate"]["name"], clause["predicate"]["predicate_type"])
+        for clause in clauses
+    ]):
+        lines.append(f"Parameter {name} : {predicate_type}.")
+    lines.extend(
+        [
+            "Parameter not_T : PropT -> PropT.",
+            "Parameter and_T : PropT -> PropT -> PropT.",
+        ]
+    )
+    if ast["time_modifiers"]:
+        lines.extend(
+            f"Parameter {name} : Entity."
+            for name in unique_names([
+                modifier["argument"] for modifier in ast["time_modifiers"]
+            ])
+        )
+        lines.extend(
+            [
+                "",
+                "Parameter at_T : Entity -> PropT -> PropT.",
+                "Parameter during_T : Entity -> PropT -> PropT.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            f"Definition {definition_name} : Prop :=",
+            f"  {proposition}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def timed_after_ast(
     first_predicate: str,
     first_theme: str,
@@ -2906,26 +3218,87 @@ def contrastive_intransitive_do_support_negation(
     subject = clean_phrase(tokens[:auxiliary_index])
     if subject == "entity":
         return None
-    if tokens[negation_index + 2 : but_index]:
-        return contrastive_do_support_failure(
-            sentence,
-            subject,
-            tokens[auxiliary_index],
-            "left_branch_material_under_contrastive_negation",
-            (
-                "left-branch modifiers or objects inside contrastive "
-                "do-support negation are not yet supported"
-            ),
-            (
-                "Material between the negated predicate and but is not folded "
-                "into a subject or object; add a dedicated construction before "
-                "exporting this sentence."
-            ),
-        )
+    left_material = tokens[negation_index + 2 : but_index]
     trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[but_index + 2 :])
     if trailing_modifiers is None:
         return None
     trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    if left_material:
+        left_branch_modifiers = split_shared_adv_and_time_modifiers(left_material)
+        if left_branch_modifiers is None:
+            return contrastive_do_support_failure(
+                sentence,
+                subject,
+                tokens[auxiliary_index],
+                "left_branch_material_under_contrastive_negation",
+                (
+                    "left-branch modifiers or objects inside contrastive "
+                    "do-support negation are not yet supported"
+                ),
+                (
+                    "Material between the negated predicate and but is not folded "
+                    "into a subject or object; add a dedicated construction before "
+                    "exporting this sentence."
+                ),
+            )
+        left_adv_modifiers, left_time_modifiers = left_branch_modifiers
+        if left_time_modifiers or fronted_adv_modifiers or trailing_adv_modifiers:
+            return contrastive_do_support_failure(
+                sentence,
+                subject,
+                tokens[auxiliary_index],
+                "mixed_branch_modifier_under_contrastive_negation",
+                (
+                    "mixed local and shared modifiers inside contrastive "
+                    "do-support negation are not yet supported"
+                ),
+                (
+                    "The parser supports a local left-branch Adv only when "
+                    "the right branch has no additional shared Adv material."
+                ),
+            )
+        time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+        clauses = [
+            branch_modifier_clause(left_surface, subject, left_adv_modifiers, True),
+            branch_modifier_clause(right_surface, subject, [], False),
+        ]
+        ast = contrastive_branch_modifier_ast(subject, clauses, time_modifiers)
+        type_check = check_contrastive_branch_modifier_ast(ast)
+        typed_replacement = render_contrastive_branch_modifier_translation(ast)
+        coq_code = render_contrastive_branch_modifier_coq(
+            "contrastive_branch_modifier_negation_assertion",
+            ast,
+        )
+        return {
+            "kind": "contrastive_do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} contrasts not {clauses[0]['predicate']['name']} "
+                f"with local Adv material against {clauses[1]['predicate']['name']}."
+            ),
+            "event_semantics": {
+                "analysis": "contrastive-do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "not(exists e1. "
+                    f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) "
+                    "and local modifiers) and exists e2. "
+                    f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject})"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Contrastive do-support negation with a left-branch Adv "
+                    "uses branch-local ModifierSeq indices: the negated branch "
+                    "may have n > 0 while the positive branch uses n = 0."
+                ),
+            },
+            "coq_code": coq_code,
+        }
     shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     predicate_type = (
@@ -3009,19 +3382,19 @@ def contrastive_transitive_do_support_negation(
     if left_tail is None:
         return None
     left_object_tokens, left_adv_modifiers, left_time_modifiers = left_tail
-    if left_adv_modifiers or left_time_modifiers:
+    if left_time_modifiers:
         return contrastive_do_support_failure(
             sentence,
             subject,
             tokens[auxiliary_index],
-            "left_branch_modifier_under_contrastive_negation",
+            "left_branch_time_modifier_under_contrastive_negation",
             (
-                "left-branch modifiers inside contrastive do-support negation "
+                "left-branch time modifiers inside contrastive do-support negation "
                 "are not yet supported"
             ),
             (
-                "The parser refuses to collapse a left-branch modifier into the "
-                "object name before a dedicated scope rule is implemented."
+                "The parser refuses to collapse a left-branch temporal modifier "
+                "into the object name before a dedicated scope rule is implemented."
             ),
         )
     left_object = clean_phrase(left_object_tokens)
@@ -3036,6 +3409,79 @@ def contrastive_transitive_do_support_negation(
         return None
     shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+    if left_adv_modifiers:
+        if shared_adv_modifiers:
+            return contrastive_do_support_failure(
+                sentence,
+                subject,
+                tokens[auxiliary_index],
+                "mixed_branch_modifier_under_contrastive_negation",
+                (
+                    "mixed local and shared modifiers inside contrastive "
+                    "do-support negation are not yet supported"
+                ),
+                (
+                    "The parser supports a local left-branch Adv only when "
+                    "the right branch has no additional shared Adv material."
+                ),
+            )
+        clauses = [
+            branch_modifier_clause(
+                left_surface,
+                subject,
+                left_adv_modifiers,
+                True,
+                {"name": left_object, "type": object_type_for_transitive_predicate(lemma_verb(left_surface))},
+            ),
+            branch_modifier_clause(
+                right_surface,
+                subject,
+                [],
+                False,
+                {"name": right_object, "type": object_type_for_transitive_predicate(lemma_verb(right_surface))},
+            ),
+        ]
+        ast = contrastive_branch_modifier_ast(subject, clauses, time_modifiers)
+        type_check = check_contrastive_branch_modifier_ast(ast)
+        typed_replacement = render_contrastive_branch_modifier_translation(ast)
+        coq_code = render_contrastive_branch_modifier_coq(
+            "contrastive_transitive_branch_modifier_negation_assertion",
+            ast,
+        )
+        return {
+            "kind": "contrastive_do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} contrasts not "
+                f"{clauses[0]['predicate']['name']}({left_object} : "
+                f"{clauses[0]['object']['type']}) with local Adv material against "
+                f"{clauses[1]['predicate']['name']}({right_object} : "
+                f"{clauses[1]['object']['type']})."
+            ),
+            "event_semantics": {
+                "analysis": "contrastive-do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "not(exists e1. "
+                    f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                    f"Theme(e1, {left_object}) and local modifiers) and exists e2. "
+                    f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                    f"Theme(e2, {right_object})"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Contrastive transitive do-support negation with a left-branch "
+                    "Adv uses branch-local ModifierSeq indices and preserves both "
+                    "object lexical types before Coq."
+                ),
+            },
+            "coq_code": coq_code,
+        }
 
     clauses: list[dict[str, Any]] = []
     for surface, obj, negated in (

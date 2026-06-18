@@ -155,8 +155,10 @@ and `John did not eat bread but drank water` becomes
 discipline now applies to clear contrastive examples, so `John did not walk but
 talked in the park` keeps `in(park)` as an `Adv` in both coordinates. Left-branch
 internal modifiers, such as `John did not eat bread in the park but drank water`,
-are still rejected with a left-branch modifier diagnostic rather than being
-collapsed into `bread_in_park`. Scope-
+now use branch-local `ModifierSeq` indices:
+`and_T(not_T(eat(1)(in(park), john, bread)), drink(0)(john, water))`, rather
+than being collapsed into `bread_in_park`. Mixed local-and-right-branch modifier
+cases remain rejected until their scope is licensed explicitly. Scope-
 ambiguous patterns such as `John did not walk and talk` remain rejected at
 internal type checking rather than being misread as a subject `john_did_not` or
 an object `and_did_not_talk`.
