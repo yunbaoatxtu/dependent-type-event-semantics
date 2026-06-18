@@ -37,6 +37,7 @@ from translator.natural_language_pipeline import (
     run_pipeline,
     sentence_to_event_semantics,
     state_change_verb_metadata,
+    strip_surface_coordination_marker,
     verify_coq_code,
 )
 from translator.state_change_lexicon import (
@@ -2570,6 +2571,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("john_either", either_disjunctive["dependent_type_translation"])
         self.assertEqual(either_disjunctive["coq_check"]["status"], "passed")
 
+        both_right_branch = run_pipeline(
+            "John both walked and did not talk",
+            require_coq=True,
+        )
+        self.assertTrue(both_right_branch["ok"])
+        self.assertEqual(both_right_branch["ast"]["subject"], {"name": "john", "type": "Entity"})
+        self.assertEqual(
+            both_right_branch["dependent_type_translation"],
+            "and_T(walk(john), not_T(talk(john)))",
+        )
+        self.assertNotIn("john_both", both_right_branch["dependent_type_translation"])
+        self.assertEqual(both_right_branch["coq_check"]["status"], "passed")
+
         transitive_disjunctive = run_pipeline(
             "John ate bread or did not drink water",
             require_coq=True,
@@ -3184,11 +3198,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("or_talked", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
-    def test_predicate_coordination_strips_either_marker_from_subject(self) -> None:
-        for sentence in (
-            "John either walked or talked",
-            "Either John walked or talked",
-        ):
+    def test_predicate_coordination_strips_surface_pair_marker_from_subject(self) -> None:
+        cases = (
+            ("John either walked or talked", "or_T(walk(john), talk(john))"),
+            ("Either John walked or talked", "or_T(walk(john), talk(john))"),
+            ("John both walked and talked", "and_T(walk(john), talk(john))"),
+        )
+        for sentence, expected_translation in cases:
             with self.subTest(sentence=sentence):
                 result = run_pipeline(sentence, require_coq=True)
                 self.assertTrue(result["ok"])
@@ -3196,11 +3212,22 @@ class TranslatorTests(unittest.TestCase):
                 self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
                 self.assertEqual(
                     result["dependent_type_translation"],
-                    "or_T(walk(john), talk(john))",
+                    expected_translation,
                 )
                 self.assertNotIn("john_either", result["dependent_type_translation"])
                 self.assertNotIn("either_john", result["dependent_type_translation"])
+                self.assertNotIn("john_both", result["dependent_type_translation"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_predicate_coordination_keeps_initial_both_outside_same_subject_rule(self) -> None:
+        self.assertEqual(
+            strip_surface_coordination_marker(["both", "john", "and", "mary", "walked"]),
+            ["both", "john", "and", "mary", "walked"],
+        )
+        self.assertEqual(
+            strip_surface_coordination_marker(["john", "both", "walked", "and", "talked"]),
+            ["john", "walked", "and", "talked"],
+        )
 
     def test_transitive_predicate_coordination_supports_or_disjunction(self) -> None:
         result = run_pipeline("John ate bread or drank water", require_coq=True)
@@ -3217,11 +3244,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("bread_or_drank_water", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
-    def test_transitive_predicate_coordination_strips_either_marker_from_subject(self) -> None:
-        for sentence in (
-            "John either ate bread or drank water",
-            "Either John ate bread or drank water",
-        ):
+    def test_transitive_predicate_coordination_strips_surface_pair_marker_from_subject(self) -> None:
+        cases = (
+            ("John either ate bread or drank water", "or_T(eat(john, bread), drink(john, water))"),
+            ("Either John ate bread or drank water", "or_T(eat(john, bread), drink(john, water))"),
+            ("John both ate bread and drank water", "and_T(eat(john, bread), drink(john, water))"),
+        )
+        for sentence, expected_translation in cases:
             with self.subTest(sentence=sentence):
                 result = run_pipeline(sentence, require_coq=True)
                 self.assertTrue(result["ok"])
@@ -3229,12 +3258,13 @@ class TranslatorTests(unittest.TestCase):
                 self.assertEqual(result["ast"]["subject"], {"name": "john", "type": "Entity"})
                 self.assertEqual(
                     result["dependent_type_translation"],
-                    "or_T(eat(john, bread), drink(john, water))",
+                    expected_translation,
                 )
                 self.assertIn("Parameter bread : Food.", result["coq_code"])
                 self.assertIn("Parameter water : Drinkable.", result["coq_code"])
                 self.assertNotIn("john_either", result["dependent_type_translation"])
                 self.assertNotIn("either_john", result["dependent_type_translation"])
+                self.assertNotIn("john_both", result["dependent_type_translation"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_repeated_do_support_negation_coordinates_negated_branches(self) -> None:

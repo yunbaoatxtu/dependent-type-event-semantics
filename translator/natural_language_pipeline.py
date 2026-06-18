@@ -98,17 +98,40 @@ def single_boolean_coordinator(tokens: list[str]) -> tuple[str, int] | None:
     return matches[0]
 
 
-def strip_either_coordination_marker(tokens: list[str]) -> list[str]:
-    if tokens.count("either") != 1:
+def strip_coordination_pair_marker(
+    tokens: list[str],
+    marker: str,
+    coordinator: str,
+    *,
+    allow_initial_marker: bool,
+) -> list[str]:
+    if tokens.count(marker) != 1 or coordinator not in tokens:
         return tokens
-    either_index = tokens.index("either")
-    if either_index == 0:
+    marker_index = tokens.index(marker)
+    if marker_index == 0 and allow_initial_marker:
         return tokens[1:]
     if (
-        either_index + 1 < len(tokens)
-        and is_likely_surface_verb(tokens[either_index + 1])
+        marker_index > 0
+        and marker_index + 1 < len(tokens)
+        and is_likely_surface_verb(tokens[marker_index + 1])
     ):
-        return [*tokens[:either_index], *tokens[either_index + 1 :]]
+        return [*tokens[:marker_index], *tokens[marker_index + 1 :]]
+    return tokens
+
+
+def strip_surface_coordination_marker(tokens: list[str]) -> list[str]:
+    tokens = strip_coordination_pair_marker(
+        tokens,
+        "either",
+        "or",
+        allow_initial_marker=True,
+    )
+    tokens = strip_coordination_pair_marker(
+        tokens,
+        "both",
+        "and",
+        allow_initial_marker=False,
+    )
     return tokens
 
 
@@ -1224,7 +1247,7 @@ def wrap_negated_coq(term: str, negated: bool) -> str:
 def coordinated_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
-    tokens = strip_either_coordination_marker(tokens)
+    tokens = strip_surface_coordination_marker(tokens)
     coordination = single_boolean_coordinator(tokens)
     if coordination is None:
         return None
@@ -3458,7 +3481,7 @@ def render_predicate_coordination_coq(
 def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
-    tokens = strip_either_coordination_marker(tokens)
+    tokens = strip_surface_coordination_marker(tokens)
     coordination = single_boolean_coordinator(tokens)
     if coordination is None:
         return None
@@ -4418,7 +4441,7 @@ def contrastive_transitive_do_support_negation(
 def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
-    tokens = strip_either_coordination_marker(tokens)
+    tokens = strip_surface_coordination_marker(tokens)
     coordination = single_boolean_coordinator(tokens)
     if coordination is None:
         return None
