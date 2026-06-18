@@ -157,8 +157,14 @@ talked in the park` keeps `in(park)` as an `Adv` in both coordinates. Left-branc
 internal modifiers, such as `John did not eat bread in the park but drank water`,
 now use branch-local `ModifierSeq` indices:
 `and_T(not_T(eat(1)(in(park), john, bread)), drink(0)(john, water))`, rather
-than being collapsed into `bread_in_park`. Mixed local-and-right-branch modifier
-cases remain rejected until their scope is licensed explicitly. Scope-
+than being collapsed into `bread_in_park`. Right-branch local modifiers can be
+kept independently as well, so `John did not eat bread in the park but drank
+water quickly` becomes `and_T(not_T(eat(1)(in(park), john, bread)),
+drink(1)(quickly, john, water))`. The same rules now require both verbs in a
+transitive coordination slice to be licensed as transitive surface predicates,
+preventing `walk in the park` or `talk quickly` from being compiled as
+entity-object applications. Mixed fronted shared modifiers plus branch-local
+modifiers remain rejected until their scope is licensed explicitly. Scope-
 ambiguous patterns such as `John did not walk and talk` remain rejected at
 internal type checking rather than being misread as a subject `john_did_not` or
 an object `and_did_not_talk`.

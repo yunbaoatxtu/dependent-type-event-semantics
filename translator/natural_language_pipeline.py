@@ -43,6 +43,7 @@ from translator.surface_lexicon import (
     count_phrase_value,
     is_passive_participle,
     is_likely_surface_verb,
+    is_likely_transitive_verb,
     lemma_verb,
     modifier_semantic_role,
     modifier_surface_audit,
@@ -3121,6 +3122,11 @@ def coordinated_transitive_do_support_negation(
     if subject == "entity":
         return None
     left_surface = tokens[left_verb_index]
+    if not (
+        is_likely_transitive_verb(left_surface)
+        and is_likely_transitive_verb(right_surface)
+    ):
+        return None
     left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
     right_tail = split_object_tokens_and_modifiers(tokens[and_index + 4 :])
     if right_tail is None:
@@ -3242,25 +3248,25 @@ def contrastive_intransitive_do_support_negation(
                 ),
             )
         left_adv_modifiers, left_time_modifiers = left_branch_modifiers
-        if left_time_modifiers or fronted_adv_modifiers or trailing_adv_modifiers:
+        if left_time_modifiers or fronted_adv_modifiers:
             return contrastive_do_support_failure(
                 sentence,
                 subject,
                 tokens[auxiliary_index],
                 "mixed_branch_modifier_under_contrastive_negation",
                 (
-                    "mixed local and shared modifiers inside contrastive "
+                    "mixed branch-local and fronted shared modifiers inside contrastive "
                     "do-support negation are not yet supported"
                 ),
                 (
-                    "The parser supports a local left-branch Adv only when "
-                    "the right branch has no additional shared Adv material."
+                    "The parser supports branch-local Adv material on both "
+                    "coordinates, but not an additional fronted shared Adv."
                 ),
             )
         time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
         clauses = [
             branch_modifier_clause(left_surface, subject, left_adv_modifiers, True),
-            branch_modifier_clause(right_surface, subject, [], False),
+            branch_modifier_clause(right_surface, subject, trailing_adv_modifiers, False),
         ]
         ast = contrastive_branch_modifier_ast(subject, clauses, time_modifiers)
         type_check = check_contrastive_branch_modifier_ast(ast)
@@ -3274,7 +3280,8 @@ def contrastive_intransitive_do_support_negation(
             "input_sentence": sentence,
             "construction_summary": (
                 f"Same subject {subject} contrasts not {clauses[0]['predicate']['name']} "
-                f"with local Adv material against {clauses[1]['predicate']['name']}."
+                f"with local Adv material against {clauses[1]['predicate']['name']} "
+                "with its own branch-local Adv material."
             ),
             "event_semantics": {
                 "analysis": "contrastive-do-support-negation",
@@ -3284,6 +3291,7 @@ def contrastive_intransitive_do_support_negation(
                     f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) "
                     "and local modifiers) and exists e2. "
                     f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject})"
+                    " and local modifiers"
                 ),
                 "typed_replacement": typed_replacement,
             },
@@ -3293,8 +3301,8 @@ def contrastive_intransitive_do_support_negation(
                 **type_check,
                 "note": (
                     "Contrastive do-support negation with a left-branch Adv "
-                    "uses branch-local ModifierSeq indices: the negated branch "
-                    "may have n > 0 while the positive branch uses n = 0."
+                    "uses branch-local ModifierSeq indices: the negated and "
+                    "positive branches may have independent modifier lengths."
                 ),
             },
             "coq_code": coq_code,
@@ -3374,6 +3382,11 @@ def contrastive_transitive_do_support_negation(
     fronted_adv_modifiers: list[dict[str, Any]],
     fronted_time_modifiers: list[dict[str, str]],
 ) -> dict[str, Any] | None:
+    if not (
+        is_likely_transitive_verb(left_surface)
+        and is_likely_transitive_verb(right_surface)
+    ):
+        return None
     auxiliary_index = negation_index - 1
     subject = clean_phrase(tokens[:auxiliary_index])
     if subject == "entity":
@@ -3410,19 +3423,19 @@ def contrastive_transitive_do_support_negation(
     shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     if left_adv_modifiers:
-        if shared_adv_modifiers:
+        if fronted_adv_modifiers:
             return contrastive_do_support_failure(
                 sentence,
                 subject,
                 tokens[auxiliary_index],
                 "mixed_branch_modifier_under_contrastive_negation",
                 (
-                    "mixed local and shared modifiers inside contrastive "
+                    "mixed branch-local and fronted shared modifiers inside contrastive "
                     "do-support negation are not yet supported"
                 ),
                 (
-                    "The parser supports a local left-branch Adv only when "
-                    "the right branch has no additional shared Adv material."
+                    "The parser supports branch-local Adv material on both "
+                    "coordinates, but not an additional fronted shared Adv."
                 ),
             )
         clauses = [
@@ -3436,7 +3449,7 @@ def contrastive_transitive_do_support_negation(
             branch_modifier_clause(
                 right_surface,
                 subject,
-                [],
+                trailing_adv_modifiers,
                 False,
                 {"name": right_object, "type": object_type_for_transitive_predicate(lemma_verb(right_surface))},
             ),
@@ -3456,7 +3469,7 @@ def contrastive_transitive_do_support_negation(
                 f"{clauses[0]['predicate']['name']}({left_object} : "
                 f"{clauses[0]['object']['type']}) with local Adv material against "
                 f"{clauses[1]['predicate']['name']}({right_object} : "
-                f"{clauses[1]['object']['type']})."
+                f"{clauses[1]['object']['type']}) with its own branch-local Adv material."
             ),
             "event_semantics": {
                 "analysis": "contrastive-do-support-negation",
@@ -3466,7 +3479,7 @@ def contrastive_transitive_do_support_negation(
                     f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
                     f"Theme(e1, {left_object}) and local modifiers) and exists e2. "
                     f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
-                    f"Theme(e2, {right_object})"
+                    f"Theme(e2, {right_object}) and local modifiers"
                 ),
                 "typed_replacement": typed_replacement,
             },
@@ -3476,8 +3489,9 @@ def contrastive_transitive_do_support_negation(
                 **type_check,
                 "note": (
                     "Contrastive transitive do-support negation with a left-branch "
-                    "Adv uses branch-local ModifierSeq indices and preserves both "
-                    "object lexical types before Coq."
+                    "Adv uses branch-local ModifierSeq indices; each coordinate "
+                    "may carry its own modifier length while both object lexical "
+                    "types remain checked before Coq."
                 ),
             },
             "coq_code": coq_code,
@@ -3583,6 +3597,11 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
         return None
     left_surface = tokens[left_verb_index]
     right_surface = tokens[and_index + 1]
+    if not (
+        is_likely_transitive_verb(left_surface)
+        and is_likely_transitive_verb(right_surface)
+    ):
+        return None
     left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
     right_tail = split_object_tokens_and_modifiers(tokens[and_index + 2 :])
     if right_tail is None:

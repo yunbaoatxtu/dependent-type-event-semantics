@@ -738,12 +738,17 @@ Current type rules:
   `and_T(not_T(walk(john)), talk(john))`.
   Shared modifiers are preserved for those clear contrastive readings as well,
   so `John did not walk but talked in the park` records `in(park) : Adv` instead
-  of introducing an entity-like object. Left-branch-only Adv modifiers are
+  of introducing an entity-like object. Branch-local Adv modifiers are
   represented by `contrastive_branch_modifier_coordination`: the negated branch
   may use `walk(1)(in(park), john)` or `eat(1)(in(park), john, bread)`, while the
-  positive branch uses the zero-length sequence, such as `talk(0)(john)` or
-  `drink(0)(john, water)`. Mixed local and right-branch modifiers remain outside
-  the implemented fragment and are rejected before fallback.
+  positive branch can independently use either a zero-length sequence, such as
+  `talk(0)(john)` or `drink(0)(john, water)`, or its own local Adv sequence, such
+  as `talk(1)(quickly, john)` or `drink(1)(quickly, john, water)`. Transitive
+  coordination rules are additionally gated by the shared surface lexicon's
+  transitive-verb list, so intransitive predicates such as `walk` and `talk` do
+  not license pseudo-objects formed from modifiers. Mixed fronted shared Adv
+  material plus branch-local modifiers remains outside the implemented fragment
+  and is rejected before fallback.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the

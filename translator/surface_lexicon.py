@@ -81,6 +81,21 @@ COMMON_VERB_LEMMAS = {
     "walk",
     "write",
 }
+COMMON_TRANSITIVE_VERB_LEMMAS = {
+    "admire",
+    "break",
+    "butter",
+    "chase",
+    "drink",
+    "eat",
+    "know",
+    "love",
+    "read",
+    "salute",
+    "see",
+    "visit",
+    "write",
+}
 TEMPORAL_ADVERBS = {
     "today",
     "tomorrow",
@@ -206,6 +221,10 @@ def lemma_verb(token: str) -> str:
 
 def is_likely_surface_verb(token: str) -> bool:
     return lemma_verb(token) in COMMON_VERB_LEMMAS
+
+
+def is_likely_transitive_verb(token: str) -> bool:
+    return lemma_verb(token) in COMMON_TRANSITIVE_VERB_LEMMAS
 
 
 def is_passive_participle(token: str) -> bool:
