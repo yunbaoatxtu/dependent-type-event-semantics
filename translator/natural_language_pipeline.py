@@ -764,6 +764,94 @@ def split_fronted_do_support_modifiers(
     return remaining, all_adv_modifiers, all_time_modifiers
 
 
+def repeated_do_support_negation_coordination_pipeline(
+    sentence: str,
+    tokens: list[str],
+    negation_index: int,
+    auxiliary: str,
+    subject: str,
+    fronted_adv_modifiers: list[dict[str, Any]] | None = None,
+    fronted_time_modifiers: list[dict[str, str]] | None = None,
+) -> dict[str, Any] | None:
+    fronted_adv_modifiers = list(fronted_adv_modifiers or [])
+    fronted_time_modifiers = list(fronted_time_modifiers or [])
+    if tokens.count("and") != 1:
+        return None
+    and_index = tokens.index("and")
+    if and_index <= negation_index + 1 or and_index + 3 >= len(tokens):
+        return None
+    if tokens[and_index + 1] not in DO_SUPPORT_AUXILIARIES:
+        return None
+    if tokens[and_index + 2] != "not":
+        return None
+    left_surface = tokens[negation_index + 1]
+    right_surface = tokens[and_index + 3]
+    if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
+        return None
+
+    left_clause = negated_coordination_clause_from_tail(
+        left_surface,
+        tokens[negation_index + 2 : and_index],
+        subject,
+        fronted_adv_modifiers,
+    )
+    right_clause = negated_coordination_clause_from_tail(
+        right_surface,
+        tokens[and_index + 4 :],
+        subject,
+        fronted_adv_modifiers,
+    )
+    if left_clause is None or right_clause is None:
+        return None
+    clauses = [left_clause, right_clause]
+    readings = negated_coordination_readings(
+        subject,
+        clauses,
+        fronted_time_modifiers,
+    )
+    distributed_reading = readings[1]
+    type_check = check_negated_coordination_readings(readings)
+    type_check = {
+        **type_check,
+        "reading_count": 1,
+        "surface_scope": "distributed_negation",
+    }
+    typed_replacement = render_negated_coordination_reading(distributed_reading)
+    coq_code = render_negated_coordination_coq([distributed_reading])
+    return {
+        "kind": "repeated_do_support_negation_coordination",
+        "input_sentence": sentence,
+        "construction_summary": (
+            f"Same subject {subject} coordinates two explicit do-support "
+            "negations, so each typed branch is wrapped in not_T."
+        ),
+        "event_semantics": {
+            "analysis": "repeated-do-support-negation-coordination",
+            "source": sentence,
+            "event_style_reference": (
+                "not(P) and not(Q), without introducing Event, Agent, or Theme"
+            ),
+            "formula": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": {
+            "kind": "repeated_do_support_negation_coordination",
+            "auxiliary": auxiliary,
+            "subject": {"name": subject, "type": "Entity"},
+            "reading": distributed_reading,
+        },
+        "type_check": {
+            **type_check,
+            "note": (
+                "Repeated do-support negation over coordination has an explicit "
+                "distributed negation surface form, so the translator exports "
+                "one checked proposition rather than an ambiguity set."
+            ),
+        },
+        "coq_code": coq_code,
+    }
+
+
 def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     negation_index = None
@@ -797,9 +885,6 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
     if "and" in tokens:
-        coordinated = coordinated_do_support_negation_pipeline(sentence)
-        if coordinated is not None:
-            return coordinated
         stripped_negation_index = None
         for index, token in enumerate(tokens_without_fronted):
             if (
@@ -809,6 +894,27 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
             ):
                 stripped_negation_index = index
                 break
+        if stripped_negation_index is not None:
+            stripped_auxiliary_index = stripped_negation_index - 1
+            stripped_subject_tokens = tokens_without_fronted[:stripped_auxiliary_index]
+            stripped_subject = clean_phrase(stripped_subject_tokens)
+            if stripped_subject != "entity":
+                repeated_coordination = (
+                    repeated_do_support_negation_coordination_pipeline(
+                        sentence,
+                        tokens_without_fronted,
+                        stripped_negation_index,
+                        tokens_without_fronted[stripped_auxiliary_index],
+                        stripped_subject,
+                        fronted_adv_modifiers,
+                        fronted_time_modifiers,
+                    )
+                )
+                if repeated_coordination is not None:
+                    return repeated_coordination
+        coordinated = coordinated_do_support_negation_pipeline(sentence)
+        if coordinated is not None:
+            return coordinated
         ambiguous_coordination = None
         if stripped_negation_index is not None:
             stripped_auxiliary_index = stripped_negation_index - 1

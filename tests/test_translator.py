@@ -3095,25 +3095,69 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
-    def test_repeated_do_support_negation_is_not_misparsed_as_subject(self) -> None:
-        for sentence in (
+    def test_repeated_do_support_negation_coordinates_negated_branches(self) -> None:
+        intransitive = run_pipeline(
             "John did not walk and did not talk",
+            require_coq=True,
+        )
+        self.assertTrue(intransitive["ok"])
+        self.assertEqual(
+            intransitive["kind"],
+            "repeated_do_support_negation_coordination",
+        )
+        self.assertEqual(
+            intransitive["dependent_type_translation"],
+            "and_T(not_T(walk(john)), not_T(talk(john)))",
+        )
+        self.assertEqual(
+            intransitive["ast"]["subject"],
+            {"name": "john", "type": "Entity"},
+        )
+        self.assertEqual(intransitive["type_check"]["reading_count"], 1)
+        self.assertEqual(intransitive["coq_check"]["status"], "passed")
+        self.assertNotIn("john_did_not", intransitive["dependent_type_translation"])
+
+        transitive = run_pipeline(
             "John did not eat bread and did not drink water",
-        ):
-            with self.subTest(sentence=sentence):
-                result = run_pipeline(sentence, require_coq=True)
-                self.assertFalse(result["ok"])
-                self.assertEqual(result["kind"], "do_support_negation")
-                self.assertEqual(result["coq_check"]["status"], "skipped")
-                self.assertEqual(
-                    result["ast"]["subject"],
-                    {"name": "john", "type": "Entity"},
-                )
-                self.assertIn(
-                    "do-support negation with coordination is not yet supported",
-                    result["type_check"]["errors"],
-                )
-                self.assertNotIn("john_did_not", result["dependent_type_translation"])
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(
+            transitive["kind"],
+            "repeated_do_support_negation_coordination",
+        )
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            "and_T(not_T(eat(john, bread)), not_T(drink(john, water)))",
+        )
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertIn("Parameter eat : Entity -> Food -> Prop.", transitive["coq_code"])
+        self.assertIn(
+            "Parameter drink : Entity -> Drinkable -> Prop.",
+            transitive["coq_code"],
+        )
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+
+        fronted = run_pipeline(
+            "In the park yesterday John did not walk and did not talk",
+            require_coq=True,
+        )
+        self.assertTrue(fronted["ok"])
+        self.assertEqual(
+            fronted["dependent_type_translation"],
+            (
+                "at_T(yesterday, and_T(not_T(walk(1)(in(park), john)), "
+                "not_T(talk(1)(in(park), john))))"
+            ),
+        )
+        self.assertEqual(
+            fronted["ast"]["subject"],
+            {"name": "john", "type": "Entity"},
+        )
+        self.assertIn("Parameter in_park : Adv.", fronted["coq_code"])
+        self.assertIn("Parameter yesterday : Entity.", fronted["coq_code"])
+        self.assertEqual(fronted["coq_check"]["status"], "passed")
 
     def test_do_support_negation_ambiguity_rejects_object_type_conflict(self) -> None:
         result = run_pipeline(

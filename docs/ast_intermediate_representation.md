@@ -752,8 +752,10 @@ Current type rules:
   the resulting proposition, and Adv modifiers remain typed modifier entries
   rather than entities or object-name suffixes.
   Repeated do-support negation across both branches, such as `John did not walk
-  and did not talk`, is currently rejected as an unsupported construction rather
-  than being accepted with a malformed subject like `john_did_not`.
+  and did not talk`, is treated as an explicit distributed surface form:
+  `and_T(not_T(walk(john)), not_T(talk(john)))`. The same parser boundary keeps
+  `john` as the subject rather than accepting a malformed subject like
+  `john_did_not`.
   Clear contrastive `but` cases use the same local marker on the first
   coordinate: `John did not walk but talked` renders as
   `and_T(not_T(walk(john)), talk(john))`.
