@@ -3271,10 +3271,51 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter walk : forall n : nat, ModifierSeq n -> Entity -> PropT.", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
-    def test_subject_coordination_does_not_capture_transitive_predicate(self) -> None:
+    def test_subject_coordination_delegates_transitive_predicate_to_typed_rule(self) -> None:
         result = run_pipeline("John and Mary ate bread", require_coq=True)
         self.assertTrue(result["ok"])
-        self.assertNotEqual(result.get("kind"), "subject_coordination")
+        self.assertEqual(result.get("kind"), "transitive_subject_coordination")
+
+    def test_transitive_subject_coordination_shares_typed_object(self) -> None:
+        cases = (
+            ("John and Mary ate bread", "and_T(eat(john, bread), eat(mary, bread))", "Food"),
+            ("Both John and Mary ate bread", "and_T(eat(john, bread), eat(mary, bread))", "Food"),
+            ("John or Mary drank water", "or_T(drink(john, water), drink(mary, water))", "Drinkable"),
+        )
+        for sentence, expected_translation, expected_object_type in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "transitive_subject_coordination")
+                self.assertEqual(result["construction_rule"]["id"], "transitive_subject_coordination")
+                self.assertEqual(
+                    result["ast"]["subjects"],
+                    [{"name": "john", "type": "Entity"}, {"name": "mary", "type": "Entity"}],
+                )
+                self.assertEqual(result["ast"]["object"]["type"], expected_object_type)
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                self.assertIn(f"Parameter {expected_object_type} : Type.", result["coq_code"])
+                self.assertNotIn("both_john_and_mary", result["dependent_type_translation"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_transitive_subject_coordination_preserves_shared_modifiers_and_time(self) -> None:
+        result = run_pipeline("John and Mary ate bread in the park yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "transitive_subject_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(eat(1)(in(park), john, bread), eat(1)(in(park), mary, bread)))",
+        )
+        self.assertEqual(result["ast"]["object"], {"name": "bread", "type": "Food"})
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertIn("Parameter bread : Food.", result["coq_code"])
+        self.assertIn(
+            "Parameter eat : forall n : nat, ModifierSeq n -> Entity -> Food -> PropT.",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_transitive_predicate_coordination_supports_or_disjunction(self) -> None:
         result = run_pipeline("John ate bread or drank water", require_coq=True)
@@ -4799,6 +4840,7 @@ class TranslatorTests(unittest.TestCase):
             "do_support_negation",
             "predicate_coordination",
             "subject_coordination",
+            "transitive_subject_coordination",
             "transitive_predicate_coordination",
         }
         self.assertTrue(expected.issubset(rules))
@@ -4823,6 +4865,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter Agent :", rules["subject_coordination"].forbidden_coq_fragments)
         self.assertIn(
             "Parameter Event : Type.",
+            rules["transitive_subject_coordination"].forbidden_coq_fragments,
+        )
+        self.assertIn(
+            "Parameter Agent :",
+            rules["transitive_subject_coordination"].forbidden_coq_fragments,
+        )
+        self.assertIn(
+            "Parameter Event : Type.",
             rules["transitive_predicate_coordination"].forbidden_coq_fragments,
         )
         self.assertIn(
@@ -4843,6 +4893,7 @@ class TranslatorTests(unittest.TestCase):
             "do_support_negation": "John did not walk",
             "predicate_coordination": "John walked and talked",
             "subject_coordination": "John and Mary walked",
+            "transitive_subject_coordination": "John and Mary ate bread",
             "transitive_predicate_coordination": "John ate bread and drank water",
         }
         for rule in construction_rules():

@@ -229,8 +229,13 @@ both become `and_T(walk(john), walk(mary))`, while `John or Mary walked` becomes
 `or_T(walk(john), walk(mary))`. Shared Adv and time material still composes
 outside the subject names: `John and Mary walked in the park yesterday` becomes
 `at_T(yesterday, and_T(walk(1)(in(park), john), walk(1)(in(park), mary)))`.
-The rule is intentionally restricted to intransitives, so `John and Mary ate
-bread` is not consumed as this construction.
+A companion transitive subject-coordination rule keeps the shared object and its
+lexical type explicit: `John and Mary ate bread` becomes
+`and_T(eat(john, bread), eat(mary, bread))` with `bread : Food`, and `John or
+Mary drank water` becomes `or_T(drink(john, water), drink(mary, water))` with
+`water : Drinkable`. Shared modifiers compose in the same way, so `John and Mary
+ate bread in the park yesterday` becomes
+`at_T(yesterday, and_T(eat(1)(in(park), john, bread), eat(1)(in(park), mary, bread)))`.
 The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while

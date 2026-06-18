@@ -581,9 +581,56 @@ Shared Adv and time material use the same modifier and time fields as predicate
 coordination. For example, `John and Mary walked in the park yesterday` renders
 as `at_T(yesterday, and_T(walk(1)(in(park), john), walk(1)(in(park), mary)))`.
 
-This construction is deliberately limited to intransitive predicates. `John and
-Mary ate bread` is not analyzed as `subject_coordination`; a future transitive
-subject-coordination rule would need an explicit object field and object type.
+This construction is deliberately limited to intransitive predicates. Transitive
+shared-object cases are represented by `transitive_subject_coordination` instead.
+
+### `transitive_subject_coordination`
+
+Represents coordinated `Entity` subjects sharing one transitive predicate and
+one typed object, such as `John and Mary ate bread` or `John or Mary drank
+water`:
+
+```json
+{
+  "kind": "transitive_subject_coordination",
+  "subjects": [
+    {
+      "name": "john",
+      "type": "Entity"
+    },
+    {
+      "name": "mary",
+      "type": "Entity"
+    }
+  ],
+  "predicate": {
+    "surface": "ate",
+    "name": "eat",
+    "predicate_type": "Entity -> Food -> Prop"
+  },
+  "object": {
+    "name": "bread",
+    "type": "Food"
+  },
+  "modifiers": [],
+  "connective": "and_T",
+  "connective_type": "Prop -> Prop -> Prop",
+  "time_modifiers": []
+}
+```
+
+Renders as:
+
+```text
+and_T(eat(john, bread), eat(mary, bread))
+```
+
+The object type is inferred through the same lexical argument table used by
+other transitive rules, so `bread` is `Food` for `eat`, while `water` is
+`Drinkable` for `drink`. Shared Adv and time material remain separate from both
+subjects and the object: `John and Mary ate bread in the park yesterday` renders
+as `at_T(yesterday, and_T(eat(1)(in(park), john, bread), eat(1)(in(park), mary,
+bread)))`.
 
 ### `predicate_coordination`
 
@@ -889,6 +936,10 @@ Current type rules:
   `Entity`, the shared predicate has type `Entity -> Prop` or, when shared `Adv`
   modifiers are present, `forall n : nat, ModifierSeq n -> Entity -> PropT`,
   and the connective type matches the resulting proposition type.
+- `transitive_subject_coordination` has type `Prop` when exactly two subjects
+  have type `Entity`, the shared object has a stable lexical type, and the
+  shared predicate has type `Entity -> ObjectType -> Prop` or, with shared `Adv`
+  modifiers, `forall n : nat, ModifierSeq n -> Entity -> ObjectType -> PropT`.
 - `transitive_predicate_coordination` has type `Prop` when the shared subject has
   type `Entity`, each clause supplies an object with a stable lexical type, and
   each predicate has the corresponding type `Entity -> ObjectType -> Prop` or,
