@@ -3478,6 +3478,270 @@ def render_predicate_coordination_coq(
     return "\n".join(lines)
 
 
+def subject_coordination_ast(
+    subjects: list[str],
+    predicate: dict[str, str],
+    modifiers: list[dict[str, Any]],
+    time_modifiers: list[dict[str, str]],
+    connective: str = "and_T",
+) -> dict[str, Any]:
+    return {
+        "kind": "subject_coordination",
+        "subjects": [{"name": subject, "type": "Entity"} for subject in subjects],
+        "predicate": predicate,
+        "modifiers": modifiers,
+        "connective": connective,
+        "connective_type": (
+            "PropT -> PropT -> PropT" if modifiers else "Prop -> Prop -> Prop"
+        ),
+        "time_modifiers": time_modifiers,
+    }
+
+
+def check_subject_coordination_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "subject_coordination":
+        errors.append("ast.kind must be subject_coordination")
+    modifiers = ast.get("modifiers")
+    has_modifiers = isinstance(modifiers, list) and bool(modifiers)
+    expected_predicate_type = (
+        "forall n : nat, ModifierSeq n -> Entity -> PropT"
+        if has_modifiers
+        else "Entity -> Prop"
+    )
+
+    subjects = ast.get("subjects")
+    if not isinstance(subjects, list) or len(subjects) != 2:
+        errors.append("subject coordination subjects must contain exactly two items")
+    else:
+        for index, subject in enumerate(subjects):
+            if not isinstance(subject, dict):
+                errors.append(f"subject coordination subjects[{index}] must be an object")
+                continue
+            if not isinstance(subject.get("name"), str) or not subject.get("name"):
+                errors.append(
+                    f"subject coordination subjects[{index}].name must be a non-empty string"
+                )
+            if subject.get("type") != "Entity":
+                errors.append(f"subject coordination subjects[{index}] must have type Entity")
+
+    predicate = ast.get("predicate")
+    if not isinstance(predicate, dict):
+        errors.append("subject coordination predicate must be an object")
+    else:
+        surface = predicate.get("surface")
+        name = predicate.get("name")
+        if not isinstance(surface, str) or not surface:
+            errors.append("subject coordination predicate.surface must be a non-empty string")
+        if not isinstance(name, str) or not name:
+            errors.append("subject coordination predicate.name must be a non-empty string")
+        elif surface and lemma_verb(str(surface)) != name:
+            errors.append("subject coordination predicate.name must match its surface lemma")
+        if predicate.get("predicate_type") != expected_predicate_type:
+            errors.append(
+                f"subject coordination predicate must have type {expected_predicate_type}"
+            )
+
+    if ast.get("connective") not in {"and_T", "or_T"}:
+        errors.append("subject coordination connective must be and_T or or_T")
+    expected_connective_type = (
+        "PropT -> PropT -> PropT" if has_modifiers else "Prop -> Prop -> Prop"
+    )
+    if ast.get("connective_type") != expected_connective_type:
+        errors.append(
+            "subject coordination connective must have type "
+            f"{expected_connective_type}"
+        )
+
+    check_coordination_modifiers(errors, modifiers, "subject coordination")
+    check_time_modifiers(errors, ast.get("time_modifiers"), "subject coordination")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def render_subject_coordination_translation(ast: dict[str, Any]) -> str:
+    predicate = ast["predicate"]["name"]
+    subjects = [subject["name"] for subject in ast["subjects"]]
+    modifiers = ast.get("modifiers", [])
+    if modifiers:
+        modifier_args = readable_modifier_arguments(modifiers)
+        modifier_count = len(modifiers)
+        left = f"{predicate}({modifier_count})({modifier_args}, {subjects[0]})"
+        right = f"{predicate}({modifier_count})({modifier_args}, {subjects[1]})"
+    else:
+        left = f"{predicate}({subjects[0]})"
+        right = f"{predicate}({subjects[1]})"
+    proposition = f"{ast['connective']}({left}, {right})"
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
+
+
+def render_subject_coordination_coq(
+    definition_name: str,
+    ast: dict[str, Any],
+) -> str:
+    predicate = ast["predicate"]["name"]
+    subjects = [subject["name"] for subject in ast["subjects"]]
+    modifiers = ast.get("modifiers", [])
+    if modifiers:
+        modifier_count = len(modifiers)
+        modifier_sequence = coq_modifier_sequence(modifiers)
+        left = f"{predicate} {modifier_count} {modifier_sequence} {subjects[0]}"
+        right = f"{predicate} {modifier_count} {modifier_sequence} {subjects[1]}"
+    else:
+        left = f"{predicate} {subjects[0]}"
+        right = f"{predicate} {subjects[1]}"
+    proposition = f"{ast['connective']} ({left}) ({right})"
+    for modifier in ast["time_modifiers"]:
+        proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+    lines = [
+        "(* Subject coordination without event variables. *)",
+        "Parameter Entity : Type.",
+    ]
+    if modifiers:
+        lines.extend(
+            [
+                "Definition PropT : Type := Prop.",
+                "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+                "Parameter ModifierSeq : nat -> Type.",
+                "Parameter mods_nil : ModifierSeq 0.",
+                "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
+            ]
+        )
+        lines.extend(f"Parameter {name} : Adv." for name in unique_names([
+            modifier["name"] for modifier in modifiers
+        ]))
+    lines.append("")
+    lines.extend(f"Parameter {subject} : Entity." for subject in unique_names(subjects))
+    if modifiers:
+        lines.append(f"Parameter {predicate} : forall n : nat, ModifierSeq n -> Entity -> PropT.")
+        lines.append(f"Parameter {ast['connective']} : PropT -> PropT -> PropT.")
+    else:
+        lines.append(f"Parameter {predicate} : Entity -> Prop.")
+        lines.append(f"Parameter {ast['connective']} : Prop -> Prop -> Prop.")
+    if ast["time_modifiers"]:
+        lines.extend(
+            f"Parameter {name} : Entity."
+            for name in unique_names([
+                modifier["argument"] for modifier in ast["time_modifiers"]
+            ])
+        )
+        lines.extend(
+            [
+                "",
+                "Parameter at_T : Entity -> Prop -> Prop.",
+                "Parameter during_T : Entity -> Prop -> Prop.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            f"Definition {definition_name} : Prop :=",
+            f"  {proposition}.",
+            "",
+            f"Check {definition_name}.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def subject_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
+    tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
+    leading_both = bool(tokens and tokens[0] == "both")
+    if leading_both:
+        if "and" not in tokens:
+            return None
+        tokens = tokens[1:]
+
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
+        return None
+    coordinator, coordinator_index = coordination
+    if leading_both and coordinator != "and":
+        return None
+    left_subject_tokens = tokens[:coordinator_index]
+    right_side_tokens = tokens[coordinator_index + 1 :]
+    if not left_subject_tokens or len(right_side_tokens) < 2:
+        return None
+
+    predicate_offsets = [
+        index
+        for index, token in enumerate(right_side_tokens)
+        if is_likely_surface_verb(token)
+    ]
+    if len(predicate_offsets) != 1:
+        return None
+    predicate_offset = predicate_offsets[0]
+    if predicate_offset == 0:
+        return None
+    right_subject_tokens = right_side_tokens[:predicate_offset]
+    predicate_surface = right_side_tokens[predicate_offset]
+
+    trailing_modifiers = split_shared_adv_and_time_modifiers(
+        right_side_tokens[predicate_offset + 1 :]
+    )
+    if trailing_modifiers is None:
+        return None
+    trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+
+    subjects = [clean_phrase(left_subject_tokens), clean_phrase(right_subject_tokens)]
+    if any(subject == "entity" for subject in subjects):
+        return None
+    predicate_name = lemma_verb(predicate_surface)
+    predicate = {
+        "surface": predicate_surface,
+        "name": predicate_name,
+        "predicate_type": (
+            "forall n : nat, ModifierSeq n -> Entity -> PropT"
+            if shared_adv_modifiers
+            else "Entity -> Prop"
+        ),
+    }
+    ast = subject_coordination_ast(
+        subjects,
+        predicate,
+        shared_adv_modifiers,
+        time_modifiers,
+        connective_for_coordinator(coordinator),
+    )
+    type_check = check_subject_coordination_ast(ast)
+    typed_replacement = render_subject_coordination_translation(ast)
+    coq_code = render_subject_coordination_coq(
+        f"subject_coordination_{predicate_name}",
+        ast,
+    )
+    return {
+        "kind": "subject_coordination",
+        "input_sentence": sentence,
+        "event_semantics": {
+            "analysis": "subject-coordination",
+            "source": sentence,
+            "event_style_reference": (
+                f"{predicate_name}(e1) with Agent(e1, {subjects[0]}) and "
+                f"{predicate_name}(e2) with Agent(e2, {subjects[1]})"
+            ),
+            "typed_replacement": typed_replacement,
+        },
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": type_check,
+        "coq_code": coq_code,
+        "construction_summary": (
+            f"Subject coordination shares {predicate_name} across "
+            f"{subjects[0]} and {subjects[1]} without introducing event variables."
+        ),
+    }
+
+
 def predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
@@ -4853,6 +5117,18 @@ def construction_rules() -> list[ConstructionRule]:
             label="Predicate coordination",
             phenomenon="Same-subject intransitive predicate coordination without event variables",
             analyzer=predicate_coordination_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="subject_coordination",
+            label="Subject coordination",
+            phenomenon="Shared intransitive predicate over coordinated subjects without event variables",
+            analyzer=subject_coordination_pipeline,
             forbidden_coq_fragments=(
                 "Parameter Event : Type.",
                 "exists e : Event",

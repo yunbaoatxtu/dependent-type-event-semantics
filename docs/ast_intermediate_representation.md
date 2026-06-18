@@ -534,6 +534,57 @@ The paired object-wide reading has the same relation arguments but reverses the
 `scope_order`. This makes the ambiguity auditable before the Coq formula is
 rendered.
 
+### `subject_coordination`
+
+Represents coordinated `Entity` subjects sharing one intransitive predicate,
+such as `John and Mary walked`, `Both John and Mary walked`, or `John or Mary
+walked`. The construction records the two subjects, the shared lemmatized
+predicate, and the Boolean connective:
+
+```json
+{
+  "kind": "subject_coordination",
+  "subjects": [
+    {
+      "name": "john",
+      "type": "Entity"
+    },
+    {
+      "name": "mary",
+      "type": "Entity"
+    }
+  ],
+  "predicate": {
+    "surface": "walked",
+    "name": "walk",
+    "predicate_type": "Entity -> Prop"
+  },
+  "modifiers": [],
+  "connective": "and_T",
+  "connective_type": "Prop -> Prop -> Prop",
+  "time_modifiers": []
+}
+```
+
+Renders as:
+
+```text
+and_T(walk(john), walk(mary))
+```
+
+The sentence-initial marker in `Both John and Mary walked` is not absorbed into
+the subject name; it licenses the same `and_T` reading. Disjunction uses
+`"connective": "or_T"`, so `John or Mary walked` renders as
+`or_T(walk(john), walk(mary))`.
+
+Shared Adv and time material use the same modifier and time fields as predicate
+coordination. For example, `John and Mary walked in the park yesterday` renders
+as `at_T(yesterday, and_T(walk(1)(in(park), john), walk(1)(in(park), mary)))`.
+
+This construction is deliberately limited to intransitive predicates. `John and
+Mary ate bread` is not analyzed as `subject_coordination`; a future transitive
+subject-coordination rule would need an explicit object field and object type.
+
 ### `predicate_coordination`
 
 Represents same-subject intransitive predicate coordination such as `John walked
@@ -834,6 +885,10 @@ Current type rules:
   coordinated predicate has either type `Entity -> Prop` or, when shared `Adv`
   modifiers are present, `forall n : nat, ModifierSeq n -> Entity -> PropT`, and
   every predicate lemma matches its surface form.
+- `subject_coordination` has type `Prop` when exactly two subjects have type
+  `Entity`, the shared predicate has type `Entity -> Prop` or, when shared `Adv`
+  modifiers are present, `forall n : nat, ModifierSeq n -> Entity -> PropT`,
+  and the connective type matches the resulting proposition type.
 - `transitive_predicate_coordination` has type `Prop` when the shared subject has
   type `Entity`, each clause supplies an object with a stable lexical type, and
   each predicate has the corresponding type `Entity -> ObjectType -> Prop` or,

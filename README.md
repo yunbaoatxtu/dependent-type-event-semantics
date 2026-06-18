@@ -223,6 +223,14 @@ not `in_park_slowly`.
 The same order rule applies when one modifier is fronted and another is
 trailing: `Slowly John walked and talked in the park` still yields the sequence
 `slowly, in(park)`.
+A separate subject-coordination rule handles two `Entity` subjects sharing one
+intransitive predicate. `John and Mary walked` and `Both John and Mary walked`
+both become `and_T(walk(john), walk(mary))`, while `John or Mary walked` becomes
+`or_T(walk(john), walk(mary))`. Shared Adv and time material still composes
+outside the subject names: `John and Mary walked in the park yesterday` becomes
+`at_T(yesterday, and_T(walk(1)(in(park), john), walk(1)(in(park), mary)))`.
+The rule is intentionally restricted to intransitives, so `John and Mary ate
+bread` is not consumed as this construction.
 The next controlled coordination layer handles two transitive verb phrases with
 the same subject. `John ate bread and drank water` becomes
 `and_T(eat(john, bread), drink(john, water))`; `bread` is typed as `Food`, while

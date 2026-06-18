@@ -3229,6 +3229,53 @@ class TranslatorTests(unittest.TestCase):
             ["john", "walked", "and", "talked"],
         )
 
+    def test_subject_coordination_shares_intransitive_predicate(self) -> None:
+        cases = (
+            ("John and Mary walked", "and_T(walk(john), walk(mary))", "and_T"),
+            ("Both John and Mary walked", "and_T(walk(john), walk(mary))", "and_T"),
+            ("John or Mary walked", "or_T(walk(john), walk(mary))", "or_T"),
+        )
+        for sentence, expected_translation, expected_connective in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "subject_coordination")
+                self.assertEqual(result["construction_rule"]["id"], "subject_coordination")
+                self.assertEqual(result["ast"]["connective"], expected_connective)
+                self.assertEqual(
+                    result["ast"]["subjects"],
+                    [{"name": "john", "type": "Entity"}, {"name": "mary", "type": "Entity"}],
+                )
+                self.assertEqual(result["ast"]["predicate"]["predicate_type"], "Entity -> Prop")
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                self.assertIn("Parameter john : Entity.", result["coq_code"])
+                self.assertIn("Parameter mary : Entity.", result["coq_code"])
+                self.assertIn("Parameter walk : Entity -> Prop.", result["coq_code"])
+                self.assertNotIn("both_john_and_mary", result["dependent_type_translation"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_subject_coordination_preserves_shared_modifiers_and_time(self) -> None:
+        result = run_pipeline("John and Mary walked in the park yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "subject_coordination")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "at_T(yesterday, and_T(walk(1)(in(park), john), walk(1)(in(park), mary)))",
+        )
+        self.assertEqual(result["ast"]["modifiers"][0]["type"], "Adv")
+        self.assertEqual(result["ast"]["modifiers"][0]["name"], "in_park")
+        self.assertEqual(result["ast"]["time_modifiers"], [{"operator": "at", "argument": "yesterday"}])
+        self.assertIn("Parameter in_park : Adv.", result["coq_code"])
+        self.assertIn("Parameter walk : forall n : nat, ModifierSeq n -> Entity -> PropT.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_subject_coordination_does_not_capture_transitive_predicate(self) -> None:
+        result = run_pipeline("John and Mary ate bread", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertNotEqual(result.get("kind"), "subject_coordination")
+
     def test_transitive_predicate_coordination_supports_or_disjunction(self) -> None:
         result = run_pipeline("John ate bread or drank water", require_coq=True)
         self.assertTrue(result["ok"])
@@ -4751,6 +4798,7 @@ class TranslatorTests(unittest.TestCase):
             "copular_property",
             "do_support_negation",
             "predicate_coordination",
+            "subject_coordination",
             "transitive_predicate_coordination",
         }
         self.assertTrue(expected.issubset(rules))
@@ -4771,6 +4819,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter Agent :", rules["do_support_negation"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["predicate_coordination"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["predicate_coordination"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["subject_coordination"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["subject_coordination"].forbidden_coq_fragments)
         self.assertIn(
             "Parameter Event : Type.",
             rules["transitive_predicate_coordination"].forbidden_coq_fragments,
@@ -4792,6 +4842,7 @@ class TranslatorTests(unittest.TestCase):
             "copular_property": "Mary is happy",
             "do_support_negation": "John did not walk",
             "predicate_coordination": "John walked and talked",
+            "subject_coordination": "John and Mary walked",
             "transitive_predicate_coordination": "John ate bread and drank water",
         }
         for rule in construction_rules():
