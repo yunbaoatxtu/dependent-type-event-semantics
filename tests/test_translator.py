@@ -2542,6 +2542,39 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(transitive["coq_check"]["status"], "passed")
 
+        disjunctive = run_pipeline("John walked or did not talk", require_coq=True)
+        self.assertTrue(disjunctive["ok"])
+        self.assertEqual(disjunctive["kind"], "coordinated_do_support_negation")
+        self.assertEqual(disjunctive["ast"]["connective"], "or_T")
+        self.assertEqual(
+            disjunctive["dependent_type_translation"],
+            "or_T(walk(john), not_T(talk(john)))",
+        )
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", disjunctive["coq_code"])
+        self.assertIn(
+            "or_T (walk john) (not_T (talk john))",
+            disjunctive["coq_code"],
+        )
+        self.assertEqual(disjunctive["coq_check"]["status"], "passed")
+
+        transitive_disjunctive = run_pipeline(
+            "John ate bread or did not drink water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_disjunctive["ok"])
+        self.assertEqual(transitive_disjunctive["ast"]["connective"], "or_T")
+        self.assertEqual(
+            transitive_disjunctive["dependent_type_translation"],
+            "or_T(eat(john, bread), not_T(drink(john, water)))",
+        )
+        self.assertIn("Parameter bread : Food.", transitive_disjunctive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive_disjunctive["coq_code"])
+        self.assertIn(
+            "or_T (eat john bread) (not_T (drink john water))",
+            transitive_disjunctive["coq_code"],
+        )
+        self.assertEqual(transitive_disjunctive["coq_check"]["status"], "passed")
+
     def test_do_support_negation_coordination_preserves_time_and_shared_adv(self) -> None:
         fronted_time = run_pipeline(
             "Yesterday John walked and did not talk",
@@ -4786,6 +4819,25 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("and_T(walk(john), not_T(talk(john)))", page)
         self.assertIn("hygiene: passed", page)
         self.assertIn("Coq/Rocq Check", page)
+
+        disjunctive = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+walked+or+did+not+talk&require_coq=1",
+        )
+        self.assertTrue(disjunctive["ok"])
+        self.assertEqual(
+            disjunctive["dependent_type_translation"],
+            "or_T(walk(john), not_T(talk(john)))",
+        )
+        self.assertEqual(disjunctive["diagnostics"]["summary"], "translation verified")
+
+        disjunctive_page = render_page(
+            "John walked or did not talk",
+            require_coq=True,
+        )
+        self.assertIn("Translation verified", disjunctive_page)
+        self.assertIn("or_T(walk(john), not_T(talk(john)))", disjunctive_page)
+        self.assertIn("Parameter or_T : Prop -&gt; Prop -&gt; Prop.", disjunctive_page)
 
     def test_api_and_page_report_ambiguous_do_support_negation_readings(self) -> None:
         handler = object.__new__(PipelineHandler)

@@ -736,7 +736,12 @@ Current type rules:
   such as `John did not walk` is compiled by wrapping the positive-clause AST in
   this constructor. Right-branch coordinated do-support negation, as in `John
   walked and did not talk`, records `negated: true` on the second checked
-  coordinate and renders `and_T(walk(john), not_T(talk(john)))`. Scope-ambiguous
+  coordinate and renders `and_T(walk(john), not_T(talk(john)))`.
+  The same right-branch rule can use `or_T`: `John walked or did not talk`
+  renders as `or_T(walk(john), not_T(talk(john)))`, and the transitive case
+  `John ate bread or did not drink water` preserves `bread : Food` and
+  `water : Drinkable`.
+  Scope-ambiguous
   coordinated do-support negation, as in `John did not walk and talk`, is
   represented by `do_support_negation_coordination_ambiguity` with two readings:
   `negation_over_conjunction` renders `not_T(and_T(walk(john), talk(john)))`,

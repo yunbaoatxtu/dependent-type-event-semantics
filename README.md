@@ -145,7 +145,10 @@ also preserves lexical object types, so `John did not eat bread` becomes
 do-support negation is now handled as typed coordination, so `John walked and did
 not talk` becomes `and_T(walk(john), not_T(talk(john)))`, and `John ate bread
 and did not drink water` becomes `and_T(eat(john, bread), not_T(drink(john,
-water)))`. Time expressions still scope outside the conjunction, and shared
+water)))`. The same typed boundary supports disjunction: `John walked or did
+not talk` becomes `or_T(walk(john), not_T(talk(john)))`, and `John ate bread or
+did not drink water` becomes `or_T(eat(john, bread), not_T(drink(john, water)))`.
+Time expressions still scope outside the conjunction, and shared
 locative/instrumental/manner material remains typed as `Adv`, e.g. `John walked
 and did not talk in the park` keeps `in(park)` as a modifier in both
 coordinates. Contrastive `but` coordination is handled for simple clear cases:

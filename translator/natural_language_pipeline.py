@@ -1170,37 +1170,43 @@ def wrap_negated_coq(term: str, negated: bool) -> str:
 def coordinated_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
-    if tokens.count("and") != 1:
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
         return None
-    and_index = tokens.index("and")
-    if "not" in tokens[:and_index]:
+    coordinator, coordinator_index = coordination
+    connective = connective_for_coordinator(coordinator)
+    if "not" in tokens[:coordinator_index]:
         return None
-    if and_index + 3 >= len(tokens):
+    if coordinator_index + 3 >= len(tokens):
         return None
-    auxiliary = tokens[and_index + 1]
-    if auxiliary not in DO_SUPPORT_AUXILIARIES or tokens[and_index + 2] != "not":
+    auxiliary = tokens[coordinator_index + 1]
+    if auxiliary not in DO_SUPPORT_AUXILIARIES or tokens[coordinator_index + 2] != "not":
         return None
-    right_surface = tokens[and_index + 3]
+    right_surface = tokens[coordinator_index + 3]
     if not is_likely_surface_verb(right_surface):
         return None
 
     transitive = coordinated_transitive_do_support_negation(
         sentence,
         tokens,
-        and_index,
+        coordinator_index,
         right_surface,
         fronted_adv_modifiers,
         fronted_time_modifiers,
+        coordinator,
+        connective,
     )
     if transitive is not None:
         return transitive
     return coordinated_intransitive_do_support_negation(
         sentence,
         tokens,
-        and_index,
+        coordinator_index,
         right_surface,
         fronted_adv_modifiers,
         fronted_time_modifiers,
+        coordinator,
+        connective,
     )
 
 
@@ -3823,12 +3829,14 @@ def split_object_tokens_and_modifiers(
 def coordinated_intransitive_do_support_negation(
     sentence: str,
     tokens: list[str],
-    and_index: int,
+    coordinator_index: int,
     right_surface: str,
     fronted_adv_modifiers: list[dict[str, Any]],
     fronted_time_modifiers: list[dict[str, str]],
+    coordinator: str,
+    connective: str,
 ) -> dict[str, Any] | None:
-    left_predicate_index = and_index - 1
+    left_predicate_index = coordinator_index - 1
     if left_predicate_index <= 0:
         return None
     left_surface = tokens[left_predicate_index]
@@ -3837,7 +3845,7 @@ def coordinated_intransitive_do_support_negation(
     subject = clean_phrase(tokens[:left_predicate_index])
     if subject == "entity":
         return None
-    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[and_index + 4 :])
+    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[coordinator_index + 4 :])
     if trailing_modifiers is None:
         return None
     trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
@@ -3866,6 +3874,7 @@ def coordinated_intransitive_do_support_negation(
         predicates,
         shared_adv_modifiers,
         time_modifiers,
+        connective=connective,
     )
     type_check = check_predicate_coordination_ast(ast)
     typed_replacement = render_predicate_coordination_translation(ast)
@@ -3877,7 +3886,7 @@ def coordinated_intransitive_do_support_negation(
         "kind": "coordinated_do_support_negation",
         "input_sentence": sentence,
         "construction_summary": (
-            f"Same subject {subject} coordinates {predicates[0]['name']} with "
+            f"Same subject {subject} coordinates {predicates[0]['name']} {coordinator} "
             f"the right-branch do-support negation not {predicates[1]['name']}."
         ),
         "event_semantics": {
@@ -3885,7 +3894,7 @@ def coordinated_intransitive_do_support_negation(
             "source": sentence,
             "event_style_reference": (
                 "exists e1. "
-                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) and "
+                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) {coordinator} "
                 "not(exists e2. "
                 f"{predicates[1]['name']}(e2) and Agent(e2, {subject}))"
             ),
@@ -3908,20 +3917,22 @@ def coordinated_intransitive_do_support_negation(
 def coordinated_transitive_do_support_negation(
     sentence: str,
     tokens: list[str],
-    and_index: int,
+    coordinator_index: int,
     right_surface: str,
     fronted_adv_modifiers: list[dict[str, Any]],
     fronted_time_modifiers: list[dict[str, str]],
+    coordinator: str,
+    connective: str,
 ) -> dict[str, Any] | None:
     left_verb_indices = [
         index
-        for index in range(1, and_index)
+        for index in range(1, coordinator_index)
         if is_likely_surface_verb(tokens[index])
     ]
     if len(left_verb_indices) != 1:
         return None
     left_verb_index = left_verb_indices[0]
-    if left_verb_index == 0 or left_verb_index + 1 >= and_index:
+    if left_verb_index == 0 or left_verb_index + 1 >= coordinator_index:
         return None
     subject = clean_phrase(tokens[:left_verb_index])
     if subject == "entity":
@@ -3932,8 +3943,8 @@ def coordinated_transitive_do_support_negation(
         and is_likely_transitive_verb(right_surface)
     ):
         return None
-    left_object = clean_phrase(tokens[left_verb_index + 1 : and_index])
-    right_tail = split_object_tokens_and_modifiers(tokens[and_index + 4 :])
+    left_object = clean_phrase(tokens[left_verb_index + 1 : coordinator_index])
+    right_tail = split_object_tokens_and_modifiers(tokens[coordinator_index + 4 :])
     if right_tail is None:
         return None
     right_object_tokens, trailing_adv_modifiers, trailing_time_modifiers = right_tail
@@ -3972,6 +3983,7 @@ def coordinated_transitive_do_support_negation(
         clauses,
         shared_adv_modifiers,
         time_modifiers,
+        connective=connective,
     )
     type_check = check_transitive_predicate_coordination_ast(ast)
     typed_replacement = render_transitive_predicate_coordination_translation(ast)
@@ -3985,7 +3997,7 @@ def coordinated_transitive_do_support_negation(
         "construction_summary": (
             f"Same subject {subject} coordinates "
             f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
-            f"{clauses[0]['object']['type']}) with right-branch negation not "
+            f"{clauses[0]['object']['type']}) {coordinator} right-branch negation not "
             f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
             f"{clauses[1]['object']['type']})."
         ),
@@ -3995,7 +4007,7 @@ def coordinated_transitive_do_support_negation(
             "event_style_reference": (
                 "exists e1. "
                 f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
-                f"Theme(e1, {clauses[0]['object']['name']}) and not(exists e2. "
+                f"Theme(e1, {clauses[0]['object']['name']}) {coordinator} not(exists e2. "
                 f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
                 f"Theme(e2, {clauses[1]['object']['name']}))"
             ),
