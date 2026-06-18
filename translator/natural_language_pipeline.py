@@ -961,6 +961,8 @@ def coordinated_do_support_negation_pipeline(sentence: str) -> dict[str, Any] | 
     if tokens.count("and") != 1:
         return None
     and_index = tokens.index("and")
+    if "not" in tokens[:and_index]:
+        return None
     if and_index + 3 >= len(tokens):
         return None
     auxiliary = tokens[and_index + 1]

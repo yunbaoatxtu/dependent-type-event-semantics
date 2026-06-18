@@ -3095,6 +3095,26 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_repeated_do_support_negation_is_not_misparsed_as_subject(self) -> None:
+        for sentence in (
+            "John did not walk and did not talk",
+            "John did not eat bread and did not drink water",
+        ):
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertFalse(result["ok"])
+                self.assertEqual(result["kind"], "do_support_negation")
+                self.assertEqual(result["coq_check"]["status"], "skipped")
+                self.assertEqual(
+                    result["ast"]["subject"],
+                    {"name": "john", "type": "Entity"},
+                )
+                self.assertIn(
+                    "do-support negation with coordination is not yet supported",
+                    result["type_check"]["errors"],
+                )
+                self.assertNotIn("john_did_not", result["dependent_type_translation"])
+
     def test_do_support_negation_ambiguity_rejects_object_type_conflict(self) -> None:
         result = run_pipeline(
             "John did not eat bread and drink bread",

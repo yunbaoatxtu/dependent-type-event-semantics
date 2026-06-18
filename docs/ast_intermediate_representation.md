@@ -751,6 +751,9 @@ Current type rules:
   `yesterday` as a proposition-level time operator. Time modifiers scope over
   the resulting proposition, and Adv modifiers remain typed modifier entries
   rather than entities or object-name suffixes.
+  Repeated do-support negation across both branches, such as `John did not walk
+  and did not talk`, is currently rejected as an unsupported construction rather
+  than being accepted with a malformed subject like `john_did_not`.
   Clear contrastive `but` cases use the same local marker on the first
   coordinate: `John did not walk but talked` renders as
   `and_T(not_T(walk(john)), talk(john))`.
