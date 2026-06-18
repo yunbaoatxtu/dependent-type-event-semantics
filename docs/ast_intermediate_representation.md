@@ -734,8 +734,13 @@ Current type rules:
   `negation_over_conjunction` renders `not_T(and_T(walk(john), talk(john)))`,
   while `distributed_negation` renders
   `and_T(not_T(walk(john)), not_T(talk(john)))`.
-  Time modifiers scope over the resulting conjunction, and shared Adv modifiers
-  remain typed modifier entries rather than entities.
+  Branch-local modifiers are preserved inside both readings: `John did not walk
+  slowly and talk quickly` renders `walk(1)(slowly, john)` and
+  `talk(1)(quickly, john)` under the two alternative negation scopes, while
+  `John did not eat bread slowly and drink water quickly` keeps `bread : Food`
+  and `water : Drinkable` separate from the `slowly` and `quickly` Adv entries.
+  Time modifiers scope over the resulting proposition, and Adv modifiers remain
+  typed modifier entries rather than entities or object-name suffixes.
   Clear contrastive `but` cases use the same local marker on the first
   coordinate: `John did not walk but talked` renders as
   `and_T(not_T(walk(john)), talk(john))`.

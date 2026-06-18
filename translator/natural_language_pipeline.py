@@ -281,8 +281,29 @@ def negated_coordination_readings(
     ]
 
 
+def negated_coordination_clause_uses_propt(clause: dict[str, Any]) -> bool:
+    predicate_type = str(clause.get("predicate", {}).get("predicate_type", ""))
+    return (
+        predicate_type.startswith("forall n : nat, ModifierSeq n ->")
+        or bool(clause.get("modifiers"))
+        or bool(clause.get("time_modifiers"))
+        or "modifiers" in clause
+        or "time_modifiers" in clause
+    )
+
+
+def negated_coordination_uses_propt(readings: list[dict[str, Any]]) -> bool:
+    return any(
+        negated_coordination_clause_uses_propt(clause)
+        for reading in readings
+        for clause in reading.get("clauses", [])
+        if isinstance(clause, dict)
+    )
+
+
 def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
     errors: list[str] = []
+    object_declarations: list[tuple[str, str]] = []
     if len(readings) != 2:
         errors.append(f"expected two negated coordination readings, got {len(readings)}")
     observed_scopes = {str(reading.get("scope")) for reading in readings}
@@ -333,9 +354,25 @@ def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[
                 errors.append(
                     f"readings[{reading_index}].clauses[{clause_index}].predicate.name must match its surface lemma"
                 )
+            uses_propt = negated_coordination_clause_uses_propt(clause)
+            if uses_propt:
+                check_coordination_modifiers(
+                    errors,
+                    clause.get("modifiers", []),
+                    f"readings[{reading_index}].clauses[{clause_index}]",
+                )
+                check_time_modifiers(
+                    errors,
+                    clause.get("time_modifiers", []),
+                    f"readings[{reading_index}].clauses[{clause_index}]",
+                )
             obj = clause.get("object")
             if obj is None:
-                expected_type = "Entity -> Prop"
+                expected_type = (
+                    "forall n : nat, ModifierSeq n -> Entity -> PropT"
+                    if uses_propt
+                    else "Entity -> Prop"
+                )
             elif isinstance(obj, dict):
                 object_name = obj.get("name")
                 object_type = obj.get("type")
@@ -349,7 +386,14 @@ def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[
                     )
                     expected_type = None
                 else:
-                    expected_type = f"Entity -> {object_type} -> Prop"
+                    if reading_index == 0:
+                        object_declarations.append((str(object_name), object_type))
+                    expected_type = (
+                        "forall n : nat, ModifierSeq n -> "
+                        f"Entity -> {object_type} -> PropT"
+                        if uses_propt
+                        else f"Entity -> {object_type} -> Prop"
+                    )
             else:
                 errors.append(
                     f"readings[{reading_index}].clauses[{clause_index}].object must be null or object"
@@ -359,6 +403,12 @@ def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[
                 errors.append(
                     f"readings[{reading_index}].clauses[{clause_index}].predicate must have type {expected_type}"
                 )
+
+    check_declaration_type_conflicts(
+        errors,
+        object_declarations,
+        "negated coordination object",
+    )
 
     return {
         "ok": not errors,
@@ -372,6 +422,10 @@ def render_negated_coordination_clause(
     clause: dict[str, Any],
     coq: bool = False,
 ) -> str:
+    if negated_coordination_clause_uses_propt(clause):
+        if coq:
+            return render_branch_clause_coq(clause)
+        return render_branch_clause_translation(clause)
     predicate = clause["predicate"]["name"]
     subject = clause["subject"]["name"]
     obj = clause.get("object")
@@ -406,6 +460,7 @@ def render_negated_coordination_coq(
 ) -> str:
     clauses = readings[0]["clauses"]
     subject = readings[0]["subject"]["name"]
+    uses_propt = negated_coordination_uses_propt(readings)
     object_types = list(
         dict.fromkeys(
             clause["object"]["type"]
@@ -427,7 +482,27 @@ def render_negated_coordination_coq(
         "(* Scope ambiguity for do-support negation over coordination. *)",
         "Parameter Entity : Type.",
     ]
+    if uses_propt:
+        lines.extend(
+            [
+                "Definition PropT : Type := Prop.",
+                "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+                "Parameter ModifierSeq : nat -> Type.",
+                "Parameter mods_nil : ModifierSeq 0.",
+                "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
+            ]
+        )
     lines.extend(f"Parameter {object_type} : Type." for object_type in object_types)
+    if uses_propt:
+        all_modifiers = [
+            modifier
+            for clause in clauses
+            for modifier in clause.get("modifiers", [])
+        ]
+        lines.extend(
+            f"Parameter {name} : Adv."
+            for name in unique_names([modifier["name"] for modifier in all_modifiers])
+        )
     lines.extend(
         [
             "",
@@ -439,13 +514,40 @@ def render_negated_coordination_coq(
         f"Parameter {name} : {predicate_type}."
         for name, predicate_type in predicate_declarations
     )
-    lines.extend(
-        [
-            "Parameter not_T : Prop -> Prop.",
-            "Parameter and_T : Prop -> Prop -> Prop.",
-            "",
+    if uses_propt:
+        lines.extend(
+            [
+                "Parameter not_T : PropT -> PropT.",
+                "Parameter and_T : PropT -> PropT -> PropT.",
+            ]
+        )
+        all_time_modifiers = [
+            modifier
+            for clause in clauses
+            for modifier in clause.get("time_modifiers", [])
         ]
-    )
+        if all_time_modifiers:
+            lines.extend(
+                f"Parameter {name} : Entity."
+                for name in unique_names([
+                    modifier["argument"] for modifier in all_time_modifiers
+                ])
+            )
+            lines.extend(
+                [
+                    "Parameter at_T : Entity -> PropT -> PropT.",
+                    "Parameter during_T : Entity -> PropT -> PropT.",
+                ]
+            )
+        lines.append("")
+    else:
+        lines.extend(
+            [
+                "Parameter not_T : Prop -> Prop.",
+                "Parameter and_T : Prop -> Prop -> Prop.",
+                "",
+            ]
+        )
     for reading in readings:
         lines.extend(
             [
@@ -457,6 +559,65 @@ def render_negated_coordination_coq(
     lines.extend(f"Check {reading['name']}." for reading in readings)
     lines.append("")
     return "\n".join(lines)
+
+
+def negated_coordination_clause_from_tail(
+    surface: str,
+    tail_tokens: list[str],
+    subject: str,
+) -> dict[str, Any] | None:
+    modifier_parse = split_shared_adv_and_time_modifiers(tail_tokens)
+    if modifier_parse is not None:
+        adv_modifiers, time_modifiers = modifier_parse
+        if adv_modifiers or time_modifiers:
+            return branch_modifier_clause(
+                surface,
+                subject,
+                adv_modifiers,
+                False,
+                time_modifiers=time_modifiers,
+            )
+        return {
+            "predicate": {
+                "surface": surface,
+                "name": lemma_verb(surface),
+                "predicate_type": "Entity -> Prop",
+            },
+            "subject": {"name": subject, "type": "Entity"},
+            "object": None,
+        }
+
+    if not is_likely_transitive_verb(surface):
+        return None
+
+    object_parse = split_object_tokens_and_modifiers(tail_tokens)
+    if object_parse is None:
+        return None
+    object_tokens, adv_modifiers, time_modifiers = object_parse
+    obj = clean_phrase(object_tokens)
+    if obj == "entity":
+        return None
+    predicate = lemma_verb(surface)
+    object_type = object_type_for_transitive_predicate(predicate)
+    obj_record = {"name": obj, "type": object_type}
+    if adv_modifiers or time_modifiers:
+        return branch_modifier_clause(
+            surface,
+            subject,
+            adv_modifiers,
+            False,
+            obj_record,
+            time_modifiers=time_modifiers,
+        )
+    return {
+        "predicate": {
+            "surface": surface,
+            "name": predicate,
+            "predicate_type": f"Entity -> {object_type} -> Prop",
+        },
+        "subject": {"name": subject, "type": "Entity"},
+        "object": obj_record,
+    }
 
 
 def ambiguous_do_support_coordination_pipeline(
@@ -476,66 +637,19 @@ def ambiguous_do_support_coordination_pipeline(
     if not is_likely_surface_verb(left_surface) or not is_likely_surface_verb(right_surface):
         return None
 
-    clauses: list[dict[str, Any]]
-    left_object_tokens = tokens[negation_index + 2 : and_index]
-    right_object_tokens = tokens[and_index + 2 :]
-    if not left_object_tokens and not right_object_tokens:
-        clauses = [
-            {
-                "predicate": {
-                    "surface": left_surface,
-                    "name": lemma_verb(left_surface),
-                    "predicate_type": "Entity -> Prop",
-                },
-                "subject": {"name": subject, "type": "Entity"},
-                "object": None,
-            },
-            {
-                "predicate": {
-                    "surface": right_surface,
-                    "name": lemma_verb(right_surface),
-                    "predicate_type": "Entity -> Prop",
-                },
-                "subject": {"name": subject, "type": "Entity"},
-                "object": None,
-            },
-        ]
-    elif (
-        left_object_tokens
-        and right_object_tokens
-        and is_likely_transitive_verb(left_surface)
-        and is_likely_transitive_verb(right_surface)
-    ):
-        left_object = clean_phrase(left_object_tokens)
-        right_object = clean_phrase(right_object_tokens)
-        if left_object == "entity" or right_object == "entity":
-            return None
-        left_predicate = lemma_verb(left_surface)
-        right_predicate = lemma_verb(right_surface)
-        left_object_type = object_type_for_transitive_predicate(left_predicate)
-        right_object_type = object_type_for_transitive_predicate(right_predicate)
-        clauses = [
-            {
-                "predicate": {
-                    "surface": left_surface,
-                    "name": left_predicate,
-                    "predicate_type": f"Entity -> {left_object_type} -> Prop",
-                },
-                "subject": {"name": subject, "type": "Entity"},
-                "object": {"name": left_object, "type": left_object_type},
-            },
-            {
-                "predicate": {
-                    "surface": right_surface,
-                    "name": right_predicate,
-                    "predicate_type": f"Entity -> {right_object_type} -> Prop",
-                },
-                "subject": {"name": subject, "type": "Entity"},
-                "object": {"name": right_object, "type": right_object_type},
-            },
-        ]
-    else:
+    left_clause = negated_coordination_clause_from_tail(
+        left_surface,
+        tokens[negation_index + 2 : and_index],
+        subject,
+    )
+    right_clause = negated_coordination_clause_from_tail(
+        right_surface,
+        tokens[and_index + 2 :],
+        subject,
+    )
+    if left_clause is None or right_clause is None:
         return None
+    clauses = [left_clause, right_clause]
 
     readings = negated_coordination_readings(subject, clauses)
     type_check = check_negated_coordination_readings(readings)

@@ -2992,6 +2992,98 @@ class TranslatorTests(unittest.TestCase):
             for reading in readings:
                 self.assertEqual(reading["subject"]["type"], "Entity")
 
+    def test_do_support_negation_ambiguity_preserves_branch_modifiers(self) -> None:
+        intransitive = run_pipeline(
+            "John did not walk slowly and talk quickly",
+            require_coq=True,
+        )
+        self.assertTrue(intransitive["ok"])
+        self.assertEqual(
+            intransitive["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: "
+                "not_T(and_T(walk(1)(slowly, john), talk(1)(quickly, john)))"
+            ),
+            intransitive["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: "
+                "and_T(not_T(walk(1)(slowly, john)), "
+                "not_T(talk(1)(quickly, john)))"
+            ),
+            intransitive["dependent_type_translation"],
+        )
+        self.assertIn("Parameter slowly : Adv.", intransitive["coq_code"])
+        self.assertIn("Parameter quickly : Adv.", intransitive["coq_code"])
+        self.assertIn(
+            "Parameter walk : forall n : nat, ModifierSeq n -> Entity -> PropT.",
+            intransitive["coq_code"],
+        )
+        self.assertIn(
+            "Parameter talk : forall n : nat, ModifierSeq n -> Entity -> PropT.",
+            intransitive["coq_code"],
+        )
+        self.assertIn(
+            (
+                "not_T (and_T "
+                "(walk 1 (mods_cons 0 slowly mods_nil) john) "
+                "(talk 1 (mods_cons 0 quickly mods_nil) john))"
+            ),
+            intransitive["coq_code"],
+        )
+        self.assertEqual(intransitive["coq_check"]["status"], "passed")
+
+        transitive = run_pipeline(
+            "John did not eat bread slowly and drink water quickly",
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(
+            transitive["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: not_T(and_T("
+                "eat(1)(slowly, john, bread), "
+                "drink(1)(quickly, john, water)))"
+            ),
+            transitive["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: and_T("
+                "not_T(eat(1)(slowly, john, bread)), "
+                "not_T(drink(1)(quickly, john, water)))"
+            ),
+            transitive["dependent_type_translation"],
+        )
+        self.assertNotIn("bread_slowly", transitive["dependent_type_translation"])
+        self.assertNotIn("water_quickly", transitive["dependent_type_translation"])
+        self.assertIn("Parameter bread : Food.", transitive["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertIn("Parameter slowly : Adv.", transitive["coq_code"])
+        self.assertIn("Parameter quickly : Adv.", transitive["coq_code"])
+        self.assertIn(
+            (
+                "Parameter eat : forall n : nat, ModifierSeq n -> "
+                "Entity -> Food -> PropT."
+            ),
+            transitive["coq_code"],
+        )
+        self.assertIn(
+            (
+                "Parameter drink : forall n : nat, ModifierSeq n -> "
+                "Entity -> Drinkable -> PropT."
+            ),
+            transitive["coq_code"],
+        )
+        self.assertEqual(transitive["coq_check"]["status"], "passed")
+
     def test_do_support_negation_coordination_rejects_duplicate_reading_scope(self) -> None:
         result = run_pipeline("John did not walk and talk", require_coq=False)
         readings = result["ast"]["readings"]
@@ -3001,6 +3093,27 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "negated coordination readings must include wide and distributed negation",
             type_check["errors"],
+        )
+
+    def test_do_support_negation_ambiguity_rejects_object_type_conflict(self) -> None:
+        result = run_pipeline(
+            "John did not eat bread and drink bread",
+            require_coq=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(
+            result["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertEqual(result["coq_check"]["status"], "skipped")
+        self.assertEqual(
+            result["type_check"]["errors"],
+            [
+                (
+                    "negated coordination object bread has conflicting lexical "
+                    "types: Food vs Drinkable"
+                )
+            ],
         )
 
     def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
