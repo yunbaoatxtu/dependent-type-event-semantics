@@ -3165,6 +3165,84 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_do_support_negation_ambiguity_preserves_fronted_modifiers(self) -> None:
+        fronted_time = run_pipeline(
+            "Yesterday John did not walk and talk",
+            require_coq=True,
+        )
+        self.assertTrue(fronted_time["ok"])
+        self.assertEqual(
+            fronted_time["kind"],
+            "do_support_negation_coordination_ambiguity",
+        )
+        self.assertEqual(
+            fronted_time["ast"]["subject"],
+            {"name": "john", "type": "Entity"},
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: "
+                "at_T(yesterday, not_T(and_T(walk(john), talk(john))))"
+            ),
+            fronted_time["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: "
+                "at_T(yesterday, and_T(not_T(walk(john)), not_T(talk(john))))"
+            ),
+            fronted_time["dependent_type_translation"],
+        )
+        self.assertNotIn("yesterday_john", fronted_time["dependent_type_translation"])
+        self.assertIn("Parameter yesterday : Entity.", fronted_time["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", fronted_time["coq_code"])
+        self.assertEqual(fronted_time["coq_check"]["status"], "passed")
+
+        fronted_adv = run_pipeline(
+            "In the park John did not walk slowly and talk quickly",
+            require_coq=True,
+        )
+        self.assertTrue(fronted_adv["ok"])
+        self.assertEqual(
+            fronted_adv["ast"]["subject"],
+            {"name": "john", "type": "Entity"},
+        )
+        self.assertIn(
+            (
+                "negation_over_conjunction: not_T(and_T("
+                "walk(2)(in(park), slowly, john), "
+                "talk(2)(in(park), quickly, john)))"
+            ),
+            fronted_adv["dependent_type_translation"],
+        )
+        self.assertIn(
+            (
+                "distributed_negation: and_T("
+                "not_T(walk(2)(in(park), slowly, john)), "
+                "not_T(talk(2)(in(park), quickly, john)))"
+            ),
+            fronted_adv["dependent_type_translation"],
+        )
+        self.assertNotIn("in_park_john", fronted_adv["dependent_type_translation"])
+        self.assertIn("Parameter in_park : Adv.", fronted_adv["coq_code"])
+        self.assertIn("Parameter slowly : Adv.", fronted_adv["coq_code"])
+        self.assertIn("Parameter quickly : Adv.", fronted_adv["coq_code"])
+        self.assertIn(
+            (
+                "walk 2 (mods_cons 1 in_park "
+                "(mods_cons 0 slowly mods_nil)) john"
+            ),
+            fronted_adv["coq_code"],
+        )
+        self.assertIn(
+            (
+                "talk 2 (mods_cons 1 in_park "
+                "(mods_cons 0 quickly mods_nil)) john"
+            ),
+            fronted_adv["coq_code"],
+        )
+        self.assertEqual(fronted_adv["coq_check"]["status"], "passed")
+
     def test_predicate_coordination_uses_shared_subject_without_theme(self) -> None:
         result = run_pipeline("John walked and talked", require_coq=True)
         self.assertTrue(result["ok"])

@@ -264,6 +264,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
 def negated_coordination_readings(
     subject: str,
     clauses: list[dict[str, Any]],
+    time_modifiers: list[dict[str, str]] | None = None,
 ) -> list[dict[str, Any]]:
     return [
         {
@@ -271,12 +272,14 @@ def negated_coordination_readings(
             "scope": "negation_over_conjunction",
             "subject": {"name": subject, "type": "Entity"},
             "clauses": clauses,
+            "time_modifiers": list(time_modifiers or []),
         },
         {
             "name": "do_support_negation_distributed_scope",
             "scope": "distributed_negation",
             "subject": {"name": subject, "type": "Entity"},
             "clauses": clauses,
+            "time_modifiers": list(time_modifiers or []),
         },
     ]
 
@@ -323,6 +326,12 @@ def check_negated_coordination_readings(readings: list[dict[str, Any]]) -> dict[
                 errors.append(
                     f"readings[{reading_index}].subject.name must be non-empty"
                 )
+
+        check_time_modifiers(
+            errors,
+            reading.get("time_modifiers", []),
+            f"readings[{reading_index}]",
+        )
 
         clauses = reading.get("clauses")
         if not isinstance(clauses, list) or len(clauses) != 2:
@@ -447,12 +456,20 @@ def render_negated_coordination_reading(
     if coq:
         conjunction = f"and_T ({left}) ({right})"
         if reading["scope"] == "negation_over_conjunction":
-            return f"not_T ({conjunction})"
-        return f"and_T (not_T ({left})) (not_T ({right}))"
+            proposition = f"not_T ({conjunction})"
+        else:
+            proposition = f"and_T (not_T ({left})) (not_T ({right}))"
+        for modifier in reading.get("time_modifiers", []):
+            proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+        return proposition
     conjunction = f"and_T({left}, {right})"
     if reading["scope"] == "negation_over_conjunction":
-        return f"not_T({conjunction})"
-    return f"and_T(not_T({left}), not_T({right}))"
+        proposition = f"not_T({conjunction})"
+    else:
+        proposition = f"and_T(not_T({left}), not_T({right}))"
+    for modifier in reading.get("time_modifiers", []):
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
 
 
 def render_negated_coordination_coq(
@@ -523,6 +540,10 @@ def render_negated_coordination_coq(
         )
         all_time_modifiers = [
             modifier
+            for reading in readings
+            for modifier in reading.get("time_modifiers", [])
+        ] + [
+            modifier
             for clause in clauses
             for modifier in clause.get("time_modifiers", [])
         ]
@@ -545,9 +566,27 @@ def render_negated_coordination_coq(
             [
                 "Parameter not_T : Prop -> Prop.",
                 "Parameter and_T : Prop -> Prop -> Prop.",
-                "",
             ]
         )
+        all_time_modifiers = [
+            modifier
+            for reading in readings
+            for modifier in reading.get("time_modifiers", [])
+        ]
+        if all_time_modifiers:
+            lines.extend(
+                f"Parameter {name} : Entity."
+                for name in unique_names([
+                    modifier["argument"] for modifier in all_time_modifiers
+                ])
+            )
+            lines.extend(
+                [
+                    "Parameter at_T : Entity -> Prop -> Prop.",
+                    "Parameter during_T : Entity -> Prop -> Prop.",
+                ]
+            )
+        lines.append("")
     for reading in readings:
         lines.extend(
             [
@@ -565,15 +604,18 @@ def negated_coordination_clause_from_tail(
     surface: str,
     tail_tokens: list[str],
     subject: str,
+    shared_adv_modifiers: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
+    shared_adv_modifiers = list(shared_adv_modifiers or [])
     modifier_parse = split_shared_adv_and_time_modifiers(tail_tokens)
     if modifier_parse is not None:
         adv_modifiers, time_modifiers = modifier_parse
-        if adv_modifiers or time_modifiers:
+        modifiers = [*shared_adv_modifiers, *adv_modifiers]
+        if modifiers or time_modifiers:
             return branch_modifier_clause(
                 surface,
                 subject,
-                adv_modifiers,
+                modifiers,
                 False,
                 time_modifiers=time_modifiers,
             )
@@ -600,11 +642,12 @@ def negated_coordination_clause_from_tail(
     predicate = lemma_verb(surface)
     object_type = object_type_for_transitive_predicate(predicate)
     obj_record = {"name": obj, "type": object_type}
-    if adv_modifiers or time_modifiers:
+    modifiers = [*shared_adv_modifiers, *adv_modifiers]
+    if modifiers or time_modifiers:
         return branch_modifier_clause(
             surface,
             subject,
-            adv_modifiers,
+            modifiers,
             False,
             obj_record,
             time_modifiers=time_modifiers,
@@ -626,7 +669,11 @@ def ambiguous_do_support_coordination_pipeline(
     negation_index: int,
     auxiliary: str,
     subject: str,
+    fronted_adv_modifiers: list[dict[str, Any]] | None = None,
+    fronted_time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any] | None:
+    fronted_adv_modifiers = list(fronted_adv_modifiers or [])
+    fronted_time_modifiers = list(fronted_time_modifiers or [])
     if tokens.count("and") != 1:
         return None
     and_index = tokens.index("and")
@@ -641,17 +688,23 @@ def ambiguous_do_support_coordination_pipeline(
         left_surface,
         tokens[negation_index + 2 : and_index],
         subject,
+        fronted_adv_modifiers,
     )
     right_clause = negated_coordination_clause_from_tail(
         right_surface,
         tokens[and_index + 2 :],
         subject,
+        fronted_adv_modifiers,
     )
     if left_clause is None or right_clause is None:
         return None
     clauses = [left_clause, right_clause]
 
-    readings = negated_coordination_readings(subject, clauses)
+    readings = negated_coordination_readings(
+        subject,
+        clauses,
+        fronted_time_modifiers,
+    )
     type_check = check_negated_coordination_readings(readings)
     dependent_type_translation = "\n".join(
         f"{reading['scope']}: {render_negated_coordination_reading(reading)}"
@@ -718,17 +771,39 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
     if subject == "entity":
         return None
 
+    tokens_without_fronted, fronted_time_modifiers = split_fronted_time_modifiers(tokens)
+    tokens_without_fronted, fronted_adv_modifiers = split_fronted_adv_modifiers(
+        tokens_without_fronted
+    )
+
     if "and" in tokens:
         coordinated = coordinated_do_support_negation_pipeline(sentence)
         if coordinated is not None:
             return coordinated
-        ambiguous_coordination = ambiguous_do_support_coordination_pipeline(
-            sentence,
-            tokens,
-            negation_index,
-            auxiliary,
-            subject,
-        )
+        stripped_negation_index = None
+        for index, token in enumerate(tokens_without_fronted):
+            if (
+                token == "not"
+                and index > 0
+                and tokens_without_fronted[index - 1] in DO_SUPPORT_AUXILIARIES
+            ):
+                stripped_negation_index = index
+                break
+        ambiguous_coordination = None
+        if stripped_negation_index is not None:
+            stripped_auxiliary_index = stripped_negation_index - 1
+            stripped_subject_tokens = tokens_without_fronted[:stripped_auxiliary_index]
+            stripped_subject = clean_phrase(stripped_subject_tokens)
+            if stripped_subject != "entity":
+                ambiguous_coordination = ambiguous_do_support_coordination_pipeline(
+                    sentence,
+                    tokens_without_fronted,
+                    stripped_negation_index,
+                    tokens_without_fronted[stripped_auxiliary_index],
+                    stripped_subject,
+                    fronted_adv_modifiers,
+                    fronted_time_modifiers,
+                )
         if ambiguous_coordination is not None:
             return ambiguous_coordination
         return {
