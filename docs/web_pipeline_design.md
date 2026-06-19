@@ -308,6 +308,11 @@ construction-specific `alternative_scope_readings` audit. The
 `semantic_readings_check` object reports the number of readings and rejects
 duplicate names or alternative Coq definition names that are not exported in
 the generated scaffold.
+The single-reading Parsons/Luo-Shi routes use the same web/API contract:
+`after the singing of the Marseillaise, John saluted the flag` exposes
+`timed_after_singing_salute`, and `In every burning, oxygen is consumed`
+exposes `universal_timed_burning`, with each name checked against an exported
+Coq/Rocq definition.
 
 The pasted legacy browser prototype from the earlier webpage is useful as a
 design sketch: it already distinguished nested perception cases from temporal
@@ -333,6 +338,9 @@ and `were`, and stores the auxiliary in the AST so that the fallback parser does
 not misclassify those words as lexical verbs. Passive participle recognition and
 irregular lemmatization are supplied by `translator/surface_lexicon.py`, keeping
 surface morphology separate from the construction-specific semantic rule. The
+web/API output also normalizes the two passive cases into checked
+`semantic_readings`: `by_phrase_agent` for an explicit by-phrase and
+`omitted_existential_agent` for the existential-agent replacement. The
 AST shown by the web/API result includes a `surface_lexicon` audit object with
 the original participle, selected lemma, and lexicon source module.
 

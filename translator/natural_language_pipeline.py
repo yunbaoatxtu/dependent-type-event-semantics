@@ -2101,18 +2101,24 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
         second_theme,
     )
     type_check = check_timed_after_ast(ast)
-    return {
-        "kind": "timed_after",
-        "input_sentence": sentence,
-        "event_semantics": event_semantics,
-        "dependent_type_translation": event_semantics["typed_replacement"],
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": "The Parsons-style event relation is represented with Time variables, not an Event parameter.",
+    return attach_single_semantic_reading(
+        {
+            "kind": "timed_after",
+            "input_sentence": sentence,
+            "event_semantics": event_semantics,
+            "dependent_type_translation": event_semantics["typed_replacement"],
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": "The Parsons-style event relation is represented with Time variables, not an Event parameter.",
+            },
+            "coq_code": coq_code,
         },
-        "coq_code": coq_code,
-    }
+        name="timed_after_singing_salute",
+        coq_definition="after_singing_salute",
+        source="timed_after",
+        scope="time_before_salute",
+    )
 
 
 def perception_nominalization_ast(
@@ -3579,18 +3585,24 @@ def every_burning_pipeline(sentence: str) -> dict[str, Any] | None:
     }
     ast = universal_timed_burning_ast()
     type_check = check_universal_timed_ast(ast)
-    return {
-        "kind": "universal_timed_burning",
-        "input_sentence": sentence,
-        "event_semantics": event_semantics,
-        "dependent_type_translation": event_semantics["typed_replacement"],
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": "Event inclusion is represented as universal quantification over entities and times.",
+    return attach_single_semantic_reading(
+        {
+            "kind": "universal_timed_burning",
+            "input_sentence": sentence,
+            "event_semantics": event_semantics,
+            "dependent_type_translation": event_semantics["typed_replacement"],
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": "Event inclusion is represented as universal quantification over entities and times.",
+            },
+            "coq_code": coq_code,
         },
-        "coq_code": coq_code,
-    }
+        name="universal_timed_burning",
+        coq_definition="every_burning_consumes_oxygen",
+        source="universal_timed_burning",
+        scope="forall_entity_time",
+    )
 
 
 def lexical_state_change_ast(
@@ -7102,26 +7114,32 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
         ]
     )
-    return {
-        "kind": "passive_argument_omission",
-        "input_sentence": sentence,
-        "event_semantics": {
-            "analysis": "passive-argument-omission",
-            "source": sentence,
-            "event_style_reference": event_reference,
-            "typed_replacement": typed_replacement,
+    return attach_single_semantic_reading(
+        {
+            "kind": "passive_argument_omission",
+            "input_sentence": sentence,
+            "event_semantics": {
+                "analysis": "passive-argument-omission",
+                "source": sentence,
+                "event_style_reference": event_reference,
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "A passive without by-phrase introduces an existential Entity "
+                    "agent; no Event, Agent(e, ...), or Theme(e, ...) declaration is exported."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "dependent_type_translation": typed_replacement,
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": (
-                "A passive without by-phrase introduces an existential Entity "
-                "agent; no Event, Agent(e, ...), or Theme(e, ...) declaration is exported."
-            ),
-        },
-        "coq_code": coq_code,
-    }
+        name=definition_name,
+        coq_definition=definition_name,
+        source="passive_argument_omission",
+        scope="by_phrase_agent" if agent is not None else "omitted_existential_agent",
+    )
 
 
 def construction_rules() -> list[ConstructionRule]:

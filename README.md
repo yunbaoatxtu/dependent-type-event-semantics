@@ -380,7 +380,10 @@ checks a formula of the form `exists t_sing t_salute : Time, ...`. Its AST also
 checks that `sing : Entity -> Time -> Prop`,
 `salute : Entity -> Entity -> Time -> Prop`, and
 `before : Time -> Time -> Prop` relate `t_sing` before `t_salute`. It does not
-introduce a hidden `Event` parameter for this sentence.
+introduce a hidden `Event` parameter for this sentence. The same output now
+also exposes a single checked `semantic_readings` entry,
+`timed_after_singing_salute`, whose Coq definition is audited by
+`semantic_readings_check`.
 
 Two further Parsons/Luo-Shi examples are now checked by specialized paths:
 
@@ -488,7 +491,9 @@ The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and
 `consume` have type `Entity -> Time -> Prop` and share the same time variable.
-Both generated Coq scaffolds are checked without introducing an `Event` type.
+Its single `semantic_readings` entry is named `universal_timed_burning` and
+points to the exported `every_burning_consumes_oxygen` Coq definition. Both
+generated Coq scaffolds are checked without introducing an `Event` type.
 
 The argument-omission path now also covers a passive slice:
 
@@ -524,7 +529,11 @@ shared surface lexicon in `translator/surface_lexicon.py`, so `seen` exports
 `see : Entity -> Entity -> Prop` and `written` exports
 `write : Entity -> Entity -> Prop`. The AST exposes this step as a
 `surface_lexicon` audit object recording the surface participle, the selected
-lemma, and the lexicon module that supplied the mapping.
+lemma, and the lexicon module that supplied the mapping. Passive by-phrase and
+omitted-agent outputs are normalized into single `semantic_readings` entries
+with `by_phrase_agent` or `omitted_existential_agent` scope labels, so clients
+can consume them through the same checked interface as quantifier, negation,
+and Parsons/Luo-Shi time examples.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments

@@ -4639,6 +4639,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter Event : Type.", explicit["coq_code"])
         self.assertNotIn("Parameter Agent :", explicit["coq_code"])
         self.assertNotIn("Parameter Theme :", explicit["coq_code"])
+        self.assertEqual(
+            [reading["name"] for reading in explicit["semantic_readings"]],
+            ["passive_butter_by_agent"],
+        )
+        self.assertEqual(explicit["semantic_readings"][0]["scope"], "by_phrase_agent")
+        self.assertEqual(
+            explicit["semantic_readings"][0]["source"],
+            "passive_argument_omission",
+        )
+        self.assertTrue(explicit["semantic_readings_check"]["ok"])
+        self.assertEqual(explicit["semantic_readings_check"]["reading_count"], 1)
         self.assertEqual(explicit["coq_check"]["status"], "passed")
 
         omitted = run_pipeline("the toast was buttered", require_coq=True)
@@ -4656,6 +4667,24 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter Event : Type.", omitted["coq_code"])
         self.assertNotIn("Parameter Agent :", omitted["coq_code"])
         self.assertNotIn("Parameter Theme :", omitted["coq_code"])
+        self.assertEqual(
+            [reading["name"] for reading in omitted["semantic_readings"]],
+            ["passive_butter_omitted_agent"],
+        )
+        self.assertEqual(
+            omitted["semantic_readings"][0]["scope"],
+            "omitted_existential_agent",
+        )
+        self.assertEqual(
+            omitted["semantic_readings"][0]["coq_definition"],
+            "passive_butter_omitted_agent",
+        )
+        self.assertTrue(omitted["semantic_readings_check"]["ok"])
+        self.assertEqual(omitted["semantic_readings_check"]["reading_count"], 1)
+        self.assertEqual(
+            omitted["event_semantics"]["semantic_readings_check"],
+            omitted["semantic_readings_check"],
+        )
         self.assertEqual(omitted["coq_check"]["status"], "passed")
 
         present = run_pipeline("the toast is buttered", require_coq=True)
@@ -4778,6 +4807,22 @@ class TranslatorTests(unittest.TestCase):
                 "predicate_type": "Time -> Time -> Prop",
                 "arguments": ["t_sing", "t_salute"],
             },
+        )
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["timed_after_singing_salute"],
+        )
+        self.assertEqual(result["semantic_readings"][0]["scope"], "time_before_salute")
+        self.assertEqual(result["semantic_readings"][0]["source"], "timed_after")
+        self.assertEqual(
+            result["semantic_readings"][0]["coq_definition"],
+            "after_singing_salute",
+        )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
+        self.assertEqual(
+            result["event_semantics"]["semantic_readings_check"],
+            result["semantic_readings_check"],
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
@@ -5752,6 +5797,21 @@ class TranslatorTests(unittest.TestCase):
             },
         )
         self.assertTrue(result["type_check"]["ok"])
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["universal_timed_burning"],
+        )
+        self.assertEqual(result["semantic_readings"][0]["scope"], "forall_entity_time")
+        self.assertEqual(
+            result["semantic_readings"][0]["coq_definition"],
+            "every_burning_consumes_oxygen",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["source"],
+            "universal_timed_burning",
+        )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_universal_timed_burning_rejects_unshared_time_variable(self) -> None:

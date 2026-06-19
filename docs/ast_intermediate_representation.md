@@ -269,7 +269,10 @@ binds two times and checks the lexical predicates and temporal relation:
 ```
 
 This captures temporal dependence without introducing an event-to-event
-ordering predicate.
+ordering predicate. The pipeline also emits a top-level
+`semantic_readings` entry named `timed_after_singing_salute`; its
+`semantic_readings_check` record confirms that the reading type-checks and
+that the referenced Coq definition is exported.
 
 ### `perception_nominalization`
 
@@ -590,7 +593,9 @@ predicates:
 ```
 
 The structural check requires the antecedent and consequent to share the bound
-time variable `t`.
+time variable `t`. The corresponding top-level `semantic_readings` entry is
+named `universal_timed_burning` and points to the exported
+`every_burning_consumes_oxygen` definition.
 
 ### `lexical_state_change`
 
@@ -741,7 +746,9 @@ participle, and `source` must identify `translator/surface_lexicon.py`. If the
 by-phrase is
 present, `agent.source` is `by_phrase` and `agent.name` stores the overt
 individual; otherwise `agent.source` is `omitted_existential` and the exported
-Coq scaffold binds `x_agent : Entity`.
+Coq scaffold binds `x_agent : Entity`. Both branches are normalized as
+single-reading outputs: `by_phrase_agent` for the overt agent and
+`omitted_existential_agent` for the existentially bound agent.
 
 ### `scope_ambiguity`
 
