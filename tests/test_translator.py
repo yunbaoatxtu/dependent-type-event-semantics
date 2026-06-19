@@ -5213,6 +5213,21 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_perception_nominalization_rejects_reversed_temporal_bilateral_relation(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave and Sue smile after Bill waved and Ann laughed",
+            require_coq=False,
+        )
+        ast = result["ast"]
+        embedded = ast["perception"]["object"]["proposition"]
+        embedded["relations"][2]["arguments"] = ["t_main_2", "t_reference_1"]
+        type_check = check_perception_nominalization_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "embedded after relation has the wrong before-argument order",
+            type_check["errors"],
+        )
+
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
         result = run_pipeline("Mary saw Bill leave", require_coq=True)
         self.assertTrue(result["ok"])
