@@ -275,6 +275,11 @@ def semantic_readings_failure_hint(check: dict[str, Any]) -> str:
     )
 
 
+def semantic_readings_repair_details_for(check: dict[str, Any]) -> dict[str, Any]:
+    details = check.get("repair_details")
+    return details if isinstance(details, dict) else {}
+
+
 def stable_token(value: str) -> str:
     return "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in value)
 
@@ -475,6 +480,11 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         else []
     )
     semantic_failure_summary = semantic_reading_failure_summary(semantic_failure_kinds)
+    semantic_repair_details = (
+        semantic_readings_repair_details_for(semantic_readings_check)
+        if isinstance(semantic_readings_check, dict)
+        else {}
+    )
     construction_hygiene = result.get("construction_hygiene", {})
     coq_check = result.get("coq_check", {})
     warnings = result_state_warnings(result)
@@ -531,6 +541,7 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "stages": stages,
         "semantic_readings_failure_kinds": semantic_failure_kinds,
         "semantic_readings_failure_summary": semantic_failure_summary,
+        "semantic_readings_repair_details": semantic_repair_details,
         "warnings": warnings,
         "manual_repair_required": any(
             draft.get("requires_human_choice") for draft in drafts
@@ -754,7 +765,13 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
 def semantic_readings_check_panel(result: dict[str, Any]) -> str:
     check = result.get("semantic_readings_check") or {}
     readings = result.get("semantic_readings") or []
-    exported_definitions = exported_prop_definition_names(result.get("coq_code", ""))
+    repair_details = semantic_readings_repair_details_for(check)
+    exported_definitions = repair_details.get("exported_definitions")
+    if not isinstance(exported_definitions, list):
+        exported_definitions = exported_prop_definition_names(result.get("coq_code", ""))
+    exported_definition_names = [
+        str(name) for name in exported_definitions if isinstance(name, str)
+    ]
     if not check:
         body = '<p class="semantic-reading-empty">No semantic readings check available.</p>'
     else:
@@ -790,6 +807,65 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
             f'{html.escape(failure_summary)}'
             '</p>'
         )
+        expected_definitions = repair_details.get("expected_coq_definitions", [])
+        missing_definitions = repair_details.get("missing_coq_definitions", [])
+        duplicate_names = repair_details.get("duplicate_reading_names", [])
+        malformed_indices = repair_details.get("malformed_reading_indices", [])
+        failed_type_indices = repair_details.get("failed_type_check_indices", [])
+        expected_export_count = repair_details.get("expected_export_count")
+        observed_export_count = repair_details.get("observed_export_count")
+        detail_rows = []
+        if isinstance(expected_definitions, list) and expected_definitions:
+            detail_rows.append(
+                (
+                    "expected Coq/Rocq definitions",
+                    ", ".join(str(definition) for definition in expected_definitions),
+                )
+            )
+        if isinstance(missing_definitions, list) and missing_definitions:
+            detail_rows.append(
+                (
+                    "missing Coq/Rocq definitions",
+                    ", ".join(str(definition) for definition in missing_definitions),
+                )
+            )
+        if isinstance(duplicate_names, list) and duplicate_names:
+            detail_rows.append(
+                ("duplicate reading names", ", ".join(str(name) for name in duplicate_names))
+            )
+        if isinstance(malformed_indices, list) and malformed_indices:
+            detail_rows.append(
+                (
+                    "malformed reading indices",
+                    ", ".join(str(index) for index in malformed_indices),
+                )
+            )
+        if isinstance(failed_type_indices, list) and failed_type_indices:
+            detail_rows.append(
+                (
+                    "failed type-check indices",
+                    ", ".join(str(index) for index in failed_type_indices),
+                )
+            )
+        if expected_export_count is not None:
+            expected_text = str(expected_export_count)
+            observed_text = "none" if observed_export_count is None else str(observed_export_count)
+            detail_rows.append(
+                ("export count", f"expected {expected_text}; observed {observed_text}")
+            )
+        if detail_rows:
+            repair_details_html = (
+                '<dl class="semantic-reading-repair-details">'
+                + "".join(
+                    f"<dt>{html.escape(label)}</dt><dd>{html.escape(value)}</dd>"
+                    for label, value in detail_rows
+                )
+                + "</dl>"
+            )
+        else:
+            repair_details_html = (
+                '<p class="semantic-reading-empty">No semantic reading repair details.</p>'
+            )
         rows = []
         for index, reading in enumerate(readings if isinstance(readings, list) else []):
             if not isinstance(reading, dict):
@@ -804,7 +880,7 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
                 if isinstance(type_check, dict)
                 else "not_applicable"
             )
-            exported = bool(coq_definition and coq_definition in exported_definitions)
+            exported = bool(coq_definition and coq_definition in exported_definition_names)
             exported_status = "yes" if exported else "no"
             row_status = "passed" if type_status == "passed" and (exported or not coq_definition) else "failed"
             rows.append(
@@ -844,7 +920,7 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
         definitions_html = (
             '<p class="semantic-reading-export-summary">'
             "exported Prop/PropT definitions: "
-            f'{html.escape(", ".join(exported_definitions) or "none")}'
+            f'{html.escape(", ".join(exported_definition_names) or "none")}'
             '</p>'
         )
         raw_json = html.escape(compact_json(check))
@@ -853,6 +929,7 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
             + failure_summary_html
             + failure_kinds_html
             + definitions_html
+            + repair_details_html
             + readings_html
             + errors_html
             + '<details class="semantic-reading-raw"><summary>Raw check JSON</summary>'
@@ -1331,6 +1408,25 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       color: var(--muted);
       padding: 3px 8px;
       font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }}
+    .semantic-reading-repair-details {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      display: grid;
+      grid-template-columns: minmax(150px, auto) minmax(0, 1fr);
+      gap: 5px 10px;
+      margin: 0;
+      padding: 9px 10px;
+      font-size: 13px;
+    }}
+    .semantic-reading-repair-details dt {{
+      color: var(--muted);
+    }}
+    .semantic-reading-repair-details dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
     }}
     .semantic-reading-audit-list,
     .semantic-reading-error-list {{

@@ -5933,6 +5933,22 @@ class TranslatorTests(unittest.TestCase):
                 "missing Coq/Rocq exports."
             ),
         )
+        self.assertEqual(
+            check["repair_details"]["exported_definitions"],
+            ["reading"],
+        )
+        self.assertEqual(
+            check["repair_details"]["expected_coq_definitions"],
+            ["missing_reading", "reading"],
+        )
+        self.assertEqual(
+            check["repair_details"]["missing_coq_definitions"],
+            ["missing_reading"],
+        )
+        self.assertEqual(
+            check["repair_details"]["duplicate_reading_names"],
+            ["reading"],
+        )
 
     def test_semantic_readings_check_classifies_type_and_shape_failures(self) -> None:
         malformed = check_semantic_readings(
@@ -5955,6 +5971,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             malformed["failure_kinds"],
             ["malformed_readings", "reading_type_check_failed"],
+        )
+        self.assertEqual(malformed["repair_details"]["malformed_reading_indices"], [1])
+        self.assertEqual(malformed["repair_details"]["failed_type_check_indices"], [0])
+        self.assertEqual(
+            malformed["repair_details"]["expected_coq_definitions"],
+            ["bad_type"],
         )
 
     def test_exported_prop_definition_names_ignore_type_aliases(self) -> None:
@@ -7049,6 +7071,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>source</dt><dd>quantifier_scope</dd>", page)
         self.assertIn("<dt>type check</dt><dd>passed</dd>", page)
         self.assertIn("No semantic reading failure kinds.", page)
+        self.assertNotIn("expected none; observed", page)
         self.assertIn("No semantic reading errors.", page)
         self.assertIn("<summary>Raw check JSON</summary>", page)
         self.assertIn("&quot;reading_count&quot;: 2", page)
@@ -7072,6 +7095,16 @@ class TranslatorTests(unittest.TestCase):
                     "errors": [
                         "semantic_readings[0].coq_definition 'missing_reading' is not exported"
                     ],
+                    "repair_details": {
+                        "exported_definitions": ["other_reading"],
+                        "expected_coq_definitions": ["missing_reading"],
+                        "missing_coq_definitions": ["missing_reading"],
+                        "duplicate_reading_names": [],
+                        "malformed_reading_indices": [],
+                        "failed_type_check_indices": [],
+                        "expected_export_count": None,
+                        "observed_export_count": 1,
+                    },
                 },
                 "coq_code": "Definition other_reading : Prop := True.",
             }
@@ -7084,6 +7117,9 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-semantic-reading-kind="missing_coq_export"', panel_html)
         self.assertIn("exported Prop/PropT definitions: other_reading", panel_html)
+        self.assertIn("missing Coq/Rocq definitions", panel_html)
+        self.assertIn("<dd>missing_reading</dd>", panel_html)
+        self.assertIn("expected Coq/Rocq definitions", panel_html)
         self.assertIn(
             (
                 'class="semantic-reading-audit semantic-reading-audit--failed" '
@@ -7284,6 +7320,16 @@ class TranslatorTests(unittest.TestCase):
                     "errors": [
                         "semantic_readings[0].coq_definition 'missing_reading' is not exported"
                     ],
+                    "repair_details": {
+                        "exported_definitions": ["other_reading"],
+                        "expected_coq_definitions": ["missing_reading"],
+                        "missing_coq_definitions": ["missing_reading"],
+                        "duplicate_reading_names": [],
+                        "malformed_reading_indices": [],
+                        "failed_type_check_indices": [],
+                        "expected_export_count": None,
+                        "observed_export_count": 1,
+                    },
                 },
                 "construction_hygiene": {"ok": None, "checked": False},
                 "coq_check": {"ok": None, "status": "skipped"},
@@ -7299,6 +7345,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             diagnostics["semantic_readings_failure_summary"],
             "Semantic-reading failure kind(s): missing Coq/Rocq exports.",
+        )
+        self.assertEqual(
+            diagnostics["semantic_readings_repair_details"]["missing_coq_definitions"],
+            ["missing_reading"],
         )
         self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "inspect_readings")
         self.assertEqual(
@@ -7437,6 +7487,18 @@ class TranslatorTests(unittest.TestCase):
             result["semantic_readings_check"]["failure_kinds"],
             ["export_count_mismatch"],
         )
+        self.assertEqual(
+            result["semantic_readings_check"]["repair_details"]["exported_definitions"],
+            ["first_reading", "second_reading"],
+        )
+        self.assertEqual(
+            result["semantic_readings_check"]["repair_details"]["expected_export_count"],
+            1,
+        )
+        self.assertEqual(
+            result["semantic_readings_check"]["repair_details"]["observed_export_count"],
+            2,
+        )
         self.assertIn(
             "must export exactly one Prop/PropT definition",
             result["semantic_readings_check"]["errors"][0],
@@ -7454,6 +7516,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             diagnostics["semantic_readings_failure_kinds"],
             ["export_count_mismatch"],
+        )
+        self.assertEqual(
+            diagnostics["semantic_readings_repair_details"]["observed_export_count"],
+            2,
         )
         self.assertEqual(diagnostics["stages"]["semantic_readings_check"], "failed")
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
@@ -7534,6 +7600,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_readings_check`", readme)
         self.assertIn("`diagnostics.semantic_readings_failure_kinds`", readme)
         self.assertIn("`diagnostics.semantic_readings_failure_summary`", readme)
+        self.assertIn("`diagnostics.semantic_readings_repair_details`", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7632,6 +7699,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-reading-name`", web_design)
         self.assertIn("`data-coq-exported`", web_design)
         self.assertIn("`semantic_readings_failure_kinds`", web_design)
+        self.assertIn("`semantic_readings_repair_details`", web_design)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)

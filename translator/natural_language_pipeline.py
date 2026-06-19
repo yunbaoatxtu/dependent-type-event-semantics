@@ -290,12 +290,38 @@ def semantic_reading_failure_summary(kinds: list[str]) -> str:
     return "Semantic-reading failure kind(s): " + ", ".join(labels) + "."
 
 
+def semantic_readings_repair_details(
+    *,
+    exported_definitions: list[str] | None = None,
+    expected_coq_definitions: list[str] | None = None,
+    missing_coq_definitions: list[str] | None = None,
+    duplicate_reading_names: list[str] | None = None,
+    malformed_reading_indices: list[int] | None = None,
+    failed_type_check_indices: list[int] | None = None,
+    expected_export_count: int | None = None,
+    observed_export_count: int | None = None,
+) -> dict[str, Any]:
+    exported = sorted(exported_definitions or [])
+    observed = len(exported) if observed_export_count is None else observed_export_count
+    return {
+        "exported_definitions": exported,
+        "expected_coq_definitions": sorted(expected_coq_definitions or []),
+        "missing_coq_definitions": sorted(missing_coq_definitions or []),
+        "duplicate_reading_names": sorted(duplicate_reading_names or []),
+        "malformed_reading_indices": sorted(set(malformed_reading_indices or [])),
+        "failed_type_check_indices": sorted(set(failed_type_check_indices or [])),
+        "expected_export_count": expected_export_count,
+        "observed_export_count": observed,
+    }
+
+
 def semantic_readings_check_payload(
     *,
     checked: bool,
     ok: bool | None,
     reading_count: int,
     errors: list[str],
+    repair_details: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     failure_kinds = semantic_reading_failure_kinds(errors)
     return {
@@ -305,6 +331,7 @@ def semantic_readings_check_payload(
         "errors": errors,
         "failure_kinds": failure_kinds,
         "failure_summary": semantic_reading_failure_summary(failure_kinds),
+        "repair_details": repair_details or semantic_readings_repair_details(),
     }
 
 
@@ -312,12 +339,16 @@ def check_semantic_readings(
     readings: list[dict[str, Any]] | None,
     coq_code: str = "",
 ) -> dict[str, Any]:
+    exported_definitions = exported_prop_definition_names(coq_code) if coq_code else []
     if readings is None:
         return semantic_readings_check_payload(
             checked=False,
             ok=None,
             reading_count=0,
             errors=[],
+            repair_details=semantic_readings_repair_details(
+                exported_definitions=exported_definitions,
+            ),
         )
     errors: list[str] = []
     if not isinstance(readings, list):
@@ -326,19 +357,32 @@ def check_semantic_readings(
             ok=False,
             reading_count=0,
             errors=["semantic_readings must be a list"],
+            repair_details=semantic_readings_repair_details(
+                exported_definitions=exported_definitions,
+            ),
         )
     if not readings:
         errors.append("semantic_readings must not be empty when present")
+    expected_coq_definitions: list[str] = []
+    missing_coq_definitions: list[str] = []
+    duplicate_reading_names: list[str] = []
+    malformed_reading_indices: list[int] = []
+    failed_type_check_indices: list[int] = []
     seen_names: set[str] = set()
+    exported_definition_set = set(exported_definitions)
     for index, reading in enumerate(readings):
         if not isinstance(reading, dict):
             errors.append(f"semantic_readings[{index}] must be an object")
+            malformed_reading_indices.append(index)
             continue
+        malformed = False
         name = reading.get("name")
         if not isinstance(name, str) or not name:
             errors.append(f"semantic_readings[{index}].name must be a non-empty string")
+            malformed = True
         elif name in seen_names:
             errors.append(f"semantic_readings name {name!r} is duplicated")
+            duplicate_reading_names.append(name)
         else:
             seen_names.add(name)
         translation = reading.get("dependent_type_translation")
@@ -347,17 +391,27 @@ def check_semantic_readings(
                 "semantic_readings"
                 f"[{index}].dependent_type_translation must be a non-empty string"
             )
+            malformed = True
         coq_definition = reading.get("coq_definition")
         if coq_definition is not None:
             if not isinstance(coq_definition, str) or not coq_definition:
                 errors.append(
                     f"semantic_readings[{index}].coq_definition must be a non-empty string"
                 )
-            elif coq_code and f"Definition {coq_definition}" not in coq_code:
+                malformed = True
+            else:
+                expected_coq_definitions.append(coq_definition)
+            if (
+                isinstance(coq_definition, str)
+                and coq_definition
+                and coq_code
+                and coq_definition not in exported_definition_set
+            ):
                 errors.append(
                     "semantic_readings"
                     f"[{index}].coq_definition {coq_definition!r} is not exported"
                 )
+                missing_coq_definitions.append(coq_definition)
         scope_policy = reading.get("scope_policy")
         if scope_policy is not None and (
             not isinstance(scope_policy, dict)
@@ -367,17 +421,30 @@ def check_semantic_readings(
             )
         ):
             errors.append(f"semantic_readings[{index}].scope_policy must map strings to strings")
+            malformed = True
         type_check = reading.get("type_check")
         if type_check is not None:
             if not isinstance(type_check, dict):
                 errors.append(f"semantic_readings[{index}].type_check must be an object")
+                malformed = True
             elif type_check.get("ok") is not True:
                 errors.append(f"semantic_readings[{index}].type_check must have ok=true")
+                failed_type_check_indices.append(index)
+        if malformed:
+            malformed_reading_indices.append(index)
     return semantic_readings_check_payload(
         checked=True,
         ok=not errors,
         reading_count=len(readings),
         errors=errors,
+        repair_details=semantic_readings_repair_details(
+            exported_definitions=exported_definitions,
+            expected_coq_definitions=expected_coq_definitions,
+            missing_coq_definitions=missing_coq_definitions,
+            duplicate_reading_names=duplicate_reading_names,
+            malformed_reading_indices=malformed_reading_indices,
+            failed_type_check_indices=failed_type_check_indices,
+        ),
     )
 
 
@@ -460,6 +527,11 @@ def attach_default_registered_semantic_reading(
                     "must export exactly one Prop/PropT definition"
                 )
             ],
+            repair_details=semantic_readings_repair_details(
+                exported_definitions=definition_names,
+                expected_export_count=1,
+                observed_export_count=len(definition_names),
+            ),
         )
         result["semantic_readings"] = []
         result["semantic_readings_check"] = semantic_readings_check
