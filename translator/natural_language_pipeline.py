@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 import shutil
@@ -1985,6 +1986,18 @@ def timed_proposition_coordination_ast(
     }
 
 
+def timed_coordination_group_ast(
+    clauses: list[dict[str, Any]],
+    coordinator: str,
+) -> dict[str, Any]:
+    if len(clauses) == 1:
+        return clauses[0]
+    return timed_proposition_coordination_ast(
+        clauses,
+        connective_for_coordinator(coordinator),
+    )
+
+
 def split_boolean_coordinate_tokens(
     tokens: list[str],
 ) -> tuple[list[list[str]], list[str]] | None:
@@ -2005,48 +2018,61 @@ def split_boolean_coordinate_tokens(
     return groups, coordinators
 
 
+def fold_timed_boolean_coordination_with_precedence(
+    clauses: list[dict[str, Any]],
+    coordinators: list[str],
+    *,
+    tight_coordinator: str,
+) -> dict[str, Any] | None:
+    if len(clauses) != len(coordinators) + 1:
+        return None
+    if tight_coordinator not in BOOLEAN_COORDINATORS:
+        return None
+    loose_coordinator = "or" if tight_coordinator == "and" else "and"
+    loose_terms: list[dict[str, Any]] = []
+    current_tight_terms = [clauses[0]]
+    for coordinator, clause in zip(coordinators, clauses[1:]):
+        if coordinator == tight_coordinator:
+            current_tight_terms.append(clause)
+            continue
+        loose_terms.append(
+            timed_coordination_group_ast(current_tight_terms, tight_coordinator)
+        )
+        current_tight_terms = [clause]
+    loose_terms.append(
+        timed_coordination_group_ast(current_tight_terms, tight_coordinator)
+    )
+    return timed_coordination_group_ast(loose_terms, loose_coordinator)
+
+
 def fold_mixed_timed_boolean_coordination(
     clauses: list[dict[str, Any]],
     coordinators: list[str],
 ) -> dict[str, Any] | None:
-    if len(clauses) != len(coordinators) + 1:
-        return None
-    if len(set(coordinators)) == 1:
-        return timed_proposition_coordination_ast(
-            clauses,
-            connective_for_coordinator(coordinators[0]),
-        )
-
-    or_terms: list[dict[str, Any]] = []
-    current_and_terms = [clauses[0]]
-    for coordinator, clause in zip(coordinators, clauses[1:]):
-        if coordinator == "and":
-            current_and_terms.append(clause)
-            continue
-        if len(current_and_terms) == 1:
-            or_terms.append(current_and_terms[0])
-        else:
-            or_terms.append(
-                timed_proposition_coordination_ast(
-                    current_and_terms,
-                    connective_for_coordinator("and"),
-                )
-            )
-        current_and_terms = [clause]
-
-    if len(current_and_terms) == 1:
-        or_terms.append(current_and_terms[0])
-    else:
-        or_terms.append(
-            timed_proposition_coordination_ast(
-                current_and_terms,
-                connective_for_coordinator("and"),
-            )
-        )
-    return timed_proposition_coordination_ast(
-        or_terms,
-        connective_for_coordinator("or"),
+    primary = fold_timed_boolean_coordination_with_precedence(
+        clauses,
+        coordinators,
+        tight_coordinator="and",
     )
+    if primary is None:
+        return None
+    if len(set(coordinators)) > 1:
+        alternative = fold_timed_boolean_coordination_with_precedence(
+            copy.deepcopy(clauses),
+            coordinators,
+            tight_coordinator="or",
+        )
+        if alternative is not None:
+            primary["coordination_scope"] = {
+                "primary_policy": "and_before_or",
+                "alternative_policy": "or_before_and",
+                "coordinators": [
+                    connective_for_coordinator(coordinator)
+                    for coordinator in coordinators
+                ],
+                "alternative_ast": alternative,
+            }
+    return primary
 
 
 def temporal_relation_arguments(
@@ -2090,7 +2116,7 @@ def perception_timed_proposition_leaf_clauses(
     return [proposition]
 
 
-def temporal_relation_proposition_ast(
+def base_temporal_relation_proposition_ast(
     main_clause: dict[str, Any],
     reference_clause: dict[str, Any],
     relation_surface: str,
@@ -2124,6 +2150,98 @@ def temporal_relation_proposition_ast(
         ast["relation"] = relations[0]
     else:
         ast["relations"] = relations
+    return ast
+
+
+def timed_proposition_scope_variants(
+    proposition: dict[str, Any],
+) -> list[dict[str, Any]]:
+    variants = [
+        {
+            "policy": "and_before_or",
+            "is_primary": True,
+            "proposition": proposition,
+        }
+    ]
+    scope = proposition.get("coordination_scope")
+    if isinstance(scope, dict) and isinstance(scope.get("alternative_ast"), dict):
+        variants.append(
+            {
+                "policy": str(scope.get("alternative_policy", "or_before_and")),
+                "is_primary": False,
+                "proposition": scope["alternative_ast"],
+            }
+        )
+    return variants
+
+
+def temporal_relation_alternative_scope_readings(
+    proposition: dict[str, Any],
+) -> list[dict[str, Any]]:
+    relation_surface = proposition.get("relation_surface")
+    if relation_surface not in TEMPORAL_RELATION_CONNECTORS:
+        return []
+    alternatives: list[dict[str, Any]] = []
+    main_variants = timed_proposition_scope_variants(proposition["main"])
+    reference_variants = timed_proposition_scope_variants(proposition["reference"])
+    for main_variant in main_variants:
+        for reference_variant in reference_variants:
+            if main_variant["is_primary"] and reference_variant["is_primary"]:
+                continue
+            alt_ast = base_temporal_relation_proposition_ast(
+                main_variant["proposition"],
+                reference_variant["proposition"],
+                str(relation_surface),
+            )
+            errors: list[str] = []
+            check_perception_embedded_proposition(alt_ast, errors)
+            changed_sides = [
+                side
+                for side, variant in (
+                    ("main", main_variant),
+                    ("reference", reference_variant),
+                )
+                if not variant["is_primary"]
+            ]
+            name = "or_before_and_" + "_".join(changed_sides)
+            alternatives.append(
+                {
+                    "name": name,
+                    "scope_policy": {
+                        "main": main_variant["policy"],
+                        "reference": reference_variant["policy"],
+                    },
+                    "dependent_type_translation": (
+                        render_perception_embedded_translation(alt_ast)
+                    ),
+                    "ast": alt_ast,
+                    "branch_count": (
+                        len(timed_disjunction_branch_options(alt_ast["main"]))
+                        * len(timed_disjunction_branch_options(alt_ast["reference"]))
+                    ),
+                    "type_check": {
+                        "ok": not errors,
+                        "type": "Prop" if not errors else None,
+                        "errors": errors,
+                    },
+                }
+            )
+    return alternatives
+
+
+def temporal_relation_proposition_ast(
+    main_clause: dict[str, Any],
+    reference_clause: dict[str, Any],
+    relation_surface: str,
+) -> dict[str, Any]:
+    ast = base_temporal_relation_proposition_ast(
+        main_clause,
+        reference_clause,
+        relation_surface,
+    )
+    alternatives = temporal_relation_alternative_scope_readings(ast)
+    if alternatives:
+        ast["alternative_scope_readings"] = alternatives
     return ast
 
 
@@ -2365,19 +2483,53 @@ def render_perception_temporal_relations_translation(
     return f"before({relation['arguments'][0]}, {relation['arguments'][1]})"
 
 
-def timed_disjunction_branch_options(proposition: dict[str, Any]) -> list[dict[str, Any]]:
-    if (
-        proposition.get("kind") == "timed_proposition_coordination"
-        and proposition.get("connective") == "or_T"
-    ):
-        return proposition["clauses"]
+def timed_disjunction_branch_options(
+    proposition: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if proposition.get("kind") != "timed_proposition_coordination":
+        return [proposition]
+    clauses = proposition.get("clauses")
+    if not isinstance(clauses, list) or not clauses:
+        return [proposition]
+    if proposition.get("connective") == "or_T":
+        branches: list[dict[str, Any]] = []
+        for clause in clauses:
+            if isinstance(clause, dict):
+                branches.extend(timed_disjunction_branch_options(clause))
+        return branches
+    if proposition.get("connective") == "and_T":
+        branch_groups: list[list[dict[str, Any]]] = [[]]
+        for clause in clauses:
+            if not isinstance(clause, dict):
+                return [proposition]
+            clause_options = timed_disjunction_branch_options(clause)
+            branch_groups = [
+                [*branch_group, option]
+                for branch_group in branch_groups
+                for option in clause_options
+            ]
+        return [
+            timed_coordination_group_ast(branch_group, "and")
+            for branch_group in branch_groups
+        ]
     return [proposition]
+
+
+def timed_proposition_has_disjunction(proposition: dict[str, Any]) -> bool:
+    if proposition.get("kind") != "timed_proposition_coordination":
+        return False
+    if proposition.get("connective") == "or_T":
+        return True
+    clauses = proposition.get("clauses")
+    return isinstance(clauses, list) and any(
+        isinstance(clause, dict) and timed_proposition_has_disjunction(clause)
+        for clause in clauses
+    )
 
 
 def temporal_relation_has_timed_disjunction(proposition: dict[str, Any]) -> bool:
     return any(
-        side.get("kind") == "timed_proposition_coordination"
-        and side.get("connective") == "or_T"
+        timed_proposition_has_disjunction(side)
         for side in (proposition["main"], proposition["reference"])
     )
 
@@ -2975,6 +3127,18 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     definition_suffix = perception_embedded_definition_suffix(embedded_proposition)
     embedded_translation = render_perception_embedded_translation(embedded_proposition)
     embedded_coq = render_perception_embedded_coq(embedded_proposition)
+    alternative_scope_readings = [
+        dict(reading)
+        for reading in embedded_proposition.get("alternative_scope_readings", [])
+        if isinstance(reading, dict)
+    ]
+    for reading in alternative_scope_readings:
+        reading["typed_replacement"] = (
+            f"see(Mary, E({reading['dependent_type_translation']}))"
+        )
+        reading["coq_definition"] = (
+            f"mary_saw_{definition_suffix}_{reading['name']}"
+        )
     embedded_predicate_declarations = unique_typed_declarations(
         perception_embedded_predicate_declarations(embedded_proposition)
     )
@@ -3010,8 +3174,24 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
             f"Definition mary_saw_{definition_suffix} : Prop :=",
             f"  {perception_predicate} {experiencer} (E ({embedded_coq})).",
+            *[
+                line
+                for reading in alternative_scope_readings
+                for line in (
+                    "",
+                    f"Definition {reading['coq_definition']} : Prop :=",
+                    (
+                        f"  {perception_predicate} {experiencer} "
+                        f"(E ({render_perception_embedded_coq(reading['ast'])}))."
+                    ),
+                )
+            ],
             "",
             f"Check mary_saw_{definition_suffix}.",
+            *[
+                f"Check {reading['coq_definition']}."
+                for reading in alternative_scope_readings
+            ],
             "",
         ]
     )
@@ -3024,6 +3204,8 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         ),
         "typed_replacement": f"see(Mary, E({embedded_translation}))",
     }
+    if alternative_scope_readings:
+        event_semantics["alternative_scope_readings"] = alternative_scope_readings
     ast = perception_nominalization_ast(
         perception_predicate,
         experiencer,
@@ -3035,6 +3217,11 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         "input_sentence": sentence,
         "event_semantics": event_semantics,
         "dependent_type_translation": event_semantics["typed_replacement"],
+        **(
+            {"alternative_scope_readings": alternative_scope_readings}
+            if alternative_scope_readings
+            else {}
+        ),
         "ast": ast,
         "type_check": {
             **type_check,

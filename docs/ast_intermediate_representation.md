@@ -1242,6 +1242,10 @@ Current type rules:
   mixed coordination may occur on the main side, on the reference side, or on
   both sides, in which case the branch renderer takes the Cartesian product of
   the top-level `or_T` alternatives while preserving nested `and_T` groups.
+  Mixed nodes also carry an `alternative_scope_readings` audit at the temporal
+  relation level. Each alternative records the opposite `or_before_and` policy,
+  its branch count, a rendered dependent-type formula, and a type-check result;
+  the perception Coq/Rocq scaffold emits one checked definition per alternative.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

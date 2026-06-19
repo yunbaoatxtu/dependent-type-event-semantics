@@ -463,8 +463,12 @@ contains `laugh(Ann, t_main_3)`. The same policy applies on the reference side:
 `or_T` over one branch with
 `and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2))` and one branch
 with `laugh(Ann, t_reference_3)`. If both sides are mixed, the renderer builds
-the Cartesian set of branch-local alternatives. Parenthesized or pragmatically
-marked scope alternatives are still outside this small controlled fragment.
+the Cartesian set of branch-local alternatives. The default reading is still
+the exported primary translation, but the pipeline now also reports an
+`alternative_scope_readings` list with the opposite `or_before_and` grouping;
+those alternatives are emitted as extra Coq/Rocq definitions and checked in the
+same scaffold. Parenthesized or pragmatically marked scope alternatives are
+still outside this small controlled fragment.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

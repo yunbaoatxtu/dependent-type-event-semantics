@@ -5493,6 +5493,23 @@ class TranslatorTests(unittest.TestCase):
             "and_T (leave John t_main_1) (smile Sue t_main_2)",
             result["coq_code"],
         )
+        alternatives = result["alternative_scope_readings"]
+        self.assertEqual(len(alternatives), 1)
+        self.assertEqual(alternatives[0]["name"], "or_before_and_main")
+        self.assertEqual(
+            alternatives[0]["scope_policy"],
+            {"main": "or_before_and", "reference": "and_before_or"},
+        )
+        self.assertEqual(alternatives[0]["branch_count"], 2)
+        self.assertTrue(alternatives[0]["type_check"]["ok"])
+        self.assertIn(
+            "and_T(leave(John, t_main_1), laugh(Ann, t_main_3))",
+            alternatives[0]["typed_replacement"],
+        )
+        self.assertIn(
+            "mary_saw_john_leave_and_sue_smile_or_ann_laugh_after_bill_wave_or_before_and_main",
+            result["coq_code"],
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_perception_nominalization_groups_mixed_temporal_and_before_or(self) -> None:
@@ -5543,6 +5560,23 @@ class TranslatorTests(unittest.TestCase):
             "and_T (wave Bill t_reference_1) (smile Sue t_reference_2)",
             result["coq_code"],
         )
+        alternatives = result["alternative_scope_readings"]
+        self.assertEqual(len(alternatives), 1)
+        self.assertEqual(alternatives[0]["name"], "or_before_and_reference")
+        self.assertEqual(
+            alternatives[0]["scope_policy"],
+            {"main": "and_before_or", "reference": "or_before_and"},
+        )
+        self.assertEqual(alternatives[0]["branch_count"], 2)
+        self.assertTrue(alternatives[0]["type_check"]["ok"])
+        self.assertIn(
+            "and_T(wave(Bill, t_reference_1), laugh(Ann, t_reference_3))",
+            alternatives[0]["typed_replacement"],
+        )
+        self.assertIn(
+            "mary_saw_john_leave_after_bill_wave_and_sue_smile_or_ann_laugh_or_before_and_reference",
+            result["coq_code"],
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_perception_nominalization_embeds_bilateral_mixed_temporal_coordination(self) -> None:
@@ -5567,8 +5601,31 @@ class TranslatorTests(unittest.TestCase):
             "and smile(Kate, t_reference_3)",
             result["dependent_type_translation"],
         )
+        alternatives = result["alternative_scope_readings"]
+        self.assertEqual(
+            [reading["name"] for reading in alternatives],
+            [
+                "or_before_and_reference",
+                "or_before_and_main",
+                "or_before_and_main_reference",
+            ],
+        )
+        self.assertEqual([reading["branch_count"] for reading in alternatives], [4, 4, 4])
+        self.assertTrue(all(reading["type_check"]["ok"] for reading in alternatives))
+        self.assertIn(
+            "and_T(leave(John, t_main_1), laugh(Ann, t_main_3))",
+            alternatives[1]["typed_replacement"],
+        )
+        self.assertIn(
+            "and_T(wave(Bill, t_reference_1), smile(Kate, t_reference_3))",
+            alternatives[0]["typed_replacement"],
+        )
         self.assertIn("before t_reference_2 t_main_2", result["coq_code"])
         self.assertIn("before t_reference_3 t_main_3", result["coq_code"])
+        self.assertIn(
+            "mary_saw_john_leave_and_sue_smile_or_ann_laugh_after_bill_wave_and_tom_jump_or_kate_smile_or_before_and_main_reference",
+            result["coq_code"],
+        )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
@@ -5860,9 +5917,16 @@ class TranslatorTests(unittest.TestCase):
             "or_T(exists t_main_1 t_main_2 t_reference : Time.",
             result["dependent_type_translation"],
         )
+        self.assertEqual(len(result["alternative_scope_readings"]), 1)
+        self.assertEqual(
+            result["alternative_scope_readings"][0]["name"],
+            "or_before_and_main",
+        )
 
         page = render_page(sentence, require_coq=True)
         self.assertIn("translation verified", page)
+        self.assertIn("alternative_scope_readings", page)
+        self.assertIn("or_before_and_main", page)
         self.assertIn("or_T(exists t_main_1 t_main_2 t_reference : Time.", page)
         self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
         self.assertIn("Parameter and_T : Prop -&gt; Prop -&gt; Prop.", page)
@@ -5882,6 +5946,11 @@ class TranslatorTests(unittest.TestCase):
         embedded = result["ast"]["perception"]["object"]["proposition"]
         self.assertEqual(embedded["main"]["connective"], "or_T")
         self.assertEqual(embedded["reference"]["connective"], "or_T")
+        self.assertEqual(len(result["alternative_scope_readings"]), 3)
+        self.assertEqual(
+            result["alternative_scope_readings"][2]["name"],
+            "or_before_and_main_reference",
+        )
         self.assertIn(
             "or_T(exists t_main_1 t_main_2 t_reference_1 t_reference_2 : Time.",
             result["dependent_type_translation"],
@@ -5890,6 +5959,8 @@ class TranslatorTests(unittest.TestCase):
 
         page = render_page(sentence, require_coq=True)
         self.assertIn("translation verified", page)
+        self.assertIn("alternative_scope_readings", page)
+        self.assertIn("or_before_and_main_reference", page)
         self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
         self.assertIn("and_T(wave(Bill, t_reference_1), jump(Tom, t_reference_2))", page)
         self.assertIn("&quot;name&quot;: &quot;Kate&quot;", page)
