@@ -13,7 +13,12 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from translator.dependent_type_event_translator import STATE_LEXICON
-from translator.natural_language_pipeline import exported_prop_definition_names, run_pipeline
+from translator.natural_language_pipeline import (
+    exported_prop_definition_names,
+    run_pipeline,
+    semantic_reading_failure_kinds,
+    semantic_reading_failure_summary,
+)
 
 
 DEFAULT_SENTENCE = "John knocked twice"
@@ -79,6 +84,16 @@ FAILURE_STAGE_ACTIONS = {
             "detail": "Inspect declarations and verify the local Coq/Rocq toolchain is available.",
         }
     ],
+}
+
+SEMANTIC_READING_FAILURE_HINTS = {
+    "duplicate_reading_name": "Rename duplicate semantic readings so each reading has a stable unique name.",
+    "export_count_mismatch": "Supply explicit semantic_readings or export exactly one Prop/PropT definition.",
+    "malformed_readings": "Fix malformed semantic_readings fields before export.",
+    "missing_coq_export": "Export a matching Coq/Rocq Definition for every semantic reading.",
+    "missing_readings": "Add normalized semantic_readings before Coq/Rocq validation.",
+    "reading_type_check_failed": "Fix the reading-local type_check before Coq/Rocq validation.",
+    "unknown_reading_error": "Inspect semantic readings, formulas, and exported Coq definitions.",
 }
 
 
@@ -238,6 +253,26 @@ def check_status(ok: Any) -> str:
 
 def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
+
+
+def semantic_readings_failure_kinds_for(check: dict[str, Any]) -> list[str]:
+    kinds = check.get("failure_kinds")
+    if isinstance(kinds, list) and all(isinstance(kind, str) for kind in kinds):
+        return sorted(set(kinds))
+    errors = check.get("errors", [])
+    if isinstance(errors, list) and all(isinstance(error, str) for error in errors):
+        return semantic_reading_failure_kinds(errors)
+    return []
+
+
+def semantic_readings_failure_hint(check: dict[str, Any]) -> str:
+    kinds = semantic_readings_failure_kinds_for(check)
+    if not kinds:
+        return FAILURE_STAGE_HINTS["semantic_readings_check"]
+    return SEMANTIC_READING_FAILURE_HINTS.get(
+        kinds[0],
+        FAILURE_STAGE_HINTS["semantic_readings_check"],
+    )
 
 
 def stable_token(value: str) -> str:
@@ -434,6 +469,12 @@ def lexicon_patch_drafts(result: dict[str, Any]) -> list[dict[str, Any]]:
 def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     type_check = result.get("type_check", {})
     semantic_readings_check = result.get("semantic_readings_check", {})
+    semantic_failure_kinds = (
+        semantic_readings_failure_kinds_for(semantic_readings_check)
+        if isinstance(semantic_readings_check, dict)
+        else []
+    )
+    semantic_failure_summary = semantic_reading_failure_summary(semantic_failure_kinds)
     construction_hygiene = result.get("construction_hygiene", {})
     coq_check = result.get("coq_check", {})
     warnings = result_state_warnings(result)
@@ -476,13 +517,20 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     else:
         summary = "translation failed"
         failure_stage = "parsing"
-    recovery_hint = FAILURE_STAGE_HINTS.get(failure_stage) if failure_stage else None
+    if failure_stage == "semantic_readings_check" and isinstance(
+        semantic_readings_check, dict
+    ):
+        recovery_hint = semantic_readings_failure_hint(semantic_readings_check)
+    else:
+        recovery_hint = FAILURE_STAGE_HINTS.get(failure_stage) if failure_stage else None
     return {
         "summary": summary,
         "failure_stage": failure_stage,
         "recovery_hint": recovery_hint,
         "recovery_actions": recovery_actions_for(failure_stage),
         "stages": stages,
+        "semantic_readings_failure_kinds": semantic_failure_kinds,
+        "semantic_readings_failure_summary": semantic_failure_summary,
         "warnings": warnings,
         "manual_repair_required": any(
             draft.get("requires_human_choice") for draft in drafts
@@ -719,6 +767,29 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
             f'{html.escape(status)}: {html.escape(str(count))} reading(s)'
             '</p>'
         )
+        failure_kinds = semantic_readings_failure_kinds_for(check)
+        failure_summary = str(
+            check.get("failure_summary") or semantic_reading_failure_summary(failure_kinds)
+        )
+        if failure_kinds:
+            failure_kinds_html = (
+                '<ul class="semantic-reading-kind-list">'
+                + "".join(
+                    '<li '
+                    f'class="semantic-reading-kind semantic-reading-kind--{html.escape(css_token(kind))}" '
+                    f'data-semantic-reading-kind="{html.escape(kind, quote=True)}">'
+                    f'{html.escape(kind)}</li>'
+                    for kind in failure_kinds
+                )
+                + "</ul>"
+            )
+        else:
+            failure_kinds_html = '<p class="semantic-reading-empty">No semantic reading failure kinds.</p>'
+        failure_summary_html = (
+            '<p class="semantic-reading-failure-summary">'
+            f'{html.escape(failure_summary)}'
+            '</p>'
+        )
         rows = []
         for index, reading in enumerate(readings if isinstance(readings, list) else []):
             if not isinstance(reading, dict):
@@ -779,6 +850,8 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
         raw_json = html.escape(compact_json(check))
         body = (
             summary
+            + failure_summary_html
+            + failure_kinds_html
             + definitions_html
             + readings_html
             + errors_html
@@ -1236,11 +1309,28 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       color: var(--error);
     }}
     .semantic-reading-export-summary,
+    .semantic-reading-failure-summary,
     .semantic-reading-empty {{
       margin: 0;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.45;
+    }}
+    .semantic-reading-kind-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }}
+    .semantic-reading-kind {{
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--muted);
+      padding: 3px 8px;
+      font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }}
     .semantic-reading-audit-list,
     .semantic-reading-error-list {{

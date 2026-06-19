@@ -615,6 +615,11 @@ stop at the first failed stage: if internal AST `type_check` fails or the
 normalized `semantic_readings_check` cannot match readings to exported
 Coq/Rocq definitions, construction hygiene and Coq/Rocq validation are reported
 as `skipped` rather than attempted.
+For semantic-reading failures, `diagnostics.semantic_readings_failure_kinds`
+and `diagnostics.semantic_readings_failure_summary` classify the problem as
+missing readings, duplicate reading names, malformed reading records,
+reading-local type-check failure, missing Coq/Rocq exports, or a registered
+construction export-count mismatch.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `next-step--<kind>` CSS class for frontend automation.
@@ -625,7 +630,8 @@ The `Semantic Readings Check` panel is likewise structured rather than raw-only:
 it displays the audit status, reading count, exported Prop/PropT definition
 names, and one row per reading with its name, scope, source, Coq/Rocq
 definition, exported status, and reading-local type-check status, followed by
-any semantic-reading errors and the raw JSON record.
+classified semantic-reading failure kinds, any semantic-reading errors, and the
+raw JSON record.
 The same stage-local reporting covers lexical declaration conflicts: `John ate
 bread and drank bread` is reported as a dependent-type checking failure because
 `bread` would need both `Food` and `Drinkable`, and the Coq/Rocq stage is

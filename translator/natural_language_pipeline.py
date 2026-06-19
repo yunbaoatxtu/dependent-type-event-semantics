@@ -244,25 +244,89 @@ def semantic_reading(
     return reading
 
 
+SEMANTIC_READING_FAILURE_LABELS = {
+    "duplicate_reading_name": "duplicate reading names",
+    "export_count_mismatch": "wrong number of exported propositions",
+    "malformed_readings": "malformed semantic readings",
+    "missing_coq_export": "missing Coq/Rocq exports",
+    "missing_readings": "missing semantic readings",
+    "reading_type_check_failed": "reading-local type check failed",
+    "unknown_reading_error": "unclassified semantic-reading error",
+}
+
+
+def semantic_reading_error_kind(error: str) -> str:
+    if "must not be empty" in error:
+        return "missing_readings"
+    if "must export exactly one Prop/PropT definition" in error:
+        return "export_count_mismatch"
+    if " is duplicated" in error:
+        return "duplicate_reading_name"
+    if " is not exported" in error:
+        return "missing_coq_export"
+    if ".type_check must have ok=true" in error:
+        return "reading_type_check_failed"
+    if (
+        "must be a list" in error
+        or "must be an object" in error
+        or ".name must be a non-empty string" in error
+        or ".dependent_type_translation must be a non-empty string" in error
+        or ".coq_definition must be a non-empty string" in error
+        or ".scope_policy must map strings to strings" in error
+    ):
+        return "malformed_readings"
+    return "unknown_reading_error"
+
+
+def semantic_reading_failure_kinds(errors: list[str]) -> list[str]:
+    observed = {semantic_reading_error_kind(error) for error in errors}
+    return sorted(observed)
+
+
+def semantic_reading_failure_summary(kinds: list[str]) -> str:
+    if not kinds:
+        return "No semantic-reading failures."
+    labels = [SEMANTIC_READING_FAILURE_LABELS.get(kind, kind) for kind in kinds]
+    return "Semantic-reading failure kind(s): " + ", ".join(labels) + "."
+
+
+def semantic_readings_check_payload(
+    *,
+    checked: bool,
+    ok: bool | None,
+    reading_count: int,
+    errors: list[str],
+) -> dict[str, Any]:
+    failure_kinds = semantic_reading_failure_kinds(errors)
+    return {
+        "checked": checked,
+        "ok": ok,
+        "reading_count": reading_count,
+        "errors": errors,
+        "failure_kinds": failure_kinds,
+        "failure_summary": semantic_reading_failure_summary(failure_kinds),
+    }
+
+
 def check_semantic_readings(
     readings: list[dict[str, Any]] | None,
     coq_code: str = "",
 ) -> dict[str, Any]:
     if readings is None:
-        return {
-            "checked": False,
-            "ok": None,
-            "reading_count": 0,
-            "errors": [],
-        }
+        return semantic_readings_check_payload(
+            checked=False,
+            ok=None,
+            reading_count=0,
+            errors=[],
+        )
     errors: list[str] = []
     if not isinstance(readings, list):
-        return {
-            "checked": True,
-            "ok": False,
-            "reading_count": 0,
-            "errors": ["semantic_readings must be a list"],
-        }
+        return semantic_readings_check_payload(
+            checked=True,
+            ok=False,
+            reading_count=0,
+            errors=["semantic_readings must be a list"],
+        )
     if not readings:
         errors.append("semantic_readings must not be empty when present")
     seen_names: set[str] = set()
@@ -309,12 +373,12 @@ def check_semantic_readings(
                 errors.append(f"semantic_readings[{index}].type_check must be an object")
             elif type_check.get("ok") is not True:
                 errors.append(f"semantic_readings[{index}].type_check must have ok=true")
-    return {
-        "checked": True,
-        "ok": not errors,
-        "reading_count": len(readings),
-        "errors": errors,
-    }
+    return semantic_readings_check_payload(
+        checked=True,
+        ok=not errors,
+        reading_count=len(readings),
+        errors=errors,
+    )
 
 
 def single_semantic_reading_payload(
@@ -386,17 +450,17 @@ def attach_default_registered_semantic_reading(
 
     definition_names = exported_prop_definition_names(result.get("coq_code", ""))
     if len(definition_names) != 1:
-        semantic_readings_check = {
-            "checked": True,
-            "ok": False,
-            "reading_count": 0,
-            "errors": [
+        semantic_readings_check = semantic_readings_check_payload(
+            checked=True,
+            ok=False,
+            reading_count=0,
+            errors=[
                 (
                     "registered construction outputs without explicit semantic_readings "
                     "must export exactly one Prop/PropT definition"
                 )
             ],
-        }
+        )
         result["semantic_readings"] = []
         result["semantic_readings_check"] = semantic_readings_check
         event_semantics = result.setdefault("event_semantics", {})

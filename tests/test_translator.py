@@ -5922,6 +5922,40 @@ class TranslatorTests(unittest.TestCase):
             "semantic_readings[1].coq_definition 'missing_reading' is not exported",
             check["errors"],
         )
+        self.assertEqual(
+            check["failure_kinds"],
+            ["duplicate_reading_name", "missing_coq_export"],
+        )
+        self.assertEqual(
+            check["failure_summary"],
+            (
+                "Semantic-reading failure kind(s): duplicate reading names, "
+                "missing Coq/Rocq exports."
+            ),
+        )
+
+    def test_semantic_readings_check_classifies_type_and_shape_failures(self) -> None:
+        malformed = check_semantic_readings(
+            [
+                {
+                    "name": "bad_type",
+                    "dependent_type_translation": "p",
+                    "coq_definition": "bad_type",
+                    "type_check": {"ok": False},
+                },
+                {
+                    "name": "",
+                    "dependent_type_translation": "",
+                    "scope_policy": {"bad": 1},
+                },
+            ],
+            "Definition bad_type : Prop := True.",
+        )
+        self.assertFalse(malformed["ok"])
+        self.assertEqual(
+            malformed["failure_kinds"],
+            ["malformed_readings", "reading_type_check_failed"],
+        )
 
     def test_exported_prop_definition_names_ignore_type_aliases(self) -> None:
         self.assertEqual(
@@ -7014,6 +7048,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>scope</dt><dd>subject_then_object</dd>", page)
         self.assertIn("<dt>source</dt><dd>quantifier_scope</dd>", page)
         self.assertIn("<dt>type check</dt><dd>passed</dd>", page)
+        self.assertIn("No semantic reading failure kinds.", page)
         self.assertIn("No semantic reading errors.", page)
         self.assertIn("<summary>Raw check JSON</summary>", page)
         self.assertIn("&quot;reading_count&quot;: 2", page)
@@ -7043,6 +7078,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-semantic-readings-status="failed"', panel_html)
         self.assertIn("failed: 1 reading(s)", panel_html)
+        self.assertIn(
+            "Semantic-reading failure kind(s): missing Coq/Rocq exports.",
+            panel_html,
+        )
+        self.assertIn('data-semantic-reading-kind="missing_coq_export"', panel_html)
         self.assertIn("exported Prop/PropT definitions: other_reading", panel_html)
         self.assertIn(
             (
@@ -7241,7 +7281,9 @@ class TranslatorTests(unittest.TestCase):
                     "checked": True,
                     "ok": False,
                     "reading_count": 0,
-                    "errors": ["reading definition missing"],
+                    "errors": [
+                        "semantic_readings[0].coq_definition 'missing_reading' is not exported"
+                    ],
                 },
                 "construction_hygiene": {"ok": None, "checked": False},
                 "coq_check": {"ok": None, "status": "skipped"},
@@ -7251,7 +7293,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(diagnostics["failure_stage"], "semantic_readings_check")
         self.assertEqual(
             diagnostics["recovery_hint"],
-            "Inspect semantic readings and exported Coq definition names.",
+            "Export a matching Coq/Rocq Definition for every semantic reading.",
+        )
+        self.assertEqual(diagnostics["semantic_readings_failure_kinds"], ["missing_coq_export"])
+        self.assertEqual(
+            diagnostics["semantic_readings_failure_summary"],
+            "Semantic-reading failure kind(s): missing Coq/Rocq exports.",
         )
         self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "inspect_readings")
         self.assertEqual(
@@ -7386,6 +7433,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertFalse(result["semantic_readings_check"]["ok"])
         self.assertEqual(result["semantic_readings_check"]["reading_count"], 0)
+        self.assertEqual(
+            result["semantic_readings_check"]["failure_kinds"],
+            ["export_count_mismatch"],
+        )
         self.assertIn(
             "must export exactly one Prop/PropT definition",
             result["semantic_readings_check"]["errors"][0],
@@ -7396,6 +7447,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("semantic_readings_check failed", result["coq_check"]["message"])
         diagnostics = build_diagnostics(result)
         self.assertEqual(diagnostics["failure_stage"], "semantic_readings_check")
+        self.assertEqual(
+            diagnostics["recovery_hint"],
+            "Supply explicit semantic_readings or export exactly one Prop/PropT definition.",
+        )
+        self.assertEqual(
+            diagnostics["semantic_readings_failure_kinds"],
+            ["export_count_mismatch"],
+        )
         self.assertEqual(diagnostics["stages"]["semantic_readings_check"], "failed")
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
         self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
@@ -7473,6 +7532,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"coq_check": "passed"', readme)
         self.assertIn("`diagnostics.failure_stage` distinguishes", readme)
         self.assertIn("`semantic_readings_check`", readme)
+        self.assertIn("`diagnostics.semantic_readings_failure_kinds`", readme)
+        self.assertIn("`diagnostics.semantic_readings_failure_summary`", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7570,6 +7631,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Type Check panel", web_design)
         self.assertIn("`data-reading-name`", web_design)
         self.assertIn("`data-coq-exported`", web_design)
+        self.assertIn("`semantic_readings_failure_kinds`", web_design)
+        self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)

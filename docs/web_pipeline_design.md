@@ -198,6 +198,12 @@ and `not_applicable`. It summarizes `type_check`,
 can see whether a failure belongs to internal structure, reading/export
 alignment, construction-specific hygiene, or the external proof-assistant
 boundary.
+When `semantic_readings_check` fails, the diagnostics object also exposes
+`semantic_readings_failure_kinds` and `semantic_readings_failure_summary`.
+Current failure kinds distinguish missing readings, duplicate reading names,
+malformed reading records, reading-local type-check failures, missing Coq/Rocq
+exports, registered-rule export-count mismatches, and unclassified
+semantic-reading errors.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not
@@ -220,7 +226,8 @@ renders one row per reading with stable `data-reading-name`,
 `data-coq-definition`, and `data-coq-exported` hooks. Each row shows the
 reading name, scope, source, Coq/Rocq definition, exported status, and
 reading-local type-check status. If the audit fails, the same panel displays
-the semantic-reading error list before the raw JSON details.
+failure-kind chips with stable `data-semantic-reading-kind` hooks and the
+semantic-reading error list before the raw JSON details.
 Warnings are rendered separately in a `Semantic Warnings` panel. Each rendered
 warning exposes `data-warning-kind` and a `semantic-warning--<kind>` CSS class
 so the interface can distinguish semantic caveats from recovery actions. If a
