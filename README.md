@@ -559,7 +559,7 @@ records actual violations. A clean replacement therefore looks like:
 ```
 
 The web/API layer also adds a compact `diagnostics` object that summarizes the
-three relevant checks for user interfaces:
+four relevant checks for user interfaces:
 
 ```json
 {
@@ -571,6 +571,7 @@ three relevant checks for user interfaces:
     "warnings": [],
     "stages": {
       "type_check": "passed",
+      "semantic_readings_check": "passed",
       "construction_hygiene": "passed",
       "coq_check": "passed"
     }
@@ -605,13 +606,15 @@ contract without inspecting raw network traffic, and a `Conclusion` panel with
 the same short outcome string returned by the API.
 
 For failures, `diagnostics.failure_stage` distinguishes `input`, `parsing`,
-`type_check`, `construction_hygiene`, and `coq_check` failures.
+`type_check`, `semantic_readings_check`, `construction_hygiene`, and
+`coq_check` failures.
 `diagnostics.recovery_hint` gives a short next-step suggestion for that failure
 stage, while `diagnostics.recovery_actions` exposes the same advice as
 structured actions for frontends and automation. Registered construction rules
-stop at the first failed stage: if internal AST `type_check` fails,
-construction hygiene and Coq/Rocq validation are reported as `skipped` rather
-than attempted.
+stop at the first failed stage: if internal AST `type_check` fails or the
+normalized `semantic_readings_check` cannot match readings to exported
+Coq/Rocq definitions, construction hygiene and Coq/Rocq validation are reported
+as `skipped` rather than attempted.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute and a
 `next-step--<kind>` CSS class for frontend automation.

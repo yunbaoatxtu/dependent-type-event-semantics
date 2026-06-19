@@ -99,7 +99,10 @@ records for resultative targets; each record includes the target `state`, its
 `scale`, an optional `default_source_state`, and a `source_policy` such as
 `lexical_prestate` or `unknown_source_allowed`. `lexicon_patch_drafts` lifts
 the repair templates from warning actions into a top-level list that clients
-can treat as a candidate STATE_LEXICON patch queue. On any failure, it must still return `ok: false`, an `error` message when available, and a `diagnostics` object so callers can distinguish parser, type-checking, construction-hygiene, and Coq/Rocq boundary failures.
+can treat as a candidate STATE_LEXICON patch queue. On any failure, it must
+still return `ok: false`, an `error` message when available, and a
+`diagnostics` object so callers can distinguish parser, type-checking,
+semantic-readings-audit, construction-hygiene, and Coq/Rocq boundary failures.
 
 `modifier_role_audit` is a flat list extracted from the AST. Each record gives
 the application path, function, modifier string, `Adv` type, and semantic role,
@@ -114,7 +117,8 @@ same `Adv` constant exported to Coq/Rocq.
 
 `diagnostics.failure_stage` is the machine-readable failure locator. It is
 `null` on successful translations and otherwise one of `input`, `parsing`,
-`type_check`, `construction_hygiene`, or `coq_check`.
+`type_check`, `semantic_readings_check`, `construction_hygiene`, or
+`coq_check`.
 `diagnostics.recovery_hint` is `null` on success and otherwise gives a compact
 next-step suggestion tied to the failure stage.
 `diagnostics.recovery_actions` is an array of structured action objects with
@@ -189,9 +193,11 @@ A successful response should include:
 - a short conclusion.
 
 The diagnostics summary has four stage values: `passed`, `failed`, `skipped`,
-and `not_applicable`. It summarizes `type_check`, `construction_hygiene`, and
-`coq_check` so a user can see whether a failure belongs to internal structure,
-construction-specific hygiene, or the external proof-assistant boundary.
+and `not_applicable`. It summarizes `type_check`,
+`semantic_readings_check`, `construction_hygiene`, and `coq_check` so a user
+can see whether a failure belongs to internal structure, reading/export
+alignment, construction-specific hygiene, or the external proof-assistant
+boundary.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not
@@ -395,10 +401,12 @@ passed` and `found forbidden fragments: none`. When a rule supplies
 `construction_summary`, the panel also shows an instance summary, for example
 that a same-subject VP coordination shares `john` while keeping `bread : Food`
 and `water : Drinkable` in separate conjuncts.
-If the construction's internal AST `type_check` fails, the pipeline stops before
-construction hygiene and Coq/Rocq validation; those downstream stages are
-reported as `skipped`, so the diagnostics do not blur an AST error into a proof
-assistant error.
+If the construction's internal AST `type_check` fails, or if the normalized
+`semantic_readings_check` cannot match each checked reading to an exported
+Coq/Rocq definition, the pipeline stops before construction hygiene and
+Coq/Rocq validation; those downstream stages are reported as `skipped`, so the
+diagnostics do not blur an AST or reading-interface error into a proof assistant
+error.
 For example, `John ate bread and drank bread` is a transitive VP-coordination
 analysis whose two object positions require incompatible lexical types for the
 same surface constant. The web/API layer reports this as `failure_stage:

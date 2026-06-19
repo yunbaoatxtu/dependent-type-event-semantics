@@ -7162,6 +7162,38 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "failed")
         self.assertEqual(diagnostics["stages"]["coq_check"], "failed")
 
+    def test_web_diagnostics_reports_semantic_readings_check_failure(self) -> None:
+        diagnostics = build_diagnostics(
+            {
+                "ok": False,
+                "input_sentence": "synthetic readings failure",
+                "type_check": {"ok": True},
+                "semantic_readings_check": {
+                    "checked": True,
+                    "ok": False,
+                    "reading_count": 0,
+                    "errors": ["reading definition missing"],
+                },
+                "construction_hygiene": {"ok": None, "checked": False},
+                "coq_check": {"ok": None, "status": "skipped"},
+            }
+        )
+        self.assertEqual(diagnostics["summary"], "semantic readings check failed")
+        self.assertEqual(diagnostics["failure_stage"], "semantic_readings_check")
+        self.assertEqual(
+            diagnostics["recovery_hint"],
+            "Inspect semantic readings and exported Coq definition names.",
+        )
+        self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "inspect_readings")
+        self.assertEqual(
+            diagnostics["recovery_actions"][0]["label"],
+            "Inspect semantic readings",
+        )
+        self.assertEqual(diagnostics["stages"]["type_check"], "passed")
+        self.assertEqual(diagnostics["stages"]["semantic_readings_check"], "failed")
+        self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
+        self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
+
     def test_web_diagnostics_reports_type_check_failure_stage(self) -> None:
         diagnostics = build_diagnostics(
             {
@@ -7255,6 +7287,50 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["coq_check"]["status"], "failed")
         self.assertIn("forbidden construction fragments", result["coq_check"]["message"])
 
+    def test_registered_rule_fails_before_coq_when_semantic_readings_check_fails(self) -> None:
+        def ambiguous_export_analyzer(sentence: str) -> dict:
+            return {
+                "kind": "bad_readings_rule",
+                "input_sentence": sentence,
+                "event_semantics": {},
+                "dependent_type_translation": "ambiguous",
+                "ast": {},
+                "type_check": {"ok": True, "type": "Prop", "errors": []},
+                "coq_code": "\n".join(
+                    [
+                        "Definition first_reading : Prop := True.",
+                        "Definition second_reading : Prop := True.",
+                    ]
+                ),
+            }
+
+        rule = ConstructionRule(
+            rule_id="bad_readings_rule",
+            label="Bad readings rule",
+            phenomenon="negative semantic-readings test",
+            analyzer=ambiguous_export_analyzer,
+            forbidden_coq_fragments=("Parameter Event : Type.",),
+        )
+        result = run_registered_rule(rule, "bad readings sentence", require_coq=True)
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertFalse(result["ok"])
+        self.assertFalse(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 0)
+        self.assertIn(
+            "must export exactly one Prop/PropT definition",
+            result["semantic_readings_check"]["errors"][0],
+        )
+        self.assertIsNone(result["construction_hygiene"]["ok"])
+        self.assertFalse(result["construction_hygiene"]["checked"])
+        self.assertEqual(result["coq_check"]["status"], "skipped")
+        self.assertIn("semantic_readings_check failed", result["coq_check"]["message"])
+        diagnostics = build_diagnostics(result)
+        self.assertEqual(diagnostics["failure_stage"], "semantic_readings_check")
+        self.assertEqual(diagnostics["stages"]["semantic_readings_check"], "failed")
+        self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
+        self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
+
     def test_registered_rule_skips_coq_when_internal_type_check_fails(self) -> None:
         def bad_type_analyzer(sentence: str) -> dict:
             return {
@@ -7323,9 +7399,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"recovery_actions": []', readme)
         self.assertIn('"warnings": []', readme)
         self.assertIn('"type_check": "passed"', readme)
+        self.assertIn('"semantic_readings_check": "passed"', readme)
         self.assertIn('"construction_hygiene": "passed"', readme)
         self.assertIn('"coq_check": "passed"', readme)
         self.assertIn("`diagnostics.failure_stage` distinguishes", readme)
+        self.assertIn("`semantic_readings_check`", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7599,11 +7677,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`dependent_type_translation`", web_design)
         self.assertIn('`schema_version: "analyze.v1"`', web_design)
         self.assertIn("`result_state_lexicon`", web_design)
+        self.assertIn("semantic-readings-audit", web_design)
+        self.assertIn("`semantic_readings_check`", web_design)
         self.assertIn("`source_policy`", web_design)
         self.assertIn("Result State Lexicon panel", web_design)
         self.assertIn("dedicated `Conclusion` panel", web_design)
         self.assertIn("`construction_hygiene`", web_design)
-        self.assertIn("failure, it must still return `ok: false`", web_design)
+        self.assertIn("On any failure, it must", web_design)
+        self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
         self.assertIn("The web status line should surface `recovery_hint` directly", web_design)
         self.assertIn("Machine clients should prefer `recovery_actions`", web_design)

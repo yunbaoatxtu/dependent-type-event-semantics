@@ -24,6 +24,7 @@ FAILURE_STAGE_LABELS = {
     "input": "empty input",
     "parsing": "natural-language parsing",
     "type_check": "dependent-type checking",
+    "semantic_readings_check": "semantic readings audit",
     "construction_hygiene": "construction hygiene",
     "coq_check": "Coq/Rocq validation",
 }
@@ -31,6 +32,7 @@ FAILURE_STAGE_HINTS = {
     "input": "Enter a non-empty sentence.",
     "parsing": "Try a sentence with at least a subject and a predicate.",
     "type_check": "Inspect the dependent-type AST and type-check errors.",
+    "semantic_readings_check": "Inspect semantic readings and exported Coq definition names.",
     "construction_hygiene": "Remove forbidden construction fragments from generated Coq.",
     "coq_check": "Check the generated Coq scaffold and local Coq/Rocq toolchain.",
 }
@@ -54,6 +56,13 @@ FAILURE_STAGE_ACTIONS = {
             "kind": "inspect_ast",
             "label": "Inspect typed AST",
             "detail": "Compare the generated AST with the dependent-type checker errors.",
+        }
+    ],
+    "semantic_readings_check": [
+        {
+            "kind": "inspect_readings",
+            "label": "Inspect semantic readings",
+            "detail": "Check reading names, formulas, type checks, and exported Coq definitions.",
         }
     ],
     "construction_hygiene": [
@@ -424,12 +433,18 @@ def lexicon_patch_drafts(result: dict[str, Any]) -> list[dict[str, Any]]:
 
 def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     type_check = result.get("type_check", {})
+    semantic_readings_check = result.get("semantic_readings_check", {})
     construction_hygiene = result.get("construction_hygiene", {})
     coq_check = result.get("coq_check", {})
     warnings = result_state_warnings(result)
     drafts = lexicon_patch_drafts({"diagnostics": {"warnings": warnings}})
     stages = {
         "type_check": check_status(type_check.get("ok")) if type_check else "not_applicable",
+        "semantic_readings_check": (
+            check_status(semantic_readings_check.get("ok"))
+            if semantic_readings_check
+            else "not_applicable"
+        ),
         "construction_hygiene": (
             check_status(construction_hygiene.get("ok"))
             if construction_hygiene
@@ -440,6 +455,12 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     if result.get("ok"):
         summary = "translation verified"
         failure_stage = None
+    elif (
+        semantic_readings_check
+        and semantic_readings_check.get("ok") is False
+    ):
+        summary = "semantic readings check failed"
+        failure_stage = "semantic_readings_check"
     elif construction_hygiene and construction_hygiene.get("ok") is False:
         summary = "construction hygiene failed"
         failure_stage = "construction_hygiene"
