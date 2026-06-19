@@ -1985,6 +1985,29 @@ def timed_proposition_coordination_ast(
     }
 
 
+def split_homogeneous_boolean_coordinate_tokens(
+    tokens: list[str],
+) -> tuple[str, list[list[str]]] | None:
+    if not tokens or tokens[0] in BOOLEAN_COORDINATORS or tokens[-1] in BOOLEAN_COORDINATORS:
+        return None
+    coordinator: str | None = None
+    groups: list[list[str]] = [[]]
+    for token in tokens:
+        if token in BOOLEAN_COORDINATORS:
+            if coordinator is None:
+                coordinator = token
+            elif coordinator != token:
+                return None
+            if not groups[-1]:
+                return None
+            groups.append([])
+            continue
+        groups[-1].append(token)
+    if coordinator is None or any(not group for group in groups):
+        return None
+    return coordinator, groups
+
+
 def temporal_relation_arguments(
     relation_surface: str,
     main_time: str,
@@ -2048,7 +2071,7 @@ def temporal_relation_proposition_ast(
     return ast
 
 
-def unsupported_temporal_perception_disjunction(
+def unsupported_mixed_temporal_perception_coordination(
     sentence: str,
     embedded_tokens: list[str],
 ) -> dict[str, Any]:
@@ -2056,38 +2079,43 @@ def unsupported_temporal_perception_disjunction(
         "kind": "perception_nominalization",
         "input_sentence": sentence,
         "construction_summary": (
-            "A perception complement with a temporal relation and disjunction was "
-            "detected, but this controlled fragment currently licenses only "
-            "conjunctive timed propositions."
+            "A perception complement with a temporal relation and mixed boolean "
+            "coordination was detected, but this controlled fragment currently "
+            "requires one homogeneous timed-proposition connective per side."
         ),
         "event_semantics": {
-            "analysis": "perception-temporal-disjunction-boundary",
+            "analysis": "perception-temporal-mixed-coordination-boundary",
             "source": sentence,
             "event_style_reference": (
                 "exists e. Seeing(e) and Experiencer(e, Mary) and "
-                "Theme(e, disjunctive temporal proposition)"
+                "Theme(e, mixed boolean temporal proposition)"
             ),
         },
         "dependent_type_translation": "",
         "ast": {
             "kind": "perception_nominalization",
-            "unsupported": "temporal_perception_disjunction",
+            "unsupported": "mixed_temporal_perception_coordination",
             "embedded_tokens": embedded_tokens,
-            "connective": "or_T",
+            "connectives": [
+                BOOLEAN_COORDINATORS[token]
+                for token in embedded_tokens
+                if token in BOOLEAN_COORDINATORS
+            ],
         },
         "type_check": {
             "ok": False,
             "type": None,
             "errors": [
                 (
-                    "timed perception disjunction currently requires an explicit "
-                    "reading policy; refusing to treat temporal material as an Entity"
+                    "mixed timed perception coordination currently requires an "
+                    "explicit reading policy; refusing to treat temporal material "
+                    "as an Entity"
                 )
             ],
             "note": (
                 "The parser recognized after/before inside a perception complement "
-                "together with or. This boundary is rejected until the project adds "
-                "a typed account of temporal disjunction scope."
+                "together with mixed boolean coordination. This boundary is rejected "
+                "until the project adds a typed account of mixed temporal boolean scope."
             ),
         },
         "coq_code": "",
@@ -2163,11 +2191,10 @@ def parse_timed_perception_side(
     if simple_clause is not None:
         return simple_clause
 
-    if "or" in tokens:
+    coordination = split_homogeneous_boolean_coordinate_tokens(tokens)
+    if coordination is None:
         return None
-    groups = split_coordinate_tokens(tokens)
-    if groups is None or len(groups) < 2:
-        return None
+    coordinator, groups = coordination
     clauses: list[dict[str, Any]] = []
     for index, group in enumerate(groups, start=1):
         clause = parse_timed_perception_embedded_clause(
@@ -2179,7 +2206,7 @@ def parse_timed_perception_side(
         clauses.append(clause)
     return timed_proposition_coordination_ast(
         clauses,
-        connective_for_coordinator("and"),
+        connective_for_coordinator(coordinator),
     )
 
 
@@ -2285,6 +2312,61 @@ def render_perception_temporal_relations_translation(
     return f"before({relation['arguments'][0]}, {relation['arguments'][1]})"
 
 
+def timed_disjunction_branch_options(proposition: dict[str, Any]) -> list[dict[str, Any]]:
+    if (
+        proposition.get("kind") == "timed_proposition_coordination"
+        and proposition.get("connective") == "or_T"
+    ):
+        return proposition["clauses"]
+    return [proposition]
+
+
+def temporal_relation_has_timed_disjunction(proposition: dict[str, Any]) -> bool:
+    return any(
+        side.get("kind") == "timed_proposition_coordination"
+        and side.get("connective") == "or_T"
+        for side in (proposition["main"], proposition["reference"])
+    )
+
+
+def render_temporal_relation_branch_translation(
+    main: dict[str, Any],
+    reference: dict[str, Any],
+    relation_surface: str,
+) -> str:
+    time_variables = [
+        *perception_timed_proposition_times(main),
+        *perception_timed_proposition_times(reference),
+    ]
+    relation_text = " and ".join(
+        f"before({arguments[0]}, {arguments[1]})"
+        for arguments in expected_temporal_relation_arguments(
+            main,
+            reference,
+            relation_surface,
+        )
+    )
+    return (
+        f"exists {' '.join(time_variables)} : Time. "
+        f"{render_perception_timed_proposition_translation(main)} and "
+        f"{render_perception_timed_proposition_translation(reference)} and "
+        f"{relation_text}"
+    )
+
+
+def render_disjunctive_temporal_relation_translation(proposition: dict[str, Any]) -> str:
+    branches = [
+        render_temporal_relation_branch_translation(
+            main,
+            reference,
+            proposition["relation_surface"],
+        )
+        for main in timed_disjunction_branch_options(proposition["main"])
+        for reference in timed_disjunction_branch_options(proposition["reference"])
+    ]
+    return render_binary_connective_translation("or_T", branches)
+
+
 def render_perception_embedded_translation(proposition: dict[str, Any]) -> str:
     if proposition.get("kind") == "subject_coordination":
         return render_subject_coordination_translation(proposition)
@@ -2298,6 +2380,8 @@ def render_perception_embedded_translation(proposition: dict[str, Any]) -> str:
     if proposition.get("kind") == "temporal_relation":
         main = proposition["main"]
         reference = proposition["reference"]
+        if temporal_relation_has_timed_disjunction(proposition):
+            return render_disjunctive_temporal_relation_translation(proposition)
         return (
             f"exists {' '.join(binder['variable'] for binder in proposition['binders'])} : Time. "
             f"{render_perception_timed_proposition_translation(main)} and "
@@ -2340,6 +2424,48 @@ def render_perception_temporal_relations_coq(proposition: dict[str, Any]) -> str
     return f"    before {relation['arguments'][0]} {relation['arguments'][1]}"
 
 
+def render_temporal_relation_branch_coq(
+    main: dict[str, Any],
+    reference: dict[str, Any],
+    relation_surface: str,
+) -> str:
+    time_variables = [
+        *perception_timed_proposition_times(main),
+        *perception_timed_proposition_times(reference),
+    ]
+    quantifiers = "".join(
+        f"exists {time_variable} : Time,\n  "
+        for time_variable in time_variables
+    )
+    relation_text = " /\\\n".join(
+        f"    before {arguments[0]} {arguments[1]}"
+        for arguments in expected_temporal_relation_arguments(
+            main,
+            reference,
+            relation_surface,
+        )
+    )
+    return (
+        quantifiers
+        + f"  {render_perception_timed_proposition_coq(main)} /\\\n"
+        + f"    {render_perception_timed_proposition_coq(reference)} /\\\n"
+        + relation_text
+    )
+
+
+def render_disjunctive_temporal_relation_coq(proposition: dict[str, Any]) -> str:
+    branches = [
+        render_temporal_relation_branch_coq(
+            main,
+            reference,
+            proposition["relation_surface"],
+        )
+        for main in timed_disjunction_branch_options(proposition["main"])
+        for reference in timed_disjunction_branch_options(proposition["reference"])
+    ]
+    return render_binary_connective_coq("or_T", branches)
+
+
 def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
     if proposition.get("kind") == "subject_coordination":
         predicate = proposition["predicate"]["name"]
@@ -2358,6 +2484,8 @@ def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
     if proposition.get("kind") == "temporal_relation":
         main = proposition["main"]
         reference = proposition["reference"]
+        if temporal_relation_has_timed_disjunction(proposition):
+            return render_disjunctive_temporal_relation_coq(proposition)
         quantifiers = "".join(
             f"exists {binder['variable']} : Time,\n  "
             for binder in proposition["binders"]
@@ -2469,8 +2597,8 @@ def check_timed_side_proposition(
     errors: list[str],
 ) -> None:
     if proposition.get("kind") == "timed_proposition_coordination":
-        if proposition.get("connective") != "and_T":
-            errors.append(f"embedded timed {label} coordination currently requires and_T")
+        if proposition.get("connective") not in {"and_T", "or_T"}:
+            errors.append(f"embedded timed {label} coordination connective must be and_T or or_T")
         if proposition.get("connective_type") != "Prop -> Prop -> Prop":
             errors.append(
                 f"embedded timed {label} coordination connective must have type Prop -> Prop -> Prop"
@@ -2652,8 +2780,8 @@ def check_perception_embedded_proposition(
         return
 
     if proposition.get("kind") == "timed_proposition_coordination":
-        if proposition.get("connective") != "and_T":
-            errors.append("embedded timed proposition coordination currently requires and_T")
+        if proposition.get("connective") not in {"and_T", "or_T"}:
+            errors.append("embedded timed proposition coordination connective must be and_T or or_T")
         if proposition.get("connective_type") != "Prop -> Prop -> Prop":
             errors.append(
                 "embedded timed proposition coordination connective must have type Prop -> Prop -> Prop"
@@ -2738,7 +2866,7 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             "or" in embedded_tokens
             and any(token in TEMPORAL_RELATION_CONNECTORS for token in embedded_tokens)
         ):
-            return unsupported_temporal_perception_disjunction(sentence, embedded_tokens)
+            return unsupported_mixed_temporal_perception_coordination(sentence, embedded_tokens)
         leading_both = bool(embedded_tokens and embedded_tokens[0] == "both")
         if leading_both:
             embedded_tokens = embedded_tokens[1:]

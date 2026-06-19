@@ -1228,10 +1228,11 @@ Current type rules:
   in the direction licensed by the surface connector. If either side is a timed
   proposition coordination, its `clauses` list must contain at least two timed
   clauses, and the checker requires one `before` relation for each
-  main/reference time pair. The current timed-perception fragment only licenses
-  conjunctive timed proposition lists; a surface `or` together with `after` or
-  `before` is represented as an explicit unsupported boundary and fails before
-  Coq/Rocq export.
+  main/reference time pair. Homogeneous `or` timed lists are rendered with
+  branch-local time quantification: each disjunct receives its own existential
+  `Time` binders and its own `before` constraints before the branches are
+  folded by `or_T`. Mixed `and`/`or` timed coordination remains an explicit
+  unsupported boundary and fails before Coq/Rocq export.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

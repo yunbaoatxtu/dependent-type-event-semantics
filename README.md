@@ -445,9 +445,12 @@ The corresponding `before` forms reverse every ordered pair, so three main
 clauses before one reference clause check `before(t_main_i, t_reference)`, and
 one main clause before three reference clauses checks `before(t_main,
 t_reference_i)`.
-Timed perception disjunction remains outside the controlled fragment: `Mary saw
-John leave or Sue smile after Bill waved` is rejected at the internal type-check
-stage rather than treating `after Bill waved` as part of an entity name.
+Timed perception disjunction now uses branch-local time binding: `Mary saw John
+leave or Sue smile after Bill waved` renders as an `or_T` of two existential
+time propositions, so each branch carries its own `before` constraint and the
+temporal phrase is not folded into an entity name. Mixed `and`/`or` timed
+coordination remains outside the controlled fragment and is rejected before
+Coq/Rocq export.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and
