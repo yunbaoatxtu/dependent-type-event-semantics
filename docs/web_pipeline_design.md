@@ -85,8 +85,9 @@ The response is a single JSON object with `schema_version: "analyze.v1"` so
 clients can distinguish this contract from later API revisions. On success, it
 must expose the same semantic artifacts shown on the page: `event_semantics`,
 `dependent_type_translation`, `result_state_lexicon`, `modifier_role_audit`,
-`lexicon_patch_drafts`, `patch_text_preview`, `semantic_readings`, `ast`,
-`coq_code`, `construction_rule`, `construction_summary`,
+`lexicon_patch_drafts`, `patch_text_preview`, `semantic_readings`,
+`semantic_readings_check`, `ast`, `coq_code`, `construction_rule`,
+`construction_summary`,
 `construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
 The page mirrors that version in a compact `API Contract` panel, including the
 `/api/analyze` endpoint, so a browser screenshot and a JSON client can refer to
@@ -269,8 +270,10 @@ structured AST object with a `scope_order`, bound variables, restrictor
 predicate types, and the binary relation type before the readable and Coq
 formulas are rendered. The API also exposes the same alternatives through
 top-level `semantic_readings`, matching the shape used by do-support negation
-ambiguities and mixed temporal perception alternatives. In this path, `boy` and
-`girl` are predicates of type
+ambiguities and mixed temporal perception alternatives. A companion
+`semantic_readings_check` confirms that the readings are unique, non-empty, and
+linked to exported Coq definitions. In this path, `boy` and `girl` are
+predicates of type
 `Entity -> Prop`, while `some` is a quantifier pattern, not an entity constant.
 The checked scaffold also types `love` directly as `Entity -> Entity -> Prop`,
 so the two readings do not smuggle in an `Event` type, `Agent`, or `Theme`
@@ -300,7 +303,10 @@ variable. The scaffold therefore avoids both an `Event` type and an
 event-inclusion predicate such as `IN`. When the perception complement contains
 mixed temporal coordination, the primary policy and checked alternative
 policies are exposed through `semantic_readings` as well as the
-construction-specific `alternative_scope_readings` audit.
+construction-specific `alternative_scope_readings` audit. The
+`semantic_readings_check` object reports the number of readings and rejects
+duplicate names or alternative Coq definition names that are not exported in
+the generated scaffold.
 
 The pasted legacy browser prototype from the earlier webpage is useful as a
 design sketch: it already distinguished nested perception cases from temporal

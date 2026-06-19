@@ -786,7 +786,9 @@ The paired object-wide reading has the same relation arguments but reverses the
 rendered. The API result also exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
 translation, Coq definition name, and type-check metadata shape used for other
-ambiguity-producing constructions.
+ambiguity-producing constructions. `semantic_readings_check` then audits the
+normalized list for duplicate names, missing formulas, failed per-reading
+checks, and Coq definition names that are not actually exported.
 
 ### `subject_coordination`
 
@@ -1179,7 +1181,9 @@ Current type rules:
   rather than entities or object-name suffixes. The API mirrors the two
   negation readings in top-level `semantic_readings`, so clients can enumerate
   the checked wide-scope and distributed readings without knowing the
-  construction-specific AST layout.
+  construction-specific AST layout. `semantic_readings_check` records the same
+  reading count and rejects malformed normalized entries before clients need to
+  inspect the nested construction-specific representation.
   Repeated do-support negation across both branches, such as `John did not walk
   and did not talk`, is treated as an explicit distributed surface form:
   `and_T(not_T(walk(john)), not_T(talk(john)))`. The same parser boundary keeps
@@ -1254,7 +1258,8 @@ Current type rules:
   the perception Coq/Rocq scaffold emits one checked definition per alternative.
   The same primary and alternative formulas are normalized into top-level
   `semantic_readings`, preserving the scope policy and type-check result for
-  the web/API layer.
+  the web/API layer. The companion `semantic_readings_check` verifies that each
+  normalized alternative names an exported Coq/Rocq definition.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

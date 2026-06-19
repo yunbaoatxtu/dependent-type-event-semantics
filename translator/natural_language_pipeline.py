@@ -244,6 +244,79 @@ def semantic_reading(
     return reading
 
 
+def check_semantic_readings(
+    readings: list[dict[str, Any]] | None,
+    coq_code: str = "",
+) -> dict[str, Any]:
+    if readings is None:
+        return {
+            "checked": False,
+            "ok": None,
+            "reading_count": 0,
+            "errors": [],
+        }
+    errors: list[str] = []
+    if not isinstance(readings, list):
+        return {
+            "checked": True,
+            "ok": False,
+            "reading_count": 0,
+            "errors": ["semantic_readings must be a list"],
+        }
+    if not readings:
+        errors.append("semantic_readings must not be empty when present")
+    seen_names: set[str] = set()
+    for index, reading in enumerate(readings):
+        if not isinstance(reading, dict):
+            errors.append(f"semantic_readings[{index}] must be an object")
+            continue
+        name = reading.get("name")
+        if not isinstance(name, str) or not name:
+            errors.append(f"semantic_readings[{index}].name must be a non-empty string")
+        elif name in seen_names:
+            errors.append(f"semantic_readings name {name!r} is duplicated")
+        else:
+            seen_names.add(name)
+        translation = reading.get("dependent_type_translation")
+        if not isinstance(translation, str) or not translation.strip():
+            errors.append(
+                "semantic_readings"
+                f"[{index}].dependent_type_translation must be a non-empty string"
+            )
+        coq_definition = reading.get("coq_definition")
+        if coq_definition is not None:
+            if not isinstance(coq_definition, str) or not coq_definition:
+                errors.append(
+                    f"semantic_readings[{index}].coq_definition must be a non-empty string"
+                )
+            elif coq_code and f"Definition {coq_definition}" not in coq_code:
+                errors.append(
+                    "semantic_readings"
+                    f"[{index}].coq_definition {coq_definition!r} is not exported"
+                )
+        scope_policy = reading.get("scope_policy")
+        if scope_policy is not None and (
+            not isinstance(scope_policy, dict)
+            or any(
+                not isinstance(key, str) or not isinstance(value, str)
+                for key, value in scope_policy.items()
+            )
+        ):
+            errors.append(f"semantic_readings[{index}].scope_policy must map strings to strings")
+        type_check = reading.get("type_check")
+        if type_check is not None:
+            if not isinstance(type_check, dict):
+                errors.append(f"semantic_readings[{index}].type_check must be an object")
+            elif type_check.get("ok") is not True:
+                errors.append(f"semantic_readings[{index}].type_check must have ok=true")
+    return {
+        "checked": True,
+        "ok": not errors,
+        "reading_count": len(readings),
+        "errors": errors,
+    }
+
+
 def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         semantic_reading(
@@ -347,6 +420,8 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
         ]
     )
+    semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+    event_semantics["semantic_readings_check"] = semantic_readings_check
     return {
         "kind": "quantifier_scope_ambiguity",
         "input_sentence": sentence,
@@ -355,6 +430,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             reading["formula"] for reading in event_semantics["readings"]
         ),
         "semantic_readings": semantic_readings,
+        "semantic_readings_check": semantic_readings_check,
         "ast": {
             "kind": "scope_ambiguity",
             "quantifier": "some",
@@ -932,6 +1008,7 @@ def ambiguous_do_support_coordination_pipeline(
         for reading in readings
     )
     coq_code = render_negated_coordination_coq(readings)
+    semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
     kind = (
         "do_support_negation_disjunction"
         if connective == "or_T"
@@ -975,9 +1052,11 @@ def ambiguous_do_support_coordination_pipeline(
                 for reading in readings
             ],
             "semantic_readings": semantic_readings,
+            "semantic_readings_check": semantic_readings_check,
         },
         "dependent_type_translation": dependent_type_translation,
         "semantic_readings": semantic_readings,
+        "semantic_readings_check": semantic_readings_check,
         "ast": {
             "kind": "do_support_negation_coordination_ambiguity",
             "auxiliary": auxiliary,
@@ -3290,6 +3369,7 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
         ]
     )
+    semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
     event_semantics = {
         "analysis": "parsons-perception-complement",
         "source": sentence,
@@ -3299,6 +3379,7 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         ),
         "typed_replacement": f"see(Mary, E({embedded_translation}))",
         "semantic_readings": semantic_readings,
+        "semantic_readings_check": semantic_readings_check,
     }
     if alternative_scope_readings:
         event_semantics["alternative_scope_readings"] = alternative_scope_readings
@@ -3314,6 +3395,7 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         "event_semantics": event_semantics,
         "dependent_type_translation": event_semantics["typed_replacement"],
         "semantic_readings": semantic_readings,
+        "semantic_readings_check": semantic_readings_check,
         **(
             {"alternative_scope_readings": alternative_scope_readings}
             if alternative_scope_readings

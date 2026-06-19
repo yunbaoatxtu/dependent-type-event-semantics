@@ -28,6 +28,7 @@ from translator.natural_language_pipeline import (
     check_perception_nominalization_ast,
     check_predicate_coordination_ast,
     check_quantifier_scope_readings,
+    check_semantic_readings,
     check_stative_result_state_ast,
     check_timed_after_ast,
     check_transitive_predicate_coordination_ast,
@@ -5742,6 +5743,12 @@ class TranslatorTests(unittest.TestCase):
             "exists x_boy : Entity",
             result["semantic_readings"][0]["dependent_type_translation"],
         )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 2)
+        self.assertEqual(
+            result["event_semantics"]["semantic_readings_check"],
+            result["semantic_readings_check"],
+        )
         readings = result["ast"]["readings"]
         self.assertEqual(
             [binder["role"] for binder in readings[0]["scope_order"]],
@@ -5773,6 +5780,31 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "scope readings must include both subject-wide and object-wide orders",
             type_check["errors"],
+        )
+
+    def test_semantic_readings_check_rejects_duplicate_and_unexported_readings(self) -> None:
+        check = check_semantic_readings(
+            [
+                {
+                    "name": "reading",
+                    "dependent_type_translation": "p",
+                    "coq_definition": "reading",
+                    "type_check": {"ok": True},
+                },
+                {
+                    "name": "reading",
+                    "dependent_type_translation": "q",
+                    "coq_definition": "missing_reading",
+                    "type_check": {"ok": True},
+                },
+            ],
+            "Definition reading : Prop := True.",
+        )
+        self.assertFalse(check["ok"])
+        self.assertIn("semantic_readings name 'reading' is duplicated", check["errors"])
+        self.assertIn(
+            "semantic_readings[1].coq_definition 'missing_reading' is not exported",
+            check["errors"],
         )
 
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
@@ -5953,11 +5985,15 @@ class TranslatorTests(unittest.TestCase):
             "or_before_and_main",
         )
         self.assertEqual(len(result["semantic_readings"]), 2)
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 2)
 
         page = render_page(sentence, require_coq=True)
         self.assertIn("translation verified", page)
         self.assertIn("alternative_scope_readings", page)
         self.assertIn("semantic_readings", page)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn("&quot;reading_count&quot;: 2", page)
         self.assertIn("or_before_and_main", page)
         self.assertIn("or_T(exists t_main_1 t_main_2 t_reference : Time.", page)
         self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
@@ -5984,6 +6020,8 @@ class TranslatorTests(unittest.TestCase):
             "or_before_and_main_reference",
         )
         self.assertEqual(len(result["semantic_readings"]), 4)
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 4)
         self.assertIn(
             "or_T(exists t_main_1 t_main_2 t_reference_1 t_reference_2 : Time.",
             result["dependent_type_translation"],
@@ -5994,6 +6032,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("translation verified", page)
         self.assertIn("alternative_scope_readings", page)
         self.assertIn("semantic_readings", page)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn("&quot;reading_count&quot;: 4", page)
         self.assertIn("or_before_and_main_reference", page)
         self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
         self.assertIn("and_T(wave(Bill, t_reference_1), jump(Tom, t_reference_2))", page)
@@ -6182,11 +6222,15 @@ class TranslatorTests(unittest.TestCase):
             "not_T(and_T(walk(john), talk(john)))",
             result["semantic_readings"][0]["dependent_type_translation"],
         )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 2)
 
         page = render_page("John did not walk and talk", require_coq=True)
         self.assertIn("Translation verified", page)
         self.assertIn("do_support_negation_coordination_ambiguity", page)
         self.assertIn("semantic_readings", page)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn("&quot;reading_count&quot;: 2", page)
         self.assertIn("negation_over_conjunction", page)
         self.assertIn("distributed_negation", page)
         self.assertIn("not_T(and_T(walk(john), talk(john)))", page)

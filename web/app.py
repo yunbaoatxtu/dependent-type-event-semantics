@@ -847,6 +847,8 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
     type_check = compact_json(result.get("type_check", {}))
+    semantic_readings = compact_json(result.get("semantic_readings", []))
+    semantic_readings_check = compact_json(result.get("semantic_readings_check", {}))
     modifier_roles = compact_json(result.get("modifier_role_audit", []))
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
     patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
@@ -1237,6 +1239,8 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {next_steps_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("Modifier Role Audit", modifier_roles)}
+      {panel("Semantic Readings", semantic_readings)}
+      {panel("Semantic Readings Check", semantic_readings_check)}
       {panel("AST", ast)}
       {panel("Type Check", type_check)}
       {panel("Result State Lexicon JSON", result_lexicon)}
