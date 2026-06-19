@@ -168,11 +168,17 @@ transitive coordination slice to be licensed as transitive surface predicates,
 preventing `walk in the park` or `talk quickly` from being compiled as
 entity-object applications. Fronted shared modifiers now become a shared
 branch-local prefix, so `In the park John did not eat bread slowly but drank
-water quickly` renders both branches with `in(park)` before their own local
+water quickly` keeps both local adverbs and the shared `in(park)` modifier
+typed as `Adv`, rendering both branches with `in(park)` before their own local
 modifier. Left-branch-internal time modifiers now remain inside their own
 branch, so `John did not eat bread yesterday but drank water quickly` becomes
 `and_T(not_T(at_T(yesterday, eat(0)(john, bread))), drink(1)(quickly, john,
-water))`. Scope-ambiguous patterns such as `John did not walk and talk` are now
+water))`. All successful do-support negation routes now expose a normalized
+`semantic_readings` list and `semantic_readings_check`, including single-reading
+simple negation, right-branch coordination, contrastive `but`, and repeated
+do-support negation, so API clients do not need special code just to find the
+checked formula for these constructions. Scope-ambiguous patterns such as
+`John did not walk and talk` are now
 returned as two explicit readings, `not_T(and_T(walk(john), talk(john)))` and
 `and_T(not_T(walk(john)), not_T(talk(john)))`, rather than being misread as a
 subject `john_did_not` or an object `and_did_not_talk`. Negated disjunction is

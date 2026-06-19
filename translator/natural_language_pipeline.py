@@ -317,6 +317,59 @@ def check_semantic_readings(
     }
 
 
+def single_semantic_reading_payload(
+    *,
+    name: str,
+    dependent_type_translation: str,
+    coq_code: str,
+    coq_definition: str,
+    type_check: dict[str, Any],
+    source: str,
+    scope: str | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    reading_type_check = {
+        "ok": type_check.get("ok") is True,
+        "type": type_check.get("type"),
+        "errors": type_check.get("errors", []),
+    }
+    readings = [
+        semantic_reading(
+            name=name,
+            dependent_type_translation=dependent_type_translation,
+            coq_definition=coq_definition,
+            scope=scope,
+            type_check=reading_type_check,
+            source=source,
+        )
+    ]
+    return readings, check_semantic_readings(readings, coq_code)
+
+
+def attach_single_semantic_reading(
+    result: dict[str, Any],
+    *,
+    name: str,
+    coq_definition: str,
+    source: str,
+    scope: str | None = None,
+) -> dict[str, Any]:
+    semantic_readings, semantic_readings_check = single_semantic_reading_payload(
+        name=name,
+        dependent_type_translation=result["dependent_type_translation"],
+        coq_code=result.get("coq_code", ""),
+        coq_definition=coq_definition,
+        type_check=result.get("type_check", {}),
+        source=source,
+        scope=scope,
+    )
+    result["semantic_readings"] = semantic_readings
+    result["semantic_readings_check"] = semantic_readings_check
+    event_semantics = result.setdefault("event_semantics", {})
+    event_semantics["semantic_readings"] = semantic_readings
+    event_semantics["semantic_readings_check"] = semantic_readings_check
+    return result
+
+
 def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         semantic_reading(
@@ -1156,38 +1209,44 @@ def repeated_do_support_negation_coordination_pipeline(
     }
     typed_replacement = render_negated_coordination_reading(exported_reading)
     coq_code = render_negated_coordination_coq([exported_reading])
-    return {
-        "kind": "repeated_do_support_negation_coordination",
-        "input_sentence": sentence,
-        "construction_summary": (
-            f"Same subject {subject} coordinates two explicit do-support "
-            f"negations with {coordinator}, so each typed branch is wrapped in not_T."
-        ),
-        "event_semantics": {
-            "analysis": "repeated-do-support-negation-coordination",
-            "source": sentence,
-            "event_style_reference": (
-                f"not(P) {coordinator} not(Q), without introducing Event, Agent, or Theme"
-            ),
-            "formula": typed_replacement,
-        },
-        "dependent_type_translation": typed_replacement,
-        "ast": {
+    return attach_single_semantic_reading(
+        {
             "kind": "repeated_do_support_negation_coordination",
-            "auxiliary": auxiliary,
-            "subject": {"name": subject, "type": "Entity"},
-            "reading": exported_reading,
-        },
-        "type_check": {
-            **type_check,
-            "note": (
-                "Repeated do-support negation over coordination has an explicit "
-                "distributed negation surface form, so the translator exports "
-                "one checked proposition rather than an ambiguity set."
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} coordinates two explicit do-support "
+                f"negations with {coordinator}, so each typed branch is wrapped in not_T."
             ),
+            "event_semantics": {
+                "analysis": "repeated-do-support-negation-coordination",
+                "source": sentence,
+                "event_style_reference": (
+                    f"not(P) {coordinator} not(Q), without introducing Event, Agent, or Theme"
+                ),
+                "formula": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": {
+                "kind": "repeated_do_support_negation_coordination",
+                "auxiliary": auxiliary,
+                "subject": {"name": subject, "type": "Entity"},
+                "reading": exported_reading,
+            },
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Repeated do-support negation over coordination has an explicit "
+                    "distributed negation surface form, so the translator exports "
+                    "one checked proposition rather than an ambiguity set."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "coq_code": coq_code,
-    }
+        name=exported_reading["name"],
+        coq_definition=exported_reading["name"],
+        source="do_support_negation",
+        scope=surface_scope,
+    )
 
 
 def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
@@ -1362,33 +1421,39 @@ def do_support_negation_pipeline(sentence: str) -> dict[str, Any] | None:
         "coq",
     ) if type_check["ok"] else ""
     typed_replacement = render_term(ast)
-    return {
-        "kind": "do_support_negation",
-        "input_sentence": sentence,
-        "construction_summary": (
-            f"Do-support negation maps {auxiliary} not to not_T over the "
-            f"positive clause {positive_sentence}."
-        ),
-        "event_semantics": {
-            "analysis": "do-support-negation",
-            "source": sentence,
-            "positive_clause": positive_translation["translation"],
-            "event_style_reference": (
-                f"not(exists e. {positive_translation['translation']})"
+    return attach_single_semantic_reading(
+        {
+            "kind": "do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Do-support negation maps {auxiliary} not to not_T over the "
+                f"positive clause {positive_sentence}."
             ),
-            "typed_replacement": typed_replacement,
+            "event_semantics": {
+                "analysis": "do-support-negation",
+                "source": sentence,
+                "positive_clause": positive_translation["translation"],
+                "event_style_reference": (
+                    f"not(exists e. {positive_translation['translation']})"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Do-support negation is represented as a proposition-level "
+                    "not_T wrapper around the checked positive-clause AST."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "dependent_type_translation": typed_replacement,
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": (
-                "Do-support negation is represented as a proposition-level "
-                "not_T wrapper around the checked positive-clause AST."
-            ),
-        },
-        "coq_code": coq_code,
-    }
+        name="do_support_negation",
+        coq_definition="example_1",
+        source="do_support_negation",
+        scope="simple_negation",
+    )
 
 
 def wrap_negated_translation(term: str, negated: bool) -> str:
@@ -6233,36 +6298,42 @@ def coordinated_intransitive_do_support_negation(
         "coordinated_do_support_negation_assertion",
         ast,
     )
-    return {
-        "kind": "coordinated_do_support_negation",
-        "input_sentence": sentence,
-        "construction_summary": (
-            f"Same subject {subject} coordinates {predicates[0]['name']} {coordinator} "
-            f"the right-branch do-support negation not {predicates[1]['name']}."
-        ),
-        "event_semantics": {
-            "analysis": "right-branch-do-support-negation",
-            "source": sentence,
-            "event_style_reference": (
-                "exists e1. "
-                f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) {coordinator} "
-                "not(exists e2. "
-                f"{predicates[1]['name']}(e2) and Agent(e2, {subject}))"
+    return attach_single_semantic_reading(
+        {
+            "kind": "coordinated_do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} coordinates {predicates[0]['name']} {coordinator} "
+                f"the right-branch do-support negation not {predicates[1]['name']}."
             ),
-            "typed_replacement": typed_replacement,
+            "event_semantics": {
+                "analysis": "right-branch-do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "exists e1. "
+                    f"{predicates[0]['name']}(e1) and Agent(e1, {subject}) {coordinator} "
+                    "not(exists e2. "
+                    f"{predicates[1]['name']}(e2) and Agent(e2, {subject}))"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Right-branch do-support negation is represented by wrapping "
+                    "only the second checked coordinate in not_T; no Event, Agent, "
+                    "or Theme predicate is exported."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "dependent_type_translation": typed_replacement,
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": (
-                "Right-branch do-support negation is represented by wrapping "
-                "only the second checked coordinate in not_T; no Event, Agent, "
-                "or Theme predicate is exported."
-            ),
-        },
-        "coq_code": coq_code,
-    }
+        name="right_branch_do_support_negation",
+        coq_definition="coordinated_do_support_negation_assertion",
+        source="do_support_negation",
+        scope="right_branch_negation",
+    )
 
 
 def coordinated_transitive_do_support_negation(
@@ -6342,40 +6413,46 @@ def coordinated_transitive_do_support_negation(
         "coordinated_transitive_do_support_negation_assertion",
         ast,
     )
-    return {
-        "kind": "coordinated_do_support_negation",
-        "input_sentence": sentence,
-        "construction_summary": (
-            f"Same subject {subject} coordinates "
-            f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
-            f"{clauses[0]['object']['type']}) {coordinator} right-branch negation not "
-            f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
-            f"{clauses[1]['object']['type']})."
-        ),
-        "event_semantics": {
-            "analysis": "right-branch-do-support-negation",
-            "source": sentence,
-            "event_style_reference": (
-                "exists e1. "
-                f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
-                f"Theme(e1, {clauses[0]['object']['name']}) {coordinator} not(exists e2. "
-                f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
-                f"Theme(e2, {clauses[1]['object']['name']}))"
+    return attach_single_semantic_reading(
+        {
+            "kind": "coordinated_do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} coordinates "
+                f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
+                f"{clauses[0]['object']['type']}) {coordinator} right-branch negation not "
+                f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
+                f"{clauses[1]['object']['type']})."
             ),
-            "typed_replacement": typed_replacement,
+            "event_semantics": {
+                "analysis": "right-branch-do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "exists e1. "
+                    f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                    f"Theme(e1, {clauses[0]['object']['name']}) {coordinator} not(exists e2. "
+                    f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                    f"Theme(e2, {clauses[1]['object']['name']}))"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Right-branch transitive do-support negation is represented by "
+                    "wrapping only the second typed coordinate in not_T; object "
+                    "lexical types are still checked before Coq."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "dependent_type_translation": typed_replacement,
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": (
-                "Right-branch transitive do-support negation is represented by "
-                "wrapping only the second typed coordinate in not_T; object "
-                "lexical types are still checked before Coq."
-            ),
-        },
-        "coq_code": coq_code,
-    }
+        name="right_branch_transitive_do_support_negation",
+        coq_definition="coordinated_transitive_do_support_negation_assertion",
+        source="do_support_negation",
+        scope="right_branch_negation",
+    )
 
 
 def contrastive_intransitive_do_support_negation(
@@ -6439,40 +6516,46 @@ def contrastive_intransitive_do_support_negation(
             "contrastive_branch_modifier_negation_assertion",
             ast,
         )
-        return {
-            "kind": "contrastive_do_support_negation",
-            "input_sentence": sentence,
-            "construction_summary": (
-                f"Same subject {subject} contrasts not {clauses[0]['predicate']['name']} "
-                f"with local Adv material against {clauses[1]['predicate']['name']} "
-                "with its own branch-local Adv material; fronted Adv material "
-                "is copied into both branch-local modifier sequences."
-            ),
-            "event_semantics": {
-                "analysis": "contrastive-do-support-negation",
-                "source": sentence,
-                "event_style_reference": (
-                    "not(exists e1. "
-                    f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) "
-                    "and local modifiers) and exists e2. "
-                    f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject})"
-                    " and local modifiers"
+        return attach_single_semantic_reading(
+            {
+                "kind": "contrastive_do_support_negation",
+                "input_sentence": sentence,
+                "construction_summary": (
+                    f"Same subject {subject} contrasts not {clauses[0]['predicate']['name']} "
+                    f"with local Adv material against {clauses[1]['predicate']['name']} "
+                    "with its own branch-local Adv material; fronted Adv material "
+                    "is copied into both branch-local modifier sequences."
                 ),
-                "typed_replacement": typed_replacement,
+                "event_semantics": {
+                    "analysis": "contrastive-do-support-negation",
+                    "source": sentence,
+                    "event_style_reference": (
+                        "not(exists e1. "
+                        f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) "
+                        "and local modifiers) and exists e2. "
+                        f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject})"
+                        " and local modifiers"
+                    ),
+                    "typed_replacement": typed_replacement,
+                },
+                "dependent_type_translation": typed_replacement,
+                "ast": ast,
+                "type_check": {
+                    **type_check,
+                    "note": (
+                        "Contrastive do-support negation with branch-local Adv or "
+                        "time material uses branch-local ModifierSeq indices and "
+                        "clause-local time_modifiers; fronted Adv material is "
+                        "represented as a shared prefix."
+                    ),
+                },
+                "coq_code": coq_code,
             },
-            "dependent_type_translation": typed_replacement,
-            "ast": ast,
-            "type_check": {
-                **type_check,
-                "note": (
-                    "Contrastive do-support negation with branch-local Adv or "
-                    "time material uses branch-local ModifierSeq indices and "
-                    "clause-local time_modifiers; fronted Adv material is "
-                    "represented as a shared prefix."
-                ),
-            },
-            "coq_code": coq_code,
-        }
+            name="contrastive_branch_modifier_do_support_negation",
+            coq_definition="contrastive_branch_modifier_negation_assertion",
+            source="do_support_negation",
+            scope="contrastive_but",
+        )
     shared_adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     predicate_type = (
@@ -6505,37 +6588,43 @@ def contrastive_intransitive_do_support_negation(
         "contrastive_do_support_negation_assertion",
         ast,
     )
-    return {
-        "kind": "contrastive_do_support_negation",
-        "input_sentence": sentence,
-        "construction_summary": (
-            f"Same subject {subject} contrasts not {predicates[0]['name']} with "
-            f"{predicates[1]['name']} using a typed conjunction."
-        ),
-        "event_semantics": {
-            "analysis": "contrastive-do-support-negation",
-            "source": sentence,
-            "event_style_reference": (
-                "not(exists e1. "
-                f"{predicates[0]['name']}(e1) and Agent(e1, {subject})) and "
-                "exists e2. "
-                f"{predicates[1]['name']}(e2) and Agent(e2, {subject})"
+    return attach_single_semantic_reading(
+        {
+            "kind": "contrastive_do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} contrasts not {predicates[0]['name']} with "
+                f"{predicates[1]['name']} using a typed conjunction."
             ),
-            "typed_replacement": typed_replacement,
+            "event_semantics": {
+                "analysis": "contrastive-do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "not(exists e1. "
+                    f"{predicates[0]['name']}(e1) and Agent(e1, {subject})) and "
+                    "exists e2. "
+                    f"{predicates[1]['name']}(e2) and Agent(e2, {subject})"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Contrastive do-support negation with but is represented by "
+                    "wrapping the first coordinate in not_T and conjoining it with "
+                    "the positive second coordinate; shared Adv modifiers remain "
+                    "typed modifier arguments rather than entities."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "dependent_type_translation": typed_replacement,
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": (
-                "Contrastive do-support negation with but is represented by "
-                "wrapping the first coordinate in not_T and conjoining it with "
-                "the positive second coordinate; shared Adv modifiers remain "
-                "typed modifier arguments rather than entities."
-            ),
-        },
-        "coq_code": coq_code,
-    }
+        name="contrastive_do_support_negation",
+        coq_definition="contrastive_do_support_negation_assertion",
+        source="do_support_negation",
+        scope="contrastive_but",
+    )
 
 
 def contrastive_transitive_do_support_negation(
@@ -6598,44 +6687,50 @@ def contrastive_transitive_do_support_negation(
             "contrastive_transitive_branch_modifier_negation_assertion",
             ast,
         )
-        return {
-            "kind": "contrastive_do_support_negation",
-            "input_sentence": sentence,
-            "construction_summary": (
-                f"Same subject {subject} contrasts not "
-                f"{clauses[0]['predicate']['name']}({left_object} : "
-                f"{clauses[0]['object']['type']}) with local Adv material against "
-                f"{clauses[1]['predicate']['name']}({right_object} : "
-                f"{clauses[1]['object']['type']}) with its own branch-local Adv material; "
-                "fronted Adv material is copied into both branch-local modifier sequences."
-            ),
-            "event_semantics": {
-                "analysis": "contrastive-do-support-negation",
-                "source": sentence,
-                "event_style_reference": (
-                    "not(exists e1. "
-                    f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
-                    f"Theme(e1, {left_object}) and local modifiers) and exists e2. "
-                    f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
-                    f"Theme(e2, {right_object}) and local modifiers"
+        return attach_single_semantic_reading(
+            {
+                "kind": "contrastive_do_support_negation",
+                "input_sentence": sentence,
+                "construction_summary": (
+                    f"Same subject {subject} contrasts not "
+                    f"{clauses[0]['predicate']['name']}({left_object} : "
+                    f"{clauses[0]['object']['type']}) with local Adv material against "
+                    f"{clauses[1]['predicate']['name']}({right_object} : "
+                    f"{clauses[1]['object']['type']}) with its own branch-local Adv material; "
+                    "fronted Adv material is copied into both branch-local modifier sequences."
                 ),
-                "typed_replacement": typed_replacement,
+                "event_semantics": {
+                    "analysis": "contrastive-do-support-negation",
+                    "source": sentence,
+                    "event_style_reference": (
+                        "not(exists e1. "
+                        f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                        f"Theme(e1, {left_object}) and local modifiers) and exists e2. "
+                        f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                        f"Theme(e2, {right_object}) and local modifiers"
+                    ),
+                    "typed_replacement": typed_replacement,
+                },
+                "dependent_type_translation": typed_replacement,
+                "ast": ast,
+                "type_check": {
+                    **type_check,
+                    "note": (
+                        "Contrastive transitive do-support negation with branch-local "
+                        "Adv or time material uses branch-local ModifierSeq indices "
+                        "and clause-local time_modifiers; each coordinate may carry "
+                        "its own modifier length while both object lexical types remain "
+                        "checked before Coq. Fronted Adv material becomes a shared "
+                        "prefix in each branch-local sequence."
+                    ),
+                },
+                "coq_code": coq_code,
             },
-            "dependent_type_translation": typed_replacement,
-            "ast": ast,
-            "type_check": {
-                **type_check,
-                "note": (
-                    "Contrastive transitive do-support negation with branch-local "
-                    "Adv or time material uses branch-local ModifierSeq indices "
-                    "and clause-local time_modifiers; each coordinate may carry "
-                    "its own modifier length while both object lexical types remain "
-                    "checked before Coq. Fronted Adv material becomes a shared "
-                    "prefix in each branch-local sequence."
-                ),
-            },
-            "coq_code": coq_code,
-        }
+            name="contrastive_transitive_branch_modifier_do_support_negation",
+            coq_definition="contrastive_transitive_branch_modifier_negation_assertion",
+            source="do_support_negation",
+            scope="contrastive_but",
+        )
 
     clauses: list[dict[str, Any]] = []
     for surface, obj, negated in (
@@ -6673,41 +6768,47 @@ def contrastive_transitive_do_support_negation(
         "contrastive_transitive_do_support_negation_assertion",
         ast,
     )
-    return {
-        "kind": "contrastive_do_support_negation",
-        "input_sentence": sentence,
-        "construction_summary": (
-            f"Same subject {subject} contrasts not "
-            f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
-            f"{clauses[0]['object']['type']}) with "
-            f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
-            f"{clauses[1]['object']['type']})."
-        ),
-        "event_semantics": {
-            "analysis": "contrastive-do-support-negation",
-            "source": sentence,
-            "event_style_reference": (
-                "not(exists e1. "
-                f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
-                f"Theme(e1, {clauses[0]['object']['name']})) and exists e2. "
-                f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
-                f"Theme(e2, {clauses[1]['object']['name']})"
+    return attach_single_semantic_reading(
+        {
+            "kind": "contrastive_do_support_negation",
+            "input_sentence": sentence,
+            "construction_summary": (
+                f"Same subject {subject} contrasts not "
+                f"{clauses[0]['predicate']['name']}({clauses[0]['object']['name']} : "
+                f"{clauses[0]['object']['type']}) with "
+                f"{clauses[1]['predicate']['name']}({clauses[1]['object']['name']} : "
+                f"{clauses[1]['object']['type']})."
             ),
-            "typed_replacement": typed_replacement,
+            "event_semantics": {
+                "analysis": "contrastive-do-support-negation",
+                "source": sentence,
+                "event_style_reference": (
+                    "not(exists e1. "
+                    f"{clauses[0]['predicate']['name']}(e1) and Agent(e1, {subject}) and "
+                    f"Theme(e1, {clauses[0]['object']['name']})) and exists e2. "
+                    f"{clauses[1]['predicate']['name']}(e2) and Agent(e2, {subject}) and "
+                    f"Theme(e2, {clauses[1]['object']['name']})"
+                ),
+                "typed_replacement": typed_replacement,
+            },
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "Contrastive transitive do-support negation with but wraps only "
+                    "the first typed coordinate in not_T and keeps both object "
+                    "lexical types checked before Coq; shared Adv modifiers remain "
+                    "typed modifier arguments rather than entities."
+                ),
+            },
+            "coq_code": coq_code,
         },
-        "dependent_type_translation": typed_replacement,
-        "ast": ast,
-        "type_check": {
-            **type_check,
-            "note": (
-                "Contrastive transitive do-support negation with but wraps only "
-                "the first typed coordinate in not_T and keeps both object "
-                "lexical types checked before Coq; shared Adv modifiers remain "
-                "typed modifier arguments rather than entities."
-            ),
-        },
-        "coq_code": coq_code,
-    }
+        name="contrastive_transitive_do_support_negation",
+        coq_definition="contrastive_transitive_do_support_negation_assertion",
+        source="do_support_negation",
+        scope="contrastive_but",
+    )
 
 
 def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] | None:

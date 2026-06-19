@@ -1178,12 +1178,13 @@ Current type rules:
   talk` still keep `john` as the subject, `in(park)` as shared `Adv`, and
   `yesterday` as a proposition-level time operator. Time modifiers scope over
   the resulting proposition, and Adv modifiers remain typed modifier entries
-  rather than entities or object-name suffixes. The API mirrors the two
-  negation readings in top-level `semantic_readings`, so clients can enumerate
-  the checked wide-scope and distributed readings without knowing the
-  construction-specific AST layout. `semantic_readings_check` records the same
-  reading count and rejects malformed normalized entries before clients need to
-  inspect the nested construction-specific representation.
+  rather than entities or object-name suffixes. For the ambiguous coordination
+  entry, the API mirrors the two negation readings in top-level
+  `semantic_readings`, so clients can enumerate the checked wide-scope and
+  distributed readings without knowing the construction-specific AST layout.
+  `semantic_readings_check` records the same reading count and rejects malformed
+  normalized entries before clients need to inspect the nested
+  construction-specific representation.
   Repeated do-support negation across both branches, such as `John did not walk
   and did not talk`, is treated as an explicit distributed surface form:
   `and_T(not_T(walk(john)), not_T(talk(john)))`. The same parser boundary keeps
@@ -1210,7 +1211,12 @@ Current type rules:
   `drink(2)(in(park), quickly, john, water)`. Branch-internal time modifiers
   are stored on the relevant clause in `time_modifiers`, so the negated branch
   can render as `not_T(at_T(yesterday, eat(0)(john, bread)))` while the positive
-  branch remains independently modified.
+  branch remains independently modified. The same normalized `semantic_readings`
+  and `semantic_readings_check` shape is emitted for successful single-reading
+  do-support routes: simple negation, right-branch negation coordination,
+  contrastive `but`, repeated do-support negation, and negated disjunction.
+  Single readings therefore have the same checked formula, scope label, and Coq
+  definition audit shape as ambiguity sets.
 - `transition` has type `TransitionT`; its `theme` is exported as `Entity`, while
   `state_scale` is exported as `StateScale`, and `source_state` and
   `target_state` are exported as `State`. The `state_scale` must match the

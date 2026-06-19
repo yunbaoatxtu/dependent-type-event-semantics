@@ -2488,6 +2488,14 @@ class TranslatorTests(unittest.TestCase):
             "Definition example_1 : PropT := (not_T (walk 0 mods_nil john)).",
             result["coq_code"],
         )
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["do_support_negation"],
+        )
+        self.assertEqual(result["semantic_readings"][0]["scope"], "simple_negation")
+        self.assertEqual(result["semantic_readings"][0]["coq_definition"], "example_1")
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
         self.assertNotIn("john_did_not", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
@@ -2532,6 +2540,11 @@ class TranslatorTests(unittest.TestCase):
             "and_T (walk john) (not_T (talk john))",
             intransitive["coq_code"],
         )
+        self.assertEqual(
+            [reading["name"] for reading in intransitive["semantic_readings"]],
+            ["right_branch_do_support_negation"],
+        )
+        self.assertTrue(intransitive["semantic_readings_check"]["ok"])
         self.assertEqual(intransitive["coq_check"]["status"], "passed")
 
         transitive = run_pipeline(
@@ -2550,6 +2563,11 @@ class TranslatorTests(unittest.TestCase):
             "and_T (eat john bread) (not_T (drink john water))",
             transitive["coq_code"],
         )
+        self.assertEqual(
+            transitive["semantic_readings"][0]["coq_definition"],
+            "coordinated_transitive_do_support_negation_assertion",
+        )
+        self.assertTrue(transitive["semantic_readings_check"]["ok"])
         self.assertEqual(transitive["coq_check"]["status"], "passed")
 
         disjunctive = run_pipeline("John walked or did not talk", require_coq=True)
@@ -2565,6 +2583,8 @@ class TranslatorTests(unittest.TestCase):
             "or_T (walk john) (not_T (talk john))",
             disjunctive["coq_code"],
         )
+        self.assertEqual(disjunctive["semantic_readings"][0]["scope"], "right_branch_negation")
+        self.assertTrue(disjunctive["semantic_readings_check"]["ok"])
         self.assertEqual(disjunctive["coq_check"]["status"], "passed")
 
         either_disjunctive = run_pipeline(
@@ -2673,6 +2693,12 @@ class TranslatorTests(unittest.TestCase):
             "and_T (not_T (walk john)) (talk john)",
             intransitive["coq_code"],
         )
+        self.assertEqual(
+            [reading["name"] for reading in intransitive["semantic_readings"]],
+            ["contrastive_do_support_negation"],
+        )
+        self.assertEqual(intransitive["semantic_readings"][0]["scope"], "contrastive_but")
+        self.assertTrue(intransitive["semantic_readings_check"]["ok"])
         self.assertEqual(intransitive["coq_check"]["status"], "passed")
 
         transitive = run_pipeline(
@@ -2687,6 +2713,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter bread : Food.", transitive["coq_code"])
         self.assertIn("Parameter water : Drinkable.", transitive["coq_code"])
+        self.assertEqual(
+            transitive["semantic_readings"][0]["coq_definition"],
+            "contrastive_transitive_do_support_negation_assertion",
+        )
+        self.assertTrue(transitive["semantic_readings_check"]["ok"])
         self.assertEqual(transitive["coq_check"]["status"], "passed")
 
         timed = run_pipeline(
@@ -2757,6 +2788,11 @@ class TranslatorTests(unittest.TestCase):
             "(talk 0 mods_nil john)",
             left_local_location["coq_code"],
         )
+        self.assertEqual(
+            left_local_location["semantic_readings"][0]["coq_definition"],
+            "contrastive_branch_modifier_negation_assertion",
+        )
+        self.assertTrue(left_local_location["semantic_readings_check"]["ok"])
 
         both_branch_local_location = run_pipeline(
             "John did not walk in the park but talked quickly",
@@ -2902,6 +2938,11 @@ class TranslatorTests(unittest.TestCase):
             "(drink 1 (mods_cons 0 quickly mods_nil) john water)",
             transitive_both_branch_local_location["coq_code"],
         )
+        self.assertEqual(
+            transitive_both_branch_local_location["semantic_readings"][0]["coq_definition"],
+            "contrastive_transitive_branch_modifier_negation_assertion",
+        )
+        self.assertTrue(transitive_both_branch_local_location["semantic_readings_check"]["ok"])
 
         transitive_fronted_and_branch_local_location = run_pipeline(
             "In the park John did not eat bread slowly but drank water quickly",
@@ -3176,6 +3217,12 @@ class TranslatorTests(unittest.TestCase):
             "negation_over_disjunction: not_T(or_T(walk(john), talk(john)))",
         )
         self.assertEqual(intransitive["type_check"]["reading_count"], 1)
+        self.assertEqual(
+            [reading["name"] for reading in intransitive["semantic_readings"]],
+            ["do_support_negation_wide_disjunction"],
+        )
+        self.assertEqual(intransitive["semantic_readings"][0]["scope"], "negation_over_disjunction")
+        self.assertTrue(intransitive["semantic_readings_check"]["ok"])
         self.assertEqual(intransitive["coq_check"]["status"], "passed")
         self.assertNotIn("or_talk", intransitive["dependent_type_translation"])
         self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", intransitive["coq_code"])
@@ -3406,6 +3453,7 @@ class TranslatorTests(unittest.TestCase):
             "Parameter drink : Entity -> Drinkable -> Prop.",
             transitive["coq_code"],
         )
+        self.assertTrue(transitive["semantic_readings_check"]["ok"])
         self.assertEqual(transitive["coq_check"]["status"], "passed")
 
         fronted = run_pipeline(
@@ -3441,6 +3489,12 @@ class TranslatorTests(unittest.TestCase):
             disjunctive["type_check"]["surface_scope"],
             "disjunction_of_negations",
         )
+        self.assertEqual(
+            [reading["name"] for reading in disjunctive["semantic_readings"]],
+            ["do_support_negation_disjunction_of_negations"],
+        )
+        self.assertEqual(disjunctive["semantic_readings"][0]["scope"], "disjunction_of_negations")
+        self.assertTrue(disjunctive["semantic_readings_check"]["ok"])
         self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", disjunctive["coq_code"])
         self.assertEqual(disjunctive["coq_check"]["status"], "passed")
 
@@ -6160,12 +6214,22 @@ class TranslatorTests(unittest.TestCase):
             result["dependent_type_translation"],
             "and_T(walk(john), not_T(talk(john)))",
         )
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["right_branch_do_support_negation"],
+        )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
 
         page = render_page("John walked and did not talk", require_coq=True)
         self.assertIn("Translation verified", page)
         self.assertIn("id: do_support_negation", page)
         self.assertIn("and_T(walk(john), not_T(talk(john)))", page)
         self.assertIn("hygiene: passed", page)
+        self.assertIn("Semantic Readings", page)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn("right_branch_do_support_negation", page)
+        self.assertIn("&quot;reading_count&quot;: 1", page)
         self.assertIn("Coq/Rocq Check", page)
 
         disjunctive = PipelineHandler.handle_api(
@@ -6277,6 +6341,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;name&quot;: &quot;in_park&quot;", page)
         self.assertIn("Parameter in_park : Adv.", page)
         self.assertIn("Parameter not_T : PropT -&gt; PropT.", page)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn("&quot;reading_count&quot;: 1", page)
 
         local_page = render_page(
             "John did not walk in the park but talked",

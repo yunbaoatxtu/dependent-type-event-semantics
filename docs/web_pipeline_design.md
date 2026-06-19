@@ -269,8 +269,9 @@ in which the girl existential has wider scope. Each reading is recorded as a
 structured AST object with a `scope_order`, bound variables, restrictor
 predicate types, and the binary relation type before the readable and Coq
 formulas are rendered. The API also exposes the same alternatives through
-top-level `semantic_readings`, matching the shape used by do-support negation
-ambiguities and mixed temporal perception alternatives. A companion
+top-level `semantic_readings`, matching the shape used by both single-reading
+and ambiguity-producing do-support negation routes and by mixed temporal
+perception alternatives. A companion
 `semantic_readings_check` confirms that the readings are unique, non-empty, and
 linked to exported Coq definitions. In this path, `boy` and `girl` are
 predicates of type
