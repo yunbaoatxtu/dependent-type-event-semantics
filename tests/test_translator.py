@@ -5432,6 +5432,42 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("exists t_reference_2 : Time", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_perception_nominalization_can_embed_temporal_bilateral_disjunction(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave or Sue smile after Bill waved or Ann laughed",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        expected_translation = (
+            "see(Mary, E(or_T(exists t_main_1 t_reference_1 : Time. "
+            "leave(John, t_main_1) and wave(Bill, t_reference_1) and "
+            "before(t_reference_1, t_main_1), or_T(exists t_main_1 "
+            "t_reference_2 : Time. leave(John, t_main_1) and "
+            "laugh(Ann, t_reference_2) and before(t_reference_2, t_main_1), "
+            "or_T(exists t_main_2 t_reference_1 : Time. smile(Sue, t_main_2) "
+            "and wave(Bill, t_reference_1) and before(t_reference_1, t_main_2), "
+            "exists t_main_2 t_reference_2 : Time. smile(Sue, t_main_2) and "
+            "laugh(Ann, t_reference_2) and before(t_reference_2, t_main_2))))))"
+        )
+        self.assertEqual(result["dependent_type_translation"], expected_translation)
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(embedded["main"]["connective"], "or_T")
+        self.assertEqual(embedded["reference"]["connective"], "or_T")
+        self.assertEqual(
+            [relation["arguments"] for relation in embedded["relations"]],
+            [
+                ["t_reference_1", "t_main_1"],
+                ["t_reference_2", "t_main_1"],
+                ["t_reference_1", "t_main_2"],
+                ["t_reference_2", "t_main_2"],
+            ],
+        )
+        self.assertIn("or_T (exists t_main_1 : Time", result["coq_code"])
+        self.assertIn("or_T (exists t_main_2 : Time", result["coq_code"])
+        self.assertIn("before t_reference_2 t_main_2", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_perception_nominalization_rejects_mixed_temporal_boolean_coordination(self) -> None:
         result = run_pipeline(
             "Mary saw John leave and Sue smile or Ann laugh after Bill waved",

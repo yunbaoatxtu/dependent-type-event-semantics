@@ -448,7 +448,10 @@ t_reference_i)`.
 Timed perception disjunction now uses branch-local time binding: `Mary saw John
 leave or Sue smile after Bill waved` renders as an `or_T` of two existential
 time propositions, so each branch carries its own `before` constraint and the
-temporal phrase is not folded into an entity name. Mixed `and`/`or` timed
+temporal phrase is not folded into an entity name. If both the main and
+reference sides are disjunctive, the renderer builds the Cartesian set of
+branch-local alternatives, so two main possibilities against two reference
+possibilities yield four scoped `or_T` branches. Mixed `and`/`or` timed
 coordination remains outside the controlled fragment and is rejected before
 Coq/Rocq export.
 The burning example uses universal time quantification:
