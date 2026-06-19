@@ -435,7 +435,7 @@ The checker requires one `before` relation for each timed main/reference pair,
 so deleting either ordering constraint is rejected before Coq/Rocq export.
 When both sides are coordinated, the checker requires the full Cartesian set of
 main/reference time constraints. For example, `Mary saw John leave and Sue smile
-after Bill waved and Ann smiled` binds `t_main_1`, `t_main_2`,
+after Bill waved and Ann laughed` binds `t_main_1`, `t_main_2`,
 `t_reference_1`, and `t_reference_2`, then checks four `before` relations.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST

@@ -541,7 +541,7 @@ see(Mary, E(exists t_main_1 t_main_2 t_reference : Time. and_T(leave(John, t_mai
 
 If both sides are coordinated, the `relations` list is the full Cartesian set
 of ordered main/reference time pairs. For `Mary saw John leave and Sue smile
-after Bill waved and Ann smiled`, the checked translation contains four
+after Bill waved and Ann laughed`, the checked translation contains four
 ordering constraints:
 
 ```text

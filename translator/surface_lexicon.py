@@ -72,6 +72,7 @@ COMMON_VERB_LEMMAS = {
     "knock",
     "love",
     "jump",
+    "laugh",
     "leave",
     "read",
     "run",

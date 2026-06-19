@@ -366,6 +366,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("passed"), "pass")
         self.assertEqual(lemma_verb("missed"), "miss")
         self.assertEqual(lemma_verb("stopped"), "stop")
+        self.assertEqual(lemma_verb("laughed"), "laugh")
         self.assertEqual(lemma_verb("ran"), "run")
         self.assertEqual(lemma_verb("slept"), "sleep")
         self.assertEqual(lemma_verb("wrote"), "write")
@@ -381,6 +382,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("sleep", COMMON_VERB_LEMMAS)
         self.assertIn("write", COMMON_VERB_LEMMAS)
         self.assertIn("smile", COMMON_VERB_LEMMAS)
+        self.assertIn("laugh", COMMON_VERB_LEMMAS)
         self.assertIn("eat", COMMON_TRANSITIVE_VERB_LEMMAS)
         self.assertIn("drink", COMMON_TRANSITIVE_VERB_LEMMAS)
         self.assertNotIn("walk", COMMON_TRANSITIVE_VERB_LEMMAS)
@@ -394,7 +396,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(is_likely_surface_verb("flew"))
         self.assertTrue(is_likely_surface_verb("waved"))
         self.assertTrue(is_likely_surface_verb("smiled"))
+        self.assertTrue(is_likely_surface_verb("laughed"))
         self.assertEqual(lemma_verb("smiling"), "smile")
+        self.assertEqual(lemma_verb("laughing"), "laugh")
         self.assertFalse(is_likely_surface_verb("cat"))
         self.assertTrue(is_likely_transitive_verb("ate"))
         self.assertTrue(is_likely_transitive_verb("drank"))
@@ -5121,11 +5125,11 @@ class TranslatorTests(unittest.TestCase):
     def test_perception_nominalization_can_embed_temporal_bilateral_coordination(self) -> None:
         cases = (
             (
-                "Mary saw John leave and Sue smile after Bill waved and Ann smiled",
+                "Mary saw John leave and Sue smile after Bill waved and Ann laughed",
                 (
                     "see(Mary, E(exists t_main_1 t_main_2 t_reference_1 t_reference_2 : Time. "
                     "and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and "
-                    "and_T(wave(Bill, t_reference_1), smile(Ann, t_reference_2)) and "
+                    "and_T(wave(Bill, t_reference_1), laugh(Ann, t_reference_2)) and "
                     "before(t_reference_1, t_main_1) and before(t_reference_2, t_main_1) and "
                     "before(t_reference_1, t_main_2) and before(t_reference_2, t_main_2)))"
                 ),
@@ -5138,11 +5142,11 @@ class TranslatorTests(unittest.TestCase):
                 ],
             ),
             (
-                "Mary saw John leave and Sue smile before Bill waved and Ann smiled",
+                "Mary saw John leave and Sue smile before Bill waved and Ann laughed",
                 (
                     "see(Mary, E(exists t_main_1 t_main_2 t_reference_1 t_reference_2 : Time. "
                     "and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and "
-                    "and_T(wave(Bill, t_reference_1), smile(Ann, t_reference_2)) and "
+                    "and_T(wave(Bill, t_reference_1), laugh(Ann, t_reference_2)) and "
                     "before(t_main_1, t_reference_1) and before(t_main_1, t_reference_2) and "
                     "before(t_main_2, t_reference_1) and before(t_main_2, t_reference_2)))"
                 ),
@@ -5181,9 +5185,10 @@ class TranslatorTests(unittest.TestCase):
                 )
                 self.assertIn("Parameter Ann : Entity.", result["coq_code"])
                 self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+                self.assertIn("Parameter laugh : Entity -> Time -> Prop.", result["coq_code"])
                 self.assertIn("exists t_reference_2 : Time,", result["coq_code"])
                 self.assertIn(
-                    "and_T (wave Bill t_reference_1) (smile Ann t_reference_2)",
+                    "and_T (wave Bill t_reference_1) (laugh Ann t_reference_2)",
                     result["coq_code"],
                 )
                 for left, right in expected_arguments:
@@ -5195,7 +5200,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_perception_nominalization_rejects_missing_temporal_bilateral_relation(self) -> None:
         result = run_pipeline(
-            "Mary saw John leave and Sue smile after Bill waved and Ann smiled",
+            "Mary saw John leave and Sue smile after Bill waved and Ann laughed",
             require_coq=False,
         )
         ast = result["ast"]
