@@ -34,6 +34,7 @@ from translator.natural_language_pipeline import (
     check_transitive_predicate_coordination_ast,
     check_universal_timed_ast,
     construction_rules,
+    exported_prop_definition_names,
     run_registered_rule,
     run_pipeline,
     sentence_to_event_semantics,
@@ -5921,6 +5922,22 @@ class TranslatorTests(unittest.TestCase):
             check["errors"],
         )
 
+    def test_exported_prop_definition_names_ignore_type_aliases(self) -> None:
+        self.assertEqual(
+            exported_prop_definition_names(
+                "\n".join(
+                    [
+                        "Definition PropT : Type := Prop.",
+                        "Definition example_1 : Prop :=",
+                        "  True.",
+                        "Definition example_2 : PropT :=",
+                        "  example_1.",
+                    ]
+                )
+            ),
+            ["example_1", "example_2"],
+        )
+
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
         rules = {rule.rule_id: rule for rule in construction_rules()}
         expected = {
@@ -6003,6 +6020,46 @@ class TranslatorTests(unittest.TestCase):
                 self.assertEqual(result["construction_hygiene"]["found_forbidden_fragments"], [])
                 for fragment in rule.forbidden_coq_fragments:
                     self.assertNotIn(fragment, result["coq_code"])
+
+    def test_registered_rule_success_outputs_expose_semantic_readings_check(self) -> None:
+        examples = {
+            "passive_argument_omission": "the toast was buttered",
+            "lexical_state_change": "the door opened",
+            "stative_result_state": "the vase is broken",
+            "timed_after": "after the singing of the Marseillaise, John saluted the flag",
+            "perception_nominalization": "Mary saw John leave",
+            "universal_timed_burning": "In every burning, oxygen is consumed",
+            "quantifier_scope_ambiguity": "some boy loves some girl",
+            "copular_property": "Mary is happy",
+            "do_support_negation": "John did not walk",
+            "predicate_coordination": "John walked and talked",
+            "subject_coordination": "John and Mary walked",
+            "transitive_subject_coordination": "John and Mary ate bread",
+            "object_coordination": "Mary visited Paris and London",
+            "transitive_predicate_coordination": "John ate bread and drank water",
+        }
+        for rule in construction_rules():
+            with self.subTest(rule=rule.rule_id):
+                result = run_pipeline(examples[rule.rule_id], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertIn("semantic_readings", result)
+                self.assertIn("semantic_readings_check", result)
+                self.assertTrue(result["semantic_readings_check"]["ok"])
+                self.assertGreaterEqual(
+                    result["semantic_readings_check"]["reading_count"],
+                    1,
+                )
+                self.assertEqual(
+                    result["event_semantics"]["semantic_readings_check"],
+                    result["semantic_readings_check"],
+                )
+                for reading in result["semantic_readings"]:
+                    coq_definition = reading.get("coq_definition")
+                    if coq_definition is not None:
+                        self.assertIn(
+                            f"Definition {coq_definition}",
+                            result["coq_code"],
+                        )
 
     def test_web_analyze_sentence_success(self) -> None:
         result = analyze_sentence("John broke the vase")

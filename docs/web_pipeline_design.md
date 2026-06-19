@@ -313,6 +313,11 @@ The single-reading Parsons/Luo-Shi routes use the same web/API contract:
 `timed_after_singing_salute`, and `In every burning, oxygen is consumed`
 exposes `universal_timed_burning`, with each name checked against an exported
 Coq/Rocq definition.
+The registered-rule executor now enforces this shape for every successful
+registered construction. If an analyzer does not supply explicit readings and
+its generated scaffold exports exactly one `Definition ... : Prop/PropT`, the
+executor creates a conservative `{rule_id}_single_reading` entry and runs the
+same `semantic_readings_check` before Coq/Rocq validation.
 
 The pasted legacy browser prototype from the earlier webpage is useful as a
 design sketch: it already distinguished nested perception cases from temporal

@@ -796,6 +796,11 @@ translation, Coq definition name, and type-check metadata shape used for other
 ambiguity-producing constructions. `semantic_readings_check` then audits the
 normalized list for duplicate names, missing formulas, failed per-reading
 checks, and Coq definition names that are not actually exported.
+At the registered-rule boundary, successful single-reading constructions that
+do not provide a specialized reading list are normalized in the same format:
+the executor extracts the unique exported `Definition ... : Prop/PropT`, emits
+`{rule_id}_single_reading`, and records the same audit in
+`semantic_readings_check`.
 
 ### `subject_coordination`
 

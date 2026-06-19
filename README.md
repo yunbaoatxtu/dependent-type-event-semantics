@@ -589,11 +589,16 @@ asks the server to run the external Coq/Rocq boundary check when the toolchain
 is available. The response includes `schema_version: "analyze.v1"` plus the
 same event-semantics JSON,
 dependent-type rendering, generated Coq, `result_state_lexicon`,
-`modifier_role_audit`, `lexicon_patch_drafts`, `patch_text_preview`, `construction_rule`,
+`modifier_role_audit`, `lexicon_patch_drafts`, `patch_text_preview`,
+`semantic_readings`, `semantic_readings_check`, `construction_rule`,
 `construction_summary`, `construction_hygiene`, `coq_check`, and `diagnostics`
 fields used by the web page. For registered construction rules,
 `construction_summary` gives a sentence-local explanation such as
 `Same subject john coordinates eat(bread : Food) and drink(water : Drinkable).`
+Successful registered rules must expose a passing `semantic_readings_check`.
+Rules with explicit ambiguity keep their specialized readings; otherwise the
+registered-rule boundary creates a conservative single reading from the unique
+exported Coq/Rocq `Definition ... : Prop/PropT`.
 The page also renders an `API Contract` panel with the same schema
 version and endpoint, so browser users and automated clients can check the
 contract without inspecting raw network traffic, and a `Conclusion` panel with

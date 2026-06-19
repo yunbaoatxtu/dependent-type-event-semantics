@@ -370,6 +370,49 @@ def attach_single_semantic_reading(
     return result
 
 
+def exported_prop_definition_names(coq_code: str) -> list[str]:
+    return re.findall(
+        r"(?m)^Definition\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(?:Prop|PropT)\b",
+        coq_code,
+    )
+
+
+def attach_default_registered_semantic_reading(
+    result: dict[str, Any],
+    rule: ConstructionRule,
+) -> dict[str, Any]:
+    if "semantic_readings" in result or "semantic_readings_check" in result:
+        return result
+
+    definition_names = exported_prop_definition_names(result.get("coq_code", ""))
+    if len(definition_names) != 1:
+        semantic_readings_check = {
+            "checked": True,
+            "ok": False,
+            "reading_count": 0,
+            "errors": [
+                (
+                    "registered construction outputs without explicit semantic_readings "
+                    "must export exactly one Prop/PropT definition"
+                )
+            ],
+        }
+        result["semantic_readings"] = []
+        result["semantic_readings_check"] = semantic_readings_check
+        event_semantics = result.setdefault("event_semantics", {})
+        event_semantics["semantic_readings"] = []
+        event_semantics["semantic_readings_check"] = semantic_readings_check
+        return result
+
+    return attach_single_semantic_reading(
+        result,
+        name=f"{rule.rule_id}_single_reading",
+        coq_definition=definition_names[0],
+        source=rule.rule_id,
+        scope="registered_single_reading",
+    )
+
+
 def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         semantic_reading(
@@ -7356,6 +7399,30 @@ def run_registered_rule(
                 "message": "Skipped Coq/Rocq validation because internal type_check failed.",
             },
             "conclusion": "Translation failed internal type_check before Coq/Rocq validation.",
+        }
+
+    analysis = attach_default_registered_semantic_reading(analysis, rule)
+    semantic_readings_check = analysis.get("semantic_readings_check")
+    if (
+        isinstance(semantic_readings_check, dict)
+        and semantic_readings_check.get("ok") is False
+    ):
+        return {
+            **analysis,
+            "ok": False,
+            "construction_rule": construction_rule_payload(rule),
+            "construction_hygiene": {
+                "ok": None,
+                "checked": False,
+                "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+                "found_forbidden_fragments": [],
+            },
+            "coq_check": {
+                "ok": None,
+                "status": "skipped",
+                "message": "Skipped Coq/Rocq validation because semantic_readings_check failed.",
+            },
+            "conclusion": "Translation failed semantic_readings_check before Coq/Rocq validation.",
         }
 
     forbidden_found = check_forbidden_coq_fragments(
