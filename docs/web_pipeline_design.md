@@ -220,10 +220,18 @@ count rather than forcing the user to inspect raw JSON first.
 Machine clients should prefer `recovery_actions` when they need stable action
 names or button labels, and `warnings` when they need to flag underspecified but
 still successfully checked translations.
+For `semantic_readings_check` failures, the action list is derived from
+`semantic_readings_repair_details`: `add_missing_coq_definitions` carries
+`target_definitions`, `rename_duplicate_readings` carries duplicate names,
+`fix_malformed_readings` and `fix_reading_type_checks` carry
+`reading_indices`, and `normalize_reading_exports` carries expected and
+observed export counts plus the exported definition names.
 The page should render the same actions in a `Next Steps` panel, keeping
 human-facing guidance and machine-facing API output aligned.
 Each rendered action must expose `data-action-kind` and a `next-step--<kind>`
-CSS class so later UI controls and browser tests have stable hooks.
+CSS class so later UI controls and browser tests have stable hooks. When an
+action carries target metadata, the panel should display it in a compact
+`next-step-details` table.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

@@ -76,6 +76,7 @@ from web.app import (
     analyze_sentence,
     build_diagnostics,
     modifier_role_audit,
+    next_steps_panel,
     parse_patch_resolution_params,
     render_page,
     render_lexicon_patch_text,
@@ -5949,6 +5950,31 @@ class TranslatorTests(unittest.TestCase):
             check["repair_details"]["duplicate_reading_names"],
             ["reading"],
         )
+        diagnostics = build_diagnostics(
+            {
+                "ok": False,
+                "type_check": {"ok": True},
+                "semantic_readings_check": check,
+                "construction_hygiene": {"ok": None, "checked": False},
+                "coq_check": {"ok": None, "status": "skipped"},
+            }
+        )
+        self.assertEqual(
+            [action["kind"] for action in diagnostics["recovery_actions"]],
+            [
+                "add_missing_coq_definitions",
+                "rename_duplicate_readings",
+                "inspect_readings",
+            ],
+        )
+        self.assertEqual(
+            diagnostics["recovery_actions"][0]["target_definitions"],
+            ["missing_reading"],
+        )
+        self.assertEqual(
+            diagnostics["recovery_actions"][1]["duplicate_reading_names"],
+            ["reading"],
+        )
 
     def test_semantic_readings_check_classifies_type_and_shape_failures(self) -> None:
         malformed = check_semantic_readings(
@@ -5978,6 +6004,21 @@ class TranslatorTests(unittest.TestCase):
             malformed["repair_details"]["expected_coq_definitions"],
             ["bad_type"],
         )
+        diagnostics = build_diagnostics(
+            {
+                "ok": False,
+                "type_check": {"ok": True},
+                "semantic_readings_check": malformed,
+                "construction_hygiene": {"ok": None, "checked": False},
+                "coq_check": {"ok": None, "status": "skipped"},
+            }
+        )
+        self.assertEqual(
+            [action["kind"] for action in diagnostics["recovery_actions"]],
+            ["fix_malformed_readings", "fix_reading_type_checks", "inspect_readings"],
+        )
+        self.assertEqual(diagnostics["recovery_actions"][0]["reading_indices"], [1])
+        self.assertEqual(diagnostics["recovery_actions"][1]["reading_indices"], [0])
 
     def test_exported_prop_definition_names_ignore_type_aliases(self) -> None:
         self.assertEqual(
@@ -7350,11 +7391,23 @@ class TranslatorTests(unittest.TestCase):
             diagnostics["semantic_readings_repair_details"]["missing_coq_definitions"],
             ["missing_reading"],
         )
-        self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "inspect_readings")
+        self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "add_missing_coq_definitions")
+        self.assertEqual(
+            diagnostics["recovery_actions"][0]["target_definitions"],
+            ["missing_reading"],
+        )
         self.assertEqual(
             diagnostics["recovery_actions"][0]["label"],
+            "Export missing readings",
+        )
+        self.assertEqual(diagnostics["recovery_actions"][1]["kind"], "inspect_readings")
+        self.assertEqual(
+            diagnostics["recovery_actions"][1]["label"],
             "Inspect semantic readings",
         )
+        next_steps_html = next_steps_panel({"diagnostics": diagnostics})
+        self.assertIn('data-action-kind="add_missing_coq_definitions"', next_steps_html)
+        self.assertIn("<dt>target definitions</dt><dd>missing_reading</dd>", next_steps_html)
         self.assertEqual(diagnostics["stages"]["type_check"], "passed")
         self.assertEqual(diagnostics["stages"]["semantic_readings_check"], "failed")
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
@@ -7521,6 +7574,16 @@ class TranslatorTests(unittest.TestCase):
             diagnostics["semantic_readings_repair_details"]["observed_export_count"],
             2,
         )
+        self.assertEqual(diagnostics["recovery_actions"][0]["kind"], "normalize_reading_exports")
+        self.assertEqual(diagnostics["recovery_actions"][0]["expected_export_count"], 1)
+        self.assertEqual(diagnostics["recovery_actions"][0]["observed_export_count"], 2)
+        self.assertEqual(
+            diagnostics["recovery_actions"][0]["exported_definitions"],
+            ["first_reading", "second_reading"],
+        )
+        next_steps_html = next_steps_panel({"diagnostics": diagnostics})
+        self.assertIn('data-action-kind="normalize_reading_exports"', next_steps_html)
+        self.assertIn("<dt>export count</dt><dd>expected 1; observed 2</dd>", next_steps_html)
         self.assertEqual(diagnostics["stages"]["semantic_readings_check"], "failed")
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
         self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
@@ -7601,6 +7664,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.semantic_readings_failure_kinds`", readme)
         self.assertIn("`diagnostics.semantic_readings_failure_summary`", readme)
         self.assertIn("`diagnostics.semantic_readings_repair_details`", readme)
+        self.assertIn("`add_missing_coq_definitions`", readme)
+        self.assertIn("`normalize_reading_exports`", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7700,6 +7765,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-coq-exported`", web_design)
         self.assertIn("`semantic_readings_failure_kinds`", web_design)
         self.assertIn("`semantic_readings_repair_details`", web_design)
+        self.assertIn("`add_missing_coq_definitions`", web_design)
+        self.assertIn("`next-step-details`", web_design)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)

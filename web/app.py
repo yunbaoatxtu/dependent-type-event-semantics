@@ -280,6 +280,120 @@ def semantic_readings_repair_details_for(check: dict[str, Any]) -> dict[str, Any
     return details if isinstance(details, dict) else {}
 
 
+def string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
+
+
+def int_list(value: Any) -> list[int]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, int)]
+
+
+def semantic_readings_recovery_actions(check: dict[str, Any]) -> list[dict[str, Any]]:
+    details = semantic_readings_repair_details_for(check)
+    kinds = semantic_readings_failure_kinds_for(check)
+    actions: list[dict[str, Any]] = []
+    missing_definitions = string_list(details.get("missing_coq_definitions"))
+    if missing_definitions:
+        actions.append(
+            {
+                "kind": "add_missing_coq_definitions",
+                "label": "Export missing readings",
+                "detail": (
+                    "Add Coq/Rocq Definition(s) for: "
+                    + ", ".join(missing_definitions)
+                    + "."
+                ),
+                "target_definitions": missing_definitions,
+            }
+        )
+    duplicate_names = string_list(details.get("duplicate_reading_names"))
+    if duplicate_names:
+        actions.append(
+            {
+                "kind": "rename_duplicate_readings",
+                "label": "Rename duplicate readings",
+                "detail": (
+                    "Give each semantic reading a unique name; duplicates: "
+                    + ", ".join(duplicate_names)
+                    + "."
+                ),
+                "duplicate_reading_names": duplicate_names,
+            }
+        )
+    malformed_indices = int_list(details.get("malformed_reading_indices"))
+    if malformed_indices:
+        actions.append(
+            {
+                "kind": "fix_malformed_readings",
+                "label": "Fix malformed reading records",
+                "detail": (
+                    "Repair semantic_readings record(s) at index: "
+                    + ", ".join(str(index) for index in malformed_indices)
+                    + "."
+                ),
+                "reading_indices": malformed_indices,
+            }
+        )
+    failed_type_indices = int_list(details.get("failed_type_check_indices"))
+    if failed_type_indices:
+        actions.append(
+            {
+                "kind": "fix_reading_type_checks",
+                "label": "Fix reading type checks",
+                "detail": (
+                    "Repair reading-local type_check result(s) at index: "
+                    + ", ".join(str(index) for index in failed_type_indices)
+                    + "."
+                ),
+                "reading_indices": failed_type_indices,
+            }
+        )
+    expected_count = details.get("expected_export_count")
+    observed_count = details.get("observed_export_count")
+    exported_definitions = string_list(details.get("exported_definitions"))
+    if expected_count is not None and observed_count != expected_count:
+        actions.append(
+            {
+                "kind": "normalize_reading_exports",
+                "label": "Normalize reading exports",
+                "detail": (
+                    "Registered construction output should expose "
+                    f"{expected_count} Prop/PropT definition(s), but exposes "
+                    f"{observed_count}."
+                ),
+                "expected_export_count": expected_count,
+                "observed_export_count": observed_count,
+                "exported_definitions": exported_definitions,
+            }
+        )
+    if "missing_readings" in kinds:
+        actions.append(
+            {
+                "kind": "add_semantic_readings",
+                "label": "Add semantic readings",
+                "detail": "Emit at least one normalized semantic_readings record before export.",
+            }
+        )
+    if "unknown_reading_error" in kinds:
+        actions.append(
+            {
+                "kind": "inspect_readings",
+                "label": "Inspect semantic readings",
+                "detail": "Inspect semantic readings, formulas, and exported Coq definitions.",
+            }
+        )
+    generic = recovery_actions_for("semantic_readings_check")[0]
+    if not actions:
+        return [generic]
+    if all(action.get("kind") != generic["kind"] for action in actions):
+        actions.append(generic)
+    return actions
+
+
 def stable_token(value: str) -> str:
     return "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in value)
 
@@ -533,11 +647,17 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         recovery_hint = semantic_readings_failure_hint(semantic_readings_check)
     else:
         recovery_hint = FAILURE_STAGE_HINTS.get(failure_stage) if failure_stage else None
+    if failure_stage == "semantic_readings_check" and isinstance(
+        semantic_readings_check, dict
+    ):
+        recovery_actions = semantic_readings_recovery_actions(semantic_readings_check)
+    else:
+        recovery_actions = recovery_actions_for(failure_stage)
     return {
         "summary": summary,
         "failure_stage": failure_stage,
         "recovery_hint": recovery_hint,
-        "recovery_actions": recovery_actions_for(failure_stage),
+        "recovery_actions": recovery_actions,
         "stages": stages,
         "semantic_readings_failure_kinds": semantic_failure_kinds,
         "semantic_readings_failure_summary": semantic_failure_summary,
@@ -669,6 +789,30 @@ def css_token(value: str) -> str:
     return stable_token(value)
 
 
+def recovery_action_detail_rows(action: dict[str, Any]) -> list[tuple[str, str]]:
+    rows: list[tuple[str, str]] = []
+    list_fields = [
+        ("target_definitions", "target definitions"),
+        ("duplicate_reading_names", "duplicate readings"),
+        ("reading_indices", "reading indices"),
+        ("exported_definitions", "exported definitions"),
+    ]
+    for key, label in list_fields:
+        value = action.get(key)
+        if isinstance(value, list) and value:
+            rows.append((label, ", ".join(str(item) for item in value)))
+    expected_count = action.get("expected_export_count")
+    observed_count = action.get("observed_export_count")
+    if expected_count is not None or observed_count is not None:
+        rows.append(
+            (
+                "export count",
+                f"expected {expected_count}; observed {observed_count}",
+            )
+        )
+    return rows
+
+
 def next_steps_panel(result: dict[str, Any]) -> str:
     actions = result.get("diagnostics", {}).get("recovery_actions", [])
     if not actions:
@@ -680,6 +824,17 @@ def next_steps_panel(result: dict[str, Any]) -> str:
             label = action.get("label", "")
             detail = action.get("detail", "")
             kind_class = css_token(kind)
+            rows = recovery_action_detail_rows(action)
+            details_html = ""
+            if rows:
+                details_html = (
+                    '<dl class="next-step-details">'
+                    + "".join(
+                        f"<dt>{html.escape(label_text)}</dt><dd>{html.escape(value)}</dd>"
+                        for label_text, value in rows
+                    )
+                    + "</dl>"
+                )
             items.append(
                 '<li '
                 f'class="next-step next-step--{html.escape(kind_class)}" '
@@ -687,6 +842,7 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                 f'<strong>{html.escape(label)}</strong>'
                 f'<code>{html.escape(kind)}</code>'
                 f'<p>{html.escape(detail)}</p>'
+                f"{details_html}"
                 "</li>"
             )
         body = '<ul class="next-step-list">' + "".join(items) + "</ul>"
@@ -1313,6 +1469,19 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       margin: 0;
       color: var(--muted);
       line-height: 1.45;
+    }}
+    .next-step-details {{
+      display: grid;
+      grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .next-step-details dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
     }}
     .semantic-warning {{
       border-left: 3px solid var(--warning);

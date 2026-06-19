@@ -626,9 +626,16 @@ reading definition names, missing definitions, duplicate reading names,
 malformed reading indices, failed reading-local type-check indices, and
 expected versus observed export counts when a registered rule did not expose a
 unique proposition.
+For the same boundary, `diagnostics.recovery_actions` is specialized from
+those repair details: missing exports produce `add_missing_coq_definitions`
+with `target_definitions`, duplicate names produce `rename_duplicate_readings`,
+malformed records and local type-check failures identify `reading_indices`, and
+registered-rule export-count mismatches produce `normalize_reading_exports`
+with expected and observed counts.
 The local web page renders those structured actions in a separate `Next Steps`
-panel. Each rendered action carries a stable `data-action-kind` attribute and a
-`next-step--<kind>` CSS class for frontend automation.
+panel. Each rendered action carries a stable `data-action-kind` attribute, a
+`next-step--<kind>` CSS class, and a compact details table for frontend
+automation.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.
