@@ -539,6 +539,15 @@ and stores one `before` relation for each main/reference time pair:
 see(Mary, E(exists t_main_1 t_main_2 t_reference : Time. and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and wave(Bill, t_reference) and before(t_reference, t_main_1) and before(t_reference, t_main_2)))
 ```
 
+If both sides are coordinated, the `relations` list is the full Cartesian set
+of ordered main/reference time pairs. For `Mary saw John leave and Sue smile
+after Bill waved and Ann smiled`, the checked translation contains four
+ordering constraints:
+
+```text
+before(t_reference_1, t_main_1), before(t_reference_2, t_main_1), before(t_reference_1, t_main_2), before(t_reference_2, t_main_2)
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
