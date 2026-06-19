@@ -13,7 +13,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from translator.dependent_type_event_translator import STATE_LEXICON
-from translator.natural_language_pipeline import run_pipeline
+from translator.natural_language_pipeline import exported_prop_definition_names, run_pipeline
 
 
 DEFAULT_SENTENCE = "John knocked twice"
@@ -703,6 +703,97 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
     )
 
 
+def semantic_readings_check_panel(result: dict[str, Any]) -> str:
+    check = result.get("semantic_readings_check") or {}
+    readings = result.get("semantic_readings") or []
+    exported_definitions = exported_prop_definition_names(result.get("coq_code", ""))
+    if not check:
+        body = '<p class="semantic-reading-empty">No semantic readings check available.</p>'
+    else:
+        status = check_status(check.get("ok"))
+        count = check.get("reading_count", 0)
+        summary = (
+            '<p '
+            f'class="semantic-readings-check-summary semantic-readings-check-summary--{html.escape(css_token(status))}" '
+            f'data-semantic-readings-status="{html.escape(status)}">'
+            f'{html.escape(status)}: {html.escape(str(count))} reading(s)'
+            '</p>'
+        )
+        rows = []
+        for index, reading in enumerate(readings if isinstance(readings, list) else []):
+            if not isinstance(reading, dict):
+                continue
+            name = str(reading.get("name", f"reading_{index + 1}"))
+            scope = str(reading.get("scope", ""))
+            source = str(reading.get("source", ""))
+            coq_definition = str(reading.get("coq_definition", ""))
+            type_check = reading.get("type_check") or {}
+            type_status = (
+                check_status(type_check.get("ok"))
+                if isinstance(type_check, dict)
+                else "not_applicable"
+            )
+            exported = bool(coq_definition and coq_definition in exported_definitions)
+            exported_status = "yes" if exported else "no"
+            row_status = "passed" if type_status == "passed" and (exported or not coq_definition) else "failed"
+            rows.append(
+                '<li '
+                f'class="semantic-reading-audit semantic-reading-audit--{html.escape(row_status)}" '
+                f'data-reading-name="{html.escape(name, quote=True)}" '
+                f'data-coq-definition="{html.escape(coq_definition, quote=True)}" '
+                f'data-coq-exported="{html.escape(exported_status, quote=True)}">'
+                f'<strong>{html.escape(name)}</strong>'
+                '<dl>'
+                f'<dt>scope</dt><dd>{html.escape(scope or "none")}</dd>'
+                f'<dt>source</dt><dd>{html.escape(source or "none")}</dd>'
+                f'<dt>coq</dt><dd>{html.escape(coq_definition or "none")}</dd>'
+                f'<dt>exported</dt><dd>{html.escape(exported_status)}</dd>'
+                f'<dt>type check</dt><dd>{html.escape(type_status)}</dd>'
+                '</dl>'
+                '</li>'
+            )
+        readings_html = (
+            '<ul class="semantic-reading-audit-list">' + "".join(rows) + "</ul>"
+            if rows
+            else '<p class="semantic-reading-empty">No normalized readings were emitted.</p>'
+        )
+        errors = check.get("errors") if isinstance(check, dict) else []
+        if isinstance(errors, list) and errors:
+            errors_html = (
+                '<ul class="semantic-reading-error-list">'
+                + "".join(
+                    f'<li data-semantic-reading-error="{html.escape(str(error), quote=True)}">'
+                    f'{html.escape(str(error))}</li>'
+                    for error in errors
+                )
+                + "</ul>"
+            )
+        else:
+            errors_html = '<p class="semantic-reading-empty">No semantic reading errors.</p>'
+        definitions_html = (
+            '<p class="semantic-reading-export-summary">'
+            "exported Prop/PropT definitions: "
+            f'{html.escape(", ".join(exported_definitions) or "none")}'
+            '</p>'
+        )
+        raw_json = html.escape(compact_json(check))
+        body = (
+            summary
+            + definitions_html
+            + readings_html
+            + errors_html
+            + '<details class="semantic-reading-raw"><summary>Raw check JSON</summary>'
+            f'<pre>{raw_json}</pre>'
+            '</details>'
+        )
+    return (
+        '<section class="panel semantic-readings-check-panel">'
+        "<h2>Semantic Readings Check</h2>"
+        f'<div class="semantic-readings-check">{body}</div>'
+        "</section>"
+    )
+
+
 def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     entries = result.get("result_state_lexicon", [])
     if not entries:
@@ -869,7 +960,6 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     ast = compact_json(result.get("ast", {}))
     type_check = compact_json(result.get("type_check", {}))
     semantic_readings = compact_json(result.get("semantic_readings", []))
-    semantic_readings_check = compact_json(result.get("semantic_readings_check", {}))
     modifier_roles = compact_json(result.get("modifier_role_audit", []))
     result_lexicon = compact_json(result.get("result_state_lexicon", []))
     patch_drafts = compact_json(result.get("lexicon_patch_drafts", []))
@@ -1127,6 +1217,86 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
     .semantic-warning-action .semantic-warning-draft {{
       margin-top: 2px;
     }}
+    .semantic-readings-check {{
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }}
+    .semantic-readings-check-summary {{
+      margin: 0;
+      width: fit-content;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font: 13px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }}
+    .semantic-readings-check-summary--failed {{
+      background: var(--error-soft);
+      color: var(--error);
+    }}
+    .semantic-reading-export-summary,
+    .semantic-reading-empty {{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }}
+    .semantic-reading-audit-list,
+    .semantic-reading-error-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }}
+    .semantic-reading-audit {{
+      border-left: 3px solid var(--accent);
+      background: #ffffff;
+      padding: 9px 10px;
+      display: grid;
+      gap: 6px;
+    }}
+    .semantic-reading-audit--failed {{
+      border-left-color: var(--error);
+      background: var(--error-soft);
+    }}
+    .semantic-reading-audit strong {{
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }}
+    .semantic-reading-audit dl {{
+      display: grid;
+      grid-template-columns: minmax(78px, auto) minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .semantic-reading-audit dt {{
+      color: var(--muted);
+    }}
+    .semantic-reading-audit dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
+    }}
+    .semantic-reading-error-list li {{
+      border-left: 3px solid var(--error);
+      background: var(--error-soft);
+      color: var(--error);
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.45;
+    }}
+    .semantic-reading-raw summary {{
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .semantic-reading-raw pre {{
+      margin-top: 8px;
+      min-height: 0;
+    }}
     .lexicon-list {{
       list-style: none;
       margin: 0;
@@ -1261,7 +1431,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
       {panel("Construction Rule", construction)}
       {panel("Modifier Role Audit", modifier_roles)}
       {panel("Semantic Readings", semantic_readings)}
-      {panel("Semantic Readings Check", semantic_readings_check)}
+      {semantic_readings_check_panel(result)}
       {panel("AST", ast)}
       {panel("Type Check", type_check)}
       {panel("Result State Lexicon JSON", result_lexicon)}

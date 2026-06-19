@@ -213,6 +213,14 @@ The page should render the same actions in a `Next Steps` panel, keeping
 human-facing guidance and machine-facing API output aligned.
 Each rendered action must expose `data-action-kind` and a `next-step--<kind>`
 CSS class so later UI controls and browser tests have stable hooks.
+The page should also render `semantic_readings_check` as a structured
+`Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
+audit status and reading count, lists exported Prop/PropT definition names, and
+renders one row per reading with stable `data-reading-name`,
+`data-coq-definition`, and `data-coq-exported` hooks. Each row shows the
+reading name, scope, source, Coq/Rocq definition, exported status, and
+reading-local type-check status. If the audit fails, the same panel displays
+the semantic-reading error list before the raw JSON details.
 Warnings are rendered separately in a `Semantic Warnings` panel. Each rendered
 warning exposes `data-warning-kind` and a `semantic-warning--<kind>` CSS class
 so the interface can distinguish semantic caveats from recovery actions. If a

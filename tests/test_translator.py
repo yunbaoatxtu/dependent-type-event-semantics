@@ -81,6 +81,7 @@ from web.app import (
     render_lexicon_patch_text,
     result_state_warning_for_entry,
     result_state_warnings,
+    semantic_readings_check_panel,
 )
 
 
@@ -6989,6 +6990,74 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
 
+    def test_web_page_shows_structured_semantic_readings_check(self) -> None:
+        page = render_page("some boy loves some girl", require_coq=True)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn(
+            (
+                'class="semantic-readings-check-summary '
+                'semantic-readings-check-summary--passed" '
+                'data-semantic-readings-status="passed"'
+            ),
+            page,
+        )
+        self.assertIn("passed: 2 reading(s)", page)
+        self.assertIn("exported Prop/PropT definitions: some_boy_wide_scope, some_girl_wide_scope", page)
+        self.assertIn(
+            (
+                'class="semantic-reading-audit semantic-reading-audit--passed" '
+                'data-reading-name="some_boy_wide_scope" '
+                'data-coq-definition="some_boy_wide_scope" data-coq-exported="yes"'
+            ),
+            page,
+        )
+        self.assertIn("<dt>scope</dt><dd>subject_then_object</dd>", page)
+        self.assertIn("<dt>source</dt><dd>quantifier_scope</dd>", page)
+        self.assertIn("<dt>type check</dt><dd>passed</dd>", page)
+        self.assertIn("No semantic reading errors.", page)
+        self.assertIn("<summary>Raw check JSON</summary>", page)
+        self.assertIn("&quot;reading_count&quot;: 2", page)
+
+    def test_semantic_readings_check_panel_shows_missing_export_errors(self) -> None:
+        panel_html = semantic_readings_check_panel(
+            {
+                "semantic_readings": [
+                    {
+                        "name": "missing_reading",
+                        "scope": "synthetic_scope",
+                        "source": "negative_test",
+                        "coq_definition": "missing_reading",
+                        "type_check": {"ok": True},
+                    }
+                ],
+                "semantic_readings_check": {
+                    "checked": True,
+                    "ok": False,
+                    "reading_count": 1,
+                    "errors": [
+                        "semantic_readings[0].coq_definition 'missing_reading' is not exported"
+                    ],
+                },
+                "coq_code": "Definition other_reading : Prop := True.",
+            }
+        )
+        self.assertIn('data-semantic-readings-status="failed"', panel_html)
+        self.assertIn("failed: 1 reading(s)", panel_html)
+        self.assertIn("exported Prop/PropT definitions: other_reading", panel_html)
+        self.assertIn(
+            (
+                'class="semantic-reading-audit semantic-reading-audit--failed" '
+                'data-reading-name="missing_reading" '
+                'data-coq-definition="missing_reading" data-coq-exported="no"'
+            ),
+            panel_html,
+        )
+        self.assertIn("<dt>exported</dt><dd>no</dd>", panel_html)
+        self.assertIn(
+            "semantic_readings[0].coq_definition &#x27;missing_reading&#x27; is not exported",
+            panel_html,
+        )
+
     def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
         page = render_page("a cat sits on a mat", require_coq=True)
         self.assertIn("Construction Rule", page)
@@ -7408,6 +7477,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
         self.assertIn("`Type Check` panel", readme)
+        self.assertIn("`Semantic Readings Check` panel is likewise structured", readme)
+        self.assertIn("exported Prop/PropT definition", readme)
         self.assertIn("`manual_repair_required`", readme)
         self.assertIn("`lexicon_patch_draft_count`", readme)
         self.assertIn("`Translation verified with warnings`", readme)
@@ -7497,6 +7568,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("AST `frame` field", web_design)
         self.assertIn("`the plant killed` is not accepted", web_design)
         self.assertIn("Type Check panel", web_design)
+        self.assertIn("`data-reading-name`", web_design)
+        self.assertIn("`data-coq-exported`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
