@@ -5531,6 +5531,36 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
         self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
 
+    def test_web_api_and_page_report_nary_timed_perception_success(self) -> None:
+        sentence = "Mary saw John leave and Sue smile and Ann laugh after Bill waved"
+        result = analyze_sentence(sentence, require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(result["construction_rule"]["id"], "perception_nominalization")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(embedded["kind"], "temporal_relation")
+        self.assertEqual(len(embedded["main"]["clauses"]), 3)
+        self.assertEqual(len(embedded["relations"]), 3)
+        self.assertIn(
+            "and_T(leave(John, t_main_1), and_T(smile(Sue, t_main_2), laugh(Ann, t_main_3)))",
+            result["dependent_type_translation"],
+        )
+        self.assertIn(
+            "and_T (leave John t_main_1) (and_T (smile Sue t_main_2) (laugh Ann t_main_3))",
+            result["coq_code"],
+        )
+
+        page = render_page(sentence, require_coq=True)
+        self.assertIn("translation verified", page)
+        self.assertIn("Parsons/Luo-Shi perception complement", page)
+        self.assertIn("and_T(leave(John, t_main_1), and_T(smile(Sue, t_main_2), laugh(Ann, t_main_3)))", page)
+        self.assertIn("&quot;predicate&quot;: &quot;laugh&quot;", page)
+        self.assertIn("before t_reference t_main_3", page)
+
     def test_web_api_and_page_expose_surface_lexicon_audits(self) -> None:
         passive = analyze_sentence("John was seen by Mary", require_coq=True)
         self.assertTrue(passive["ok"])
