@@ -1898,8 +1898,7 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
 def perception_nominalization_ast(
     perception_predicate: str,
     experiencer: str,
-    embedded_predicate: str,
-    embedded_subject: str,
+    embedded_proposition: dict[str, Any],
 ) -> dict[str, Any]:
     return {
         "kind": "perception_nominalization",
@@ -1914,17 +1913,85 @@ def perception_nominalization_ast(
                 "kind": "nominalized_proposition",
                 "nominalizer": "E",
                 "nominalizer_type": "Prop -> Entity",
-                "proposition": {
-                    "predicate": embedded_predicate,
-                    "predicate_type": "Entity -> Prop",
-                    "subject": {
-                        "name": embedded_subject,
-                        "type": "Entity",
-                    },
-                },
+                "proposition": embedded_proposition,
             },
         },
     }
+
+
+def simple_perception_embedded_proposition(
+    embedded_predicate: str,
+    embedded_subject: str,
+) -> dict[str, Any]:
+    return {
+        "predicate": embedded_predicate,
+        "predicate_type": "Entity -> Prop",
+        "subject": {
+            "name": embedded_subject,
+            "type": "Entity",
+        },
+    }
+
+
+def perception_entity_name(tokens: list[str]) -> str:
+    cleaned = clean_phrase(tokens)
+    return "_".join(part.capitalize() for part in cleaned.split("_"))
+
+
+def render_perception_embedded_translation(proposition: dict[str, Any]) -> str:
+    if proposition.get("kind") == "subject_coordination":
+        return render_subject_coordination_translation(proposition)
+    return f"{proposition['predicate']}({proposition['subject']['name']})"
+
+
+def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
+    if proposition.get("kind") == "subject_coordination":
+        predicate = proposition["predicate"]["name"]
+        subjects = [subject["name"] for subject in proposition["subjects"]]
+        return (
+            f"{proposition['connective']} "
+            f"({predicate} {subjects[0]}) ({predicate} {subjects[1]})"
+        )
+    return f"{proposition['predicate']} {proposition['subject']['name']}"
+
+
+def perception_embedded_subjects(proposition: dict[str, Any]) -> list[str]:
+    if proposition.get("kind") == "subject_coordination":
+        return [subject["name"] for subject in proposition["subjects"]]
+    return [proposition["subject"]["name"]]
+
+
+def perception_embedded_predicate(proposition: dict[str, Any]) -> str:
+    if proposition.get("kind") == "subject_coordination":
+        return proposition["predicate"]["name"]
+    return proposition["predicate"]
+
+
+def check_perception_embedded_proposition(
+    proposition: dict[str, Any],
+    errors: list[str],
+) -> None:
+    if proposition.get("kind") == "subject_coordination":
+        if proposition.get("modifiers") != []:
+            errors.append(
+                "perception embedded subject coordination currently requires no shared modifiers"
+            )
+        if proposition.get("time_modifiers") != []:
+            errors.append(
+                "perception embedded subject coordination currently requires no time modifiers"
+            )
+        type_check = check_subject_coordination_ast(proposition)
+        errors.extend(
+            f"embedded subject coordination: {error}"
+            for error in type_check["errors"]
+        )
+        return
+
+    if proposition.get("predicate_type") != "Entity -> Prop":
+        errors.append("embedded predicate must have type Entity -> Prop")
+    subject = proposition.get("subject")
+    if not isinstance(subject, dict) or subject.get("type") != "Entity":
+        errors.append("embedded subject must have type Entity")
 
 
 def check_perception_nominalization_ast(ast: dict[str, Any]) -> dict[str, Any]:
@@ -1953,11 +2020,7 @@ def check_perception_nominalization_ast(ast: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(proposition, dict):
                 errors.append("nominalized object must contain a proposition")
             else:
-                if proposition.get("predicate_type") != "Entity -> Prop":
-                    errors.append("embedded predicate must have type Entity -> Prop")
-                subject = proposition.get("subject")
-                if not isinstance(subject, dict) or subject.get("type") != "Entity":
-                    errors.append("embedded subject must have type Entity")
+                check_perception_embedded_proposition(proposition, errors)
 
     return {
         "ok": not errors,
@@ -1968,29 +2031,95 @@ def check_perception_nominalization_ast(ast: dict[str, Any]) -> dict[str, Any]:
 
 def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
-    if tokens not in (["mary", "saw", "john", "leave"], ["mary", "saw", "john", "left"]):
+    if len(tokens) < 4 or tokens[0] != "mary" or tokens[1] != "saw":
         return None
 
     experiencer = "Mary"
-    embedded_subject = "John"
     perception_predicate = lemma_verb(tokens[1])
-    embedded_predicate = lemma_verb(tokens[3])
+    embedded_tokens = tokens[2:]
+    embedded_proposition: dict[str, Any] | None = None
+    definition_suffix = "john_leave"
+
+    if len(embedded_tokens) == 2 and embedded_tokens[1] in {"leave", "left"}:
+        embedded_subject = perception_entity_name([embedded_tokens[0]])
+        embedded_predicate = lemma_verb(embedded_tokens[1])
+        embedded_proposition = simple_perception_embedded_proposition(
+            embedded_predicate,
+            embedded_subject,
+        )
+        definition_suffix = f"{embedded_subject.lower()}_{embedded_predicate}"
+    else:
+        leading_both = bool(embedded_tokens and embedded_tokens[0] == "both")
+        if leading_both:
+            embedded_tokens = embedded_tokens[1:]
+        coordination = single_boolean_coordinator(embedded_tokens)
+        if coordination is None:
+            return None
+        coordinator, coordinator_index = coordination
+        if leading_both and coordinator != "and":
+            return None
+        left_subject_tokens = embedded_tokens[:coordinator_index]
+        right_tokens = embedded_tokens[coordinator_index + 1 :]
+        if not left_subject_tokens or len(right_tokens) < 2:
+            return None
+        embedded_surface = right_tokens[-1]
+        if embedded_surface not in {"leave", "left"}:
+            return None
+        right_subject_tokens = right_tokens[:-1]
+        if not right_subject_tokens:
+            return None
+        embedded_predicate = lemma_verb(embedded_surface)
+        subjects = [
+            perception_entity_name(left_subject_tokens),
+            perception_entity_name(right_subject_tokens),
+        ]
+        embedded_proposition = subject_coordination_ast(
+            subjects,
+            {
+                "surface": embedded_surface,
+                "name": embedded_predicate,
+                "predicate_type": "Entity -> Prop",
+            },
+            [],
+            [],
+            connective_for_coordinator(coordinator),
+        )
+        definition_suffix = (
+            f"{subjects[0].lower()}_{coordinator}_{subjects[1].lower()}_"
+            f"{embedded_predicate}"
+        )
+
+    if embedded_proposition is None:
+        return None
+    embedded_translation = render_perception_embedded_translation(embedded_proposition)
+    embedded_coq = render_perception_embedded_coq(embedded_proposition)
+    embedded_predicate = perception_embedded_predicate(embedded_proposition)
+    embedded_subjects = perception_embedded_subjects(embedded_proposition)
+    connective = embedded_proposition.get("connective")
     coq_code = "\n".join(
         [
             "(* Luo-Shi-style nominalization for perception complements. *)",
             "Parameter Entity : Type.",
             "",
             f"Parameter {experiencer} : Entity.",
-            f"Parameter {embedded_subject} : Entity.",
+            *[
+                f"Parameter {subject} : Entity."
+                for subject in unique_names(embedded_subjects)
+            ],
             "",
             "Parameter E : Prop -> Entity.",
             f"Parameter {embedded_predicate} : Entity -> Prop.",
             f"Parameter {perception_predicate} : Entity -> Entity -> Prop.",
+            *(
+                [f"Parameter {connective} : Prop -> Prop -> Prop."]
+                if isinstance(connective, str)
+                else []
+            ),
             "",
-            "Definition mary_saw_john_leave : Prop :=",
-            f"  {perception_predicate} {experiencer} (E ({embedded_predicate} {embedded_subject})).",
+            f"Definition mary_saw_{definition_suffix} : Prop :=",
+            f"  {perception_predicate} {experiencer} (E ({embedded_coq})).",
             "",
-            "Check mary_saw_john_leave.",
+            f"Check mary_saw_{definition_suffix}.",
             "",
         ]
     )
@@ -1999,15 +2128,15 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         "source": sentence,
         "event_style_reference": (
             "exists e e'. seeing(e) and Experiencer(e, Mary) and "
-            "leaving(e') and Agent(e', John) and Theme(e, e')"
+            f"leaving(e') and Agent(e', {' and '.join(embedded_subjects)}) "
+            "and Theme(e, e')"
         ),
-        "typed_replacement": "see(Mary, E(leave(John)))",
+        "typed_replacement": f"see(Mary, E({embedded_translation}))",
     }
     ast = perception_nominalization_ast(
         perception_predicate,
         experiencer,
-        embedded_predicate,
-        embedded_subject,
+        embedded_proposition,
     )
     type_check = check_perception_nominalization_ast(ast)
     return {

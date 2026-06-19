@@ -387,6 +387,12 @@ The perception-complement example uses a nominalizing map
 `E : Prop -> Entity`, yielding `see Mary (E (leave John))`. Its AST records
 `see : Entity -> Entity -> Prop`, `leave : Entity -> Prop`, and the nominalized
 object produced by `E`, so the construction is type-checked before Coq export.
+The nominalized object may also be a checked embedded subject coordination:
+`Mary saw John and Bill leave` becomes
+`see(Mary, E(and_T(leave(John), leave(Bill))))`, while
+`Mary saw John or Bill leave` uses `or_T` inside the same nominalizer. This keeps
+the perceived complement propositional before `E` maps it into the entity object
+position of `see`.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

@@ -307,6 +307,52 @@ then mapped into an entity-denoting percept by `E : Prop -> Entity`:
 This prevents the construction from being represented as a hidden event object
 while still giving the perception verb an entity-denoting object.
 
+The nominalized proposition can itself be a checked subject coordination. For
+`Mary saw John and Bill leave`, the object of perception is not a fresh event
+entity or a flat `john_and_bill` constant; it is `E` applied to the coordinated
+proposition:
+
+```json
+{
+  "kind": "perception_nominalization",
+  "perception": {
+    "predicate": "see",
+    "predicate_type": "Entity -> Entity -> Prop",
+    "experiencer": {
+      "name": "Mary",
+      "type": "Entity"
+    },
+    "object": {
+      "kind": "nominalized_proposition",
+      "nominalizer": "E",
+      "nominalizer_type": "Prop -> Entity",
+      "proposition": {
+        "kind": "subject_coordination",
+        "subjects": [
+          {"name": "John", "type": "Entity"},
+          {"name": "Bill", "type": "Entity"}
+        ],
+        "predicate": {
+          "surface": "leave",
+          "name": "leave",
+          "predicate_type": "Entity -> Prop"
+        },
+        "modifiers": [],
+        "connective": "and_T",
+        "connective_type": "Prop -> Prop -> Prop",
+        "time_modifiers": []
+      }
+    }
+  }
+}
+```
+
+This renders as:
+
+```text
+see(Mary, E(and_T(leave(John), leave(Bill))))
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
