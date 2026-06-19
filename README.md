@@ -393,6 +393,10 @@ The nominalized object may also be a checked embedded subject coordination:
 `Mary saw John or Bill leave` uses `or_T` inside the same nominalizer. This keeps
 the perceived complement propositional before `E` maps it into the entity object
 position of `see`.
+The same layer now handles two coordinated embedded propositions:
+`Mary saw John leave and Bill wave` becomes
+`see(Mary, E(and_T(leave(John), wave(Bill))))`, with `leave` and `wave`
+declared separately at type `Entity -> Prop`.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

@@ -353,6 +353,52 @@ This renders as:
 see(Mary, E(and_T(leave(John), leave(Bill))))
 ```
 
+The embedded proposition can also coordinate two complete embedded clauses. For
+`Mary saw John leave and Bill wave`, the nominalizer applies to a
+`proposition_coordination` object rather than to a subject-coordination object:
+
+```json
+{
+  "kind": "perception_nominalization",
+  "perception": {
+    "predicate": "see",
+    "predicate_type": "Entity -> Entity -> Prop",
+    "experiencer": {
+      "name": "Mary",
+      "type": "Entity"
+    },
+    "object": {
+      "kind": "nominalized_proposition",
+      "nominalizer": "E",
+      "nominalizer_type": "Prop -> Entity",
+      "proposition": {
+        "kind": "proposition_coordination",
+        "clauses": [
+          {
+            "predicate": "leave",
+            "predicate_type": "Entity -> Prop",
+            "subject": {"name": "John", "type": "Entity"}
+          },
+          {
+            "predicate": "wave",
+            "predicate_type": "Entity -> Prop",
+            "subject": {"name": "Bill", "type": "Entity"}
+          }
+        ],
+        "connective": "and_T",
+        "connective_type": "Prop -> Prop -> Prop"
+      }
+    }
+  }
+}
+```
+
+This renders as:
+
+```text
+see(Mary, E(and_T(leave(John), wave(Bill))))
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example

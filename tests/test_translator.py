@@ -4808,6 +4808,52 @@ class TranslatorTests(unittest.TestCase):
                 self.assertNotIn("Parameter Theme :", result["coq_code"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_perception_nominalization_can_embed_proposition_coordination(self) -> None:
+        cases = (
+            (
+                "Mary saw John leave and Bill wave",
+                "see(Mary, E(and_T(leave(John), wave(Bill))))",
+                "and_T",
+            ),
+            (
+                "Mary saw John leave or Bill wave",
+                "see(Mary, E(or_T(leave(John), wave(Bill))))",
+                "or_T",
+            ),
+        )
+        for sentence, expected_translation, expected_connective in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "perception_nominalization")
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                embedded = result["ast"]["perception"]["object"]["proposition"]
+                self.assertEqual(embedded["kind"], "proposition_coordination")
+                self.assertEqual(embedded["connective"], expected_connective)
+                self.assertEqual(
+                    embedded["clauses"],
+                    [
+                        {
+                            "predicate": "leave",
+                            "predicate_type": "Entity -> Prop",
+                            "subject": {"name": "John", "type": "Entity"},
+                        },
+                        {
+                            "predicate": "wave",
+                            "predicate_type": "Entity -> Prop",
+                            "subject": {"name": "Bill", "type": "Entity"},
+                        },
+                    ],
+                )
+                self.assertIn("Parameter leave : Entity -> Prop.", result["coq_code"])
+                self.assertIn("Parameter wave : Entity -> Prop.", result["coq_code"])
+                self.assertIn(f"Parameter {expected_connective} : Prop -> Prop -> Prop.", result["coq_code"])
+                self.assertIn(f"see Mary (E ({expected_connective} (leave John) (wave Bill)))", result["coq_code"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertNotIn("Parameter Theme :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
         result = run_pipeline("Mary saw Bill leave", require_coq=True)
         self.assertTrue(result["ok"])

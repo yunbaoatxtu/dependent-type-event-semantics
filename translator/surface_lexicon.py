@@ -72,6 +72,7 @@ COMMON_VERB_LEMMAS = {
     "knock",
     "love",
     "jump",
+    "leave",
     "read",
     "run",
     "sit",
@@ -79,6 +80,7 @@ COMMON_VERB_LEMMAS = {
     "talk",
     "visit",
     "walk",
+    "wave",
     "write",
 }
 COMMON_TRANSITIVE_VERB_LEMMAS = {
