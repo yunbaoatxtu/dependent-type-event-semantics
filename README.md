@@ -441,6 +441,10 @@ Timed perception coordination is not limited to two clauses: `Mary saw John
 leave and Sue smile and Ann laugh after Bill waved` is rendered with three main
 times and a right-associated `and_T` term, then checks three `before`
 constraints from the reference time to the three main times.
+The corresponding `before` forms reverse every ordered pair, so three main
+clauses before one reference clause check `before(t_main_i, t_reference)`, and
+one main clause before three reference clauses checks `before(t_main,
+t_reference_i)`.
 Timed perception disjunction remains outside the controlled fragment: `Mary saw
 John leave or Sue smile after Bill waved` is rejected at the internal type-check
 stage rather than treating `after Bill waved` as part of an entity name.
