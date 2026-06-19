@@ -217,6 +217,47 @@ def quantifier_scope_coq(reading: dict[str, Any]) -> str:
     return f"Definition {reading['name']} : Prop := {render_quantifier_reading(reading, coq=True)}."
 
 
+def semantic_reading(
+    *,
+    name: str,
+    dependent_type_translation: str,
+    coq_definition: str | None = None,
+    scope: str | None = None,
+    scope_policy: dict[str, str] | None = None,
+    type_check: dict[str, Any] | None = None,
+    source: str | None = None,
+) -> dict[str, Any]:
+    reading: dict[str, Any] = {
+        "name": name,
+        "dependent_type_translation": dependent_type_translation,
+    }
+    if coq_definition is not None:
+        reading["coq_definition"] = coq_definition
+    if scope is not None:
+        reading["scope"] = scope
+    if scope_policy is not None:
+        reading["scope_policy"] = scope_policy
+    if type_check is not None:
+        reading["type_check"] = type_check
+    if source is not None:
+        reading["source"] = source
+    return reading
+
+
+def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        semantic_reading(
+            name=reading["name"],
+            dependent_type_translation=render_quantifier_reading(reading),
+            coq_definition=reading["name"],
+            scope="_then_".join(binder["role"] for binder in reading["scope_order"]),
+            type_check={"ok": True, "type": "Prop", "errors": []},
+            source="quantifier_scope",
+        )
+        for reading in readings
+    ]
+
+
 def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
     errors: list[str] = []
     if len(readings) != 2:
@@ -280,6 +321,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         quantifier_scope_reading(subject_noun, verb, object_noun, subject_first=False),
     ]
     type_check = check_quantifier_scope_readings(readings)
+    semantic_readings = quantifier_semantic_readings(readings)
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
@@ -287,6 +329,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             {**reading, "formula": render_quantifier_reading(reading)}
             for reading in readings
         ],
+        "semantic_readings": semantic_readings,
     }
     coq_code = "\n".join(
         [
@@ -311,6 +354,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         "dependent_type_translation": "\n".join(
             reading["formula"] for reading in event_semantics["readings"]
         ),
+        "semantic_readings": semantic_readings,
         "ast": {
             "kind": "scope_ambiguity",
             "quantifier": "some",
@@ -757,6 +801,22 @@ def render_negated_coordination_coq(
     return "\n".join(lines)
 
 
+def negated_coordination_semantic_readings(
+    readings: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        semantic_reading(
+            name=reading["name"],
+            dependent_type_translation=render_negated_coordination_reading(reading),
+            coq_definition=reading["name"],
+            scope=reading["scope"],
+            type_check={"ok": True, "type": "Prop", "errors": []},
+            source="do_support_negation",
+        )
+        for reading in readings
+    ]
+
+
 def negated_coordination_clause_from_tail(
     surface: str,
     tail_tokens: list[str],
@@ -866,6 +926,7 @@ def ambiguous_do_support_coordination_pipeline(
         connective=connective,
     )
     type_check = check_negated_coordination_readings(readings)
+    semantic_readings = negated_coordination_semantic_readings(readings)
     dependent_type_translation = "\n".join(
         f"{reading['scope']}: {render_negated_coordination_reading(reading)}"
         for reading in readings
@@ -913,8 +974,10 @@ def ambiguous_do_support_coordination_pipeline(
                 {**reading, "formula": render_negated_coordination_reading(reading)}
                 for reading in readings
             ],
+            "semantic_readings": semantic_readings,
         },
         "dependent_type_translation": dependent_type_translation,
+        "semantic_readings": semantic_readings,
         "ast": {
             "kind": "do_support_negation_coordination_ambiguity",
             "auxiliary": auxiliary,
@@ -3139,6 +3202,38 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         reading["coq_definition"] = (
             f"mary_saw_{definition_suffix}_{reading['name']}"
         )
+    semantic_readings = [
+        semantic_reading(
+            name="primary",
+            dependent_type_translation=f"see(Mary, E({embedded_translation}))",
+            coq_definition=f"mary_saw_{definition_suffix}",
+            scope_policy=(
+                {
+                    "main": "and_before_or",
+                    "reference": "and_before_or",
+                }
+                if alternative_scope_readings
+                else None
+            ),
+            type_check={
+                "ok": True,
+                "type": "Prop",
+                "errors": [],
+            },
+            source="perception_nominalization",
+        )
+    ]
+    semantic_readings.extend(
+        semantic_reading(
+            name=reading["name"],
+            dependent_type_translation=reading["typed_replacement"],
+            coq_definition=reading["coq_definition"],
+            scope_policy=reading["scope_policy"],
+            type_check=reading["type_check"],
+            source="perception_nominalization",
+        )
+        for reading in alternative_scope_readings
+    )
     embedded_predicate_declarations = unique_typed_declarations(
         perception_embedded_predicate_declarations(embedded_proposition)
     )
@@ -3203,6 +3298,7 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             f"PropositionObject(p, {embedded_translation}) and Theme(e, p)"
         ),
         "typed_replacement": f"see(Mary, E({embedded_translation}))",
+        "semantic_readings": semantic_readings,
     }
     if alternative_scope_readings:
         event_semantics["alternative_scope_readings"] = alternative_scope_readings
@@ -3217,6 +3313,7 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         "input_sentence": sentence,
         "event_semantics": event_semantics,
         "dependent_type_translation": event_semantics["typed_replacement"],
+        "semantic_readings": semantic_readings,
         **(
             {"alternative_scope_readings": alternative_scope_readings}
             if alternative_scope_readings

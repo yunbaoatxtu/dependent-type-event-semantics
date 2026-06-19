@@ -295,7 +295,10 @@ python3 -m translator.natural_language_pipeline \
 ```
 
 This produces both subject-wide and object-wide existential readings and checks
-the generated Coq scaffold. The intermediate AST stores each reading as a
+the generated Coq scaffold. The result also exposes a top-level
+`semantic_readings` list, so clients can consume quantifier, negation, and
+mixed temporal scope alternatives through one common shape. The intermediate
+AST stores each reading as a
 structured scope order with bound variables, `Entity -> Prop` restrictor
 predicates, and an `Entity -> Entity -> Prop` relation before any formula string
 is rendered. Coq/Rocq verifies the exported formal terms; it does not by itself
@@ -467,8 +470,11 @@ the Cartesian set of branch-local alternatives. The default reading is still
 the exported primary translation, but the pipeline now also reports an
 `alternative_scope_readings` list with the opposite `or_before_and` grouping;
 those alternatives are emitted as extra Coq/Rocq definitions and checked in the
-same scaffold. Parenthesized or pragmatically marked scope alternatives are
-still outside this small controlled fragment.
+same scaffold. The primary reading and these checked alternatives are also
+normalized into top-level `semantic_readings`, matching the schema used for
+quantifier scope and do-support negation ambiguity. Parenthesized or
+pragmatically marked scope alternatives are still outside this small controlled
+fragment.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

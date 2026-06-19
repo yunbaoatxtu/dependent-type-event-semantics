@@ -783,7 +783,10 @@ keeps two readings with explicit quantifier order and predicate types:
 
 The paired object-wide reading has the same relation arguments but reverses the
 `scope_order`. This makes the ambiguity auditable before the Coq formula is
-rendered.
+rendered. The API result also exposes the two formulas through top-level
+`semantic_readings`, using the same `name`, `scope`, rendered dependent-type
+translation, Coq definition name, and type-check metadata shape used for other
+ambiguity-producing constructions.
 
 ### `subject_coordination`
 
@@ -1173,7 +1176,10 @@ Current type rules:
   talk` still keep `john` as the subject, `in(park)` as shared `Adv`, and
   `yesterday` as a proposition-level time operator. Time modifiers scope over
   the resulting proposition, and Adv modifiers remain typed modifier entries
-  rather than entities or object-name suffixes.
+  rather than entities or object-name suffixes. The API mirrors the two
+  negation readings in top-level `semantic_readings`, so clients can enumerate
+  the checked wide-scope and distributed readings without knowing the
+  construction-specific AST layout.
   Repeated do-support negation across both branches, such as `John did not walk
   and did not talk`, is treated as an explicit distributed surface form:
   `and_T(not_T(walk(john)), not_T(talk(john)))`. The same parser boundary keeps
@@ -1246,6 +1252,9 @@ Current type rules:
   relation level. Each alternative records the opposite `or_before_and` policy,
   its branch count, a rendered dependent-type formula, and a type-check result;
   the perception Coq/Rocq scaffold emits one checked definition per alternative.
+  The same primary and alternative formulas are normalized into top-level
+  `semantic_readings`, preserving the scope policy and type-check result for
+  the web/API layer.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

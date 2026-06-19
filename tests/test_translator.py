@@ -5497,6 +5497,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(len(alternatives), 1)
         self.assertEqual(alternatives[0]["name"], "or_before_and_main")
         self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["primary", "or_before_and_main"],
+        )
+        self.assertEqual(
+            result["semantic_readings"][1]["dependent_type_translation"],
+            alternatives[0]["typed_replacement"],
+        )
+        self.assertEqual(
             alternatives[0]["scope_policy"],
             {"main": "or_before_and", "reference": "and_before_or"},
         )
@@ -5612,6 +5620,15 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual([reading["branch_count"] for reading in alternatives], [4, 4, 4])
         self.assertTrue(all(reading["type_check"]["ok"] for reading in alternatives))
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            [
+                "primary",
+                "or_before_and_reference",
+                "or_before_and_main",
+                "or_before_and_main_reference",
+            ],
+        )
         self.assertIn(
             "and_T(leave(John, t_main_1), laugh(Ann, t_main_3))",
             alternatives[1]["typed_replacement"],
@@ -5712,6 +5729,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter boy : nat ->", result["coq_code"])
         self.assertEqual(result["type_check"]["reading_count"], 2)
         self.assertIn("no Event argument is introduced", result["type_check"]["note"])
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["some_boy_wide_scope", "some_girl_wide_scope"],
+        )
+        self.assertEqual(
+            [reading["scope"] for reading in result["semantic_readings"]],
+            ["subject_then_object", "object_then_subject"],
+        )
+        self.assertEqual(result["semantic_readings"][0]["source"], "quantifier_scope")
+        self.assertIn(
+            "exists x_boy : Entity",
+            result["semantic_readings"][0]["dependent_type_translation"],
+        )
         readings = result["ast"]["readings"]
         self.assertEqual(
             [binder["role"] for binder in readings[0]["scope_order"]],
@@ -5922,10 +5952,12 @@ class TranslatorTests(unittest.TestCase):
             result["alternative_scope_readings"][0]["name"],
             "or_before_and_main",
         )
+        self.assertEqual(len(result["semantic_readings"]), 2)
 
         page = render_page(sentence, require_coq=True)
         self.assertIn("translation verified", page)
         self.assertIn("alternative_scope_readings", page)
+        self.assertIn("semantic_readings", page)
         self.assertIn("or_before_and_main", page)
         self.assertIn("or_T(exists t_main_1 t_main_2 t_reference : Time.", page)
         self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
@@ -5951,6 +5983,7 @@ class TranslatorTests(unittest.TestCase):
             result["alternative_scope_readings"][2]["name"],
             "or_before_and_main_reference",
         )
+        self.assertEqual(len(result["semantic_readings"]), 4)
         self.assertIn(
             "or_T(exists t_main_1 t_main_2 t_reference_1 t_reference_2 : Time.",
             result["dependent_type_translation"],
@@ -5960,6 +5993,7 @@ class TranslatorTests(unittest.TestCase):
         page = render_page(sentence, require_coq=True)
         self.assertIn("translation verified", page)
         self.assertIn("alternative_scope_readings", page)
+        self.assertIn("semantic_readings", page)
         self.assertIn("or_before_and_main_reference", page)
         self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
         self.assertIn("and_T(wave(Bill, t_reference_1), jump(Tom, t_reference_2))", page)
@@ -6136,10 +6170,23 @@ class TranslatorTests(unittest.TestCase):
             "distributed_negation: and_T(not_T(walk(john)), not_T(talk(john)))",
             result["dependent_type_translation"],
         )
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["do_support_negation_wide_scope", "do_support_negation_distributed_scope"],
+        )
+        self.assertEqual(
+            [reading["scope"] for reading in result["semantic_readings"]],
+            ["negation_over_conjunction", "distributed_negation"],
+        )
+        self.assertIn(
+            "not_T(and_T(walk(john), talk(john)))",
+            result["semantic_readings"][0]["dependent_type_translation"],
+        )
 
         page = render_page("John did not walk and talk", require_coq=True)
         self.assertIn("Translation verified", page)
         self.assertIn("do_support_negation_coordination_ambiguity", page)
+        self.assertIn("semantic_readings", page)
         self.assertIn("negation_over_conjunction", page)
         self.assertIn("distributed_negation", page)
         self.assertIn("not_T(and_T(walk(john), talk(john)))", page)
