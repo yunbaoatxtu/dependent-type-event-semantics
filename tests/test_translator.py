@@ -380,6 +380,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("talk", COMMON_VERB_LEMMAS)
         self.assertIn("sleep", COMMON_VERB_LEMMAS)
         self.assertIn("write", COMMON_VERB_LEMMAS)
+        self.assertIn("smile", COMMON_VERB_LEMMAS)
         self.assertIn("eat", COMMON_TRANSITIVE_VERB_LEMMAS)
         self.assertIn("drink", COMMON_TRANSITIVE_VERB_LEMMAS)
         self.assertNotIn("walk", COMMON_TRANSITIVE_VERB_LEMMAS)
@@ -392,6 +393,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(is_likely_surface_verb("chased"))
         self.assertTrue(is_likely_surface_verb("flew"))
         self.assertTrue(is_likely_surface_verb("waved"))
+        self.assertTrue(is_likely_surface_verb("smiled"))
+        self.assertEqual(lemma_verb("smiling"), "smile")
         self.assertFalse(is_likely_surface_verb("cat"))
         self.assertTrue(is_likely_transitive_verb("ate"))
         self.assertTrue(is_likely_transitive_verb("drank"))
@@ -4918,6 +4921,103 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "embedded after relation has the wrong before-argument order",
+            type_check["errors"],
+        )
+
+    def test_perception_nominalization_can_embed_temporal_reference_coordination(self) -> None:
+        cases = (
+            (
+                "Mary saw John leave after Bill waved and Sue smiled",
+                (
+                    "see(Mary, E(exists t_main t_reference_1 t_reference_2 : Time. "
+                    "leave(John, t_main) and "
+                    "and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2)) and "
+                    "before(t_reference_1, t_main) and before(t_reference_2, t_main)))"
+                ),
+                "after",
+                [["t_reference_1", "t_main"], ["t_reference_2", "t_main"]],
+            ),
+            (
+                "Mary saw John leave before Bill waved and Sue smiled",
+                (
+                    "see(Mary, E(exists t_main t_reference_1 t_reference_2 : Time. "
+                    "leave(John, t_main) and "
+                    "and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2)) and "
+                    "before(t_main, t_reference_1) and before(t_main, t_reference_2)))"
+                ),
+                "before",
+                [["t_main", "t_reference_1"], ["t_main", "t_reference_2"]],
+            ),
+        )
+        for sentence, expected_translation, relation_surface, expected_arguments in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "perception_nominalization")
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                embedded = result["ast"]["perception"]["object"]["proposition"]
+                self.assertEqual(embedded["kind"], "temporal_relation")
+                self.assertEqual(embedded["relation_surface"], relation_surface)
+                self.assertEqual(
+                    embedded["binders"],
+                    [
+                        {"variable": "t_main", "type": "Time"},
+                        {"variable": "t_reference_1", "type": "Time"},
+                        {"variable": "t_reference_2", "type": "Time"},
+                    ],
+                )
+                reference = embedded["reference"]
+                self.assertEqual(reference["kind"], "timed_proposition_coordination")
+                self.assertEqual(reference["connective"], "and_T")
+                self.assertEqual(
+                    reference["clauses"],
+                    [
+                        {
+                            "predicate": "wave",
+                            "predicate_type": "Entity -> Time -> Prop",
+                            "subject": {"name": "Bill", "type": "Entity"},
+                            "time": "t_reference_1",
+                        },
+                        {
+                            "predicate": "smile",
+                            "predicate_type": "Entity -> Time -> Prop",
+                            "subject": {"name": "Sue", "type": "Entity"},
+                            "time": "t_reference_2",
+                        },
+                    ],
+                )
+                self.assertEqual(
+                    [relation["arguments"] for relation in embedded["relations"]],
+                    expected_arguments,
+                )
+                self.assertNotIn("Bill_Waved_And_Sue", result["dependent_type_translation"])
+                self.assertIn("Parameter Time : Type.", result["coq_code"])
+                self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+                self.assertIn("Parameter smile : Entity -> Time -> Prop.", result["coq_code"])
+                self.assertIn("exists t_reference_2 : Time,", result["coq_code"])
+                self.assertIn(
+                    "and_T (wave Bill t_reference_1) (smile Sue t_reference_2)",
+                    result["coq_code"],
+                )
+                for left, right in expected_arguments:
+                    self.assertIn(f"before {left} {right}", result["coq_code"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertNotIn("Parameter Theme :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_rejects_missing_temporal_reference_relation(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave after Bill waved and Sue smiled",
+            require_coq=False,
+        )
+        ast = result["ast"]
+        embedded = ast["perception"]["object"]["proposition"]
+        embedded["relations"] = embedded["relations"][:1]
+        type_check = check_perception_nominalization_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "embedded timed reference coordination must contain one before relation per clause",
             type_check["errors"],
         )
 

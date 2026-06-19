@@ -77,6 +77,7 @@ COMMON_VERB_LEMMAS = {
     "run",
     "sit",
     "sleep",
+    "smile",
     "talk",
     "visit",
     "walk",
@@ -211,6 +212,8 @@ def lemma_verb(token: str) -> str:
         stem = token[:-2]
         if len(stem) > 1 and stem[-1] == stem[-2] and not stem.endswith("ss"):
             return stem[:-1]
+        if stem + "e" in COMMON_VERB_LEMMAS:
+            return stem + "e"
         if token.endswith("sed") and not stem.endswith("ss"):
             return stem + "e"
         return stem
@@ -218,6 +221,8 @@ def lemma_verb(token: str) -> str:
         stem = token[:-3]
         if len(stem) > 1 and stem[-1] == stem[-2]:
             return stem[:-1]
+        if stem + "e" in COMMON_VERB_LEMMAS:
+            return stem + "e"
         return stem
     return token
 

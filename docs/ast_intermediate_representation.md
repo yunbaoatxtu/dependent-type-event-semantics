@@ -454,6 +454,82 @@ This renders as:
 see(Mary, E(exists t_main t_reference : Time. leave(John, t_main) and wave(Bill, t_reference) and before(t_reference, t_main)))
 ```
 
+The reference side of a temporal complement may also be a checked timed
+proposition coordination. For `Mary saw John leave after Bill waved and Sue
+smiled`, the reference proposition contains two timed clauses and therefore two
+ordering constraints:
+
+```json
+{
+  "kind": "perception_nominalization",
+  "perception": {
+    "predicate": "see",
+    "predicate_type": "Entity -> Entity -> Prop",
+    "experiencer": {
+      "name": "Mary",
+      "type": "Entity"
+    },
+    "object": {
+      "kind": "nominalized_proposition",
+      "nominalizer": "E",
+      "nominalizer_type": "Prop -> Entity",
+      "proposition": {
+        "kind": "temporal_relation",
+        "relation_surface": "after",
+        "binders": [
+          {"variable": "t_main", "type": "Time"},
+          {"variable": "t_reference_1", "type": "Time"},
+          {"variable": "t_reference_2", "type": "Time"}
+        ],
+        "main": {
+          "predicate": "leave",
+          "predicate_type": "Entity -> Time -> Prop",
+          "subject": {"name": "John", "type": "Entity"},
+          "time": "t_main"
+        },
+        "reference": {
+          "kind": "timed_proposition_coordination",
+          "clauses": [
+            {
+              "predicate": "wave",
+              "predicate_type": "Entity -> Time -> Prop",
+              "subject": {"name": "Bill", "type": "Entity"},
+              "time": "t_reference_1"
+            },
+            {
+              "predicate": "smile",
+              "predicate_type": "Entity -> Time -> Prop",
+              "subject": {"name": "Sue", "type": "Entity"},
+              "time": "t_reference_2"
+            }
+          ],
+          "connective": "and_T",
+          "connective_type": "Prop -> Prop -> Prop"
+        },
+        "relations": [
+          {
+            "predicate": "before",
+            "predicate_type": "Time -> Time -> Prop",
+            "arguments": ["t_reference_1", "t_main"]
+          },
+          {
+            "predicate": "before",
+            "predicate_type": "Time -> Time -> Prop",
+            "arguments": ["t_reference_2", "t_main"]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+This renders as:
+
+```text
+see(Mary, E(exists t_main t_reference_1 t_reference_2 : Time. leave(John, t_main) and and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2)) and before(t_reference_1, t_main) and before(t_reference_2, t_main)))
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
@@ -1121,7 +1197,9 @@ Current type rules:
   temporal relation over `Time`, and the nominalizer has type `Prop -> Entity`.
   Embedded temporal relations require two bound time variables and a
   `before : Time -> Time -> Prop` relation in the direction licensed by the
-  surface connector.
+  surface connector. If the temporal relation's reference side is a timed
+  proposition coordination, the checker requires one bound reference time and
+  one `before` relation for each timed reference clause.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

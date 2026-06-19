@@ -405,6 +405,19 @@ see(Mary, E(exists t_main t_reference : Time. leave(John, t_main) and wave(Bill,
 ```
 
 Here `leave` and `wave` are declared as `Entity -> Time -> Prop`.
+The reference side of that temporal relation can itself be coordinated:
+
+```text
+Mary saw John leave after Bill waved and Sue smiled
+```
+
+This yields:
+
+```text
+see(Mary, E(exists t_main t_reference_1 t_reference_2 : Time. leave(John, t_main) and and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2)) and before(t_reference_1, t_main) and before(t_reference_2, t_main)))
+```
+
+The checker requires one `before` relation for each timed reference clause.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and
