@@ -452,8 +452,14 @@ temporal phrase is not folded into an entity name. If both the main and
 reference sides are disjunctive, the renderer builds the Cartesian set of
 branch-local alternatives, so two main possibilities against two reference
 possibilities yield four scoped `or_T` branches. Mixed `and`/`or` timed
-coordination remains outside the controlled fragment and is rejected before
-Coq/Rocq export.
+coordination now uses a controlled precedence policy: adjacent `and` groups are
+formed first, and those groups are then folded by `or_T`, with each disjunctive
+branch retaining its own existential time binders and `before` constraints. For
+example, `Mary saw John leave and Sue smile or Ann laugh after Bill waved`
+renders as an `or_T` whose first branch contains
+`and_T(leave(John, t_main_1), smile(Sue, t_main_2))` and whose second branch
+contains `laugh(Ann, t_main_3)`. Parenthesized or pragmatically marked scope
+alternatives are still outside this small controlled fragment.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

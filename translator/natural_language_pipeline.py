@@ -1985,27 +1985,68 @@ def timed_proposition_coordination_ast(
     }
 
 
-def split_homogeneous_boolean_coordinate_tokens(
+def split_boolean_coordinate_tokens(
     tokens: list[str],
-) -> tuple[str, list[list[str]]] | None:
+) -> tuple[list[list[str]], list[str]] | None:
     if not tokens or tokens[0] in BOOLEAN_COORDINATORS or tokens[-1] in BOOLEAN_COORDINATORS:
         return None
-    coordinator: str | None = None
     groups: list[list[str]] = [[]]
+    coordinators: list[str] = []
     for token in tokens:
         if token in BOOLEAN_COORDINATORS:
-            if coordinator is None:
-                coordinator = token
-            elif coordinator != token:
-                return None
             if not groups[-1]:
                 return None
+            coordinators.append(token)
             groups.append([])
             continue
         groups[-1].append(token)
-    if coordinator is None or any(not group for group in groups):
+    if not coordinators or any(not group for group in groups):
         return None
-    return coordinator, groups
+    return groups, coordinators
+
+
+def fold_mixed_timed_boolean_coordination(
+    clauses: list[dict[str, Any]],
+    coordinators: list[str],
+) -> dict[str, Any] | None:
+    if len(clauses) != len(coordinators) + 1:
+        return None
+    if len(set(coordinators)) == 1:
+        return timed_proposition_coordination_ast(
+            clauses,
+            connective_for_coordinator(coordinators[0]),
+        )
+
+    or_terms: list[dict[str, Any]] = []
+    current_and_terms = [clauses[0]]
+    for coordinator, clause in zip(coordinators, clauses[1:]):
+        if coordinator == "and":
+            current_and_terms.append(clause)
+            continue
+        if len(current_and_terms) == 1:
+            or_terms.append(current_and_terms[0])
+        else:
+            or_terms.append(
+                timed_proposition_coordination_ast(
+                    current_and_terms,
+                    connective_for_coordinator("and"),
+                )
+            )
+        current_and_terms = [clause]
+
+    if len(current_and_terms) == 1:
+        or_terms.append(current_and_terms[0])
+    else:
+        or_terms.append(
+            timed_proposition_coordination_ast(
+                current_and_terms,
+                connective_for_coordinator("and"),
+            )
+        )
+    return timed_proposition_coordination_ast(
+        or_terms,
+        connective_for_coordinator("or"),
+    )
 
 
 def temporal_relation_arguments(
@@ -2025,13 +2066,28 @@ def perception_timed_proposition_times(proposition: dict[str, Any]) -> list[str]
         clauses = proposition.get("clauses")
         if not isinstance(clauses, list):
             return []
-        return [
-            clause["time"]
-            for clause in clauses
-            if isinstance(clause, dict) and isinstance(clause.get("time"), str)
-        ]
+        times: list[str] = []
+        for clause in clauses:
+            if isinstance(clause, dict):
+                times.extend(perception_timed_proposition_times(clause))
+        return times
     time_variable = proposition.get("time")
     return [time_variable] if isinstance(time_variable, str) else []
+
+
+def perception_timed_proposition_leaf_clauses(
+    proposition: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if proposition.get("kind") == "timed_proposition_coordination":
+        leaves: list[dict[str, Any]] = []
+        clauses = proposition.get("clauses")
+        if not isinstance(clauses, list):
+            return leaves
+        for clause in clauses:
+            if isinstance(clause, dict):
+                leaves.extend(perception_timed_proposition_leaf_clauses(clause))
+        return leaves
+    return [proposition]
 
 
 def temporal_relation_proposition_ast(
@@ -2191,10 +2247,10 @@ def parse_timed_perception_side(
     if simple_clause is not None:
         return simple_clause
 
-    coordination = split_homogeneous_boolean_coordinate_tokens(tokens)
+    coordination = split_boolean_coordinate_tokens(tokens)
     if coordination is None:
         return None
-    coordinator, groups = coordination
+    groups, coordinators = coordination
     clauses: list[dict[str, Any]] = []
     for index, group in enumerate(groups, start=1):
         clause = parse_timed_perception_embedded_clause(
@@ -2204,10 +2260,7 @@ def parse_timed_perception_side(
         if clause is None:
             return None
         clauses.append(clause)
-    return timed_proposition_coordination_ast(
-        clauses,
-        connective_for_coordinator(coordinator),
-    )
+    return fold_mixed_timed_boolean_coordination(clauses, coordinators)
 
 
 def parse_timed_perception_main(tokens: list[str]) -> dict[str, Any] | None:
@@ -2293,7 +2346,7 @@ def render_perception_timed_proposition_translation(
         return render_binary_connective_translation(
             proposition["connective"],
             [
-                render_perception_timed_clause_translation(clause)
+                render_perception_timed_proposition_translation(clause)
                 for clause in proposition["clauses"]
             ],
         )
@@ -2407,7 +2460,7 @@ def render_perception_timed_proposition_coq(proposition: dict[str, Any]) -> str:
         return render_binary_connective_coq(
             proposition["connective"],
             [
-                render_perception_timed_clause_coq(clause)
+                render_perception_timed_proposition_coq(clause)
                 for clause in proposition["clauses"]
             ],
         )
@@ -2543,12 +2596,12 @@ def perception_embedded_predicate_declarations(
 
 
 def perception_embedded_connectives(proposition: dict[str, Any]) -> list[str]:
+    if proposition.get("kind") == "subject_coordination":
+        return [proposition["connective"]]
     if proposition.get("kind") in {
-        "subject_coordination",
+        "proposition_coordination",
         "timed_proposition_coordination",
     }:
-        return [proposition["connective"]]
-    if proposition.get("kind") == "proposition_coordination":
         connectives = [proposition["connective"]]
         for clause in proposition["clauses"]:
             connectives.extend(perception_embedded_connectives(clause))
@@ -2603,15 +2656,18 @@ def check_timed_side_proposition(
             errors.append(
                 f"embedded timed {label} coordination connective must have type Prop -> Prop -> Prop"
             )
-        clauses = proposition.get("clauses")
-        if not isinstance(clauses, list) or len(clauses) < 2:
+        if not isinstance(proposition.get("clauses"), list) or len(proposition["clauses"]) < 2:
             errors.append(f"embedded timed {label} coordination must contain at least two clauses")
             return
-        for index, clause in enumerate(clauses, start=1):
+        leaves = perception_timed_proposition_leaf_clauses(proposition)
+        if len(leaves) < 2:
+            errors.append(f"embedded timed {label} coordination must contain at least two leaf clauses")
+            return
+        for index, clause in enumerate(leaves, start=1):
             check_timed_perception_clause(
                 clause,
                 f"{coordination_time_prefix}_{index}",
-                f"{label}[{index - 1}]",
+                f"{label} leaf[{index - 1}]",
                 errors,
             )
         return
@@ -2786,15 +2842,18 @@ def check_perception_embedded_proposition(
             errors.append(
                 "embedded timed proposition coordination connective must have type Prop -> Prop -> Prop"
             )
-        clauses = proposition.get("clauses")
-        if not isinstance(clauses, list) or len(clauses) < 2:
+        if not isinstance(proposition.get("clauses"), list) or len(proposition["clauses"]) < 2:
             errors.append("embedded timed proposition coordination must contain at least two clauses")
             return
-        for index, clause in enumerate(clauses, start=1):
+        leaves = perception_timed_proposition_leaf_clauses(proposition)
+        if len(leaves) < 2:
+            errors.append("embedded timed proposition coordination must contain at least two leaf clauses")
+            return
+        for index, clause in enumerate(leaves, start=1):
             check_timed_perception_clause(
                 clause,
                 f"t_reference_{index}",
-                f"timed clause[{index - 1}]",
+                f"timed leaf[{index - 1}]",
                 errors,
             )
         return

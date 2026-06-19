@@ -5468,16 +5468,54 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("before t_reference_2 t_main_2", result["coq_code"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
-    def test_perception_nominalization_rejects_mixed_temporal_boolean_coordination(self) -> None:
+    def test_perception_nominalization_embeds_mixed_temporal_boolean_coordination(self) -> None:
         result = run_pipeline(
             "Mary saw John leave and Sue smile or Ann laugh after Bill waved",
             require_coq=True,
         )
-        self.assertFalse(result["ok"])
+        self.assertTrue(result["ok"])
         self.assertEqual(result["kind"], "perception_nominalization")
-        self.assertEqual(result["ast"]["unsupported"], "mixed_temporal_perception_coordination")
-        self.assertEqual(result["coq_check"]["status"], "skipped")
-        self.assertIn("mixed timed perception coordination", result["type_check"]["errors"][0])
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(embedded["main"]["connective"], "or_T")
+        self.assertEqual(embedded["main"]["clauses"][0]["connective"], "and_T")
+        self.assertIn(
+            "or_T(exists t_main_1 t_main_2 t_reference : Time. "
+            "and_T(leave(John, t_main_1), smile(Sue, t_main_2))",
+            result["dependent_type_translation"],
+        )
+        self.assertIn(
+            "exists t_main_3 t_reference : Time. laugh(Ann, t_main_3)",
+            result["dependent_type_translation"],
+        )
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertIn(
+            "and_T (leave John t_main_1) (smile Sue t_main_2)",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_groups_mixed_temporal_and_before_or(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave or Sue smile and Ann laugh after Bill waved",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(embedded["main"]["connective"], "or_T")
+        self.assertEqual(embedded["main"]["clauses"][1]["connective"], "and_T")
+        self.assertIn(
+            "or_T(exists t_main_1 t_reference : Time. leave(John, t_main_1)",
+            result["dependent_type_translation"],
+        )
+        self.assertIn(
+            "exists t_main_2 t_main_3 t_reference : Time. "
+            "and_T(smile(Sue, t_main_2), laugh(Ann, t_main_3))",
+            result["dependent_type_translation"],
+        )
+        self.assertIn("Parameter or_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
 
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
         result = run_pipeline("Mary saw Bill leave", require_coq=True)
@@ -5750,21 +5788,30 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("wave(John_Leave)", page)
         self.assertNotIn("Sue_Smile_After_Bill", page)
 
-    def test_web_api_and_page_reject_mixed_temporal_perception_coordination(self) -> None:
+    def test_web_api_and_page_report_mixed_temporal_perception_coordination_success(self) -> None:
         sentence = "Mary saw John leave and Sue smile or Ann laugh after Bill waved"
         result = analyze_sentence(sentence, require_coq=True)
-        self.assertFalse(result["ok"])
+        self.assertTrue(result["ok"])
         self.assertEqual(result["kind"], "perception_nominalization")
-        self.assertEqual(result["diagnostics"]["summary"], "type check failed")
-        self.assertEqual(result["diagnostics"]["failure_stage"], "type_check")
-        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "skipped")
-        self.assertEqual(result["ast"]["unsupported"], "mixed_temporal_perception_coordination")
-        self.assertIn("mixed timed perception coordination", result["type_check"]["errors"][0])
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(result["diagnostics"]["failure_stage"], None)
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+        self.assertEqual(result["coq_check"]["status"], "passed")
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(embedded["main"]["connective"], "or_T")
+        self.assertEqual(embedded["main"]["clauses"][0]["connective"], "and_T")
+        self.assertIn(
+            "or_T(exists t_main_1 t_main_2 t_reference : Time.",
+            result["dependent_type_translation"],
+        )
 
         page = render_page(sentence, require_coq=True)
-        self.assertIn("type check failed", page)
-        self.assertIn("mixed_temporal_perception_coordination", page)
-        self.assertIn("mixed timed perception coordination", page)
+        self.assertIn("translation verified", page)
+        self.assertIn("or_T(exists t_main_1 t_main_2 t_reference : Time.", page)
+        self.assertIn("and_T(leave(John, t_main_1), smile(Sue, t_main_2))", page)
+        self.assertIn("Parameter and_T : Prop -&gt; Prop -&gt; Prop.", page)
         self.assertNotIn("Ann_Laugh_After_Bill", page)
 
     def test_web_api_and_page_expose_surface_lexicon_audits(self) -> None:

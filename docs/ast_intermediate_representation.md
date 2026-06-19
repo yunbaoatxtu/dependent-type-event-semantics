@@ -1233,8 +1233,12 @@ Current type rules:
   `Time` binders and its own `before` constraints before the branches are
   folded by `or_T`. When both sides are disjunctive, the branch renderer uses
   the Cartesian product of main-side and reference-side alternatives, preserving
-  one scoped temporal relation per pair. Mixed `and`/`or` timed coordination
-  remains an explicit unsupported boundary and fails before Coq/Rocq export.
+  one scoped temporal relation per pair. Mixed `and`/`or` timed coordination is
+  accepted only under an explicit precedence policy: `and` groups are built
+  first, and the resulting groups are folded by `or_T`. The checker then
+  flattens the timed leaves to verify that every leaf has the expected bound
+  time variable and that the temporal relation still contains one ordered
+  `before` constraint per main/reference leaf pair.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.
