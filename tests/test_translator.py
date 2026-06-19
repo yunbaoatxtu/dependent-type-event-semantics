@@ -5228,6 +5228,94 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_perception_nominalization_can_embed_temporal_nary_main_coordination(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave and Sue smile and Ann laugh after Bill waved",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "see(Mary, E(exists t_main_1 t_main_2 t_main_3 t_reference : Time. "
+                "and_T(leave(John, t_main_1), and_T(smile(Sue, t_main_2), "
+                "laugh(Ann, t_main_3))) and wave(Bill, t_reference) and "
+                "before(t_reference, t_main_1) and before(t_reference, t_main_2) and "
+                "before(t_reference, t_main_3)))"
+            ),
+        )
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(
+            embedded["binders"],
+            [
+                {"variable": "t_main_1", "type": "Time"},
+                {"variable": "t_main_2", "type": "Time"},
+                {"variable": "t_main_3", "type": "Time"},
+                {"variable": "t_reference", "type": "Time"},
+            ],
+        )
+        self.assertEqual(len(embedded["main"]["clauses"]), 3)
+        self.assertEqual(embedded["main"]["clauses"][2]["predicate"], "laugh")
+        self.assertEqual(
+            [relation["arguments"] for relation in embedded["relations"]],
+            [
+                ["t_reference", "t_main_1"],
+                ["t_reference", "t_main_2"],
+                ["t_reference", "t_main_3"],
+            ],
+        )
+        self.assertIn(
+            "and_T (leave John t_main_1) (and_T (smile Sue t_main_2) (laugh Ann t_main_3))",
+            result["coq_code"],
+        )
+        self.assertIn("before t_reference t_main_3", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_can_embed_temporal_nary_reference_coordination(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave after Bill waved and Sue smiled and Ann laughed",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            (
+                "see(Mary, E(exists t_main t_reference_1 t_reference_2 t_reference_3 : Time. "
+                "leave(John, t_main) and and_T(wave(Bill, t_reference_1), "
+                "and_T(smile(Sue, t_reference_2), laugh(Ann, t_reference_3))) and "
+                "before(t_reference_1, t_main) and before(t_reference_2, t_main) and "
+                "before(t_reference_3, t_main)))"
+            ),
+        )
+        embedded = result["ast"]["perception"]["object"]["proposition"]
+        self.assertEqual(
+            embedded["binders"],
+            [
+                {"variable": "t_main", "type": "Time"},
+                {"variable": "t_reference_1", "type": "Time"},
+                {"variable": "t_reference_2", "type": "Time"},
+                {"variable": "t_reference_3", "type": "Time"},
+            ],
+        )
+        self.assertEqual(len(embedded["reference"]["clauses"]), 3)
+        self.assertEqual(embedded["reference"]["clauses"][2]["predicate"], "laugh")
+        self.assertEqual(
+            [relation["arguments"] for relation in embedded["relations"]],
+            [
+                ["t_reference_1", "t_main"],
+                ["t_reference_2", "t_main"],
+                ["t_reference_3", "t_main"],
+            ],
+        )
+        self.assertIn(
+            "and_T (wave Bill t_reference_1) (and_T (smile Sue t_reference_2) (laugh Ann t_reference_3))",
+            result["coq_code"],
+        )
+        self.assertIn("before t_reference_3 t_main", result["coq_code"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
         result = run_pipeline("Mary saw Bill leave", require_coq=True)
         self.assertTrue(result["ok"])

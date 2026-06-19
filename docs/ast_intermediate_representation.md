@@ -548,6 +548,16 @@ ordering constraints:
 before(t_reference_1, t_main_1), before(t_reference_2, t_main_1), before(t_reference_1, t_main_2), before(t_reference_2, t_main_2)
 ```
 
+Timed proposition coordination may contain more than two clauses. The AST still
+stores a single `clauses` list and a binary connective type
+`Prop -> Prop -> Prop`; rendering folds the list as a right-associated binary
+term. For example, `Mary saw John leave and Sue smile and Ann laugh after Bill
+waved` renders the main side as:
+
+```text
+and_T(leave(John, t_main_1), and_T(smile(Sue, t_main_2), laugh(Ann, t_main_3)))
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
@@ -1216,7 +1226,8 @@ Current type rules:
   Embedded temporal relations bind the time variables used by their main and
   reference propositions and require `before : Time -> Time -> Prop` relations
   in the direction licensed by the surface connector. If either side is a timed
-  proposition coordination, the checker requires one `before` relation for each
+  proposition coordination, its `clauses` list must contain at least two timed
+  clauses, and the checker requires one `before` relation for each
   main/reference time pair.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the

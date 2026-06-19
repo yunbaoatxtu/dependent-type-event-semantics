@@ -437,6 +437,10 @@ When both sides are coordinated, the checker requires the full Cartesian set of
 main/reference time constraints. For example, `Mary saw John leave and Sue smile
 after Bill waved and Ann laughed` binds `t_main_1`, `t_main_2`,
 `t_reference_1`, and `t_reference_2`, then checks four `before` relations.
+Timed perception coordination is not limited to two clauses: `Mary saw John
+leave and Sue smile and Ann laugh after Bill waved` is rendered with three main
+times and a right-associated `and_T` term, then checks three `before`
+constraints from the reference time to the three main times.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

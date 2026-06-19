@@ -2117,29 +2117,23 @@ def parse_timed_perception_side(
     if simple_clause is not None:
         return simple_clause
 
-    coordination = single_boolean_coordinator(tokens)
-    if coordination is None:
+    if "or" in tokens:
         return None
-    coordinator, coordinator_index = coordination
-    if coordinator != "and":
+    groups = split_coordinate_tokens(tokens)
+    if groups is None or len(groups) < 2:
         return None
-    left_tokens = tokens[:coordinator_index]
-    right_tokens = tokens[coordinator_index + 1 :]
-    if not left_tokens or not right_tokens:
-        return None
-    left_clause = parse_timed_perception_embedded_clause(
-        left_tokens,
-        f"{coordination_time_prefix}_1",
-    )
-    right_clause = parse_timed_perception_embedded_clause(
-        right_tokens,
-        f"{coordination_time_prefix}_2",
-    )
-    if left_clause is None or right_clause is None:
-        return None
+    clauses: list[dict[str, Any]] = []
+    for index, group in enumerate(groups, start=1):
+        clause = parse_timed_perception_embedded_clause(
+            group,
+            f"{coordination_time_prefix}_{index}",
+        )
+        if clause is None:
+            return None
+        clauses.append(clause)
     return timed_proposition_coordination_ast(
-        [left_clause, right_clause],
-        connective_for_coordinator(coordinator),
+        clauses,
+        connective_for_coordinator("and"),
     )
 
 
@@ -2194,11 +2188,10 @@ def perception_embedded_definition_suffix(proposition: dict[str, Any]) -> str:
         "proposition_coordination",
         "timed_proposition_coordination",
     }:
-        left, right = proposition["clauses"]
         connective = str(proposition["connective"]).replace("_T", "")
-        return (
-            f"{perception_clause_definition_suffix(left)}_"
-            f"{connective}_{perception_clause_definition_suffix(right)}"
+        return f"_{connective}_".join(
+            perception_embedded_definition_suffix(clause)
+            for clause in proposition["clauses"]
         )
     if proposition.get("kind") == "temporal_relation":
         return (
@@ -2213,15 +2206,23 @@ def render_perception_timed_clause_translation(clause: dict[str, Any]) -> str:
     return f"{clause['predicate']}({clause['subject']['name']}, {clause['time']})"
 
 
+def render_binary_connective_translation(connective: str, arguments: list[str]) -> str:
+    rendered = arguments[-1]
+    for argument in reversed(arguments[:-1]):
+        rendered = f"{connective}({argument}, {rendered})"
+    return rendered
+
+
 def render_perception_timed_proposition_translation(
     proposition: dict[str, Any],
 ) -> str:
     if proposition.get("kind") == "timed_proposition_coordination":
-        left, right = proposition["clauses"]
-        return (
-            f"{proposition['connective']}("
-            f"{render_perception_timed_clause_translation(left)}, "
-            f"{render_perception_timed_clause_translation(right)})"
+        return render_binary_connective_translation(
+            proposition["connective"],
+            [
+                render_perception_timed_clause_translation(clause)
+                for clause in proposition["clauses"]
+            ],
         )
     return render_perception_timed_clause_translation(proposition)
 
@@ -2264,13 +2265,21 @@ def render_perception_timed_clause_coq(clause: dict[str, Any]) -> str:
     return f"{clause['predicate']} {clause['subject']['name']} {clause['time']}"
 
 
+def render_binary_connective_coq(connective: str, arguments: list[str]) -> str:
+    rendered = arguments[-1]
+    for argument in reversed(arguments[:-1]):
+        rendered = f"{connective} ({argument}) ({rendered})"
+    return rendered
+
+
 def render_perception_timed_proposition_coq(proposition: dict[str, Any]) -> str:
     if proposition.get("kind") == "timed_proposition_coordination":
-        left, right = proposition["clauses"]
-        return (
-            f"{proposition['connective']} "
-            f"({render_perception_timed_clause_coq(left)}) "
-            f"({render_perception_timed_clause_coq(right)})"
+        return render_binary_connective_coq(
+            proposition["connective"],
+            [
+                render_perception_timed_clause_coq(clause)
+                for clause in proposition["clauses"]
+            ],
         )
     return render_perception_timed_clause_coq(proposition)
 
@@ -2421,8 +2430,8 @@ def check_timed_side_proposition(
                 f"embedded timed {label} coordination connective must have type Prop -> Prop -> Prop"
             )
         clauses = proposition.get("clauses")
-        if not isinstance(clauses, list) or len(clauses) != 2:
-            errors.append(f"embedded timed {label} coordination must contain exactly two clauses")
+        if not isinstance(clauses, list) or len(clauses) < 2:
+            errors.append(f"embedded timed {label} coordination must contain at least two clauses")
             return
         for index, clause in enumerate(clauses, start=1):
             check_timed_perception_clause(
@@ -2604,8 +2613,8 @@ def check_perception_embedded_proposition(
                 "embedded timed proposition coordination connective must have type Prop -> Prop -> Prop"
             )
         clauses = proposition.get("clauses")
-        if not isinstance(clauses, list) or len(clauses) != 2:
-            errors.append("embedded timed proposition coordination must contain exactly two clauses")
+        if not isinstance(clauses, list) or len(clauses) < 2:
+            errors.append("embedded timed proposition coordination must contain at least two clauses")
             return
         for index, clause in enumerate(clauses, start=1):
             check_timed_perception_clause(
