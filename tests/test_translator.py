@@ -5561,6 +5561,30 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;predicate&quot;: &quot;laugh&quot;", page)
         self.assertIn("before t_reference t_main_3", page)
 
+    def test_web_api_and_page_reject_temporal_perception_disjunction_boundary(self) -> None:
+        sentence = "Mary saw John leave or Sue smile after Bill waved"
+        result = analyze_sentence(sentence, require_coq=True)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(result["construction_rule"]["id"], "perception_nominalization")
+        self.assertEqual(result["diagnostics"]["summary"], "type check failed")
+        self.assertEqual(result["diagnostics"]["failure_stage"], "type_check")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "failed")
+        self.assertEqual(result["diagnostics"]["stages"]["construction_hygiene"], "skipped")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "skipped")
+        self.assertEqual(result["coq_check"]["status"], "skipped")
+        self.assertEqual(result["dependent_type_translation"], "")
+        self.assertEqual(result["coq_code"], "")
+        self.assertIn("temporal_perception_disjunction", result["ast"]["unsupported"])
+        self.assertIn("timed perception disjunction", result["type_check"]["errors"][0])
+
+        page = render_page(sentence, require_coq=True)
+        self.assertIn("type check failed", page)
+        self.assertIn("temporal_perception_disjunction", page)
+        self.assertIn("timed perception disjunction", page)
+        self.assertNotIn("wave(John_Leave)", page)
+        self.assertNotIn("Sue_Smile_After_Bill", page)
+
     def test_web_api_and_page_expose_surface_lexicon_audits(self) -> None:
         passive = analyze_sentence("John was seen by Mary", require_coq=True)
         self.assertTrue(passive["ok"])

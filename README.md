@@ -441,6 +441,9 @@ Timed perception coordination is not limited to two clauses: `Mary saw John
 leave and Sue smile and Ann laugh after Bill waved` is rendered with three main
 times and a right-associated `and_T` term, then checks three `before`
 constraints from the reference time to the three main times.
+Timed perception disjunction remains outside the controlled fragment: `Mary saw
+John leave or Sue smile after Bill waved` is rejected at the internal type-check
+stage rather than treating `after Bill waved` as part of an entity name.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

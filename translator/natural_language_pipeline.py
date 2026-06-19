@@ -2048,6 +2048,52 @@ def temporal_relation_proposition_ast(
     return ast
 
 
+def unsupported_temporal_perception_disjunction(
+    sentence: str,
+    embedded_tokens: list[str],
+) -> dict[str, Any]:
+    return {
+        "kind": "perception_nominalization",
+        "input_sentence": sentence,
+        "construction_summary": (
+            "A perception complement with a temporal relation and disjunction was "
+            "detected, but this controlled fragment currently licenses only "
+            "conjunctive timed propositions."
+        ),
+        "event_semantics": {
+            "analysis": "perception-temporal-disjunction-boundary",
+            "source": sentence,
+            "event_style_reference": (
+                "exists e. Seeing(e) and Experiencer(e, Mary) and "
+                "Theme(e, disjunctive temporal proposition)"
+            ),
+        },
+        "dependent_type_translation": "",
+        "ast": {
+            "kind": "perception_nominalization",
+            "unsupported": "temporal_perception_disjunction",
+            "embedded_tokens": embedded_tokens,
+            "connective": "or_T",
+        },
+        "type_check": {
+            "ok": False,
+            "type": None,
+            "errors": [
+                (
+                    "timed perception disjunction currently requires an explicit "
+                    "reading policy; refusing to treat temporal material as an Entity"
+                )
+            ],
+            "note": (
+                "The parser recognized after/before inside a perception complement "
+                "together with or. This boundary is rejected until the project adds "
+                "a typed account of temporal disjunction scope."
+            ),
+        },
+        "coq_code": "",
+    }
+
+
 def perception_entity_name(tokens: list[str]) -> str:
     cleaned = clean_phrase(tokens)
     return "_".join(part.capitalize() for part in cleaned.split("_"))
@@ -2688,6 +2734,11 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             embedded_proposition = temporal_relation
 
     if embedded_proposition is None:
+        if (
+            "or" in embedded_tokens
+            and any(token in TEMPORAL_RELATION_CONNECTORS for token in embedded_tokens)
+        ):
+            return unsupported_temporal_perception_disjunction(sentence, embedded_tokens)
         leading_both = bool(embedded_tokens and embedded_tokens[0] == "both")
         if leading_both:
             embedded_tokens = embedded_tokens[1:]
