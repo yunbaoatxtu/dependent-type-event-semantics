@@ -405,7 +405,8 @@ see(Mary, E(exists t_main t_reference : Time. leave(John, t_main) and wave(Bill,
 ```
 
 Here `leave` and `wave` are declared as `Entity -> Time -> Prop`.
-The reference side of that temporal relation can itself be coordinated:
+Either side of that temporal relation can itself be coordinated. A coordinated
+reference side is:
 
 ```text
 Mary saw John leave after Bill waved and Sue smiled
@@ -418,6 +419,20 @@ see(Mary, E(exists t_main t_reference_1 t_reference_2 : Time. leave(John, t_main
 ```
 
 The checker requires one `before` relation for each timed reference clause.
+A coordinated main side receives the same treatment:
+
+```text
+Mary saw John leave and Sue smile after Bill waved
+```
+
+This yields:
+
+```text
+see(Mary, E(exists t_main_1 t_main_2 t_reference : Time. and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and wave(Bill, t_reference) and before(t_reference, t_main_1) and before(t_reference, t_main_2)))
+```
+
+The checker requires one `before` relation for each timed main/reference pair,
+so deleting either ordering constraint is rejected before Coq/Rocq export.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

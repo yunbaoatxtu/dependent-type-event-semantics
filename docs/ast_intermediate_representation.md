@@ -530,6 +530,15 @@ This renders as:
 see(Mary, E(exists t_main t_reference_1 t_reference_2 : Time. leave(John, t_main) and and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2)) and before(t_reference_1, t_main) and before(t_reference_2, t_main)))
 ```
 
+The main side can also be a checked timed proposition coordination. For `Mary
+saw John leave and Sue smile after Bill waved`, the main proposition contains
+two timed clauses, so the AST binds `t_main_1`, `t_main_2`, and `t_reference`
+and stores one `before` relation for each main/reference time pair:
+
+```text
+see(Mary, E(exists t_main_1 t_main_2 t_reference : Time. and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and wave(Bill, t_reference) and before(t_reference, t_main_1) and before(t_reference, t_main_2)))
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
@@ -1195,11 +1204,11 @@ Current type rules:
   type `Entity -> Entity -> Prop`, the embedded proposition is either a simple
   `Entity -> Prop` clause, a checked proposition coordination, or a checked
   temporal relation over `Time`, and the nominalizer has type `Prop -> Entity`.
-  Embedded temporal relations require two bound time variables and a
-  `before : Time -> Time -> Prop` relation in the direction licensed by the
-  surface connector. If the temporal relation's reference side is a timed
-  proposition coordination, the checker requires one bound reference time and
-  one `before` relation for each timed reference clause.
+  Embedded temporal relations bind the time variables used by their main and
+  reference propositions and require `before : Time -> Time -> Prop` relations
+  in the direction licensed by the surface connector. If either side is a timed
+  proposition coordination, the checker requires one `before` relation for each
+  main/reference time pair.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

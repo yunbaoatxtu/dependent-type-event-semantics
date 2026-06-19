@@ -5021,6 +5021,103 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_perception_nominalization_can_embed_temporal_main_coordination(self) -> None:
+        cases = (
+            (
+                "Mary saw John leave and Sue smile after Bill waved",
+                (
+                    "see(Mary, E(exists t_main_1 t_main_2 t_reference : Time. "
+                    "and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and "
+                    "wave(Bill, t_reference) and "
+                    "before(t_reference, t_main_1) and before(t_reference, t_main_2)))"
+                ),
+                "after",
+                [["t_reference", "t_main_1"], ["t_reference", "t_main_2"]],
+            ),
+            (
+                "Mary saw John leave and Sue smile before Bill waved",
+                (
+                    "see(Mary, E(exists t_main_1 t_main_2 t_reference : Time. "
+                    "and_T(leave(John, t_main_1), smile(Sue, t_main_2)) and "
+                    "wave(Bill, t_reference) and "
+                    "before(t_main_1, t_reference) and before(t_main_2, t_reference)))"
+                ),
+                "before",
+                [["t_main_1", "t_reference"], ["t_main_2", "t_reference"]],
+            ),
+        )
+        for sentence, expected_translation, relation_surface, expected_arguments in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "perception_nominalization")
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                embedded = result["ast"]["perception"]["object"]["proposition"]
+                self.assertEqual(embedded["kind"], "temporal_relation")
+                self.assertEqual(embedded["relation_surface"], relation_surface)
+                self.assertEqual(
+                    embedded["binders"],
+                    [
+                        {"variable": "t_main_1", "type": "Time"},
+                        {"variable": "t_main_2", "type": "Time"},
+                        {"variable": "t_reference", "type": "Time"},
+                    ],
+                )
+                main = embedded["main"]
+                self.assertEqual(main["kind"], "timed_proposition_coordination")
+                self.assertEqual(main["connective"], "and_T")
+                self.assertEqual(
+                    main["clauses"],
+                    [
+                        {
+                            "predicate": "leave",
+                            "predicate_type": "Entity -> Time -> Prop",
+                            "subject": {"name": "John", "type": "Entity"},
+                            "time": "t_main_1",
+                        },
+                        {
+                            "predicate": "smile",
+                            "predicate_type": "Entity -> Time -> Prop",
+                            "subject": {"name": "Sue", "type": "Entity"},
+                            "time": "t_main_2",
+                        },
+                    ],
+                )
+                self.assertEqual(embedded["reference"]["time"], "t_reference")
+                self.assertEqual(
+                    [relation["arguments"] for relation in embedded["relations"]],
+                    expected_arguments,
+                )
+                self.assertIn("Parameter Time : Type.", result["coq_code"])
+                self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", result["coq_code"])
+                self.assertIn("Parameter smile : Entity -> Time -> Prop.", result["coq_code"])
+                self.assertIn("exists t_main_2 : Time,", result["coq_code"])
+                self.assertIn(
+                    "and_T (leave John t_main_1) (smile Sue t_main_2)",
+                    result["coq_code"],
+                )
+                for left, right in expected_arguments:
+                    self.assertIn(f"before {left} {right}", result["coq_code"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertNotIn("Parameter Theme :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_rejects_missing_temporal_main_relation(self) -> None:
+        result = run_pipeline(
+            "Mary saw John leave and Sue smile after Bill waved",
+            require_coq=False,
+        )
+        ast = result["ast"]
+        embedded = ast["perception"]["object"]["proposition"]
+        embedded["relations"] = embedded["relations"][:1]
+        type_check = check_perception_nominalization_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "embedded timed main coordination must contain one before relation per clause",
+            type_check["errors"],
+        )
+
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
         result = run_pipeline("Mary saw Bill leave", require_coq=True)
         self.assertTrue(result["ok"])
