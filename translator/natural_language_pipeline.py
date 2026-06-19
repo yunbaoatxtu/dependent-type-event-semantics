@@ -2136,8 +2136,8 @@ def unsupported_mixed_temporal_perception_coordination(
         "input_sentence": sentence,
         "construction_summary": (
             "A perception complement with a temporal relation and mixed boolean "
-            "coordination was detected, but this controlled fragment currently "
-            "requires one homogeneous timed-proposition connective per side."
+            "coordination was detected, but it falls outside the current "
+            "and-before-or timed-proposition policy."
         ),
         "event_semantics": {
             "analysis": "perception-temporal-mixed-coordination-boundary",
@@ -2163,15 +2163,15 @@ def unsupported_mixed_temporal_perception_coordination(
             "type": None,
             "errors": [
                 (
-                    "mixed timed perception coordination currently requires an "
-                    "explicit reading policy; refusing to treat temporal material "
-                    "as an Entity"
+                    "mixed timed perception coordination is malformed or outside "
+                    "the explicit and-before-or reading policy; refusing to treat "
+                    "temporal material as an Entity"
                 )
             ],
             "note": (
                 "The parser recognized after/before inside a perception complement "
-                "together with mixed boolean coordination. This boundary is rejected "
-                "until the project adds a typed account of mixed temporal boolean scope."
+                "together with mixed boolean coordination, but could not build a typed "
+                "timed proposition under the current precedence policy."
             ),
         },
         "coq_code": "",

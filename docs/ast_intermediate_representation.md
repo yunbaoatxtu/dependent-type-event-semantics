@@ -1238,7 +1238,10 @@ Current type rules:
   first, and the resulting groups are folded by `or_T`. The checker then
   flattens the timed leaves to verify that every leaf has the expected bound
   time variable and that the temporal relation still contains one ordered
-  `before` constraint per main/reference leaf pair.
+  `before` constraint per main/reference leaf pair. This policy is symmetric:
+  mixed coordination may occur on the main side, on the reference side, or on
+  both sides, in which case the branch renderer takes the Cartesian product of
+  the top-level `or_T` alternatives while preserving nested `and_T` groups.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

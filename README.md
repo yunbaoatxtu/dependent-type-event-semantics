@@ -458,8 +458,13 @@ branch retaining its own existential time binders and `before` constraints. For
 example, `Mary saw John leave and Sue smile or Ann laugh after Bill waved`
 renders as an `or_T` whose first branch contains
 `and_T(leave(John, t_main_1), smile(Sue, t_main_2))` and whose second branch
-contains `laugh(Ann, t_main_3)`. Parenthesized or pragmatically marked scope
-alternatives are still outside this small controlled fragment.
+contains `laugh(Ann, t_main_3)`. The same policy applies on the reference side:
+`Mary saw John leave after Bill waved and Sue smiled or Ann laughed` becomes an
+`or_T` over one branch with
+`and_T(wave(Bill, t_reference_1), smile(Sue, t_reference_2))` and one branch
+with `laugh(Ann, t_reference_3)`. If both sides are mixed, the renderer builds
+the Cartesian set of branch-local alternatives. Parenthesized or pragmatically
+marked scope alternatives are still outside this small controlled fragment.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and
