@@ -156,6 +156,7 @@ IRREGULAR_VERBS = {
     "killed": "kill",
     "slept": "sleep",
     "written": "write",
+    "waved": "wave",
 }
 
 SURFACE_LEXICON_SOURCE = "translator/surface_lexicon.py"

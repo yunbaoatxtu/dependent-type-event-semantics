@@ -397,6 +397,14 @@ The same layer now handles two coordinated embedded propositions:
 `Mary saw John leave and Bill wave` becomes
 `see(Mary, E(and_T(leave(John), wave(Bill))))`, with `leave` and `wave`
 declared separately at type `Entity -> Prop`.
+It can also keep an internal temporal relation inside the perceived
+proposition: `Mary saw John leave after Bill waved` becomes:
+
+```text
+see(Mary, E(exists t_main t_reference : Time. leave(John, t_main) and wave(Bill, t_reference) and before(t_reference, t_main)))
+```
+
+Here `leave` and `wave` are declared as `Entity -> Time -> Prop`.
 The burning example uses universal time quantification:
 `forall x : Entity, forall t : Time, burn x t -> consume oxygen t`. Its AST
 stores the binders `x : Entity` and `t : Time`, then checks that both `burn` and

@@ -399,6 +399,61 @@ This renders as:
 see(Mary, E(and_T(leave(John), wave(Bill))))
 ```
 
+The same nominalization layer can keep a temporal dependency inside the
+embedded proposition. For `Mary saw John leave after Bill waved`, the perceived
+object is not an event ordered after another event. It is `E` applied to a
+time-indexed proposition whose reference time precedes the main time:
+
+```json
+{
+  "kind": "perception_nominalization",
+  "perception": {
+    "predicate": "see",
+    "predicate_type": "Entity -> Entity -> Prop",
+    "experiencer": {
+      "name": "Mary",
+      "type": "Entity"
+    },
+    "object": {
+      "kind": "nominalized_proposition",
+      "nominalizer": "E",
+      "nominalizer_type": "Prop -> Entity",
+      "proposition": {
+        "kind": "temporal_relation",
+        "relation_surface": "after",
+        "binders": [
+          {"variable": "t_main", "type": "Time"},
+          {"variable": "t_reference", "type": "Time"}
+        ],
+        "main": {
+          "predicate": "leave",
+          "predicate_type": "Entity -> Time -> Prop",
+          "subject": {"name": "John", "type": "Entity"},
+          "time": "t_main"
+        },
+        "reference": {
+          "predicate": "wave",
+          "predicate_type": "Entity -> Time -> Prop",
+          "subject": {"name": "Bill", "type": "Entity"},
+          "time": "t_reference"
+        },
+        "relation": {
+          "predicate": "before",
+          "predicate_type": "Time -> Time -> Prop",
+          "arguments": ["t_reference", "t_main"]
+        }
+      }
+    }
+  }
+}
+```
+
+This renders as:
+
+```text
+see(Mary, E(exists t_main t_reference : Time. leave(John, t_main) and wave(Bill, t_reference) and before(t_reference, t_main)))
+```
+
 ### `forall_time`
 
 Represents the Luo-Shi-style replacement for Parsons' event-inclusion example
@@ -1061,9 +1116,12 @@ Current type rules:
   second predicate has type `Entity -> Entity -> Time -> Prop`, and
   `before : Time -> Time -> Prop` relates `t_sing` before `t_salute`.
 - `perception_nominalization` has type `Prop` when the perception predicate has
-  type `Entity -> Entity -> Prop`, the embedded predicate has type
-  `Entity -> Prop`, the embedded subject is an `Entity`, and the nominalizer has
-  type `Prop -> Entity`.
+  type `Entity -> Entity -> Prop`, the embedded proposition is either a simple
+  `Entity -> Prop` clause, a checked proposition coordination, or a checked
+  temporal relation over `Time`, and the nominalizer has type `Prop -> Entity`.
+  Embedded temporal relations require two bound time variables and a
+  `before : Time -> Time -> Prop` relation in the direction licensed by the
+  surface connector.
 - `forall_time` has type `Prop` when it binds `x : Entity` and `t : Time`, and
   both the antecedent and consequent have type `Entity -> Time -> Prop` over the
   shared time variable `t`.

@@ -64,6 +64,7 @@ PROPERTY_DEGREES = {"very"}
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
 BOOLEAN_COORDINATORS = {"and": "and_T", "or": "or_T"}
+TEMPORAL_RELATION_CONNECTORS = {"after", "before"}
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,17 @@ def single_boolean_coordinator(tokens: list[str]) -> tuple[str, int] | None:
         (token, index)
         for index, token in enumerate(tokens)
         if token in BOOLEAN_COORDINATORS
+    ]
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def single_temporal_relation_connector(tokens: list[str]) -> tuple[str, int] | None:
+    matches = [
+        (token, index)
+        for index, token in enumerate(tokens)
+        if token in TEMPORAL_RELATION_CONNECTORS
     ]
     if len(matches) != 1:
         return None
@@ -1933,6 +1945,22 @@ def simple_perception_embedded_proposition(
     }
 
 
+def timed_perception_embedded_proposition(
+    embedded_predicate: str,
+    embedded_subject: str,
+    time_variable: str,
+) -> dict[str, Any]:
+    return {
+        "predicate": embedded_predicate,
+        "predicate_type": "Entity -> Time -> Prop",
+        "subject": {
+            "name": embedded_subject,
+            "type": "Entity",
+        },
+        "time": time_variable,
+    }
+
+
 def proposition_coordination_ast(
     clauses: list[dict[str, Any]],
     connective: str = "and_T",
@@ -1942,6 +1970,33 @@ def proposition_coordination_ast(
         "clauses": clauses,
         "connective": connective,
         "connective_type": "Prop -> Prop -> Prop",
+    }
+
+
+def temporal_relation_proposition_ast(
+    main_clause: dict[str, Any],
+    reference_clause: dict[str, Any],
+    relation_surface: str,
+) -> dict[str, Any]:
+    relation_arguments = (
+        ["t_reference", "t_main"]
+        if relation_surface == "after"
+        else ["t_main", "t_reference"]
+    )
+    return {
+        "kind": "temporal_relation",
+        "relation_surface": relation_surface,
+        "binders": [
+            {"variable": "t_main", "type": "Time"},
+            {"variable": "t_reference", "type": "Time"},
+        ],
+        "main": main_clause,
+        "reference": reference_clause,
+        "relation": {
+            "predicate": "before",
+            "predicate_type": "Time -> Time -> Prop",
+            "arguments": relation_arguments,
+        },
     }
 
 
@@ -1959,7 +2014,12 @@ def parse_simple_perception_embedded_clause(
 ) -> dict[str, Any] | None:
     if len(tokens) < 2:
         return None
-    if any(token in BOOLEAN_COORDINATORS or token == "both" for token in tokens):
+    if any(
+        token in BOOLEAN_COORDINATORS
+        or token in TEMPORAL_RELATION_CONNECTORS
+        or token == "both"
+        for token in tokens
+    ):
         return None
     embedded_surface = tokens[-1]
     if not is_perception_embedded_intransitive_surface(embedded_surface):
@@ -1970,6 +2030,50 @@ def parse_simple_perception_embedded_clause(
     return simple_perception_embedded_proposition(
         lemma_verb(embedded_surface),
         embedded_subject,
+    )
+
+
+def parse_timed_perception_embedded_clause(
+    tokens: list[str],
+    time_variable: str,
+) -> dict[str, Any] | None:
+    if len(tokens) < 2:
+        return None
+    embedded_surface = tokens[-1]
+    if not is_perception_embedded_intransitive_surface(embedded_surface):
+        return None
+    embedded_subject = perception_entity_name(tokens[:-1])
+    if embedded_subject == "Entity":
+        return None
+    return timed_perception_embedded_proposition(
+        lemma_verb(embedded_surface),
+        embedded_subject,
+        time_variable,
+    )
+
+
+def parse_temporal_perception_embedded_proposition(
+    tokens: list[str],
+) -> dict[str, Any] | None:
+    relation = single_temporal_relation_connector(tokens)
+    if relation is None:
+        return None
+    relation_surface, relation_index = relation
+    main_tokens = tokens[:relation_index]
+    reference_tokens = tokens[relation_index + 1 :]
+    if not main_tokens or not reference_tokens:
+        return None
+    main_clause = parse_timed_perception_embedded_clause(main_tokens, "t_main")
+    reference_clause = parse_timed_perception_embedded_clause(
+        reference_tokens,
+        "t_reference",
+    )
+    if main_clause is None or reference_clause is None:
+        return None
+    return temporal_relation_proposition_ast(
+        main_clause,
+        reference_clause,
+        relation_surface,
     )
 
 
@@ -1989,7 +2093,17 @@ def perception_embedded_definition_suffix(proposition: dict[str, Any]) -> str:
             f"{perception_clause_definition_suffix(left)}_"
             f"{connective}_{perception_clause_definition_suffix(right)}"
         )
+    if proposition.get("kind") == "temporal_relation":
+        return (
+            f"{perception_clause_definition_suffix(proposition['main'])}_"
+            f"{proposition['relation_surface']}_"
+            f"{perception_clause_definition_suffix(proposition['reference'])}"
+        )
     return perception_clause_definition_suffix(proposition)
+
+
+def render_perception_timed_clause_translation(clause: dict[str, Any]) -> str:
+    return f"{clause['predicate']}({clause['subject']['name']}, {clause['time']})"
 
 
 def render_perception_embedded_translation(proposition: dict[str, Any]) -> str:
@@ -2002,7 +2116,21 @@ def render_perception_embedded_translation(proposition: dict[str, Any]) -> str:
             f"{render_perception_embedded_translation(left)}, "
             f"{render_perception_embedded_translation(right)})"
         )
+    if proposition.get("kind") == "temporal_relation":
+        main = proposition["main"]
+        reference = proposition["reference"]
+        relation = proposition["relation"]
+        return (
+            "exists t_main t_reference : Time. "
+            f"{render_perception_timed_clause_translation(main)} and "
+            f"{render_perception_timed_clause_translation(reference)} and "
+            f"before({relation['arguments'][0]}, {relation['arguments'][1]})"
+        )
     return f"{proposition['predicate']}({proposition['subject']['name']})"
+
+
+def render_perception_timed_clause_coq(clause: dict[str, Any]) -> str:
+    return f"{clause['predicate']} {clause['subject']['name']} {clause['time']}"
 
 
 def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
@@ -2020,6 +2148,17 @@ def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
             f"({render_perception_embedded_coq(left)}) "
             f"({render_perception_embedded_coq(right)})"
         )
+    if proposition.get("kind") == "temporal_relation":
+        main = proposition["main"]
+        reference = proposition["reference"]
+        relation = proposition["relation"]
+        return (
+            "exists t_main : Time,\n"
+            "  exists t_reference : Time,\n"
+            f"    {render_perception_timed_clause_coq(main)} /\\\n"
+            f"    {render_perception_timed_clause_coq(reference)} /\\\n"
+            f"    before {relation['arguments'][0]} {relation['arguments'][1]}"
+        )
     return f"{proposition['predicate']} {proposition['subject']['name']}"
 
 
@@ -2031,18 +2170,38 @@ def perception_embedded_subjects(proposition: dict[str, Any]) -> list[str]:
         for clause in proposition["clauses"]:
             subjects.extend(perception_embedded_subjects(clause))
         return subjects
+    if proposition.get("kind") == "temporal_relation":
+        return (
+            perception_embedded_subjects(proposition["main"])
+            + perception_embedded_subjects(proposition["reference"])
+        )
     return [proposition["subject"]["name"]]
 
 
-def perception_embedded_predicates(proposition: dict[str, Any]) -> list[str]:
+def perception_embedded_predicate_declarations(
+    proposition: dict[str, Any],
+) -> list[tuple[str, str]]:
     if proposition.get("kind") == "subject_coordination":
-        return [proposition["predicate"]["name"]]
+        return [(proposition["predicate"]["name"], "Entity -> Prop")]
     if proposition.get("kind") == "proposition_coordination":
-        predicates: list[str] = []
+        declarations: list[tuple[str, str]] = []
         for clause in proposition["clauses"]:
-            predicates.extend(perception_embedded_predicates(clause))
-        return predicates
-    return [proposition["predicate"]]
+            declarations.extend(perception_embedded_predicate_declarations(clause))
+        return declarations
+    if proposition.get("kind") == "temporal_relation":
+        return [
+            (proposition["main"]["predicate"], "Entity -> Time -> Prop"),
+            (proposition["reference"]["predicate"], "Entity -> Time -> Prop"),
+        ]
+    return [(proposition["predicate"], "Entity -> Prop")]
+
+
+def perception_embedded_uses_time(proposition: dict[str, Any]) -> bool:
+    if proposition.get("kind") == "temporal_relation":
+        return True
+    if proposition.get("kind") == "proposition_coordination":
+        return any(perception_embedded_uses_time(clause) for clause in proposition["clauses"])
+    return False
 
 
 def check_perception_embedded_proposition(
@@ -2078,6 +2237,54 @@ def check_perception_embedded_proposition(
             return
         for clause in clauses:
             check_perception_embedded_proposition(clause, errors)
+        return
+
+    if proposition.get("kind") == "temporal_relation":
+        relation_surface = proposition.get("relation_surface")
+        if relation_surface not in TEMPORAL_RELATION_CONNECTORS:
+            errors.append("embedded temporal relation must be after or before")
+        if proposition.get("binders") != [
+            {"variable": "t_main", "type": "Time"},
+            {"variable": "t_reference", "type": "Time"},
+        ]:
+            errors.append(
+                "embedded temporal relation must bind t_main and t_reference as Time"
+            )
+        for field, expected_time in (("main", "t_main"), ("reference", "t_reference")):
+            clause = proposition.get(field)
+            if not isinstance(clause, dict):
+                errors.append(f"embedded temporal relation {field} must be an object")
+                continue
+            if clause.get("predicate_type") != "Entity -> Time -> Prop":
+                errors.append(
+                    f"embedded temporal relation {field} predicate must have type Entity -> Time -> Prop"
+                )
+            subject = clause.get("subject")
+            if not isinstance(subject, dict) or subject.get("type") != "Entity":
+                errors.append(
+                    f"embedded temporal relation {field} subject must have type Entity"
+                )
+            if clause.get("time") != expected_time:
+                errors.append(
+                    f"embedded temporal relation {field} must use bound time {expected_time}"
+                )
+        relation = proposition.get("relation")
+        if not isinstance(relation, dict):
+            errors.append("embedded temporal relation relation must be an object")
+        else:
+            if relation.get("predicate") != "before":
+                errors.append("embedded temporal relation predicate must be before")
+            if relation.get("predicate_type") != "Time -> Time -> Prop":
+                errors.append("embedded before relation must have type Time -> Time -> Prop")
+            expected_arguments = (
+                ["t_reference", "t_main"]
+                if relation_surface == "after"
+                else ["t_main", "t_reference"]
+            )
+            if relation.get("arguments") != expected_arguments:
+                errors.append(
+                    f"embedded {relation_surface} relation has the wrong before-argument order"
+                )
         return
 
     if proposition.get("predicate_type") != "Entity -> Prop":
@@ -2136,6 +2343,13 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     if simple_clause is not None:
         embedded_proposition = simple_clause
     else:
+        temporal_relation = parse_temporal_perception_embedded_proposition(
+            embedded_tokens,
+        )
+        if temporal_relation is not None:
+            embedded_proposition = temporal_relation
+
+    if embedded_proposition is None:
         leading_both = bool(embedded_tokens and embedded_tokens[0] == "both")
         if leading_both:
             embedded_tokens = embedded_tokens[1:]
@@ -2185,13 +2399,16 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     definition_suffix = perception_embedded_definition_suffix(embedded_proposition)
     embedded_translation = render_perception_embedded_translation(embedded_proposition)
     embedded_coq = render_perception_embedded_coq(embedded_proposition)
-    embedded_predicates = perception_embedded_predicates(embedded_proposition)
+    embedded_predicate_declarations = unique_typed_declarations(
+        perception_embedded_predicate_declarations(embedded_proposition)
+    )
     embedded_subjects = perception_embedded_subjects(embedded_proposition)
     connective = embedded_proposition.get("connective")
     coq_code = "\n".join(
         [
             "(* Luo-Shi-style nominalization for perception complements. *)",
             "Parameter Entity : Type.",
+            *(["Parameter Time : Type."] if perception_embedded_uses_time(embedded_proposition) else []),
             "",
             f"Parameter {experiencer} : Entity.",
             *[
@@ -2201,10 +2418,15 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
             "Parameter E : Prop -> Entity.",
             *[
-                f"Parameter {predicate} : Entity -> Prop."
-                for predicate in unique_names(embedded_predicates)
+                f"Parameter {predicate} : {predicate_type}."
+                for predicate, predicate_type in embedded_predicate_declarations
             ],
             f"Parameter {perception_predicate} : Entity -> Entity -> Prop.",
+            *(
+                ["Parameter before : Time -> Time -> Prop."]
+                if perception_embedded_uses_time(embedded_proposition)
+                else []
+            ),
             *(
                 [f"Parameter {connective} : Prop -> Prop -> Prop."]
                 if isinstance(connective, str)

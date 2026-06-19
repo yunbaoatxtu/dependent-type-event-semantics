@@ -391,6 +391,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(is_likely_surface_verb("wrote"))
         self.assertTrue(is_likely_surface_verb("chased"))
         self.assertTrue(is_likely_surface_verb("flew"))
+        self.assertTrue(is_likely_surface_verb("waved"))
         self.assertFalse(is_likely_surface_verb("cat"))
         self.assertTrue(is_likely_transitive_verb("ate"))
         self.assertTrue(is_likely_transitive_verb("drank"))
@@ -4853,6 +4854,72 @@ class TranslatorTests(unittest.TestCase):
                 self.assertNotIn("Parameter Agent :", result["coq_code"])
                 self.assertNotIn("Parameter Theme :", result["coq_code"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_can_embed_temporal_relation(self) -> None:
+        cases = (
+            (
+                "Mary saw John leave after Bill waved",
+                (
+                    "see(Mary, E(exists t_main t_reference : Time. "
+                    "leave(John, t_main) and wave(Bill, t_reference) and "
+                    "before(t_reference, t_main)))"
+                ),
+                "after",
+                ["t_reference", "t_main"],
+            ),
+            (
+                "Mary saw John leave before Bill waved",
+                (
+                    "see(Mary, E(exists t_main t_reference : Time. "
+                    "leave(John, t_main) and wave(Bill, t_reference) and "
+                    "before(t_main, t_reference)))"
+                ),
+                "before",
+                ["t_main", "t_reference"],
+            ),
+        )
+        for sentence, expected_translation, relation_surface, expected_arguments in cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "perception_nominalization")
+                self.assertEqual(result["dependent_type_translation"], expected_translation)
+                embedded = result["ast"]["perception"]["object"]["proposition"]
+                self.assertEqual(embedded["kind"], "temporal_relation")
+                self.assertEqual(embedded["relation_surface"], relation_surface)
+                self.assertEqual(
+                    embedded["binders"],
+                    [
+                        {"variable": "t_main", "type": "Time"},
+                        {"variable": "t_reference", "type": "Time"},
+                    ],
+                )
+                self.assertEqual(embedded["main"]["predicate_type"], "Entity -> Time -> Prop")
+                self.assertEqual(embedded["reference"]["predicate_type"], "Entity -> Time -> Prop")
+                self.assertEqual(embedded["relation"]["arguments"], expected_arguments)
+                self.assertIn("Parameter Time : Type.", result["coq_code"])
+                self.assertIn("Parameter leave : Entity -> Time -> Prop.", result["coq_code"])
+                self.assertIn("Parameter wave : Entity -> Time -> Prop.", result["coq_code"])
+                self.assertIn("Parameter before : Time -> Time -> Prop.", result["coq_code"])
+                self.assertIn("see Mary (E (exists t_main : Time,", result["coq_code"])
+                self.assertIn("exists t_reference : Time,", result["coq_code"])
+                self.assertIn(f"before {expected_arguments[0]} {expected_arguments[1]}", result["coq_code"])
+                self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+                self.assertNotIn("Parameter Agent :", result["coq_code"])
+                self.assertNotIn("Parameter Theme :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
+    def test_perception_nominalization_rejects_reversed_temporal_relation(self) -> None:
+        result = run_pipeline("Mary saw John leave after Bill waved", require_coq=False)
+        ast = result["ast"]
+        embedded = ast["perception"]["object"]["proposition"]
+        embedded["relation"]["arguments"] = ["t_main", "t_reference"]
+        type_check = check_perception_nominalization_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "embedded after relation has the wrong before-argument order",
+            type_check["errors"],
+        )
 
     def test_perception_nominalization_names_simple_embedded_subject(self) -> None:
         result = run_pipeline("Mary saw Bill leave", require_coq=True)
