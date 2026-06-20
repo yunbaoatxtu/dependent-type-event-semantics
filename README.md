@@ -644,8 +644,14 @@ registered-rule export-count mismatches produce `normalize_reading_exports`
 with expected and observed counts.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute, a
+`data-action-index` attribute, a `data-action-contract-kind` attribute, a
+`data-action-contract-api="/api/diagnostic-contract"` pointer, a
 `next-step--<kind>` CSS class, and a compact details table for frontend
-automation.
+automation. Diagnostic fixture pages also expose each action through a stable
+JSON link such as
+`/api/recovery-action?case=semantic_readings_missing_export&index=0`, whose
+`diagnostic_recovery_action.v1` payload contains the fixture case, action
+index, failure stage, exact action object, and the shared diagnostic contract.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or

@@ -608,6 +608,28 @@ def validate_recovery_action_matches_repair_details(
             )
 
 
+def validate_recovery_action_export_bundle(
+    case: str,
+    action_index: int,
+    expected_action: dict,
+    bundle: dict,
+) -> None:
+    if bundle.get("schema_version") != "diagnostic_recovery_action.v1":
+        raise SystemExit(f"web route smoke check failed: {case} recovery action schema drift")
+    if bundle.get("case") != case:
+        raise SystemExit(f"web route smoke check failed: {case} recovery action case drift")
+    if bundle.get("action_index") != action_index:
+        raise SystemExit(f"web route smoke check failed: {case} recovery action index drift")
+    if bundle.get("action") != expected_action:
+        raise SystemExit(f"web route smoke check failed: {case} recovery action payload drift")
+    if not isinstance(bundle.get("failure_stage"), str):
+        raise SystemExit(f"web route smoke check failed: {case} recovery action stage drift")
+    contract = bundle.get("contract")
+    if not isinstance(contract, dict):
+        raise SystemExit(f"web route smoke check failed: {case} recovery action contract drift")
+    validate_diagnostic_contract_manifest(contract)
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -721,9 +743,25 @@ def validate_diagnostic_fixture_routes(
         )
         if not isinstance(expected_label, str) or expected_selected_option not in fixture_page:
             raise SystemExit(f"web route smoke check failed: {case} label drift")
-        expected_fragments.extend(
-            f'data-action-kind="{action_kind}"' for action_kind in expected_actions
-        )
+        for action_index, action_kind in enumerate(expected_actions):
+            expected_fragments.extend(
+                [
+                    f'id="recovery-action-{action_index}"',
+                    f'data-action-kind="{action_kind}"',
+                    f'data-action-index="{action_index}"',
+                    'data-action-contract-api="/api/diagnostic-contract"',
+                    f'data-action-contract-kind="{action_kind}"',
+                    (
+                        "href=\"/api/recovery-action?"
+                        + html.escape(
+                            urlencode({"case": case, "index": str(action_index)}),
+                            quote=True,
+                        )
+                        + '"'
+                    ),
+                    'data-action-export="json"',
+                ]
+            )
         for fragment in expected_fragments:
             if fragment not in fixture_page:
                 raise SystemExit(
@@ -885,6 +923,21 @@ def run_web_route_smoke_check() -> None:
                 raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
             with opener.open(f"http://127.0.0.1:{port}{api_path}", timeout=5) as response:
                 fixture_payloads[case] = json.load(response)
+            actions = fixture_payloads[case].get("diagnostics", {}).get("recovery_actions", [])
+            if not isinstance(actions, list):
+                raise SystemExit(f"web route smoke check failed: {case} missing recovery actions")
+            for action_index, action in enumerate(actions):
+                query = urlencode({"case": case, "index": str(action_index)})
+                with opener.open(
+                    f"http://127.0.0.1:{port}/api/recovery-action?{query}",
+                    timeout=5,
+                ) as response:
+                    validate_recovery_action_export_bundle(
+                        case,
+                        action_index,
+                        action,
+                        json.load(response),
+                    )
             with opener.open(f"http://127.0.0.1:{port}{html_path}", timeout=5) as response:
                 fixture_pages[case] = response.read().decode("utf-8")
         validate_lexicon_patch_http_routes(port, opener)

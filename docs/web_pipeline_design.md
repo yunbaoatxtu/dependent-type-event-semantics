@@ -276,10 +276,17 @@ For `semantic_readings_check` failures, the action list is derived from
 observed export counts plus the exported definition names.
 The page should render the same actions in a `Next Steps` panel, keeping
 human-facing guidance and machine-facing API output aligned.
-Each rendered action must expose `data-action-kind` and a `next-step--<kind>`
-CSS class so later UI controls and browser tests have stable hooks. When an
-action carries target metadata, the panel should display it in a compact
-`next-step-details` table.
+Each rendered action must expose `data-action-kind`, `data-action-index`,
+`data-action-contract-kind`, a `data-action-contract-api="/api/diagnostic-contract"`
+pointer, and a `next-step--<kind>` CSS class so later UI controls and browser
+tests have stable hooks. When an action carries target metadata, the panel
+should display it in a compact `next-step-details` table. Diagnostic fixture
+pages should also expose each action through
+`/api/recovery-action?case=<case>&index=<n>`, returning a
+`diagnostic_recovery_action.v1` object with the case, action index, failure
+stage, exact action payload, and shared diagnostic contract. This gives browser
+tools an inspection/export path for one suggested repair without scraping the
+full analysis response.
 The service should keep these hooks browser-testable through controlled
 diagnostics fixtures. `/api/diagnostic-fixture?case=semantic_readings_missing_export`
 returns the JSON version of a semantic-reading export failure, while

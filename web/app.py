@@ -35,6 +35,7 @@ ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 DIAGNOSTIC_CONTRACT_SCHEMA = "diagnostic_contract.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
+RECOVERY_ACTION_SCHEMA = "diagnostic_recovery_action.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
 DIAGNOSTIC_FIXTURE_SPECS = (
@@ -390,6 +391,21 @@ def diagnostic_contract_manifest() -> dict[str, Any]:
         "failure_stages": sorted(DIAGNOSTIC_FAILURE_STAGES),
         "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
         "recovery_action_kinds": sorted(DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+    }
+
+
+def recovery_action_export_bundle(case: str, action_index: int) -> dict[str, Any]:
+    result = diagnostic_fixture_result(case)
+    diagnostics = result.get("diagnostics", {})
+    actions = diagnostics.get("recovery_actions", [])
+    action = actions[action_index]
+    return {
+        "schema_version": RECOVERY_ACTION_SCHEMA,
+        "case": case,
+        "action_index": action_index,
+        "failure_stage": diagnostics.get("failure_stage"),
+        "action": action,
+        "contract": diagnostic_contract_manifest(),
     }
 
 
@@ -1099,13 +1115,24 @@ def recovery_action_detail_rows(action: dict[str, Any]) -> list[tuple[str, str]]
     return rows
 
 
+def diagnostic_fixture_case_for_result(result: dict[str, Any]) -> str | None:
+    fixture = result.get("diagnostic_fixture")
+    if not isinstance(fixture, dict):
+        return None
+    case = fixture.get("case")
+    if isinstance(case, str) and case in DIAGNOSTIC_FIXTURE_CASES:
+        return case
+    return None
+
+
 def next_steps_panel(result: dict[str, Any]) -> str:
     actions = result.get("diagnostics", {}).get("recovery_actions", [])
     if not actions:
         body = '<p class="next-step-empty">No recovery actions needed.</p>'
     else:
         items = []
-        for action in actions:
+        fixture_case = diagnostic_fixture_case_for_result(result)
+        for index, action in enumerate(actions):
             kind = action.get("kind", "")
             label = action.get("label", "")
             detail = action.get("detail", "")
@@ -1121,14 +1148,29 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                     )
                     + "</dl>"
                 )
+            action_link = ""
+            if fixture_case:
+                href = "/api/recovery-action?" + urlencode(
+                    {"case": fixture_case, "index": str(index)}
+                )
+                action_link = (
+                    '<a class="next-step-action-link" '
+                    f'href="{html.escape(href, quote=True)}" '
+                    'data-action-export="json">Open action JSON</a>'
+                )
             items.append(
                 '<li '
+                f'id="recovery-action-{index}" '
                 f'class="next-step next-step--{html.escape(kind_class)}" '
-                f'data-action-kind="{html.escape(kind)}">'
+                f'data-action-kind="{html.escape(kind)}" '
+                f'data-action-index="{index}" '
+                'data-action-contract-api="/api/diagnostic-contract" '
+                f'data-action-contract-kind="{html.escape(kind)}">'
                 f'<strong>{html.escape(label)}</strong>'
                 f'<code>{html.escape(kind)}</code>'
                 f'<p>{html.escape(detail)}</p>'
                 f"{details_html}"
+                f"{action_link}"
                 "</li>"
             )
         body = '<ul class="next-step-list">' + "".join(items) + "</ul>"
@@ -1870,6 +1912,21 @@ def render_page(
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       word-break: break-word;
     }}
+    .next-step-action-link {{
+      width: fit-content;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 8px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 12px;
+      font-weight: 650;
+      text-decoration: none;
+    }}
+    .next-step-action-link:focus,
+    .next-step-action-link:hover {{
+      background: #ffffff;
+    }}
     .semantic-warning {{
       border-left: 3px solid var(--warning);
       background: var(--warning-soft);
@@ -2271,6 +2328,10 @@ class PipelineHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/diagnostic-contract":
             self.write_json_response(self.handle_diagnostic_contract_api())
             return
+        if parsed.path == "/api/recovery-action":
+            payload, status = self.handle_recovery_action_api(parsed.query)
+            self.write_json_response(payload, status=status)
+            return
         if parsed.path == "/api/lexicon-patch-drafts":
             response_format = self.patch_response_format(parsed.query)
             if response_format == "patch":
@@ -2329,6 +2390,47 @@ class PipelineHandler(BaseHTTPRequestHandler):
 
     def handle_diagnostic_contract_api(self) -> dict[str, Any]:
         return diagnostic_contract_manifest()
+
+    def handle_recovery_action_api(self, query: str) -> tuple[dict[str, Any], HTTPStatus]:
+        params = parse_qs(query)
+        case = params.get("case", [DEFAULT_DIAGNOSTIC_FIXTURE_CASE])[0].strip()
+        index_text = params.get("index", ["0"])[0].strip()
+        if not case or case not in DIAGNOSTIC_FIXTURE_CASES:
+            return (
+                {
+                    "schema_version": RECOVERY_ACTION_SCHEMA,
+                    "ok": False,
+                    "error": f"Unknown diagnostic fixture {case!r}.",
+                    "available_diagnostic_fixtures": sorted(DIAGNOSTIC_FIXTURE_CASES),
+                },
+                HTTPStatus.BAD_REQUEST,
+            )
+        try:
+            action_index = int(index_text)
+        except ValueError:
+            return (
+                {
+                    "schema_version": RECOVERY_ACTION_SCHEMA,
+                    "ok": False,
+                    "case": case,
+                    "error": f"Invalid recovery action index {index_text!r}.",
+                },
+                HTTPStatus.BAD_REQUEST,
+            )
+        result = diagnostic_fixture_result(case)
+        actions = result.get("diagnostics", {}).get("recovery_actions", [])
+        if action_index < 0 or action_index >= len(actions):
+            return (
+                {
+                    "schema_version": RECOVERY_ACTION_SCHEMA,
+                    "ok": False,
+                    "case": case,
+                    "error": f"Recovery action index {action_index} is out of range.",
+                    "available_action_count": len(actions),
+                },
+                HTTPStatus.BAD_REQUEST,
+            )
+        return recovery_action_export_bundle(case, action_index), HTTPStatus.OK
 
     def handle_patch_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)
