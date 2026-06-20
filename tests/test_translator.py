@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 import subprocess
 import sys
@@ -6,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
+from scripts.verify_project import validate_diagnostic_fixture_routes
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_LEXICON,
@@ -7868,6 +7870,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
         self.assertIn("per-option failure-stage", readme)
+        self.assertIn("standalone verifier", readme)
+        self.assertIn("case drift", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7979,7 +7983,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The selector should be rendered from that same manifest", web_design)
         self.assertIn("`data-fixtures-api`", web_design)
         self.assertIn("option-level failure-stage", web_design)
+        self.assertIn("pure verifier helper", web_design)
+        self.assertIn("stale selector attributes", web_design)
         self.assertIn("visible controls and JSON inventory cannot silently drift apart", manuscript)
+        self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
@@ -8195,9 +8202,68 @@ class TranslatorTests(unittest.TestCase):
             verifier.index('"--no-deps"'),
         )
 
+    def diagnostic_fixture_route_artifacts(
+        self,
+    ) -> tuple[dict, dict[str, dict], dict[str, str]]:
+        manifest = diagnostic_fixture_manifest()
+        payloads = {}
+        pages = {}
+        for fixture in manifest["cases"]:
+            case = fixture["case"]
+            payload = diagnostic_fixture_result(case)
+            payloads[case] = payload
+            pages[case] = render_page(
+                payload["input_sentence"],
+                result=payload,
+                endpoint="/api/diagnostic-fixture",
+            )
+        return manifest, payloads, pages
+
+    def test_verification_validates_diagnostic_fixture_route_artifacts(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_duplicate_diagnostic_fixture_case(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        manifest["cases"].append(deepcopy(manifest["cases"][0]))
+        with self.assertRaisesRegex(SystemExit, "duplicate fixture cases"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_incomplete_diagnostic_fixture_metadata(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        manifest["cases"][0].pop("html_path")
+        with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        manifest["cases"][0].pop("recovery_action_kinds")
+        with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_payload_case_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["coq_check_failure"]["diagnostic_fixture"]["case"] = "type_check_failure"
+        with self.assertRaisesRegex(SystemExit, "coq_check_failure payload case drift"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_html_metadata_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = dict(pages)
+        pages["type_check_failure"] = pages["type_check_failure"].replace(
+            'data-fixtures-api="/api/diagnostic-fixtures"',
+            'data-fixtures-api="/api/stale-fixtures"',
+        )
+        with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_runs_web_route_smoke_check(self) -> None:
         verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
+        self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", verifier)

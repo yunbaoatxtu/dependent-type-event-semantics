@@ -117,40 +117,29 @@ def run_lexicon_export_smoke_check() -> None:
         raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
 
 
-def run_web_route_smoke_check() -> None:
-    from web.app import PipelineHandler
-
-    print("==> web route smoke check")
-    server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        port = server.server_address[1]
-        opener = build_opener(ProxyHandler({}))
-        with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
-            manifest = json.load(response)
-        manifest_cases = manifest.get("cases", [])
-        if not isinstance(manifest_cases, list) or not manifest_cases:
-            raise SystemExit("web route smoke check failed: missing fixture cases")
-        fixture_count = len(manifest_cases)
-        fixture_payloads = {}
-        fixture_pages = {}
-        for fixture in manifest_cases:
-            if not isinstance(fixture, dict):
-                raise SystemExit("web route smoke check failed: malformed fixture case")
-            case = fixture.get("case")
-            api_path = fixture.get("api_path")
-            html_path = fixture.get("html_path")
-            if not all(isinstance(value, str) for value in [case, api_path, html_path]):
-                raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
-            with opener.open(f"http://127.0.0.1:{port}{api_path}", timeout=5) as response:
-                fixture_payloads[case] = json.load(response)
-            with opener.open(f"http://127.0.0.1:{port}{html_path}", timeout=5) as response:
-                fixture_pages[case] = response.read().decode("utf-8")
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
+def validate_diagnostic_fixture_routes(
+    manifest: dict,
+    fixture_payloads: dict[str, dict],
+    fixture_pages: dict[str, str],
+) -> None:
+    manifest_cases = manifest.get("cases", [])
+    if not isinstance(manifest_cases, list) or not manifest_cases:
+        raise SystemExit("web route smoke check failed: missing fixture cases")
+    fixture_count = len(manifest_cases)
+    for fixture in manifest_cases:
+        if not isinstance(fixture, dict):
+            raise SystemExit("web route smoke check failed: malformed fixture case")
+        case = fixture.get("case")
+        api_path = fixture.get("api_path")
+        html_path = fixture.get("html_path")
+        failure_stage = fixture.get("failure_stage")
+        recovery_actions = fixture.get("recovery_action_kinds")
+        if not all(isinstance(value, str) for value in [case, api_path, html_path, failure_stage]):
+            raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
+        if not isinstance(recovery_actions, list) or not all(
+            isinstance(action, str) for action in recovery_actions
+        ):
+            raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
 
     if manifest.get("schema_version") != "diagnostic_fixtures.v1":
         raise SystemExit("web route smoke check failed: wrong diagnostic fixture schema")
@@ -199,6 +188,43 @@ def run_web_route_smoke_check() -> None:
                     "web route smoke check failed: diagnostic fixture page missing "
                     f"{fragment} for {case}"
                 )
+
+
+def run_web_route_smoke_check() -> None:
+    from web.app import PipelineHandler
+
+    print("==> web route smoke check")
+    server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        port = server.server_address[1]
+        opener = build_opener(ProxyHandler({}))
+        with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
+            manifest = json.load(response)
+        manifest_cases = manifest.get("cases", [])
+        if not isinstance(manifest_cases, list):
+            raise SystemExit("web route smoke check failed: missing fixture cases")
+        fixture_payloads = {}
+        fixture_pages = {}
+        for fixture in manifest_cases:
+            if not isinstance(fixture, dict):
+                raise SystemExit("web route smoke check failed: malformed fixture case")
+            case = fixture.get("case")
+            api_path = fixture.get("api_path")
+            html_path = fixture.get("html_path")
+            if not all(isinstance(value, str) for value in [case, api_path, html_path]):
+                raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
+            with opener.open(f"http://127.0.0.1:{port}{api_path}", timeout=5) as response:
+                fixture_payloads[case] = json.load(response)
+            with opener.open(f"http://127.0.0.1:{port}{html_path}", timeout=5) as response:
+                fixture_pages[case] = response.read().decode("utf-8")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    validate_diagnostic_fixture_routes(manifest, fixture_payloads, fixture_pages)
 
 
 def parse_args() -> argparse.Namespace:
