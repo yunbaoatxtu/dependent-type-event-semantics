@@ -655,8 +655,8 @@ The companion `/api/diagnostic-fixtures` endpoint returns a
 failure stage, and recovery action kinds for frontends and regression tools.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, and per-option failure-stage and
-recovery-action metadata, so the visible controls and API inventory cannot
-silently drift apart.
+recovery-action metadata, so the visible labels, controls, and API inventory
+cannot silently drift apart.
 The project-level verification smoke check fetches both the JSON manifest and
 the matching HTML fixture page, so this selector/manifest contract is enforced
 outside the unit-test renderer as well.
@@ -667,8 +667,9 @@ diagnostic case does not require updating a separate hard-coded smoke-test
 constant.
 The manifest/API/HTML consistency rules also live in a standalone verifier
 helper with counterexample tests for duplicate cases, missing metadata, payload
-case drift, recovery-action drift between the payload and manifest, stale HTML
-selector attributes, and stale `Next Steps` action hooks.
+case drift, label drift between manifest and HTML, recovery-action drift between
+the payload and manifest, stale HTML selector attributes, and stale `Next Steps`
+action hooks.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

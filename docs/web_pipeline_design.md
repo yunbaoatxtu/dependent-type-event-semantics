@@ -248,8 +248,9 @@ The JSON companion `/api/diagnostic-fixtures` should expose a
 `diagnostic_fixtures.v1` manifest listing every fixture case, its label, JSON
 path, HTML path, failure stage, and recovery action kinds.
 The selector should be rendered from that same manifest and expose
-`data-fixtures-schema`, `data-fixtures-api`, and option-level failure-stage and
-recovery-action metadata so the UI cannot drift from the JSON inventory.
+`data-fixtures-schema`, `data-fixtures-api`, option-level failure-stage and
+recovery-action metadata, and the manifest label as the option text so the UI
+cannot drift from the JSON inventory.
 The project verification smoke check should request both the manifest endpoint
 and the HTML fixture page, making selector/manifest drift visible in the same
 deterministic check suite that exercises the backend pipeline.
@@ -260,9 +261,11 @@ from a second hard-coded case total.
 The same consistency rules should be factored into a pure verifier helper so
 tests can inject duplicate cases, incomplete metadata, payload case drift, and
 stale selector attributes without needing a live server. The helper should also
-compare the manifest's `recovery_action_kinds` with the actual payload
+compare the manifest label with the rendered option text, and compare the
+manifest's `recovery_action_kinds` with the actual payload
 `diagnostics.recovery_actions` list and the rendered `Next Steps`
-`data-action-kind` hooks, so repair advice cannot drift between JSON and HTML.
+`data-action-kind` hooks, so labels and repair advice cannot drift between JSON
+and HTML.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

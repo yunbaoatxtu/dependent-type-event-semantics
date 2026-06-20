@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import shutil
 import subprocess
@@ -130,11 +131,15 @@ def validate_diagnostic_fixture_routes(
         if not isinstance(fixture, dict):
             raise SystemExit("web route smoke check failed: malformed fixture case")
         case = fixture.get("case")
+        label = fixture.get("label")
         api_path = fixture.get("api_path")
         html_path = fixture.get("html_path")
         failure_stage = fixture.get("failure_stage")
         recovery_actions = fixture.get("recovery_action_kinds")
-        if not all(isinstance(value, str) for value in [case, api_path, html_path, failure_stage]):
+        if not all(
+            isinstance(value, str)
+            for value in [case, label, api_path, html_path, failure_stage]
+        ):
             raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
         if not isinstance(recovery_actions, list) or not all(
             isinstance(action, str) for action in recovery_actions
@@ -156,6 +161,7 @@ def validate_diagnostic_fixture_routes(
     if missing.get("api_path") != "/api/diagnostic-fixture?case=semantic_readings_missing_export":
         raise SystemExit("web route smoke check failed: wrong fixture API path")
     for case, fixture in cases.items():
+        expected_label = fixture.get("label")
         expected_stage = fixture.get("failure_stage")
         expected_actions = fixture.get("recovery_action_kinds", [])
         payload = fixture_payloads.get(case, {})
@@ -192,6 +198,14 @@ def validate_diagnostic_fixture_routes(
             f'data-failure-stage="{expected_stage}"',
             f'data-recovery-action-kinds="{recovery_action_text}"',
         ]
+        expected_selected_option = (
+            f'value="{html.escape(case, quote=True)}" selected '
+            f'data-failure-stage="{html.escape(str(expected_stage), quote=True)}" '
+            f'data-recovery-action-kinds="{html.escape(recovery_action_text, quote=True)}">'
+            f'{html.escape(str(expected_label))}</option>'
+        )
+        if not isinstance(expected_label, str) or expected_selected_option not in fixture_page:
+            raise SystemExit(f"web route smoke check failed: {case} label drift")
         expected_fragments.extend(
             f'data-action-kind="{action_kind}"' for action_kind in expected_actions
         )

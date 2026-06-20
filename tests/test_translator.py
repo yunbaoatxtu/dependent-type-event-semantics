@@ -7872,8 +7872,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("per-option failure-stage", readme)
         self.assertIn("standalone verifier", readme)
         self.assertIn("case drift", readme)
+        self.assertIn("label drift between manifest and HTML", readme)
         self.assertIn("recovery-action drift", readme)
-        self.assertIn("stale `Next Steps` action hooks", readme)
+        self.assertIn("stale `Next Steps`", readme)
+        self.assertIn("action hooks", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7986,11 +7988,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-fixtures-api`", web_design)
         self.assertIn("option-level failure-stage", web_design)
         self.assertIn("pure verifier helper", web_design)
+        self.assertIn("manifest label as the option text", web_design)
         self.assertIn("stale selector attributes", web_design)
         self.assertIn("`diagnostics.recovery_actions` list", web_design)
         self.assertIn("`data-action-kind` hooks", web_design)
-        self.assertIn("visible controls and JSON inventory cannot silently drift apart", manuscript)
+        self.assertIn(
+            "visible labels, controls, and JSON inventory cannot silently drift apart",
+            manuscript,
+        )
         self.assertIn("standalone verifier helper", manuscript)
+        self.assertIn("label drift between manifest and HTML", manuscript)
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
@@ -8245,6 +8252,12 @@ class TranslatorTests(unittest.TestCase):
 
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         manifest = deepcopy(manifest)
+        manifest["cases"][0].pop("label")
+        with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
         manifest["cases"][0].pop("recovery_action_kinds")
         with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
@@ -8254,6 +8267,19 @@ class TranslatorTests(unittest.TestCase):
         payloads = deepcopy(payloads)
         payloads["coq_check_failure"]["diagnostic_fixture"]["case"] = "type_check_failure"
         with self.assertRaisesRegex(SystemExit, "coq_check_failure payload case drift"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_label_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "semantic_readings_missing_export":
+                fixture["label"] = "Stale visible label"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export label drift",
+        ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
     def test_verification_rejects_diagnostic_fixture_recovery_action_drift(self) -> None:
@@ -8309,6 +8335,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fixture_pages[case] = response.read().decode(\"utf-8\")", verifier)
         self.assertIn("payload case drift", verifier)
         self.assertIn("stage drift", verifier)
+        self.assertIn("label drift", verifier)
         self.assertIn("recovery action drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
