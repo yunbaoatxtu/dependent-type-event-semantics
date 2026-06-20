@@ -774,6 +774,10 @@ The test suite compares this API JSON bundle, the API `format=patch` response,
 the direct bundle builder, the CLI JSON output, and the CLI `--patch-out` file
 for the same unresolved, resolved, and validation-error cases, so all review
 channels stay synchronized.
+The repository-level web smoke check also starts a real local server and
+requests both `/api/lexicon-patch-drafts` response formats, checking HTTP
+status, `Content-Type`, `Content-Length`, parsed JSON, and patch text against the
+same fixed bundle contract.
 
 Run the local web demo:
 
@@ -937,6 +941,9 @@ previews can be written into a fresh `work/` tree.
 API JSON, API patch-text download, direct builder output, CLI JSON, and CLI
 `--patch-out` files are regression-tested against one another for both resolved
 and validation-error bundles.
+The live HTTP route is covered too: the verifier checks the JSON response as
+`application/json`, the patch response as `text/plain`, and the byte length and
+payload for each response.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

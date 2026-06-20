@@ -11,7 +11,7 @@ import subprocess
 import sys
 import threading
 from http.server import ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
 
@@ -706,6 +706,83 @@ def validate_diagnostic_fixture_routes(
                 )
 
 
+def validate_lexicon_patch_http_routes(port: int, opener) -> None:
+    from scripts.export_lexicon_patch_drafts import build_patch_bundle
+
+    cases = [
+        (
+            "pending_red_bundle",
+            {
+                "sentence": "Mary painted the door red",
+                "require_coq": "1",
+            },
+            build_patch_bundle("Mary painted the door red", require_coq=True),
+        ),
+        (
+            "resolved_red_bundle",
+            {
+                "sentence": "Mary painted the door red",
+                "require_coq": "1",
+                "resolve": "state-red--unknown_source_allowed=not_red",
+            },
+            build_patch_bundle(
+                "Mary painted the door red",
+                require_coq=True,
+                resolution_items=["state-red--unknown_source_allowed=not_red"],
+            ),
+        ),
+        (
+            "invalid_red_bundle",
+            {
+                "sentence": "Mary painted the door red",
+                "require_coq": "1",
+                "resolve": "state-red--unknown_source_allowed=intact",
+            },
+            build_patch_bundle(
+                "Mary painted the door red",
+                require_coq=True,
+                resolution_items=["state-red--unknown_source_allowed=intact"],
+            ),
+        ),
+    ]
+    for case, params, expected_bundle in cases:
+        query = urlencode(params)
+        with opener.open(
+            f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?{query}",
+            timeout=5,
+        ) as response:
+            raw = response.read()
+            if response.status != 200:
+                raise SystemExit(f"web route smoke check failed: {case} JSON status drift")
+            if response.headers.get_content_type() != "application/json":
+                raise SystemExit(f"web route smoke check failed: {case} JSON content type drift")
+            if "charset=utf-8" not in response.headers.get("Content-Type", ""):
+                raise SystemExit(f"web route smoke check failed: {case} JSON charset drift")
+            if response.headers.get("Content-Length") != str(len(raw)):
+                raise SystemExit(f"web route smoke check failed: {case} JSON length drift")
+        observed_bundle = json.loads(raw.decode("utf-8"))
+        if observed_bundle != expected_bundle:
+            raise SystemExit(f"web route smoke check failed: {case} JSON bundle drift")
+        validate_lexicon_patch_bundle(case, observed_bundle)
+
+        with opener.open(
+            f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?{query}&format=patch",
+            timeout=5,
+        ) as response:
+            raw = response.read()
+            if response.status != 200:
+                raise SystemExit(f"web route smoke check failed: {case} patch status drift")
+            if response.headers.get_content_type() != "text/plain":
+                raise SystemExit(f"web route smoke check failed: {case} patch content type drift")
+            if "charset=utf-8" not in response.headers.get("Content-Type", ""):
+                raise SystemExit(f"web route smoke check failed: {case} patch charset drift")
+            if response.headers.get("Content-Length") != str(len(raw)):
+                raise SystemExit(f"web route smoke check failed: {case} patch length drift")
+        observed_patch = raw.decode("utf-8")
+        if observed_patch != observed_bundle.get("patch_text_preview"):
+            raise SystemExit(f"web route smoke check failed: {case} patch preview drift")
+
+
 def run_web_route_smoke_check() -> None:
     from web.app import PipelineHandler
 
@@ -735,6 +812,7 @@ def run_web_route_smoke_check() -> None:
                 fixture_payloads[case] = json.load(response)
             with opener.open(f"http://127.0.0.1:{port}{html_path}", timeout=5) as response:
                 fixture_pages[case] = response.read().decode("utf-8")
+        validate_lexicon_patch_http_routes(port, opener)
     finally:
         server.shutdown()
         server.server_close()

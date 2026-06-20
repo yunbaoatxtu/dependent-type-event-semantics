@@ -1,10 +1,14 @@
 from copy import deepcopy
+from contextlib import contextmanager
+from http.server import ThreadingHTTPServer
 import json
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
+from urllib.request import ProxyHandler, build_opener
 
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.verify_project import (
@@ -100,6 +104,21 @@ EXAMPLES = ROOT / "translator" / "examples"
 
 def load_example(name: str) -> dict:
     return json.loads((EXAMPLES / name).read_text(encoding="utf-8"))
+
+
+@contextmanager
+def pipeline_server():
+    server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        port = server.server_address[1]
+        opener = build_opener(ProxyHandler({}))
+        yield f"http://127.0.0.1:{port}", opener
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
 
 class TranslatorTests(unittest.TestCase):
@@ -7085,6 +7104,75 @@ class TranslatorTests(unittest.TestCase):
             structured_resolved_text,
         )
 
+    def test_http_lexicon_patch_drafts_contract_matches_handler(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        cases = [
+            (
+                "pending",
+                "sentence=Mary+painted+the+door+red&require_coq=1",
+                PipelineHandler.handle_patch_api(
+                    handler,
+                    "sentence=Mary+painted+the+door+red&require_coq=1",
+                ),
+            ),
+            (
+                "resolved",
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                ),
+                PipelineHandler.handle_patch_api(
+                    handler,
+                    (
+                        "sentence=Mary+painted+the+door+red&require_coq=1"
+                        "&resolve=state-red--unknown_source_allowed=not_red"
+                    ),
+                ),
+            ),
+            (
+                "invalid_source",
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=intact"
+                ),
+                PipelineHandler.handle_patch_api(
+                    handler,
+                    (
+                        "sentence=Mary+painted+the+door+red&require_coq=1"
+                        "&resolve=state-red--unknown_source_allowed=intact"
+                    ),
+                ),
+            ),
+        ]
+        with pipeline_server() as (base_url, opener):
+            for case, query, expected_bundle in cases:
+                with self.subTest(case=case, format="json"):
+                    with opener.open(
+                        f"{base_url}/api/lexicon-patch-drafts?{query}",
+                        timeout=5,
+                    ) as response:
+                        raw = response.read()
+                        self.assertEqual(response.status, 200)
+                        self.assertEqual(response.headers.get_content_type(), "application/json")
+                        self.assertIn("charset=utf-8", response.headers.get("Content-Type", ""))
+                        self.assertEqual(response.headers.get("Content-Length"), str(len(raw)))
+                    http_bundle = json.loads(raw.decode("utf-8"))
+                    self.assertEqual(http_bundle, expected_bundle)
+                    validate_lexicon_patch_bundle(f"http_{case}", http_bundle)
+
+                with self.subTest(case=case, format="patch"):
+                    with opener.open(
+                        f"{base_url}/api/lexicon-patch-drafts?{query}&format=patch",
+                        timeout=5,
+                    ) as response:
+                        raw = response.read()
+                        self.assertEqual(response.status, 200)
+                        self.assertEqual(response.headers.get_content_type(), "text/plain")
+                        self.assertIn("charset=utf-8", response.headers.get("Content-Type", ""))
+                        self.assertEqual(response.headers.get("Content-Length"), str(len(raw)))
+                    http_patch = raw.decode("utf-8")
+                    self.assertEqual(http_patch, expected_bundle["patch_text_preview"])
+
     def test_api_lexicon_patch_drafts_rejects_mismatched_structured_resolution(self) -> None:
         resolutions, errors = parse_patch_resolution_params(
             {
@@ -8362,6 +8450,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("API JSON bundle", readme)
         self.assertIn("CLI `--patch-out` file", readme)
         self.assertIn("channels stay synchronized", readme)
+        self.assertIn("starts a real local server", readme)
+        self.assertIn("`Content-Type`, `Content-Length`, parsed JSON", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8437,6 +8527,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("direct bundle builder", web_design)
         self.assertIn("CLI `--patch-out` file", web_design)
         self.assertIn("one repair contract", web_design)
+        self.assertIn("exercises the live HTTP route", web_design)
+        self.assertIn("matching byte lengths", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)

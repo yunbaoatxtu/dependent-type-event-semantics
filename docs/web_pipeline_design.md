@@ -191,6 +191,10 @@ The regression tests also compare the direct bundle builder, API JSON response,
 API `format=patch` text response, CLI JSON output, and CLI `--patch-out` file
 for unresolved, resolved, and validation-error bundles. This keeps browser
 downloads, command-line review files, and JSON clients on one repair contract.
+The project-level web smoke check exercises the live HTTP route as well,
+checking that `/api/lexicon-patch-drafts` returns JSON as `application/json`,
+patch text as `text/plain`, matching byte lengths, and payloads identical to
+the fixed bundle builder for pending, resolved, and validation-error cases.
 
 ## Successful Response
 
