@@ -29,9 +29,12 @@ ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DIAGNOSTIC_FIXTURE_CASES = {
+    "construction_hygiene_failure",
+    "coq_check_failure",
     "semantic_readings_export_count_mismatch",
     "semantic_readings_malformed",
     "semantic_readings_missing_export",
+    "type_check_failure",
 }
 FAILURE_STAGE_LABELS = {
     "input": "empty input",
@@ -131,6 +134,17 @@ def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") ->
             }
         )
 
+    passing_coq_code = "Definition fixture_reading : Prop := True.\n"
+    passing_semantic_readings = [
+        {
+            "name": "fixture_reading",
+            "source": "diagnostic_fixture",
+            "dependent_type_translation": "fixture_reading : Prop",
+            "coq_definition": "fixture_reading",
+            "type_check": {"ok": True, "type": "Prop", "errors": []},
+        }
+    ]
+
     coq_code = "Definition other_reading : Prop := True.\n"
     semantic_readings: list[dict[str, Any]] = [
         {
@@ -142,6 +156,16 @@ def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") ->
         }
     ]
     semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+    dependent_type_translation = "diagnostic fixture for semantic_readings_check"
+    ast = {"kind": "diagnostic_fixture", "case": case}
+    type_check = {"ok": True, "type": "Prop", "errors": []}
+    construction_hygiene = {"ok": None, "checked": False}
+    coq_check = {
+        "ok": None,
+        "status": "skipped",
+        "message": "Skipped Coq/Rocq validation because semantic_readings_check failed.",
+    }
+    conclusion = "Diagnostic fixture: semantic readings audit failed before Coq/Rocq validation."
 
     if case == "semantic_readings_export_count_mismatch":
         coq_code = (
@@ -187,6 +211,67 @@ def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") ->
             },
         ]
         semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+    elif case == "type_check_failure":
+        coq_code = passing_coq_code
+        semantic_readings = passing_semantic_readings
+        semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+        dependent_type_translation = "bad_type_fixture : Prop"
+        ast = {
+            "kind": "diagnostic_fixture",
+            "case": case,
+            "node": {"kind": "application", "function": "bad_type_fixture"},
+        }
+        type_check = {
+            "ok": False,
+            "type": None,
+            "errors": ["diagnostic fixture type_check failure"],
+        }
+        coq_check = {
+            "ok": None,
+            "status": "skipped",
+            "message": "Skipped Coq/Rocq validation because internal type_check failed.",
+        }
+        conclusion = "Diagnostic fixture: dependent-type checking failed before Coq/Rocq validation."
+    elif case == "construction_hygiene_failure":
+        coq_code = "Parameter Event : Type.\nDefinition fixture_reading : Prop := True.\n"
+        semantic_readings = passing_semantic_readings
+        semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+        dependent_type_translation = "fixture_reading : Prop"
+        construction_hygiene = {
+            "ok": False,
+            "checked": True,
+            "forbidden_coq_fragments": ["Parameter Event : Type."],
+            "found_forbidden_fragments": ["Parameter Event : Type."],
+        }
+        coq_check = {
+            "ok": False,
+            "status": "failed",
+            "message": (
+                "Generated Coq contains forbidden construction fragments: "
+                "Parameter Event : Type."
+            ),
+        }
+        conclusion = "Diagnostic fixture: construction hygiene failed before Coq/Rocq validation."
+    elif case == "coq_check_failure":
+        coq_code = (
+            "Definition fixture_reading : Prop := True.\n"
+            "Definition broken_coq_fixture : Prop := missing_constant.\n"
+        )
+        semantic_readings = passing_semantic_readings
+        semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+        dependent_type_translation = "fixture_reading : Prop"
+        construction_hygiene = {
+            "ok": True,
+            "checked": True,
+            "forbidden_coq_fragments": ["Parameter Event : Type."],
+            "found_forbidden_fragments": [],
+        }
+        coq_check = {
+            "ok": False,
+            "status": "failed",
+            "message": "Diagnostic fixture Coq/Rocq validation failure.",
+        }
+        conclusion = "Diagnostic fixture: Coq/Rocq validation failed."
 
     result = {
         "ok": False,
@@ -197,20 +282,16 @@ def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") ->
             "semantic_readings": semantic_readings,
             "semantic_readings_check": semantic_readings_check,
         },
-        "dependent_type_translation": "diagnostic fixture for semantic_readings_check",
+        "dependent_type_translation": dependent_type_translation,
         "semantic_readings": semantic_readings,
         "semantic_readings_check": semantic_readings_check,
-        "ast": {"kind": "diagnostic_fixture", "case": case},
-        "type_check": {"ok": True, "type": "Prop", "errors": []},
-        "construction_hygiene": {"ok": None, "checked": False},
+        "ast": ast,
+        "type_check": type_check,
+        "construction_hygiene": construction_hygiene,
         "coq_code": coq_code,
-        "coq_check": {
-            "ok": None,
-            "status": "skipped",
-            "message": "Skipped Coq/Rocq validation because semantic_readings_check failed.",
-        },
+        "coq_check": coq_check,
         "diagnostic_fixture": {"case": case, "available_cases": sorted(DIAGNOSTIC_FIXTURE_CASES)},
-        "conclusion": "Diagnostic fixture: semantic readings audit failed before Coq/Rocq validation.",
+        "conclusion": conclusion,
     }
     return add_diagnostics(result)
 

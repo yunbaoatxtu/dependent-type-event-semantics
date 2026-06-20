@@ -642,7 +642,10 @@ states. Use
 `/diagnostic-fixture?case=semantic_readings_missing_export` for the matching
 HTML page. Companion cases cover malformed readings and registered-rule export
 count mismatches, letting browser checks inspect the same `Next Steps` details
-without corrupting the ordinary `/api/analyze` path.
+without corrupting the ordinary `/api/analyze` path. The same fixture endpoint
+also covers the other stage-local failures through `type_check_failure`,
+`construction_hygiene_failure`, and `coq_check_failure`, so each major
+failure-stage banner and recovery action can be tested directly.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

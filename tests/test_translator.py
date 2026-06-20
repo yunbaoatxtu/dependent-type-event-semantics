@@ -7453,6 +7453,62 @@ class TranslatorTests(unittest.TestCase):
             ["fix_malformed_readings", "fix_reading_type_checks", "inspect_readings"],
         )
 
+    def test_diagnostic_fixture_api_exposes_stage_failures(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        type_failure = PipelineHandler.handle_diagnostic_fixture_api(
+            handler, "case=type_check_failure"
+        )
+        self.assertEqual(type_failure["diagnostics"]["failure_stage"], "type_check")
+        self.assertEqual(type_failure["diagnostics"]["recovery_actions"][0]["kind"], "inspect_ast")
+        self.assertEqual(type_failure["diagnostics"]["stages"]["type_check"], "failed")
+        self.assertEqual(
+            type_failure["diagnostics"]["stages"]["semantic_readings_check"],
+            "passed",
+        )
+        self.assertEqual(type_failure["diagnostics"]["stages"]["coq_check"], "skipped")
+        self.assertIn("diagnostic fixture type_check failure", type_failure["type_check"]["errors"])
+
+        hygiene_failure = PipelineHandler.handle_diagnostic_fixture_api(
+            handler, "case=construction_hygiene_failure"
+        )
+        self.assertEqual(
+            hygiene_failure["diagnostics"]["failure_stage"],
+            "construction_hygiene",
+        )
+        self.assertEqual(
+            hygiene_failure["diagnostics"]["recovery_actions"][0]["label"],
+            "Remove forbidden fragments",
+        )
+        self.assertEqual(
+            hygiene_failure["construction_hygiene"]["found_forbidden_fragments"],
+            ["Parameter Event : Type."],
+        )
+        self.assertEqual(
+            hygiene_failure["diagnostics"]["stages"]["construction_hygiene"],
+            "failed",
+        )
+        self.assertEqual(hygiene_failure["diagnostics"]["stages"]["coq_check"], "failed")
+
+        coq_failure = PipelineHandler.handle_diagnostic_fixture_api(
+            handler, "case=coq_check_failure"
+        )
+        self.assertEqual(coq_failure["diagnostics"]["failure_stage"], "coq_check")
+        self.assertEqual(coq_failure["diagnostics"]["summary"], "coq validation failed")
+        self.assertEqual(
+            coq_failure["diagnostics"]["recovery_actions"][0]["label"],
+            "Check Coq/Rocq scaffold",
+        )
+        self.assertEqual(coq_failure["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(
+            coq_failure["diagnostics"]["stages"]["semantic_readings_check"],
+            "passed",
+        )
+        self.assertEqual(
+            coq_failure["diagnostics"]["stages"]["construction_hygiene"],
+            "passed",
+        )
+        self.assertEqual(coq_failure["diagnostics"]["stages"]["coq_check"], "failed")
+
     def test_diagnostic_fixture_page_renders_next_step_details(self) -> None:
         result = diagnostic_fixture_result("semantic_readings_export_count_mismatch")
         page = render_page(
@@ -7465,6 +7521,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>export count</dt><dd>expected 1; observed 2</dd>", page)
         self.assertIn("<dt>exported definitions</dt><dd>first_reading, second_reading</dd>", page)
         self.assertIn("Semantic Readings Check", page)
+
+    def test_diagnostic_fixture_page_renders_type_failure_stage(self) -> None:
+        result = diagnostic_fixture_result("type_check_failure")
+        page = render_page(
+            result["input_sentence"],
+            result=result,
+            endpoint="/api/diagnostic-fixture",
+        )
+        self.assertIn("Failure stage: dependent-type checking.", page)
+        self.assertIn('data-action-kind="inspect_ast"', page)
+        self.assertIn("diagnostic fixture type_check failure", page)
+        self.assertIn("Type Check", page)
 
     def test_web_diagnostics_reports_type_check_failure_stage(self) -> None:
         diagnostics = build_diagnostics(
@@ -7720,6 +7788,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`add_missing_coq_definitions`", readme)
         self.assertIn("`normalize_reading_exports`", readme)
         self.assertIn("/api/diagnostic-fixture?case=semantic_readings_missing_export", readme)
+        self.assertIn("`type_check_failure`", readme)
+        self.assertIn("`construction_hygiene_failure`", readme)
+        self.assertIn("`coq_check_failure`", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7822,6 +7893,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`add_missing_coq_definitions`", web_design)
         self.assertIn("`next-step-details`", web_design)
         self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", web_design)
+        self.assertIn("`type_check_failure`", web_design)
+        self.assertIn("`construction_hygiene_failure`", web_design)
+        self.assertIn("`coq_check_failure`", web_design)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)

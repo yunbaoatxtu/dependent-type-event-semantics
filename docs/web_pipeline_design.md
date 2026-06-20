@@ -238,7 +238,9 @@ returns the JSON version of a semantic-reading export failure, while
 `/diagnostic-fixture?case=semantic_readings_missing_export` renders the same
 failure through the ordinary page panels. Additional fixture cases can cover
 malformed readings and export-count mismatches without changing the normal
-`/api/analyze` behavior.
+`/api/analyze` behavior. The same endpoint should expose `type_check_failure`,
+`construction_hygiene_failure`, and `coq_check_failure` cases so every major
+stage-local failure can be checked as both JSON and HTML.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and
