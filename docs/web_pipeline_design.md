@@ -253,6 +253,8 @@ recovery-action metadata so the UI cannot drift from the JSON inventory.
 The project verification smoke check should request both the manifest endpoint
 and the HTML fixture page, making selector/manifest drift visible in the same
 deterministic check suite that exercises the backend pipeline.
+It should iterate over every case advertised by the manifest and compare the
+API payload, selected HTML option, failure stage, and recovery-action metadata.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and
