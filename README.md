@@ -793,6 +793,9 @@ Those CLI/HTTP contract cases are defined once in
 `scripts/lexicon_patch_contract_cases.py` and imported by the direct API tests,
 live HTTP route tests, command-line tests, and project verifier, so a new
 boundary case enters every gate together.
+The same shared case object also carries the expected `validation_errors`
+fragments for failing cases; direct API, HTTP, CLI, and verifier checks all
+reject a bundle whose machine-readable failure reason drifts from that contract.
 
 Run the local web demo:
 
@@ -967,7 +970,9 @@ review: successful CLI exits and non-zero CLI exits both have to leave behind
 JSON and patch-text files whose payloads match the same bundle contract.
 It reads the same shared contract-case table as the live HTTP regression test,
 which keeps the command-line and browser/API acceptance boundaries from
-silently drifting apart.
+silently drifting apart. The smoke check also enforces the expected
+`validation_errors` fragments for failing cases, so a review artifact cannot
+keep the right shape while silently changing the reason it rejects a repair.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

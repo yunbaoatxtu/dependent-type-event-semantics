@@ -7069,6 +7069,7 @@ class TranslatorTests(unittest.TestCase):
                     bundle["patch_text_preview"],
                 )
                 validate_lexicon_patch_bundle(case.name, bundle)
+                self.assertEqual(case.validation_errors_for(bundle), [])
 
     def test_api_lexicon_patch_drafts_patch_format(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -7125,6 +7126,7 @@ class TranslatorTests(unittest.TestCase):
                     http_bundle = json.loads(raw.decode("utf-8"))
                     self.assertEqual(http_bundle, expected_bundle)
                     validate_lexicon_patch_bundle(f"http_{case.name}", http_bundle)
+                    self.assertEqual(case.validation_errors_for(http_bundle), [])
 
                 with self.subTest(case=case.name, format="patch"):
                     with opener.open(
@@ -7299,6 +7301,7 @@ class TranslatorTests(unittest.TestCase):
                         self.assertIn("# Validation errors:", cli_patch)
                         self.assertNotIn("# Candidate replacement/addition lines:", cli_patch)
                     validate_lexicon_patch_bundle(f"cli_http_{case.name}", cli_bundle)
+                    self.assertEqual(case.validation_errors_for(cli_bundle), [])
 
     def test_lexicon_patch_contract_cases_drive_verifier_smoke_check(self) -> None:
         names = [case.name for case in LEXICON_PATCH_CONTRACT_CASES]
@@ -7318,13 +7321,30 @@ class TranslatorTests(unittest.TestCase):
         for case in LEXICON_PATCH_CONTRACT_CASES:
             self.assertIn("--sentence", case.cli_args())
             self.assertIn("sentence=", case.query())
-            validate_lexicon_patch_bundle(f"shared_contract_{case.name}", case.expected_bundle())
+            expected_bundle = case.expected_bundle()
+            validate_lexicon_patch_bundle(f"shared_contract_{case.name}", expected_bundle)
+            self.assertEqual(case.validation_errors_for(expected_bundle), [])
+            malformed_bundle = dict(expected_bundle)
+            if case.expected_error_fragments:
+                malformed_bundle["validation_errors"] = []
+                self.assertIn(
+                    "missing validation_errors",
+                    " ".join(case.validation_errors_for(malformed_bundle)),
+                )
+            else:
+                malformed_bundle["validation_errors"] = ["unexpected validation failure"]
+                self.assertIn(
+                    "unexpected validation_errors",
+                    " ".join(case.validation_errors_for(malformed_bundle)),
+                )
 
         verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
         self.assertIn("LEXICON_PATCH_CONTRACT_CASES", verifier)
         self.assertIn("for case in LEXICON_PATCH_CONTRACT_CASES:", verifier)
         self.assertIn("case.expected_bundle()", verifier)
+        self.assertIn("case.validation_errors_for(case_bundle)", verifier)
         self.assertIn("contract_case.expected_bundle(require_coq=True)", verifier)
+        self.assertIn("contract_case.validation_errors_for(observed_bundle)", verifier)
         self.assertNotIn("negative_cases =", verifier)
         self.assertNotIn("cases = [", verifier)
 
@@ -8497,6 +8517,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("scripts/lexicon_patch_contract_cases.py", readme)
         self.assertIn("direct API tests", readme)
         self.assertIn("boundary case enters every gate", readme)
+        self.assertIn("expected `validation_errors`", readme)
+        self.assertIn("machine-readable failure reason", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8582,6 +8604,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Successful and non-zero", web_design)
         self.assertIn("shared contract-case table", web_design)
         self.assertIn("separate hand-maintained", web_design)
+        self.assertIn("expected `validation_errors`", web_design)
+        self.assertIn("different rejection reason", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)

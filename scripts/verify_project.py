@@ -210,6 +210,12 @@ def run_lexicon_export_smoke_check() -> None:
                 f"{name} patch text drift"
             )
         validate_lexicon_patch_bundle(f"cli_negative_{name}", case_bundle)
+        contract_errors = case.validation_errors_for(case_bundle)
+        if contract_errors:
+            raise SystemExit(
+                "lexicon patch exporter smoke check failed: "
+                f"{name} validation-error contract drift: {'; '.join(contract_errors)}"
+            )
 
 
 def run_lexicon_warning_schema_check() -> None:
@@ -767,6 +773,12 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         if observed_bundle != expected_bundle:
             raise SystemExit(f"web route smoke check failed: {case} JSON bundle drift")
         validate_lexicon_patch_bundle(case, observed_bundle)
+        contract_errors = contract_case.validation_errors_for(observed_bundle)
+        if contract_errors:
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} validation-error contract drift: {'; '.join(contract_errors)}"
+            )
 
         with opener.open(
             f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?{query}&format=patch",

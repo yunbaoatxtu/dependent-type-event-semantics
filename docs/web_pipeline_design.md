@@ -211,6 +211,10 @@ The direct API tests, live HTTP tests, CLI tests, and verifier import the same
 shared contract-case table from `scripts/lexicon_patch_contract_cases.py`, so
 CLI review and browser/API review cannot accumulate separate hand-maintained
 case lists.
+For failing cases, that table also records the expected `validation_errors`
+fragments. The direct handler, live HTTP route, command-line exporter, and
+project verifier all check those fragments, so a boundary can no longer keep a
+valid bundle shape while reporting a different rejection reason.
 
 ## Successful Response
 

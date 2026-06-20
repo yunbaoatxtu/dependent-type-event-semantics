@@ -127,6 +127,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("pending, compact resolved, structured resolved", manuscript)
         self.assertIn("successful and non-zero CLI exits both write the guarded review artifacts", manuscript)
         self.assertIn("shared contract table imported by the direct API tests", manuscript)
+        self.assertIn("expected validation-error fragments", manuscript)
+        self.assertIn("machine-readable validation_errors", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)

@@ -48,6 +48,26 @@ class LexiconPatchContractCase:
             source_states=list(self.source_states),
         )
 
+    def validation_errors_for(self, bundle: object) -> list[str]:
+        errors: list[str] = []
+        if not isinstance(bundle, dict):
+            return ["bundle is not a dictionary"]
+        validation_errors = bundle.get("validation_errors")
+        if not isinstance(validation_errors, list) or not all(
+            isinstance(error, str) for error in validation_errors
+        ):
+            return ["validation_errors is not a string list"]
+
+        observed_text = " ".join(validation_errors)
+        if self.expected_returncode == 0 and validation_errors:
+            errors.append("unexpected validation_errors for successful contract case")
+        if self.expected_returncode != 0 and not validation_errors:
+            errors.append("missing validation_errors for failing contract case")
+        for fragment in self.expected_error_fragments:
+            if fragment not in observed_text:
+                errors.append(f"missing expected validation error fragment: {fragment}")
+        return errors
+
 
 LEXICON_PATCH_CONTRACT_CASES = (
     LexiconPatchContractCase(
