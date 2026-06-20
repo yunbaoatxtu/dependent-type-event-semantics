@@ -653,6 +653,10 @@ the `/api/analyze` contract.
 The companion `/api/diagnostic-fixtures` endpoint returns a
 `diagnostic_fixtures.v1` manifest with each case label, JSON path, HTML path,
 failure stage, and recovery action kinds for frontends and regression tools.
+The selector is rendered from the same manifest and carries
+`data-fixtures-schema`, `data-fixtures-api`, and per-option failure-stage and
+recovery-action metadata, so the visible controls and API inventory cannot
+silently drift apart.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

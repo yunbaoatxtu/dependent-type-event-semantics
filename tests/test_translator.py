@@ -7564,6 +7564,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('class="diagnostic-fixture-form"', page)
         self.assertIn('action="/diagnostic-fixture"', page)
         self.assertIn('data-current-fixture="semantic_readings_missing_export"', page)
+        self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', page)
+        self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', page)
+        self.assertIn('data-fixture-count="6"', page)
         for case in [
             "construction_hygiene_failure",
             "coq_check_failure",
@@ -7573,6 +7576,11 @@ class TranslatorTests(unittest.TestCase):
             "type_check_failure",
         ]:
             self.assertIn(f'value="{case}"', page)
+        self.assertIn('data-failure-stage="semantic_readings_check"', page)
+        self.assertIn(
+            'data-recovery-action-kinds="add_missing_coq_definitions, inspect_readings"',
+            page,
+        )
 
     def test_diagnostic_fixture_page_selects_current_fixture_case(self) -> None:
         result = diagnostic_fixture_result("coq_check_failure")
@@ -7582,7 +7590,10 @@ class TranslatorTests(unittest.TestCase):
             endpoint="/api/diagnostic-fixture",
         )
         self.assertIn('data-current-fixture="coq_check_failure"', page)
-        self.assertIn('<option value="coq_check_failure" selected>Coq/Rocq Check</option>', page)
+        self.assertIn('value="coq_check_failure" selected', page)
+        self.assertIn('data-failure-stage="coq_check"', page)
+        self.assertIn('data-recovery-action-kinds="inspect_coq"', page)
+        self.assertIn(">Coq/Rocq Check</option>", page)
         self.assertIn("Failure stage: Coq/Rocq validation.", page)
         self.assertIn('data-action-kind="inspect_coq"', page)
 
@@ -7858,6 +7869,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic-fixture-form`", readme)
         self.assertIn("/api/diagnostic-fixtures", readme)
         self.assertIn("`diagnostic_fixtures.v1` manifest", readme)
+        self.assertIn("The selector is rendered from the same manifest", readme)
+        self.assertIn("`data-fixtures-schema`", readme)
+        self.assertIn("per-option failure-stage", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7966,6 +7980,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic-fixture-form`", web_design)
         self.assertIn("/api/diagnostic-fixtures", web_design)
         self.assertIn("`diagnostic_fixtures.v1` manifest", web_design)
+        self.assertIn("The selector should be rendered from that same manifest", web_design)
+        self.assertIn("`data-fixtures-api`", web_design)
+        self.assertIn("option-level failure-stage", web_design)
+        self.assertIn("visible controls and JSON inventory cannot silently drift apart", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)

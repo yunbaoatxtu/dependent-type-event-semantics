@@ -1372,25 +1372,44 @@ def hidden_input(name: str, value: str) -> str:
 
 
 def diagnostic_fixture_form(result: dict[str, Any]) -> str:
+    manifest = diagnostic_fixture_manifest()
+    manifest_cases = [
+        fixture
+        for fixture in manifest.get("cases", [])
+        if isinstance(fixture, dict) and isinstance(fixture.get("case"), str)
+    ]
+    available_cases = {str(fixture["case"]) for fixture in manifest_cases}
     fixture = result.get("diagnostic_fixture", {})
     current_case = fixture.get("case") if isinstance(fixture, dict) else None
+    default_case = str(manifest.get("default_case", DEFAULT_DIAGNOSTIC_FIXTURE_CASE))
     selected_case = (
         current_case
         if isinstance(current_case, str)
-        and current_case in DIAGNOSTIC_FIXTURE_CASES
-        else DEFAULT_DIAGNOSTIC_FIXTURE_CASE
+        and current_case in available_cases
+        else default_case
     )
+    if selected_case not in available_cases:
+        selected_case = DEFAULT_DIAGNOSTIC_FIXTURE_CASE
     options = []
-    for case in sorted(DIAGNOSTIC_FIXTURE_CASES):
+    for fixture_case in manifest_cases:
+        case = str(fixture_case["case"])
         selected = " selected" if case == selected_case else ""
-        label = DIAGNOSTIC_FIXTURE_LABELS.get(case, case.replace("_", " ").title())
+        recovery_actions = fixture_case.get("recovery_action_kinds", [])
+        recovery_action_text = ", ".join(
+            str(action) for action in recovery_actions if isinstance(action, str)
+        )
         options.append(
-            f'<option value="{html.escape(case, quote=True)}"{selected}>'
-            f"{html.escape(label)}</option>"
+            f'<option value="{html.escape(case, quote=True)}"{selected} '
+            f'data-failure-stage="{html.escape(str(fixture_case.get("failure_stage", "")), quote=True)}" '
+            f'data-recovery-action-kinds="{html.escape(recovery_action_text, quote=True)}">'
+            f"{html.escape(str(fixture_case.get('label', case)))}</option>"
         )
     return (
         '<form class="diagnostic-fixture-form" method="get" action="/diagnostic-fixture" '
-        f'data-current-fixture="{html.escape(selected_case, quote=True)}">'
+        f'data-current-fixture="{html.escape(selected_case, quote=True)}" '
+        f'data-fixtures-schema="{html.escape(str(manifest.get("schema_version", "")), quote=True)}" '
+        f'data-fixtures-api="/api/diagnostic-fixtures" '
+        f'data-fixture-count="{len(manifest_cases)}">'
         '<label for="diagnostic-fixture-case">Diagnostics</label>'
         '<select id="diagnostic-fixture-case" name="case">'
         f"{''.join(options)}"
