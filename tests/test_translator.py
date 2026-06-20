@@ -7854,6 +7854,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(manifest["default_case"], "semantic_readings_missing_export")
         spec_cases = {str(spec["case"]) for spec in DIAGNOSTIC_FIXTURE_SPECS}
         spec_labels = {str(spec["case"]): str(spec["label"]) for spec in DIAGNOSTIC_FIXTURE_SPECS}
+        spec_stages = {
+            str(spec["case"]): str(spec["failure_stage"])
+            for spec in DIAGNOSTIC_FIXTURE_SPECS
+        }
+        spec_actions = {
+            str(spec["case"]): list(spec["recovery_action_kinds"])
+            for spec in DIAGNOSTIC_FIXTURE_SPECS
+        }
         self.assertEqual(len(spec_cases), len(DIAGNOSTIC_FIXTURE_SPECS))
         self.assertIn(DEFAULT_DIAGNOSTIC_FIXTURE_CASE, spec_cases)
         self.assertEqual(DIAGNOSTIC_FIXTURE_CASES, frozenset(spec_cases))
@@ -7862,6 +7870,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(set(cases), spec_cases)
         for case, label in spec_labels.items():
             self.assertEqual(cases[case]["label"], label)
+        for case, stage in spec_stages.items():
+            self.assertEqual(cases[case]["failure_stage"], stage)
+        for case, action_kinds in spec_actions.items():
+            self.assertEqual(cases[case]["recovery_action_kinds"], action_kinds)
+            payload = diagnostic_fixture_result(case)
+            self.assertEqual(payload["diagnostics"]["failure_stage"], spec_stages[case])
+            self.assertEqual(
+                [
+                    action["kind"]
+                    for action in payload["diagnostics"]["recovery_actions"]
+                ],
+                action_kinds,
+            )
         missing = cases["semantic_readings_missing_export"]
         self.assertEqual(missing["label"], "Missing Reading Export")
         self.assertEqual(
@@ -8256,8 +8277,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic-fixture-form`", readme)
         self.assertIn("/api/diagnostic-fixtures", readme)
         self.assertIn("`diagnostic_fixtures.v1` manifest", readme)
-        self.assertIn("`DIAGNOSTIC_FIXTURE_SPECS` table", readme)
-        self.assertIn("separate case set and label map", readme)
+        self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", readme)
+        self.assertIn("stage, and action lists", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
         self.assertIn("per-option failure-stage", readme)
@@ -8392,7 +8413,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic_fixtures.v1` manifest", web_design)
         self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", web_design)
         self.assertIn("parallel case", web_design)
-        self.assertIn("label structures", web_design)
+        self.assertIn("label, stage, and action structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
         self.assertIn("`data-fixtures-api`", web_design)
         self.assertIn("option-level failure-stage", web_design)
