@@ -115,6 +115,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("action/detail drift", manuscript)
         self.assertIn("warning/action/draft chain as a fixed schema", manuscript)
         self.assertIn("patch_text_preview must mention every draft id", manuscript)
+        self.assertIn("standalone lexicon_patch_drafts.v1 bundle", manuscript)
+        self.assertIn("review-only patch text to agree", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)

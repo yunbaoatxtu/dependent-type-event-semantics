@@ -759,6 +759,10 @@ conflicting source-state choice is reported in `validation_errors` and is never
 auto-applied.
 When `validation_errors` is non-empty, the review patch text suppresses
 candidate replacement lines until the errors are resolved.
+The verifier also checks the standalone `lexicon_patch_drafts.v1` bundle as a
+fixed schema: `resolved_patch_count`, `requires_human_choice`, `can_auto_apply`,
+`validation_errors`, draft states, and the review-only patch text must agree, so
+an invalid review cannot quietly produce an auto-applicable replacement line.
 
 The same bundle is available from the web service at
 `/api/lexicon-patch-drafts?sentence=Mary+painted+the+door+red&require_coq=1`.
@@ -919,7 +923,9 @@ exported as a standalone JSON bundle with
 Resolved bundles report `resolved_patch_count`, `validation_errors`, and a
 `patch_text_preview`; unresolved previews keep pending human-choice lines as
 comments, while resolved previews show candidate replacement lines. The
-web page renders the same text in a `Lexicon Patch Text Preview` panel with an
+standalone bundle is checked as a fixed schema, so `can_auto_apply` cannot drift
+from `validation_errors`, `resolved_patch_count`, or the candidate patch text.
+The web page renders the same text in a `Lexicon Patch Text Preview` panel with an
 `Open patch text` link backed by `format=patch`, and the command-line exporter
 can additionally write that review-only candidate patch text with `--patch-out`.
 File outputs create missing parent directories, so review bundles and patch

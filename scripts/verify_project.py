@@ -162,6 +162,7 @@ def run_lexicon_export_smoke_check() -> None:
     )
     bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
     patch_text = patch_path.read_text(encoding="utf-8")
+    validate_lexicon_patch_bundle("resolved_red_bundle", bundle)
     if not bundle.get("can_auto_apply"):
         raise SystemExit("lexicon patch exporter smoke check failed: bundle is not auto-applicable")
     if "patch_text_preview" not in bundle:
@@ -346,6 +347,99 @@ def validate_lexicon_warning_response(case: str, result: object) -> None:
             draft_id = draft.get("draft_id") if isinstance(draft, dict) else None
             if isinstance(draft_id, str) and draft_id and draft_id not in patch_text:
                 raise SystemExit(f"web warning smoke check failed: {case} patch text drift")
+
+
+def validate_lexicon_patch_bundle(case: str, bundle: object) -> None:
+    if not isinstance(bundle, dict):
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed bundle")
+    if bundle.get("schema_version") != "lexicon_patch_drafts.v1":
+        raise SystemExit(f"lexicon patch bundle check failed: {case} wrong schema")
+    diagnostics = bundle.get("diagnostics")
+    drafts = bundle.get("lexicon_patch_drafts")
+    validation_errors = bundle.get("validation_errors")
+    patch_text = bundle.get("patch_text_preview")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed diagnostics")
+    if not isinstance(drafts, list):
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed drafts")
+    if not string_list(validation_errors):
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed validation errors")
+    if not isinstance(patch_text, str) or not patch_text:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed patch text")
+    if not isinstance(bundle.get("input_sentence"), str):
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed input sentence")
+    if type(bundle.get("ok")) is not bool:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed ok flag")
+    for field in ["requires_human_choice", "can_auto_apply"]:
+        if type(bundle.get(field)) is not bool:
+            raise SystemExit(f"lexicon patch bundle check failed: {case} malformed {field}")
+    if type(bundle.get("resolved_patch_count")) is not int:
+        raise SystemExit(
+            f"lexicon patch bundle check failed: {case} malformed resolved_patch_count"
+        )
+    if type(diagnostics.get("manual_repair_required")) is not bool:
+        raise SystemExit(
+            f"lexicon patch bundle check failed: {case} malformed manual repair flag"
+        )
+    if type(diagnostics.get("lexicon_patch_draft_count")) is not int:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} malformed draft count")
+    if diagnostics.get("lexicon_patch_draft_count") != len(drafts):
+        raise SystemExit(f"lexicon patch bundle check failed: {case} draft count drift")
+
+    for draft in drafts:
+        validate_lexicon_patch_draft(case, draft)
+    requires_choice = any(
+        isinstance(draft, dict) and draft.get("requires_human_choice")
+        for draft in drafts
+    )
+    resolved_count = sum(
+        1 for draft in drafts if isinstance(draft, dict) and draft.get("can_auto_apply")
+    )
+    expected_auto_apply = bool(drafts) and not validation_errors and resolved_count == len(drafts)
+    if bundle.get("requires_human_choice") != requires_choice:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} human-choice drift")
+    if bundle.get("resolved_patch_count") != resolved_count:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} resolved count drift")
+    if bundle.get("can_auto_apply") != expected_auto_apply:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} auto-apply drift")
+    if validation_errors:
+        if "# Validation errors:" not in patch_text:
+            raise SystemExit(f"lexicon patch bundle check failed: {case} validation text drift")
+        for error in validation_errors:
+            if error not in patch_text:
+                raise SystemExit(f"lexicon patch bundle check failed: {case} validation text drift")
+        if "# Candidate replacement/addition lines:" in patch_text:
+            raise SystemExit(f"lexicon patch bundle check failed: {case} unsafe patch text")
+        if "# Resolve validation errors before copying any candidate line." not in patch_text:
+            raise SystemExit(f"lexicon patch bundle check failed: {case} validation guard drift")
+    elif bundle.get("can_auto_apply"):
+        if "# Candidate replacement/addition lines:" not in patch_text:
+            raise SystemExit(f"lexicon patch bundle check failed: {case} candidate text drift")
+    elif not drafts and "# No auto-applicable patch lines." not in patch_text:
+        raise SystemExit(f"lexicon patch bundle check failed: {case} empty patch text drift")
+
+    for draft in drafts:
+        assert isinstance(draft, dict)
+        draft_auto = draft.get("can_auto_apply")
+        if draft_auto and draft.get("requires_human_choice"):
+            raise SystemExit(f"lexicon patch bundle check failed: {case} draft state drift")
+        if draft_auto and draft.get("placeholder_fields"):
+            raise SystemExit(f"lexicon patch bundle check failed: {case} draft state drift")
+        if draft_auto and draft.get("default_source_state") == "<choose_source_state>":
+            raise SystemExit(f"lexicon patch bundle check failed: {case} draft state drift")
+        if not draft_auto and not draft.get("requires_human_choice"):
+            raise SystemExit(f"lexicon patch bundle check failed: {case} draft state drift")
+        if not draft_auto and not draft.get("placeholder_fields"):
+            raise SystemExit(f"lexicon patch bundle check failed: {case} draft state drift")
+        if draft_auto and not validation_errors:
+            state = str(draft.get("state"))
+            source = str(draft.get("default_source_state"))
+            if state not in patch_text or source not in patch_text:
+                raise SystemExit(f"lexicon patch bundle check failed: {case} candidate text drift")
+        if not draft_auto:
+            draft_id = str(draft.get("draft_id"))
+            if draft_id not in patch_text:
+                raise SystemExit(f"lexicon patch bundle check failed: {case} pending text drift")
 
 
 def validate_semantic_readings_repair_details(case: str, details: object) -> None:

@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.verify_project import (
     validate_diagnostic_fixture_routes,
+    validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
 )
 from translator.dependent_type_event_translator import (
@@ -6819,6 +6820,114 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("# No auto-applicable patch lines.", invalid_patch_text)
         self.assertIn("# Pending human choices:", invalid_patch_text)
 
+    def test_verification_validates_lexicon_patch_bundle_schema(self) -> None:
+        unresolved_bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        validate_lexicon_patch_bundle("unresolved_red_bundle", unresolved_bundle)
+
+        empty_bundle = build_patch_bundle("John hammered the metal flat", require_coq=True)
+        validate_lexicon_patch_bundle("empty_flat_bundle", empty_bundle)
+
+        resolved_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=not_red"],
+        )
+        validate_lexicon_patch_bundle("resolved_red_bundle", resolved_bundle)
+
+        invalid_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=intact"],
+        )
+        validate_lexicon_patch_bundle("invalid_red_bundle", invalid_bundle)
+
+    def test_verification_rejects_bad_lexicon_patch_bundle_shape(self) -> None:
+        bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        bundle = deepcopy(bundle)
+        bundle["schema_version"] = "stale_schema"
+        with self.assertRaisesRegex(SystemExit, "unresolved_red_bundle wrong schema"):
+            validate_lexicon_patch_bundle("unresolved_red_bundle", bundle)
+
+        bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        bundle = deepcopy(bundle)
+        bundle["validation_errors"] = [1]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "unresolved_red_bundle malformed validation errors",
+        ):
+            validate_lexicon_patch_bundle("unresolved_red_bundle", bundle)
+
+        bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        bundle = deepcopy(bundle)
+        bundle["diagnostics"]["lexicon_patch_draft_count"] = 0
+        with self.assertRaisesRegex(SystemExit, "unresolved_red_bundle draft count drift"):
+            validate_lexicon_patch_bundle("unresolved_red_bundle", bundle)
+
+    def test_verification_rejects_lexicon_patch_bundle_state_drift(self) -> None:
+        resolved_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=not_red"],
+        )
+        bundle = deepcopy(resolved_bundle)
+        bundle["resolved_patch_count"] = 0
+        with self.assertRaisesRegex(SystemExit, "resolved_red_bundle resolved count drift"):
+            validate_lexicon_patch_bundle("resolved_red_bundle", bundle)
+
+        bundle = deepcopy(resolved_bundle)
+        bundle["can_auto_apply"] = False
+        with self.assertRaisesRegex(SystemExit, "resolved_red_bundle auto-apply drift"):
+            validate_lexicon_patch_bundle("resolved_red_bundle", bundle)
+
+        bundle = deepcopy(resolved_bundle)
+        bundle["lexicon_patch_drafts"][0]["requires_human_choice"] = True
+        with self.assertRaisesRegex(SystemExit, "resolved_red_bundle human-choice drift"):
+            validate_lexicon_patch_bundle("resolved_red_bundle", bundle)
+
+        unresolved_bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        bundle = deepcopy(unresolved_bundle)
+        bundle["lexicon_patch_drafts"][0]["requires_human_choice"] = False
+        with self.assertRaisesRegex(SystemExit, "unresolved_red_bundle human-choice drift"):
+            validate_lexicon_patch_bundle("unresolved_red_bundle", bundle)
+
+    def test_verification_rejects_lexicon_patch_bundle_text_drift(self) -> None:
+        invalid_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=intact"],
+        )
+        bundle = deepcopy(invalid_bundle)
+        bundle["patch_text_preview"] = bundle["patch_text_preview"].replace(
+            "# Validation errors:",
+            "# Stale validation header:",
+        )
+        with self.assertRaisesRegex(SystemExit, "invalid_red_bundle validation text drift"):
+            validate_lexicon_patch_bundle("invalid_red_bundle", bundle)
+
+        bundle = deepcopy(invalid_bundle)
+        bundle["patch_text_preview"] += "# Candidate replacement/addition lines:\n"
+        with self.assertRaisesRegex(SystemExit, "invalid_red_bundle unsafe patch text"):
+            validate_lexicon_patch_bundle("invalid_red_bundle", bundle)
+
+        unresolved_bundle = build_patch_bundle("Mary painted the door red", require_coq=True)
+        bundle = deepcopy(unresolved_bundle)
+        bundle["patch_text_preview"] = bundle["patch_text_preview"].replace(
+            "state-red--unknown_source_allowed",
+            "state-red--stale",
+        )
+        with self.assertRaisesRegex(SystemExit, "unresolved_red_bundle pending text drift"):
+            validate_lexicon_patch_bundle("unresolved_red_bundle", bundle)
+
+        resolved_bundle = build_patch_bundle(
+            "Mary painted the door red",
+            require_coq=True,
+            resolution_items=["state-red--unknown_source_allowed=not_red"],
+        )
+        bundle = deepcopy(resolved_bundle)
+        bundle["patch_text_preview"] = bundle["patch_text_preview"].replace("not_red", "stale")
+        with self.assertRaisesRegex(SystemExit, "resolved_red_bundle candidate text drift"):
+            validate_lexicon_patch_bundle("resolved_red_bundle", bundle)
+
     def test_export_lexicon_patch_drafts_creates_output_parent_dirs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "nested" / "review" / "patch.txt"
@@ -8031,6 +8140,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("warning/action/draft chain as a fixed schema", manuscript)
         self.assertIn("top-level lexicon_patch_drafts queue", manuscript)
+        self.assertIn("standalone lexicon_patch_drafts.v1 bundle", manuscript)
+        self.assertIn("review-only patch text to agree", manuscript)
         self.assertIn("controlled diagnostics stage set", manuscript)
         self.assertIn("route case drift between manifest paths and fixture cases", manuscript)
         self.assertIn("label drift between manifest and HTML", manuscript)
@@ -8112,6 +8223,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`format=patch`", readme)
         self.assertIn("`resolved_patch_count`", readme)
         self.assertIn("`validation_errors`", readme)
+        self.assertIn("standalone `lexicon_patch_drafts.v1` bundle", readme)
+        self.assertIn("fixed schema: `resolved_patch_count`", readme)
+        self.assertIn("invalid review cannot quietly produce", readme)
+        self.assertIn("`can_auto_apply` cannot drift", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8181,6 +8296,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`lexicon_patch_drafts.v1`", web_design)
         self.assertIn("`resolved_patch_count`", web_design)
         self.assertIn("`validation_errors`", web_design)
+        self.assertIn("bundle-level fixed schema", web_design)
+        self.assertIn("each draft's resolved or pending state", web_design)
+        self.assertIn("guarded patch text to agree", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)
@@ -8661,6 +8779,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("warning/draft drift", verifier)
         self.assertIn("lexicon patch draft count drift", verifier)
         self.assertIn("patch text drift", verifier)
+        self.assertIn("def validate_lexicon_patch_bundle(", verifier)
+        self.assertIn("validate_lexicon_patch_bundle(\"resolved_red_bundle\", bundle)", verifier)
+        self.assertIn("lexicon patch bundle check failed", verifier)
+        self.assertIn("draft count drift", verifier)
+        self.assertIn("human-choice drift", verifier)
+        self.assertIn("resolved count drift", verifier)
+        self.assertIn("auto-apply drift", verifier)
+        self.assertIn("unsafe patch text", verifier)
+        self.assertIn("validation guard drift", verifier)
         self.assertNotIn("len(cases) != 6", verifier)
         self.assertNotIn('data-fixture-count="6"', verifier)
         self.assertIn("for fixture in manifest_cases:", verifier)

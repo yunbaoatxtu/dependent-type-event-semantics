@@ -179,6 +179,10 @@ path writes the same review-only candidate text exposed in
 `patch_text_preview` and does not mutate the lexicon. When a draft still needs
 a human source-state choice, the preview keeps the pending patch line as a comment
 instead of presenting it as auto-applicable source code. Both JSON and
+patch-text outputs are now checked as a bundle-level fixed schema: the verifier
+requires `resolved_patch_count`, `requires_human_choice`, `can_auto_apply`,
+`validation_errors`, each draft's resolved or pending state, and the candidate
+or guarded patch text to agree.
 patch-text file exports create missing parent directories before writing.
 The project-level verification script includes a smoke check for this exporter
 so the file-output path is exercised alongside unit tests and formalization
