@@ -220,6 +220,11 @@ count rather than forcing the user to inspect raw JSON first.
 Machine clients should prefer `recovery_actions` when they need stable action
 names or button labels, and `warnings` when they need to flag underspecified but
 still successfully checked translations.
+Every recovery action should carry non-empty `kind`, `label`, and `detail`
+fields. The verifier should reject unknown diagnostic action kinds and should
+check kind-specific payload shapes, including `target_definitions`,
+`duplicate_reading_names`, `reading_indices`, `expected_export_count`,
+`observed_export_count`, and `exported_definitions`.
 For `semantic_readings_check` failures, the action list is derived from
 `semantic_readings_repair_details`: `add_missing_coq_definitions` carries
 `target_definitions`, `rename_duplicate_readings` carries duplicate names,
@@ -273,8 +278,9 @@ parse each manifest `api_path` and `html_path` to verify that its endpoint and
 `case` query parameter point back to the same fixture case, compare the manifest
 label with the rendered option text, and compare the manifest's
 `recovery_action_kinds` with the actual payload `diagnostics.recovery_actions`
-list and the rendered `Next Steps` `data-action-kind` hooks, so routes, labels,
-and repair advice cannot drift between JSON and HTML.
+list and the rendered `Next Steps` `data-action-kind` hooks. It should also
+validate each payload action's schema, so routes, labels, typed repair
+arguments, and repair advice cannot drift between JSON and HTML.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

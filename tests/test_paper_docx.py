@@ -109,6 +109,8 @@ class PaperDocxTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("machine-readable failure_stage field", manuscript)
         self.assertIn("structured recovery_actions", manuscript)
+        self.assertIn("each recovery action schema", manuscript)
+        self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)
         self.assertIn("stage-local diagnostics", manuscript)

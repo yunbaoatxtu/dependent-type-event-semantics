@@ -7884,6 +7884,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("action hooks", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
+        self.assertIn("controlled diagnostic action set", readme)
+        self.assertIn("kind-specific payload fields", readme)
+        self.assertIn("action targets or counts", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
         self.assertIn("`Type Check` panel", readme)
         self.assertIn("`Semantic Readings Check` panel is likewise structured", readme)
@@ -8001,7 +8004,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("four internal/proof-boundary stages", web_design)
         self.assertIn("stale selector attributes", web_design)
         self.assertIn("`diagnostics.recovery_actions`", web_design)
+        self.assertIn("unknown diagnostic action kinds", web_design)
+        self.assertIn("kind-specific payload shapes", web_design)
         self.assertIn("list and the rendered `Next Steps`", web_design)
+        self.assertIn("validate each payload action's schema", web_design)
         self.assertIn("`data-action-kind` hooks", web_design)
         self.assertIn(
             "visible labels, controls, and JSON inventory cannot silently drift apart",
@@ -8009,11 +8015,13 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
+        self.assertIn("each recovery action schema", manuscript)
         self.assertIn("controlled diagnostics stage set", manuscript)
         self.assertIn("route case drift between manifest paths and fixture cases", manuscript)
         self.assertIn("label drift between manifest and HTML", manuscript)
         self.assertIn("unknown fixture failure stages", manuscript)
         self.assertIn("missing internal/proof-boundary stage coverage", manuscript)
+        self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
@@ -8374,10 +8382,77 @@ class TranslatorTests(unittest.TestCase):
         actions = payloads["semantic_readings_missing_export"]["diagnostics"][
             "recovery_actions"
         ]
-        actions[0]["kind"] = "stale_repair_action"
+        actions[0]["kind"] = "inspect_ast"
         with self.assertRaisesRegex(
             SystemExit,
             "semantic_readings_missing_export recovery action drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_unknown_diagnostic_fixture_recovery_action_kind(
+        self,
+    ) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        payloads = deepcopy(payloads)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "semantic_readings_missing_export":
+                fixture["recovery_action_kinds"][0] = "stale_repair_action"
+                break
+        payloads["semantic_readings_missing_export"]["diagnostics"]["recovery_actions"][0][
+            "kind"
+        ] = "stale_repair_action"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export unknown recovery action kind",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_incomplete_diagnostic_fixture_recovery_action(
+        self,
+    ) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["coq_check_failure"]["diagnostics"]["recovery_actions"][0].pop("detail")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "coq_check_failure incomplete recovery action metadata",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_missing_action_targets(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_missing_export"]["diagnostics"]["recovery_actions"][0].pop(
+            "target_definitions"
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export invalid recovery action target_definitions",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_bad_action_indices(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_malformed"]["diagnostics"]["recovery_actions"][0][
+            "reading_indices"
+        ] = ["1"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_malformed invalid recovery action reading_indices",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_bad_export_count_action(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_export_count_mismatch"]["diagnostics"][
+            "recovery_actions"
+        ][0]["expected_export_count"] = "1"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_export_count_mismatch invalid recovery action export counts",
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
@@ -8420,6 +8495,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("REQUIRED_DIAGNOSTIC_FIXTURE_STAGES", verifier)
         self.assertIn("unknown fixture failure stage", verifier)
         self.assertIn("missing diagnostic fixture stages", verifier)
+        self.assertIn("VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS", verifier)
+        self.assertIn("def validate_diagnostic_recovery_action(", verifier)
+        self.assertIn("unknown recovery action kind", verifier)
+        self.assertIn("invalid recovery action target_definitions", verifier)
+        self.assertIn("invalid recovery action reading_indices", verifier)
+        self.assertIn("invalid recovery action export counts", verifier)
         self.assertNotIn("len(cases) != 6", verifier)
         self.assertNotIn('data-fixture-count="6"', verifier)
         self.assertIn("for fixture in manifest_cases:", verifier)

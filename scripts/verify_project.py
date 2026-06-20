@@ -38,6 +38,19 @@ REQUIRED_DIAGNOSTIC_FIXTURE_STAGES = {
     "construction_hygiene",
     "coq_check",
 }
+VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS = {
+    "add_missing_coq_definitions",
+    "add_semantic_readings",
+    "edit_input",
+    "fix_malformed_readings",
+    "fix_reading_type_checks",
+    "inspect_ast",
+    "inspect_coq",
+    "inspect_readings",
+    "normalize_reading_exports",
+    "rename_duplicate_readings",
+    "revise_sentence",
+}
 
 
 def run(label: str, command: list[str]) -> None:
@@ -141,6 +154,61 @@ def validate_fixture_path(case: str, path: str, route: str, label: str) -> None:
         raise SystemExit(f"web route smoke check failed: {case} {label} case drift")
 
 
+def nonempty_string_list(value: object) -> bool:
+    return isinstance(value, list) and bool(value) and all(
+        isinstance(item, str) and item for item in value
+    )
+
+
+def integer_list(value: object) -> bool:
+    return isinstance(value, list) and all(type(item) is int for item in value)
+
+
+def validate_diagnostic_recovery_action(case: str, action: object) -> None:
+    if not isinstance(action, dict):
+        raise SystemExit(f"web route smoke check failed: {case} malformed recovery action")
+    kind = action.get("kind")
+    if kind not in VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS:
+        raise SystemExit(f"web route smoke check failed: {case} unknown recovery action kind")
+    for field in ["label", "detail"]:
+        if not isinstance(action.get(field), str) or not action.get(field):
+            raise SystemExit(
+                f"web route smoke check failed: {case} incomplete recovery action metadata"
+            )
+    if kind == "add_missing_coq_definitions" and not nonempty_string_list(
+        action.get("target_definitions")
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {case} invalid recovery action target_definitions"
+        )
+    if kind == "rename_duplicate_readings" and not nonempty_string_list(
+        action.get("duplicate_reading_names")
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {case} invalid recovery action duplicate_reading_names"
+        )
+    if kind in {"fix_malformed_readings", "fix_reading_type_checks"} and not integer_list(
+        action.get("reading_indices")
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {case} invalid recovery action reading_indices"
+        )
+    if kind == "normalize_reading_exports":
+        expected = action.get("expected_export_count")
+        observed = action.get("observed_export_count")
+        exported = action.get("exported_definitions")
+        if type(expected) is not int or type(observed) is not int:
+            raise SystemExit(
+                f"web route smoke check failed: {case} invalid recovery action export counts"
+            )
+        if not isinstance(exported, list) or not all(
+            isinstance(item, str) and item for item in exported
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: {case} invalid recovery action exported_definitions"
+            )
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -215,6 +283,8 @@ def validate_diagnostic_fixture_routes(
         payload_actions = diagnostics.get("recovery_actions", [])
         if not isinstance(payload_actions, list):
             raise SystemExit(f"web route smoke check failed: {case} missing recovery actions")
+        for action in payload_actions:
+            validate_diagnostic_recovery_action(case, action)
         observed_actions = [
             action.get("kind")
             for action in payload_actions

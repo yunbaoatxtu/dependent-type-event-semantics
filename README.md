@@ -615,6 +615,11 @@ stop at the first failed stage: if internal AST `type_check` fails or the
 normalized `semantic_readings_check` cannot match readings to exported
 Coq/Rocq definitions, construction hygiene and Coq/Rocq validation are reported
 as `skipped` rather than attempted.
+Every recovery action must expose non-empty `kind`, `label`, and `detail`
+fields. The project verifier also checks that action kinds come from the
+controlled diagnostic action set and that kind-specific payload fields have the
+right shape: `target_definitions`, `duplicate_reading_names`, `reading_indices`,
+`expected_export_count`, `observed_export_count`, and `exported_definitions`.
 For semantic-reading failures, `diagnostics.semantic_readings_failure_kinds`
 and `diagnostics.semantic_readings_failure_summary` classify the problem as
 missing readings, duplicate reading names, malformed reading records,
@@ -677,9 +682,9 @@ The manifest/API/HTML consistency rules also live in a standalone verifier
 helper with counterexample tests for duplicate cases, missing metadata, payload
 case drift, route case drift between manifest paths and the fixture case, label
 drift between manifest and HTML, unknown fixture failure stages, missing
-internal/proof-boundary stage coverage, recovery-action drift between the
-payload and manifest, stale HTML selector attributes, and stale `Next Steps`
-action hooks.
+internal/proof-boundary stage coverage, malformed recovery actions, invalid
+action targets or counts, recovery-action drift between the payload and
+manifest, stale HTML selector attributes, and stale `Next Steps` action hooks.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.
