@@ -6992,6 +6992,63 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(no_draft_bundle["requires_human_choice"])
         self.assertEqual(no_draft_bundle["lexicon_patch_drafts"], [])
 
+    def test_api_patch_bundle_matches_direct_builder(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        cases = [
+            (
+                "unresolved",
+                "sentence=Mary+painted+the+door+red&require_coq=1",
+                build_patch_bundle("Mary painted the door red", require_coq=True),
+            ),
+            (
+                "compact_resolved",
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                ),
+                build_patch_bundle(
+                    "Mary painted the door red",
+                    require_coq=True,
+                    resolution_items=["state-red--unknown_source_allowed=not_red"],
+                ),
+            ),
+            (
+                "structured_resolved",
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve_draft_id=state-red--unknown_source_allowed"
+                    "&source_state=not_red"
+                ),
+                build_patch_bundle(
+                    "Mary painted the door red",
+                    require_coq=True,
+                    resolve_draft_ids=["state-red--unknown_source_allowed"],
+                    source_states=["not_red"],
+                ),
+            ),
+            (
+                "invalid_source",
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=intact"
+                ),
+                build_patch_bundle(
+                    "Mary painted the door red",
+                    require_coq=True,
+                    resolution_items=["state-red--unknown_source_allowed=intact"],
+                ),
+            ),
+        ]
+        for case, query, expected in cases:
+            with self.subTest(case=case):
+                bundle = PipelineHandler.handle_patch_api(handler, query)
+                self.assertEqual(bundle, expected)
+                self.assertEqual(
+                    PipelineHandler.handle_patch_text_api(handler, f"{query}&format=patch"),
+                    bundle["patch_text_preview"],
+                )
+                validate_lexicon_patch_bundle(case, bundle)
+
     def test_api_lexicon_patch_drafts_patch_format(self) -> None:
         handler = object.__new__(PipelineHandler)
         pending_text = PipelineHandler.handle_patch_text_api(
@@ -7073,6 +7130,79 @@ class TranslatorTests(unittest.TestCase):
             '"red": StateLexiconEntry("color_scale", default_source_state="not_red"),',
             bundle["patch_text_preview"],
         )
+
+    def test_cli_patch_export_matches_api_bundle_and_patch_text(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        query = (
+            "sentence=Mary+painted+the+door+red&require_coq=1"
+            "&resolve=state-red--unknown_source_allowed=not_red"
+        )
+        expected_bundle = PipelineHandler.handle_patch_api(handler, query)
+        expected_patch = PipelineHandler.handle_patch_text_api(handler, f"{query}&format=patch")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_path = Path(tmpdir) / "bundle" / "red.json"
+            patch_path = Path(tmpdir) / "patch" / "red.patch"
+            subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/export_lexicon_patch_drafts.py",
+                    "--sentence",
+                    "Mary painted the door red",
+                    "--require-coq",
+                    "--resolve",
+                    "state-red--unknown_source_allowed=not_red",
+                    "--out",
+                    str(out_path),
+                    "--patch-out",
+                    str(patch_path),
+                ],
+                cwd=ROOT,
+                check=True,
+            )
+            cli_bundle = json.loads(out_path.read_text(encoding="utf-8"))
+            cli_patch = patch_path.read_text(encoding="utf-8")
+        self.assertEqual(cli_bundle, expected_bundle)
+        self.assertEqual(cli_patch, expected_patch)
+        self.assertEqual(cli_patch, cli_bundle["patch_text_preview"])
+        validate_lexicon_patch_bundle("cli_resolved_red_bundle", cli_bundle)
+
+    def test_cli_patch_export_writes_invalid_bundle_before_nonzero_exit(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        query = (
+            "sentence=Mary+painted+the+door+red&require_coq=1"
+            "&resolve=state-red--unknown_source_allowed=intact"
+        )
+        expected_bundle = PipelineHandler.handle_patch_api(handler, query)
+        expected_patch = PipelineHandler.handle_patch_text_api(handler, f"{query}&format=patch")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_path = Path(tmpdir) / "bundle" / "red.json"
+            patch_path = Path(tmpdir) / "patch" / "red.patch"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/export_lexicon_patch_drafts.py",
+                    "--sentence",
+                    "Mary painted the door red",
+                    "--require-coq",
+                    "--resolve",
+                    "state-red--unknown_source_allowed=intact",
+                    "--out",
+                    str(out_path),
+                    "--patch-out",
+                    str(patch_path),
+                ],
+                cwd=ROOT,
+                check=False,
+            )
+            cli_bundle = json.loads(out_path.read_text(encoding="utf-8"))
+            cli_patch = patch_path.read_text(encoding="utf-8")
+        self.assertEqual(completed.returncode, 1)
+        self.assertEqual(cli_bundle, expected_bundle)
+        self.assertEqual(cli_patch, expected_patch)
+        self.assertEqual(cli_patch, cli_bundle["patch_text_preview"])
+        self.assertIn("# Validation errors:", cli_patch)
+        self.assertNotIn("# Candidate replacement/addition lines:", cli_patch)
+        validate_lexicon_patch_bundle("cli_invalid_red_bundle", cli_bundle)
 
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -8142,6 +8272,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("top-level lexicon_patch_drafts queue", manuscript)
         self.assertIn("standalone lexicon_patch_drafts.v1 bundle", manuscript)
         self.assertIn("review-only patch text to agree", manuscript)
+        self.assertIn("repair-export channels are also checked", manuscript)
+        self.assertIn("command-line --patch-out file", manuscript)
         self.assertIn("controlled diagnostics stage set", manuscript)
         self.assertIn("route case drift between manifest paths and fixture cases", manuscript)
         self.assertIn("label drift between manifest and HTML", manuscript)
@@ -8227,6 +8359,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fixed schema: `resolved_patch_count`", readme)
         self.assertIn("invalid review cannot quietly produce", readme)
         self.assertIn("`can_auto_apply` cannot drift", readme)
+        self.assertIn("API JSON bundle", readme)
+        self.assertIn("CLI `--patch-out` file", readme)
+        self.assertIn("channels stay synchronized", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8299,6 +8434,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("bundle-level fixed schema", web_design)
         self.assertIn("each draft's resolved or pending state", web_design)
         self.assertIn("guarded patch text to agree", web_design)
+        self.assertIn("direct bundle builder", web_design)
+        self.assertIn("CLI `--patch-out` file", web_design)
+        self.assertIn("one repair contract", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)

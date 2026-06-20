@@ -187,6 +187,10 @@ patch-text file exports create missing parent directories before writing.
 The project-level verification script includes a smoke check for this exporter
 so the file-output path is exercised alongside unit tests and formalization
 checks.
+The regression tests also compare the direct bundle builder, API JSON response,
+API `format=patch` text response, CLI JSON output, and CLI `--patch-out` file
+for unresolved, resolved, and validation-error bundles. This keeps browser
+downloads, command-line review files, and JSON clients on one repair contract.
 
 ## Successful Response
 

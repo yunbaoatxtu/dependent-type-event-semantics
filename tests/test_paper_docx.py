@@ -117,6 +117,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("patch_text_preview must mention every draft id", manuscript)
         self.assertIn("standalone lexicon_patch_drafts.v1 bundle", manuscript)
         self.assertIn("review-only patch text to agree", manuscript)
+        self.assertIn("repair-export channels are also checked", manuscript)
+        self.assertIn("command-line --patch-out file", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)

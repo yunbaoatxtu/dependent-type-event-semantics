@@ -163,6 +163,8 @@ def run_lexicon_export_smoke_check() -> None:
     bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
     patch_text = patch_path.read_text(encoding="utf-8")
     validate_lexicon_patch_bundle("resolved_red_bundle", bundle)
+    if patch_text != bundle.get("patch_text_preview"):
+        raise SystemExit("lexicon patch exporter smoke check failed: patch text drift")
     if not bundle.get("can_auto_apply"):
         raise SystemExit("lexicon patch exporter smoke check failed: bundle is not auto-applicable")
     if "patch_text_preview" not in bundle:

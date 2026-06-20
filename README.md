@@ -770,6 +770,10 @@ Use `format=patch` on that endpoint to receive the review-only patch text as
 `text/plain`. The web page also renders a source-state form for each pending
 draft; submitting it previews the resolved patch through structured
 `resolve_draft_id` and `source_state` parameters without mutating the lexicon.
+The test suite compares this API JSON bundle, the API `format=patch` response,
+the direct bundle builder, the CLI JSON output, and the CLI `--patch-out` file
+for the same unresolved, resolved, and validation-error cases, so all review
+channels stay synchronized.
 
 Run the local web demo:
 
@@ -930,6 +934,9 @@ The web page renders the same text in a `Lexicon Patch Text Preview` panel with 
 can additionally write that review-only candidate patch text with `--patch-out`.
 File outputs create missing parent directories, so review bundles and patch
 previews can be written into a fresh `work/` tree.
+API JSON, API patch-text download, direct builder output, CLI JSON, and CLI
+`--patch-out` files are regression-tested against one another for both resolved
+and validation-error bundles.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness
