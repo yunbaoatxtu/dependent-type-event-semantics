@@ -14,9 +14,15 @@ from urllib.request import ProxyHandler, build_opener
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES
 from scripts.verify_project import (
+    REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+    VALID_DIAGNOSTIC_FAILURE_STAGES,
+    VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     validate_diagnostic_fixture_routes,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
+)
+from web.diagnostic_contract import (
+    REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
 )
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
@@ -7916,6 +7922,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(cases["type_check_failure"]["failure_stage"], "type_check")
         self.assertEqual(cases["coq_check_failure"]["recovery_action_kinds"], ["inspect_coq"])
 
+    def test_diagnostic_contract_is_shared_with_project_verifier(self) -> None:
+        self.assertIs(VALID_DIAGNOSTIC_FAILURE_STAGES, DIAGNOSTIC_FAILURE_STAGES)
+        self.assertIs(
+            VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+            DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+        )
+        self.assertIs(
+            VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+            REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+        )
+
     def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-empty case"):
             DiagnosticFixtureSpec(
@@ -8318,6 +8335,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", readme)
         self.assertIn("validated `DiagnosticFixtureSpec` entries", readme)
         self.assertIn("unknown stage/action names fail", readme)
+        self.assertIn("same diagnostic contract", readme)
+        self.assertIn("controlled failure-stage and recovery-action vocabularies", readme)
         self.assertIn("stage, and action lists", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
@@ -8454,6 +8473,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", web_design)
         self.assertIn("validated `DiagnosticFixtureSpec` entries", web_design)
         self.assertIn("unknown stage/action names should fail", web_design)
+        self.assertIn("diagnostic\ncontract module", web_design)
+        self.assertIn("verifier acceptance cannot drift", web_design)
         self.assertIn("parallel case", web_design)
         self.assertIn("label, stage, and action structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
@@ -8480,6 +8501,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("one DIAGNOSTIC_FIXTURE_SPECS table", manuscript)
         self.assertIn("validated DiagnosticFixtureSpec", manuscript)
         self.assertIn("checked against controlled vocabularies", manuscript)
+        self.assertIn("same diagnostic contract module", manuscript)
+        self.assertIn("UI layer would reject", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)
@@ -9138,6 +9161,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fixture_count = len(manifest_cases)", verifier)
         self.assertIn("duplicate fixture cases", verifier)
         self.assertIn("VALID_DIAGNOSTIC_FAILURE_STAGES", verifier)
+        self.assertIn("web.diagnostic_contract", verifier)
         self.assertIn("REQUIRED_DIAGNOSTIC_FIXTURE_STAGES", verifier)
         self.assertIn("unknown fixture failure stage", verifier)
         self.assertIn("missing diagnostic fixture stages", verifier)

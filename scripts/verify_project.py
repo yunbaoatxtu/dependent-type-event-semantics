@@ -20,39 +20,19 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES  # noqa: E402
+from web.diagnostic_contract import (  # noqa: E402
+    DIAGNOSTIC_FAILURE_STAGES,
+    DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+)
 PYCACHE = ROOT / ".pycache"
 COQ_FILE = ROOT / "formalization" / "DependentTypeEventSemantics.v"
 PACKAGE_WHEEL_DIR = ROOT / "work" / "verify_package_build"
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
-VALID_DIAGNOSTIC_FAILURE_STAGES = {
-    "input",
-    "parsing",
-    "type_check",
-    "semantic_readings_check",
-    "construction_hygiene",
-    "coq_check",
-}
-REQUIRED_DIAGNOSTIC_FIXTURE_STAGES = {
-    "type_check",
-    "semantic_readings_check",
-    "construction_hygiene",
-    "coq_check",
-}
-VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS = {
-    "add_missing_coq_definitions",
-    "add_semantic_readings",
-    "edit_input",
-    "fix_malformed_readings",
-    "fix_reading_type_checks",
-    "inspect_ast",
-    "inspect_coq",
-    "inspect_readings",
-    "normalize_reading_exports",
-    "rename_duplicate_readings",
-    "revise_sentence",
-}
+VALID_DIAGNOSTIC_FAILURE_STAGES = DIAGNOSTIC_FAILURE_STAGES
+VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS = DIAGNOSTIC_RECOVERY_ACTION_KINDS
 VALID_LEXICON_WARNING_KINDS = {
     "derived_result_scale",
     "source_state_used_as_target",

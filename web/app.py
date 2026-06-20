@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import html
 import json
 from http import HTTPStatus
@@ -23,6 +22,11 @@ from translator.natural_language_pipeline import (
     semantic_readings_check_payload,
     semantic_readings_repair_details,
 )
+from web.diagnostic_contract import (
+    DIAGNOSTIC_FAILURE_STAGES,
+    DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    DiagnosticFixtureSpec,
+)
 
 
 DEFAULT_SENTENCE = "John knocked twice"
@@ -31,76 +35,6 @@ LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
-DIAGNOSTIC_FAILURE_STAGES = frozenset(
-    {
-        "input",
-        "parsing",
-        "type_check",
-        "semantic_readings_check",
-        "construction_hygiene",
-        "coq_check",
-    }
-)
-DIAGNOSTIC_RECOVERY_ACTION_KINDS = frozenset(
-    {
-        "add_missing_coq_definitions",
-        "add_semantic_readings",
-        "edit_input",
-        "fix_malformed_readings",
-        "fix_reading_type_checks",
-        "inspect_ast",
-        "inspect_coq",
-        "inspect_readings",
-        "normalize_reading_exports",
-        "rename_duplicate_readings",
-        "revise_sentence",
-    }
-)
-
-
-@dataclass(frozen=True)
-class DiagnosticFixtureSpec:
-    case: str
-    label: str
-    failure_stage: str
-    recovery_action_kinds: tuple[str, ...]
-
-    def __post_init__(self) -> None:
-        case = self.case.strip()
-        label = self.label.strip()
-        failure_stage = self.failure_stage.strip()
-        recovery_action_kinds = tuple(
-            action.strip() for action in self.recovery_action_kinds
-        )
-        if not case:
-            raise ValueError("Diagnostic fixture specs require a non-empty case.")
-        if not label:
-            raise ValueError(f"Diagnostic fixture {case!r} requires a non-empty label.")
-        if failure_stage not in DIAGNOSTIC_FAILURE_STAGES:
-            raise ValueError(
-                f"Diagnostic fixture {case!r} uses unknown failure stage "
-                f"{failure_stage!r}."
-            )
-        if not recovery_action_kinds:
-            raise ValueError(
-                f"Diagnostic fixture {case!r} requires at least one recovery action."
-            )
-        unknown_actions = sorted(
-            action
-            for action in set(recovery_action_kinds)
-            if action not in DIAGNOSTIC_RECOVERY_ACTION_KINDS
-        )
-        if unknown_actions:
-            raise ValueError(
-                f"Diagnostic fixture {case!r} uses unknown recovery actions: "
-                f"{unknown_actions!r}."
-            )
-        object.__setattr__(self, "case", case)
-        object.__setattr__(self, "label", label)
-        object.__setattr__(self, "failure_stage", failure_stage)
-        object.__setattr__(self, "recovery_action_kinds", recovery_action_kinds)
-
-
 DIAGNOSTIC_FIXTURE_SPECS = (
     DiagnosticFixtureSpec(
         case="construction_hygiene_failure",

@@ -300,6 +300,9 @@ expected recovery-action kinds should be derived from a single
 `DIAGNOSTIC_FIXTURE_SPECS` table of validated `DiagnosticFixtureSpec` entries
 rather than maintained as parallel case, label, stage, and action structures;
 unknown stage/action names should fail before the manifest is served.
+The web application and project verifier should import the same diagnostic
+contract module for the controlled failure-stage and recovery-action
+vocabularies, so verifier acceptance cannot drift from UI construction.
 The selector should be rendered from that same manifest and expose
 `data-fixtures-schema`, `data-fixtures-api`, option-level failure-stage and
 recovery-action metadata, and the manifest label as the option text so the UI

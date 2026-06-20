@@ -668,6 +668,10 @@ recovery-action kinds are now derived from one `DIAGNOSTIC_FIXTURE_SPECS`
 table of validated `DiagnosticFixtureSpec` entries, so adding a fixture no
 longer requires editing separate case, label, stage, and action lists, and
 unknown stage/action names fail before the manifest is served.
+The web application and project verifier import the same diagnostic contract
+module for the controlled failure-stage and recovery-action vocabularies, so
+the browser/API route checks cannot accept a stage name that the UI layer would
+reject.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, and per-option failure-stage and
 recovery-action metadata, so the visible labels, controls, and API inventory
