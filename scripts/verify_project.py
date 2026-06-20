@@ -141,6 +141,8 @@ def run_package_build_smoke_check() -> None:
 
 
 def run_lexicon_export_smoke_check() -> None:
+    from scripts.export_lexicon_patch_drafts import build_patch_bundle
+
     output_dir = ROOT / "work" / "verify_lexicon_patch_export"
     bundle_path = output_dir / "bundle" / "red.json"
     patch_path = output_dir / "patch" / "red.patch"
@@ -172,6 +174,80 @@ def run_lexicon_export_smoke_check() -> None:
         raise SystemExit("lexicon patch exporter smoke check failed: missing patch_text_preview")
     if 'StateLexiconEntry("color_scale", default_source_state="not_red")' not in patch_text:
         raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
+
+    negative_cases = [
+        (
+            "empty_sentence",
+            ["--sentence", ""],
+            build_patch_bundle(""),
+        ),
+        (
+            "unknown_draft",
+            [
+                "--sentence",
+                "Mary painted the door red",
+                "--resolve",
+                "state-blue--unknown_source_allowed=not_red",
+            ],
+            build_patch_bundle(
+                "Mary painted the door red",
+                resolution_items=["state-blue--unknown_source_allowed=not_red"],
+            ),
+        ),
+        (
+            "conflicting_resolution",
+            [
+                "--sentence",
+                "Mary painted the door red",
+                "--resolve",
+                "state-red--unknown_source_allowed=not_red",
+                "--resolve-draft-id",
+                "state-red--unknown_source_allowed",
+                "--source-state",
+                "dry",
+            ],
+            build_patch_bundle(
+                "Mary painted the door red",
+                resolution_items=["state-red--unknown_source_allowed=not_red"],
+                resolve_draft_ids=["state-red--unknown_source_allowed"],
+                source_states=["dry"],
+            ),
+        ),
+    ]
+    for name, args, expected_bundle in negative_cases:
+        case_bundle_path = output_dir / "negative" / name / "bundle.json"
+        case_patch_path = output_dir / "negative" / name / "state.patch"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "scripts/export_lexicon_patch_drafts.py",
+                *args,
+                "--out",
+                str(case_bundle_path),
+                "--patch-out",
+                str(case_patch_path),
+            ],
+            cwd=ROOT,
+            check=False,
+        )
+        if completed.returncode != 1:
+            raise SystemExit(
+                "lexicon patch exporter smoke check failed: "
+                f"{name} returned {completed.returncode}"
+            )
+        case_bundle = json.loads(case_bundle_path.read_text(encoding="utf-8"))
+        case_patch = case_patch_path.read_text(encoding="utf-8")
+        if case_bundle != expected_bundle:
+            raise SystemExit(
+                "lexicon patch exporter smoke check failed: "
+                f"{name} bundle drift"
+            )
+        if case_patch != case_bundle.get("patch_text_preview"):
+            raise SystemExit(
+                "lexicon patch exporter smoke check failed: "
+                f"{name} patch text drift"
+            )
+        validate_lexicon_patch_bundle(f"cli_negative_{name}", case_bundle)
 
 
 def run_lexicon_warning_schema_check() -> None:

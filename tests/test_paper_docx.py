@@ -123,6 +123,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("content type, byte length, parsed JSON, and patch text", manuscript)
         self.assertIn("The same HTTP boundary now includes negative cases", manuscript)
         self.assertIn("unsupported response formats return a 400 JSON error", manuscript)
+        self.assertIn("The command-line exporter is now tied to the same negative-case contract", manuscript)
+        self.assertIn("non-zero CLI exits still write the guarded review artifacts", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)

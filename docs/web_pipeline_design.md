@@ -200,6 +200,10 @@ a bundle validation error with no candidate patch lines, conflicting
 source-state choices keep the bundle non-auto-applicable, repeated identical
 choices collapse to one safe resolution, and unsupported `format` values return
 a 400 JSON response with the allowed formats.
+The CLI exporter is regression-tested against those live HTTP outputs for the
+same negative cases. Non-zero command-line exits still have to write the JSON
+bundle and `--patch-out` text, and those files must match the browser/API
+payloads before the smoke check passes.
 
 ## Successful Response
 

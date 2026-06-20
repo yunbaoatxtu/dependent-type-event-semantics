@@ -122,6 +122,39 @@ def pipeline_server():
         thread.join(timeout=5)
 
 
+def http_patch_bundle_and_text(base_url: str, opener, query: str) -> tuple[dict, str]:
+    with opener.open(f"{base_url}/api/lexicon-patch-drafts?{query}", timeout=5) as response:
+        bundle = json.loads(response.read().decode("utf-8"))
+    with opener.open(
+        f"{base_url}/api/lexicon-patch-drafts?{query}&format=patch",
+        timeout=5,
+    ) as response:
+        patch_text = response.read().decode("utf-8")
+    return bundle, patch_text
+
+
+def run_cli_patch_export(args: list[str]) -> tuple[int, dict, str]:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_path = Path(tmpdir) / "bundle" / "patch.json"
+        patch_path = Path(tmpdir) / "patch" / "state.patch"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "scripts/export_lexicon_patch_drafts.py",
+                *args,
+                "--out",
+                str(out_path),
+                "--patch-out",
+                str(patch_path),
+            ],
+            cwd=ROOT,
+            check=False,
+        )
+        cli_bundle = json.loads(out_path.read_text(encoding="utf-8"))
+        cli_patch = patch_path.read_text(encoding="utf-8")
+    return completed.returncode, cli_bundle, cli_patch
+
+
 class TranslatorTests(unittest.TestCase):
     def test_variable_polyadicity_and_time(self) -> None:
         result = translate(load_example("example_butter.json"))
@@ -7345,6 +7378,90 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("# Candidate replacement/addition lines:", cli_patch)
         validate_lexicon_patch_bundle("cli_invalid_red_bundle", cli_bundle)
 
+    def test_cli_patch_export_negative_cases_match_http_outputs(self) -> None:
+        cases = [
+            (
+                "empty_sentence",
+                ["--sentence", "", "--require-coq"],
+                "sentence=&require_coq=1",
+                1,
+                ["sentence is required"],
+            ),
+            (
+                "unknown_draft",
+                [
+                    "--sentence",
+                    "Mary painted the door red",
+                    "--require-coq",
+                    "--resolve",
+                    "state-blue--unknown_source_allowed=not_red",
+                ],
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-blue--unknown_source_allowed=not_red"
+                ),
+                1,
+                ["no matching lexicon patch draft"],
+            ),
+            (
+                "conflicting_resolution",
+                [
+                    "--sentence",
+                    "Mary painted the door red",
+                    "--require-coq",
+                    "--resolve",
+                    "state-red--unknown_source_allowed=not_red",
+                    "--resolve-draft-id",
+                    "state-red--unknown_source_allowed",
+                    "--source-state",
+                    "dry",
+                ],
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                    "&resolve_draft_id=state-red--unknown_source_allowed"
+                    "&source_state=dry"
+                ),
+                1,
+                ["Conflicting resolution"],
+            ),
+            (
+                "duplicate_same_resolution",
+                [
+                    "--sentence",
+                    "Mary painted the door red",
+                    "--require-coq",
+                    "--resolve",
+                    "state-red--unknown_source_allowed=not_red",
+                    "--resolve",
+                    "state-red--unknown_source_allowed=not_red",
+                ],
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                ),
+                0,
+                [],
+            ),
+        ]
+        with pipeline_server() as (base_url, opener):
+            for case, args, query, expected_returncode, expected_error_fragments in cases:
+                with self.subTest(case=case):
+                    http_bundle, http_patch = http_patch_bundle_and_text(base_url, opener, query)
+                    returncode, cli_bundle, cli_patch = run_cli_patch_export(args)
+                    self.assertEqual(returncode, expected_returncode)
+                    self.assertEqual(cli_bundle, http_bundle)
+                    self.assertEqual(cli_patch, http_patch)
+                    self.assertEqual(cli_patch, cli_bundle["patch_text_preview"])
+                    for fragment in expected_error_fragments:
+                        self.assertIn(fragment, " ".join(cli_bundle["validation_errors"]))
+                        self.assertIn(fragment, cli_patch)
+                    if expected_error_fragments:
+                        self.assertIn("# Validation errors:", cli_patch)
+                        self.assertNotIn("# Candidate replacement/addition lines:", cli_patch)
+                    validate_lexicon_patch_bundle(f"cli_http_{case}", cli_bundle)
+
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(handler, "sentence=%20%20&require_coq=1")
@@ -8507,6 +8624,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Content-Type`, `Content-Length`, parsed JSON", readme)
         self.assertIn("empty sentences add a", readme)
         self.assertIn("unsupported `format` values return a 400 JSON", readme)
+        self.assertIn("CLI exporter is checked against the same live HTTP outputs", readme)
+        self.assertIn("Even when the CLI exits non-zero", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8586,6 +8705,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("matching byte lengths", web_design)
         self.assertIn("Negative HTTP cases are checked", web_design)
         self.assertIn("allowed formats", web_design)
+        self.assertIn("CLI exporter is regression-tested against those live HTTP outputs", web_design)
+        self.assertIn("Non-zero command-line exits", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)

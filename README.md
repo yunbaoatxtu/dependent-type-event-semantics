@@ -783,6 +783,11 @@ bundle `validation_errors` entry and suppress candidate lines, conflicting
 source-state choices remain non-auto-applicable, repeated identical choices are
 accepted as one resolution, and unsupported `format` values return a 400 JSON
 error instead of silently changing response shape.
+The CLI exporter is checked against the same live HTTP outputs for empty
+sentences, unknown draft ids, conflicting source states, and repeated identical
+resolutions. Even when the CLI exits non-zero, it must still write the JSON
+bundle and `--patch-out` text before failing, so reviewers can inspect the same
+guarded artifact that the browser would download.
 
 Run the local web demo:
 
@@ -952,6 +957,9 @@ payload for each response.
 It also checks empty-input, repeated-resolution, conflicting-resolution, and
 unknown-format cases so downloadable patch text cannot bypass the same
 validation contract.
+The exporter smoke check mirrors those negative cases for command-line review:
+non-zero CLI exits still have to leave behind JSON and patch-text files whose
+payloads match the same bundle contract.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness
