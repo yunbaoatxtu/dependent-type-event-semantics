@@ -646,6 +646,10 @@ without corrupting the ordinary `/api/analyze` path. The same fixture endpoint
 also covers the other stage-local failures through `type_check_failure`,
 `construction_hygiene_failure`, and `coq_check_failure`, so each major
 failure-stage banner and recovery action can be tested directly.
+The HTML page exposes those cases through a compact
+`diagnostic-fixture-form` selector that opens `/diagnostic-fixture`, keeping
+diagnostic fixtures reachable without changing the ordinary analysis form or
+the `/api/analyze` contract.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

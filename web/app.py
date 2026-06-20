@@ -36,6 +36,14 @@ DIAGNOSTIC_FIXTURE_CASES = {
     "semantic_readings_missing_export",
     "type_check_failure",
 }
+DIAGNOSTIC_FIXTURE_LABELS = {
+    "construction_hygiene_failure": "Construction Hygiene",
+    "coq_check_failure": "Coq/Rocq Check",
+    "semantic_readings_export_count_mismatch": "Reading Export Count",
+    "semantic_readings_malformed": "Malformed Readings",
+    "semantic_readings_missing_export": "Missing Reading Export",
+    "type_check_failure": "Type Check",
+}
 FAILURE_STAGE_LABELS = {
     "input": "empty input",
     "parsing": "natural-language parsing",
@@ -1332,6 +1340,35 @@ def hidden_input(name: str, value: str) -> str:
     )
 
 
+def diagnostic_fixture_form(result: dict[str, Any]) -> str:
+    fixture = result.get("diagnostic_fixture", {})
+    current_case = fixture.get("case") if isinstance(fixture, dict) else None
+    selected_case = (
+        current_case
+        if isinstance(current_case, str)
+        and current_case in DIAGNOSTIC_FIXTURE_CASES
+        else "semantic_readings_missing_export"
+    )
+    options = []
+    for case in sorted(DIAGNOSTIC_FIXTURE_CASES):
+        selected = " selected" if case == selected_case else ""
+        label = DIAGNOSTIC_FIXTURE_LABELS.get(case, case.replace("_", " ").title())
+        options.append(
+            f'<option value="{html.escape(case, quote=True)}"{selected}>'
+            f"{html.escape(label)}</option>"
+        )
+    return (
+        '<form class="diagnostic-fixture-form" method="get" action="/diagnostic-fixture" '
+        f'data-current-fixture="{html.escape(selected_case, quote=True)}">'
+        '<label for="diagnostic-fixture-case">Diagnostics</label>'
+        '<select id="diagnostic-fixture-case" name="case">'
+        f"{''.join(options)}"
+        "</select>"
+        '<button type="submit">Open</button>'
+        "</form>"
+    )
+
+
 def lexicon_resolve_form(draft: dict[str, Any], sentence: str, require_coq: bool) -> str:
     if not draft.get("requires_human_choice"):
         return ""
@@ -1925,6 +1962,28 @@ def render_page(
       font-size: 13px;
       padding: 0 10px;
     }}
+    .diagnostic-fixture-form {{
+      display: grid;
+      grid-template-columns: auto minmax(190px, 260px) auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .diagnostic-fixture-form select {{
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 0 8px;
+      font-size: 13px;
+    }}
+    .diagnostic-fixture-form button {{
+      min-height: 34px;
+      padding: 0 10px;
+      font-size: 13px;
+    }}
     h2 {{
       font-size: 14px;
       margin: 0;
@@ -1945,6 +2004,7 @@ def render_page(
     }}
     @media (max-width: 760px) {{
       header, .analysis-form, .grid {{ grid-template-columns: 1fr; display: grid; }}
+      .diagnostic-fixture-form {{ grid-template-columns: 1fr; }}
       .lexicon-resolve-form {{ grid-template-columns: 1fr; }}
       label {{ white-space: normal; }}
     }}
@@ -1963,6 +2023,7 @@ def render_page(
       <label><input name="require_coq" type="checkbox" value="1"{checked}> require Coq/Rocq</label>
       <button type="submit">Analyze</button>
     </form>
+    {diagnostic_fixture_form(result)}
     <div class="status">{html.escape(status_label(result))}: {html.escape(status_detail(result))}</div>
     <div class="grid">
       {panel("Event Semantics", event_semantics)}

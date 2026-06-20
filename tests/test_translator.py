@@ -7522,6 +7522,33 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>exported definitions</dt><dd>first_reading, second_reading</dd>", page)
         self.assertIn("Semantic Readings Check", page)
 
+    def test_web_page_renders_diagnostic_fixture_selector(self) -> None:
+        page = render_page("John knocked twice", require_coq=True)
+        self.assertIn('class="diagnostic-fixture-form"', page)
+        self.assertIn('action="/diagnostic-fixture"', page)
+        self.assertIn('data-current-fixture="semantic_readings_missing_export"', page)
+        for case in [
+            "construction_hygiene_failure",
+            "coq_check_failure",
+            "semantic_readings_export_count_mismatch",
+            "semantic_readings_malformed",
+            "semantic_readings_missing_export",
+            "type_check_failure",
+        ]:
+            self.assertIn(f'value="{case}"', page)
+
+    def test_diagnostic_fixture_page_selects_current_fixture_case(self) -> None:
+        result = diagnostic_fixture_result("coq_check_failure")
+        page = render_page(
+            result["input_sentence"],
+            result=result,
+            endpoint="/api/diagnostic-fixture",
+        )
+        self.assertIn('data-current-fixture="coq_check_failure"', page)
+        self.assertIn('<option value="coq_check_failure" selected>Coq/Rocq Check</option>', page)
+        self.assertIn("Failure stage: Coq/Rocq validation.", page)
+        self.assertIn('data-action-kind="inspect_coq"', page)
+
     def test_diagnostic_fixture_page_renders_type_failure_stage(self) -> None:
         result = diagnostic_fixture_result("type_check_failure")
         page = render_page(
@@ -7791,6 +7818,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`type_check_failure`", readme)
         self.assertIn("`construction_hygiene_failure`", readme)
         self.assertIn("`coq_check_failure`", readme)
+        self.assertIn("`diagnostic-fixture-form`", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7896,6 +7924,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`type_check_failure`", web_design)
         self.assertIn("`construction_hygiene_failure`", web_design)
         self.assertIn("`coq_check_failure`", web_design)
+        self.assertIn("`diagnostic-fixture-form`", web_design)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
