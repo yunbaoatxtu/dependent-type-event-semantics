@@ -90,6 +90,7 @@ from translator.surface_lexicon import (
 )
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
+    DIAGNOSTIC_CONTRACT_SCHEMA,
     DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
     DIAGNOSTIC_FAILURE_STAGES,
     DIAGNOSTIC_FIXTURE_CASES,
@@ -100,6 +101,7 @@ from web.app import (
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
+    diagnostic_contract_manifest,
     diagnostic_fixture_manifest,
     diagnostic_fixture_result,
     modifier_role_audit,
@@ -7933,6 +7935,23 @@ class TranslatorTests(unittest.TestCase):
             REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
         )
 
+    def test_diagnostic_contract_api_exposes_controlled_vocabularies(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        contract = PipelineHandler.handle_diagnostic_contract_api(handler)
+        self.assertEqual(contract, diagnostic_contract_manifest())
+        self.assertEqual(contract["schema_version"], DIAGNOSTIC_CONTRACT_SCHEMA)
+        self.assertEqual(contract["failure_stages"], sorted(DIAGNOSTIC_FAILURE_STAGES))
+        self.assertEqual(
+            contract["required_fixture_stages"],
+            sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
+        )
+        self.assertEqual(
+            contract["recovery_action_kinds"],
+            sorted(DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+        )
+        self.assertIn("semantic_readings_check", contract["failure_stages"])
+        self.assertIn("add_missing_coq_definitions", contract["recovery_action_kinds"])
+
     def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-empty case"):
             DiagnosticFixtureSpec(
@@ -8034,6 +8053,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-current-fixture="semantic_readings_missing_export"', page)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', page)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', page)
+        self.assertIn('data-diagnostic-contract-api="/api/diagnostic-contract"', page)
         self.assertIn(f'data-fixture-count="{fixture_count}"', page)
         for fixture in manifest["cases"]:
             case = fixture["case"]
@@ -8337,9 +8357,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("unknown stage/action names fail", readme)
         self.assertIn("same diagnostic contract", readme)
         self.assertIn("controlled failure-stage and recovery-action vocabularies", readme)
+        self.assertIn("/api/diagnostic-contract", readme)
+        self.assertIn("`diagnostic_contract.v1` manifest", readme)
+        self.assertIn("`required_fixture_stages`", readme)
         self.assertIn("stage, and action lists", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
+        self.assertIn("`data-diagnostic-contract-api`", readme)
         self.assertIn("per-option failure-stage", readme)
         self.assertIn("checked against the same controlled set", readme)
         self.assertIn("four internal/proof-boundary stages", readme)
@@ -8475,15 +8499,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("unknown stage/action names should fail", web_design)
         self.assertIn("diagnostic\ncontract module", web_design)
         self.assertIn("verifier acceptance cannot drift", web_design)
+        self.assertIn("/api/diagnostic-contract", web_design)
+        self.assertIn("`diagnostic_contract.v1` manifest", web_design)
+        self.assertIn("`required_fixture_stages`", web_design)
         self.assertIn("parallel case", web_design)
         self.assertIn("label, stage, and action structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
         self.assertIn("`data-fixtures-api`", web_design)
+        self.assertIn("`data-diagnostic-contract-api`", web_design)
         self.assertIn("option-level failure-stage", web_design)
         self.assertIn("pure verifier helper", web_design)
         self.assertIn("API/HTML route case parameter", web_design)
         self.assertIn("parse each manifest `api_path` and `html_path`", web_design)
-        self.assertIn("manifest label as the option text", web_design)
+        self.assertIn("manifest label\nas the option text", web_design)
         self.assertIn("controlled diagnostics set", web_design)
         self.assertIn("four internal/proof-boundary stages", web_design)
         self.assertIn("stale selector attributes", web_design)
@@ -8503,6 +8531,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("checked against controlled vocabularies", manuscript)
         self.assertIn("same diagnostic contract module", manuscript)
         self.assertIn("UI layer would reject", manuscript)
+        self.assertIn("/api/diagnostic-contract", manuscript)
+        self.assertIn("diagnostic_contract.v1 manifest", manuscript)
+        self.assertIn("required_fixture_stages", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)
@@ -9150,8 +9181,11 @@ class TranslatorTests(unittest.TestCase):
     def test_verification_runs_web_route_smoke_check(self) -> None:
         verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
+        self.assertIn("def validate_diagnostic_contract_manifest(", verifier)
         self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
+        self.assertIn("/api/diagnostic-contract", verifier)
+        self.assertIn("diagnostic_contract.v1", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn('"/api/diagnostic-fixture"', verifier)
         self.assertIn('"/diagnostic-fixture"', verifier)
@@ -9209,6 +9243,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("recovery action drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
+        self.assertIn('data-diagnostic-contract-api="/api/diagnostic-contract"', verifier)
         self.assertIn('data-fixture-count="{fixture_count}"', verifier)
         self.assertIn('data-failure-stage="{expected_stage}"', verifier)
         self.assertIn('data-recovery-action-kinds="{recovery_action_text}"', verifier)

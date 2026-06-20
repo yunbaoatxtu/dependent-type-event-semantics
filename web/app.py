@@ -26,12 +26,14 @@ from web.diagnostic_contract import (
     DIAGNOSTIC_FAILURE_STAGES,
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     DiagnosticFixtureSpec,
+    REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
 )
 
 
 DEFAULT_SENTENCE = "John knocked twice"
 ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
+DIAGNOSTIC_CONTRACT_SCHEMA = "diagnostic_contract.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
@@ -379,6 +381,15 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
         "schema_version": DIAGNOSTIC_FIXTURES_SCHEMA,
         "default_case": DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
         "cases": cases,
+    }
+
+
+def diagnostic_contract_manifest() -> dict[str, Any]:
+    return {
+        "schema_version": DIAGNOSTIC_CONTRACT_SCHEMA,
+        "failure_stages": sorted(DIAGNOSTIC_FAILURE_STAGES),
+        "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
+        "recovery_action_kinds": sorted(DIAGNOSTIC_RECOVERY_ACTION_KINDS),
     }
 
 
@@ -1459,6 +1470,7 @@ def diagnostic_fixture_form(result: dict[str, Any]) -> str:
         f'data-current-fixture="{html.escape(selected_case, quote=True)}" '
         f'data-fixtures-schema="{html.escape(str(manifest.get("schema_version", "")), quote=True)}" '
         f'data-fixtures-api="/api/diagnostic-fixtures" '
+        f'data-diagnostic-contract-api="/api/diagnostic-contract" '
         f'data-fixture-count="{len(manifest_cases)}">'
         '<label for="diagnostic-fixture-case">Diagnostics</label>'
         '<select id="diagnostic-fixture-case" name="case">'
@@ -2165,6 +2177,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/diagnostic-fixtures":
             self.write_json_response(self.handle_diagnostic_fixtures_api())
             return
+        if parsed.path == "/api/diagnostic-contract":
+            self.write_json_response(self.handle_diagnostic_contract_api())
+            return
         if parsed.path == "/api/lexicon-patch-drafts":
             response_format = self.patch_response_format(parsed.query)
             if response_format == "patch":
@@ -2220,6 +2235,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
 
     def handle_diagnostic_fixtures_api(self) -> dict[str, Any]:
         return diagnostic_fixture_manifest()
+
+    def handle_diagnostic_contract_api(self) -> dict[str, Any]:
+        return diagnostic_contract_manifest()
 
     def handle_patch_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)

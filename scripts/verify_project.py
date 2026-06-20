@@ -707,6 +707,7 @@ def validate_diagnostic_fixture_routes(
             f'data-current-fixture="{case}"',
             'data-fixtures-schema="diagnostic_fixtures.v1"',
             'data-fixtures-api="/api/diagnostic-fixtures"',
+            'data-diagnostic-contract-api="/api/diagnostic-contract"',
             f'data-fixture-count="{fixture_count}"',
             f'value="{case}" selected',
             f'data-failure-stage="{expected_stage}"',
@@ -729,6 +730,19 @@ def validate_diagnostic_fixture_routes(
                     "web route smoke check failed: diagnostic fixture page missing "
                     f"{fragment} for {case}"
                 )
+
+
+def validate_diagnostic_contract_manifest(contract: dict) -> None:
+    if contract.get("schema_version") != "diagnostic_contract.v1":
+        raise SystemExit("web route smoke check failed: wrong diagnostic contract schema")
+    if contract.get("failure_stages") != sorted(VALID_DIAGNOSTIC_FAILURE_STAGES):
+        raise SystemExit("web route smoke check failed: diagnostic failure-stage drift")
+    if contract.get("required_fixture_stages") != sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES):
+        raise SystemExit("web route smoke check failed: diagnostic fixture-stage drift")
+    if contract.get("recovery_action_kinds") != sorted(
+        VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS
+    ):
+        raise SystemExit("web route smoke check failed: diagnostic recovery-action drift")
 
 
 def validate_lexicon_patch_http_routes(port: int, opener) -> None:
@@ -820,6 +834,8 @@ def run_web_route_smoke_check() -> None:
     try:
         port = server.server_address[1]
         opener = build_opener(ProxyHandler({}))
+        with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-contract", timeout=5) as response:
+            validate_diagnostic_contract_manifest(json.load(response))
         with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
             manifest = json.load(response)
         manifest_cases = manifest.get("cases", [])

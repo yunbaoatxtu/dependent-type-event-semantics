@@ -303,10 +303,13 @@ unknown stage/action names should fail before the manifest is served.
 The web application and project verifier should import the same diagnostic
 contract module for the controlled failure-stage and recovery-action
 vocabularies, so verifier acceptance cannot drift from UI construction.
+The same vocabulary should be exposed to clients at `/api/diagnostic-contract`
+as a `diagnostic_contract.v1` manifest containing `failure_stages`,
+`required_fixture_stages`, and `recovery_action_kinds`.
 The selector should be rendered from that same manifest and expose
-`data-fixtures-schema`, `data-fixtures-api`, option-level failure-stage and
-recovery-action metadata, and the manifest label as the option text so the UI
-cannot drift from the JSON inventory.
+`data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
+option-level failure-stage and recovery-action metadata, and the manifest label
+as the option text so the UI cannot drift from the JSON inventory.
 The project verification smoke check should request both the manifest endpoint
 and the HTML fixture page, making selector/manifest drift visible in the same
 deterministic check suite that exercises the backend pipeline.

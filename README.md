@@ -672,10 +672,13 @@ The web application and project verifier import the same diagnostic contract
 module for the controlled failure-stage and recovery-action vocabularies, so
 the browser/API route checks cannot accept a stage name that the UI layer would
 reject.
+The same vocabulary is exposed to clients at `/api/diagnostic-contract` as a
+`diagnostic_contract.v1` manifest containing `failure_stages`,
+`required_fixture_stages`, and `recovery_action_kinds`.
 The selector is rendered from the same manifest and carries
-`data-fixtures-schema`, `data-fixtures-api`, and per-option failure-stage and
-recovery-action metadata, so the visible labels, controls, and API inventory
-cannot silently drift apart.
+`data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
+and per-option failure-stage and recovery-action metadata, so the visible
+labels, controls, and API inventory cannot silently drift apart.
 The project-level verification smoke check fetches both the JSON manifest and
 the matching HTML fixture page, so this selector/manifest contract is enforced
 outside the unit-test renderer as well.
