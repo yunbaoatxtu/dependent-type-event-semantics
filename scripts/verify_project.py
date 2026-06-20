@@ -164,6 +164,61 @@ def integer_list(value: object) -> bool:
     return isinstance(value, list) and all(type(item) is int for item in value)
 
 
+def string_list(value: object) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
+
+
+def validate_semantic_readings_repair_details(case: str, details: object) -> None:
+    if not isinstance(details, dict):
+        raise SystemExit(f"web route smoke check failed: {case} malformed repair details")
+    string_list_fields = [
+        "exported_definitions",
+        "expected_coq_definitions",
+        "missing_coq_definitions",
+        "duplicate_reading_names",
+    ]
+    integer_list_fields = [
+        "malformed_reading_indices",
+        "failed_type_check_indices",
+    ]
+    required_fields = [
+        *string_list_fields,
+        *integer_list_fields,
+        "expected_export_count",
+        "observed_export_count",
+    ]
+    missing_fields = [field for field in required_fields if field not in details]
+    if missing_fields:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} incomplete semantic readings repair details"
+        )
+    for field in string_list_fields:
+        if not string_list(details.get(field)):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid semantic readings repair details {field}"
+            )
+    for field in integer_list_fields:
+        if not integer_list(details.get(field)):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid semantic readings repair details {field}"
+            )
+    expected = details.get("expected_export_count")
+    observed = details.get("observed_export_count")
+    if expected is not None and type(expected) is not int:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} invalid semantic readings repair details expected_export_count"
+        )
+    if type(observed) is not int:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} invalid semantic readings repair details observed_export_count"
+        )
+
+
 def validate_diagnostic_recovery_action(case: str, action: object) -> None:
     if not isinstance(action, dict):
         raise SystemExit(f"web route smoke check failed: {case} malformed recovery action")
@@ -206,6 +261,49 @@ def validate_diagnostic_recovery_action(case: str, action: object) -> None:
         ):
             raise SystemExit(
                 f"web route smoke check failed: {case} invalid recovery action exported_definitions"
+            )
+
+
+def validate_recovery_action_matches_repair_details(
+    case: str,
+    action: dict,
+    details: dict,
+) -> None:
+    kind = action.get("kind")
+    checks = {
+        "add_missing_coq_definitions": (
+            "target_definitions",
+            "missing_coq_definitions",
+        ),
+        "rename_duplicate_readings": (
+            "duplicate_reading_names",
+            "duplicate_reading_names",
+        ),
+        "fix_malformed_readings": (
+            "reading_indices",
+            "malformed_reading_indices",
+        ),
+        "fix_reading_type_checks": (
+            "reading_indices",
+            "failed_type_check_indices",
+        ),
+    }
+    if kind in checks:
+        action_field, detail_field = checks[kind]
+        if action.get(action_field) != details.get(detail_field):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} recovery action repair detail drift"
+            )
+    if kind == "normalize_reading_exports":
+        if (
+            action.get("expected_export_count") != details.get("expected_export_count")
+            or action.get("observed_export_count") != details.get("observed_export_count")
+            or action.get("exported_definitions") != details.get("exported_definitions")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} recovery action repair detail drift"
             )
 
 
@@ -280,11 +378,14 @@ def validate_diagnostic_fixture_routes(
             raise SystemExit(f"web route smoke check failed: {case} missing diagnostics")
         if diagnostics.get("failure_stage") != expected_stage:
             raise SystemExit(f"web route smoke check failed: {case} stage drift")
+        repair_details = diagnostics.get("semantic_readings_repair_details")
+        validate_semantic_readings_repair_details(case, repair_details)
         payload_actions = diagnostics.get("recovery_actions", [])
         if not isinstance(payload_actions, list):
             raise SystemExit(f"web route smoke check failed: {case} missing recovery actions")
         for action in payload_actions:
             validate_diagnostic_recovery_action(case, action)
+            validate_recovery_action_matches_repair_details(case, action, repair_details)
         observed_actions = [
             action.get("kind")
             for action in payload_actions

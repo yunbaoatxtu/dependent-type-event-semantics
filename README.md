@@ -631,6 +631,11 @@ reading definition names, missing definitions, duplicate reading names,
 malformed reading indices, failed reading-local type-check indices, and
 expected versus observed export counts when a registered rule did not expose a
 unique proposition.
+The verifier treats this as a fixed schema: the definition-name fields must be
+string lists, the index fields must be integer lists, `expected_export_count`
+must be either an integer or `null`, and `observed_export_count` must be an
+integer. It also checks that repair details agree with the specialized
+recovery action payloads derived from them.
 For the same boundary, `diagnostics.recovery_actions` is specialized from
 those repair details: missing exports produce `add_missing_coq_definitions`
 with `target_definitions`, duplicate names produce `rename_duplicate_readings`,
@@ -683,8 +688,9 @@ helper with counterexample tests for duplicate cases, missing metadata, payload
 case drift, route case drift between manifest paths and the fixture case, label
 drift between manifest and HTML, unknown fixture failure stages, missing
 internal/proof-boundary stage coverage, malformed recovery actions, invalid
-action targets or counts, recovery-action drift between the payload and
-manifest, stale HTML selector attributes, and stale `Next Steps` action hooks.
+repair-detail fields, action/detail drift, invalid action targets or counts,
+recovery-action drift between the payload and manifest, stale HTML selector
+attributes, and stale `Next Steps` action hooks.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

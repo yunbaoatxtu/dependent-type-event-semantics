@@ -7858,6 +7858,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.semantic_readings_failure_kinds`", readme)
         self.assertIn("`diagnostics.semantic_readings_failure_summary`", readme)
         self.assertIn("`diagnostics.semantic_readings_repair_details`", readme)
+        self.assertIn("fixed schema", readme)
         self.assertIn("`add_missing_coq_definitions`", readme)
         self.assertIn("`normalize_reading_exports`", readme)
         self.assertIn("/api/diagnostic-fixture?case=semantic_readings_missing_export", readme)
@@ -7879,6 +7880,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("drift between manifest and HTML", readme)
         self.assertIn("unknown fixture failure stages", readme)
         self.assertIn("internal/proof-boundary stage coverage", readme)
+        self.assertIn("repair-detail fields", readme)
+        self.assertIn("action/detail drift", readme)
         self.assertIn("recovery-action drift", readme)
         self.assertIn("stale `Next Steps`", readme)
         self.assertIn("action hooks", readme)
@@ -7984,6 +7987,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-coq-exported`", web_design)
         self.assertIn("`semantic_readings_failure_kinds`", web_design)
         self.assertIn("`semantic_readings_repair_details`", web_design)
+        self.assertIn("checked as a fixed schema", web_design)
+        self.assertIn("compare these details with the payload fields", web_design)
         self.assertIn("`add_missing_coq_definitions`", web_design)
         self.assertIn("`next-step-details`", web_design)
         self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", web_design)
@@ -8008,6 +8013,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("kind-specific payload shapes", web_design)
         self.assertIn("list and the rendered `Next Steps`", web_design)
         self.assertIn("validate each payload action's schema", web_design)
+        self.assertIn("compare action payloads against", web_design)
         self.assertIn("`data-action-kind` hooks", web_design)
         self.assertIn(
             "visible labels, controls, and JSON inventory cannot silently drift apart",
@@ -8015,12 +8021,16 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
+        self.assertIn("repair detail record as a fixed schema", manuscript)
+        self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("controlled diagnostics stage set", manuscript)
         self.assertIn("route case drift between manifest paths and fixture cases", manuscript)
         self.assertIn("label drift between manifest and HTML", manuscript)
         self.assertIn("unknown fixture failure stages", manuscript)
         self.assertIn("missing internal/proof-boundary stage coverage", manuscript)
+        self.assertIn("incomplete or ill-typed repair details", manuscript)
+        self.assertIn("action/detail drift", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
@@ -8456,6 +8466,66 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_rejects_incomplete_semantic_readings_repair_details(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_missing_export"]["diagnostics"][
+            "semantic_readings_repair_details"
+        ].pop("missing_coq_definitions")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export incomplete semantic readings repair details",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_bad_semantic_readings_repair_detail_types(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_malformed"]["diagnostics"][
+            "semantic_readings_repair_details"
+        ]["malformed_reading_indices"] = ["1"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_malformed invalid semantic readings repair details "
+            "malformed_reading_indices",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_export_count_mismatch"]["diagnostics"][
+            "semantic_readings_repair_details"
+        ]["expected_export_count"] = "1"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_export_count_mismatch invalid semantic readings repair details "
+            "expected_export_count",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_repair_detail_and_action_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_missing_export"]["diagnostics"][
+            "semantic_readings_repair_details"
+        ]["missing_coq_definitions"] = ["different_reading"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export recovery action repair detail drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["semantic_readings_export_count_mismatch"]["diagnostics"][
+            "semantic_readings_repair_details"
+        ]["observed_export_count"] = 3
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_export_count_mismatch recovery action repair detail drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_rejects_diagnostic_fixture_html_metadata_drift(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         pages = dict(pages)
@@ -8501,6 +8571,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("invalid recovery action target_definitions", verifier)
         self.assertIn("invalid recovery action reading_indices", verifier)
         self.assertIn("invalid recovery action export counts", verifier)
+        self.assertIn("def validate_semantic_readings_repair_details(", verifier)
+        self.assertIn("incomplete semantic readings repair details", verifier)
+        self.assertIn("invalid semantic readings repair details", verifier)
+        self.assertIn("def validate_recovery_action_matches_repair_details(", verifier)
+        self.assertIn("recovery action repair detail drift", verifier)
         self.assertNotIn("len(cases) != 6", verifier)
         self.assertNotIn('data-fixture-count="6"', verifier)
         self.assertIn("for fixture in manifest_cases:", verifier)

@@ -209,6 +209,11 @@ with exported Prop/PropT definition names, expected reading definition names,
 missing Coq/Rocq definitions, duplicate reading names, malformed reading
 indices, failed reading-local type-check indices, and expected versus observed
 export counts when a registered rule emits too many or too few propositions.
+This object should be checked as a fixed schema: definition-name fields are
+string lists, reading-index fields are integer lists, `expected_export_count`
+is an integer or `null`, and `observed_export_count` is an integer. The same
+verifier should compare these details with the payload fields of the specialized
+recovery actions derived from them.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not
@@ -279,8 +284,9 @@ parse each manifest `api_path` and `html_path` to verify that its endpoint and
 label with the rendered option text, and compare the manifest's
 `recovery_action_kinds` with the actual payload `diagnostics.recovery_actions`
 list and the rendered `Next Steps` `data-action-kind` hooks. It should also
-validate each payload action's schema, so routes, labels, typed repair
-arguments, and repair advice cannot drift between JSON and HTML.
+validate each payload action's schema and compare action payloads against
+`semantic_readings_repair_details`, so routes, labels, typed repair arguments,
+and repair advice cannot drift between JSON and HTML.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and
