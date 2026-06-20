@@ -8697,7 +8697,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("real local web route", manuscript)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
-        self.assertIn("python3 scripts/verify_project.py --skip-coq --require-docx", readme)
+        self.assertIn("python3 scripts/verify_project.py --require-coq --require-docx", readme)
         self.assertIn("the compact diagnostics summary", web_design)
         self.assertIn("construction-specific hygiene", web_design)
         self.assertIn("`diagnostics.failure_stage` is the machine-readable failure locator", web_design)
@@ -9301,8 +9301,10 @@ class TranslatorTests(unittest.TestCase):
         workflow = (ROOT / ".github" / "workflows" / "verify.yml").read_text(
             encoding="utf-8"
         )
+        self.assertIn("sudo apt-get install -y coq", workflow)
+        self.assertIn("coqc --version", workflow)
         self.assertIn('python -m pip install ".[docx]"', workflow)
-        self.assertIn("python scripts/verify_project.py --skip-coq --require-docx", workflow)
+        self.assertIn("python scripts/verify_project.py --require-coq --require-docx", workflow)
         self.assertIn("Run deterministic checks", workflow)
 
 if __name__ == "__main__":

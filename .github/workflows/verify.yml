@@ -12,7 +12,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install Coq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y coq
+          coqc --version
       - name: Install document test dependency
         run: python -m pip install ".[docx]"
       - name: Run deterministic checks
-        run: python scripts/verify_project.py --skip-coq --require-docx
+        run: python scripts/verify_project.py --require-coq --require-docx
