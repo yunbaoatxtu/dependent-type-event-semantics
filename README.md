@@ -662,6 +662,9 @@ the matching HTML fixture page, so this selector/manifest contract is enforced
 outside the unit-test renderer as well.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, failure stage, and recovery-action metadata for each one.
+The expected selector count is derived from the manifest itself, so adding a new
+diagnostic case does not require updating a separate hard-coded smoke-test
+constant.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

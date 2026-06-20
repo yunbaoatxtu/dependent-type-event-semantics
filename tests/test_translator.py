@@ -7561,20 +7561,16 @@ class TranslatorTests(unittest.TestCase):
 
     def test_web_page_renders_diagnostic_fixture_selector(self) -> None:
         page = render_page("John knocked twice", require_coq=True)
+        manifest = diagnostic_fixture_manifest()
+        fixture_count = len(manifest["cases"])
         self.assertIn('class="diagnostic-fixture-form"', page)
         self.assertIn('action="/diagnostic-fixture"', page)
         self.assertIn('data-current-fixture="semantic_readings_missing_export"', page)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', page)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', page)
-        self.assertIn('data-fixture-count="6"', page)
-        for case in [
-            "construction_hygiene_failure",
-            "coq_check_failure",
-            "semantic_readings_export_count_mismatch",
-            "semantic_readings_malformed",
-            "semantic_readings_missing_export",
-            "type_check_failure",
-        ]:
+        self.assertIn(f'data-fixture-count="{fixture_count}"', page)
+        for fixture in manifest["cases"]:
+            case = fixture["case"]
             self.assertIn(f'value="{case}"', page)
         self.assertIn('data-failure-stage="semantic_readings_check"', page)
         self.assertIn(
@@ -8206,13 +8202,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", verifier)
         self.assertIn("diagnostic_fixtures.v1", verifier)
-        self.assertIn("for fixture in manifest.get(\"cases\", []):", verifier)
+        self.assertIn("manifest_cases = manifest.get(\"cases\", [])", verifier)
+        self.assertIn("fixture_count = len(manifest_cases)", verifier)
+        self.assertIn("duplicate fixture cases", verifier)
+        self.assertNotIn("len(cases) != 6", verifier)
+        self.assertNotIn('data-fixture-count="6"', verifier)
+        self.assertIn("for fixture in manifest_cases:", verifier)
         self.assertIn("fixture_payloads[case] = json.load(response)", verifier)
         self.assertIn("fixture_pages[case] = response.read().decode(\"utf-8\")", verifier)
         self.assertIn("payload case drift", verifier)
         self.assertIn("stage drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
+        self.assertIn('data-fixture-count="{fixture_count}"', verifier)
         self.assertIn('data-failure-stage="{expected_stage}"', verifier)
         self.assertIn('data-recovery-action-kinds="{recovery_action_text}"', verifier)
         self.assertIn("ProxyHandler({})", verifier)

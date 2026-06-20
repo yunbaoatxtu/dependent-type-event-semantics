@@ -255,6 +255,8 @@ and the HTML fixture page, making selector/manifest drift visible in the same
 deterministic check suite that exercises the backend pipeline.
 It should iterate over every case advertised by the manifest and compare the
 API payload, selected HTML option, failure stage, and recovery-action metadata.
+The expected selector count should be derived from the manifest rather than
+from a second hard-coded case total.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

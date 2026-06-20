@@ -129,9 +129,13 @@ def run_web_route_smoke_check() -> None:
         opener = build_opener(ProxyHandler({}))
         with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
             manifest = json.load(response)
+        manifest_cases = manifest.get("cases", [])
+        if not isinstance(manifest_cases, list) or not manifest_cases:
+            raise SystemExit("web route smoke check failed: missing fixture cases")
+        fixture_count = len(manifest_cases)
         fixture_payloads = {}
         fixture_pages = {}
-        for fixture in manifest.get("cases", []):
+        for fixture in manifest_cases:
             if not isinstance(fixture, dict):
                 raise SystemExit("web route smoke check failed: malformed fixture case")
             case = fixture.get("case")
@@ -152,9 +156,9 @@ def run_web_route_smoke_check() -> None:
         raise SystemExit("web route smoke check failed: wrong diagnostic fixture schema")
     if manifest.get("default_case") != "semantic_readings_missing_export":
         raise SystemExit("web route smoke check failed: wrong default fixture case")
-    cases = {fixture.get("case"): fixture for fixture in manifest.get("cases", [])}
-    if len(cases) != 6:
-        raise SystemExit("web route smoke check failed: unexpected fixture case count")
+    cases = {fixture.get("case"): fixture for fixture in manifest_cases}
+    if len(cases) != fixture_count:
+        raise SystemExit("web route smoke check failed: duplicate fixture cases")
     missing = cases.get("semantic_readings_missing_export")
     if not missing:
         raise SystemExit("web route smoke check failed: missing semantic readings fixture")
@@ -184,7 +188,7 @@ def run_web_route_smoke_check() -> None:
             f'data-current-fixture="{case}"',
             'data-fixtures-schema="diagnostic_fixtures.v1"',
             'data-fixtures-api="/api/diagnostic-fixtures"',
-            'data-fixture-count="6"',
+            f'data-fixture-count="{fixture_count}"',
             f'value="{case}" selected',
             f'data-failure-stage="{expected_stage}"',
             f'data-recovery-action-kinds="{recovery_action_text}"',
