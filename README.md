@@ -975,7 +975,9 @@ This includes a package-build smoke check that runs
 `pip wheel --no-build-isolation --no-deps`, using the active Python
 environment's local build tooling rather than requiring a network fetch for
 build dependencies. It also runs a smoke check for the lexicon patch exporter,
-verifying that it can write both the JSON bundle and review-only patch text.
+verifying that it can write both the JSON bundle and review-only patch text,
+and a web route smoke check that requests the diagnostic fixture manifest
+through the local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the

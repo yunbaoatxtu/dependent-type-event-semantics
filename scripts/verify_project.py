@@ -8,9 +8,14 @@ import json
 import shutil
 import subprocess
 import sys
+import threading
+from http.server import ThreadingHTTPServer
 from pathlib import Path
+from urllib.request import ProxyHandler, build_opener
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 PYCACHE = ROOT / ".pycache"
 COQ_FILE = ROOT / "formalization" / "DependentTypeEventSemantics.v"
 PACKAGE_WHEEL_DIR = ROOT / "work" / "verify_package_build"
@@ -112,6 +117,39 @@ def run_lexicon_export_smoke_check() -> None:
         raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
 
 
+def run_web_route_smoke_check() -> None:
+    from web.app import PipelineHandler
+
+    print("==> web route smoke check")
+    server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        port = server.server_address[1]
+        opener = build_opener(ProxyHandler({}))
+        with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
+            manifest = json.load(response)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    if manifest.get("schema_version") != "diagnostic_fixtures.v1":
+        raise SystemExit("web route smoke check failed: wrong diagnostic fixture schema")
+    if manifest.get("default_case") != "semantic_readings_missing_export":
+        raise SystemExit("web route smoke check failed: wrong default fixture case")
+    cases = {fixture.get("case"): fixture for fixture in manifest.get("cases", [])}
+    if len(cases) != 6:
+        raise SystemExit("web route smoke check failed: unexpected fixture case count")
+    missing = cases.get("semantic_readings_missing_export")
+    if not missing:
+        raise SystemExit("web route smoke check failed: missing semantic readings fixture")
+    if missing.get("failure_stage") != "semantic_readings_check":
+        raise SystemExit("web route smoke check failed: wrong semantic readings failure stage")
+    if missing.get("api_path") != "/api/diagnostic-fixture?case=semantic_readings_missing_export":
+        raise SystemExit("web route smoke check failed: wrong fixture API path")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run translator, scaffold, and optional proof-assistant checks."
@@ -165,6 +203,7 @@ def main() -> None:
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
+    run_web_route_smoke_check()
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")
     else:

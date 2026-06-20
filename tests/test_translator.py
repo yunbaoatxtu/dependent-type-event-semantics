@@ -8052,6 +8052,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("package-build smoke check", readme)
         self.assertIn("package-build smoke check", manuscript)
         self.assertIn("smoke check for the lexicon patch exporter", readme)
+        self.assertIn("web route smoke check", readme)
+        self.assertIn("real local web route", manuscript)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
         self.assertIn("python3 scripts/verify_project.py --skip-coq --require-docx", readme)
@@ -8177,6 +8179,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertLess(
             verifier.index('"--no-build-isolation"'),
             verifier.index('"--no-deps"'),
+        )
+
+    def test_verification_runs_web_route_smoke_check(self) -> None:
+        verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
+        self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
+        self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
+        self.assertIn("/api/diagnostic-fixtures", verifier)
+        self.assertIn("diagnostic_fixtures.v1", verifier)
+        self.assertIn("ProxyHandler({})", verifier)
+        self.assertIn("run_web_route_smoke_check()", verifier)
+        self.assertLess(
+            verifier.index("run_lexicon_export_smoke_check()"),
+            verifier.index("run_web_route_smoke_check()"),
         )
 
     def test_github_workflow_runs_docx_verification_entrypoint(self) -> None:
