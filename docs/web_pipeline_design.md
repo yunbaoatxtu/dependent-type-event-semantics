@@ -306,6 +306,9 @@ vocabularies, so verifier acceptance cannot drift from UI construction.
 The same vocabulary should be exposed to clients at `/api/diagnostic-contract`
 as a `diagnostic_contract.v1` manifest containing `failure_stages`,
 `required_fixture_stages`, and `recovery_action_kinds`.
+The verifier should reject schema drift, failure-stage drift,
+required-fixture-stage drift, recovery-action drift, and stale selector links
+to that contract endpoint.
 The selector should be rendered from that same manifest and expose
 `data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
 option-level failure-stage and recovery-action metadata, and the manifest label

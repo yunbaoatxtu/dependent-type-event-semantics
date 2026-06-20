@@ -17,6 +17,7 @@ from scripts.verify_project import (
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     VALID_DIAGNOSTIC_FAILURE_STAGES,
     VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    validate_diagnostic_contract_manifest,
     validate_diagnostic_fixture_routes,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
@@ -7952,6 +7953,28 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("semantic_readings_check", contract["failure_stages"])
         self.assertIn("add_missing_coq_definitions", contract["recovery_action_kinds"])
 
+    def test_verification_rejects_diagnostic_contract_manifest_drift(self) -> None:
+        contract = diagnostic_contract_manifest()
+        bad_schema = deepcopy(contract)
+        bad_schema["schema_version"] = "diagnostic_contract.v0"
+        with self.assertRaisesRegex(SystemExit, "wrong diagnostic contract schema"):
+            validate_diagnostic_contract_manifest(bad_schema)
+
+        bad_stages = deepcopy(contract)
+        bad_stages["failure_stages"] = ["semantic_readings_check"]
+        with self.assertRaisesRegex(SystemExit, "diagnostic failure-stage drift"):
+            validate_diagnostic_contract_manifest(bad_stages)
+
+        bad_required = deepcopy(contract)
+        bad_required["required_fixture_stages"] = ["semantic_readings_check"]
+        with self.assertRaisesRegex(SystemExit, "diagnostic fixture-stage drift"):
+            validate_diagnostic_contract_manifest(bad_required)
+
+        bad_actions = deepcopy(contract)
+        bad_actions["recovery_action_kinds"] = ["inspect_readings"]
+        with self.assertRaisesRegex(SystemExit, "diagnostic recovery-action drift"):
+            validate_diagnostic_contract_manifest(bad_actions)
+
     def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-empty case"):
             DiagnosticFixtureSpec(
@@ -8360,6 +8383,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-contract", readme)
         self.assertIn("`diagnostic_contract.v1` manifest", readme)
         self.assertIn("`required_fixture_stages`", readme)
+        self.assertIn("schema drift", readme)
+        self.assertIn("required-fixture-stage", readme)
+        self.assertIn("stale selector links", readme)
         self.assertIn("stage, and action lists", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
@@ -8502,6 +8528,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-contract", web_design)
         self.assertIn("`diagnostic_contract.v1` manifest", web_design)
         self.assertIn("`required_fixture_stages`", web_design)
+        self.assertIn("schema drift", web_design)
+        self.assertIn("required-fixture-stage", web_design)
+        self.assertIn("stale selector links", web_design)
         self.assertIn("parallel case", web_design)
         self.assertIn("label, stage, and action structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
@@ -8534,6 +8563,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-contract", manuscript)
         self.assertIn("diagnostic_contract.v1 manifest", manuscript)
         self.assertIn("required_fixture_stages", manuscript)
+        self.assertIn("schema drift", manuscript)
+        self.assertIn("required-fixture-stage drift", manuscript)
+        self.assertIn("stale selector links", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)
@@ -9162,6 +9194,16 @@ class TranslatorTests(unittest.TestCase):
         pages["type_check_failure"] = pages["type_check_failure"].replace(
             'data-fixtures-api="/api/diagnostic-fixtures"',
             'data-fixtures-api="/api/stale-fixtures"',
+        )
+        with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_contract_html_metadata_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = dict(pages)
+        pages["type_check_failure"] = pages["type_check_failure"].replace(
+            'data-diagnostic-contract-api="/api/diagnostic-contract"',
+            'data-diagnostic-contract-api="/api/stale-diagnostic-contract"',
         )
         with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)

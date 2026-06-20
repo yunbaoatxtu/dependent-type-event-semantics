@@ -675,6 +675,9 @@ reject.
 The same vocabulary is exposed to clients at `/api/diagnostic-contract` as a
 `diagnostic_contract.v1` manifest containing `failure_stages`,
 `required_fixture_stages`, and `recovery_action_kinds`.
+The verifier rejects schema drift, failure-stage drift, required-fixture-stage
+drift, recovery-action drift, and stale selector links to that contract
+endpoint.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
 and per-option failure-stage and recovery-action metadata, so the visible
