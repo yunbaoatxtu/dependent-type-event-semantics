@@ -255,17 +255,19 @@ The project verification smoke check should request both the manifest endpoint
 and the HTML fixture page, making selector/manifest drift visible in the same
 deterministic check suite that exercises the backend pipeline.
 It should iterate over every case advertised by the manifest and compare the
-API payload, selected HTML option, failure stage, and recovery-action metadata.
+API payload, selected HTML option, API/HTML route case parameter, failure stage,
+and recovery-action metadata.
 The expected selector count should be derived from the manifest rather than
 from a second hard-coded case total.
 The same consistency rules should be factored into a pure verifier helper so
 tests can inject duplicate cases, incomplete metadata, payload case drift, and
 stale selector attributes without needing a live server. The helper should also
-compare the manifest label with the rendered option text, and compare the
-manifest's `recovery_action_kinds` with the actual payload
-`diagnostics.recovery_actions` list and the rendered `Next Steps`
-`data-action-kind` hooks, so labels and repair advice cannot drift between JSON
-and HTML.
+parse each manifest `api_path` and `html_path` to verify that its endpoint and
+`case` query parameter point back to the same fixture case, compare the manifest
+label with the rendered option text, and compare the manifest's
+`recovery_action_kinds` with the actual payload `diagnostics.recovery_actions`
+list and the rendered `Next Steps` `data-action-kind` hooks, so routes, labels,
+and repair advice cannot drift between JSON and HTML.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

@@ -11,6 +11,7 @@ import subprocess
 import sys
 import threading
 from http.server import ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
 
@@ -118,6 +119,14 @@ def run_lexicon_export_smoke_check() -> None:
         raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
 
 
+def validate_fixture_path(case: str, path: str, route: str, label: str) -> None:
+    parsed = urlparse(path)
+    if parsed.path != route:
+        raise SystemExit(f"web route smoke check failed: {case} {label} path drift")
+    if parse_qs(parsed.query, keep_blank_values=True) != {"case": [case]}:
+        raise SystemExit(f"web route smoke check failed: {case} {label} case drift")
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -158,9 +167,19 @@ def validate_diagnostic_fixture_routes(
         raise SystemExit("web route smoke check failed: missing semantic readings fixture")
     if missing.get("failure_stage") != "semantic_readings_check":
         raise SystemExit("web route smoke check failed: wrong semantic readings failure stage")
-    if missing.get("api_path") != "/api/diagnostic-fixture?case=semantic_readings_missing_export":
-        raise SystemExit("web route smoke check failed: wrong fixture API path")
     for case, fixture in cases.items():
+        validate_fixture_path(
+            case,
+            fixture.get("api_path", ""),
+            "/api/diagnostic-fixture",
+            "API",
+        )
+        validate_fixture_path(
+            case,
+            fixture.get("html_path", ""),
+            "/diagnostic-fixture",
+            "HTML",
+        )
         expected_label = fixture.get("label")
         expected_stage = fixture.get("failure_stage")
         expected_actions = fixture.get("recovery_action_kinds", [])
