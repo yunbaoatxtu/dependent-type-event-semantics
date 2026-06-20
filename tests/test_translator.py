@@ -8,6 +8,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
@@ -6955,6 +6956,16 @@ class TranslatorTests(unittest.TestCase):
 
     def test_api_lexicon_patch_drafts_endpoint(self) -> None:
         handler = object.__new__(PipelineHandler)
+        empty_bundle = PipelineHandler.handle_patch_api(handler, "sentence=&require_coq=1")
+        self.assertFalse(empty_bundle["ok"])
+        self.assertFalse(empty_bundle["can_auto_apply"])
+        self.assertFalse(empty_bundle["requires_human_choice"])
+        self.assertEqual(empty_bundle["lexicon_patch_drafts"], [])
+        self.assertIn("sentence is required", empty_bundle["validation_errors"][0])
+        self.assertIn("# Validation errors:", empty_bundle["patch_text_preview"])
+        self.assertIn("# No auto-applicable patch lines.", empty_bundle["patch_text_preview"])
+        self.assertNotIn("# Candidate replacement/addition lines:", empty_bundle["patch_text_preview"])
+
         bundle = PipelineHandler.handle_patch_api(
             handler,
             "sentence=Mary+painted+the+door+red&require_coq=1",
@@ -7108,6 +7119,11 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         cases = [
             (
+                "empty_input",
+                "sentence=&require_coq=1",
+                PipelineHandler.handle_patch_api(handler, "sentence=&require_coq=1"),
+            ),
+            (
                 "pending",
                 "sentence=Mary+painted+the+door+red&require_coq=1",
                 PipelineHandler.handle_patch_api(
@@ -7125,6 +7141,22 @@ class TranslatorTests(unittest.TestCase):
                     handler,
                     (
                         "sentence=Mary+painted+the+door+red&require_coq=1"
+                        "&resolve=state-red--unknown_source_allowed=not_red"
+                    ),
+                ),
+            ),
+            (
+                "duplicate_same_resolution",
+                (
+                    "sentence=Mary+painted+the+door+red&require_coq=1"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                    "&resolve=state-red--unknown_source_allowed=not_red"
+                ),
+                PipelineHandler.handle_patch_api(
+                    handler,
+                    (
+                        "sentence=Mary+painted+the+door+red&require_coq=1"
+                        "&resolve=state-red--unknown_source_allowed=not_red"
                         "&resolve=state-red--unknown_source_allowed=not_red"
                     ),
                 ),
@@ -7172,6 +7204,27 @@ class TranslatorTests(unittest.TestCase):
                         self.assertEqual(response.headers.get("Content-Length"), str(len(raw)))
                     http_patch = raw.decode("utf-8")
                     self.assertEqual(http_patch, expected_bundle["patch_text_preview"])
+
+    def test_http_lexicon_patch_drafts_rejects_unknown_format(self) -> None:
+        with pipeline_server() as (base_url, opener):
+            with self.assertRaises(HTTPError) as raised:
+                opener.open(
+                    (
+                        f"{base_url}/api/lexicon-patch-drafts?"
+                        "sentence=Mary+painted+the+door+red&require_coq=1&format=zip"
+                    ),
+                    timeout=5,
+                )
+            error = raised.exception
+            raw = error.read()
+            self.assertEqual(error.code, 400)
+            self.assertEqual(error.headers.get_content_type(), "application/json")
+            self.assertEqual(error.headers.get("Content-Length"), str(len(raw)))
+            payload = json.loads(raw.decode("utf-8"))
+        self.assertEqual(payload["schema_version"], "lexicon_patch_drafts.v1")
+        self.assertFalse(payload["ok"])
+        self.assertIn("Unsupported lexicon patch response format", payload["error"])
+        self.assertEqual(payload["allowed_formats"], ["json", "patch"])
 
     def test_api_lexicon_patch_drafts_rejects_mismatched_structured_resolution(self) -> None:
         resolutions, errors = parse_patch_resolution_params(
@@ -8452,6 +8505,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("channels stay synchronized", readme)
         self.assertIn("starts a real local server", readme)
         self.assertIn("`Content-Type`, `Content-Length`, parsed JSON", readme)
+        self.assertIn("empty sentences add a", readme)
+        self.assertIn("unsupported `format` values return a 400 JSON", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8529,6 +8584,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("one repair contract", web_design)
         self.assertIn("exercises the live HTTP route", web_design)
         self.assertIn("matching byte lengths", web_design)
+        self.assertIn("Negative HTTP cases are checked", web_design)
+        self.assertIn("allowed formats", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)

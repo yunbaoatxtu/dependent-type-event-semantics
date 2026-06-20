@@ -121,6 +121,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("command-line --patch-out file", manuscript)
         self.assertIn("The web route is now part of that contract", manuscript)
         self.assertIn("content type, byte length, parsed JSON, and patch text", manuscript)
+        self.assertIn("The same HTTP boundary now includes negative cases", manuscript)
+        self.assertIn("unsupported response formats return a 400 JSON error", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)

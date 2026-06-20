@@ -195,6 +195,11 @@ The project-level web smoke check exercises the live HTTP route as well,
 checking that `/api/lexicon-patch-drafts` returns JSON as `application/json`,
 patch text as `text/plain`, matching byte lengths, and payloads identical to
 the fixed bundle builder for pending, resolved, and validation-error cases.
+Negative HTTP cases are checked on the same route. Empty input is represented as
+a bundle validation error with no candidate patch lines, conflicting
+source-state choices keep the bundle non-auto-applicable, repeated identical
+choices collapse to one safe resolution, and unsupported `format` values return
+a 400 JSON response with the allowed formats.
 
 ## Successful Response
 

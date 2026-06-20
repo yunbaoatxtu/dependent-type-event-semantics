@@ -778,6 +778,11 @@ The repository-level web smoke check also starts a real local server and
 requests both `/api/lexicon-patch-drafts` response formats, checking HTTP
 status, `Content-Type`, `Content-Length`, parsed JSON, and patch text against the
 same fixed bundle contract.
+HTTP-level negative cases are part of the same guard: empty sentences add a
+bundle `validation_errors` entry and suppress candidate lines, conflicting
+source-state choices remain non-auto-applicable, repeated identical choices are
+accepted as one resolution, and unsupported `format` values return a 400 JSON
+error instead of silently changing response shape.
 
 Run the local web demo:
 
@@ -944,6 +949,9 @@ and validation-error bundles.
 The live HTTP route is covered too: the verifier checks the JSON response as
 `application/json`, the patch response as `text/plain`, and the byte length and
 payload for each response.
+It also checks empty-input, repeated-resolution, conflicting-resolution, and
+unknown-format cases so downloadable patch text cannot bypass the same
+validation contract.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

@@ -437,11 +437,14 @@ def build_lexicon_patch_bundle(
 ) -> dict[str, Any]:
     result = analyze_sentence(sentence, require_coq=require_coq)
     diagnostics = result.get("diagnostics", {})
+    all_errors = list(resolution_errors or [])
+    if not sentence.strip():
+        all_errors.append("sentence is required for lexicon patch drafts.")
     drafts, validation_errors = resolve_lexicon_patch_drafts(
         result.get("lexicon_patch_drafts", []),
         resolutions or {},
     )
-    all_errors = [*(resolution_errors or []), *validation_errors]
+    all_errors.extend(validation_errors)
     bundle = {
         "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
         "input_sentence": result.get("input_sentence", sentence.strip()),
@@ -2116,8 +2119,23 @@ class PipelineHandler(BaseHTTPRequestHandler):
             self.write_json_response(self.handle_diagnostic_fixtures_api())
             return
         if parsed.path == "/api/lexicon-patch-drafts":
-            if self.patch_response_format(parsed.query) == "patch":
+            response_format = self.patch_response_format(parsed.query)
+            if response_format == "patch":
                 self.write_text_response(self.handle_patch_text_api(parsed.query))
+                return
+            if response_format not in {"json", ""}:
+                self.write_json_response(
+                    {
+                        "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
+                        "ok": False,
+                        "error": (
+                            "Unsupported lexicon patch response format "
+                            f"{response_format!r}; expected 'json' or 'patch'."
+                        ),
+                        "allowed_formats": ["json", "patch"],
+                    },
+                    status=HTTPStatus.BAD_REQUEST,
+                )
                 return
             self.write_json_response(self.handle_patch_api(parsed.query))
             return
@@ -2173,7 +2191,7 @@ class PipelineHandler(BaseHTTPRequestHandler):
 
     def patch_response_format(self, query: str) -> str:
         params = parse_qs(query)
-        return params.get("format", ["json"])[0]
+        return params.get("format", ["json"])[0].strip().lower()
 
     def write_html_response(self, content: str) -> None:
         encoded = content.encode("utf-8")
@@ -2191,9 +2209,13 @@ class PipelineHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded)
 
-    def write_json_response(self, content: dict[str, Any]) -> None:
+    def write_json_response(
+        self,
+        content: dict[str, Any],
+        status: HTTPStatus = HTTPStatus.OK,
+    ) -> None:
         encoded = compact_json(content).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()

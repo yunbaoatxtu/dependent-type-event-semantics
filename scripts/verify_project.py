@@ -13,6 +13,7 @@ import threading
 from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, urlencode, urlparse
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -711,6 +712,14 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
 
     cases = [
         (
+            "empty_sentence_bundle",
+            {
+                "sentence": "",
+                "require_coq": "1",
+            },
+            build_patch_bundle("", require_coq=True),
+        ),
+        (
             "pending_red_bundle",
             {
                 "sentence": "Mary painted the door red",
@@ -732,6 +741,42 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
             ),
         ),
         (
+            "duplicate_resolution_red_bundle",
+            {
+                "sentence": "Mary painted the door red",
+                "require_coq": "1",
+                "resolve": [
+                    "state-red--unknown_source_allowed=not_red",
+                    "state-red--unknown_source_allowed=not_red",
+                ],
+            },
+            build_patch_bundle(
+                "Mary painted the door red",
+                require_coq=True,
+                resolution_items=[
+                    "state-red--unknown_source_allowed=not_red",
+                    "state-red--unknown_source_allowed=not_red",
+                ],
+            ),
+        ),
+        (
+            "conflicting_resolution_red_bundle",
+            {
+                "sentence": "Mary painted the door red",
+                "require_coq": "1",
+                "resolve": "state-red--unknown_source_allowed=not_red",
+                "resolve_draft_id": "state-red--unknown_source_allowed",
+                "source_state": "dry",
+            },
+            build_patch_bundle(
+                "Mary painted the door red",
+                require_coq=True,
+                resolution_items=["state-red--unknown_source_allowed=not_red"],
+                resolve_draft_ids=["state-red--unknown_source_allowed"],
+                source_states=["dry"],
+            ),
+        ),
+        (
             "invalid_red_bundle",
             {
                 "sentence": "Mary painted the door red",
@@ -746,7 +791,7 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         ),
     ]
     for case, params, expected_bundle in cases:
-        query = urlencode(params)
+        query = urlencode(params, doseq=True)
         with opener.open(
             f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?{query}",
             timeout=5,
@@ -781,6 +826,38 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         observed_patch = raw.decode("utf-8")
         if observed_patch != observed_bundle.get("patch_text_preview"):
             raise SystemExit(f"web route smoke check failed: {case} patch preview drift")
+
+    unknown_format_url = (
+        f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?"
+        + urlencode(
+            {
+                "sentence": "Mary painted the door red",
+                "require_coq": "1",
+                "format": "zip",
+            }
+        )
+    )
+    try:
+        opener.open(unknown_format_url, timeout=5)
+    except HTTPError as exc:
+        raw = exc.read()
+        if exc.code != 400:
+            raise SystemExit("web route smoke check failed: unknown format status drift")
+        if exc.headers.get_content_type() != "application/json":
+            raise SystemExit("web route smoke check failed: unknown format content type drift")
+        if exc.headers.get("Content-Length") != str(len(raw)):
+            raise SystemExit("web route smoke check failed: unknown format length drift")
+        payload = json.loads(raw.decode("utf-8"))
+    else:
+        raise SystemExit("web route smoke check failed: unknown format was accepted")
+    if payload.get("schema_version") != "lexicon_patch_drafts.v1":
+        raise SystemExit("web route smoke check failed: unknown format schema drift")
+    if payload.get("ok") is not False:
+        raise SystemExit("web route smoke check failed: unknown format ok drift")
+    if payload.get("allowed_formats") != ["json", "patch"]:
+        raise SystemExit("web route smoke check failed: unknown format allowed formats drift")
+    if "Unsupported lexicon patch response format" not in str(payload.get("error", "")):
+        raise SystemExit("web route smoke check failed: unknown format error drift")
 
 
 def run_web_route_smoke_check() -> None:
