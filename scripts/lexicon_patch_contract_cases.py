@@ -49,12 +49,35 @@ class LexiconPatchContractCase:
         )
 
 
-LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES = (
+LEXICON_PATCH_CONTRACT_CASES = (
     LexiconPatchContractCase(
         name="empty_sentence",
         sentence="",
         expected_returncode=1,
         expected_error_fragments=("sentence is required",),
+    ),
+    LexiconPatchContractCase(
+        name="pending_red",
+        sentence="Mary painted the door red",
+    ),
+    LexiconPatchContractCase(
+        name="resolved_red_compact",
+        sentence="Mary painted the door red",
+        resolution_items=("state-red--unknown_source_allowed=not_red",),
+    ),
+    LexiconPatchContractCase(
+        name="resolved_red_structured",
+        sentence="Mary painted the door red",
+        resolve_draft_ids=("state-red--unknown_source_allowed",),
+        source_states=("not_red",),
+    ),
+    LexiconPatchContractCase(
+        name="duplicate_same_resolution",
+        sentence="Mary painted the door red",
+        resolution_items=(
+            "state-red--unknown_source_allowed=not_red",
+            "state-red--unknown_source_allowed=not_red",
+        ),
     ),
     LexiconPatchContractCase(
         name="unknown_draft",
@@ -73,12 +96,10 @@ LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES = (
         expected_error_fragments=("Conflicting resolution",),
     ),
     LexiconPatchContractCase(
-        name="duplicate_same_resolution",
+        name="invalid_source_state",
         sentence="Mary painted the door red",
-        resolution_items=(
-            "state-red--unknown_source_allowed=not_red",
-            "state-red--unknown_source_allowed=not_red",
-        ),
-        expected_returncode=0,
+        resolution_items=("state-red--unknown_source_allowed=intact",),
+        expected_returncode=1,
+        expected_error_fragments=("expected 'color_scale'",),
     ),
 )

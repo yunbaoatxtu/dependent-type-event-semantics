@@ -19,9 +19,7 @@ from urllib.request import ProxyHandler, build_opener
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from scripts.lexicon_patch_contract_cases import (  # noqa: E402
-    LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES,
-)
+from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES  # noqa: E402
 PYCACHE = ROOT / ".pycache"
 COQ_FILE = ROOT / "formalization" / "DependentTypeEventSemantics.v"
 PACKAGE_WHEEL_DIR = ROOT / "work" / "verify_package_build"
@@ -176,10 +174,10 @@ def run_lexicon_export_smoke_check() -> None:
     if 'StateLexiconEntry("color_scale", default_source_state="not_red")' not in patch_text:
         raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
 
-    for case in LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES:
+    for case in LEXICON_PATCH_CONTRACT_CASES:
         name = case.name
-        case_bundle_path = output_dir / "negative" / name / "bundle.json"
-        case_patch_path = output_dir / "negative" / name / "state.patch"
+        case_bundle_path = output_dir / "contract" / name / "bundle.json"
+        case_patch_path = output_dir / "contract" / name / "state.patch"
         completed = subprocess.run(
             [
                 sys.executable,
@@ -748,90 +746,10 @@ def validate_diagnostic_fixture_routes(
 
 
 def validate_lexicon_patch_http_routes(port: int, opener) -> None:
-    from scripts.export_lexicon_patch_drafts import build_patch_bundle
-
-    cases = [
-        (
-            "empty_sentence_bundle",
-            {
-                "sentence": "",
-                "require_coq": "1",
-            },
-            build_patch_bundle("", require_coq=True),
-        ),
-        (
-            "pending_red_bundle",
-            {
-                "sentence": "Mary painted the door red",
-                "require_coq": "1",
-            },
-            build_patch_bundle("Mary painted the door red", require_coq=True),
-        ),
-        (
-            "resolved_red_bundle",
-            {
-                "sentence": "Mary painted the door red",
-                "require_coq": "1",
-                "resolve": "state-red--unknown_source_allowed=not_red",
-            },
-            build_patch_bundle(
-                "Mary painted the door red",
-                require_coq=True,
-                resolution_items=["state-red--unknown_source_allowed=not_red"],
-            ),
-        ),
-        (
-            "duplicate_resolution_red_bundle",
-            {
-                "sentence": "Mary painted the door red",
-                "require_coq": "1",
-                "resolve": [
-                    "state-red--unknown_source_allowed=not_red",
-                    "state-red--unknown_source_allowed=not_red",
-                ],
-            },
-            build_patch_bundle(
-                "Mary painted the door red",
-                require_coq=True,
-                resolution_items=[
-                    "state-red--unknown_source_allowed=not_red",
-                    "state-red--unknown_source_allowed=not_red",
-                ],
-            ),
-        ),
-        (
-            "conflicting_resolution_red_bundle",
-            {
-                "sentence": "Mary painted the door red",
-                "require_coq": "1",
-                "resolve": "state-red--unknown_source_allowed=not_red",
-                "resolve_draft_id": "state-red--unknown_source_allowed",
-                "source_state": "dry",
-            },
-            build_patch_bundle(
-                "Mary painted the door red",
-                require_coq=True,
-                resolution_items=["state-red--unknown_source_allowed=not_red"],
-                resolve_draft_ids=["state-red--unknown_source_allowed"],
-                source_states=["dry"],
-            ),
-        ),
-        (
-            "invalid_red_bundle",
-            {
-                "sentence": "Mary painted the door red",
-                "require_coq": "1",
-                "resolve": "state-red--unknown_source_allowed=intact",
-            },
-            build_patch_bundle(
-                "Mary painted the door red",
-                require_coq=True,
-                resolution_items=["state-red--unknown_source_allowed=intact"],
-            ),
-        ),
-    ]
-    for case, params, expected_bundle in cases:
-        query = urlencode(params, doseq=True)
+    for contract_case in LEXICON_PATCH_CONTRACT_CASES:
+        case = f"{contract_case.name}_bundle"
+        query = contract_case.query(require_coq=True)
+        expected_bundle = contract_case.expected_bundle(require_coq=True)
         with opener.open(
             f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?{query}",
             timeout=5,

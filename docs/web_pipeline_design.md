@@ -201,12 +201,16 @@ source-state choices keep the bundle non-auto-applicable, repeated identical
 choices collapse to one safe resolution, and unsupported `format` values return
 a 400 JSON response with the allowed formats.
 The CLI exporter is regression-tested against those live HTTP outputs for the
-same negative cases. Non-zero command-line exits still have to write the JSON
-bundle and `--patch-out` text, and those files must match the browser/API
-payloads before the smoke check passes.
-The unit test and verifier import the same shared contract-case table from
-`scripts/lexicon_patch_contract_cases.py`, so CLI review and browser/API review
-cannot accumulate separate hand-maintained negative-case lists.
+same shared case table, covering pending, compact resolved, structured
+resolved, duplicate-resolution, empty-sentence, unknown-draft, conflicting
+source-state, and invalid-source-state bundles. Successful and non-zero
+command-line exits still have to write the JSON bundle and `--patch-out` text,
+and those files must match the browser/API payloads before the smoke check
+passes.
+The direct API tests, live HTTP tests, CLI tests, and verifier import the same
+shared contract-case table from `scripts/lexicon_patch_contract_cases.py`, so
+CLI review and browser/API review cannot accumulate separate hand-maintained
+case lists.
 
 ## Successful Response
 
