@@ -14,10 +14,13 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 from translator.dependent_type_event_translator import STATE_LEXICON
 from translator.natural_language_pipeline import (
+    check_semantic_readings,
     exported_prop_definition_names,
     run_pipeline,
     semantic_reading_failure_kinds,
     semantic_reading_failure_summary,
+    semantic_readings_check_payload,
+    semantic_readings_repair_details,
 )
 
 
@@ -25,6 +28,11 @@ DEFAULT_SENTENCE = "John knocked twice"
 ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
+DIAGNOSTIC_FIXTURE_CASES = {
+    "semantic_readings_export_count_mismatch",
+    "semantic_readings_malformed",
+    "semantic_readings_missing_export",
+}
 FAILURE_STAGE_LABELS = {
     "input": "empty input",
     "parsing": "natural-language parsing",
@@ -108,6 +116,103 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
         }
         return add_diagnostics(result)
     return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
+
+
+def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") -> dict[str, Any]:
+    case = case.strip() or "semantic_readings_missing_export"
+    if case not in DIAGNOSTIC_FIXTURE_CASES:
+        return add_diagnostics(
+            {
+                "ok": False,
+                "input_sentence": f"diagnostic fixture: {case}",
+                "error": f"Unknown diagnostic fixture {case!r}.",
+                "available_diagnostic_fixtures": sorted(DIAGNOSTIC_FIXTURE_CASES),
+                "conclusion": "Diagnostic fixture failed before analysis.",
+            }
+        )
+
+    coq_code = "Definition other_reading : Prop := True.\n"
+    semantic_readings: list[dict[str, Any]] = [
+        {
+            "name": "missing_reading",
+            "source": "diagnostic_fixture",
+            "dependent_type_translation": "missing_reading : PropT",
+            "coq_definition": "missing_reading",
+            "type_check": {"ok": True, "type": "PropT", "errors": []},
+        }
+    ]
+    semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+
+    if case == "semantic_readings_export_count_mismatch":
+        coq_code = (
+            "Definition first_reading : Prop := True.\n"
+            "Definition second_reading : Prop := True.\n"
+        )
+        semantic_readings = []
+        semantic_readings_check = semantic_readings_check_payload(
+            checked=True,
+            ok=False,
+            reading_count=0,
+            errors=[
+                (
+                    "registered construction outputs without explicit semantic_readings "
+                    "must export exactly one Prop/PropT definition"
+                )
+            ],
+            repair_details=semantic_readings_repair_details(
+                exported_definitions=["first_reading", "second_reading"],
+                expected_export_count=1,
+                observed_export_count=2,
+            ),
+        )
+    elif case == "semantic_readings_malformed":
+        coq_code = "Definition bad_type : Prop := True.\n"
+        semantic_readings = [
+            {
+                "name": "bad_type",
+                "source": "diagnostic_fixture",
+                "dependent_type_translation": "bad_type : Prop",
+                "coq_definition": "bad_type",
+                "type_check": {
+                    "ok": False,
+                    "type": None,
+                    "errors": ["synthetic reading-local type error"],
+                },
+            },
+            {
+                "name": "",
+                "source": "diagnostic_fixture",
+                "dependent_type_translation": "",
+                "coq_definition": "",
+            },
+        ]
+        semantic_readings_check = check_semantic_readings(semantic_readings, coq_code)
+
+    result = {
+        "ok": False,
+        "input_sentence": f"diagnostic fixture: {case}",
+        "event_semantics": {
+            "kind": "diagnostic_fixture",
+            "case": case,
+            "semantic_readings": semantic_readings,
+            "semantic_readings_check": semantic_readings_check,
+        },
+        "dependent_type_translation": "diagnostic fixture for semantic_readings_check",
+        "semantic_readings": semantic_readings,
+        "semantic_readings_check": semantic_readings_check,
+        "ast": {"kind": "diagnostic_fixture", "case": case},
+        "type_check": {"ok": True, "type": "Prop", "errors": []},
+        "construction_hygiene": {"ok": None, "checked": False},
+        "coq_code": coq_code,
+        "coq_check": {
+            "ok": None,
+            "status": "skipped",
+            "message": "Skipped Coq/Rocq validation because semantic_readings_check failed.",
+        },
+        "diagnostic_fixture": {"case": case, "available_cases": sorted(DIAGNOSTIC_FIXTURE_CASES)},
+        "conclusion": "Diagnostic fixture: semantic readings audit failed before Coq/Rocq validation.",
+    }
+    return add_diagnostics(result)
 
 
 def parse_patch_resolution_items(items: list[str]) -> tuple[dict[str, str], list[str]]:
@@ -1259,8 +1364,13 @@ def lexicon_patch_text_preview_for_result(result: dict[str, Any]) -> str:
     )
 
 
-def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> str:
-    result = analyze_sentence(sentence, require_coq=require_coq)
+def render_page(
+    sentence: str = DEFAULT_SENTENCE,
+    require_coq: bool = False,
+    result: dict[str, Any] | None = None,
+    endpoint: str = "/api/analyze",
+) -> str:
+    result = result or analyze_sentence(sentence, require_coq=require_coq)
     event_semantics = compact_json(result.get("event_semantics", result.get("error", "")))
     dependent = result.get("dependent_type_translation", result.get("error", ""))
     ast = compact_json(result.get("ast", {}))
@@ -1278,7 +1388,7 @@ def render_page(sentence: str = DEFAULT_SENTENCE, require_coq: bool = False) -> 
         {
             "schema_version": result.get("schema_version", ANALYZE_RESPONSE_SCHEMA),
             "response_kind": "analysis",
-            "endpoint": "/api/analyze",
+            "endpoint": endpoint,
         }
     )
     coq_code = result.get("coq_code", "")
@@ -1807,11 +1917,27 @@ class PipelineHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/analyze":
             self.write_json_response(self.handle_api(parsed.query))
             return
+        if parsed.path == "/api/diagnostic-fixture":
+            self.write_json_response(self.handle_diagnostic_fixture_api(parsed.query))
+            return
         if parsed.path == "/api/lexicon-patch-drafts":
             if self.patch_response_format(parsed.query) == "patch":
                 self.write_text_response(self.handle_patch_text_api(parsed.query))
                 return
             self.write_json_response(self.handle_patch_api(parsed.query))
+            return
+        if parsed.path == "/diagnostic-fixture":
+            params = parse_qs(parsed.query)
+            case = params.get("case", ["semantic_readings_missing_export"])[0]
+            result = diagnostic_fixture_result(case)
+            self.write_html_response(
+                render_page(
+                    result.get("input_sentence", f"diagnostic fixture: {case}"),
+                    require_coq=False,
+                    result=result,
+                    endpoint="/api/diagnostic-fixture",
+                )
+            )
             return
         if parsed.path not in {"/", ""}:
             self.send_error(HTTPStatus.NOT_FOUND)
@@ -1826,6 +1952,11 @@ class PipelineHandler(BaseHTTPRequestHandler):
         sentence = params.get("sentence", [""])[0]
         require_coq = params.get("require_coq", ["0"])[0] == "1"
         return analyze_sentence(sentence, require_coq=require_coq)
+
+    def handle_diagnostic_fixture_api(self, query: str) -> dict[str, Any]:
+        params = parse_qs(query)
+        case = params.get("case", ["semantic_readings_missing_export"])[0]
+        return diagnostic_fixture_result(case)
 
     def handle_patch_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)

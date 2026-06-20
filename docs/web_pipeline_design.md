@@ -232,6 +232,13 @@ Each rendered action must expose `data-action-kind` and a `next-step--<kind>`
 CSS class so later UI controls and browser tests have stable hooks. When an
 action carries target metadata, the panel should display it in a compact
 `next-step-details` table.
+The service should keep these hooks browser-testable through controlled
+diagnostics fixtures. `/api/diagnostic-fixture?case=semantic_readings_missing_export`
+returns the JSON version of a semantic-reading export failure, while
+`/diagnostic-fixture?case=semantic_readings_missing_export` renders the same
+failure through the ordinary page panels. Additional fixture cases can cover
+malformed readings and export-count mismatches without changing the normal
+`/api/analyze` behavior.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

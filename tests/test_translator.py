@@ -75,6 +75,7 @@ from web.app import (
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
+    diagnostic_fixture_result,
     modifier_role_audit,
     next_steps_panel,
     parse_patch_resolution_params,
@@ -7413,6 +7414,58 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(diagnostics["stages"]["construction_hygiene"], "skipped")
         self.assertEqual(diagnostics["stages"]["coq_check"], "skipped")
 
+    def test_diagnostic_fixture_api_exposes_semantic_readings_repairs(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        missing = PipelineHandler.handle_diagnostic_fixture_api(
+            handler, "case=semantic_readings_missing_export"
+        )
+        self.assertFalse(missing["ok"])
+        self.assertEqual(missing["diagnostic_fixture"]["case"], "semantic_readings_missing_export")
+        self.assertEqual(missing["diagnostics"]["failure_stage"], "semantic_readings_check")
+        self.assertEqual(
+            missing["diagnostics"]["semantic_readings_failure_kinds"],
+            ["missing_coq_export"],
+        )
+        self.assertEqual(
+            missing["diagnostics"]["recovery_actions"][0]["kind"],
+            "add_missing_coq_definitions",
+        )
+        self.assertEqual(
+            missing["diagnostics"]["recovery_actions"][0]["target_definitions"],
+            ["missing_reading"],
+        )
+
+        mismatch = PipelineHandler.handle_diagnostic_fixture_api(
+            handler, "case=semantic_readings_export_count_mismatch"
+        )
+        self.assertEqual(
+            mismatch["diagnostics"]["recovery_actions"][0]["kind"],
+            "normalize_reading_exports",
+        )
+        self.assertEqual(mismatch["diagnostics"]["recovery_actions"][0]["expected_export_count"], 1)
+        self.assertEqual(mismatch["diagnostics"]["recovery_actions"][0]["observed_export_count"], 2)
+
+        malformed = PipelineHandler.handle_diagnostic_fixture_api(
+            handler, "case=semantic_readings_malformed"
+        )
+        self.assertEqual(
+            [action["kind"] for action in malformed["diagnostics"]["recovery_actions"]],
+            ["fix_malformed_readings", "fix_reading_type_checks", "inspect_readings"],
+        )
+
+    def test_diagnostic_fixture_page_renders_next_step_details(self) -> None:
+        result = diagnostic_fixture_result("semantic_readings_export_count_mismatch")
+        page = render_page(
+            result["input_sentence"],
+            result=result,
+            endpoint="/api/diagnostic-fixture",
+        )
+        self.assertIn("&quot;endpoint&quot;: &quot;/api/diagnostic-fixture&quot;", page)
+        self.assertIn('data-action-kind="normalize_reading_exports"', page)
+        self.assertIn("<dt>export count</dt><dd>expected 1; observed 2</dd>", page)
+        self.assertIn("<dt>exported definitions</dt><dd>first_reading, second_reading</dd>", page)
+        self.assertIn("Semantic Readings Check", page)
+
     def test_web_diagnostics_reports_type_check_failure_stage(self) -> None:
         diagnostics = build_diagnostics(
             {
@@ -7666,6 +7719,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.semantic_readings_repair_details`", readme)
         self.assertIn("`add_missing_coq_definitions`", readme)
         self.assertIn("`normalize_reading_exports`", readme)
+        self.assertIn("/api/diagnostic-fixture?case=semantic_readings_missing_export", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7767,6 +7821,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_readings_repair_details`", web_design)
         self.assertIn("`add_missing_coq_definitions`", web_design)
         self.assertIn("`next-step-details`", web_design)
+        self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", web_design)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)

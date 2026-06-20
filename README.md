@@ -636,6 +636,13 @@ The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute, a
 `next-step--<kind>` CSS class, and a compact details table for frontend
 automation.
+The web service also exposes controlled diagnostics fixtures for these failure
+states. Use
+`/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or
+`/diagnostic-fixture?case=semantic_readings_missing_export` for the matching
+HTML page. Companion cases cover malformed readings and registered-rule export
+count mismatches, letting browser checks inspect the same `Next Steps` details
+without corrupting the ordinary `/api/analyze` path.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.
