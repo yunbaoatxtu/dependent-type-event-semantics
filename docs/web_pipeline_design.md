@@ -259,7 +259,10 @@ The expected selector count should be derived from the manifest rather than
 from a second hard-coded case total.
 The same consistency rules should be factored into a pure verifier helper so
 tests can inject duplicate cases, incomplete metadata, payload case drift, and
-stale selector attributes without needing a live server.
+stale selector attributes without needing a live server. The helper should also
+compare the manifest's `recovery_action_kinds` with the actual payload
+`diagnostics.recovery_actions` list and the rendered `Next Steps`
+`data-action-kind` hooks, so repair advice cannot drift between JSON and HTML.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and

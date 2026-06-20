@@ -667,7 +667,8 @@ diagnostic case does not require updating a separate hard-coded smoke-test
 constant.
 The manifest/API/HTML consistency rules also live in a standalone verifier
 helper with counterexample tests for duplicate cases, missing metadata, payload
-case drift, and stale HTML selector attributes.
+case drift, recovery-action drift between the payload and manifest, stale HTML
+selector attributes, and stale `Next Steps` action hooks.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

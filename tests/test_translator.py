@@ -7872,6 +7872,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("per-option failure-stage", readme)
         self.assertIn("standalone verifier", readme)
         self.assertIn("case drift", readme)
+        self.assertIn("recovery-action drift", readme)
+        self.assertIn("stale `Next Steps` action hooks", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7985,8 +7987,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("option-level failure-stage", web_design)
         self.assertIn("pure verifier helper", web_design)
         self.assertIn("stale selector attributes", web_design)
+        self.assertIn("`diagnostics.recovery_actions` list", web_design)
+        self.assertIn("`data-action-kind` hooks", web_design)
         self.assertIn("visible controls and JSON inventory cannot silently drift apart", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
+        self.assertIn("recovery-action drift between the payload and manifest", manuscript)
+        self.assertIn("stale Next Steps action hooks", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
@@ -8250,12 +8256,37 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "coq_check_failure payload case drift"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_rejects_diagnostic_fixture_recovery_action_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        actions = payloads["semantic_readings_missing_export"]["diagnostics"][
+            "recovery_actions"
+        ]
+        actions[0]["kind"] = "stale_repair_action"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export recovery action drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_rejects_diagnostic_fixture_html_metadata_drift(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         pages = dict(pages)
         pages["type_check_failure"] = pages["type_check_failure"].replace(
             'data-fixtures-api="/api/diagnostic-fixtures"',
             'data-fixtures-api="/api/stale-fixtures"',
+        )
+        with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_fixture_next_step_action_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = dict(pages)
+        pages["semantic_readings_missing_export"] = pages[
+            "semantic_readings_missing_export"
+        ].replace(
+            'data-action-kind="add_missing_coq_definitions"',
+            'data-action-kind="stale_repair_action"',
         )
         with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
@@ -8278,11 +8309,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fixture_pages[case] = response.read().decode(\"utf-8\")", verifier)
         self.assertIn("payload case drift", verifier)
         self.assertIn("stage drift", verifier)
+        self.assertIn("recovery action drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
         self.assertIn('data-fixture-count="{fixture_count}"', verifier)
         self.assertIn('data-failure-stage="{expected_stage}"', verifier)
         self.assertIn('data-recovery-action-kinds="{recovery_action_text}"', verifier)
+        self.assertIn('data-action-kind="{action_kind}"', verifier)
         self.assertIn("ProxyHandler({})", verifier)
         self.assertIn("run_web_route_smoke_check()", verifier)
         self.assertLess(

@@ -164,6 +164,16 @@ def validate_diagnostic_fixture_routes(
             raise SystemExit(f"web route smoke check failed: {case} missing diagnostics")
         if diagnostics.get("failure_stage") != expected_stage:
             raise SystemExit(f"web route smoke check failed: {case} stage drift")
+        payload_actions = diagnostics.get("recovery_actions", [])
+        if not isinstance(payload_actions, list):
+            raise SystemExit(f"web route smoke check failed: {case} missing recovery actions")
+        observed_actions = [
+            action.get("kind")
+            for action in payload_actions
+            if isinstance(action, dict) and isinstance(action.get("kind"), str)
+        ]
+        if observed_actions != expected_actions:
+            raise SystemExit(f"web route smoke check failed: {case} recovery action drift")
         payload_fixture = payload.get("diagnostic_fixture", {}) if isinstance(payload, dict) else {}
         if not isinstance(payload_fixture, dict) or payload_fixture.get("case") != case:
             raise SystemExit(f"web route smoke check failed: {case} payload case drift")
@@ -182,6 +192,9 @@ def validate_diagnostic_fixture_routes(
             f'data-failure-stage="{expected_stage}"',
             f'data-recovery-action-kinds="{recovery_action_text}"',
         ]
+        expected_fragments.extend(
+            f'data-action-kind="{action_kind}"' for action_kind in expected_actions
+        )
         for fragment in expected_fragments:
             if fragment not in fixture_page:
                 raise SystemExit(
