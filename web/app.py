@@ -27,7 +27,9 @@ from translator.natural_language_pipeline import (
 DEFAULT_SENTENCE = "John knocked twice"
 ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
+DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
+DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
 DIAGNOSTIC_FIXTURE_CASES = {
     "construction_hygiene_failure",
     "coq_check_failure",
@@ -129,8 +131,8 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
     return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
 
 
-def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") -> dict[str, Any]:
-    case = case.strip() or "semantic_readings_missing_export"
+def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> dict[str, Any]:
+    case = case.strip() or DEFAULT_DIAGNOSTIC_FIXTURE_CASE
     if case not in DIAGNOSTIC_FIXTURE_CASES:
         return add_diagnostics(
             {
@@ -302,6 +304,35 @@ def diagnostic_fixture_result(case: str = "semantic_readings_missing_export") ->
         "conclusion": conclusion,
     }
     return add_diagnostics(result)
+
+
+def diagnostic_fixture_manifest() -> dict[str, Any]:
+    cases = []
+    for case in sorted(DIAGNOSTIC_FIXTURE_CASES):
+        result = diagnostic_fixture_result(case)
+        diagnostics = result.get("diagnostics", {})
+        recovery_actions = diagnostics.get("recovery_actions", [])
+        cases.append(
+            {
+                "case": case,
+                "label": DIAGNOSTIC_FIXTURE_LABELS.get(
+                    case, case.replace("_", " ").title()
+                ),
+                "api_path": f"/api/diagnostic-fixture?{urlencode({'case': case})}",
+                "html_path": f"/diagnostic-fixture?{urlencode({'case': case})}",
+                "failure_stage": diagnostics.get("failure_stage"),
+                "recovery_action_kinds": [
+                    action.get("kind")
+                    for action in recovery_actions
+                    if isinstance(action, dict) and action.get("kind")
+                ],
+            }
+        )
+    return {
+        "schema_version": DIAGNOSTIC_FIXTURES_SCHEMA,
+        "default_case": DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
+        "cases": cases,
+    }
 
 
 def parse_patch_resolution_items(items: list[str]) -> tuple[dict[str, str], list[str]]:
@@ -1347,7 +1378,7 @@ def diagnostic_fixture_form(result: dict[str, Any]) -> str:
         current_case
         if isinstance(current_case, str)
         and current_case in DIAGNOSTIC_FIXTURE_CASES
-        else "semantic_readings_missing_export"
+        else DEFAULT_DIAGNOSTIC_FIXTURE_CASE
     )
     options = []
     for case in sorted(DIAGNOSTIC_FIXTURE_CASES):
@@ -2062,6 +2093,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/diagnostic-fixture":
             self.write_json_response(self.handle_diagnostic_fixture_api(parsed.query))
             return
+        if parsed.path == "/api/diagnostic-fixtures":
+            self.write_json_response(self.handle_diagnostic_fixtures_api())
+            return
         if parsed.path == "/api/lexicon-patch-drafts":
             if self.patch_response_format(parsed.query) == "patch":
                 self.write_text_response(self.handle_patch_text_api(parsed.query))
@@ -2070,7 +2104,7 @@ class PipelineHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/diagnostic-fixture":
             params = parse_qs(parsed.query)
-            case = params.get("case", ["semantic_readings_missing_export"])[0]
+            case = params.get("case", [DEFAULT_DIAGNOSTIC_FIXTURE_CASE])[0]
             result = diagnostic_fixture_result(case)
             self.write_html_response(
                 render_page(
@@ -2097,8 +2131,11 @@ class PipelineHandler(BaseHTTPRequestHandler):
 
     def handle_diagnostic_fixture_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)
-        case = params.get("case", ["semantic_readings_missing_export"])[0]
+        case = params.get("case", [DEFAULT_DIAGNOSTIC_FIXTURE_CASE])[0]
         return diagnostic_fixture_result(case)
+
+    def handle_diagnostic_fixtures_api(self) -> dict[str, Any]:
+        return diagnostic_fixture_manifest()
 
     def handle_patch_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)

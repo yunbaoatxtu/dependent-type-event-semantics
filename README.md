@@ -650,6 +650,9 @@ The HTML page exposes those cases through a compact
 `diagnostic-fixture-form` selector that opens `/diagnostic-fixture`, keeping
 diagnostic fixtures reachable without changing the ordinary analysis form or
 the `/api/analyze` contract.
+The companion `/api/diagnostic-fixtures` endpoint returns a
+`diagnostic_fixtures.v1` manifest with each case label, JSON path, HTML path,
+failure stage, and recovery action kinds for frontends and regression tools.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

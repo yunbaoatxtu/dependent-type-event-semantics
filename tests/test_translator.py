@@ -75,6 +75,7 @@ from web.app import (
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
+    diagnostic_fixture_manifest,
     diagnostic_fixture_result,
     modifier_role_audit,
     next_steps_panel,
@@ -7453,6 +7454,42 @@ class TranslatorTests(unittest.TestCase):
             ["fix_malformed_readings", "fix_reading_type_checks", "inspect_readings"],
         )
 
+    def test_diagnostic_fixture_manifest_exposes_cases_and_routes(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        manifest = PipelineHandler.handle_diagnostic_fixtures_api(handler)
+        self.assertEqual(manifest, diagnostic_fixture_manifest())
+        self.assertEqual(manifest["schema_version"], "diagnostic_fixtures.v1")
+        self.assertEqual(manifest["default_case"], "semantic_readings_missing_export")
+        cases = {fixture["case"]: fixture for fixture in manifest["cases"]}
+        self.assertEqual(
+            set(cases),
+            {
+                "construction_hygiene_failure",
+                "coq_check_failure",
+                "semantic_readings_export_count_mismatch",
+                "semantic_readings_malformed",
+                "semantic_readings_missing_export",
+                "type_check_failure",
+            },
+        )
+        missing = cases["semantic_readings_missing_export"]
+        self.assertEqual(missing["label"], "Missing Reading Export")
+        self.assertEqual(
+            missing["api_path"],
+            "/api/diagnostic-fixture?case=semantic_readings_missing_export",
+        )
+        self.assertEqual(
+            missing["html_path"],
+            "/diagnostic-fixture?case=semantic_readings_missing_export",
+        )
+        self.assertEqual(missing["failure_stage"], "semantic_readings_check")
+        self.assertEqual(
+            missing["recovery_action_kinds"],
+            ["add_missing_coq_definitions", "inspect_readings"],
+        )
+        self.assertEqual(cases["type_check_failure"]["failure_stage"], "type_check")
+        self.assertEqual(cases["coq_check_failure"]["recovery_action_kinds"], ["inspect_coq"])
+
     def test_diagnostic_fixture_api_exposes_stage_failures(self) -> None:
         handler = object.__new__(PipelineHandler)
         type_failure = PipelineHandler.handle_diagnostic_fixture_api(
@@ -7819,6 +7856,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`construction_hygiene_failure`", readme)
         self.assertIn("`coq_check_failure`", readme)
         self.assertIn("`diagnostic-fixture-form`", readme)
+        self.assertIn("/api/diagnostic-fixtures", readme)
+        self.assertIn("`diagnostic_fixtures.v1` manifest", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("`diagnostics.warnings` records non-fatal semantic audit notices", readme)
@@ -7925,6 +7964,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`construction_hygiene_failure`", web_design)
         self.assertIn("`coq_check_failure`", web_design)
         self.assertIn("`diagnostic-fixture-form`", web_design)
+        self.assertIn("/api/diagnostic-fixtures", web_design)
+        self.assertIn("`diagnostic_fixtures.v1` manifest", web_design)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)

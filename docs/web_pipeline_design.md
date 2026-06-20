@@ -244,6 +244,9 @@ stage-local failure can be checked as both JSON and HTML.
 The HTML page should provide a compact `diagnostic-fixture-form` selector for
 these cases, pointing at `/diagnostic-fixture`, so browser tests and developers
 can switch among fixtures without modifying the normal sentence-analysis form.
+The JSON companion `/api/diagnostic-fixtures` should expose a
+`diagnostic_fixtures.v1` manifest listing every fixture case, its label, JSON
+path, HTML path, failure stage, and recovery action kinds.
 The page should also render `semantic_readings_check` as a structured
 `Semantic Readings Check` panel, not only as raw JSON. The panel summarizes the
 audit status and reading count, lists exported Prop/PropT definition names, and
