@@ -12,6 +12,7 @@ from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
+from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES
 from scripts.verify_project import (
     validate_diagnostic_fixture_routes,
     validate_lexicon_patch_bundle,
@@ -7378,89 +7379,48 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("# Candidate replacement/addition lines:", cli_patch)
         validate_lexicon_patch_bundle("cli_invalid_red_bundle", cli_bundle)
 
-    def test_cli_patch_export_negative_cases_match_http_outputs(self) -> None:
-        cases = [
-            (
-                "empty_sentence",
-                ["--sentence", "", "--require-coq"],
-                "sentence=&require_coq=1",
-                1,
-                ["sentence is required"],
-            ),
-            (
-                "unknown_draft",
-                [
-                    "--sentence",
-                    "Mary painted the door red",
-                    "--require-coq",
-                    "--resolve",
-                    "state-blue--unknown_source_allowed=not_red",
-                ],
-                (
-                    "sentence=Mary+painted+the+door+red&require_coq=1"
-                    "&resolve=state-blue--unknown_source_allowed=not_red"
-                ),
-                1,
-                ["no matching lexicon patch draft"],
-            ),
-            (
-                "conflicting_resolution",
-                [
-                    "--sentence",
-                    "Mary painted the door red",
-                    "--require-coq",
-                    "--resolve",
-                    "state-red--unknown_source_allowed=not_red",
-                    "--resolve-draft-id",
-                    "state-red--unknown_source_allowed",
-                    "--source-state",
-                    "dry",
-                ],
-                (
-                    "sentence=Mary+painted+the+door+red&require_coq=1"
-                    "&resolve=state-red--unknown_source_allowed=not_red"
-                    "&resolve_draft_id=state-red--unknown_source_allowed"
-                    "&source_state=dry"
-                ),
-                1,
-                ["Conflicting resolution"],
-            ),
-            (
-                "duplicate_same_resolution",
-                [
-                    "--sentence",
-                    "Mary painted the door red",
-                    "--require-coq",
-                    "--resolve",
-                    "state-red--unknown_source_allowed=not_red",
-                    "--resolve",
-                    "state-red--unknown_source_allowed=not_red",
-                ],
-                (
-                    "sentence=Mary+painted+the+door+red&require_coq=1"
-                    "&resolve=state-red--unknown_source_allowed=not_red"
-                    "&resolve=state-red--unknown_source_allowed=not_red"
-                ),
-                0,
-                [],
-            ),
-        ]
+    def test_cli_patch_export_contract_cases_match_http_outputs(self) -> None:
         with pipeline_server() as (base_url, opener):
-            for case, args, query, expected_returncode, expected_error_fragments in cases:
-                with self.subTest(case=case):
+            for case in LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES:
+                with self.subTest(case=case.name):
+                    query = case.query(require_coq=True)
                     http_bundle, http_patch = http_patch_bundle_and_text(base_url, opener, query)
-                    returncode, cli_bundle, cli_patch = run_cli_patch_export(args)
-                    self.assertEqual(returncode, expected_returncode)
+                    returncode, cli_bundle, cli_patch = run_cli_patch_export(
+                        case.cli_args(require_coq=True)
+                    )
+                    self.assertEqual(returncode, case.expected_returncode)
                     self.assertEqual(cli_bundle, http_bundle)
                     self.assertEqual(cli_patch, http_patch)
                     self.assertEqual(cli_patch, cli_bundle["patch_text_preview"])
-                    for fragment in expected_error_fragments:
+                    for fragment in case.expected_error_fragments:
                         self.assertIn(fragment, " ".join(cli_bundle["validation_errors"]))
                         self.assertIn(fragment, cli_patch)
-                    if expected_error_fragments:
+                    if case.expected_error_fragments:
                         self.assertIn("# Validation errors:", cli_patch)
                         self.assertNotIn("# Candidate replacement/addition lines:", cli_patch)
-                    validate_lexicon_patch_bundle(f"cli_http_{case}", cli_bundle)
+                    validate_lexicon_patch_bundle(f"cli_http_{case.name}", cli_bundle)
+
+    def test_lexicon_patch_contract_cases_drive_verifier_smoke_check(self) -> None:
+        names = [case.name for case in LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES]
+        self.assertEqual(
+            names,
+            [
+                "empty_sentence",
+                "unknown_draft",
+                "conflicting_resolution",
+                "duplicate_same_resolution",
+            ],
+        )
+        for case in LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES:
+            self.assertIn("--sentence", case.cli_args())
+            self.assertIn("sentence=", case.query())
+            validate_lexicon_patch_bundle(f"shared_contract_{case.name}", case.expected_bundle())
+
+        verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
+        self.assertIn("LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES", verifier)
+        self.assertIn("for case in LEXICON_PATCH_CLI_HTTP_CONTRACT_CASES:", verifier)
+        self.assertIn("case.expected_bundle()", verifier)
+        self.assertNotIn("negative_cases =", verifier)
 
     def test_api_analyze_response_reports_empty_input(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -8626,6 +8586,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("unsupported `format` values return a 400 JSON", readme)
         self.assertIn("CLI exporter is checked against the same live HTTP outputs", readme)
         self.assertIn("Even when the CLI exits non-zero", readme)
+        self.assertIn("scripts/lexicon_patch_contract_cases.py", readme)
+        self.assertIn("new boundary case enters both gates together", readme)
         self.assertIn("`Lexicon Patch Text Preview` panel", readme)
         self.assertIn("`Open patch text` link", readme)
         self.assertIn("`resolve_draft_id`", readme)
@@ -8707,6 +8669,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("allowed formats", web_design)
         self.assertIn("CLI exporter is regression-tested against those live HTTP outputs", web_design)
         self.assertIn("Non-zero command-line exits", web_design)
+        self.assertIn("same shared contract-case table", web_design)
+        self.assertIn("separate hand-maintained negative-case lists", web_design)
         self.assertIn("`Lexicon Patch Text Preview`", web_design)
         self.assertIn("`Open patch text` link", web_design)
         self.assertIn('`data-patch-format="text"`', web_design)

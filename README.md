@@ -788,6 +788,9 @@ sentences, unknown draft ids, conflicting source states, and repeated identical
 resolutions. Even when the CLI exits non-zero, it must still write the JSON
 bundle and `--patch-out` text before failing, so reviewers can inspect the same
 guarded artifact that the browser would download.
+Those CLI/HTTP contract cases are defined once in
+`scripts/lexicon_patch_contract_cases.py` and imported by both the unit tests
+and the project verifier, so a new boundary case enters both gates together.
 
 Run the local web demo:
 
@@ -960,6 +963,9 @@ validation contract.
 The exporter smoke check mirrors those negative cases for command-line review:
 non-zero CLI exits still have to leave behind JSON and patch-text files whose
 payloads match the same bundle contract.
+It reads the same shared contract-case table as the live HTTP regression test,
+which keeps the command-line and browser/API acceptance boundaries from
+silently drifting apart.
 
 Argument omission preserves the lexical type of the missing object at the Coq
 boundary. For example, `John read` exports an existential witness

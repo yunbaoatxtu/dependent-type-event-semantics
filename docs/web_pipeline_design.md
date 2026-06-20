@@ -204,6 +204,9 @@ The CLI exporter is regression-tested against those live HTTP outputs for the
 same negative cases. Non-zero command-line exits still have to write the JSON
 bundle and `--patch-out` text, and those files must match the browser/API
 payloads before the smoke check passes.
+The unit test and verifier import the same shared contract-case table from
+`scripts/lexicon_patch_contract_cases.py`, so CLI review and browser/API review
+cannot accumulate separate hand-maintained negative-case lists.
 
 ## Successful Response
 
