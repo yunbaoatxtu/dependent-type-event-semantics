@@ -129,6 +129,11 @@ def run_web_route_smoke_check() -> None:
         opener = build_opener(ProxyHandler({}))
         with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
             manifest = json.load(response)
+        with opener.open(
+            f"http://127.0.0.1:{port}/diagnostic-fixture?case=semantic_readings_missing_export",
+            timeout=5,
+        ) as response:
+            fixture_page = response.read().decode("utf-8")
     finally:
         server.shutdown()
         server.server_close()
@@ -148,6 +153,23 @@ def run_web_route_smoke_check() -> None:
         raise SystemExit("web route smoke check failed: wrong semantic readings failure stage")
     if missing.get("api_path") != "/api/diagnostic-fixture?case=semantic_readings_missing_export":
         raise SystemExit("web route smoke check failed: wrong fixture API path")
+    expected_fragments = [
+        'class="diagnostic-fixture-form"',
+        'action="/diagnostic-fixture"',
+        'data-current-fixture="semantic_readings_missing_export"',
+        'data-fixtures-schema="diagnostic_fixtures.v1"',
+        'data-fixtures-api="/api/diagnostic-fixtures"',
+        'data-fixture-count="6"',
+        'value="semantic_readings_missing_export" selected',
+        'data-failure-stage="semantic_readings_check"',
+        'data-recovery-action-kinds="add_missing_coq_definitions, inspect_readings"',
+    ]
+    for fragment in expected_fragments:
+        if fragment not in fixture_page:
+            raise SystemExit(
+                "web route smoke check failed: diagnostic fixture page missing "
+                f"{fragment}"
+            )
 
 
 def parse_args() -> argparse.Namespace:

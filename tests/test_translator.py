@@ -8204,7 +8204,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
+        self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", verifier)
         self.assertIn("diagnostic_fixtures.v1", verifier)
+        self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
+        self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
+        self.assertIn('data-failure-stage="semantic_readings_check"', verifier)
         self.assertIn("ProxyHandler({})", verifier)
         self.assertIn("run_web_route_smoke_check()", verifier)
         self.assertLess(
