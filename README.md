@@ -665,8 +665,9 @@ The companion `/api/diagnostic-fixtures` endpoint returns a
 failure stage, and recovery action kinds for frontends and regression tools.
 The case inventory, display labels, expected failure stages, and expected
 recovery-action kinds are now derived from one `DIAGNOSTIC_FIXTURE_SPECS`
-table, so adding a fixture no longer requires editing separate case, label,
-stage, and action lists.
+table of validated `DiagnosticFixtureSpec` entries, so adding a fixture no
+longer requires editing separate case, label, stage, and action lists, and
+unknown stage/action names fail before the manifest is served.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, and per-option failure-stage and
 recovery-action metadata, so the visible labels, controls, and API inventory

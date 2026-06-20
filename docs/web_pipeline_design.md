@@ -297,8 +297,9 @@ The JSON companion `/api/diagnostic-fixtures` should expose a
 path, HTML path, failure stage, and recovery action kinds.
 The fixture case inventory, visible labels, expected failure stages, and
 expected recovery-action kinds should be derived from a single
-`DIAGNOSTIC_FIXTURE_SPECS` table rather than maintained as parallel case,
-label, stage, and action structures.
+`DIAGNOSTIC_FIXTURE_SPECS` table of validated `DiagnosticFixtureSpec` entries
+rather than maintained as parallel case, label, stage, and action structures;
+unknown stage/action names should fail before the manifest is served.
 The selector should be rendered from that same manifest and expose
 `data-fixtures-schema`, `data-fixtures-api`, option-level failure-stage and
 recovery-action metadata, and the manifest label as the option text so the UI

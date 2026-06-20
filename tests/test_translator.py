@@ -85,9 +85,12 @@ from translator.surface_lexicon import (
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
     DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
+    DIAGNOSTIC_FAILURE_STAGES,
     DIAGNOSTIC_FIXTURE_CASES,
     DIAGNOSTIC_FIXTURE_LABELS,
     DIAGNOSTIC_FIXTURE_SPECS,
+    DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    DiagnosticFixtureSpec,
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
@@ -7852,20 +7855,32 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(manifest, diagnostic_fixture_manifest())
         self.assertEqual(manifest["schema_version"], "diagnostic_fixtures.v1")
         self.assertEqual(manifest["default_case"], "semantic_readings_missing_export")
-        spec_cases = {str(spec["case"]) for spec in DIAGNOSTIC_FIXTURE_SPECS}
-        spec_labels = {str(spec["case"]): str(spec["label"]) for spec in DIAGNOSTIC_FIXTURE_SPECS}
+        spec_cases = {spec.case for spec in DIAGNOSTIC_FIXTURE_SPECS}
+        spec_labels = {spec.case: spec.label for spec in DIAGNOSTIC_FIXTURE_SPECS}
         spec_stages = {
-            str(spec["case"]): str(spec["failure_stage"])
+            spec.case: spec.failure_stage
             for spec in DIAGNOSTIC_FIXTURE_SPECS
         }
         spec_actions = {
-            str(spec["case"]): list(spec["recovery_action_kinds"])
+            spec.case: list(spec.recovery_action_kinds)
             for spec in DIAGNOSTIC_FIXTURE_SPECS
         }
+        self.assertTrue(
+            all(isinstance(spec, DiagnosticFixtureSpec) for spec in DIAGNOSTIC_FIXTURE_SPECS)
+        )
         self.assertEqual(len(spec_cases), len(DIAGNOSTIC_FIXTURE_SPECS))
         self.assertIn(DEFAULT_DIAGNOSTIC_FIXTURE_CASE, spec_cases)
         self.assertEqual(DIAGNOSTIC_FIXTURE_CASES, frozenset(spec_cases))
         self.assertEqual(DIAGNOSTIC_FIXTURE_LABELS, spec_labels)
+        self.assertTrue(set(spec_stages.values()) <= DIAGNOSTIC_FAILURE_STAGES)
+        self.assertTrue(
+            {
+                action
+                for action_kinds in spec_actions.values()
+                for action in action_kinds
+            }
+            <= DIAGNOSTIC_RECOVERY_ACTION_KINDS
+        )
         cases = {fixture["case"]: fixture for fixture in manifest["cases"]}
         self.assertEqual(set(cases), spec_cases)
         for case, label in spec_labels.items():
@@ -7900,6 +7915,29 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(cases["type_check_failure"]["failure_stage"], "type_check")
         self.assertEqual(cases["coq_check_failure"]["recovery_action_kinds"], ["inspect_coq"])
+
+    def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
+        with self.assertRaisesRegex(ValueError, "non-empty case"):
+            DiagnosticFixtureSpec(
+                case="",
+                label="Broken",
+                failure_stage="type_check",
+                recovery_action_kinds=("inspect_ast",),
+            )
+        with self.assertRaisesRegex(ValueError, "unknown failure stage"):
+            DiagnosticFixtureSpec(
+                case="broken_stage",
+                label="Broken",
+                failure_stage="unregistered_stage",
+                recovery_action_kinds=("inspect_ast",),
+            )
+        with self.assertRaisesRegex(ValueError, "unknown recovery actions"):
+            DiagnosticFixtureSpec(
+                case="broken_action",
+                label="Broken",
+                failure_stage="type_check",
+                recovery_action_kinds=("stale_repair_action",),
+            )
 
     def test_diagnostic_fixture_api_exposes_stage_failures(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -8278,6 +8316,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-fixtures", readme)
         self.assertIn("`diagnostic_fixtures.v1` manifest", readme)
         self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", readme)
+        self.assertIn("validated `DiagnosticFixtureSpec` entries", readme)
+        self.assertIn("unknown stage/action names fail", readme)
         self.assertIn("stage, and action lists", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
@@ -8412,6 +8452,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-fixtures", web_design)
         self.assertIn("`diagnostic_fixtures.v1` manifest", web_design)
         self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", web_design)
+        self.assertIn("validated `DiagnosticFixtureSpec` entries", web_design)
+        self.assertIn("unknown stage/action names should fail", web_design)
         self.assertIn("parallel case", web_design)
         self.assertIn("label, stage, and action structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
@@ -8436,6 +8478,8 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("one DIAGNOSTIC_FIXTURE_SPECS table", manuscript)
+        self.assertIn("validated DiagnosticFixtureSpec", manuscript)
+        self.assertIn("checked against controlled vocabularies", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import html
 import json
 from http import HTTPStatus
@@ -30,51 +31,121 @@ LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
+DIAGNOSTIC_FAILURE_STAGES = frozenset(
+    {
+        "input",
+        "parsing",
+        "type_check",
+        "semantic_readings_check",
+        "construction_hygiene",
+        "coq_check",
+    }
+)
+DIAGNOSTIC_RECOVERY_ACTION_KINDS = frozenset(
+    {
+        "add_missing_coq_definitions",
+        "add_semantic_readings",
+        "edit_input",
+        "fix_malformed_readings",
+        "fix_reading_type_checks",
+        "inspect_ast",
+        "inspect_coq",
+        "inspect_readings",
+        "normalize_reading_exports",
+        "rename_duplicate_readings",
+        "revise_sentence",
+    }
+)
+
+
+@dataclass(frozen=True)
+class DiagnosticFixtureSpec:
+    case: str
+    label: str
+    failure_stage: str
+    recovery_action_kinds: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        case = self.case.strip()
+        label = self.label.strip()
+        failure_stage = self.failure_stage.strip()
+        recovery_action_kinds = tuple(
+            action.strip() for action in self.recovery_action_kinds
+        )
+        if not case:
+            raise ValueError("Diagnostic fixture specs require a non-empty case.")
+        if not label:
+            raise ValueError(f"Diagnostic fixture {case!r} requires a non-empty label.")
+        if failure_stage not in DIAGNOSTIC_FAILURE_STAGES:
+            raise ValueError(
+                f"Diagnostic fixture {case!r} uses unknown failure stage "
+                f"{failure_stage!r}."
+            )
+        if not recovery_action_kinds:
+            raise ValueError(
+                f"Diagnostic fixture {case!r} requires at least one recovery action."
+            )
+        unknown_actions = sorted(
+            action
+            for action in set(recovery_action_kinds)
+            if action not in DIAGNOSTIC_RECOVERY_ACTION_KINDS
+        )
+        if unknown_actions:
+            raise ValueError(
+                f"Diagnostic fixture {case!r} uses unknown recovery actions: "
+                f"{unknown_actions!r}."
+            )
+        object.__setattr__(self, "case", case)
+        object.__setattr__(self, "label", label)
+        object.__setattr__(self, "failure_stage", failure_stage)
+        object.__setattr__(self, "recovery_action_kinds", recovery_action_kinds)
+
+
 DIAGNOSTIC_FIXTURE_SPECS = (
-    {
-        "case": "construction_hygiene_failure",
-        "label": "Construction Hygiene",
-        "failure_stage": "construction_hygiene",
-        "recovery_action_kinds": ("inspect_coq",),
-    },
-    {
-        "case": "coq_check_failure",
-        "label": "Coq/Rocq Check",
-        "failure_stage": "coq_check",
-        "recovery_action_kinds": ("inspect_coq",),
-    },
-    {
-        "case": "semantic_readings_export_count_mismatch",
-        "label": "Reading Export Count",
-        "failure_stage": "semantic_readings_check",
-        "recovery_action_kinds": ("normalize_reading_exports", "inspect_readings"),
-    },
-    {
-        "case": "semantic_readings_malformed",
-        "label": "Malformed Readings",
-        "failure_stage": "semantic_readings_check",
-        "recovery_action_kinds": (
+    DiagnosticFixtureSpec(
+        case="construction_hygiene_failure",
+        label="Construction Hygiene",
+        failure_stage="construction_hygiene",
+        recovery_action_kinds=("inspect_coq",),
+    ),
+    DiagnosticFixtureSpec(
+        case="coq_check_failure",
+        label="Coq/Rocq Check",
+        failure_stage="coq_check",
+        recovery_action_kinds=("inspect_coq",),
+    ),
+    DiagnosticFixtureSpec(
+        case="semantic_readings_export_count_mismatch",
+        label="Reading Export Count",
+        failure_stage="semantic_readings_check",
+        recovery_action_kinds=("normalize_reading_exports", "inspect_readings"),
+    ),
+    DiagnosticFixtureSpec(
+        case="semantic_readings_malformed",
+        label="Malformed Readings",
+        failure_stage="semantic_readings_check",
+        recovery_action_kinds=(
             "fix_malformed_readings",
             "fix_reading_type_checks",
             "inspect_readings",
         ),
-    },
-    {
-        "case": "semantic_readings_missing_export",
-        "label": "Missing Reading Export",
-        "failure_stage": "semantic_readings_check",
-        "recovery_action_kinds": ("add_missing_coq_definitions", "inspect_readings"),
-    },
-    {
-        "case": "type_check_failure",
-        "label": "Type Check",
-        "failure_stage": "type_check",
-        "recovery_action_kinds": ("inspect_ast",),
-    },
+    ),
+    DiagnosticFixtureSpec(
+        case="semantic_readings_missing_export",
+        label="Missing Reading Export",
+        failure_stage="semantic_readings_check",
+        recovery_action_kinds=("add_missing_coq_definitions", "inspect_readings"),
+    ),
+    DiagnosticFixtureSpec(
+        case="type_check_failure",
+        label="Type Check",
+        failure_stage="type_check",
+        recovery_action_kinds=("inspect_ast",),
+    ),
 )
-DIAGNOSTIC_FIXTURE_CASES = frozenset(spec["case"] for spec in DIAGNOSTIC_FIXTURE_SPECS)
+DIAGNOSTIC_FIXTURE_CASES = frozenset(spec.case for spec in DIAGNOSTIC_FIXTURE_SPECS)
 DIAGNOSTIC_FIXTURE_LABELS = {
-    spec["case"]: spec["label"] for spec in DIAGNOSTIC_FIXTURE_SPECS
+    spec.case: spec.label for spec in DIAGNOSTIC_FIXTURE_SPECS
 }
 FAILURE_STAGE_LABELS = {
     "input": "empty input",
@@ -338,8 +409,8 @@ def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> di
 
 def diagnostic_fixture_manifest() -> dict[str, Any]:
     cases = []
-    for spec in sorted(DIAGNOSTIC_FIXTURE_SPECS, key=lambda item: str(item["case"])):
-        case = str(spec["case"])
+    for spec in sorted(DIAGNOSTIC_FIXTURE_SPECS, key=lambda item: item.case):
+        case = spec.case
         result = diagnostic_fixture_result(case)
         diagnostics = result.get("diagnostics", {})
         recovery_actions = diagnostics.get("recovery_actions", [])
@@ -348,8 +419,8 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
             for action in recovery_actions
             if isinstance(action, dict) and action.get("kind")
         ]
-        expected_stage = spec["failure_stage"]
-        expected_action_kinds = list(spec["recovery_action_kinds"])
+        expected_stage = spec.failure_stage
+        expected_action_kinds = list(spec.recovery_action_kinds)
         if diagnostics.get("failure_stage") != expected_stage:
             raise RuntimeError(
                 f"Diagnostic fixture {case!r} stage drift: "
@@ -363,7 +434,7 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
         cases.append(
             {
                 "case": case,
-                "label": spec["label"],
+                "label": spec.label,
                 "api_path": f"/api/diagnostic-fixture?{urlencode({'case': case})}",
                 "html_path": f"/diagnostic-fixture?{urlencode({'case': case})}",
                 "failure_stage": expected_stage,
