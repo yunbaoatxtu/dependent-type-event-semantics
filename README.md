@@ -663,6 +663,9 @@ the `/api/analyze` contract.
 The companion `/api/diagnostic-fixtures` endpoint returns a
 `diagnostic_fixtures.v1` manifest with each case label, JSON path, HTML path,
 failure stage, and recovery action kinds for frontends and regression tools.
+The case inventory and display labels are now derived from one
+`DIAGNOSTIC_FIXTURE_SPECS` table, so adding a fixture no longer requires
+editing a separate case set and label map.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, and per-option failure-stage and
 recovery-action metadata, so the visible labels, controls, and API inventory

@@ -84,6 +84,10 @@ from translator.surface_lexicon import (
 )
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
+    DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
+    DIAGNOSTIC_FIXTURE_CASES,
+    DIAGNOSTIC_FIXTURE_LABELS,
+    DIAGNOSTIC_FIXTURE_SPECS,
     PipelineHandler,
     analyze_sentence,
     build_diagnostics,
@@ -7848,18 +7852,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(manifest, diagnostic_fixture_manifest())
         self.assertEqual(manifest["schema_version"], "diagnostic_fixtures.v1")
         self.assertEqual(manifest["default_case"], "semantic_readings_missing_export")
+        spec_cases = {str(spec["case"]) for spec in DIAGNOSTIC_FIXTURE_SPECS}
+        spec_labels = {str(spec["case"]): str(spec["label"]) for spec in DIAGNOSTIC_FIXTURE_SPECS}
+        self.assertEqual(len(spec_cases), len(DIAGNOSTIC_FIXTURE_SPECS))
+        self.assertIn(DEFAULT_DIAGNOSTIC_FIXTURE_CASE, spec_cases)
+        self.assertEqual(DIAGNOSTIC_FIXTURE_CASES, frozenset(spec_cases))
+        self.assertEqual(DIAGNOSTIC_FIXTURE_LABELS, spec_labels)
         cases = {fixture["case"]: fixture for fixture in manifest["cases"]}
-        self.assertEqual(
-            set(cases),
-            {
-                "construction_hygiene_failure",
-                "coq_check_failure",
-                "semantic_readings_export_count_mismatch",
-                "semantic_readings_malformed",
-                "semantic_readings_missing_export",
-                "type_check_failure",
-            },
-        )
+        self.assertEqual(set(cases), spec_cases)
+        for case, label in spec_labels.items():
+            self.assertEqual(cases[case]["label"], label)
         missing = cases["semantic_readings_missing_export"]
         self.assertEqual(missing["label"], "Missing Reading Export")
         self.assertEqual(
@@ -8254,6 +8256,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic-fixture-form`", readme)
         self.assertIn("/api/diagnostic-fixtures", readme)
         self.assertIn("`diagnostic_fixtures.v1` manifest", readme)
+        self.assertIn("`DIAGNOSTIC_FIXTURE_SPECS` table", readme)
+        self.assertIn("separate case set and label map", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
         self.assertIn("per-option failure-stage", readme)
@@ -8386,6 +8390,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic-fixture-form`", web_design)
         self.assertIn("/api/diagnostic-fixtures", web_design)
         self.assertIn("`diagnostic_fixtures.v1` manifest", web_design)
+        self.assertIn("DIAGNOSTIC_FIXTURE_SPECS", web_design)
+        self.assertIn("parallel case", web_design)
+        self.assertIn("label structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
         self.assertIn("`data-fixtures-api`", web_design)
         self.assertIn("option-level failure-stage", web_design)
@@ -8407,6 +8414,7 @@ class TranslatorTests(unittest.TestCase):
             "visible labels, controls, and JSON inventory cannot silently drift apart",
             manuscript,
         )
+        self.assertIn("one DIAGNOSTIC_FIXTURE_SPECS table", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)

@@ -30,21 +30,35 @@ LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
-DIAGNOSTIC_FIXTURE_CASES = {
-    "construction_hygiene_failure",
-    "coq_check_failure",
-    "semantic_readings_export_count_mismatch",
-    "semantic_readings_malformed",
-    "semantic_readings_missing_export",
-    "type_check_failure",
-}
+DIAGNOSTIC_FIXTURE_SPECS = (
+    {
+        "case": "construction_hygiene_failure",
+        "label": "Construction Hygiene",
+    },
+    {
+        "case": "coq_check_failure",
+        "label": "Coq/Rocq Check",
+    },
+    {
+        "case": "semantic_readings_export_count_mismatch",
+        "label": "Reading Export Count",
+    },
+    {
+        "case": "semantic_readings_malformed",
+        "label": "Malformed Readings",
+    },
+    {
+        "case": "semantic_readings_missing_export",
+        "label": "Missing Reading Export",
+    },
+    {
+        "case": "type_check_failure",
+        "label": "Type Check",
+    },
+)
+DIAGNOSTIC_FIXTURE_CASES = frozenset(spec["case"] for spec in DIAGNOSTIC_FIXTURE_SPECS)
 DIAGNOSTIC_FIXTURE_LABELS = {
-    "construction_hygiene_failure": "Construction Hygiene",
-    "coq_check_failure": "Coq/Rocq Check",
-    "semantic_readings_export_count_mismatch": "Reading Export Count",
-    "semantic_readings_malformed": "Malformed Readings",
-    "semantic_readings_missing_export": "Missing Reading Export",
-    "type_check_failure": "Type Check",
+    spec["case"]: spec["label"] for spec in DIAGNOSTIC_FIXTURE_SPECS
 }
 FAILURE_STAGE_LABELS = {
     "input": "empty input",

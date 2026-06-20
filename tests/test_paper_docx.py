@@ -132,6 +132,7 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)
+        self.assertIn("DIAGNOSTIC_FIXTURE_SPECS table", manuscript)
         self.assertIn("stage-local diagnostics", manuscript)
 
     def test_render_paper_script_finds_current_documents_renderer(self) -> None:

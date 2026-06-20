@@ -295,6 +295,9 @@ can switch among fixtures without modifying the normal sentence-analysis form.
 The JSON companion `/api/diagnostic-fixtures` should expose a
 `diagnostic_fixtures.v1` manifest listing every fixture case, its label, JSON
 path, HTML path, failure stage, and recovery action kinds.
+The fixture case inventory and visible labels should be derived from a single
+`DIAGNOSTIC_FIXTURE_SPECS` table rather than maintained as parallel case and
+label structures.
 The selector should be rendered from that same manifest and expose
 `data-fixtures-schema`, `data-fixtures-api`, option-level failure-stage and
 recovery-action metadata, and the manifest label as the option text so the UI
