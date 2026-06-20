@@ -730,6 +730,7 @@ def validate_diagnostic_fixture_routes(
                     "web route smoke check failed: diagnostic fixture page missing "
                     f"{fragment} for {case}"
                 )
+        validate_diagnostic_contract_html_panel(fixture_page)
 
 
 def validate_diagnostic_contract_manifest(contract: dict) -> None:
@@ -743,6 +744,37 @@ def validate_diagnostic_contract_manifest(contract: dict) -> None:
         VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS
     ):
         raise SystemExit("web route smoke check failed: diagnostic recovery-action drift")
+
+
+def validate_diagnostic_contract_html_panel(page: str) -> None:
+    expected_fields = {
+        "failure_stages": sorted(VALID_DIAGNOSTIC_FAILURE_STAGES),
+        "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
+        "recovery_action_kinds": sorted(VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+    }
+    expected_fragments = [
+        'class="panel diagnostic-contract-panel"',
+        'data-contract-schema="diagnostic_contract.v1"',
+        'data-contract-api="/api/diagnostic-contract"',
+        "<h2>Diagnostic Contract</h2>",
+    ]
+    for field, values in expected_fields.items():
+        expected_fragments.extend(
+            [
+                f'data-contract-field="{field}"',
+                f'data-contract-count="{len(values)}"',
+            ]
+        )
+        expected_fragments.extend(
+            f'data-contract-token="{html.escape(value, quote=True)}"'
+            for value in values
+        )
+    for fragment in expected_fragments:
+        if fragment not in page:
+            raise SystemExit(
+                "web route smoke check failed: diagnostic contract panel missing "
+                f"{fragment}"
+            )
 
 
 def validate_lexicon_patch_http_routes(port: int, opener) -> None:

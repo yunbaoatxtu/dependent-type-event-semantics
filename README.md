@@ -678,6 +678,11 @@ The same vocabulary is exposed to clients at `/api/diagnostic-contract` as a
 The verifier rejects schema drift, failure-stage drift, required-fixture-stage
 drift, recovery-action drift, and stale selector links to that contract
 endpoint.
+The ordinary HTML page now renders the same vocabulary in a `Diagnostic
+Contract` panel with `data-contract-schema`, `data-contract-api`,
+`data-contract-field`, `data-contract-count`, and `data-contract-token` hooks,
+so browser checks can read the controlled terms without scraping prose or
+fixture-selector options.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
 and per-option failure-stage and recovery-action metadata, so the visible

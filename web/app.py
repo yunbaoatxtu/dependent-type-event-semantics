@@ -1481,6 +1481,53 @@ def diagnostic_fixture_form(result: dict[str, Any]) -> str:
     )
 
 
+def diagnostic_contract_panel() -> str:
+    contract = diagnostic_contract_manifest()
+    schema = str(contract.get("schema_version", ""))
+    sections = [
+        ("Failure Stages", "failure_stages"),
+        ("Required Fixture Stages", "required_fixture_stages"),
+        ("Recovery Actions", "recovery_action_kinds"),
+    ]
+    vocabularies = []
+    for label, field in sections:
+        values = [
+            str(value)
+            for value in contract.get(field, [])
+            if isinstance(value, str)
+        ]
+        items = "".join(
+            '<li '
+            f'data-contract-field="{html.escape(field, quote=True)}" '
+            f'data-contract-token="{html.escape(value, quote=True)}">'
+            f"<code>{html.escape(value)}</code>"
+            "</li>"
+            for value in values
+        )
+        vocabularies.append(
+            '<div class="diagnostic-contract-vocabulary" '
+            f'data-contract-field="{html.escape(field, quote=True)}" '
+            f'data-contract-count="{len(values)}">'
+            f"<strong>{html.escape(label)}</strong>"
+            f"<ul>{items}</ul>"
+            "</div>"
+        )
+    return (
+        '<section class="panel diagnostic-contract-panel" '
+        f'data-contract-schema="{html.escape(schema, quote=True)}" '
+        'data-contract-api="/api/diagnostic-contract">'
+        "<h2>Diagnostic Contract</h2>"
+        '<div class="diagnostic-contract">'
+        "<dl>"
+        f"<dt>schema</dt><dd><code>{html.escape(schema)}</code></dd>"
+        "<dt>api</dt><dd><code>/api/diagnostic-contract</code></dd>"
+        "</dl>"
+        f"{''.join(vocabularies)}"
+        "</div>"
+        "</section>"
+    )
+
+
 def lexicon_resolve_form(draft: dict[str, Any], sentence: str, require_coq: bool) -> str:
     if not draft.get("requires_human_choice"):
         return ""
@@ -2096,6 +2143,49 @@ def render_page(
       padding: 0 10px;
       font-size: 13px;
     }}
+    .diagnostic-contract {{
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }}
+    .diagnostic-contract dl {{
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .diagnostic-contract dt {{
+      color: var(--muted);
+    }}
+    .diagnostic-contract dd {{
+      margin: 0;
+      word-break: break-word;
+    }}
+    .diagnostic-contract-vocabulary {{
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }}
+    .diagnostic-contract-vocabulary strong {{
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }}
+    .diagnostic-contract-vocabulary ul {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }}
+    .diagnostic-contract-vocabulary li {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      padding: 4px 7px;
+      font-size: 12px;
+    }}
     h2 {{
       font-size: 14px;
       margin: 0;
@@ -2143,6 +2233,7 @@ def render_page(
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
       {panel("API Contract", api_contract)}
+      {diagnostic_contract_panel()}
       {panel("Conclusion", conclusion)}
       {semantic_warnings_panel(result)}
       {lexicon_patch_drafts_panel(result, sentence, require_coq)}

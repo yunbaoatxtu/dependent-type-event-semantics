@@ -17,6 +17,7 @@ from scripts.verify_project import (
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     VALID_DIAGNOSTIC_FAILURE_STAGES,
     VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    validate_diagnostic_contract_html_panel,
     validate_diagnostic_contract_manifest,
     validate_diagnostic_fixture_routes,
     validate_lexicon_patch_bundle,
@@ -8087,6 +8088,26 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
 
+    def test_web_page_renders_diagnostic_contract_panel(self) -> None:
+        page = render_page("John knocked twice", require_coq=True)
+        contract = diagnostic_contract_manifest()
+        self.assertIn('class="panel diagnostic-contract-panel"', page)
+        self.assertIn('data-contract-schema="diagnostic_contract.v1"', page)
+        self.assertIn('data-contract-api="/api/diagnostic-contract"', page)
+        self.assertIn("<h2>Diagnostic Contract</h2>", page)
+        for field in [
+            "failure_stages",
+            "required_fixture_stages",
+            "recovery_action_kinds",
+        ]:
+            values = contract[field]
+            self.assertIn(f'data-contract-field="{field}"', page)
+            self.assertIn(f'data-contract-count="{len(values)}"', page)
+            for value in values:
+                self.assertIn(f'data-contract-token="{value}"', page)
+        self.assertIn("<code>semantic_readings_check</code>", page)
+        self.assertIn("<code>add_missing_coq_definitions</code>", page)
+
     def test_diagnostic_fixture_page_selects_current_fixture_case(self) -> None:
         result = diagnostic_fixture_result("coq_check_failure")
         page = render_page(
@@ -8386,6 +8407,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
         self.assertIn("stale selector links", readme)
+        self.assertIn("`Diagnostic\nContract` panel", readme)
+        self.assertIn("`data-contract-token`", readme)
         self.assertIn("stage, and action lists", readme)
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
@@ -8531,6 +8554,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("schema drift", web_design)
         self.assertIn("required-fixture-stage", web_design)
         self.assertIn("stale selector links", web_design)
+        self.assertIn("`Diagnostic\nContract` panel", web_design)
+        self.assertIn("`data-contract-token`", web_design)
         self.assertIn("parallel case", web_design)
         self.assertIn("label, stage, and action structures", web_design)
         self.assertIn("The selector should be rendered from that same manifest", web_design)
@@ -8566,6 +8591,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("schema drift", manuscript)
         self.assertIn("required-fixture-stage drift", manuscript)
         self.assertIn("stale selector links", manuscript)
+        self.assertIn("Diagnostic Contract panel", manuscript)
+        self.assertIn("data-contract-token", manuscript)
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)
@@ -9207,6 +9234,22 @@ class TranslatorTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_diagnostic_contract_panel_drift(self) -> None:
+        page = render_page("John knocked twice", require_coq=True)
+        stale_schema_page = page.replace(
+            'data-contract-schema="diagnostic_contract.v1"',
+            'data-contract-schema="diagnostic_contract.v0"',
+        )
+        with self.assertRaisesRegex(SystemExit, "diagnostic contract panel missing"):
+            validate_diagnostic_contract_html_panel(stale_schema_page)
+
+        missing_token_page = page.replace(
+            'data-contract-token="semantic_readings_check"',
+            'data-contract-token="semantic_readings_missing"',
+        )
+        with self.assertRaisesRegex(SystemExit, "diagnostic contract panel missing"):
+            validate_diagnostic_contract_html_panel(missing_token_page)
 
     def test_verification_rejects_diagnostic_fixture_next_step_action_drift(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()

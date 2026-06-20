@@ -309,6 +309,11 @@ as a `diagnostic_contract.v1` manifest containing `failure_stages`,
 The verifier should reject schema drift, failure-stage drift,
 required-fixture-stage drift, recovery-action drift, and stale selector links
 to that contract endpoint.
+The ordinary HTML page should render the same contract as a `Diagnostic
+Contract` panel with stable `data-contract-schema`, `data-contract-api`,
+`data-contract-field`, `data-contract-count`, and `data-contract-token` hooks,
+so browser automation can inspect the controlled vocabulary directly instead
+of inferring it from prose or selector labels.
 The selector should be rendered from that same manifest and expose
 `data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
 option-level failure-stage and recovery-action metadata, and the manifest label
