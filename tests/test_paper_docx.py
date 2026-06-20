@@ -113,6 +113,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("action/detail drift", manuscript)
+        self.assertIn("warning/action/draft chain as a fixed schema", manuscript)
+        self.assertIn("patch_text_preview must mention every draft id", manuscript)
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("Next Steps panel", manuscript)
         self.assertIn("data-action-kind", manuscript)

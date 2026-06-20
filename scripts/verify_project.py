@@ -51,6 +51,30 @@ VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS = {
     "rename_duplicate_readings",
     "revise_sentence",
 }
+VALID_LEXICON_WARNING_KINDS = {
+    "derived_result_scale",
+    "source_state_used_as_target",
+    "unknown_result_source",
+}
+VALID_LEXICON_WARNING_ACTION_KINDS = {
+    "add_state_prestate",
+    "license_state_as_target",
+    "register_state_lexicon_entry",
+}
+LEXICON_WARNING_EXPECTATIONS = {
+    "derived_result_scale": (
+        "register_state_lexicon_entry",
+        "derived_scale_no_known_prestate",
+    ),
+    "source_state_used_as_target": (
+        "license_state_as_target",
+        "source_state_only",
+    ),
+    "unknown_result_source": (
+        "add_state_prestate",
+        "unknown_source_allowed",
+    ),
+}
 
 
 def run(label: str, command: list[str]) -> None:
@@ -146,6 +170,16 @@ def run_lexicon_export_smoke_check() -> None:
         raise SystemExit("lexicon patch exporter smoke check failed: patch text missing red entry")
 
 
+def run_lexicon_warning_schema_check() -> None:
+    from web.app import analyze_sentence
+
+    print("==> semantic warning and lexicon patch schema check")
+    warning_result = analyze_sentence("Mary painted the door red", require_coq=True)
+    validate_lexicon_warning_response("mary_painted_red", warning_result)
+    clean_result = analyze_sentence("John hammered the metal flat", require_coq=True)
+    validate_lexicon_warning_response("john_hammered_flat", clean_result)
+
+
 def validate_fixture_path(case: str, path: str, route: str, label: str) -> None:
     parsed = urlparse(path)
     if parsed.path != route:
@@ -166,6 +200,152 @@ def integer_list(value: object) -> bool:
 
 def string_list(value: object) -> bool:
     return isinstance(value, list) and all(isinstance(item, str) for item in value)
+
+
+def nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value)
+
+
+def validate_lexicon_patch_draft(case: str, draft: object) -> None:
+    if not isinstance(draft, dict):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed lexicon patch draft")
+    string_fields = [
+        "draft_id",
+        "state",
+        "scale",
+        "default_source_state",
+        "current_source_policy",
+        "source_policy_after_update",
+        "state_lexicon_patch_line",
+    ]
+    bool_fields = [
+        "allow_unknown_source",
+        "requires_human_choice",
+        "can_auto_apply",
+    ]
+    required_fields = [*string_fields, *bool_fields, "placeholder_fields"]
+    missing_fields = [field for field in required_fields if field not in draft]
+    if missing_fields:
+        raise SystemExit(
+            "web warning smoke check failed: "
+            f"{case} incomplete lexicon patch draft"
+        )
+    for field in string_fields:
+        if not nonempty_string(draft.get(field)):
+            raise SystemExit(
+                "web warning smoke check failed: "
+                f"{case} invalid lexicon patch draft {field}"
+            )
+    for field in bool_fields:
+        if type(draft.get(field)) is not bool:
+            raise SystemExit(
+                "web warning smoke check failed: "
+                f"{case} invalid lexicon patch draft {field}"
+            )
+    if not string_list(draft.get("placeholder_fields")):
+        raise SystemExit(
+            "web warning smoke check failed: "
+            f"{case} invalid lexicon patch draft placeholder_fields"
+        )
+    if draft.get("source_policy_after_update") != "lexical_prestate":
+        raise SystemExit(
+            "web warning smoke check failed: "
+            f"{case} invalid lexicon patch draft source_policy_after_update"
+        )
+    if "StateLexiconEntry" not in str(draft.get("state_lexicon_patch_line", "")):
+        raise SystemExit(
+            "web warning smoke check failed: "
+            f"{case} invalid lexicon patch draft state_lexicon_patch_line"
+        )
+
+
+def lexicon_patch_draft_key(draft: dict) -> tuple[object, object, object, object]:
+    return (
+        draft.get("state"),
+        draft.get("scale"),
+        draft.get("current_source_policy"),
+        draft.get("source_policy_after_update"),
+    )
+
+
+def validate_semantic_warning(case: str, warning: object) -> dict:
+    if not isinstance(warning, dict):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed semantic warning")
+    kind = warning.get("kind")
+    if kind not in VALID_LEXICON_WARNING_KINDS:
+        raise SystemExit(f"web warning smoke check failed: {case} unknown semantic warning kind")
+    for field in ["state", "scale", "message"]:
+        if not nonempty_string(warning.get(field)):
+            raise SystemExit(
+                "web warning smoke check failed: "
+                f"{case} incomplete semantic warning metadata"
+            )
+    action = warning.get("suggested_action")
+    if not isinstance(action, dict):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed warning action")
+    action_kind = action.get("kind")
+    expected_action_kind, expected_source_policy = LEXICON_WARNING_EXPECTATIONS[kind]
+    if action_kind not in VALID_LEXICON_WARNING_ACTION_KINDS:
+        raise SystemExit(f"web warning smoke check failed: {case} unknown warning action kind")
+    if action_kind != expected_action_kind:
+        raise SystemExit(f"web warning smoke check failed: {case} warning action drift")
+    for field in ["label", "detail"]:
+        if not nonempty_string(action.get(field)):
+            raise SystemExit(
+                "web warning smoke check failed: "
+                f"{case} incomplete warning action metadata"
+            )
+    draft = action.get("lexicon_entry_draft")
+    validate_lexicon_patch_draft(case, draft)
+    assert isinstance(draft, dict)
+    if draft.get("state") != warning.get("state") or draft.get("scale") != warning.get("scale"):
+        raise SystemExit(f"web warning smoke check failed: {case} warning/draft drift")
+    if draft.get("current_source_policy") != expected_source_policy:
+        raise SystemExit(f"web warning smoke check failed: {case} warning/draft drift")
+    return draft
+
+
+def validate_lexicon_warning_response(case: str, result: object) -> None:
+    if not isinstance(result, dict):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed result")
+    diagnostics = result.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit(f"web warning smoke check failed: {case} missing diagnostics")
+    warnings = diagnostics.get("warnings")
+    if not isinstance(warnings, list):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed semantic warnings")
+    observed_drafts = result.get("lexicon_patch_drafts")
+    if not isinstance(observed_drafts, list):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed lexicon patch drafts")
+
+    expected_drafts = []
+    seen = set()
+    for warning in warnings:
+        draft = validate_semantic_warning(case, warning)
+        key = lexicon_patch_draft_key(draft)
+        if key not in seen:
+            seen.add(key)
+            expected_drafts.append(draft)
+    for draft in observed_drafts:
+        validate_lexicon_patch_draft(case, draft)
+    if observed_drafts != expected_drafts:
+        raise SystemExit(f"web warning smoke check failed: {case} warning/draft drift")
+    if diagnostics.get("lexicon_patch_draft_count") != len(observed_drafts):
+        raise SystemExit(f"web warning smoke check failed: {case} lexicon patch draft count drift")
+    manual_required = any(
+        isinstance(draft, dict) and draft.get("requires_human_choice")
+        for draft in observed_drafts
+    )
+    if diagnostics.get("manual_repair_required") != manual_required:
+        raise SystemExit(f"web warning smoke check failed: {case} manual repair drift")
+    patch_text = result.get("patch_text_preview")
+    if observed_drafts and not isinstance(patch_text, str):
+        raise SystemExit(f"web warning smoke check failed: {case} malformed patch text preview")
+    if isinstance(patch_text, str):
+        for draft in observed_drafts:
+            draft_id = draft.get("draft_id") if isinstance(draft, dict) else None
+            if isinstance(draft_id, str) and draft_id and draft_id not in patch_text:
+                raise SystemExit(f"web warning smoke check failed: {case} patch text drift")
 
 
 def validate_semantic_readings_repair_details(case: str, details: object) -> None:
@@ -520,6 +700,7 @@ def main() -> None:
     run("formalization consistency", [sys.executable, "scripts/check_formalization.py"])
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
+    run_lexicon_warning_schema_check()
     run_web_route_smoke_check()
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")

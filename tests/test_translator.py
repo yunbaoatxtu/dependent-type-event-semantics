@@ -7,7 +7,10 @@ import unittest
 from pathlib import Path
 
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
-from scripts.verify_project import validate_diagnostic_fixture_routes
+from scripts.verify_project import (
+    validate_diagnostic_fixture_routes,
+    validate_lexicon_warning_response,
+)
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_LEXICON,
@@ -7897,6 +7900,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`manual_repair_required`", readme)
         self.assertIn("`lexicon_patch_draft_count`", readme)
         self.assertIn("`Translation verified with warnings`", readme)
+        self.assertIn("warning/action/draft chain as a fixed", readme)
+        self.assertIn("patch-text draft ids", readme)
         self.assertIn("`modifier_role_audit`", readme)
         self.assertIn("`Modifier Role Audit` panel", readme)
         self.assertIn("`normalized_modifier`", readme)
@@ -8024,6 +8029,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("repair detail record as a fixed schema", manuscript)
         self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
+        self.assertIn("warning/action/draft chain as a fixed schema", manuscript)
+        self.assertIn("top-level lexicon_patch_drafts queue", manuscript)
         self.assertIn("controlled diagnostics stage set", manuscript)
         self.assertIn("route case drift between manifest paths and fixture cases", manuscript)
         self.assertIn("label drift between manifest and HTML", manuscript)
@@ -8152,6 +8159,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`lexicon_entry_draft`", web_design)
         self.assertIn("`lexicon_patch_drafts`", web_design)
         self.assertIn("`patch_text_preview`", web_design)
+        self.assertIn("warning/action/draft chain as a fixed schema", web_design)
+        self.assertIn("top-level `lexicon_patch_drafts` must equal", web_design)
+        self.assertIn("cannot silently", web_design)
         self.assertIn("`draft_id`", web_design)
         self.assertIn("`current_source_policy`", web_design)
         self.assertIn("`data-draft-id`", web_design)
@@ -8526,6 +8536,74 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_validates_lexicon_warning_response(self) -> None:
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        validate_lexicon_warning_response("mary_painted_red", result)
+
+        clean_result = analyze_sentence("John hammered the metal flat", require_coq=True)
+        validate_lexicon_warning_response("john_hammered_flat", clean_result)
+
+    def test_verification_rejects_bad_lexicon_warning_schema(self) -> None:
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        result = deepcopy(result)
+        result["diagnostics"]["warnings"][0]["kind"] = "stale_warning_kind"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mary_painted_red unknown semantic warning kind",
+        ):
+            validate_lexicon_warning_response("mary_painted_red", result)
+
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        result = deepcopy(result)
+        result["diagnostics"]["warnings"][0]["suggested_action"].pop(
+            "lexicon_entry_draft"
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mary_painted_red malformed lexicon patch draft",
+        ):
+            validate_lexicon_warning_response("mary_painted_red", result)
+
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        result = deepcopy(result)
+        result["lexicon_patch_drafts"][0]["requires_human_choice"] = "yes"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mary_painted_red invalid lexicon patch draft requires_human_choice",
+        ):
+            validate_lexicon_warning_response("mary_painted_red", result)
+
+    def test_verification_rejects_warning_and_patch_draft_drift(self) -> None:
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        result = deepcopy(result)
+        result["lexicon_patch_drafts"][0]["state"] = "blue"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mary_painted_red warning/draft drift",
+        ):
+            validate_lexicon_warning_response("mary_painted_red", result)
+
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        result = deepcopy(result)
+        result["diagnostics"]["lexicon_patch_draft_count"] = 0
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mary_painted_red lexicon patch draft count drift",
+        ):
+            validate_lexicon_warning_response("mary_painted_red", result)
+
+        result = analyze_sentence("Mary painted the door red", require_coq=True)
+        result = deepcopy(result)
+        result["patch_text_preview"] = result["patch_text_preview"].replace(
+            "state-red--unknown_source_allowed",
+            "state-red--stale",
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "mary_painted_red patch text drift",
+        ):
+            validate_lexicon_warning_response("mary_painted_red", result)
+
     def test_verification_rejects_diagnostic_fixture_html_metadata_drift(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         pages = dict(pages)
@@ -8576,6 +8654,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("invalid semantic readings repair details", verifier)
         self.assertIn("def validate_recovery_action_matches_repair_details(", verifier)
         self.assertIn("recovery action repair detail drift", verifier)
+        self.assertIn("def validate_lexicon_warning_response(", verifier)
+        self.assertIn("semantic warning and lexicon patch schema check", verifier)
+        self.assertIn("unknown semantic warning kind", verifier)
+        self.assertIn("invalid lexicon patch draft", verifier)
+        self.assertIn("warning/draft drift", verifier)
+        self.assertIn("lexicon patch draft count drift", verifier)
+        self.assertIn("patch text drift", verifier)
         self.assertNotIn("len(cases) != 6", verifier)
         self.assertNotIn('data-fixture-count="6"', verifier)
         self.assertIn("for fixture in manifest_cases:", verifier)

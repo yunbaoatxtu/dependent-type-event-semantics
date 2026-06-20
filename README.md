@@ -723,7 +723,11 @@ it invites. Suggested actions include a `lexicon_entry_draft` template with
 `state`, `scale`, `default_source_state`, and `source_policy_after_update`
 fields. The API also lifts these templates to top-level `lexicon_patch_drafts`,
 giving clients a direct repair queue without requiring them to traverse warning
-records. Each draft includes a stable `draft_id` and a
+records. The project verifier treats this warning/action/draft chain as a fixed
+schema: warning kinds, suggested-action kinds, draft fields, manual-repair
+flags, and patch-text draft ids must agree between `diagnostics.warnings`,
+top-level `lexicon_patch_drafts`, and `patch_text_preview`. Each draft includes
+a stable `draft_id` and a
 `state_lexicon_patch_line` preview of the candidate `StateLexiconEntry`, with a
 placeholder source state that must be resolved before changing the lexicon. The
 draft records this explicitly with `requires_human_choice`,

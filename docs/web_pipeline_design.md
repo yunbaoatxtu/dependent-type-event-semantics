@@ -143,6 +143,12 @@ actions also include a `lexicon_entry_draft` object with `draft_id`, `state`,
 placeholder pre-state rather than an automatically applied lexicon mutation.
 The accompanying `requires_human_choice`, `placeholder_fields`, and
 `can_auto_apply` fields make that non-automatic status machine-readable.
+The verifier now checks this warning/action/draft chain as a fixed schema:
+warning kinds must map to their expected suggested-action kinds, each embedded
+`lexicon_entry_draft` must match the warning state, scale, and source policy,
+top-level `lexicon_patch_drafts` must equal the de-duplicated embedded drafts,
+`lexicon_patch_draft_count` and `manual_repair_required` must agree with that
+queue, and `patch_text_preview` must mention every draft id that it previews.
 
 The same repair queue is available outside the page through:
 
@@ -301,7 +307,10 @@ warning exposes `data-warning-kind` and a `semantic-warning--<kind>` CSS class
 so the interface can distinguish semantic caveats from recovery actions. If a
 warning has `suggested_action`, the rendered action exposes
 `data-warning-action-kind` for UI automation and displays the
-`lexicon_entry_draft` fields as a compact draft record.
+`lexicon_entry_draft` fields as a compact draft record. The project smoke check
+also compares those embedded draft records with the top-level draft queue and
+patch preview, so the visible warning and the repair queue cannot silently
+drift apart.
 The page also renders a `Lexicon Patch Drafts` panel from top-level
 `lexicon_patch_drafts`, with stable `data-draft-id`, `data-draft-state`, and
 `data-draft-current-policy` hooks for future repair controls. The panel shows
