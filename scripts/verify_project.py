@@ -24,6 +24,20 @@ PACKAGE_WHEEL_DIR = ROOT / "work" / "verify_package_build"
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
+VALID_DIAGNOSTIC_FAILURE_STAGES = {
+    "input",
+    "parsing",
+    "type_check",
+    "semantic_readings_check",
+    "construction_hygiene",
+    "coq_check",
+}
+REQUIRED_DIAGNOSTIC_FIXTURE_STAGES = {
+    "type_check",
+    "semantic_readings_check",
+    "construction_hygiene",
+    "coq_check",
+}
 
 
 def run(label: str, command: list[str]) -> None:
@@ -154,6 +168,8 @@ def validate_diagnostic_fixture_routes(
             isinstance(action, str) for action in recovery_actions
         ):
             raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
+        if failure_stage not in VALID_DIAGNOSTIC_FAILURE_STAGES:
+            raise SystemExit(f"web route smoke check failed: {case} unknown fixture failure stage")
 
     if manifest.get("schema_version") != "diagnostic_fixtures.v1":
         raise SystemExit("web route smoke check failed: wrong diagnostic fixture schema")
@@ -162,6 +178,13 @@ def validate_diagnostic_fixture_routes(
     cases = {fixture.get("case"): fixture for fixture in manifest_cases}
     if len(cases) != fixture_count:
         raise SystemExit("web route smoke check failed: duplicate fixture cases")
+    covered_stages = {fixture.get("failure_stage") for fixture in manifest_cases}
+    missing_stages = sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES - covered_stages)
+    if missing_stages:
+        raise SystemExit(
+            "web route smoke check failed: missing diagnostic fixture stages "
+            + ", ".join(missing_stages)
+        )
     missing = cases.get("semantic_readings_missing_export")
     if not missing:
         raise SystemExit("web route smoke check failed: missing semantic readings fixture")

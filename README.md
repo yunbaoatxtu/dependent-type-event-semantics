@@ -663,14 +663,23 @@ outside the unit-test renderer as well.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.
+Fixture `failure_stage` values are checked against the same controlled set used
+by ordinary diagnostics: `input`, `parsing`, `type_check`,
+`semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture
+manifest must cover the four internal/proof-boundary stages
+`type_check`, `semantic_readings_check`, `construction_hygiene`, and
+`coq_check`; input and parsing failures remain covered through ordinary
+`/api/analyze` failure tests.
 The expected selector count is derived from the manifest itself, so adding a new
 diagnostic case does not require updating a separate hard-coded smoke-test
 constant.
 The manifest/API/HTML consistency rules also live in a standalone verifier
 helper with counterexample tests for duplicate cases, missing metadata, payload
 case drift, route case drift between manifest paths and the fixture case, label
-drift between manifest and HTML, recovery-action drift between the payload and
-manifest, stale HTML selector attributes, and stale `Next Steps` action hooks.
+drift between manifest and HTML, unknown fixture failure stages, missing
+internal/proof-boundary stage coverage, recovery-action drift between the
+payload and manifest, stale HTML selector attributes, and stale `Next Steps`
+action hooks.
 It also renders a dedicated `Type Check` panel, so construction-specific AST
 errors such as an unlicensed lexical state-change frame are visible beside the
 AST instead of being hidden behind the status banner.

@@ -257,6 +257,13 @@ deterministic check suite that exercises the backend pipeline.
 It should iterate over every case advertised by the manifest and compare the
 API payload, selected HTML option, API/HTML route case parameter, failure stage,
 and recovery-action metadata.
+The helper should reject any fixture whose `failure_stage` is outside the
+controlled diagnostics set: `input`, `parsing`, `type_check`,
+`semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture
+manifest should also cover the four internal/proof-boundary stages
+`type_check`, `semantic_readings_check`, `construction_hygiene`, and
+`coq_check`; input and parsing failures remain covered by ordinary
+`/api/analyze` failure tests rather than by controlled fixture pages.
 The expected selector count should be derived from the manifest rather than
 from a second hard-coded case total.
 The same consistency rules should be factored into a pure verifier helper so

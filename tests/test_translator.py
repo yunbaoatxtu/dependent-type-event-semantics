@@ -7870,11 +7870,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The selector is rendered from the same manifest", readme)
         self.assertIn("`data-fixtures-schema`", readme)
         self.assertIn("per-option failure-stage", readme)
+        self.assertIn("checked against the same controlled set", readme)
+        self.assertIn("four internal/proof-boundary stages", readme)
         self.assertIn("standalone verifier", readme)
         self.assertIn("case drift", readme)
         self.assertIn("route case drift between manifest paths", readme)
         self.assertIn("label", readme)
         self.assertIn("drift between manifest and HTML", readme)
+        self.assertIn("unknown fixture failure stages", readme)
+        self.assertIn("internal/proof-boundary stage coverage", readme)
         self.assertIn("recovery-action drift", readme)
         self.assertIn("stale `Next Steps`", readme)
         self.assertIn("action hooks", readme)
@@ -7993,6 +7997,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("API/HTML route case parameter", web_design)
         self.assertIn("parse each manifest `api_path` and `html_path`", web_design)
         self.assertIn("manifest label as the option text", web_design)
+        self.assertIn("controlled diagnostics set", web_design)
+        self.assertIn("four internal/proof-boundary stages", web_design)
         self.assertIn("stale selector attributes", web_design)
         self.assertIn("`diagnostics.recovery_actions`", web_design)
         self.assertIn("list and the rendered `Next Steps`", web_design)
@@ -8003,8 +8009,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("standalone verifier helper", manuscript)
         self.assertIn("API/HTML route case parameter", manuscript)
+        self.assertIn("controlled diagnostics stage set", manuscript)
         self.assertIn("route case drift between manifest paths and fixture cases", manuscript)
         self.assertIn("label drift between manifest and HTML", manuscript)
+        self.assertIn("unknown fixture failure stages", manuscript)
+        self.assertIn("missing internal/proof-boundary stage coverage", manuscript)
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
@@ -8269,6 +8278,32 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "type_check_failure":
+                fixture["failure_stage"] = "unregistered_stage"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure unknown fixture failure stage",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_requires_major_diagnostic_fixture_stage_coverage(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["failure_stage"] == "construction_hygiene":
+                fixture["failure_stage"] = "type_check"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "missing diagnostic fixture stages construction_hygiene",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_rejects_diagnostic_fixture_payload_case_drift(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         payloads = deepcopy(payloads)
@@ -8381,6 +8416,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("manifest_cases = manifest.get(\"cases\", [])", verifier)
         self.assertIn("fixture_count = len(manifest_cases)", verifier)
         self.assertIn("duplicate fixture cases", verifier)
+        self.assertIn("VALID_DIAGNOSTIC_FAILURE_STAGES", verifier)
+        self.assertIn("REQUIRED_DIAGNOSTIC_FIXTURE_STAGES", verifier)
+        self.assertIn("unknown fixture failure stage", verifier)
+        self.assertIn("missing diagnostic fixture stages", verifier)
         self.assertNotIn("len(cases) != 6", verifier)
         self.assertNotIn('data-fixture-count="6"', verifier)
         self.assertIn("for fixture in manifest_cases:", verifier)
