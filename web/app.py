@@ -1199,6 +1199,8 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
         href = "/api/recovery-action?" + urlencode(
             {"case": fixture_case, "index": str(index)}
         )
+        export_bundle = recovery_action_export_bundle(fixture_case, index)
+        export_json = html.escape(compact_json(export_bundle))
         items.append(
             '<li class="recovery-action-export" '
             f'data-export-schema="{RECOVERY_ACTION_SCHEMA}" '
@@ -1214,6 +1216,11 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
             f"<dt>kind</dt><dd><code>{html.escape(kind)}</code></dd>"
             f"<dt>stage</dt><dd><code>{html.escape(failure_stage)}</code></dd>"
             "</dl>"
+            '<details class="recovery-action-export-json" '
+            f'data-export-json-schema="{RECOVERY_ACTION_SCHEMA}">'
+            "<summary>Action JSON</summary>"
+            f"<pre>{export_json}</pre>"
+            "</details>"
             "</li>"
         )
     body = (
@@ -2011,6 +2018,17 @@ def render_page(
     .recovery-action-export dd {{
       margin: 0;
       word-break: break-word;
+    }}
+    .recovery-action-export-json summary {{
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .recovery-action-export-json pre {{
+      margin-top: 8px;
+      min-height: 0;
+      max-height: 260px;
+      background: var(--surface);
     }}
     .recovery-action-export-empty {{
       margin: 0;

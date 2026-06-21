@@ -630,6 +630,35 @@ def validate_recovery_action_export_bundle(
     validate_diagnostic_contract_manifest(contract)
 
 
+def diagnostic_contract_bundle_for_recovery_action() -> dict:
+    return {
+        "schema_version": "diagnostic_contract.v1",
+        "failure_stages": sorted(VALID_DIAGNOSTIC_FAILURE_STAGES),
+        "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
+        "recovery_action_kinds": sorted(VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+    }
+
+
+def recovery_action_export_preview_json(
+    case: str,
+    action_index: int,
+    expected_stage: str,
+    expected_action: dict,
+) -> str:
+    return json.dumps(
+        {
+            "schema_version": "diagnostic_recovery_action.v1",
+            "case": case,
+            "action_index": action_index,
+            "failure_stage": expected_stage,
+            "action": expected_action,
+            "contract": diagnostic_contract_bundle_for_recovery_action(),
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -774,6 +803,7 @@ def validate_diagnostic_fixture_routes(
             case,
             str(expected_stage),
             expected_actions,
+            payload_actions,
         )
 
 
@@ -826,6 +856,7 @@ def validate_recovery_action_exports_html_panel(
     case: str,
     expected_stage: str,
     expected_actions: list[str],
+    expected_action_payloads: list[dict],
 ) -> None:
     expected_fragments = [
         'class="panel recovery-action-exports-panel"',
@@ -835,12 +866,30 @@ def validate_recovery_action_exports_html_panel(
         "<h2>Recovery Action Exports</h2>",
     ]
     for action_index, action_kind in enumerate(expected_actions):
+        if action_index >= len(expected_action_payloads) or not isinstance(
+            expected_action_payloads[action_index],
+            dict,
+        ):
+            raise SystemExit(
+                "web route smoke check failed: recovery action exports panel missing "
+                f"payload for {case} action {action_index}"
+            )
+        expected_json = html.escape(
+            recovery_action_export_preview_json(
+                case,
+                action_index,
+                expected_stage,
+                expected_action_payloads[action_index],
+            )
+        )
         expected_fragments.extend(
             [
                 'class="recovery-action-export"',
                 f'data-export-action-index="{action_index}"',
                 f'data-export-action-kind="{html.escape(action_kind, quote=True)}"',
                 f'data-export-failure-stage="{html.escape(expected_stage, quote=True)}"',
+                f'data-export-json-schema="diagnostic_recovery_action.v1"',
+                "<summary>Action JSON</summary>",
                 (
                     'href="/api/recovery-action?'
                     + html.escape(
@@ -849,6 +898,7 @@ def validate_recovery_action_exports_html_panel(
                     )
                     + '"'
                 ),
+                expected_json,
             ]
         )
     for fragment in expected_fragments:

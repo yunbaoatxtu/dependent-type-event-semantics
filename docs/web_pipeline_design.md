@@ -291,7 +291,11 @@ full analysis response. The fixture HTML should also render a
 `data-export-schema`, `data-export-case`, `data-export-count`,
 `data-export-action-index`, `data-export-action-kind`, and
 `data-export-failure-stage` hooks, making the export inventory visible before a
-developer opens a JSON link.
+developer opens a JSON link. Each export row should include an expandable
+`Action JSON` preview; the verifier should reconstruct the expected
+`diagnostic_recovery_action.v1` bundle from the fixture payload and shared
+diagnostic contract, then require the rendered preview to match that JSON
+exactly.
 The service should keep these hooks browser-testable through controlled
 diagnostics fixtures. `/api/diagnostic-fixture?case=semantic_readings_missing_export`
 returns the JSON version of a semantic-reading export failure, while

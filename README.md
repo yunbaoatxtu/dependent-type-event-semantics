@@ -655,7 +655,9 @@ index, failure stage, exact action object, and the shared diagnostic contract.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, so browser checks can verify the export contract without opening
-each link manually.
+each link manually. Each export row also includes an expandable `Action JSON`
+preview whose content must match the corresponding
+`diagnostic_recovery_action.v1` API bundle exactly.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or
