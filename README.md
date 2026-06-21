@@ -652,6 +652,10 @@ JSON link such as
 `/api/recovery-action?case=semantic_readings_missing_export&index=0`, whose
 `diagnostic_recovery_action.v1` payload contains the fixture case, action
 index, failure stage, exact action object, and the shared diagnostic contract.
+The same fixture pages render a `Recovery Action Exports` panel that lists
+those action JSON routes with their schema, case, index, action kind, and
+failure stage, so browser checks can verify the export contract without opening
+each link manually.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or

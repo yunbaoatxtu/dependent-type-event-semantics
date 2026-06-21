@@ -769,6 +769,12 @@ def validate_diagnostic_fixture_routes(
                     f"{fragment} for {case}"
                 )
         validate_diagnostic_contract_html_panel(fixture_page)
+        validate_recovery_action_exports_html_panel(
+            fixture_page,
+            case,
+            str(expected_stage),
+            expected_actions,
+        )
 
 
 def validate_diagnostic_contract_manifest(contract: dict) -> None:
@@ -812,6 +818,44 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
             raise SystemExit(
                 "web route smoke check failed: diagnostic contract panel missing "
                 f"{fragment}"
+            )
+
+
+def validate_recovery_action_exports_html_panel(
+    page: str,
+    case: str,
+    expected_stage: str,
+    expected_actions: list[str],
+) -> None:
+    expected_fragments = [
+        'class="panel recovery-action-exports-panel"',
+        'data-export-schema="diagnostic_recovery_action.v1"',
+        f'data-export-case="{html.escape(case, quote=True)}"',
+        f'data-export-count="{len(expected_actions)}"',
+        "<h2>Recovery Action Exports</h2>",
+    ]
+    for action_index, action_kind in enumerate(expected_actions):
+        expected_fragments.extend(
+            [
+                'class="recovery-action-export"',
+                f'data-export-action-index="{action_index}"',
+                f'data-export-action-kind="{html.escape(action_kind, quote=True)}"',
+                f'data-export-failure-stage="{html.escape(expected_stage, quote=True)}"',
+                (
+                    'href="/api/recovery-action?'
+                    + html.escape(
+                        urlencode({"case": case, "index": str(action_index)}),
+                        quote=True,
+                    )
+                    + '"'
+                ),
+            ]
+        )
+    for fragment in expected_fragments:
+        if fragment not in page:
+            raise SystemExit(
+                "web route smoke check failed: recovery action exports panel missing "
+                f"{fragment} for {case}"
             )
 
 

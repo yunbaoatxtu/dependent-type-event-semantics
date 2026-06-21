@@ -286,7 +286,12 @@ pages should also expose each action through
 `diagnostic_recovery_action.v1` object with the case, action index, failure
 stage, exact action payload, and shared diagnostic contract. This gives browser
 tools an inspection/export path for one suggested repair without scraping the
-full analysis response.
+full analysis response. The fixture HTML should also render a
+`Recovery Action Exports` panel that summarizes every such route with
+`data-export-schema`, `data-export-case`, `data-export-count`,
+`data-export-action-index`, `data-export-action-kind`, and
+`data-export-failure-stage` hooks, making the export inventory visible before a
+developer opens a JSON link.
 The service should keep these hooks browser-testable through controlled
 diagnostics fixtures. `/api/diagnostic-fixture?case=semantic_readings_missing_export`
 returns the JSON version of a semantic-reading export failure, while

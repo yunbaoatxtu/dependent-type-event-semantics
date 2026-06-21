@@ -109,6 +109,7 @@ from web.app import (
     modifier_role_audit,
     next_steps_panel,
     parse_patch_resolution_params,
+    recovery_action_exports_panel,
     render_page,
     render_lexicon_patch_text,
     result_state_warning_for_entry,
@@ -8087,6 +8088,36 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-action-export="json"', page)
 
+    def test_diagnostic_fixture_page_renders_recovery_action_exports_panel(self) -> None:
+        result = diagnostic_fixture_result("semantic_readings_export_count_mismatch")
+        page = render_page(
+            result["input_sentence"],
+            result=result,
+            endpoint="/api/diagnostic-fixture",
+        )
+        self.assertIn('class="panel recovery-action-exports-panel"', page)
+        self.assertIn('data-export-schema="diagnostic_recovery_action.v1"', page)
+        self.assertIn('data-export-case="semantic_readings_export_count_mismatch"', page)
+        self.assertIn('data-export-count="2"', page)
+        self.assertIn("<h2>Recovery Action Exports</h2>", page)
+        self.assertIn('class="recovery-action-export"', page)
+        self.assertIn('data-export-action-index="0"', page)
+        self.assertIn('data-export-action-kind="normalize_reading_exports"', page)
+        self.assertIn('data-export-failure-stage="semantic_readings_check"', page)
+        self.assertIn(
+            'href="/api/recovery-action?case=semantic_readings_export_count_mismatch'
+            '&amp;index=0"',
+            page,
+        )
+        self.assertIn("<dt>schema</dt><dd><code>diagnostic_recovery_action.v1</code></dd>", page)
+        self.assertIn("<dt>kind</dt><dd><code>inspect_readings</code></dd>", page)
+
+    def test_recovery_action_exports_panel_is_fixture_only(self) -> None:
+        result = analyze_sentence("John knocked twice", require_coq=False)
+        self.assertEqual(recovery_action_exports_panel(result), "")
+        page = render_page("John knocked twice", result=result)
+        self.assertNotIn("Recovery Action Exports", page)
+
     def test_recovery_action_api_exposes_fixture_action_and_contract(self) -> None:
         expected = diagnostic_fixture_result("semantic_readings_missing_export")
         expected_action = expected["diagnostics"]["recovery_actions"][0]
@@ -8490,6 +8521,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-action-contract-kind`", readme)
         self.assertIn("/api/recovery-action?case=semantic_readings_missing_export&index=0", readme)
         self.assertIn("`diagnostic_recovery_action.v1`", readme)
+        self.assertIn("`Recovery Action Exports` panel", readme)
+        self.assertIn("schema, case, index, action kind, and", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("controlled diagnostic action set", readme)
@@ -8641,6 +8674,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-action-index`", web_design)
         self.assertIn("/api/recovery-action?case=<case>&index=<n>", web_design)
         self.assertIn("`diagnostic_recovery_action.v1`", web_design)
+        self.assertIn("`Recovery Action Exports` panel", web_design)
+        self.assertIn("`data-export-action-kind`", web_design)
         self.assertIn(
             "visible labels, controls, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -8654,6 +8689,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("diagnostic_contract.v1 manifest", manuscript)
         self.assertIn("required_fixture_stages", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
+        self.assertIn("Recovery Action Exports panel", manuscript)
+        self.assertIn("stale action-export panels", manuscript)
         self.assertIn("stale action export links", manuscript)
         self.assertIn("schema drift", manuscript)
         self.assertIn("required-fixture-stage drift", manuscript)
@@ -9348,11 +9385,25 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "diagnostic fixture page missing"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_rejects_recovery_action_exports_panel_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = dict(pages)
+        pages["semantic_readings_missing_export"] = pages[
+            "semantic_readings_missing_export"
+        ].replace(
+            'data-export-count="2"',
+            'data-export-count="1"',
+            1,
+        )
+        with self.assertRaisesRegex(SystemExit, "recovery action exports panel missing"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_runs_web_route_smoke_check(self) -> None:
         verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
         self.assertIn("def validate_diagnostic_contract_manifest(", verifier)
         self.assertIn("def validate_recovery_action_export_bundle(", verifier)
+        self.assertIn("def validate_recovery_action_exports_html_panel(", verifier)
         self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
         self.assertIn("/api/diagnostic-contract", verifier)
@@ -9423,6 +9474,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-action-index="{action_index}"', verifier)
         self.assertIn('data-action-contract-kind="{action_kind}"', verifier)
         self.assertIn('data-action-export="json"', verifier)
+        self.assertIn('class="panel recovery-action-exports-panel"', verifier)
+        self.assertIn('data-export-count="{len(expected_actions)}"', verifier)
+        self.assertIn('data-export-action-kind="{html.escape(action_kind, quote=True)}"', verifier)
         self.assertIn("ProxyHandler({})", verifier)
         self.assertIn("run_web_route_smoke_check()", verifier)
         self.assertLess(

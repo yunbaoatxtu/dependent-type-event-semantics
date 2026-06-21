@@ -1182,6 +1182,56 @@ def next_steps_panel(result: dict[str, Any]) -> str:
     )
 
 
+def recovery_action_exports_panel(result: dict[str, Any]) -> str:
+    fixture_case = diagnostic_fixture_case_for_result(result)
+    if not fixture_case:
+        return ""
+    diagnostics = result.get("diagnostics", {})
+    actions = diagnostics.get("recovery_actions", [])
+    if not isinstance(actions, list):
+        actions = []
+    failure_stage = str(diagnostics.get("failure_stage", ""))
+    items = []
+    for index, action in enumerate(actions):
+        if not isinstance(action, dict):
+            continue
+        kind = str(action.get("kind", ""))
+        href = "/api/recovery-action?" + urlencode(
+            {"case": fixture_case, "index": str(index)}
+        )
+        items.append(
+            '<li class="recovery-action-export" '
+            f'data-export-schema="{RECOVERY_ACTION_SCHEMA}" '
+            f'data-export-case="{html.escape(fixture_case, quote=True)}" '
+            f'data-export-action-index="{index}" '
+            f'data-export-action-kind="{html.escape(kind, quote=True)}" '
+            f'data-export-failure-stage="{html.escape(failure_stage, quote=True)}">'
+            f'<a href="{html.escape(href, quote=True)}">{html.escape(href)}</a>'
+            "<dl>"
+            f"<dt>schema</dt><dd><code>{RECOVERY_ACTION_SCHEMA}</code></dd>"
+            f"<dt>case</dt><dd><code>{html.escape(fixture_case)}</code></dd>"
+            f"<dt>index</dt><dd><code>{index}</code></dd>"
+            f"<dt>kind</dt><dd><code>{html.escape(kind)}</code></dd>"
+            f"<dt>stage</dt><dd><code>{html.escape(failure_stage)}</code></dd>"
+            "</dl>"
+            "</li>"
+        )
+    body = (
+        '<ul class="recovery-action-export-list">' + "".join(items) + "</ul>"
+        if items
+        else '<p class="recovery-action-export-empty">No recovery action exports.</p>'
+    )
+    return (
+        '<section class="panel recovery-action-exports-panel" '
+        f'data-export-schema="{RECOVERY_ACTION_SCHEMA}" '
+        f'data-export-case="{html.escape(fixture_case, quote=True)}" '
+        f'data-export-count="{len(items)}">'
+        "<h2>Recovery Action Exports</h2>"
+        f'<div class="recovery-action-exports">{body}</div>'
+        "</section>"
+    )
+
+
 def semantic_warnings_panel(result: dict[str, Any]) -> str:
     warnings = result.get("diagnostics", {}).get("warnings", [])
     if not warnings:
@@ -1927,6 +1977,46 @@ def render_page(
     .next-step-action-link:hover {{
       background: #ffffff;
     }}
+    .recovery-action-exports {{
+      padding: 12px;
+    }}
+    .recovery-action-export-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }}
+    .recovery-action-export {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }}
+    .recovery-action-export a {{
+      color: var(--accent);
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }}
+    .recovery-action-export dl {{
+      display: grid;
+      grid-template-columns: minmax(70px, auto) minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .recovery-action-export dd {{
+      margin: 0;
+      word-break: break-word;
+    }}
+    .recovery-action-export-empty {{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }}
     .semantic-warning {{
       border-left: 3px solid var(--warning);
       background: var(--warning-soft);
@@ -2295,6 +2385,7 @@ def render_page(
       {semantic_warnings_panel(result)}
       {lexicon_patch_drafts_panel(result, sentence, require_coq)}
       {next_steps_panel(result)}
+      {recovery_action_exports_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("Modifier Role Audit", modifier_roles)}
       {panel("Semantic Readings", semantic_readings)}
