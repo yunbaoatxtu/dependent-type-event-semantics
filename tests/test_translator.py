@@ -7903,6 +7903,27 @@ class TranslatorTests(unittest.TestCase):
             self.assertEqual(cases[case]["failure_stage"], stage)
         for case, action_kinds in spec_actions.items():
             self.assertEqual(cases[case]["recovery_action_kinds"], action_kinds)
+            self.assertEqual(
+                [
+                    export["kind"]
+                    for export in cases[case]["recovery_action_exports"]
+                ],
+                action_kinds,
+            )
+            for index, action_kind in enumerate(action_kinds):
+                self.assertEqual(
+                    cases[case]["recovery_action_exports"][index],
+                    {
+                        "schema_version": "diagnostic_recovery_action.v1",
+                        "case": case,
+                        "action_index": index,
+                        "kind": action_kind,
+                        "failure_stage": spec_stages[case],
+                        "api_path": (
+                            f"/api/recovery-action?case={case}&index={index}"
+                        ),
+                    },
+                )
             payload = diagnostic_fixture_result(case)
             self.assertEqual(payload["diagnostics"]["failure_stage"], spec_stages[case])
             self.assertEqual(
@@ -8536,6 +8557,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("schema, case, index, action kind, and", readme)
         self.assertIn("expandable `Action JSON`", readme)
         self.assertIn("API bundle exactly", readme)
+        self.assertIn("`recovery_action_exports`", readme)
+        self.assertIn("per-action JSON export paths", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("controlled diagnostic action set", readme)
@@ -8691,6 +8714,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-export-action-kind`", web_design)
         self.assertIn("`Action JSON` preview", web_design)
         self.assertIn("match that JSON", web_design)
+        self.assertIn("`recovery_action_exports`", web_design)
+        self.assertIn("per-action export metadata", web_design)
         self.assertIn(
             "visible labels, controls, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -8708,6 +8733,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("stale action-export panels", manuscript)
         self.assertIn("expandable Action JSON preview", manuscript)
         self.assertIn("stale action JSON previews", manuscript)
+        self.assertIn("recovery_action_exports inventory", manuscript)
+        self.assertIn("per-action export paths", manuscript)
         self.assertIn("stale action export links", manuscript)
         self.assertIn("schema drift", manuscript)
         self.assertIn("required-fixture-stage drift", manuscript)
@@ -9038,6 +9065,12 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        manifest["cases"][0].pop("recovery_action_exports")
+        with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         manifest = deepcopy(manifest)
@@ -9057,6 +9090,7 @@ class TranslatorTests(unittest.TestCase):
         for fixture in manifest["cases"]:
             if fixture["failure_stage"] == "construction_hygiene":
                 fixture["failure_stage"] = "type_check"
+                fixture["recovery_action_exports"][0]["failure_stage"] = "type_check"
                 break
         with self.assertRaisesRegex(
             SystemExit,
@@ -9141,6 +9175,35 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_rejects_diagnostic_fixture_recovery_action_export_drift(
+        self,
+    ) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "semantic_readings_missing_export":
+                fixture["recovery_action_exports"][0]["kind"] = "inspect_ast"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export recovery action export manifest drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "semantic_readings_missing_export":
+                fixture["recovery_action_exports"][0][
+                    "api_path"
+                ] = "/api/recovery-action?case=semantic_readings_missing_export&index=9"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export recovery action export case/index drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_rejects_unknown_diagnostic_fixture_recovery_action_kind(
         self,
     ) -> None:
@@ -9150,6 +9213,7 @@ class TranslatorTests(unittest.TestCase):
         for fixture in manifest["cases"]:
             if fixture["case"] == "semantic_readings_missing_export":
                 fixture["recovery_action_kinds"][0] = "stale_repair_action"
+                fixture["recovery_action_exports"][0]["kind"] = "stale_repair_action"
                 break
         payloads["semantic_readings_missing_export"]["diagnostics"]["recovery_actions"][0][
             "kind"
@@ -9433,6 +9497,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
         self.assertIn("def validate_diagnostic_contract_manifest(", verifier)
         self.assertIn("def validate_recovery_action_export_bundle(", verifier)
+        self.assertIn("def validate_recovery_action_export_manifest_entry(", verifier)
         self.assertIn("def validate_recovery_action_exports_html_panel(", verifier)
         self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
@@ -9494,6 +9559,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("stage drift", verifier)
         self.assertIn("label drift", verifier)
         self.assertIn("recovery action drift", verifier)
+        self.assertIn("recovery action export manifest drift", verifier)
+        self.assertIn("recovery action export case/index drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
         self.assertIn('data-diagnostic-contract-api="/api/diagnostic-contract"', verifier)

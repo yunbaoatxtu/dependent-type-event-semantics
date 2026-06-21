@@ -216,6 +216,49 @@ def validate_fixture_path(case: str, path: str, route: str, label: str) -> None:
         raise SystemExit(f"web route smoke check failed: {case} {label} case drift")
 
 
+def validate_recovery_action_export_manifest_entry(
+    case: str,
+    action_index: int,
+    expected_stage: str,
+    expected_kind: str,
+    export_entry: object,
+) -> None:
+    if not isinstance(export_entry, dict):
+        raise SystemExit(
+            f"web route smoke check failed: {case} malformed recovery action export metadata"
+        )
+    expected_fields = {
+        "schema_version": "diagnostic_recovery_action.v1",
+        "case": case,
+        "action_index": action_index,
+        "kind": expected_kind,
+        "failure_stage": expected_stage,
+    }
+    for field, expected_value in expected_fields.items():
+        if export_entry.get(field) != expected_value:
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} recovery action export manifest drift"
+            )
+    api_path = export_entry.get("api_path")
+    if not isinstance(api_path, str):
+        raise SystemExit(
+            f"web route smoke check failed: {case} incomplete recovery action export metadata"
+        )
+    parsed = urlparse(api_path)
+    if parsed.path != "/api/recovery-action":
+        raise SystemExit(
+            f"web route smoke check failed: {case} recovery action export path drift"
+        )
+    if parse_qs(parsed.query, keep_blank_values=True) != {
+        "case": [case],
+        "index": [str(action_index)],
+    }:
+        raise SystemExit(
+            f"web route smoke check failed: {case} recovery action export case/index drift"
+        )
+
+
 def nonempty_string_list(value: object) -> bool:
     return isinstance(value, list) and bool(value) and all(
         isinstance(item, str) and item for item in value
@@ -677,6 +720,7 @@ def validate_diagnostic_fixture_routes(
         html_path = fixture.get("html_path")
         failure_stage = fixture.get("failure_stage")
         recovery_actions = fixture.get("recovery_action_kinds")
+        recovery_action_exports = fixture.get("recovery_action_exports")
         if not all(
             isinstance(value, str)
             for value in [case, label, api_path, html_path, failure_stage]
@@ -686,8 +730,21 @@ def validate_diagnostic_fixture_routes(
             isinstance(action, str) for action in recovery_actions
         ):
             raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
+        if (
+            not isinstance(recovery_action_exports, list)
+            or len(recovery_action_exports) != len(recovery_actions)
+        ):
+            raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
         if failure_stage not in VALID_DIAGNOSTIC_FAILURE_STAGES:
             raise SystemExit(f"web route smoke check failed: {case} unknown fixture failure stage")
+        for action_index, action_kind in enumerate(recovery_actions):
+            validate_recovery_action_export_manifest_entry(
+                case,
+                action_index,
+                failure_stage,
+                action_kind,
+                recovery_action_exports[action_index],
+            )
 
     if manifest.get("schema_version") != "diagnostic_fixtures.v1":
         raise SystemExit("web route smoke check failed: wrong diagnostic fixture schema")
@@ -724,6 +781,7 @@ def validate_diagnostic_fixture_routes(
         expected_label = fixture.get("label")
         expected_stage = fixture.get("failure_stage")
         expected_actions = fixture.get("recovery_action_kinds", [])
+        expected_action_exports = fixture.get("recovery_action_exports", [])
         payload = fixture_payloads.get(case, {})
         diagnostics = payload.get("diagnostics", {}) if isinstance(payload, dict) else {}
         if not isinstance(diagnostics, dict):
@@ -773,6 +831,7 @@ def validate_diagnostic_fixture_routes(
         if not isinstance(expected_label, str) or expected_selected_option not in fixture_page:
             raise SystemExit(f"web route smoke check failed: {case} label drift")
         for action_index, action_kind in enumerate(expected_actions):
+            export_path = expected_action_exports[action_index].get("api_path", "")
             expected_fragments.extend(
                 [
                     f'id="recovery-action-{action_index}"',
@@ -781,11 +840,8 @@ def validate_diagnostic_fixture_routes(
                     'data-action-contract-api="/api/diagnostic-contract"',
                     f'data-action-contract-kind="{action_kind}"',
                     (
-                        "href=\"/api/recovery-action?"
-                        + html.escape(
-                            urlencode({"case": case, "index": str(action_index)}),
-                            quote=True,
-                        )
+                        'href="'
+                        + html.escape(str(export_path), quote=True)
                         + '"'
                     ),
                     'data-action-export="json"',
@@ -804,6 +860,7 @@ def validate_diagnostic_fixture_routes(
             str(expected_stage),
             expected_actions,
             payload_actions,
+            expected_action_exports,
         )
 
 
@@ -857,6 +914,7 @@ def validate_recovery_action_exports_html_panel(
     expected_stage: str,
     expected_actions: list[str],
     expected_action_payloads: list[dict],
+    expected_action_exports: list[dict],
 ) -> None:
     expected_fragments = [
         'class="panel recovery-action-exports-panel"',
@@ -882,6 +940,7 @@ def validate_recovery_action_exports_html_panel(
                 expected_action_payloads[action_index],
             )
         )
+        export_path = expected_action_exports[action_index].get("api_path", "")
         expected_fragments.extend(
             [
                 'class="recovery-action-export"',
@@ -891,11 +950,8 @@ def validate_recovery_action_exports_html_panel(
                 f'data-export-json-schema="diagnostic_recovery_action.v1"',
                 "<summary>Action JSON</summary>",
                 (
-                    'href="/api/recovery-action?'
-                    + html.escape(
-                        urlencode({"case": case, "index": str(action_index)}),
-                        quote=True,
-                    )
+                    'href="'
+                    + html.escape(str(export_path), quote=True)
                     + '"'
                 ),
                 expected_json,

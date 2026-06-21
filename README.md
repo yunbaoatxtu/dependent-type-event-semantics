@@ -674,7 +674,8 @@ diagnostic fixtures reachable without changing the ordinary analysis form or
 the `/api/analyze` contract.
 The companion `/api/diagnostic-fixtures` endpoint returns a
 `diagnostic_fixtures.v1` manifest with each case label, JSON path, HTML path,
-failure stage, and recovery action kinds for frontends and regression tools.
+failure stage, recovery action kinds, and a `recovery_action_exports` inventory
+containing per-action JSON export paths for frontends and regression tools.
 The case inventory, display labels, expected failure stages, and expected
 recovery-action kinds are now derived from one `DIAGNOSTIC_FIXTURE_SPECS`
 table of validated `DiagnosticFixtureSpec` entries, so adding a fixture no

@@ -376,6 +376,17 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
                 "html_path": f"/diagnostic-fixture?{urlencode({'case': case})}",
                 "failure_stage": expected_stage,
                 "recovery_action_kinds": expected_action_kinds,
+                "recovery_action_exports": [
+                    {
+                        "schema_version": RECOVERY_ACTION_SCHEMA,
+                        "case": case,
+                        "action_index": index,
+                        "kind": kind,
+                        "failure_stage": expected_stage,
+                        "api_path": f"/api/recovery-action?{urlencode({'case': case, 'index': str(index)})}",
+                    }
+                    for index, kind in enumerate(expected_action_kinds)
+                ],
             }
         )
     return {

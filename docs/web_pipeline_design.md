@@ -310,7 +310,11 @@ these cases, pointing at `/diagnostic-fixture`, so browser tests and developers
 can switch among fixtures without modifying the normal sentence-analysis form.
 The JSON companion `/api/diagnostic-fixtures` should expose a
 `diagnostic_fixtures.v1` manifest listing every fixture case, its label, JSON
-path, HTML path, failure stage, and recovery action kinds.
+path, HTML path, failure stage, recovery action kinds, and
+`recovery_action_exports` per-action export metadata. Each export metadata
+record should name the `diagnostic_recovery_action.v1` schema, case, action
+index, action kind, failure stage, and `/api/recovery-action` path, so clients
+do not have to infer export routes from prose or duplicate URL-building logic.
 The fixture case inventory, visible labels, expected failure stages, and
 expected recovery-action kinds should be derived from a single
 `DIAGNOSTIC_FIXTURE_SPECS` table of validated `DiagnosticFixtureSpec` entries
