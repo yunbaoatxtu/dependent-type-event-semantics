@@ -80,20 +80,24 @@ registered construction rules and fallback sentence analysis. A small
 allowlisted construction handles simple conditionals first, so `if John left,
 Mary cried` is checked as `leave(john) -> cry(mary)`, and `if John ate bread,
 Mary drank water` is checked as `eat(john, bread) -> drink(mary, water)` with
-`bread : Food` and `water : Drinkable`. Clause-level time modifiers scope over
-their own proposition, so `if John left yesterday, Mary cried today` becomes
-`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`. The same certified
+`bread : Food` and `water : Drinkable`. Clause-level Adv modifiers are stored
+as `Adv` values and passed through a `ModifierSeq`, so
+`if John ate bread quickly, Mary cried loudly` becomes
+`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`. Clause-level time
+modifiers scope over their own proposition, so
+`if John left in the park yesterday, Mary cried today` becomes
+`at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`. The same certified
 route handles narrow do-support negation inside a conditional clause:
-`if John did not leave yesterday, Mary cried today` becomes
-`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`, with `not_T`
+`if John did not leave quickly, Mary cried today` becomes
+`not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))`, with `not_T`
 declared at type `Prop -> Prop`. It also handles two coordinated subjects that
-share a clause predicate: `if John and Mary ate bread yesterday, Sue cried today`
+share a clause predicate: `if John and Mary ate bread quickly in the park yesterday, Sue cried today`
 becomes
-`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`,
-with `and_T : Prop -> Prop -> Prop`. These exports use no event, Agent, or Theme
+`at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
+with `and_T : PropT -> PropT -> PropT`. These exports use no event, Agent, or Theme
 declarations. Clause-level markers outside that certified path, such as
 `who`, `which`, `that`, `whether`, or overextended conditional strings such as
-`if John left, Mary cried loudly`, produce a parsing-stage diagnostic instead
+`if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead
 of being collapsed into entity names and sent to Coq/Rocq. This prevents the
 misleading formula `leave(0)(if_john, mary_cried)` and keeps a relation-clause subject
 such as `the tall boy who Mary saw yesterday quickly opened the old door with a key`
@@ -950,9 +954,10 @@ The current prototype has small, testable rules for:
 - simple conditionals represented as implication between typed propositions,
   including typed transitive objects such as `bread : Food` and
   `water : Drinkable`, plus clause-local temporal wrappers such as
-  `at_T(yesterday, leave(john))`, and clause-local do-support negation such as
-  `not_T(at_T(yesterday, leave(john)))`, and two-subject clause coordination
-  such as `and_T(eat(john, bread), eat(mary, bread))`;
+  `at_T(yesterday, leave(john))`, ModifierSeq-indexed Adv clauses such as
+  `eat(1)(quickly, john, bread)`, clause-local do-support negation such as
+  `not_T(leave(1)(quickly, john))`, and two-subject clause coordination such as
+  `and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation.

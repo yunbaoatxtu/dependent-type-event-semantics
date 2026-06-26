@@ -1470,6 +1470,54 @@ class TranslatorTests(unittest.TestCase):
             prepositional_time["coq_code"],
         )
 
+    def test_simple_conditional_implication_preserves_adv_modifiers(self) -> None:
+        transitive_adv = run_pipeline(
+            "if John ate bread quickly, Mary cried loudly",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_adv["ok"])
+        self.assertEqual(transitive_adv["kind"], "simple_conditional")
+        self.assertEqual(
+            transitive_adv["dependent_type_translation"],
+            "eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)",
+        )
+        self.assertEqual(transitive_adv["ast"]["antecedent"]["modifiers"][0]["type"], "Adv")
+        self.assertEqual(
+            transitive_adv["ast"]["antecedent"]["modifiers"][0]["semantic_role"],
+            "Manner",
+        )
+        self.assertEqual(transitive_adv["ast"]["consequent"]["modifiers"][0]["name"], "loudly")
+        self.assertIn("Definition PropT : Type := Prop.", transitive_adv["coq_code"])
+        self.assertIn("Parameter quickly : Adv.", transitive_adv["coq_code"])
+        self.assertIn("Parameter loudly : Adv.", transitive_adv["coq_code"])
+        self.assertIn(
+            "Parameter eat : forall n : nat, ModifierSeq n -> Entity -> Food -> PropT.",
+            transitive_adv["coq_code"],
+        )
+        self.assertIn(
+            "eat 1 (mods_cons 0 quickly mods_nil) john bread -> "
+            "cry 1 (mods_cons 0 loudly mods_nil) mary",
+            transitive_adv["coq_code"],
+        )
+        self.assertIn("quickly(e)", transitive_adv["event_semantics"]["event_style_reference"])
+        self.assertIn("loudly(e')", transitive_adv["event_semantics"]["event_style_reference"])
+        self.assertNotIn("Parameter Event : Type.", transitive_adv["coq_code"])
+        self.assertEqual(transitive_adv["coq_check"]["status"], "passed")
+
+        timed_location = run_pipeline(
+            "if John left in the park yesterday, Mary cried today",
+            require_coq=True,
+        )
+        self.assertTrue(timed_location["ok"])
+        self.assertEqual(
+            timed_location["dependent_type_translation"],
+            "at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))",
+        )
+        self.assertEqual(timed_location["ast"]["antecedent"]["modifiers"][0]["name"], "in_park")
+        self.assertIn("Parameter in_park : Adv.", timed_location["coq_code"])
+        self.assertIn("in(e, park)", timed_location["event_semantics"]["event_style_reference"])
+        self.assertEqual(timed_location["coq_check"]["status"], "passed")
+
     def test_simple_conditional_implication_preserves_clause_negation(self) -> None:
         antecedent_negation = run_pipeline(
             "if John did not leave yesterday, Mary cried today",
@@ -1528,6 +1576,27 @@ class TranslatorTests(unittest.TestCase):
             "conditional.antecedent.negation.operator must be not_T",
             type_check["errors"],
         )
+
+        negated_modifier = run_pipeline(
+            "if John did not leave quickly, Mary cried today",
+            require_coq=True,
+        )
+        self.assertTrue(negated_modifier["ok"])
+        self.assertEqual(
+            negated_modifier["dependent_type_translation"],
+            "not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))",
+        )
+        self.assertEqual(
+            negated_modifier["ast"]["antecedent"]["modifiers"][0]["name"],
+            "quickly",
+        )
+        self.assertIn("Parameter quickly : Adv.", negated_modifier["coq_code"])
+        self.assertIn(
+            "not_T (leave 1 (mods_cons 0 quickly mods_nil) john) -> "
+            "at_T today (cry mary)",
+            negated_modifier["coq_code"],
+        )
+        self.assertEqual(negated_modifier["coq_check"]["status"], "passed")
 
     def test_simple_conditional_implication_preserves_subject_coordination(self) -> None:
         intransitive = run_pipeline(
@@ -1610,6 +1679,38 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(transitive_time["coq_check"]["status"], "passed")
 
+        coordinated_adv_time = run_pipeline(
+            "if John and Mary ate bread quickly in the park yesterday, Sue cried today",
+            require_coq=True,
+        )
+        self.assertTrue(coordinated_adv_time["ok"])
+        self.assertEqual(
+            coordinated_adv_time["dependent_type_translation"],
+            (
+                "at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), "
+                "eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))"
+            ),
+        )
+        self.assertEqual(
+            coordinated_adv_time["ast"]["antecedent"]["subject_connective"],
+            {"name": "and_T", "type": "PropT -> PropT -> PropT"},
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in coordinated_adv_time["ast"]["antecedent"]["modifiers"]],
+            ["quickly", "in_park"],
+        )
+        self.assertIn("Parameter quickly : Adv.", coordinated_adv_time["coq_code"])
+        self.assertIn("Parameter in_park : Adv.", coordinated_adv_time["coq_code"])
+        self.assertIn(
+            "Parameter and_T : PropT -> PropT -> PropT.",
+            coordinated_adv_time["coq_code"],
+        )
+        self.assertIn(
+            "quickly(e1) and in(e1, park)",
+            coordinated_adv_time["event_semantics"]["event_style_reference"],
+        )
+        self.assertEqual(coordinated_adv_time["coq_check"]["status"], "passed")
+
         leading_both = run_pipeline(
             "if both John and Mary left, Sue cried",
             require_coq=True,
@@ -1631,7 +1732,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_pipeline_rejects_uncertified_clause_markers_before_fallback(self) -> None:
         overextended_conditional = run_pipeline(
-            "if John left, Mary cried loudly",
+            "if John left, Mary cried because Sue left",
             require_coq=True,
         )
         self.assertFalse(overextended_conditional["ok"])
@@ -1639,32 +1740,6 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("'if'", overextended_conditional["error"])
         self.assertNotIn("coq_check", overextended_conditional)
         self.assertNotIn("dependent_type_translation", overextended_conditional)
-
-        adverbial_conditional = run_pipeline(
-            "if John ate bread quickly, Mary cried",
-            require_coq=True,
-        )
-        self.assertFalse(adverbial_conditional["ok"])
-        self.assertIn("Unsupported clause-level marker", adverbial_conditional["error"])
-        self.assertIn("'if'", adverbial_conditional["error"])
-        self.assertNotIn("coq_check", adverbial_conditional)
-        self.assertNotIn("dependent_type_translation", adverbial_conditional)
-
-        negated_adverbial_conditional = run_pipeline(
-            "if John did not leave quickly, Mary cried",
-            require_coq=True,
-        )
-        self.assertFalse(negated_adverbial_conditional["ok"])
-        self.assertIn(
-            "Unsupported clause-level marker",
-            negated_adverbial_conditional["error"],
-        )
-        self.assertIn("'if'", negated_adverbial_conditional["error"])
-        self.assertNotIn("coq_check", negated_adverbial_conditional)
-        self.assertNotIn(
-            "dependent_type_translation",
-            negated_adverbial_conditional,
-        )
 
         malformed_negation = run_pipeline(
             "if John did not eat quickly, Mary cried",
@@ -1674,18 +1749,6 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Unsupported clause-level marker", malformed_negation["error"])
         self.assertIn("'if'", malformed_negation["error"])
         self.assertNotIn("coq_check", malformed_negation)
-
-        coordinated_adverbial_conditional = run_pipeline(
-            "if John and Mary left quickly, Sue cried",
-            require_coq=True,
-        )
-        self.assertFalse(coordinated_adverbial_conditional["ok"])
-        self.assertIn(
-            "Unsupported clause-level marker",
-            coordinated_adverbial_conditional["error"],
-        )
-        self.assertIn("'if'", coordinated_adverbial_conditional["error"])
-        self.assertNotIn("coq_check", coordinated_adverbial_conditional)
 
         relative_subject = run_pipeline(
             "the tall boy who Mary saw yesterday quickly opened the old door with a key",
@@ -7506,8 +7569,16 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter and_T : Prop -&gt; Prop -&gt; Prop.", coordinated_page)
 
+        adv_page = render_page(
+            "if John ate bread quickly, Mary cried loudly",
+            require_coq=True,
+        )
+        self.assertIn("eat(1)(quickly, john, bread) -&gt; cry(1)(loudly, mary)", adv_page)
+        self.assertIn("Parameter quickly : Adv.", adv_page)
+        self.assertIn("Parameter loudly : Adv.", adv_page)
+
     def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
-        result = analyze_sentence("if John left, Mary cried loudly", require_coq=True)
+        result = analyze_sentence("if John left, Mary cried because Sue left", require_coq=True)
         self.assertFalse(result["ok"])
         self.assertIn("Unsupported clause-level marker", result["error"])
         self.assertIn("'if'", result["error"])
@@ -8679,7 +8750,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Use a sentence with at least a recognizable subject and predicate.", page)
 
     def test_web_page_status_shows_uncertified_clause_marker_failure(self) -> None:
-        page = render_page("if John left, Mary cried loudly", require_coq=True)
+        page = render_page("if John left, Mary cried because Sue left", require_coq=True)
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: natural-language parsing.", page)
         self.assertIn("Unsupported clause-level marker", page)
@@ -10418,25 +10489,35 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`if John ate bread,", readme)
         self.assertIn("`eat(john, bread) -> drink(mary, water)`", readme)
         self.assertIn("`water : Drinkable`", readme)
-        self.assertIn("`if John left yesterday, Mary cried today`", readme)
+        self.assertIn("`if John left in the park yesterday, Mary cried today`", readme)
         self.assertIn(
-            "`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`",
+            "`at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`",
             readme,
         )
-        self.assertIn("`if John did not leave yesterday, Mary cried today`", readme)
+        self.assertIn("`if John did not leave quickly, Mary cried today`", readme)
         self.assertIn(
-            "`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`",
-            readme,
-        )
-        self.assertIn(
-            "`if John and Mary ate bread yesterday, Sue cried today`",
+            "`not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))`",
             readme,
         )
         self.assertIn(
-            "`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`",
+            "`if John and Mary ate bread quickly in the park yesterday, Sue cried today`",
             readme,
         )
-        self.assertIn("`if John left, Mary cried loudly`", readme)
+        self.assertIn(
+            "`at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`",
+            readme,
+        )
+        self.assertIn("`if John left, Mary cried because Sue left`", readme)
+        self.assertIn("`if John ate bread quickly, Mary cried loudly`", readme)
+        self.assertIn(
+            "`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`",
+            readme,
+        )
+        self.assertIn(
+            "`not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))`",
+            readme,
+        )
+        self.assertIn("`and_T : PropT -> PropT -> PropT`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
         self.assertIn("relation-clause subject", readme)
         self.assertIn("certified-fragment guard", manuscript)
@@ -10453,11 +10534,20 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("not_T : Prop -> Prop", manuscript)
+        self.assertIn(
+            "eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)",
+            manuscript,
+        )
+        self.assertIn(
+            "not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))",
+            manuscript,
+        )
         self.assertIn("and_T(leave(john), leave(mary)) -> cry(sue)", manuscript)
         self.assertIn(
             "at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))",
             manuscript,
         )
+        self.assertIn("PropT -> PropT -> PropT", manuscript)
         self.assertIn("john_and_mary", manuscript)
         self.assertIn("leave(if_john, mary_cried)", manuscript)
         self.assertIn("negative capability", manuscript)
@@ -10470,12 +10560,17 @@ class TranslatorTests(unittest.TestCase):
             web_design,
         )
         self.assertIn(
-            "`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`",
+            "`not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))`",
             web_design,
         )
+        self.assertIn(
+            "`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`",
+            web_design,
+        )
+        self.assertIn("`ModifierSeq`", web_design)
         self.assertIn("`not_T`", web_design)
         self.assertIn(
-            "`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`",
+            "`at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`",
             web_design,
         )
         self.assertIn("`and_T`", web_design)
@@ -10487,6 +10582,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`not_T : Prop -> Prop`", ast_docs)
         self.assertIn("`subjects` list", ast_docs)
         self.assertIn("`subject_connective`", ast_docs)
+        self.assertIn("`modifiers` list", ast_docs)
+        self.assertIn("`ModifierSeq`", ast_docs)
         self.assertIn("`time_modifiers` list", ast_docs)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)

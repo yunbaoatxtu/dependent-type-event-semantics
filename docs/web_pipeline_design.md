@@ -473,18 +473,23 @@ water` is certified as `eat(john, bread) -> drink(mary, water)` while preserving
 Clause-local time modifiers are also visible in the same panels:
 `if John left yesterday, Mary cried today` is certified as
 `at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`, with `at_T` declared
-at type `Entity -> Prop -> Prop`. Conditional-clause do-support negation is
+at type `Entity -> Prop -> Prop`. Clause-local Adv modifiers are shown through
+the same ModifierSeq convention used by the Luo-Shi modifier rules:
+`if John ate bread quickly, Mary cried loudly` is displayed as
+`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`, and the generated
+scaffold declares `quickly : Adv`, `loudly : Adv`, `ModifierSeq`, and `PropT`.
+Conditional-clause do-support negation is
 shown as proposition-level negation over the timed clause, so
-`if John did not leave yesterday, Mary cried today` appears as
-`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`, with `not_T`
+`if John did not leave quickly, Mary cried today` appears as
+`not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))`, with `not_T`
 declared at type `Prop -> Prop`. Two-subject conditional clauses appear in the
-same panels without a pseudo-subject: `if John and Mary ate bread yesterday,
+same panels without a pseudo-subject: `if John and Mary ate bread quickly in the park yesterday,
 Sue cried today` is displayed as
-`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`,
-with `and_T` declared at type `Prop -> Prop -> Prop`.
+`at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
+with `and_T` declared at type `PropT -> PropT -> PropT`.
 Clause-level markers outside the current certified fragment, including `who`,
 `which`, `that`, `whether`, and overextended conditional strings such as
-`if John left, Mary cried loudly`, stop the analysis at the parsing stage before a
+`if John left, Mary cried because Sue left`, stop the analysis at the parsing stage before a
 fallback formula or Coq/Rocq scaffold can be generated. This prevents malformed
 conditionals from being certified as `leave(0)(if_john, mary_cried)` and
 prevents relation-clause subjects from being swallowed by the lexical

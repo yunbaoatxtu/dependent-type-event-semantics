@@ -1385,23 +1385,27 @@ conditional rule can build a checked `conditional_implication` AST for examples
 such as `if John left, Mary cried`, whose clauses have predicates of type
 `Entity -> Prop`, and `if John ate bread, Mary drank water`, whose clauses keep
 `bread : Food`, `water : Drinkable`, and predicate types such as
-`Entity -> Food -> Prop`. Clause-local time modifiers are stored in each
-clause's `time_modifiers` list and rendered around that clause's proposition,
-so `if John left yesterday, Mary cried today` becomes
-`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`. Clause-local
-do-support negation is represented by `negated: true` plus a `negation` record
-whose operator is `not_T : Prop -> Prop`; for example,
-`if John did not leave yesterday, Mary cried today` becomes
-`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`. The connective itself
-has type `Prop -> Prop -> Prop`. A clause may also contain a two-item
+`Entity -> Food -> Prop`. Clause-local Adv modifiers are stored in a
+`modifiers` list and force the predicate type through `ModifierSeq`, so
+`if John ate bread quickly, Mary cried loudly` becomes
+`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`, with both surface
+adverbs checked as `Adv`. Clause-local time modifiers remain separate in each
+clause's `time_modifiers` list and render around that clause's proposition, so
+`if John left in the park yesterday, Mary cried today` becomes
+`at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`.
+Clause-local do-support negation is represented by `negated: true` plus a
+`negation` record whose operator is `not_T : Prop -> Prop`; for example,
+`if John did not leave quickly, Mary cried today` becomes
+`not_T(leave(1)(quickly, john)) -> at_T(today, cry(mary))`. The implication
+connective itself has type `Prop -> Prop -> Prop`. A clause may also contain a two-item
 `subjects` list and a `subject_connective` record when coordinated subjects
 share the same predicate and optional object. Thus
-`if John and Mary ate bread yesterday, Sue cried today` becomes
-`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`,
+`if John and Mary ate bread quickly in the park yesterday, Sue cried today` becomes
+`at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
 with `subject_connective.name` equal to `and_T` and
-`subject_connective.type` equal to `Prop -> Prop -> Prop`. Unsupported clause-level markers such as
+`subject_connective.type` equal to `PropT -> PropT -> PropT`. Unsupported clause-level markers such as
 `who`, `which`, `that`, `whether`, or an overextended conditional like
-`if John left, Mary cried loudly` produce a parsing failure instead of a shallow
+`if John left, Mary cried because Sue left` produce a parsing failure instead of a shallow
 AST. This is deliberately conservative: an unimplemented conditional or
 relative clause must not become an entity name that later passes the Coq/Rocq
 scaffold check.

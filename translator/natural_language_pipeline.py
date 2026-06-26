@@ -2523,12 +2523,25 @@ def simple_conditional_clause_ast(
     connective: str | None = None,
     obj: str | None = None,
     object_type: str | None = None,
+    modifiers: list[dict[str, Any]] | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
     negated: bool = False,
     auxiliary: str | None = None,
 ) -> dict[str, Any]:
-    predicate_type = "Entity -> Prop"
+    modifiers = list(modifiers or [])
     time_modifiers = list(time_modifiers or [])
+    if obj is not None and object_type is not None:
+        predicate_type = (
+            f"forall n : nat, ModifierSeq n -> Entity -> {object_type} -> PropT"
+            if modifiers
+            else f"Entity -> {object_type} -> Prop"
+        )
+    else:
+        predicate_type = (
+            "forall n : nat, ModifierSeq n -> Entity -> PropT"
+            if modifiers
+            else "Entity -> Prop"
+        )
     clause = {
         "predicate": predicate,
         "predicate_type": predicate_type,
@@ -2544,7 +2557,7 @@ def simple_conditional_clause_ast(
         ]
         clause["subject_connective"] = {
             "name": connective or "and_T",
-            "type": "Prop -> Prop -> Prop",
+            "type": "PropT -> PropT -> PropT" if modifiers else "Prop -> Prop -> Prop",
         }
     else:
         if subject is None:
@@ -2561,12 +2574,12 @@ def simple_conditional_clause_ast(
             "type": "Prop -> Prop",
         }
     if obj is not None and object_type is not None:
-        predicate_type = f"Entity -> {object_type} -> Prop"
-        clause["predicate_type"] = predicate_type
         clause["object"] = {
             "name": obj,
             "type": object_type,
         }
+    if modifiers:
+        clause["modifiers"] = modifiers
     if time_modifiers:
         clause["time_modifiers"] = time_modifiers
     return clause
@@ -2648,6 +2661,13 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
             clause.get("time_modifiers", []),
             f"conditional.{field}",
         )
+        modifiers = clause.get("modifiers", [])
+        has_modifiers = isinstance(modifiers, list) and bool(modifiers)
+        check_coordination_modifiers(
+            errors,
+            modifiers,
+            f"conditional.{field}",
+        )
         subjects = clause.get("subjects")
         subject = clause.get("subject")
         if subjects is not None:
@@ -2688,13 +2708,20 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
                     f"conditional.{field}.subject_connective must be an object"
                 )
             else:
+                expected_subject_connective_type = (
+                    "PropT -> PropT -> PropT"
+                    if has_modifiers
+                    else "Prop -> Prop -> Prop"
+                )
                 if subject_connective.get("name") not in {"and_T", "or_T"}:
                     errors.append(
                         f"conditional.{field}.subject_connective.name must be and_T or or_T"
                     )
-                if subject_connective.get("type") != "Prop -> Prop -> Prop":
+                if subject_connective.get("type") != expected_subject_connective_type:
                     errors.append(
-                        f"conditional.{field}.subject_connective.type must be Prop -> Prop -> Prop"
+                        "conditional."
+                        f"{field}.subject_connective.type must be "
+                        f"{expected_subject_connective_type}"
                     )
         elif not isinstance(subject, dict):
             errors.append(f"conditional.{field}.subject must be an object")
@@ -2714,9 +2741,14 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
 
         obj = clause.get("object")
         if obj is None:
-            if predicate_type != "Entity -> Prop":
+            expected_predicate_type = (
+                "forall n : nat, ModifierSeq n -> Entity -> PropT"
+                if has_modifiers
+                else "Entity -> Prop"
+            )
+            if predicate_type != expected_predicate_type:
                 errors.append(
-                    f"conditional.{field}.predicate_type must be Entity -> Prop "
+                    f"conditional.{field}.predicate_type must be {expected_predicate_type} "
                     "when no object is present"
                 )
         elif not isinstance(obj, dict):
@@ -2728,10 +2760,20 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append(f"conditional.{field}.object.name must be non-empty")
             if not isinstance(object_type, str) or not object_type:
                 errors.append(f"conditional.{field}.object.type must be non-empty")
-            elif predicate_type != f"Entity -> {object_type} -> Prop":
+            else:
+                expected_predicate_type = (
+                    f"forall n : nat, ModifierSeq n -> Entity -> {object_type} -> PropT"
+                    if has_modifiers
+                    else f"Entity -> {object_type} -> Prop"
+                )
+            if (
+                isinstance(object_type, str)
+                and object_type
+                and predicate_type != expected_predicate_type
+            ):
                 errors.append(
                     f"conditional.{field}.predicate_type must be "
-                    f"Entity -> {object_type} -> Prop"
+                    f"{expected_predicate_type}"
                 )
             if (
                 isinstance(object_name, str)
@@ -2795,6 +2837,12 @@ def parse_simple_conditional_time_modifiers(
     return time_modifiers
 
 
+def parse_simple_conditional_modifiers(
+    tokens: list[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]] | None:
+    return split_shared_adv_and_time_modifiers(tokens)
+
+
 def parse_simple_conditional_subject_coordination_clause(
     tokens: list[str],
 ) -> dict[str, Any] | None:
@@ -2853,23 +2901,26 @@ def parse_simple_conditional_subject_coordination_clause(
     tail_tokens = right_side_tokens[predicate_offset + 1 :]
     connective = connective_for_coordinator(coordinator)
     if not is_likely_transitive_verb(surface_predicate):
-        time_modifiers = parse_simple_conditional_time_modifiers(tail_tokens)
-        if time_modifiers is None:
+        modifier_parse = parse_simple_conditional_modifiers(tail_tokens)
+        if modifier_parse is None:
             return None
+        modifiers, time_modifiers = modifier_parse
         return {
             "subjects": subjects,
             "connective": connective,
             "predicate": predicate,
             "surface_predicate": surface_predicate,
+            "modifiers": modifiers,
             "time_modifiers": time_modifiers,
         }
     candidates: list[dict[str, Any]] = []
     for split_index in range(1, len(tail_tokens) + 1):
         object_tokens = tail_tokens[:split_index]
-        time_tokens = tail_tokens[split_index:]
+        modifier_tokens = tail_tokens[split_index:]
         obj = parse_simple_conditional_object_tokens(object_tokens)
-        time_modifiers = parse_simple_conditional_time_modifiers(time_tokens)
-        if obj is not None and time_modifiers is not None:
+        modifier_parse = parse_simple_conditional_modifiers(modifier_tokens)
+        if obj is not None and modifier_parse is not None:
+            modifiers, time_modifiers = modifier_parse
             candidates.append(
                 {
                     "subjects": subjects,
@@ -2878,6 +2929,7 @@ def parse_simple_conditional_subject_coordination_clause(
                     "surface_predicate": surface_predicate,
                     "obj": obj,
                     "object_type": object_type_for_transitive_predicate(predicate),
+                    "modifiers": modifiers,
                     "time_modifiers": time_modifiers,
                 }
             )
@@ -2923,13 +2975,15 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
             "auxiliary": auxiliary,
         }
     if not is_likely_transitive_verb(surface_predicate):
-        time_modifiers = parse_simple_conditional_time_modifiers(tail_tokens)
-        if time_modifiers is None:
+        modifier_parse = parse_simple_conditional_modifiers(tail_tokens)
+        if modifier_parse is None:
             return None
+        modifiers, time_modifiers = modifier_parse
         return {
             "subject": clean_phrase([subject]),
             "predicate": predicate,
             "surface_predicate": surface_predicate,
+            "modifiers": modifiers,
             "time_modifiers": time_modifiers,
             "negated": negated,
             "auxiliary": auxiliary,
@@ -2937,10 +2991,11 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
     candidates: list[dict[str, Any]] = []
     for split_index in range(1, len(tail_tokens) + 1):
         object_tokens = tail_tokens[:split_index]
-        time_tokens = tail_tokens[split_index:]
+        modifier_tokens = tail_tokens[split_index:]
         obj = parse_simple_conditional_object_tokens(object_tokens)
-        time_modifiers = parse_simple_conditional_time_modifiers(time_tokens)
-        if obj is not None and time_modifiers is not None:
+        modifier_parse = parse_simple_conditional_modifiers(modifier_tokens)
+        if obj is not None and modifier_parse is not None:
+            modifiers, time_modifiers = modifier_parse
             candidates.append(
                 {
                     "subject": clean_phrase([subject]),
@@ -2948,6 +3003,7 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
                     "surface_predicate": surface_predicate,
                     "obj": obj,
                     "object_type": object_type_for_transitive_predicate(predicate),
+                    "modifiers": modifiers,
                     "time_modifiers": time_modifiers,
                     "negated": negated,
                     "auxiliary": auxiliary,
@@ -2984,8 +3040,26 @@ def split_simple_conditional_tokens(tokens: list[str]) -> tuple[list[str], list[
 def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> str:
     predicate = clause["predicate"]
     obj = clause.get("object")
+    modifiers = clause.get("modifiers", [])
 
     def atomic_formula(subject_name: str) -> str:
+        if modifiers:
+            modifier_count = len(modifiers)
+            if coq:
+                modifier_sequence = coq_modifier_sequence(modifiers)
+                if obj is None:
+                    return f"{predicate} {modifier_count} {modifier_sequence} {subject_name}"
+                return (
+                    f"{predicate} {modifier_count} {modifier_sequence} "
+                    f"{subject_name} {obj['name']}"
+                )
+            modifier_args = readable_modifier_arguments(modifiers)
+            if obj is None:
+                return f"{predicate}({modifier_count})({modifier_args}, {subject_name})"
+            return (
+                f"{predicate}({modifier_count})"
+                f"({modifier_args}, {subject_name}, {obj['name']})"
+            )
         if obj is None:
             return f"{predicate} {subject_name}" if coq else f"{predicate}({subject_name})"
         object_name = obj["name"]
@@ -3028,6 +3102,13 @@ def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) 
     obj = clause.get("object")
     if isinstance(obj, dict):
         parts.append(f"Theme({event_name}, {obj['name']})")
+    for modifier in clause.get("modifiers", []):
+        expression = modifier["expression"]
+        if "(" in expression and expression.endswith(")"):
+            role_name, argument = expression.split("(", 1)
+            parts.append(f"{role_name}({event_name}, {argument[:-1]})")
+        else:
+            parts.append(f"{expression}({event_name})")
     for modifier in clause.get("time_modifiers", []):
         parts.append(f"{modifier['operator']}({event_name}, {modifier['argument']})")
     return " and ".join(parts)
@@ -3117,16 +3198,27 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
         for clause in (antecedent, consequent)
         for modifier in clause.get("time_modifiers", [])
     ]
+    adv_modifiers = [
+        modifier
+        for clause in (antecedent, consequent)
+        for modifier in clause.get("modifiers", [])
+    ]
     has_negation = any(
         clause.get("negated", False) for clause in (antecedent, consequent)
     )
-    subject_connectives = unique_names(
-        [
-            clause["subject_connective"]["name"]
-            for clause in (antecedent, consequent)
-            if "subject_connective" in clause
-        ]
-    )
+    subject_connective_types: dict[str, str] = {}
+    for clause in (antecedent, consequent):
+        subject_connective = clause.get("subject_connective")
+        if isinstance(subject_connective, dict):
+            connective_name = subject_connective["name"]
+            connective_type = (
+                "PropT -> PropT -> PropT"
+                if adv_modifiers
+                else subject_connective["type"]
+            )
+            previous_type = subject_connective_types.get(connective_name)
+            if previous_type is None or previous_type == "Prop -> Prop -> Prop":
+                subject_connective_types[connective_name] = connective_type
     coq_antecedent = simple_conditional_clause_formula(antecedent, coq=True)
     coq_consequent = simple_conditional_clause_formula(consequent, coq=True)
     coq_code = "\n".join(
@@ -3134,6 +3226,21 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
             "(* Simple conditional replacement without an event variable. *)",
             "Parameter Entity : Type.",
             *[f"Parameter {type_name} : Type." for type_name in object_type_declarations],
+            *(
+                [
+                    "Definition PropT : Type := Prop.",
+                    "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+                    "Parameter ModifierSeq : nat -> Type.",
+                    "Parameter mods_nil : ModifierSeq 0.",
+                    "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
+                ]
+                if adv_modifiers
+                else []
+            ),
+            *[
+                f"Parameter {name} : Adv."
+                for name in unique_names([modifier["name"] for modifier in adv_modifiers])
+            ],
             "",
             *[
                 f"Parameter {name} : {value_type}."
@@ -3153,8 +3260,8 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
                 else []
             ),
             *[
-                f"Parameter {connective} : Prop -> Prop -> Prop."
-                for connective in subject_connectives
+                f"Parameter {connective} : {connective_type}."
+                for connective, connective_type in subject_connective_types.items()
             ],
             *(["Parameter not_T : Prop -> Prop."] if has_negation else []),
             "",
