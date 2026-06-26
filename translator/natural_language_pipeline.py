@@ -2522,6 +2522,8 @@ def simple_conditional_clause_ast(
     obj: str | None = None,
     object_type: str | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
+    negated: bool = False,
+    auxiliary: str | None = None,
 ) -> dict[str, Any]:
     predicate_type = "Entity -> Prop"
     time_modifiers = list(time_modifiers or [])
@@ -2534,6 +2536,13 @@ def simple_conditional_clause_ast(
             "type": "Entity",
         },
     }
+    if negated:
+        clause["negated"] = True
+        clause["negation"] = {
+            "auxiliary": auxiliary,
+            "operator": "not_T",
+            "type": "Prop -> Prop",
+        }
     if obj is not None and object_type is not None:
         predicate_type = f"Entity -> {object_type} -> Prop"
         clause["predicate_type"] = predicate_type
@@ -2592,6 +2601,30 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(clause.get("surface_predicate"), str) or not clause.get("surface_predicate"):
             errors.append(
                 f"conditional.{field}.surface_predicate must be a non-empty string"
+            )
+        negated = clause.get("negated", False)
+        if not isinstance(negated, bool):
+            errors.append(f"conditional.{field}.negated must be a boolean")
+        if negated:
+            negation = clause.get("negation")
+            if not isinstance(negation, dict):
+                errors.append(f"conditional.{field}.negation must be an object")
+            else:
+                if negation.get("auxiliary") not in DO_SUPPORT_AUXILIARIES:
+                    errors.append(
+                        f"conditional.{field}.negation.auxiliary must be do, does, or did"
+                    )
+                if negation.get("operator") != "not_T":
+                    errors.append(
+                        f"conditional.{field}.negation.operator must be not_T"
+                    )
+                if negation.get("type") != "Prop -> Prop":
+                    errors.append(
+                        f"conditional.{field}.negation.type must be Prop -> Prop"
+                    )
+        elif "negation" in clause:
+            errors.append(
+                f"conditional.{field}.negation is allowed only when negated is true"
             )
         check_time_modifiers(
             errors,
@@ -2701,7 +2734,17 @@ def parse_simple_conditional_time_modifiers(
 def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
     if len(tokens) < 2:
         return None
-    subject, surface_predicate = tokens[:2]
+    subject = tokens[0]
+    negated = False
+    auxiliary: str | None = None
+    if len(tokens) >= 4 and tokens[1] in DO_SUPPORT_AUXILIARIES and tokens[2] == "not":
+        auxiliary = tokens[1]
+        surface_predicate = tokens[3]
+        tail_tokens = tokens[4:]
+        negated = True
+    else:
+        surface_predicate = tokens[1]
+        tail_tokens = tokens[2:]
     if (
         subject in ARTICLES
         or subject in PREPOSITIONS
@@ -2718,8 +2761,9 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
             "subject": clean_phrase([subject]),
             "predicate": predicate,
             "surface_predicate": surface_predicate,
+            "negated": negated,
+            "auxiliary": auxiliary,
         }
-    tail_tokens = tokens[2:]
     if not is_likely_transitive_verb(surface_predicate):
         time_modifiers = parse_simple_conditional_time_modifiers(tail_tokens)
         if time_modifiers is None:
@@ -2729,6 +2773,8 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
             "predicate": predicate,
             "surface_predicate": surface_predicate,
             "time_modifiers": time_modifiers,
+            "negated": negated,
+            "auxiliary": auxiliary,
         }
     candidates: list[dict[str, Any]] = []
     for split_index in range(1, len(tail_tokens) + 1):
@@ -2745,6 +2791,8 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
                     "obj": obj,
                     "object_type": object_type_for_transitive_predicate(predicate),
                     "time_modifiers": time_modifiers,
+                    "negated": negated,
+                    "auxiliary": auxiliary,
                 }
             )
     if len(candidates) != 1:
@@ -2787,11 +2835,14 @@ def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> s
             body = f"{predicate} {subject} {object_name}"
         else:
             body = f"{predicate}({subject}, {object_name})"
-    return render_quantifier_time_wrapped_reading(
+    timed_body = render_quantifier_time_wrapped_reading(
         body,
         clause.get("time_modifiers", []),
         coq=coq,
     )
+    if coq:
+        return wrap_negated_coq(timed_body, bool(clause.get("negated", False)))
+    return wrap_negated_translation(timed_body, bool(clause.get("negated", False)))
 
 
 def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) -> str:
@@ -2805,6 +2856,16 @@ def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) 
     for modifier in clause.get("time_modifiers", []):
         parts.append(f"{modifier['operator']}({event_name}, {modifier['argument']})")
     return " and ".join(parts)
+
+
+def simple_conditional_event_quantified_reference(
+    clause: dict[str, Any],
+    event_name: str,
+) -> str:
+    reference = f"exists {event_name}. {simple_conditional_event_reference(clause, event_name)}"
+    if clause.get("negated", False):
+        return f"not({reference})"
+    return reference
 
 
 def simple_conditional_declarations(
@@ -2859,6 +2920,9 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
         for clause in (antecedent, consequent)
         for modifier in clause.get("time_modifiers", [])
     ]
+    has_negation = any(
+        clause.get("negated", False) for clause in (antecedent, consequent)
+    )
     coq_antecedent = simple_conditional_clause_formula(antecedent, coq=True)
     coq_consequent = simple_conditional_clause_formula(consequent, coq=True)
     coq_code = "\n".join(
@@ -2884,6 +2948,7 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
                 if time_modifiers
                 else []
             ),
+            *(["Parameter not_T : Prop -> Prop."] if has_negation else []),
             "",
             f"Definition {coq_definition} : Prop :=",
             f"  {coq_antecedent} -> {coq_consequent}.",
@@ -2897,8 +2962,8 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
         "analysis": "simple-conditional",
         "source": sentence,
         "event_style_reference": (
-            f"(exists e. {simple_conditional_event_reference(antecedent, 'e')}) -> "
-            f"(exists e'. {simple_conditional_event_reference(consequent, consequent_event_name)})"
+            f"({simple_conditional_event_quantified_reference(antecedent, 'e')}) -> "
+            f"({simple_conditional_event_quantified_reference(consequent, consequent_event_name)})"
         ),
         "typed_replacement": typed_replacement,
     }

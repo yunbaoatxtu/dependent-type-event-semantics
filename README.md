@@ -82,8 +82,12 @@ Mary cried` is checked as `leave(john) -> cry(mary)`, and `if John ate bread,
 Mary drank water` is checked as `eat(john, bread) -> drink(mary, water)` with
 `bread : Food` and `water : Drinkable`. Clause-level time modifiers scope over
 their own proposition, so `if John left yesterday, Mary cried today` becomes
-`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`. These exports use no
-event, Agent, or Theme declarations. Clause-level markers outside that certified path, such as
+`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`. The same certified
+route handles narrow do-support negation inside a conditional clause:
+`if John did not leave yesterday, Mary cried today` becomes
+`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`, with `not_T`
+declared at type `Prop -> Prop`. These exports use no event, Agent, or Theme
+declarations. Clause-level markers outside that certified path, such as
 `who`, `which`, `that`, `whether`, or overextended conditional strings such as
 `if John left, Mary cried loudly`, produce a parsing-stage diagnostic instead
 of being collapsed into entity names and sent to Coq/Rocq. This prevents the
@@ -942,7 +946,8 @@ The current prototype has small, testable rules for:
 - simple conditionals represented as implication between typed propositions,
   including typed transitive objects such as `bread : Food` and
   `water : Drinkable`, plus clause-local temporal wrappers such as
-  `at_T(yesterday, leave(john))`;
+  `at_T(yesterday, leave(john))`, and clause-local do-support negation such as
+  `not_T(at_T(yesterday, leave(john)))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation.

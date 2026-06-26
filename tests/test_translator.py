@@ -58,6 +58,7 @@ from translator.natural_language_pipeline import (
     check_predicate_coordination_ast,
     check_quantifier_scope_readings,
     check_semantic_readings,
+    check_simple_conditional_ast,
     check_stative_result_state_ast,
     check_timed_after_ast,
     check_transitive_predicate_coordination_ast,
@@ -1469,6 +1470,65 @@ class TranslatorTests(unittest.TestCase):
             prepositional_time["coq_code"],
         )
 
+    def test_simple_conditional_implication_preserves_clause_negation(self) -> None:
+        antecedent_negation = run_pipeline(
+            "if John did not leave yesterday, Mary cried today",
+            require_coq=True,
+        )
+        self.assertTrue(antecedent_negation["ok"])
+        self.assertEqual(antecedent_negation["kind"], "simple_conditional")
+        self.assertEqual(
+            antecedent_negation["dependent_type_translation"],
+            "not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))",
+        )
+        self.assertTrue(antecedent_negation["ast"]["antecedent"]["negated"])
+        self.assertEqual(
+            antecedent_negation["ast"]["antecedent"]["negation"],
+            {"auxiliary": "did", "operator": "not_T", "type": "Prop -> Prop"},
+        )
+        self.assertNotIn("negated", antecedent_negation["ast"]["consequent"])
+        self.assertIn("Parameter not_T : Prop -> Prop.", antecedent_negation["coq_code"])
+        self.assertIn(
+            "not_T (at_T yesterday (leave john)) -> at_T today (cry mary)",
+            antecedent_negation["coq_code"],
+        )
+        self.assertIn(
+            "not(exists e. leave(e) and Agent(e, john) and at(e, yesterday))",
+            antecedent_negation["event_semantics"]["event_style_reference"],
+        )
+        self.assertNotIn("Parameter Event : Type.", antecedent_negation["coq_code"])
+        self.assertEqual(antecedent_negation["coq_check"]["status"], "passed")
+
+        consequent_negation = run_pipeline(
+            "if John ate bread yesterday, Mary did not drink water today",
+            require_coq=True,
+        )
+        self.assertTrue(consequent_negation["ok"])
+        self.assertEqual(
+            consequent_negation["dependent_type_translation"],
+            "at_T(yesterday, eat(john, bread)) -> not_T(at_T(today, drink(mary, water)))",
+        )
+        self.assertEqual(
+            consequent_negation["ast"]["consequent"]["object"],
+            {"name": "water", "type": "Drinkable"},
+        )
+        self.assertTrue(consequent_negation["ast"]["consequent"]["negated"])
+        self.assertIn("Parameter Drinkable : Type.", consequent_negation["coq_code"])
+        self.assertIn(
+            "at_T yesterday (eat john bread) -> not_T (at_T today (drink mary water))",
+            consequent_negation["coq_code"],
+        )
+        self.assertEqual(consequent_negation["coq_check"]["status"], "passed")
+
+        bad_negation = deepcopy(antecedent_negation["ast"])
+        bad_negation["antecedent"]["negation"]["operator"] = "maybe_T"
+        type_check = check_simple_conditional_ast(bad_negation)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "conditional.antecedent.negation.operator must be not_T",
+            type_check["errors"],
+        )
+
     def test_pipeline_rejects_uncertified_clause_markers_before_fallback(self) -> None:
         overextended_conditional = run_pipeline(
             "if John left, Mary cried loudly",
@@ -1489,6 +1549,31 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("'if'", adverbial_conditional["error"])
         self.assertNotIn("coq_check", adverbial_conditional)
         self.assertNotIn("dependent_type_translation", adverbial_conditional)
+
+        negated_adverbial_conditional = run_pipeline(
+            "if John did not leave quickly, Mary cried",
+            require_coq=True,
+        )
+        self.assertFalse(negated_adverbial_conditional["ok"])
+        self.assertIn(
+            "Unsupported clause-level marker",
+            negated_adverbial_conditional["error"],
+        )
+        self.assertIn("'if'", negated_adverbial_conditional["error"])
+        self.assertNotIn("coq_check", negated_adverbial_conditional)
+        self.assertNotIn(
+            "dependent_type_translation",
+            negated_adverbial_conditional,
+        )
+
+        malformed_negation = run_pipeline(
+            "if John did not eat quickly, Mary cried",
+            require_coq=True,
+        )
+        self.assertFalse(malformed_negation["ok"])
+        self.assertIn("Unsupported clause-level marker", malformed_negation["error"])
+        self.assertIn("'if'", malformed_negation["error"])
+        self.assertNotIn("coq_check", malformed_negation)
 
         relative_subject = run_pipeline(
             "the tall boy who Mary saw yesterday quickly opened the old door with a key",
@@ -7288,6 +7373,16 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter at_T : Entity -&gt; Prop -&gt; Prop.", timed_page)
 
+        negated_page = render_page(
+            "if John did not leave yesterday, Mary cried today",
+            require_coq=True,
+        )
+        self.assertIn(
+            "not_T(at_T(yesterday, leave(john))) -&gt; at_T(today, cry(mary))",
+            negated_page,
+        )
+        self.assertIn("Parameter not_T : Prop -&gt; Prop.", negated_page)
+
     def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
         result = analyze_sentence("if John left, Mary cried loudly", require_coq=True)
         self.assertFalse(result["ok"])
@@ -10205,6 +10300,11 @@ class TranslatorTests(unittest.TestCase):
             "`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`",
             readme,
         )
+        self.assertIn("`if John did not leave yesterday, Mary cried today`", readme)
+        self.assertIn(
+            "`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`",
+            readme,
+        )
         self.assertIn("`if John left, Mary cried loudly`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
         self.assertIn("relation-clause subject", readme)
@@ -10217,6 +10317,11 @@ class TranslatorTests(unittest.TestCase):
             "at_T(yesterday, leave(john)) -> at_T(today, cry(mary))",
             manuscript,
         )
+        self.assertIn(
+            "not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))",
+            manuscript,
+        )
+        self.assertIn("not_T : Prop -> Prop", manuscript)
         self.assertIn("leave(if_john, mary_cried)", manuscript)
         self.assertIn("negative capability", manuscript)
         self.assertIn("Clause-level markers outside the", web_design)
@@ -10227,10 +10332,17 @@ class TranslatorTests(unittest.TestCase):
             "`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`",
             web_design,
         )
+        self.assertIn(
+            "`not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`",
+            web_design,
+        )
+        self.assertIn("`not_T`", web_design)
         self.assertIn("`leave(0)(if_john, mary_cried)`", web_design)
         self.assertIn("Unsupported clause-level markers", ast_docs)
         self.assertIn("`conditional_implication` AST", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
+        self.assertIn("`negated: true`", ast_docs)
+        self.assertIn("`not_T : Prop -> Prop`", ast_docs)
         self.assertIn("`time_modifiers` list", ast_docs)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
