@@ -121,7 +121,10 @@ object description as `(young(x_rel_girl) and girl(x_rel_girl))` rather than as
 a constant named `the_young_girl`. Likewise,
 `some boy who quickly saw Mary loved a girl` renders
 `boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
-`ModifierSeq`-indexed predicate family. Likewise,
+`ModifierSeq`-indexed predicate family. A single non-temporal PP after a named
+relative object is treated as another relative-clause `Adv`, not as an entity:
+`some boy who quickly saw Mary in the park loved a girl` renders
+`boy(x_boy) and see(2)(quickly, in(park), x_boy, mary)`. Likewise,
 `some boy who saw Mary yesterday loved a girl` renders
 `boy(x_boy) and at_T(yesterday, see(x_boy, mary))`. The sentence
 `some boy loved a girl that saw Mary` renders
@@ -137,9 +140,9 @@ relative object NP is now split into explicit typed readings:
 `some boy who quickly saw a girl in the park yesterday loved a cat` composes the
 same two attachments with `quickly` and `at_T(yesterday, ...)`. More complex
 relation-clause subjects, such as
-`the tall boy who Mary saw yesterday quickly opened the old door with a key` or
-`some boy who quickly saw Mary in the park loved a girl`, and stacked relative
-object PP cases such as
+`the tall boy who Mary saw yesterday quickly opened the old door with a key`,
+and stacked relative object PP cases such as
+`some boy who quickly saw Mary in the park with a telescope loved a girl` or
 `some boy who saw a girl in the park with a telescope loved a cat`, are still
 rejected. This prevents the misleading formula
 `leave(0)(if_john, mary_cried)` and keeps unsupported relatives from being
@@ -448,8 +451,12 @@ declares `quickly : Adv`, and renders
 attach either to the main clause or to the object relative, as in
 `some boy loved a girl that saw Mary quickly`, the AST exposes both a
 `clause_adv` branch and an `object_relative_adv` branch; the unmodified
-relative branch uses `see(0)(x_girl, mary)` with `mods_nil`. A relative-object
-NP with one non-temporal PP now receives the same typed attachment split:
+relative branch uses `see(0)(x_girl, mary)` with `mods_nil`. A named relative
+object followed by a single non-temporal PP is also a relative `Adv`:
+`some boy who quickly saw Mary in the park loved a girl` keeps `mary : Entity`
+and renders `see(2)(quickly, in(park), x_boy, mary)`, without exporting a
+`mary_in_park` constant. A relative-object NP with one non-temporal PP receives
+the same typed attachment split:
 `some boy who saw a girl in the park loved a cat` has a
 `subject_relative_object_np_restrictor` branch with
 `girl(x_rel_girl) and in_park_np(x_rel_girl)` and a `subject_relative_adv`

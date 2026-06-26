@@ -918,8 +918,14 @@ time branch and an `object_relative_time` branch. With an internal Adv,
 `some boy loved a girl that saw Mary quickly` produces a `clause_adv` branch and
 an `object_relative_adv` branch; the former renders the relative as
 `see(0)(x_girl, mary)` with `mods_nil`, while the latter renders
-`see(1)(quickly, x_girl, mary)`. A single non-temporal PP inside a relative
-object NP is represented by two typed attachment variants:
+`see(1)(quickly, x_girl, mary)`. A named relative object can also take a single
+non-temporal PP as a relative `Adv`: `some boy who quickly saw Mary in the park
+loved a girl` stores `mary : Entity`, keeps both `quickly : Adv` and
+`in_park : Adv` in the relative restrictor's `modifiers` list, and renders
+`see(2)(quickly, in(park), x_boy, mary)`. The object-side case
+`some boy loved a girl that saw Mary in the park` exposes both a main-clause
+`clause_adv` branch and an `object_relative_adv` branch. A single non-temporal
+PP inside a relative object NP is represented by two typed attachment variants:
 `some boy who saw a girl in the park loved a cat` yields
 `subject_relative_object_np_restrictor`, where the nested object binder contains
 `in_park_np : Entity -> Prop`, and `subject_relative_adv`, where the relative
@@ -1496,8 +1502,9 @@ phrase object, certified temporal modifiers, and ordinary Adv modifiers, is
 stored as `relative_clause_restrictors`.
 This is deliberately conservative:
 an unimplemented conditional, stacked relative-object PP material such as
-`a girl in the park with a telescope`, or another complex relative clause must
-not become an entity name that later passes the Coq/Rocq scaffold check.
+`a girl in the park with a telescope`, stacked named-object PP material such as
+`Mary in the park with a telescope`, or another complex relative clause must not
+become an entity name that later passes the Coq/Rocq scaffold check.
 
 Modifier entries are not entity-denoting arguments. The AST records this twice:
 `modifier_vector` preserves the dependent length index, while `modifier_roles`

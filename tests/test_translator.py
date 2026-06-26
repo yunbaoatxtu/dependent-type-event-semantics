@@ -1895,7 +1895,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("coq_check", relative_subject)
 
         complex_relative_restrictor = run_pipeline(
-            "some boy who quickly saw Mary in the park loved a girl",
+            "some boy who quickly saw Mary in the park with a telescope loved a girl",
             require_coq=True,
         )
         self.assertFalse(complex_relative_restrictor["ok"])
@@ -7191,6 +7191,47 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(subject_adv_relative["coq_check"]["status"], "passed")
 
+        subject_named_object_pp_relative = run_pipeline(
+            "some boy who quickly saw Mary in the park loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_named_object_pp_relative["ok"])
+        self.assertEqual(
+            [
+                variant["kind"]
+                for variant in subject_named_object_pp_relative["ast"][
+                    "attachment_variants"
+                ]
+            ],
+            ["subject_relative_adv"],
+        )
+        subject_named_pp_restrictor = subject_named_object_pp_relative["ast"][
+            "noun_phrases"
+        ]["subject"]["relative_clause_restrictors"][0]
+        self.assertEqual(subject_named_pp_restrictor["object"]["name"], "mary")
+        self.assertEqual(
+            [modifier["name"] for modifier in subject_named_pp_restrictor["modifiers"]],
+            ["quickly", "in_park"],
+        )
+        self.assertEqual(
+            subject_named_object_pp_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and see(2)(quickly, in(park), x_boy, mary)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn("Parameter mary : Entity.", subject_named_object_pp_relative["coq_code"])
+        self.assertIn("Parameter in_park : Adv.", subject_named_object_pp_relative["coq_code"])
+        self.assertNotIn("Parameter in_park_np : Entity -> Prop.", subject_named_object_pp_relative["coq_code"])
+        self.assertNotIn("Parameter mary_in_park : Entity.", subject_named_object_pp_relative["coq_code"])
+        self.assertEqual(
+            subject_named_object_pp_relative["coq_check"]["status"],
+            "passed",
+        )
+
         subject_adv_time_relative = run_pipeline(
             "some boy who quickly saw Mary yesterday loved a girl",
             require_coq=True,
@@ -7207,6 +7248,36 @@ class TranslatorTests(unittest.TestCase):
             ),
         )
         self.assertEqual(subject_adv_time_relative["coq_check"]["status"], "passed")
+
+        subject_named_object_pp_time_relative = run_pipeline(
+            "some boy who quickly saw Mary in the park yesterday loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_named_object_pp_time_relative["ok"])
+        self.assertEqual(
+            [
+                variant["kind"]
+                for variant in subject_named_object_pp_time_relative["ast"][
+                    "attachment_variants"
+                ]
+            ],
+            ["subject_relative_adv_time"],
+        )
+        self.assertEqual(
+            subject_named_object_pp_time_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and at_T(yesterday, "
+                "see(2)(quickly, in(park), x_boy, mary))) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertEqual(
+            subject_named_object_pp_time_relative["coq_check"]["status"],
+            "passed",
+        )
 
         subject_adv_time_object_np_relative = run_pipeline(
             "some boy who quickly saw a girl yesterday loved a cat",
@@ -7334,6 +7405,40 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("girl_that_saw_mary", object_transitive_relative["dependent_type_translation"])
         self.assertNotIn("Parameter that :", object_transitive_relative["coq_code"])
         self.assertEqual(object_transitive_relative["coq_check"]["status"], "passed")
+
+        object_named_relative_pp = run_pipeline(
+            "some boy loved a girl that saw Mary in the park",
+            require_coq=True,
+        )
+        self.assertTrue(object_named_relative_pp["ok"])
+        self.assertEqual(
+            [variant["kind"] for variant in object_named_relative_pp["ast"]["attachment_variants"]],
+            ["clause_adv", "object_relative_adv"],
+        )
+        self.assertEqual(object_named_relative_pp["semantic_readings_check"]["reading_count"], 4)
+        object_named_pp_formulas = [
+            reading["dependent_type_translation"]
+            for reading in object_named_relative_pp["semantic_readings"]
+        ]
+        self.assertIn(
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and see(0)(x_girl, mary)) and "
+                "love(1)(in(park), x_boy, x_girl)"
+            ),
+            object_named_pp_formulas,
+        )
+        self.assertIn(
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and see(1)(in(park), x_girl, mary)) and "
+                "love(0)(x_boy, x_girl)"
+            ),
+            object_named_pp_formulas,
+        )
+        self.assertIn("Parameter in_park : Adv.", object_named_relative_pp["coq_code"])
+        self.assertNotIn("Parameter mary_in_park : Entity.", object_named_relative_pp["coq_code"])
+        self.assertEqual(object_named_relative_pp["coq_check"]["status"], "passed")
 
         object_relative_object_np = run_pipeline(
             "some boy loved a girl that saw a cat",
@@ -11346,10 +11451,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("see(1)(quickly, x_boy, mary)", readme)
         self.assertIn("object_relative_adv", readme)
         self.assertIn("some boy who saw a girl in the park loved a cat", readme)
+        self.assertIn("some boy who quickly saw Mary in the park loved a girl", readme)
+        self.assertIn("mary_in_park", readme)
         self.assertIn("subject_relative_object_np_restrictor", readme)
         self.assertIn("subject_relative_adv", readme)
+        self.assertIn("some boy who quickly saw Mary in the park with a telescope loved a girl", readme)
         self.assertIn("some boy who saw a girl in the park with a telescope loved a cat", readme)
-        self.assertIn("some boy who quickly saw Mary in the park loved a girl", readme)
         self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("a boy loves a", readme)
         self.assertIn("a_boy_wide_scope", readme)
@@ -11613,8 +11720,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("object-relative-Adv reading", manuscript)
         self.assertIn("PP Adv or multi-word object structure", manuscript)
         self.assertIn("some boy who saw a girl in the park loved a cat", manuscript)
+        self.assertIn("some boy who quickly saw Mary in the park loved a girl", manuscript)
+        self.assertIn("mary_in_park", manuscript)
+        self.assertIn("some boy loved a girl that saw Mary in the park", manuscript)
         self.assertIn("subject_relative_object_np_restrictor", manuscript)
         self.assertIn("object_relative_object_np_restrictor", manuscript)
+        self.assertIn("Mary in the park with a telescope", manuscript)
         self.assertIn("a girl in the park with a telescope", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
         self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
@@ -11666,8 +11777,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("object_relative_adv", ast_docs)
         self.assertIn("see(0)(x_girl, mary)", ast_docs)
         self.assertIn("some boy who saw a girl in the park loved a cat", ast_docs)
+        self.assertIn("some boy who quickly saw Mary in the park", ast_docs)
+        self.assertIn("mary : Entity", ast_docs)
+        self.assertIn("in_park : Adv", ast_docs)
+        self.assertIn("some boy loved a girl that saw Mary in the park", ast_docs)
         self.assertIn("subject_relative_object_np_restrictor", ast_docs)
         self.assertIn("object_relative_object_np_restrictor", ast_docs)
+        self.assertIn("Mary in the park with a telescope", ast_docs)
         self.assertIn("a girl in the park with a telescope", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)

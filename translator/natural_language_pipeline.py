@@ -268,34 +268,33 @@ def parse_relative_restrictor_variants(
                     restrictor["time_modifiers"] = time_modifiers
                 variants.append((tokens[:marker_index], [restrictor]))
             return variants
-        trailing_modifiers = split_common_adv_and_time_modifiers(relative_tokens[2:])
-        if trailing_modifiers is None:
+        named_object_variants = parse_relative_named_object_variants(
+            relative_tokens[1:]
+        )
+        if not named_object_variants:
             return None
-        adv_modifiers, time_modifiers = trailing_modifiers
-        modifiers = [*leading_modifiers, *adv_modifiers]
-        obj = normalize_surface_name(relative_tokens[1])
-        restrictor = {
-            "predicate": predicate,
-            "predicate_type": (
-                MODIFIER_INDEXED_BINARY_RELATION
-                if modifiers
-                else "Entity -> Entity -> Prop"
-            ),
-            "surface": " ".join(tokens[marker_index:]),
-            "marker": tokens[marker_index],
-            "relative_verb": relative_surface,
-            "object": {
-                "name": obj,
-                "surface": relative_tokens[1],
-                "type": "Entity",
-            },
-            "kind": "relative_clause_restrictor",
-        }
-        if modifiers:
-            restrictor["modifiers"] = modifiers
-        if time_modifiers:
-            restrictor["time_modifiers"] = time_modifiers
-        return [(tokens[:marker_index], [restrictor])]
+        variants: list[tuple[list[str], list[dict[str, Any]]]] = []
+        for obj, adv_modifiers, time_modifiers, _consumed in named_object_variants:
+            modifiers = [*leading_modifiers, *adv_modifiers]
+            restrictor = {
+                "predicate": predicate,
+                "predicate_type": (
+                    MODIFIER_INDEXED_BINARY_RELATION
+                    if modifiers
+                    else "Entity -> Entity -> Prop"
+                ),
+                "surface": " ".join(tokens[marker_index:]),
+                "marker": tokens[marker_index],
+                "relative_verb": relative_surface,
+                "object": obj,
+                "kind": "relative_clause_restrictor",
+            }
+            if modifiers:
+                restrictor["modifiers"] = modifiers
+            if time_modifiers:
+                restrictor["time_modifiers"] = time_modifiers
+            variants.append((tokens[:marker_index], [restrictor]))
+        return variants
     return None
 
 
@@ -466,6 +465,71 @@ def parse_relative_object_np(
     if not variants:
         return None
     return variants[0]
+
+
+def parse_relative_named_object_variants(
+    tokens: list[str],
+) -> list[tuple[dict[str, str], list[dict[str, Any]], list[dict[str, str]], int]]:
+    if not tokens:
+        return []
+    object_surface = tokens[0]
+    if (
+        object_surface in SUPPORTED_SCOPE_DETERMINERS
+        or object_surface in COMMON_ADVERBS
+        or object_surface in TEMPORAL_ADVERBS
+        or object_surface in COUNT_WORDS
+        or object_surface in COUNT_NOUNS
+        or object_surface in PREPOSITIONS
+        or object_surface in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        or object_surface in BOOLEAN_COORDINATORS
+        or object_surface in TEMPORAL_RELATION_CONNECTORS
+        or temporal_phrase_value(tokens, 0) is not None
+    ):
+        return []
+
+    obj = {
+        "name": normalize_surface_name(object_surface),
+        "surface": object_surface,
+        "type": "Entity",
+    }
+    variants: list[
+        tuple[dict[str, str], list[dict[str, Any]], list[dict[str, str]], int]
+    ] = []
+    trailing_modifiers = split_common_adv_and_time_modifiers(tokens[1:])
+    if trailing_modifiers is not None:
+        adv_modifiers, time_modifiers = trailing_modifiers
+        variants.append((obj, adv_modifiers, time_modifiers, 1))
+
+    forbidden_pp_tokens = (
+        SUPPORTED_SCOPE_DETERMINERS
+        | COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+    )
+    pp = split_non_temporal_pp(tokens, 1, forbidden_pp_tokens - ARTICLES)
+    if pp is None:
+        return variants
+    preposition, phrase, pp_end = pp
+    trailing_after_pp = split_common_adv_and_time_modifiers(tokens[pp_end:])
+    if trailing_after_pp is None:
+        return variants
+    trailing_adv_modifiers, trailing_time_modifiers = trailing_after_pp
+    variants.append(
+        (
+            obj,
+            [
+                modifier_record(modifier_expression(preposition, phrase)),
+                *trailing_adv_modifiers,
+            ],
+            trailing_time_modifiers,
+            pp_end,
+        )
+    )
+    return variants
 
 
 def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
