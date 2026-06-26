@@ -782,10 +782,17 @@ same event-semantics JSON,
 dependent-type rendering, generated Coq, `result_state_lexicon`,
 `modifier_role_audit`, `lexicon_patch_drafts`, `patch_text_preview`,
 `semantic_readings`, `semantic_readings_check`, `construction_rule`,
-`construction_summary`, `construction_hygiene`, `coq_check`, and `diagnostics`
-fields used by the web page. For registered construction rules,
+`construction_summary`, `construction_hygiene`, `coq_check`, `diagnostics`,
+and `verification_scope` fields used by the web page. For registered construction rules,
 `construction_summary` gives a sentence-local explanation such as
 `Same subject john coordinates eat(bread : Food) and drink(water : Drinkable).`
+The `verification_scope` object makes the certification boundary explicit:
+registered rules report `kind: registered_construction` and
+`certification_level: construction_rule`, while conservative fallback successes
+report `kind: fallback_shallow` and `certification_level: shallow_scaffold`.
+Failure and unsupported-fragment paths report `certification_level: none`, so a
+client cannot mistake a rejected or shallow parse for a fully certified
+natural-language interpretation.
 Successful registered rules must expose a passing `semantic_readings_check`.
 Rules with explicit ambiguity keep their specialized readings; otherwise the
 registered-rule boundary creates a conservative single reading from the unique
@@ -964,6 +971,10 @@ These ordinary success checks now share the same success-envelope,
 semantic-reading-summary, and fragment guards in the verifier, so fallback,
 quantifier, perception, timed-after, and burning cases cannot silently drift
 through five separately maintained copies of the same HTTP acceptance logic.
+The same live checks now require the JSON payload and HTML page to expose
+matching `verification_scope` metadata: fallback remains visibly shallow,
+whereas the registered quantifier, perception, timed-after, and burning cases
+are marked as construction-rule certification.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.

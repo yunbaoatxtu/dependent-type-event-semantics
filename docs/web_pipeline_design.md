@@ -88,12 +88,21 @@ must expose the same semantic artifacts shown on the page: `event_semantics`,
 `lexicon_patch_drafts`, `patch_text_preview`, `semantic_readings`,
 `semantic_readings_check`, `ast`, `coq_code`, `construction_rule`,
 `construction_summary`,
-`construction_hygiene`, `coq_check`, `diagnostics`, and `conclusion`.
+`construction_hygiene`, `coq_check`, `diagnostics`, `verification_scope`, and
+`conclusion`.
 The page mirrors that version in a compact `API Contract` panel, including the
 `/api/analyze` endpoint, so a browser screenshot and a JSON client can refer to
 the same response contract. It also renders the response `conclusion` in a
 dedicated `Conclusion` panel so the final outcome is visible outside the status
 line.
+The page also renders `verification_scope` as a dedicated panel. Registered
+construction successes must expose `kind: registered_construction`,
+`certification_level: construction_rule`, and the matched rule id. Fallback
+successes must expose `kind: fallback_shallow` and
+`certification_level: shallow_scaffold`, together with limitations explaining
+that the result is a structurally checked scaffold rather than full
+natural-language certification. Rejected or failed paths use
+`certification_level: none`.
 For ordinary fallback successes, the API response and HTML panel must agree on
 the same normalized reading row: `fallback_single_reading` from
 `fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
@@ -424,6 +433,10 @@ The verifier should implement these ordinary success cases through shared
 success-envelope, semantic-reading-summary, and text-fragment helpers rather
 than five hand-maintained copies, so adding a new registered success case
 extends one audited acceptance shape.
+Those helpers should also check the `verification_scope` JSON object and the
+matching HTML data attributes, so browser and API clients can tell whether a
+successful result is a construction-rule certification or only a shallow
+fallback scaffold.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

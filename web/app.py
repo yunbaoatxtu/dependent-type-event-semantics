@@ -16,6 +16,7 @@ from translator.dependent_type_event_translator import STATE_LEXICON
 from translator.natural_language_pipeline import (
     check_semantic_readings,
     exported_prop_definition_names,
+    failure_verification_scope,
     run_pipeline,
     semantic_reading_failure_kinds,
     semantic_reading_failure_summary,
@@ -170,6 +171,7 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
             "ok": False,
             "input_sentence": sentence,
             "error": "Please enter a sentence.",
+            "verification_scope": failure_verification_scope("empty input"),
             "conclusion": "Translation failed before parsing.",
         }
         return add_diagnostics(result)
@@ -1958,6 +1960,62 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
     )
 
 
+def verification_scope_panel(result: dict[str, Any]) -> str:
+    scope = result.get("verification_scope")
+    if not isinstance(scope, dict):
+        body = '<p class="verification-scope-empty">No verification scope emitted.</p>'
+        return (
+            '<section class="panel verification-scope" '
+            'data-verification-scope-kind="missing" '
+            'data-verification-level="missing">'
+            "<h2>Verification Scope</h2>"
+            f'<div class="verification-scope-body">{body}</div>'
+            "</section>"
+        )
+    kind = str(scope.get("kind", ""))
+    level = str(scope.get("certification_level", ""))
+    rows = [
+        ("kind", kind),
+        ("level", level),
+        ("label", str(scope.get("label", ""))),
+        ("rule", str(scope.get("rule_id") or "none")),
+        ("phenomenon", str(scope.get("phenomenon", ""))),
+        ("summary", str(scope.get("summary", ""))),
+    ]
+    guarantees = scope.get("guarantees", [])
+    limitations = scope.get("limitations", [])
+    guarantee_items = (
+        "".join(f"<li>{html.escape(str(item))}</li>" for item in guarantees)
+        if isinstance(guarantees, list) and guarantees
+        else "<li>none</li>"
+    )
+    limitation_items = (
+        "".join(f"<li>{html.escape(str(item))}</li>" for item in limitations)
+        if isinstance(limitations, list) and limitations
+        else "<li>none</li>"
+    )
+    body = (
+        '<dl class="verification-scope-details">'
+        + "".join(
+            f"<dt>{html.escape(label)}</dt><dd>{html.escape(value)}</dd>"
+            for label, value in rows
+        )
+        + "</dl>"
+        '<div class="verification-scope-list"><strong>guarantees</strong>'
+        f"<ul>{guarantee_items}</ul></div>"
+        '<div class="verification-scope-list"><strong>limitations</strong>'
+        f"<ul>{limitation_items}</ul></div>"
+    )
+    return (
+        '<section class="panel verification-scope" '
+        f'data-verification-scope-kind="{html.escape(kind, quote=True)}" '
+        f'data-verification-level="{html.escape(level, quote=True)}">'
+        "<h2>Verification Scope</h2>"
+        f'<div class="verification-scope-body">{body}</div>'
+        "</section>"
+    )
+
+
 def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     entries = result.get("result_state_lexicon", [])
     if not entries:
@@ -2248,6 +2306,7 @@ def render_page(
             "schema_version": result.get("schema_version", ANALYZE_RESPONSE_SCHEMA),
             "response_kind": "analysis",
             "endpoint": endpoint,
+            "verification_scope": result.get("verification_scope", {}),
         }
     )
     coq_code = result.get("coq_code", "")
@@ -2576,6 +2635,47 @@ def render_page(
       display: grid;
       gap: 10px;
     }}
+    .verification-scope-body {{
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }}
+    .verification-scope-details {{
+      display: grid;
+      grid-template-columns: minmax(86px, auto) minmax(0, 1fr);
+      gap: 5px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .verification-scope-details dt {{
+      color: var(--muted);
+    }}
+    .verification-scope-details dd {{
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
+    }}
+    .verification-scope-list {{
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      display: grid;
+      gap: 6px;
+    }}
+    .verification-scope-list strong {{
+      font-size: 13px;
+    }}
+    .verification-scope-list ul {{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }}
+    .verification-scope-empty {{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }}
     .semantic-readings-check-summary {{
       margin: 0;
       width: fit-content;
@@ -2881,6 +2981,7 @@ def render_page(
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
       {panel("API Contract", api_contract)}
+      {verification_scope_panel(result)}
       {diagnostic_contract_panel()}
       {panel("Conclusion", conclusion)}
       {semantic_warnings_panel(result)}

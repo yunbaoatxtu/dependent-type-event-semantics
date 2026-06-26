@@ -1222,6 +1222,42 @@ def validate_analyze_success_envelope(
     return diagnostics
 
 
+def validate_verification_scope(
+    payload: dict,
+    page: str,
+    label: str,
+    expected_kind: str,
+    expected_level: str,
+    expected_rule_id: str | None,
+) -> None:
+    scope = payload.get("verification_scope")
+    if not isinstance(scope, dict):
+        raise SystemExit(f"web route smoke check failed: {label} verification scope missing")
+    if scope.get("kind") != expected_kind:
+        raise SystemExit(f"web route smoke check failed: {label} verification scope kind drift")
+    if scope.get("certification_level") != expected_level:
+        raise SystemExit(f"web route smoke check failed: {label} verification scope level drift")
+    if scope.get("rule_id") != expected_rule_id:
+        raise SystemExit(f"web route smoke check failed: {label} verification scope rule drift")
+    if not isinstance(scope.get("guarantees"), list) or not isinstance(
+        scope.get("limitations"),
+        list,
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} verification scope shape drift")
+    require_text_fragments(
+        page,
+        [
+            "Verification Scope",
+            f'data-verification-scope-kind="{expected_kind}"',
+            f'data-verification-level="{expected_level}"',
+            f"<dt>kind</dt><dd>{expected_kind}</dd>",
+            f"<dt>level</dt><dd>{expected_level}</dd>",
+            f"<dt>rule</dt><dd>{expected_rule_id or 'none'}</dd>",
+        ],
+        f"{label} verification scope HTML",
+    )
+
+
 def require_text_fragments(text: str, fragments: list[str], label: str) -> None:
     for fragment in fragments:
         if fragment not in text:
@@ -1268,6 +1304,14 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         "fallback",
         ["semantic_readings_check"],
     )
+    validate_verification_scope(
+        payload,
+        page,
+        "fallback",
+        "fallback_shallow",
+        "shallow_scaffold",
+        None,
+    )
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: fallback semantic reading count drift")
@@ -1311,6 +1355,14 @@ def validate_analyze_quantifier_scope_success(
         sentence,
         "quantifier",
         ["semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "quantifier",
+        "registered_construction",
+        "construction_rule",
+        "quantifier_scope_ambiguity",
     )
     check = payload.get("semantic_readings_check")
     if (
@@ -1367,6 +1419,14 @@ def validate_analyze_perception_success(payload: dict, page: str, sentence: str)
         sentence,
         "perception",
         ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "perception",
+        "registered_construction",
+        "construction_rule",
+        "perception_nominalization",
     )
     event_semantics = payload.get("event_semantics")
     if not isinstance(event_semantics, dict):
@@ -1437,6 +1497,14 @@ def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str
         sentence,
         "timed-after",
         ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "timed-after",
+        "registered_construction",
+        "construction_rule",
+        "timed_after",
     )
     if payload.get("kind") != "timed_after":
         raise SystemExit("web route smoke check failed: timed-after kind drift")
@@ -1583,6 +1651,14 @@ def validate_analyze_universal_timed_burning_success(
         sentence,
         "burning",
         ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "burning",
+        "registered_construction",
+        "construction_rule",
+        "universal_timed_burning",
     )
     if payload.get("kind") != "universal_timed_burning":
         raise SystemExit("web route smoke check failed: burning kind drift")

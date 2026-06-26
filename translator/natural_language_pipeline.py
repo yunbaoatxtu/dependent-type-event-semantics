@@ -10294,6 +10294,76 @@ def construction_hygiene_payload(
     }
 
 
+def registered_verification_scope(rule: ConstructionRule) -> dict[str, Any]:
+    return {
+        "kind": "registered_construction",
+        "certification_level": "construction_rule",
+        "label": "Registered construction rule",
+        "rule_id": rule.rule_id,
+        "rule_label": rule.label,
+        "phenomenon": rule.phenomenon,
+        "summary": (
+            f"Matched registered construction rule {rule.rule_id}; the sentence "
+            "is checked against that construction's typed AST, semantic-reading "
+            "contract, construction hygiene policy, and Coq/Rocq boundary."
+        ),
+        "guarantees": [
+            "construction-specific analyzer ran before fallback",
+            "dependent-type AST and semantic readings were checked",
+            "generated Coq/Rocq scaffold was checked against construction hygiene",
+        ],
+        "limitations": [
+            "Coq/Rocq checks the exported shallow scaffold, not full natural-language understanding",
+        ],
+    }
+
+
+def fallback_verification_scope() -> dict[str, Any]:
+    return {
+        "kind": "fallback_shallow",
+        "certification_level": "shallow_scaffold",
+        "label": "Conservative fallback",
+        "rule_id": None,
+        "rule_label": None,
+        "phenomenon": "Simple fallback event-style parse",
+        "summary": (
+            "No registered construction rule matched; the system emitted a "
+            "shallow event-style analysis, translated it to the dependent-type "
+            "scaffold, and checked the resulting structural boundary."
+        ),
+        "guarantees": [
+            "fallback AST/type_check and semantic_readings contract were checked",
+            "generated Coq/Rocq scaffold was checked when requested and available",
+        ],
+        "limitations": [
+            "does not certify full natural-language semantics",
+            "does not resolve unregistered scope, attachment, or discourse ambiguities",
+        ],
+    }
+
+
+def failure_verification_scope(error: str) -> dict[str, Any]:
+    unsupported = "Unsupported clause-level marker" in error
+    return {
+        "kind": "rejected_unsupported_fragment" if unsupported else "unverified_failure",
+        "certification_level": "none",
+        "label": "No verified translation",
+        "rule_id": None,
+        "rule_label": None,
+        "phenomenon": "Rejected before a verified dependent-type export",
+        "summary": (
+            "The sentence was rejected before fallback and Coq/Rocq export because "
+            "it appears to contain an unsupported certified-fragment marker."
+            if unsupported
+            else "The sentence did not reach a verified dependent-type export."
+        ),
+        "guarantees": [],
+        "limitations": [
+            "no dependent-type translation was certified for this input",
+        ],
+    }
+
+
 def run_registered_rule(
     rule: ConstructionRule,
     sentence: str,
@@ -10302,6 +10372,7 @@ def run_registered_rule(
     analysis = rule.analyzer(sentence)
     if analysis is None:
         return None
+    analysis = {**analysis, "verification_scope": registered_verification_scope(rule)}
 
     if analysis.get("type_check", {}).get("ok") is False:
         return {
@@ -10754,6 +10825,7 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
             "ast": translation["ast"],
             "type_check": translation["type_check"],
             "coq_code": coq_code,
+            "verification_scope": fallback_verification_scope(),
         }
         if translation["type_check"]["ok"]:
             result = attach_single_semantic_reading(
@@ -10796,6 +10868,7 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
             "ok": False,
             "input_sentence": sentence,
             "error": str(exc),
+            "verification_scope": failure_verification_scope(str(exc)),
             "conclusion": "Translation failed before Coq validation.",
         }
 

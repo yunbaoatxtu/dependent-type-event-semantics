@@ -1298,6 +1298,16 @@ class TranslatorTests(unittest.TestCase):
             result["event_semantics"]["semantic_readings_check"],
             result["semantic_readings_check"],
         )
+        self.assertEqual(result["verification_scope"]["kind"], "fallback_shallow")
+        self.assertEqual(
+            result["verification_scope"]["certification_level"],
+            "shallow_scaffold",
+        )
+        self.assertIsNone(result["verification_scope"]["rule_id"])
+        self.assertIn(
+            "does not certify full natural-language semantics",
+            result["verification_scope"]["limitations"],
+        )
 
     def test_natural_language_pipeline_handles_cat_on_mat(self) -> None:
         result = run_pipeline("a cat sits on a mat", require_coq=True)
@@ -1331,6 +1341,11 @@ class TranslatorTests(unittest.TestCase):
             result["semantic_readings"][0]["reading_explanation"],
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
+        self.assertEqual(result["verification_scope"]["kind"], "fallback_shallow")
+        self.assertEqual(
+            result["verification_scope"]["certification_level"],
+            "shallow_scaffold",
+        )
 
     def test_simple_conditional_implication_is_checked_before_fallback(self) -> None:
         conditional = run_pipeline("if John left, Mary cried", require_coq=True)
@@ -8912,6 +8927,19 @@ class TranslatorTests(unittest.TestCase):
             with self.subTest(rule=rule.rule_id):
                 result = run_pipeline(examples[rule.rule_id], require_coq=True)
                 self.assertTrue(result["ok"])
+                self.assertEqual(
+                    result["verification_scope"]["kind"],
+                    "registered_construction",
+                )
+                self.assertEqual(
+                    result["verification_scope"]["certification_level"],
+                    "construction_rule",
+                )
+                self.assertEqual(result["verification_scope"]["rule_id"], rule.rule_id)
+                self.assertEqual(
+                    result["verification_scope"]["phenomenon"],
+                    rule.phenomenon,
+                )
                 self.assertIn("semantic_readings", result)
                 self.assertIn("semantic_readings_check", result)
                 self.assertTrue(result["semantic_readings_check"]["ok"])
@@ -9124,11 +9152,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["recovery_actions"][0]["kind"], "edit_input")
         self.assertEqual(result["diagnostics"]["recovery_actions"][0]["label"], "Enter a sentence")
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
+        self.assertEqual(result["verification_scope"]["kind"], "unverified_failure")
+        self.assertEqual(result["verification_scope"]["certification_level"], "none")
 
     def test_web_analyze_sentence_reports_parser_failure_stage(self) -> None:
         result = analyze_sentence("John")
         self.assertFalse(result["ok"])
         self.assertIn("at least a subject and a predicate", result["error"])
+        self.assertEqual(result["verification_scope"]["kind"], "unverified_failure")
+        self.assertEqual(result["verification_scope"]["certification_level"], "none")
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
         self.assertEqual(result["diagnostics"]["failure_stage"], "parsing")
         self.assertEqual(
@@ -9221,6 +9253,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertIn("Unsupported clause-level marker", result["error"])
         self.assertIn("'if'", result["error"])
+        self.assertEqual(
+            result["verification_scope"]["kind"],
+            "rejected_unsupported_fragment",
+        )
+        self.assertEqual(result["verification_scope"]["certification_level"], "none")
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
         self.assertEqual(result["diagnostics"]["failure_stage"], "parsing")
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
@@ -9236,6 +9273,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertFalse(relative_subject["ok"])
         self.assertIn("'who'", relative_subject["error"])
+        self.assertEqual(
+            relative_subject["verification_scope"]["kind"],
+            "rejected_unsupported_fragment",
+        )
         self.assertNotIn("state_change_verb_entry", relative_subject)
 
     def test_api_analyze_response_contains_diagnostics(self) -> None:
@@ -9247,6 +9288,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
         self.assertEqual(result["construction_rule"]["id"], "perception_nominalization")
+        self.assertEqual(result["verification_scope"]["kind"], "registered_construction")
+        self.assertEqual(
+            result["verification_scope"]["certification_level"],
+            "construction_rule",
+        )
+        self.assertEqual(
+            result["verification_scope"]["rule_id"],
+            "perception_nominalization",
+        )
         self.assertEqual(result["result_state_lexicon"], [])
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
         self.assertIsNone(result["diagnostics"]["failure_stage"])
@@ -9267,6 +9317,12 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
+        self.assertEqual(result["verification_scope"]["kind"], "fallback_shallow")
+        self.assertEqual(
+            result["verification_scope"]["certification_level"],
+            "shallow_scaffold",
+        )
+        self.assertIsNone(result["verification_scope"]["rule_id"])
         self.assertEqual(result["diagnostics"]["summary"], "translation verified")
         self.assertEqual(
             result["diagnostics"]["stages"]["semantic_readings_check"],
@@ -10196,6 +10252,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
+        self.assertEqual(result["verification_scope"]["kind"], "unverified_failure")
+        self.assertEqual(result["verification_scope"]["certification_level"], "none")
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
         self.assertEqual(result["diagnostics"]["failure_stage"], "input")
         self.assertEqual(result["diagnostics"]["recovery_hint"], "Enter a non-empty sentence.")
@@ -10211,6 +10269,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("API Contract", page)
         self.assertIn("&quot;schema_version&quot;: &quot;analyze.v1&quot;", page)
         self.assertIn("&quot;endpoint&quot;: &quot;/api/analyze&quot;", page)
+        self.assertIn("Verification Scope", page)
+        self.assertIn('data-verification-scope-kind="fallback_shallow"', page)
+        self.assertIn('data-verification-level="shallow_scaffold"', page)
+        self.assertIn("<dt>rule</dt><dd>none</dd>", page)
+        self.assertIn("does not certify full natural-language semantics", page)
         self.assertIn("Conclusion", page)
         self.assertIn("Translation succeeded.", page)
         self.assertIn("Semantic Warnings", page)
@@ -10303,6 +10366,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("phenomenon: Parsons/Luo-Shi perception complement", page)
         self.assertIn("hygiene: passed", page)
         self.assertIn("hygiene policy:", page)
+        self.assertIn("Verification Scope", page)
+        self.assertIn('data-verification-scope-kind="registered_construction"', page)
+        self.assertIn('data-verification-level="construction_rule"', page)
+        self.assertIn("<dt>rule</dt><dd>perception_nominalization</dd>", page)
+        self.assertIn("construction-specific analyzer ran before fallback", page)
         self.assertNotIn("forbidden Coq fragments:", page)
         self.assertIn("- Parameter Event : Type.", page)
         self.assertIn("found forbidden fragments:", page)
@@ -10471,11 +10539,17 @@ class TranslatorTests(unittest.TestCase):
         page = render_page("a cat sits on a mat", require_coq=True)
         self.assertIn("Construction Rule", page)
         self.assertIn("No registered construction rule matched", page)
+        self.assertIn("Verification Scope", page)
+        self.assertIn('data-verification-scope-kind="fallback_shallow"', page)
+        self.assertIn("No registered construction rule matched", page)
 
     def test_web_page_status_shows_parser_failure_stage(self) -> None:
         page = render_page("John")
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: natural-language parsing.", page)
+        self.assertIn("Verification Scope", page)
+        self.assertIn('data-verification-scope-kind="unverified_failure"', page)
+        self.assertIn('data-verification-level="none"', page)
         self.assertIn("Suggested next step: Try a sentence with at least a subject and a predicate.", page)
         self.assertIn("Next Steps", page)
         self.assertIn('class="next-step next-step--revise_sentence"', page)
@@ -10489,6 +10563,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: natural-language parsing.", page)
         self.assertIn("Unsupported clause-level marker", page)
+        self.assertIn('data-verification-scope-kind="rejected_unsupported_fragment"', page)
+        self.assertIn('data-verification-level="none"', page)
         self.assertIn("&#x27;if&#x27;", page)
         self.assertNotIn("leave(0)(if_john, mary_cried)", page)
         self.assertIn("&quot;coq_check&quot;: &quot;not_applicable&quot;", page)
@@ -11788,6 +11864,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_single_reading`", readme)
         self.assertIn("`fallback_event_semantics`", readme)
         self.assertIn("definition `example_1`", readme)
+        self.assertIn("`verification_scope`", readme)
+        self.assertIn("`kind: registered_construction`", readme)
+        self.assertIn("`kind: fallback_shallow`", readme)
+        self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
             "/api/analyze?sentence=John+knocked+twice&require_coq=1",
@@ -12174,6 +12254,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("every_burning_consumes_oxygen", manuscript)
         self.assertIn("forall x : Entity. forall t : Time", manuscript)
         self.assertIn("live HTTP acceptance boundary", manuscript)
+        self.assertIn("verification_scope object", manuscript)
+        self.assertIn("registered_construction", manuscript)
+        self.assertIn("certification_level construction_rule", manuscript)
+        self.assertIn("fallback_shallow", manuscript)
+        self.assertIn("certification_level shallow_scaffold", manuscript)
+        self.assertIn("certification_level none", manuscript.lower())
+        self.assertIn("Verification Scope panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
@@ -12666,6 +12753,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Result State Lexicon panel", readme)
         self.assertIn("`Conclusion` panel", readme)
         self.assertIn("`construction_rule`", readme)
+        self.assertIn("`verification_scope`", readme)
+        self.assertIn("`certification_level: construction_rule`", readme)
+        self.assertIn("`certification_level: shallow_scaffold`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -12678,6 +12768,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Result State Lexicon panel", web_design)
         self.assertIn("dedicated `Conclusion` panel", web_design)
         self.assertIn("`construction_hygiene`", web_design)
+        self.assertIn("`verification_scope`", web_design)
+        self.assertIn("`kind: registered_construction`", web_design)
+        self.assertIn("`kind: fallback_shallow`", web_design)
+        self.assertIn("`certification_level: none`", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
@@ -13454,6 +13548,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_semantic_readings_repair_details(", verifier)
         self.assertIn("def validate_successful_semantic_reading_contract(", verifier)
         self.assertIn("def validate_analyze_success_envelope(", verifier)
+        self.assertIn("def validate_verification_scope(", verifier)
         self.assertIn("def validate_semantic_reading_summary(", verifier)
         self.assertIn("def require_text_fragments(", verifier)
         self.assertIn("def forbid_text_fragments(", verifier)
@@ -13475,9 +13570,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("In every burning, oxygen is consumed", verifier)
         self.assertIn("fallback_single_reading", verifier)
         self.assertIn("fallback_event_semantics", verifier)
+        self.assertIn("fallback_shallow", verifier)
+        self.assertIn("shallow_scaffold", verifier)
+        self.assertIn('data-verification-scope-kind', verifier)
+        self.assertIn('data-verification-level', verifier)
         self.assertIn("some_boy_wide_scope", verifier)
         self.assertIn("some_girl_wide_scope", verifier)
         self.assertIn("quantifier_scope", verifier)
+        self.assertIn("registered_construction", verifier)
+        self.assertIn("construction_rule", verifier)
         self.assertIn("quantifier semantic reading drift", verifier)
         self.assertIn("perception_nominalization", verifier)
         self.assertIn("mary_saw_john_leave", verifier)
