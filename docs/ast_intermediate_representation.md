@@ -766,6 +766,10 @@ keeps two readings with explicit quantifier order and predicate types:
 {
   "kind": "scope_ambiguity",
   "quantifier": "some",
+  "quantifiers": {
+    "subject": "some",
+    "object": "some"
+  },
   "modifiers": [
     {
       "expression": "in(bathroom)",
@@ -784,12 +788,14 @@ keeps two readings with explicit quantifier order and predicate types:
       "scope_order": [
         {
           "role": "subject",
+          "quantifier": "some",
           "variable": "x_boy",
           "predicate": "boy",
           "predicate_type": "Entity -> Prop"
         },
         {
           "role": "object",
+          "quantifier": "some",
           "variable": "x_girl",
           "predicate": "girl",
           "predicate_type": "Entity -> Prop"
@@ -821,7 +827,12 @@ The paired object-wide reading has the same relation arguments but reverses the
 two scope readings. If the sentence has clause-level time, each reading carries
 the same typed `time_modifiers` list and renders as `at_T(yesterday, exists
 x_boy : Entity. ... love(x_boy, x_girl))` or the corresponding object-wide
-scope. For example, `some boy loved some girl in the bathroom` has a shared
+scope. The same existence-scope representation covers indefinite articles:
+`a boy loves a girl` emits `a_boy_wide_scope` and `a_girl_wide_scope`, while
+`an artist loves a critic` keeps `an` and `a` in `quantifiers` and in each
+scope binder. These determiners therefore license typed existential binders
+rather than entity constants named `boy` or `girl`. For example,
+`some boy loved some girl in the bathroom` has a shared
 Adv modifier. Each reading carries the same `modifiers` list and the relation
 type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
 the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the

@@ -63,6 +63,7 @@ ROCQ_ENV = Path(
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
 QUANTIFIER_SUBJECT_DETERMINERS = {"some", "every", "each", "all", "no"}
+EXISTENTIAL_SCOPE_DETERMINERS = {"some", "a", "an"}
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
 BOOLEAN_COORDINATORS = {"and": "and_T", "or": "or_T"}
@@ -151,8 +152,10 @@ def strip_surface_coordination_marker(tokens: list[str]) -> list[str]:
 
 def quantifier_scope_reading(
     subject_noun: str,
+    subject_quantifier: str,
     verb: str,
     object_noun: str,
+    object_quantifier: str,
     subject_first: bool,
     modifiers: list[dict[str, Any]] | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
@@ -160,12 +163,14 @@ def quantifier_scope_reading(
     modifiers = list(modifiers or [])
     subject = {
         "role": "subject",
+        "quantifier": subject_quantifier,
         "variable": f"x_{subject_noun}",
         "predicate": subject_noun,
         "predicate_type": "Entity -> Prop",
     }
     obj = {
         "role": "object",
+        "quantifier": object_quantifier,
         "variable": f"x_{object_noun}",
         "predicate": object_noun,
         "predicate_type": "Entity -> Prop",
@@ -181,12 +186,14 @@ def quantifier_scope_reading(
         "arguments": [subject["variable"], obj["variable"]],
     }
     if subject_first:
-        name = f"some_{subject_noun}_wide_scope"
+        name = f"{subject_quantifier}_{subject_noun}_wide_scope"
+        quantifier = subject_quantifier
     else:
-        name = f"some_{object_noun}_wide_scope"
+        name = f"{object_quantifier}_{object_noun}_wide_scope"
+        quantifier = object_quantifier
     return {
         "name": name,
-        "quantifier": "some",
+        "quantifier": quantifier,
         "scope_order": scope_order,
         "relation": relation,
         "modifiers": modifiers,
@@ -646,6 +653,11 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
             if not isinstance(binder, dict):
                 errors.append(f"readings[{index}].scope_order[{binder_index}] must be an object")
                 continue
+            if binder.get("quantifier") not in EXISTENTIAL_SCOPE_DETERMINERS:
+                errors.append(
+                    f"readings[{index}].scope_order[{binder_index}] "
+                    "must use an existential quantifier"
+                )
             if binder.get("predicate_type") != "Entity -> Prop":
                 errors.append(
                     f"readings[{index}].scope_order[{binder_index}] "
@@ -676,12 +688,18 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         *fronted_time_modifiers,
         *later_fronted_time_modifiers,
     ]
-    if len(tokens) < 5 or tokens[0] != "some" or tokens[3] != "some":
+    if (
+        len(tokens) < 5
+        or tokens[0] not in EXISTENTIAL_SCOPE_DETERMINERS
+        or tokens[3] not in EXISTENTIAL_SCOPE_DETERMINERS
+    ):
         return None
     trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[5:])
     if trailing_modifiers is None:
         return None
     trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    subject_quantifier = tokens[0]
+    object_quantifier = tokens[3]
     subject_noun = lemma_verb(tokens[1])
     verb = lemma_verb(tokens[2])
     object_noun = lemma_verb(tokens[4])
@@ -690,16 +708,20 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     readings = [
         quantifier_scope_reading(
             subject_noun,
+            subject_quantifier,
             verb,
             object_noun,
+            object_quantifier,
             subject_first=True,
             modifiers=adv_modifiers,
             time_modifiers=time_modifiers,
         ),
         quantifier_scope_reading(
             subject_noun,
+            subject_quantifier,
             verb,
             object_noun,
+            object_quantifier,
             subject_first=False,
             modifiers=adv_modifiers,
             time_modifiers=time_modifiers,
@@ -710,6 +732,10 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
+        "quantifiers": {
+            "subject": subject_quantifier,
+            "object": object_quantifier,
+        },
         "modifiers": adv_modifiers,
         "time_modifiers": time_modifiers,
         "readings": [
@@ -764,8 +790,8 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             quantifier_scope_coq(readings[0]),
             quantifier_scope_coq(readings[1]),
             "",
-            f"Check some_{subject_noun}_wide_scope.",
-            f"Check some_{object_noun}_wide_scope.",
+            f"Check {readings[0]['name']}.",
+            f"Check {readings[1]['name']}.",
             "",
         ]
     )
@@ -782,7 +808,15 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         "semantic_readings_check": semantic_readings_check,
         "ast": {
             "kind": "scope_ambiguity",
-            "quantifier": "some",
+            "quantifier": (
+                subject_quantifier
+                if subject_quantifier == object_quantifier
+                else "existential"
+            ),
+            "quantifiers": {
+                "subject": subject_quantifier,
+                "object": object_quantifier,
+            },
             "modifiers": adv_modifiers,
             "time_modifiers": time_modifiers,
             "readings": readings,

@@ -326,6 +326,10 @@ modifier sequences: `some boy loved some girl in the bathroom` renders
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 same readings: the modifier parser stops before the quantified subject and does
 not collapse the phrase into a malformed `in_bathroom_some` constant.
+The same existential-scope rule covers indefinite articles: `a boy loves a
+girl` yields `a_boy_wide_scope` and `a_girl_wide_scope`, while mixed forms such
+as `a boy loves some girl` preserve both surface quantifiers in the AST instead
+of treating `boy` or `girl` as entity constants.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:
