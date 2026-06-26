@@ -134,12 +134,13 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "transitive_subject_coordination": "John and Mary ate bread",
     "object_coordination": "Mary visited Paris and London",
     "transitive_predicate_coordination": "John ate bread and drank water",
+    "event_counting": "John knocked twice",
 }
 
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "John knocked twice",
+        "sentence": "a cat sits on a mat",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -404,6 +405,17 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         ],
         "expected_type_check_type": "Prop",
     },
+    {
+        "rule_id": "event_counting",
+        "sentence": "John knocked twice",
+        "expected_event_analysis": "event-counting",
+        "expected_dependent_type_fragments": ["repeat(2, knock(0)(John))"],
+        "expected_reading_names": ["event_counting_single_reading"],
+        "expected_reading_sources": ["event_counting"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
 )
 
 
@@ -638,6 +650,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "reading_count": 0,
         "clause_count": 2,
         "subject_count": 1,
+        "object_count": 0,
+    },
+    "event_counting": {
+        "kind": "repeat",
+        "predicate_symbols": ["knock"],
+        "predicate_types": [],
+        "entity_symbols": ["John"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
         "object_count": 0,
     },
 }
@@ -10873,6 +10900,48 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
 
+def event_counting_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or ast.get("kind") != "repeat":
+        return None
+    body = ast.get("body", {})
+    predicate = (
+        str(body.get("function", "predicate"))
+        if isinstance(body, dict)
+        else "predicate"
+    )
+    count = str(ast.get("count", ""))
+    coq_code = export_module([translation], "coq")
+    return {
+        "kind": "event_counting",
+        "input_sentence": sentence,
+        "event_semantics": {
+            **event_semantics,
+            "analysis": "event-counting",
+            "event_counting": {
+                "count": count,
+                "counted_predicate": predicate,
+                "representation": "repeat over a proposition",
+            },
+        },
+        "dependent_type_translation": translation["translation"],
+        "result_state_lexicon": translation["result_state_lexicon"],
+        "ast": translation["ast"],
+        "type_check": translation["type_check"],
+        "construction_summary": (
+            f"Counted occurrence: {count} occurrence(s) of {predicate} are "
+            "represented by repeat over a typed proposition, not by a universal "
+            "event argument."
+        ),
+        "coq_code": coq_code,
+    }
+
+
 def construction_rules() -> list[ConstructionRule]:
     return [
         ConstructionRule(
@@ -11039,6 +11108,18 @@ def construction_rules() -> list[ConstructionRule]:
             label="Transitive predicate coordination",
             phenomenon="Same-subject transitive VP coordination without event variables",
             analyzer=transitive_predicate_coordination_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="event_counting",
+            label="Event counting",
+            phenomenon="Counted predicate occurrences without universal event arguments",
+            analyzer=event_counting_pipeline,
             forbidden_coq_fragments=(
                 "Parameter Event : Type.",
                 "exists e : Event",

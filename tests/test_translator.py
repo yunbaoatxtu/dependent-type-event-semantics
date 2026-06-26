@@ -8850,6 +8850,7 @@ class TranslatorTests(unittest.TestCase):
             "transitive_subject_coordination",
             "object_coordination",
             "transitive_predicate_coordination",
+            "event_counting",
         }
         self.assertTrue(expected.issubset(rules))
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
@@ -8893,6 +8894,8 @@ class TranslatorTests(unittest.TestCase):
             "Parameter Agent :",
             rules["transitive_predicate_coordination"].forbidden_coq_fragments,
         )
+        self.assertIn("Parameter Event : Type.", rules["event_counting"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["event_counting"].forbidden_coq_fragments)
 
     def test_certified_fragment_manifest_tracks_registered_rules(self) -> None:
         manifest = construction_fragment_manifest()
@@ -9161,6 +9164,7 @@ class TranslatorTests(unittest.TestCase):
             "transitive_subject_coordination": "John and Mary ate bread",
             "object_coordination": "Mary visited Paris and London",
             "transitive_predicate_coordination": "John ate bread and drank water",
+            "event_counting": "John knocked twice",
         }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):
@@ -9188,6 +9192,7 @@ class TranslatorTests(unittest.TestCase):
             "transitive_subject_coordination": "John and Mary ate bread",
             "object_coordination": "Mary visited Paris and London",
             "transitive_predicate_coordination": "John ate bread and drank water",
+            "event_counting": "John knocked twice",
         }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):
@@ -9579,7 +9584,7 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
             handler,
-            "sentence=John+knocked+twice&require_coq=1",
+            "sentence=a+cat+sits+on+a+mat&require_coq=1",
         )
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
@@ -9600,7 +9605,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(upgrade_plan["schema_version"], CERTIFICATION_UPGRADE_PLAN_SCHEMA)
         self.assertEqual(upgrade_plan["source_verification_scope"], "fallback_shallow")
         self.assertEqual(upgrade_plan["target_certification_level"], "construction_rule")
-        self.assertEqual(upgrade_plan["candidate_rule_id"], "fallback_knock_repeat_candidate")
+        self.assertEqual(upgrade_plan["candidate_rule_id"], "fallback_sit_application_candidate")
         self.assertEqual(upgrade_plan["automation_mode"], "human_review_required")
         self.assertFalse(upgrade_plan["can_auto_apply"])
         self.assertEqual(
@@ -9618,18 +9623,18 @@ class TranslatorTests(unittest.TestCase):
         rule_draft = result["construction_rule_draft"]
         self.assertEqual(rule_draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
         self.assertEqual(rule_draft["source_verification_scope"], "fallback_shallow")
-        self.assertEqual(rule_draft["candidate_rule_id"], "fallback_knock_repeat_candidate")
-        self.assertEqual(rule_draft["candidate_analyzer"], "fallback_knock_repeat_candidate_pipeline")
-        self.assertEqual(rule_draft["accepted_examples"], ["John knocked twice"])
+        self.assertEqual(rule_draft["candidate_rule_id"], "fallback_sit_application_candidate")
+        self.assertEqual(rule_draft["candidate_analyzer"], "fallback_sit_application_candidate_pipeline")
+        self.assertEqual(rule_draft["accepted_examples"], ["a cat sits on a mat"])
         self.assertEqual(rule_draft["automation_mode"], "human_review_required")
         self.assertFalse(rule_draft["can_auto_apply"])
         self.assertEqual(
             rule_draft["semantic_reading_drafts"][0]["name"],
-            "fallback_knock_repeat_candidate_single_reading",
+            "fallback_sit_application_candidate_single_reading",
         )
         self.assertEqual(
             rule_draft["semantic_reading_drafts"][0]["source"],
-            "fallback_knock_repeat_candidate",
+            "fallback_sit_application_candidate",
         )
         self.assertIn(
             "Parameter Event : Type.",
@@ -9640,7 +9645,7 @@ class TranslatorTests(unittest.TestCase):
             "construction_rule",
         )
         self.assertIn(
-            "rule_id = 'fallback_knock_repeat_candidate'",
+            "rule_id = 'fallback_sit_application_candidate'",
             rule_draft["patch_text_preview"],
         )
         readings = result["semantic_readings"]
@@ -9690,11 +9695,43 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(draft["ast_summary"]["kind"], "application")
 
+    def test_event_counting_promotes_counted_fallback_candidate_to_registered_rule(self) -> None:
+        result = analyze_sentence("John knocked twice", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "event_counting")
+        self.assertEqual(result["verification_scope"]["kind"], "registered_construction")
+        self.assertEqual(result["verification_scope"]["rule_id"], "event_counting")
+        self.assertEqual(
+            result["verification_scope"]["certification_level"],
+            "construction_rule",
+        )
+        self.assertEqual(result["dependent_type_translation"], "repeat(2, knock(0)(John))")
+        self.assertEqual(result["ast"]["kind"], "repeat")
+        self.assertEqual(result["ast"]["count"], "2")
+        self.assertEqual(result["ast"]["body"]["function"], "knock")
+        self.assertNotIn("certification_upgrade_plan", result)
+        self.assertNotIn("construction_rule_draft", result)
+        self.assertEqual(result["construction_rule"]["id"], "event_counting")
+        self.assertTrue(result["construction_hygiene"]["ok"])
+        self.assertEqual(result["construction_hygiene"]["found_forbidden_fragments"], [])
+        self.assertEqual(result["semantic_readings"][0]["name"], "event_counting_single_reading")
+        self.assertEqual(result["semantic_readings"][0]["source"], "event_counting")
+        self.assertEqual(result["semantic_readings"][0]["coq_definition"], "example_1")
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertIn("Definition example_1", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        transitive = analyze_sentence("Mary visited Paris three times", require_coq=True)
+        self.assertEqual(transitive["verification_scope"]["rule_id"], "event_counting")
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            "repeat(3, visit(0)(mary, paris))",
+        )
+
     def test_api_construction_rule_draft_endpoint_exports_fallback_draft(self) -> None:
         handler = object.__new__(PipelineHandler)
         payload, status = PipelineHandler.handle_construction_rule_draft_api(
             handler,
-            "sentence=John+knocked+twice&require_coq=1",
+            "sentence=a+cat+sits+on+a+mat&require_coq=1",
         )
         self.assertEqual(status.name, "OK")
         self.assertEqual(
@@ -9706,10 +9743,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(payload["verification_scope"]["kind"], "fallback_shallow")
         draft = payload["construction_rule_draft"]
         self.assertEqual(draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
-        self.assertEqual(draft["candidate_rule_id"], "fallback_knock_repeat_candidate")
+        self.assertEqual(draft["candidate_rule_id"], "fallback_sit_application_candidate")
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["coq_definition"],
-            "fallback_knock_repeat_candidate_single_reading",
+            "fallback_sit_application_candidate_single_reading",
         )
         self.assertIn(
             "Parameter Agent :",
@@ -9717,15 +9754,15 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             construction_rule_draft_api_path(
-                "John knocked twice",
+                "a cat sits on a mat",
                 True,
                 download=True,
             ),
-            "/api/construction-rule-draft?sentence=John+knocked+twice&require_coq=1&download=1",
+            "/api/construction-rule-draft?sentence=a+cat+sits+on+a+mat&require_coq=1&download=1",
         )
         self.assertEqual(
-            construction_rule_draft_artifact_filename("fallback_knock_repeat_candidate"),
-            "construction_rule_draft__fallback_knock_repeat_candidate.json",
+            construction_rule_draft_artifact_filename("fallback_sit_application_candidate"),
+            "construction_rule_draft__fallback_sit_application_candidate.json",
         )
 
         rejected_payload, rejected_status = PipelineHandler.handle_construction_rule_draft_api(
@@ -9742,6 +9779,13 @@ class TranslatorTests(unittest.TestCase):
             rejected_payload["verification_scope"]["kind"],
             "registered_construction",
         )
+        promoted_payload, promoted_status = PipelineHandler.handle_construction_rule_draft_api(
+            handler,
+            "sentence=John+knocked+twice&require_coq=1",
+        )
+        self.assertEqual(promoted_status.name, "BAD_REQUEST")
+        self.assertFalse(promoted_payload["ok"])
+        self.assertEqual(promoted_payload["verification_scope"]["rule_id"], "event_counting")
 
     def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -10652,7 +10696,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["recovery_actions"][0]["kind"], "edit_input")
 
     def test_web_page_contains_pipeline_panels(self) -> None:
-        page = render_page("John knocked twice")
+        page = render_page("a cat sits on a mat")
         self.assertIn("Event Semantics", page)
         self.assertIn("Dependent-Type Translation", page)
         self.assertIn("Result State Lexicon", page)
@@ -10686,7 +10730,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Construction Rule", page)
         self.assertIn("Type Check", page)
         self.assertIn("Generated Coq", page)
-        self.assertIn("repeat(2, knock(0)(John))", page)
+        self.assertIn("sit(1)(on(mat), cat)", page)
 
     def test_web_page_shows_result_state_lexicon_panel(self) -> None:
         page = render_page("John hammered the metal flat", require_coq=True)
@@ -12649,8 +12693,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_event_semantics`", web_design)
         self.assertIn("Semantic Readings Check panel", web_design)
         self.assertIn("API response and HTML panel must agree", web_design)
-        self.assertIn("ordinary `/api/analyze`\nsuccess path directly", web_design)
+        self.assertIn("promoted\nevent-counting route and the ordinary fallback route directly", web_design)
         self.assertIn("John knocked twice", web_design)
+        self.assertIn("event_counting_single_reading", web_design)
+        self.assertIn("a cat sits on a mat", web_design)
         self.assertIn("multi-reading quantifier-scope success path", web_design)
         self.assertIn("some boy loves some girl", web_design)
         self.assertIn("registered perception-complement success path", web_design)
@@ -12681,8 +12727,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fallback_event_semantics", manuscript)
         self.assertIn("example_1 Coq/Rocq definition", manuscript)
         self.assertIn("both the JSON response and the HTML panel", manuscript)
-        self.assertIn("ordinary /api/analyze path directly", manuscript)
+        self.assertIn("event_counting construction", manuscript)
+        self.assertIn("event_counting_single_reading", manuscript)
         self.assertIn("John knocked twice", manuscript)
+        self.assertIn("Mary visited Paris three times", manuscript)
+        self.assertIn("a cat sits on a mat", manuscript)
         self.assertIn("some boy loves some girl", manuscript)
         self.assertIn("some_boy_wide_scope and some_girl_wide_scope", manuscript)
         self.assertIn("Mary saw John leave", manuscript)

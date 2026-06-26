@@ -455,10 +455,14 @@ Successful ordinary fallback analyses should enter the same interface as
 `fallback_single_reading`, sourced from `fallback_event_semantics`, linked to
 `example_1`, and rendered in the Semantic Readings Check panel with a `none`
 attachment summary rather than bypassing the semantic-reading audit.
-The project-level web smoke check should exercise that ordinary `/api/analyze`
-success path directly, using `John knocked twice` and the matching HTML page
-before it walks the diagnostic fixtures, so fallback success cannot drift from
-the normalized semantic-reading interface.
+The project-level web smoke check should exercise both the promoted
+event-counting route and the ordinary fallback route directly before it walks
+the diagnostic fixtures. `John knocked twice` must surface as the registered
+`event_counting` construction with `event_counting_single_reading`, while
+`a cat sits on a mat` must remain a fallback success with
+`fallback_single_reading` and a downloadable construction-rule draft. This keeps
+the promoted count construction and the remaining fallback success contract from
+drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,

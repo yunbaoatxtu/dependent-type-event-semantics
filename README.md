@@ -988,10 +988,14 @@ labels, controls, and API inventory cannot silently drift apart.
 The project-level verification smoke check fetches both the JSON manifest and
 the matching HTML fixture page, so this selector/manifest contract is enforced
 outside the unit-test renderer as well.
-It also requests the ordinary success route
+It also requests the registered event-counting route
 `/api/analyze?sentence=John+knocked+twice&require_coq=1` and the matching HTML
-page, requiring both surfaces to expose the same `fallback_single_reading`
-contract before the diagnostic fixture sweep begins.
+page, requiring both surfaces to expose `event_counting_single_reading` under
+the registered `event_counting` construction. The ordinary fallback success
+contract is checked separately with
+`/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
+surfaces to expose the same `fallback_single_reading` row and construction-rule
+draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
 two quantifier-scope readings, `some_boy_wide_scope` and

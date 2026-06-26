@@ -1331,7 +1331,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         upgrade_plan.get("schema_version") != "certification_upgrade_plan.v1"
         or upgrade_plan.get("source_verification_scope") != "fallback_shallow"
         or upgrade_plan.get("target_certification_level") != "construction_rule"
-        or upgrade_plan.get("candidate_rule_id") != "fallback_knock_repeat_candidate"
+        or upgrade_plan.get("candidate_rule_id") != "fallback_sit_application_candidate"
         or upgrade_plan.get("automation_mode") != "human_review_required"
         or upgrade_plan.get("can_auto_apply") is not False
     ):
@@ -1349,8 +1349,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         rule_draft.get("schema_version") != "construction_rule_draft.v1"
         or rule_draft.get("source_verification_scope") != "fallback_shallow"
-        or rule_draft.get("candidate_rule_id") != "fallback_knock_repeat_candidate"
-        or rule_draft.get("candidate_analyzer") != "fallback_knock_repeat_candidate_pipeline"
+        or rule_draft.get("candidate_rule_id") != "fallback_sit_application_candidate"
+        or rule_draft.get("candidate_analyzer") != "fallback_sit_application_candidate_pipeline"
         or rule_draft.get("automation_mode") != "human_review_required"
         or rule_draft.get("can_auto_apply") is not False
     ):
@@ -1359,8 +1359,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         not isinstance(draft_readings, list)
         or len(draft_readings) != 1
-        or draft_readings[0].get("name") != "fallback_knock_repeat_candidate_single_reading"
-        or draft_readings[0].get("source") != "fallback_knock_repeat_candidate"
+        or draft_readings[0].get("name") != "fallback_sit_application_candidate_single_reading"
+        or draft_readings[0].get("source") != "fallback_sit_application_candidate"
     ):
         raise SystemExit("web route smoke check failed: fallback rule draft reading drift")
     hygiene = rule_draft.get("hygiene_policy_draft")
@@ -1407,22 +1407,94 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-upgrade-plan-schema="certification_upgrade_plan.v1"',
         'data-upgrade-source-scope="fallback_shallow"',
         'data-upgrade-target-level="construction_rule"',
-        'data-upgrade-candidate-rule-id="fallback_knock_repeat_candidate"',
+        'data-upgrade-candidate-rule-id="fallback_sit_application_candidate"',
         'data-upgrade-gap-id="no_registered_construction_rule"',
         'data-upgrade-action-kind="draft_construction_rule"',
         "Construction Rule Draft",
         'data-rule-draft-schema="construction_rule_draft.v1"',
         'data-rule-draft-source-scope="fallback_shallow"',
-        'data-rule-draft-id="fallback_knock_repeat_candidate"',
-        'data-rule-draft-analyzer="fallback_knock_repeat_candidate_pipeline"',
+        'data-rule-draft-id="fallback_sit_application_candidate"',
+        'data-rule-draft-analyzer="fallback_sit_application_candidate_pipeline"',
         'data-rule-draft-can-auto-apply="false"',
-        'data-rule-draft-reading="fallback_knock_repeat_candidate_single_reading"',
+        'data-rule-draft-reading="fallback_sit_application_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        "/api/construction-rule-draft?sentence=John+knocked+twice&amp;require_coq=1&amp;download=1",
+        "/api/construction-rule-draft?sentence=a+cat+sits+on+a+mat&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: fallback page input drift")
+
+
+def validate_analyze_event_counting_success(payload: dict, page: str, sentence: str) -> None:
+    case = "analyze_event_counting_success"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "event_counting",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "event_counting",
+        "registered_construction",
+        "construction_rule",
+        "event_counting",
+    )
+    if payload.get("kind") != "event_counting":
+        raise SystemExit("web route smoke check failed: event counting kind drift")
+    if payload.get("dependent_type_translation") != "repeat(2, knock(0)(John))":
+        raise SystemExit("web route smoke check failed: event counting translation drift")
+    ast = payload.get("ast")
+    if (
+        not isinstance(ast, dict)
+        or ast.get("kind") != "repeat"
+        or ast.get("count") != "2"
+        or not isinstance(ast.get("body"), dict)
+        or ast["body"].get("function") != "knock"
+    ):
+        raise SystemExit("web route smoke check failed: event counting AST drift")
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit("web route smoke check failed: promoted counting still exposes fallback draft")
+    construction_rule = payload.get("construction_rule")
+    if not isinstance(construction_rule, dict) or construction_rule.get("id") != "event_counting":
+        raise SystemExit("web route smoke check failed: event counting rule metadata drift")
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: event counting hygiene drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: event counting reading count drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "event_counting_single_reading",
+            "scope": "registered_single_reading",
+            "source": "event_counting",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Definition example_1" not in coq_code
+        or "Parameter Event : Type." in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: event counting Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>event_counting</dd>",
+        'data-reading-name="event_counting_single_reading"',
+        "<dt>source</dt><dd>event_counting</dd>",
+        "Counted occurrence",
+        "repeat(2, knock(0)(John))",
+    ]
+    require_text_fragments(page, expected_page_fragments, "event counting HTML")
 
 
 def validate_analyze_quantifier_scope_success(
@@ -2738,7 +2810,20 @@ def run_web_route_smoke_check() -> None:
         port = server.server_address[1]
         base_url = f"http://127.0.0.1:{port}"
         opener = build_opener(ProxyHandler({}))
-        fallback_sentence = "John knocked twice"
+        event_counting_sentence = "John knocked twice"
+        event_counting_query = urlencode(
+            {"sentence": event_counting_sentence, "require_coq": "1"}
+        )
+        with opener.open(f"{base_url}/api/analyze?{event_counting_query}", timeout=5) as response:
+            event_counting_payload = json.load(response)
+        with opener.open(f"{base_url}/?{event_counting_query}", timeout=5) as response:
+            event_counting_page = response.read().decode("utf-8")
+        validate_analyze_event_counting_success(
+            event_counting_payload,
+            event_counting_page,
+            event_counting_sentence,
+        )
+        fallback_sentence = "a cat sits on a mat"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
@@ -2760,7 +2845,7 @@ def run_web_route_smoke_check() -> None:
             or draft_payload.get("ok") is not True
             or draft_payload.get("draft_schema_version") != "construction_rule_draft.v1"
             or not isinstance(draft, dict)
-            or draft.get("candidate_rule_id") != "fallback_knock_repeat_candidate"
+            or draft.get("candidate_rule_id") != "fallback_sit_application_candidate"
         ):
             raise SystemExit("web route smoke check failed: rule draft API drift")
         draft_download_query = urlencode(
@@ -2775,7 +2860,7 @@ def run_web_route_smoke_check() -> None:
             timeout=5,
         ) as response:
             disposition = response.headers.get("Content-Disposition", "")
-            if "construction_rule_draft__fallback_knock_repeat_candidate.json" not in disposition:
+            if "construction_rule_draft__fallback_sit_application_candidate.json" not in disposition:
                 raise SystemExit("web route smoke check failed: rule draft download drift")
             draft_download_payload = json.load(response)
         if draft_download_payload != draft_payload:
