@@ -2516,9 +2516,11 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
 
 def simple_conditional_clause_ast(
     predicate: str,
-    subject: str,
+    subject: str | None = None,
     *,
     surface_predicate: str,
+    subjects: list[str] | None = None,
+    connective: str | None = None,
     obj: str | None = None,
     object_type: str | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
@@ -2531,11 +2533,26 @@ def simple_conditional_clause_ast(
         "predicate": predicate,
         "predicate_type": predicate_type,
         "surface_predicate": surface_predicate,
-        "subject": {
+    }
+    if subjects is not None:
+        clause["subjects"] = [
+            {
+                "name": subject_name,
+                "type": "Entity",
+            }
+            for subject_name in subjects
+        ]
+        clause["subject_connective"] = {
+            "name": connective or "and_T",
+            "type": "Prop -> Prop -> Prop",
+        }
+    else:
+        if subject is None:
+            raise ValueError("simple conditional clause requires a subject")
+        clause["subject"] = {
             "name": subject,
             "type": "Entity",
-        },
-    }
+        }
     if negated:
         clause["negated"] = True
         clause["negation"] = {
@@ -2631,8 +2648,55 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
             clause.get("time_modifiers", []),
             f"conditional.{field}",
         )
+        subjects = clause.get("subjects")
         subject = clause.get("subject")
-        if not isinstance(subject, dict):
+        if subjects is not None:
+            if subject is not None:
+                errors.append(
+                    f"conditional.{field}.subject is not allowed with coordinated subjects"
+                )
+            if not isinstance(subjects, list) or len(subjects) != 2:
+                errors.append(
+                    f"conditional.{field}.subjects must contain exactly two items"
+                )
+            else:
+                for subject_index, coordinated_subject in enumerate(subjects):
+                    if not isinstance(coordinated_subject, dict):
+                        errors.append(
+                            f"conditional.{field}.subjects[{subject_index}] must be an object"
+                        )
+                        continue
+                    subject_name = coordinated_subject.get("name")
+                    if not isinstance(subject_name, str) or not subject_name:
+                        errors.append(
+                            f"conditional.{field}.subjects[{subject_index}].name must be non-empty"
+                        )
+                    if coordinated_subject.get("type") != "Entity":
+                        errors.append(
+                            f"conditional.{field}.subjects[{subject_index}] must have type Entity"
+                        )
+                    elif isinstance(subject_name, str) and subject_name:
+                        previous_type = declarations.setdefault(subject_name, "Entity")
+                        if previous_type != "Entity":
+                            errors.append(
+                                f"conditional declaration {subject_name} has conflicting "
+                                f"types: {previous_type} vs Entity"
+                            )
+            subject_connective = clause.get("subject_connective")
+            if not isinstance(subject_connective, dict):
+                errors.append(
+                    f"conditional.{field}.subject_connective must be an object"
+                )
+            else:
+                if subject_connective.get("name") not in {"and_T", "or_T"}:
+                    errors.append(
+                        f"conditional.{field}.subject_connective.name must be and_T or or_T"
+                    )
+                if subject_connective.get("type") != "Prop -> Prop -> Prop":
+                    errors.append(
+                        f"conditional.{field}.subject_connective.type must be Prop -> Prop -> Prop"
+                    )
+        elif not isinstance(subject, dict):
             errors.append(f"conditional.{field}.subject must be an object")
         else:
             subject_name = subject.get("name")
@@ -2731,7 +2795,101 @@ def parse_simple_conditional_time_modifiers(
     return time_modifiers
 
 
+def parse_simple_conditional_subject_coordination_clause(
+    tokens: list[str],
+) -> dict[str, Any] | None:
+    if len(tokens) < 4:
+        return None
+    leading_both = bool(tokens and tokens[0] == "both")
+    if leading_both:
+        if "and" not in tokens:
+            return None
+        tokens = tokens[1:]
+    coordination = single_boolean_coordinator(tokens)
+    if coordination is None:
+        return None
+    coordinator, coordinator_index = coordination
+    if leading_both and coordinator != "and":
+        return None
+    left_subject_tokens = tokens[:coordinator_index]
+    right_side_tokens = tokens[coordinator_index + 1 :]
+    if not left_subject_tokens or len(right_side_tokens) < 2:
+        return None
+    if any(
+        token in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        or token in COMMON_ADVERBS
+        or token in TEMPORAL_ADVERBS
+        for token in left_subject_tokens
+    ):
+        return None
+    predicate_offsets = [
+        index
+        for index, token in enumerate(right_side_tokens)
+        if is_likely_surface_verb(token)
+    ]
+    if len(predicate_offsets) != 1:
+        return None
+    predicate_offset = predicate_offsets[0]
+    if predicate_offset == 0:
+        return None
+    right_subject_tokens = right_side_tokens[:predicate_offset]
+    if any(
+        token in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        or token in COMMON_ADVERBS
+        or token in TEMPORAL_ADVERBS
+        for token in right_subject_tokens
+    ):
+        return None
+    surface_predicate = right_side_tokens[predicate_offset]
+    if surface_predicate in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS:
+        return None
+    predicate = lemma_verb(surface_predicate)
+    subjects = [
+        clean_phrase(left_subject_tokens),
+        clean_phrase(right_subject_tokens),
+    ]
+    if any(subject == "entity" for subject in subjects):
+        return None
+    tail_tokens = right_side_tokens[predicate_offset + 1 :]
+    connective = connective_for_coordinator(coordinator)
+    if not is_likely_transitive_verb(surface_predicate):
+        time_modifiers = parse_simple_conditional_time_modifiers(tail_tokens)
+        if time_modifiers is None:
+            return None
+        return {
+            "subjects": subjects,
+            "connective": connective,
+            "predicate": predicate,
+            "surface_predicate": surface_predicate,
+            "time_modifiers": time_modifiers,
+        }
+    candidates: list[dict[str, Any]] = []
+    for split_index in range(1, len(tail_tokens) + 1):
+        object_tokens = tail_tokens[:split_index]
+        time_tokens = tail_tokens[split_index:]
+        obj = parse_simple_conditional_object_tokens(object_tokens)
+        time_modifiers = parse_simple_conditional_time_modifiers(time_tokens)
+        if obj is not None and time_modifiers is not None:
+            candidates.append(
+                {
+                    "subjects": subjects,
+                    "connective": connective,
+                    "predicate": predicate,
+                    "surface_predicate": surface_predicate,
+                    "obj": obj,
+                    "object_type": object_type_for_transitive_predicate(predicate),
+                    "time_modifiers": time_modifiers,
+                }
+            )
+    if len(candidates) != 1:
+        return None
+    return candidates[0]
+
+
 def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
+    subject_coordination = parse_simple_conditional_subject_coordination_clause(tokens)
+    if subject_coordination is not None:
+        return subject_coordination
     if len(tokens) < 2:
         return None
     subject = tokens[0]
@@ -2825,16 +2983,30 @@ def split_simple_conditional_tokens(tokens: list[str]) -> tuple[list[str], list[
 
 def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> str:
     predicate = clause["predicate"]
-    subject = clause["subject"]["name"]
     obj = clause.get("object")
-    if obj is None:
-        body = f"{predicate} {subject}" if coq else f"{predicate}({subject})"
-    else:
+
+    def atomic_formula(subject_name: str) -> str:
+        if obj is None:
+            return f"{predicate} {subject_name}" if coq else f"{predicate}({subject_name})"
         object_name = obj["name"]
         if coq:
-            body = f"{predicate} {subject} {object_name}"
-        else:
-            body = f"{predicate}({subject}, {object_name})"
+            return f"{predicate} {subject_name} {object_name}"
+        return f"{predicate}({subject_name}, {object_name})"
+
+    if "subjects" in clause:
+        arguments = [
+            atomic_formula(subject["name"])
+            for subject in clause["subjects"]
+            if isinstance(subject, dict)
+        ]
+        connective = clause["subject_connective"]["name"]
+        body = (
+            render_binary_connective_coq(connective, arguments)
+            if coq
+            else render_binary_connective_translation(connective, arguments)
+        )
+    else:
+        body = atomic_formula(clause["subject"]["name"])
     timed_body = render_quantifier_time_wrapped_reading(
         body,
         clause.get("time_modifiers", []),
@@ -2846,9 +3018,12 @@ def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> s
 
 
 def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) -> str:
+    subject_name = clause.get("subject", {}).get("name")
+    if not subject_name:
+        raise ValueError("simple conditional event reference requires a singular subject")
     parts = [
         f"{clause['predicate']}({event_name})",
-        f"Agent({event_name}, {clause['subject']['name']})",
+        f"Agent({event_name}, {subject_name})",
     ]
     obj = clause.get("object")
     if isinstance(obj, dict):
@@ -2862,7 +3037,25 @@ def simple_conditional_event_quantified_reference(
     clause: dict[str, Any],
     event_name: str,
 ) -> str:
-    reference = f"exists {event_name}. {simple_conditional_event_reference(clause, event_name)}"
+    if "subjects" in clause:
+        connective = clause["subject_connective"]["name"]
+        joiner = " and " if connective == "and_T" else " or "
+        references = []
+        for index, subject in enumerate(clause["subjects"], start=1):
+            scoped_clause = {
+                key: value
+                for key, value in clause.items()
+                if key not in {"subjects", "subject_connective"}
+            }
+            scoped_clause["subject"] = subject
+            scoped_event_name = f"{event_name}{index}"
+            references.append(
+                f"exists {scoped_event_name}. "
+                f"{simple_conditional_event_reference(scoped_clause, scoped_event_name)}"
+            )
+        reference = joiner.join(f"({reference})" for reference in references)
+    else:
+        reference = f"exists {event_name}. {simple_conditional_event_reference(clause, event_name)}"
     if clause.get("negated", False):
         return f"not({reference})"
     return reference
@@ -2875,7 +3068,11 @@ def simple_conditional_declarations(
     value_declarations: dict[str, str] = {}
     predicate_declarations: dict[str, str] = {}
     for clause in (antecedent, consequent):
-        value_declarations[clause["subject"]["name"]] = "Entity"
+        if "subjects" in clause:
+            for subject in clause["subjects"]:
+                value_declarations[subject["name"]] = "Entity"
+        else:
+            value_declarations[clause["subject"]["name"]] = "Entity"
         obj = clause.get("object")
         if isinstance(obj, dict):
             value_declarations[obj["name"]] = obj["type"]
@@ -2923,6 +3120,13 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
     has_negation = any(
         clause.get("negated", False) for clause in (antecedent, consequent)
     )
+    subject_connectives = unique_names(
+        [
+            clause["subject_connective"]["name"]
+            for clause in (antecedent, consequent)
+            if "subject_connective" in clause
+        ]
+    )
     coq_antecedent = simple_conditional_clause_formula(antecedent, coq=True)
     coq_consequent = simple_conditional_clause_formula(consequent, coq=True)
     coq_code = "\n".join(
@@ -2948,6 +3152,10 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
                 if time_modifiers
                 else []
             ),
+            *[
+                f"Parameter {connective} : Prop -> Prop -> Prop."
+                for connective in subject_connectives
+            ],
             *(["Parameter not_T : Prop -> Prop."] if has_negation else []),
             "",
             f"Definition {coq_definition} : Prop :=",

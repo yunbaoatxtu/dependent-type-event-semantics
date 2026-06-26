@@ -477,7 +477,11 @@ at type `Entity -> Prop -> Prop`. Conditional-clause do-support negation is
 shown as proposition-level negation over the timed clause, so
 `if John did not leave yesterday, Mary cried today` appears as
 `not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`, with `not_T`
-declared at type `Prop -> Prop`.
+declared at type `Prop -> Prop`. Two-subject conditional clauses appear in the
+same panels without a pseudo-subject: `if John and Mary ate bread yesterday,
+Sue cried today` is displayed as
+`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`,
+with `and_T` declared at type `Prop -> Prop -> Prop`.
 Clause-level markers outside the current certified fragment, including `who`,
 `which`, `that`, `whether`, and overextended conditional strings such as
 `if John left, Mary cried loudly`, stop the analysis at the parsing stage before a

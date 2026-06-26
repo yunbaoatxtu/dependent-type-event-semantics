@@ -1393,7 +1393,13 @@ do-support negation is represented by `negated: true` plus a `negation` record
 whose operator is `not_T : Prop -> Prop`; for example,
 `if John did not leave yesterday, Mary cried today` becomes
 `not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`. The connective itself
-has type `Prop -> Prop -> Prop`. Unsupported clause-level markers such as
+has type `Prop -> Prop -> Prop`. A clause may also contain a two-item
+`subjects` list and a `subject_connective` record when coordinated subjects
+share the same predicate and optional object. Thus
+`if John and Mary ate bread yesterday, Sue cried today` becomes
+`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`,
+with `subject_connective.name` equal to `and_T` and
+`subject_connective.type` equal to `Prop -> Prop -> Prop`. Unsupported clause-level markers such as
 `who`, `which`, `that`, `whether`, or an overextended conditional like
 `if John left, Mary cried loudly` produce a parsing failure instead of a shallow
 AST. This is deliberately conservative: an unimplemented conditional or

@@ -86,7 +86,11 @@ their own proposition, so `if John left yesterday, Mary cried today` becomes
 route handles narrow do-support negation inside a conditional clause:
 `if John did not leave yesterday, Mary cried today` becomes
 `not_T(at_T(yesterday, leave(john))) -> at_T(today, cry(mary))`, with `not_T`
-declared at type `Prop -> Prop`. These exports use no event, Agent, or Theme
+declared at type `Prop -> Prop`. It also handles two coordinated subjects that
+share a clause predicate: `if John and Mary ate bread yesterday, Sue cried today`
+becomes
+`at_T(yesterday, and_T(eat(john, bread), eat(mary, bread))) -> at_T(today, cry(sue))`,
+with `and_T : Prop -> Prop -> Prop`. These exports use no event, Agent, or Theme
 declarations. Clause-level markers outside that certified path, such as
 `who`, `which`, `that`, `whether`, or overextended conditional strings such as
 `if John left, Mary cried loudly`, produce a parsing-stage diagnostic instead
@@ -947,7 +951,8 @@ The current prototype has small, testable rules for:
   including typed transitive objects such as `bread : Food` and
   `water : Drinkable`, plus clause-local temporal wrappers such as
   `at_T(yesterday, leave(john))`, and clause-local do-support negation such as
-  `not_T(at_T(yesterday, leave(john)))`;
+  `not_T(at_T(yesterday, leave(john)))`, and two-subject clause coordination
+  such as `and_T(eat(john, bread), eat(mary, bread))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation.
