@@ -25,6 +25,7 @@ from scripts.verify_project import (
     validate_recovery_action_inspection_run_rejection,
     validate_diagnostic_contract_html_panel,
     validate_diagnostic_contract_manifest,
+    validate_certified_fragment_manifest,
     validate_diagnostic_fixture_routes,
     validate_json_download_http_response,
     validate_recovery_action_export_bundle,
@@ -8893,6 +8894,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(set(registered), set(rules))
         coverage = manifest["coverage_matrix"]
         counts = manifest["coverage_matrix_counts"]
+        snapshots = {
+            entry["rule_id"]: entry
+            for entry in manifest["semantic_snapshots"]
+        }
         self.assertEqual(
             counts["registered_success_cases"],
             len(coverage["registered_success_cases"]),
@@ -8906,6 +8911,8 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
+        self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
+        self.assertEqual(set(snapshots), set(rules))
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
             "fallback_shallow",
@@ -8953,6 +8960,40 @@ class TranslatorTests(unittest.TestCase):
                     result["verification_scope"]["certification_level"],
                     case["expected_certification_level"],
                 )
+                snapshot = snapshots[case["rule_id"]]
+                self.assertEqual(snapshot["sentence"], case["sentence"])
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    snapshot["expected_event_analysis"],
+                )
+                dependent_type_translation = result["dependent_type_translation"]
+                for fragment in snapshot["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, dependent_type_translation)
+                readings = result["semantic_readings"]
+                self.assertEqual(
+                    [reading["name"] for reading in readings],
+                    snapshot["expected_reading_names"],
+                )
+                self.assertEqual(
+                    [reading["source"] for reading in readings],
+                    snapshot["expected_reading_sources"],
+                )
+                self.assertEqual(
+                    [reading["scope"] for reading in readings],
+                    snapshot["expected_reading_scopes"],
+                )
+                self.assertEqual(
+                    [reading["coq_definition"] for reading in readings],
+                    snapshot["expected_coq_definitions"],
+                )
+                self.assertEqual(
+                    result["type_check"]["type"],
+                    snapshot["expected_type_check_type"],
+                )
+                exported = exported_prop_definition_names(result["coq_code"])
+                self.assertTrue(
+                    set(snapshot["expected_coq_definitions"]).issubset(exported),
+                )
 
         for case in coverage["fallback_success_cases"]:
             with self.subTest(sentence=case["sentence"]):
@@ -8980,6 +9021,12 @@ class TranslatorTests(unittest.TestCase):
                     result["verification_scope"]["certification_level"],
                     case["expected_certification_level"],
                 )
+
+    def test_verification_rejects_certified_fragment_snapshot_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["semantic_snapshots"][0]["expected_event_analysis"] = "wrong-analysis"
+        with self.assertRaisesRegex(SystemExit, "semantic snapshot analysis drift"):
+            validate_certified_fragment_manifest(manifest)
 
     def test_web_api_and_page_expose_certified_fragment_manifest(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -9012,6 +9059,11 @@ class TranslatorTests(unittest.TestCase):
             manifest["coverage_matrix_counts"]["rejected_unsupported_cases"],
             2,
         )
+        self.assertEqual(
+            manifest["semantic_snapshot_count"],
+            len(construction_rules()),
+        )
+        self.assertIn("semantic_snapshots", manifest)
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -9023,11 +9075,20 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
+        self.assertIn(
+            f'data-semantic-snapshot-count="{len(construction_rules())}"',
+            page,
+        )
         self.assertIn('data-coverage-fallback-success-count="1"', page)
         self.assertIn('data-coverage-rejected-unsupported-count="2"', page)
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)
+        self.assertIn(
+            'data-semantic-snapshot-rule-id="quantifier_scope_ambiguity"',
+            page,
+        )
+        self.assertIn('data-semantic-snapshot-analysis="quantifier-scope"', page)
         self.assertIn('data-coverage-kind="fallback_success"', page)
         self.assertIn('data-coverage-kind="rejected_unsupported"', page)
         self.assertIn('data-coverage-marker="because"', page)
@@ -12424,6 +12485,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("registered_success_cases", manuscript)
         self.assertIn("fallback_success_cases", manuscript)
         self.assertIn("rejected_unsupported_cases", manuscript)
+        self.assertIn("semantic_snapshots", manuscript)
+        self.assertIn("semantic_snapshot_count", manuscript)
+        self.assertIn("semantic drift", manuscript)
         self.assertIn("Certified Fragment panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
@@ -12928,6 +12992,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`registered_success_cases`", readme)
         self.assertIn("`fallback_success_cases`", readme)
         self.assertIn("`rejected_unsupported_cases`", readme)
+        self.assertIn("`semantic_snapshots`", readme)
+        self.assertIn("`semantic_snapshot_count`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -12952,6 +13018,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`coverage_matrix_counts`", web_design)
         self.assertIn("`data-coverage-kind`", web_design)
         self.assertIn("`data-coverage-marker`", web_design)
+        self.assertIn("`semantic_snapshots`", web_design)
+        self.assertIn("`semantic_snapshot_count`", web_design)
+        self.assertIn("`data-semantic-snapshot-*`", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
@@ -13711,6 +13780,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("coverage_matrix_counts", verifier)
         self.assertIn("data-coverage-registered-success-count", verifier)
         self.assertIn("data-coverage-marker", verifier)
+        self.assertIn("semantic_snapshots", verifier)
+        self.assertIn("semantic_snapshot_count", verifier)
+        self.assertIn("data-semantic-snapshot-rule-id", verifier)
+        self.assertIn("semantic snapshot analysis drift", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)

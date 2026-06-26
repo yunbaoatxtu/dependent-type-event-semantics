@@ -117,6 +117,13 @@ The manifest also carries a `coverage_matrix` with
 exposes those counts through stable `data-coverage-*` attributes and renders
 fallback and rejected example rows with `data-coverage-kind`,
 `data-coverage-sentence`, and, for rejection rows, `data-coverage-marker`.
+The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
+Each snapshot is keyed by registered rule id and stores the expected analysis
+label, dependent-type translation fragments, semantic-reading names/sources,
+Coq/Rocq definition names, and type-check result for that rule's primary
+example. The `Certified Fragment` panel mirrors the snapshot count and exposes
+per-rule `data-semantic-snapshot-*` hooks, while the verifier runs the live
+pipeline against the static snapshots to catch semantic drift.
 For ordinary fallback successes, the API response and HTML panel must agree on
 the same normalized reading row: `fallback_single_reading` from
 `fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
@@ -457,6 +464,10 @@ coverage boundary synchronized with the registered construction registry.
 It should also validate `coverage_matrix_counts` against the actual matrix
 lists and compare the page's coverage-count attributes and example hooks with
 the JSON manifest.
+It should likewise validate `semantic_snapshot_count`, the page's
+`data-semantic-snapshot-*` hooks, and the live pipeline output for every
+snapshot so analysis labels, reading names, Coq/Rocq definitions, and
+dependent-type fragments cannot drift silently.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

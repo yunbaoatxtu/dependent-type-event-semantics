@@ -2093,7 +2093,11 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
 
 
 def validate_certified_fragment_manifest(manifest: dict) -> None:
-    from translator.natural_language_pipeline import construction_rules
+    from translator.natural_language_pipeline import (
+        construction_rules,
+        exported_prop_definition_names,
+        run_pipeline,
+    )
 
     if manifest.get("schema_version") != "certified_fragment.v1":
         raise SystemExit("web route smoke check failed: wrong certified fragment schema")
@@ -2114,6 +2118,18 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: certified rule id drift")
     if manifest.get("registered_construction_count") != len(rules):
         raise SystemExit("web route smoke check failed: certified rule count drift")
+    snapshots = manifest.get("semantic_snapshots")
+    if not isinstance(snapshots, list) or not snapshots:
+        raise SystemExit("web route smoke check failed: certified semantic snapshots missing")
+    if manifest.get("semantic_snapshot_count") != len(snapshots):
+        raise SystemExit("web route smoke check failed: certified semantic snapshot count drift")
+    snapshot_by_id = {
+        item.get("rule_id"): item
+        for item in snapshots
+        if isinstance(item, dict) and isinstance(item.get("rule_id"), str)
+    }
+    if set(snapshot_by_id) != set(rules):
+        raise SystemExit("web route smoke check failed: certified semantic snapshot id drift")
     coverage = manifest.get("coverage_matrix")
     counts = manifest.get("coverage_matrix_counts")
     if not isinstance(coverage, dict) or not isinstance(counts, dict):
@@ -2172,6 +2188,94 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} coverage drift"
             )
+        snapshot = snapshot_by_id[rule_id]
+        if snapshot.get("sentence") != item.get("example"):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} snapshot sentence drift"
+            )
+        expected_fragments = snapshot.get("expected_dependent_type_fragments")
+        expected_reading_names = snapshot.get("expected_reading_names")
+        expected_sources = snapshot.get("expected_reading_sources")
+        expected_scopes = snapshot.get("expected_reading_scopes")
+        expected_definitions = snapshot.get("expected_coq_definitions")
+        if (
+            not isinstance(snapshot.get("expected_event_analysis"), str)
+            or not snapshot["expected_event_analysis"]
+            or not isinstance(expected_fragments, list)
+            or not expected_fragments
+            or not all(isinstance(fragment, str) and fragment for fragment in expected_fragments)
+            or not isinstance(expected_reading_names, list)
+            or not expected_reading_names
+            or not isinstance(expected_sources, list)
+            or not isinstance(expected_scopes, list)
+            or not isinstance(expected_definitions, list)
+            or not expected_definitions
+            or not isinstance(snapshot.get("expected_type_check_type"), str)
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} snapshot schema drift"
+            )
+        result = run_pipeline(snapshot["sentence"], require_coq=False)
+        if not result.get("ok"):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} snapshot no longer runs"
+            )
+        if result.get("construction_rule", {}).get("id") != rule_id:
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} snapshot rule drift"
+            )
+        if result.get("event_semantics", {}).get("analysis") != snapshot.get(
+            "expected_event_analysis"
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} semantic snapshot analysis drift"
+            )
+        dependent_type_translation = str(result.get("dependent_type_translation", ""))
+        for fragment in expected_fragments:
+            if fragment not in dependent_type_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified rule "
+                    f"{rule_id} semantic snapshot translation drift"
+                )
+        readings = result.get("semantic_readings")
+        if not isinstance(readings, list):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} semantic snapshot readings drift"
+            )
+        observed_names = [reading.get("name") for reading in readings if isinstance(reading, dict)]
+        observed_sources = [
+            reading.get("source") for reading in readings if isinstance(reading, dict)
+        ]
+        observed_scopes = [
+            reading.get("scope") for reading in readings if isinstance(reading, dict)
+        ]
+        observed_definitions = [
+            reading.get("coq_definition")
+            for reading in readings
+            if isinstance(reading, dict)
+        ]
+        if (
+            observed_names != expected_reading_names
+            or observed_sources != expected_sources
+            or observed_scopes != expected_scopes
+            or observed_definitions != expected_definitions
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} semantic snapshot reading drift"
+            )
+        if result.get("type_check", {}).get("type") != snapshot.get(
+            "expected_type_check_type"
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} semantic snapshot type drift"
+            )
+        exported_definitions = exported_prop_definition_names(result.get("coq_code", ""))
+        missing_exports = sorted(set(expected_definitions) - set(exported_definitions))
+        if missing_exports:
+            raise SystemExit(
+                "web route smoke check failed: certified rule "
+                f"{rule_id} semantic snapshot export drift"
+            )
     fallback = manifest.get("fallback")
     if (
         not isinstance(fallback, dict)
@@ -2213,6 +2317,7 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-full-natural-language-certification="false"',
         'data-fallback-certification-level="shallow_scaffold"',
         f'data-registered-construction-count="{len(registered)}"',
+        f'data-semantic-snapshot-count="{manifest.get("semantic_snapshot_count")}"',
         (
             'data-coverage-registered-success-count="'
             f'{manifest.get("coverage_matrix_counts", {}).get("registered_success_cases")}"'
@@ -2240,6 +2345,18 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         expected_fragments.extend(
             f'data-coverage-marker="{html.escape(str(item.get("marker", "")), quote=True)}"'
             for item in coverage.get("rejected_unsupported_cases", [])
+            if isinstance(item, dict)
+        )
+    snapshots = manifest.get("semantic_snapshots", [])
+    if isinstance(snapshots, list):
+        expected_fragments.extend(
+            f'data-semantic-snapshot-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}"'
+            for item in snapshots
+            if isinstance(item, dict)
+        )
+        expected_fragments.extend(
+            f'data-semantic-snapshot-analysis="{html.escape(str(item.get("expected_event_analysis", "")), quote=True)}"'
+            for item in snapshots
             if isinstance(item, dict)
         )
     for fragment in expected_fragments:

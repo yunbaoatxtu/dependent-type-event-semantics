@@ -165,6 +165,207 @@ UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES = (
 )
 
 
+CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
+    {
+        "rule_id": "simple_conditional",
+        "sentence": "if John left, Mary cried",
+        "expected_event_analysis": "simple-conditional",
+        "expected_dependent_type_fragments": ["leave(john) -> cry(mary)"],
+        "expected_reading_names": ["simple_conditional_implication"],
+        "expected_reading_sources": ["simple_conditional"],
+        "expected_reading_scopes": ["antecedent_implies_consequent"],
+        "expected_coq_definitions": ["simple_conditional_implication"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "perception_nominalization",
+        "sentence": "Mary saw John leave",
+        "expected_event_analysis": "parsons-perception-complement",
+        "expected_dependent_type_fragments": ["see(Mary, E(leave(John)))"],
+        "expected_reading_names": ["primary"],
+        "expected_reading_sources": ["perception_nominalization"],
+        "expected_reading_scopes": ["unspecified"],
+        "expected_coq_definitions": ["mary_saw_john_leave"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "universal_timed_burning",
+        "sentence": "In every burning, oxygen is consumed",
+        "expected_event_analysis": "parsons-event-inclusion",
+        "expected_dependent_type_fragments": [
+            "forall x : Entity. forall t : Time. burn(x, t) -> consume(oxygen, t)",
+        ],
+        "expected_reading_names": ["universal_timed_burning"],
+        "expected_reading_sources": ["universal_timed_burning"],
+        "expected_reading_scopes": ["forall_entity_time"],
+        "expected_coq_definitions": ["every_burning_consumes_oxygen"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "timed_after",
+        "sentence": "after the singing of the Marseillaise, John saluted the flag",
+        "expected_event_analysis": "parsons-after-event-talk",
+        "expected_dependent_type_fragments": [
+            "exists t_sing t_salute : Time.",
+            "before(t_sing, t_salute)",
+        ],
+        "expected_reading_names": ["timed_after_singing_salute"],
+        "expected_reading_sources": ["timed_after"],
+        "expected_reading_scopes": ["time_before_salute"],
+        "expected_coq_definitions": ["after_singing_salute"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "sentence": "some boy loves some girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity.",
+            "exists x_girl : Entity. girl(x_girl) and exists x_boy : Entity.",
+        ],
+        "expected_reading_names": [
+            "some_boy_wide_scope",
+            "some_girl_wide_scope",
+        ],
+        "expected_reading_sources": ["quantifier_scope", "quantifier_scope"],
+        "expected_reading_scopes": ["subject_then_object", "object_then_subject"],
+        "expected_coq_definitions": [
+            "some_boy_wide_scope",
+            "some_girl_wide_scope",
+        ],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "lexical_state_change",
+        "sentence": "the door opened",
+        "expected_event_analysis": "lexical-state-change",
+        "expected_dependent_type_fragments": [
+            "Change(Transition(door, access_scale, closed, open))",
+        ],
+        "expected_reading_names": ["lexical_state_change_single_reading"],
+        "expected_reading_sources": ["lexical_state_change"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["lexical_open_state_change"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "stative_result_state",
+        "sentence": "the vase is broken",
+        "expected_event_analysis": "stative-result-state",
+        "expected_dependent_type_fragments": [
+            "holds_state(vase, integrity_scale, broken)",
+        ],
+        "expected_reading_names": ["stative_result_state_single_reading"],
+        "expected_reading_sources": ["stative_result_state"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["stative_broken_state"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "passive_argument_omission",
+        "sentence": "the toast was buttered",
+        "expected_event_analysis": "passive-argument-omission",
+        "expected_dependent_type_fragments": [
+            "exists x_agent : Entity. butter(x_agent, toast)",
+        ],
+        "expected_reading_names": ["passive_butter_omitted_agent"],
+        "expected_reading_sources": ["passive_argument_omission"],
+        "expected_reading_scopes": ["omitted_existential_agent"],
+        "expected_coq_definitions": ["passive_butter_omitted_agent"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "copular_property",
+        "sentence": "Mary is happy",
+        "expected_event_analysis": "copular-property",
+        "expected_dependent_type_fragments": ["holds_property(mary, happy)"],
+        "expected_reading_names": ["copular_property_single_reading"],
+        "expected_reading_sources": ["copular_property"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["property_happy_assertion"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "do_support_negation",
+        "sentence": "John did not walk",
+        "expected_event_analysis": "do-support-negation",
+        "expected_dependent_type_fragments": ["not_T(walk(0)(john))"],
+        "expected_reading_names": ["do_support_negation"],
+        "expected_reading_sources": ["do_support_negation"],
+        "expected_reading_scopes": ["simple_negation"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
+        "rule_id": "predicate_coordination",
+        "sentence": "John walked and talked",
+        "expected_event_analysis": "same-subject-predicate-coordination",
+        "expected_dependent_type_fragments": ["and_T(walk(john), talk(john))"],
+        "expected_reading_names": ["predicate_coordination_single_reading"],
+        "expected_reading_sources": ["predicate_coordination"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["predicate_coordination_assertion"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "subject_coordination",
+        "sentence": "John and Mary walked",
+        "expected_event_analysis": "subject-coordination",
+        "expected_dependent_type_fragments": ["and_T(walk(john), walk(mary))"],
+        "expected_reading_names": ["subject_coordination_single_reading"],
+        "expected_reading_sources": ["subject_coordination"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["subject_coordination_walk"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "transitive_subject_coordination",
+        "sentence": "John and Mary ate bread",
+        "expected_event_analysis": "transitive-subject-coordination",
+        "expected_dependent_type_fragments": [
+            "and_T(eat(john, bread), eat(mary, bread))",
+        ],
+        "expected_reading_names": [
+            "transitive_subject_coordination_single_reading",
+        ],
+        "expected_reading_sources": ["transitive_subject_coordination"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["transitive_subject_coordination_eat"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "object_coordination",
+        "sentence": "Mary visited Paris and London",
+        "expected_event_analysis": "object-coordination",
+        "expected_dependent_type_fragments": [
+            "and_T(visit(mary, paris), visit(mary, london))",
+        ],
+        "expected_reading_names": ["object_coordination_single_reading"],
+        "expected_reading_sources": ["object_coordination"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["object_coordination_visit"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "transitive_predicate_coordination",
+        "sentence": "John ate bread and drank water",
+        "expected_event_analysis": "same-subject-transitive-vp-coordination",
+        "expected_dependent_type_fragments": [
+            "and_T(eat(john, bread), drink(john, water))",
+        ],
+        "expected_reading_names": [
+            "transitive_predicate_coordination_single_reading",
+        ],
+        "expected_reading_sources": ["transitive_predicate_coordination"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": [
+            "transitive_predicate_coordination_assertion",
+        ],
+        "expected_type_check_type": "Prop",
+    },
+)
+
+
 def atom(pred: str, *args: str) -> dict[str, Any]:
     return {"pred": pred, "args": list(args)}
 
@@ -10348,11 +10549,17 @@ def construction_fragment_manifest() -> dict[str, Any]:
     rejected_unsupported_cases = [
         dict(example) for example in UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES
     ]
+    semantic_snapshots = [
+        copy.deepcopy(snapshot)
+        for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
+    ]
     return {
         "schema_version": "certified_fragment.v1",
         "full_natural_language_certification": False,
         "registered_construction_count": len(registered),
         "registered_constructions": registered,
+        "semantic_snapshot_count": len(semantic_snapshots),
+        "semantic_snapshots": semantic_snapshots,
         "fallback": {
             "verification_scope_kind": "fallback_shallow",
             "certification_level": "shallow_scaffold",

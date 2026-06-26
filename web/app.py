@@ -2186,6 +2186,12 @@ def certified_fragment_panel() -> str:
     )
     coverage = manifest.get("coverage_matrix", {})
     counts = manifest.get("coverage_matrix_counts", {})
+    semantic_snapshots = [
+        item
+        for item in manifest.get("semantic_snapshots", [])
+        if isinstance(item, dict)
+    ]
+    semantic_snapshot_count = str(manifest.get("semantic_snapshot_count", ""))
     registered_case_count = str(
         counts.get("registered_success_cases", "")
         if isinstance(counts, dict)
@@ -2240,11 +2246,22 @@ def certified_fragment_panel() -> str:
             for item in coverage.get("rejected_unsupported_cases", [])
             if isinstance(item, dict)
         )
+    semantic_snapshot_items = "".join(
+        '<li '
+        f'data-semantic-snapshot-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
+        f'data-semantic-snapshot-analysis="{html.escape(str(item.get("expected_event_analysis", "")), quote=True)}" '
+        f'data-semantic-snapshot-reading-count="{len(item.get("expected_reading_names", [])) if isinstance(item.get("expected_reading_names"), list) else 0}">'
+        f'<code>{html.escape(str(item.get("rule_id", "")))}</code>'
+        f'<span>{html.escape(str(item.get("expected_event_analysis", "")))}</span>'
+        "</li>"
+        for item in semantic_snapshots
+    )
     return (
         '<section class="panel certified-fragment-panel" '
         f'data-certified-fragment-schema="{html.escape(schema, quote=True)}" '
         'data-certified-fragment-api="/api/certified-fragment" '
         f'data-registered-construction-count="{len(registered)}" '
+        f'data-semantic-snapshot-count="{html.escape(semantic_snapshot_count, quote=True)}" '
         f'data-coverage-registered-success-count="{html.escape(registered_case_count, quote=True)}" '
         f'data-coverage-fallback-success-count="{html.escape(fallback_case_count, quote=True)}" '
         f'data-coverage-rejected-unsupported-count="{html.escape(rejected_case_count, quote=True)}" '
@@ -2257,6 +2274,7 @@ def certified_fragment_panel() -> str:
         "<dt>api</dt><dd><code>/api/certified-fragment</code></dd>"
         f"<dt>full NL</dt><dd>{str(bool(manifest.get('full_natural_language_certification'))).lower()}</dd>"
         f"<dt>registered rules</dt><dd>{len(registered)}</dd>"
+        f"<dt>semantic snapshots</dt><dd>{html.escape(semantic_snapshot_count)}</dd>"
         f"<dt>registered cases</dt><dd>{html.escape(registered_case_count)}</dd>"
         f"<dt>fallback cases</dt><dd>{html.escape(fallback_case_count)}</dd>"
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
@@ -2269,6 +2287,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{fallback_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'
         f"<ul>{rejected_items}</ul></div>"
+        '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
+        f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'
         f"<ul>{marker_items}</ul></div>"
         "</div>"
@@ -3043,6 +3063,7 @@ def render_page(
     }}
     .certified-fragment-rules,
     .certified-fragment-coverage,
+    .certified-fragment-snapshots,
     .certified-fragment-markers {{
       border-top: 1px solid var(--line);
       padding-top: 10px;
@@ -3054,6 +3075,7 @@ def render_page(
     }}
     .certified-fragment-rules strong,
     .certified-fragment-coverage strong,
+    .certified-fragment-snapshots strong,
     .certified-fragment-markers strong {{
       display: block;
       margin-bottom: 8px;
@@ -3069,6 +3091,7 @@ def render_page(
     }}
     .certified-fragment-rules ul,
     .certified-fragment-coverage ul,
+    .certified-fragment-snapshots ul,
     .certified-fragment-markers ul {{
       display: flex;
       flex-wrap: wrap;
@@ -3086,6 +3109,7 @@ def render_page(
     }}
     .certified-fragment-rules li,
     .certified-fragment-coverage li,
+    .certified-fragment-snapshots li,
     .certified-fragment-markers li {{
       border: 1px solid var(--line);
       border-radius: 6px;
