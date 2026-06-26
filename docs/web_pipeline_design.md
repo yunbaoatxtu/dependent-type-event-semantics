@@ -389,6 +389,10 @@ Coq/Rocq validation runs. The shared constructor should give ordinary
 single-reading outputs a `none` attachment summary and a conservative
 interpretation sentence, so specialized attachment explanations extend a stable
 schema instead of patching one in later.
+Successful ordinary fallback analyses should enter the same interface as
+`fallback_single_reading`, sourced from `fallback_event_semantics`, linked to
+`example_1`, and rendered in the Semantic Readings Check panel with a `none`
+attachment summary rather than bypassing the semantic-reading audit.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

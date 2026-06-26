@@ -74,6 +74,11 @@ wrong point: `a black cat sits on a mat` becomes
 surface lexicon also normalizes common past-tense forms before translation, so
 examples such as `a dog chased a cat` export `chase` rather than a truncated
 predicate name.
+Successful fallback analyses also expose the normalized semantic-reading
+contract used by registered constructions: a single `fallback_single_reading`
+entry sourced as `fallback_event_semantics`, linked to exported Coq/Rocq
+definition `example_1`, carrying a `none` attachment summary, and checked by a
+passing `semantic_readings_check`.
 
 The same entry point now has a certified-fragment safety guard around
 registered construction rules and fallback sentence analysis. A small

@@ -10746,6 +10746,38 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
         event_semantics = sentence_to_event_semantics(sentence)
         translation = translate(event_semantics)
         coq_code = export_module([translation], "coq")
+        result = {
+            "input_sentence": sentence,
+            "event_semantics": event_semantics,
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "coq_code": coq_code,
+        }
+        if translation["type_check"]["ok"]:
+            result = attach_single_semantic_reading(
+                result,
+                name="fallback_single_reading",
+                coq_definition="example_1",
+                source="fallback_event_semantics",
+                scope="fallback_single_reading",
+            )
+            semantic_readings_check = result.get("semantic_readings_check")
+            if (
+                isinstance(semantic_readings_check, dict)
+                and semantic_readings_check.get("ok") is False
+            ):
+                return {
+                    **result,
+                    "ok": False,
+                    "coq_check": {
+                        "ok": None,
+                        "status": "skipped",
+                        "message": "Skipped Coq/Rocq validation because semantic_readings_check failed.",
+                    },
+                    "conclusion": "Translation failed semantic_readings_check before Coq/Rocq validation.",
+                }
         coq_check = verify_coq_code(coq_code, require_coq=require_coq)
         success = translation["type_check"]["ok"] and coq_check["ok"] is not False
         conclusion = (
@@ -10754,14 +10786,8 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
             else "Translation failed; inspect type_check and coq_check."
         )
         return {
+            **result,
             "ok": success,
-            "input_sentence": sentence,
-            "event_semantics": event_semantics,
-            "dependent_type_translation": translation["translation"],
-            "result_state_lexicon": translation["result_state_lexicon"],
-            "ast": translation["ast"],
-            "type_check": translation["type_check"],
-            "coq_code": coq_code,
             "coq_check": coq_check,
             "conclusion": conclusion,
         }

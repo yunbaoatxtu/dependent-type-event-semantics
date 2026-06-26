@@ -1277,6 +1277,27 @@ class TranslatorTests(unittest.TestCase):
             result["dependent_type_translation"],
             "admire(0)(mary, painting)",
         )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
+        self.assertEqual(
+            result["semantic_readings"][0]["name"],
+            "fallback_single_reading",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["source"],
+            "fallback_event_semantics",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["coq_definition"],
+            "example_1",
+        )
+        self.assertFalse(
+            SEMANTIC_READING_CONTRACT_FIELDS - set(result["semantic_readings"][0])
+        )
+        self.assertEqual(
+            result["event_semantics"]["semantic_readings_check"],
+            result["semantic_readings_check"],
+        )
 
     def test_natural_language_pipeline_handles_cat_on_mat(self) -> None:
         result = run_pipeline("a cat sits on a mat", require_coq=True)
@@ -1290,6 +1311,24 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "Parameter sit : forall n : nat, ModifierSeq n -> Entity -> PropT.",
             result["coq_code"],
+        )
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
+        self.assertEqual(
+            result["semantic_readings"][0]["scope"],
+            "fallback_single_reading",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["dependent_type_translation"],
+            "sit(1)(on(mat), cat)",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["attachment_summary"]["kind"],
+            "none",
+        )
+        self.assertIn(
+            "normalized fallback_event_semantics proposition",
+            result["semantic_readings"][0]["reading_explanation"],
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
@@ -10140,6 +10179,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Translation succeeded.", page)
         self.assertIn("Semantic Warnings", page)
         self.assertIn("No semantic warnings.", page)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn('data-reading-name="fallback_single_reading"', page)
+        self.assertIn("<dt>source</dt><dd>fallback_event_semantics</dd>", page)
+        self.assertIn("<dt>attachment</dt><dd>none</dd>", page)
+        self.assertIn("No semantic reading failure kinds.", page)
         self.assertIn("Lexicon Patch Drafts", page)
         self.assertIn("No lexicon patch drafts.", page)
         self.assertIn("Next Steps", page)
@@ -11705,6 +11749,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The core `check_semantic_readings` boundary", readme)
         self.assertIn("missing `scope`, `source`,", readme)
         self.assertIn("`none` attachment summary", readme)
+        self.assertIn("`fallback_single_reading`", readme)
+        self.assertIn("`fallback_event_semantics`", readme)
+        self.assertIn("definition `example_1`", readme)
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
         self.assertIn("stale selector\nlinks", readme)
@@ -12014,6 +12061,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Inspection Run JSON` preview", web_design)
         self.assertIn("API-shaped diagnostic run", web_design)
         self.assertIn("repair-plan drift", web_design)
+        self.assertIn("`fallback_single_reading`", web_design)
+        self.assertIn("`fallback_event_semantics`", web_design)
+        self.assertIn("Semantic Readings Check panel", web_design)
         self.assertIn(
             "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -12032,6 +12082,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("The core check_semantic_readings boundary", manuscript)
         self.assertIn("classified as malformed_readings", manuscript)
         self.assertIn("none attachment summary", manuscript)
+        self.assertIn("fallback_single_reading", manuscript)
+        self.assertIn("fallback_event_semantics", manuscript)
+        self.assertIn("example_1 Coq/Rocq definition", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
