@@ -1583,6 +1583,50 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(transitive_mixed["coq_check"]["status"], "passed")
 
+        timed_intransitive_mixed = run_pipeline(
+            "if John left quickly yesterday, Mary left today",
+            require_coq=True,
+        )
+        self.assertTrue(timed_intransitive_mixed["ok"])
+        self.assertEqual(
+            timed_intransitive_mixed["dependent_type_translation"],
+            "at_T(yesterday, leave(1)(quickly, john)) -> at_T(today, leave(0)(mary))",
+        )
+        self.assertEqual(
+            timed_intransitive_mixed["ast"]["antecedent"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            timed_intransitive_mixed["ast"]["consequent"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> PropT",
+        )
+        self.assertIn(
+            "at_T yesterday (leave 1 (mods_cons 0 quickly mods_nil) john) -> "
+            "at_T today (leave 0 mods_nil mary)",
+            timed_intransitive_mixed["coq_code"],
+        )
+        self.assertEqual(timed_intransitive_mixed["coq_check"]["status"], "passed")
+
+        timed_transitive_mixed = run_pipeline(
+            "if John ate bread quickly yesterday, Mary ate bread today",
+            require_coq=True,
+        )
+        self.assertTrue(timed_transitive_mixed["ok"])
+        self.assertEqual(
+            timed_transitive_mixed["dependent_type_translation"],
+            "at_T(yesterday, eat(1)(quickly, john, bread)) -> at_T(today, eat(0)(mary, bread))",
+        )
+        self.assertEqual(
+            timed_transitive_mixed["ast"]["consequent"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> Food -> PropT",
+        )
+        self.assertIn(
+            "at_T yesterday (eat 1 (mods_cons 0 quickly mods_nil) john bread) -> "
+            "at_T today (eat 0 mods_nil mary bread)",
+            timed_transitive_mixed["coq_code"],
+        )
+        self.assertEqual(timed_transitive_mixed["coq_check"]["status"], "passed")
+
         coordinated_mixed = run_pipeline(
             "if John and Mary left quickly, Sue left",
             require_coq=True,
@@ -10503,6 +10547,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("leave(1)(quickly, john) -> leave(0)(mary)", manuscript)
         self.assertIn("forall n : nat, ModifierSeq n -> Entity -> PropT", manuscript)
         self.assertIn("if John ate bread quickly, Mary ate bread", manuscript)
+        self.assertIn("if John left quickly yesterday, Mary left today", readme)
+        self.assertIn("at_T(yesterday, leave(1)(quickly, john)) -> at_T(today, leave(0)(mary))", readme)
+        self.assertIn("if John ate bread quickly yesterday, Mary ate bread today", ast_docs)
+        self.assertIn(
+            "at_T(yesterday, eat(1)(quickly, john, bread)) -> at_T(today, eat(0)(mary, bread))",
+            ast_docs,
+        )
+        self.assertIn("if John left quickly yesterday, Mary left today", web_design)
+        self.assertIn("If John left quickly yesterday, Mary left today", manuscript)
         self.assertIn("`construction_summary`", readme)
         self.assertIn("Same subject john coordinates eat(bread : Food)", readme)
         self.assertIn("In the park John walked and talked", readme)

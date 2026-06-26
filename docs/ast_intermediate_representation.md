@@ -1396,7 +1396,11 @@ renders the unmodified branch with the zero-length modifier vector. For
 example, `if John left quickly, Mary left` becomes
 `leave(1)(quickly, john) -> leave(0)(mary)`, and the Coq/Rocq term supplies
 `mods_nil` to the second `leave` call instead of declaring a second
-`Entity -> Prop` constant. Clause-local time modifiers remain separate in each
+`Entity -> Prop` constant. This normalization is independent of temporal
+wrapping: `if John ate bread quickly yesterday, Mary ate bread today` becomes
+`at_T(yesterday, eat(1)(quickly, john, bread)) -> at_T(today, eat(0)(mary, bread))`,
+where the `eat` family keeps the object type `Food` on both branches and the
+second branch still receives `mods_nil`. Clause-local time modifiers remain separate in each
 clause's `time_modifiers` list and render around that clause's proposition, so
 `if John left in the park yesterday, Mary cried today` becomes
 `at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`.

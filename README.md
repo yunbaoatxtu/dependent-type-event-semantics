@@ -88,7 +88,10 @@ conditional predicate appears once with Adv modifiers and once without them,
 the unmodified clause is lifted to the same dependent signature and receives
 the zero-length modifier vector: `if John left quickly, Mary left` becomes
 `leave(1)(quickly, john) -> leave(0)(mary)`, with `mods_nil` in the generated
-Coq/Rocq term. Clause-level time
+Coq/Rocq term. The same normalization composes with clause-local time:
+`if John left quickly yesterday, Mary left today` becomes
+`at_T(yesterday, leave(1)(quickly, john)) -> at_T(today, leave(0)(mary))`.
+Clause-level time
 modifiers scope over their own proposition, so
 `if John left in the park yesterday, Mary cried today` becomes
 `at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`. The same certified
