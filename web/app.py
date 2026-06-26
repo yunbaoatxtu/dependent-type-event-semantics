@@ -350,6 +350,44 @@ def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> di
     return add_diagnostics(result)
 
 
+def recovery_action_artifact_filename(case: str, action_index: int) -> str:
+    return f"diagnostic_recovery_action__{stable_token(case)}__{action_index}.json"
+
+
+def recovery_action_run_artifact_filename(case: str, action_index: int) -> str:
+    return f"diagnostic_inspection_run__{stable_token(case)}__{action_index}.json"
+
+
+def recovery_action_api_path(
+    case: str,
+    action_index: int,
+    *,
+    download: bool = False,
+) -> str:
+    params = {"case": case, "index": str(action_index)}
+    if download:
+        params["download"] = "1"
+    return f"/api/recovery-action?{urlencode(params)}"
+
+
+def recovery_action_run_api_path(
+    case: str,
+    action_index: int,
+    *,
+    download: bool = False,
+) -> str:
+    params = {"case": case, "index": str(action_index)}
+    if download:
+        params["download"] = "1"
+    return f"/api/recovery-action-run?{urlencode(params)}"
+
+
+def request_wants_download(query: str) -> bool:
+    params = parse_qs(query)
+    value = params.get("download", ["0"])[0].strip().lower()
+    return value in {"1", "true", "yes"}
+
+
 def diagnostic_fixture_manifest() -> dict[str, Any]:
     cases = []
     for spec in sorted(DIAGNOSTIC_FIXTURE_SPECS, key=lambda item: item.case):
@@ -393,7 +431,9 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
                     "action_index": index,
                     "kind": kind,
                     "failure_stage": expected_stage,
-                    "api_path": f"/api/recovery-action?{urlencode({'case': case, 'index': str(index)})}",
+                    "api_path": recovery_action_api_path(case, index),
+                    "download_api_path": recovery_action_api_path(case, index, download=True),
+                    "download_filename": recovery_action_artifact_filename(case, index),
                     "automation_mode": repair_plan.get("automation_mode"),
                     "can_auto_run": can_auto_run,
                     "can_auto_apply": bool(repair_plan.get("can_auto_apply")),
@@ -403,7 +443,17 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
                         if isinstance(field, str)
                     ],
                     "inspection_run_api_path": (
-                        f"/api/recovery-action-run?{urlencode({'case': case, 'index': str(index)})}"
+                        recovery_action_run_api_path(case, index)
+                        if can_auto_run
+                        else None
+                    ),
+                    "inspection_run_download_api_path": (
+                        recovery_action_run_api_path(case, index, download=True)
+                        if can_auto_run
+                        else None
+                    ),
+                    "inspection_run_download_filename": (
+                        recovery_action_run_artifact_filename(case, index)
                         if can_auto_run
                         else None
                     ),
@@ -1330,9 +1380,13 @@ def next_steps_panel(result: dict[str, Any]) -> str:
             automation_mode = ""
             can_auto_run = False
             if fixture_case:
-                href = "/api/recovery-action?" + urlencode(
-                    {"case": fixture_case, "index": str(index)}
+                href = recovery_action_api_path(fixture_case, index)
+                download_href = recovery_action_api_path(
+                    fixture_case,
+                    index,
+                    download=True,
                 )
+                download_filename = recovery_action_artifact_filename(fixture_case, index)
                 export_bundle = recovery_action_export_bundle(fixture_case, index)
                 repair_plan = export_bundle.get("repair_plan", {})
                 if isinstance(repair_plan, dict):
@@ -1343,9 +1397,22 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                     f'href="{html.escape(href, quote=True)}" '
                     'data-action-export="json">Open action JSON</a>'
                 )
+                action_link += (
+                    '<a class="next-step-action-download-link" '
+                    f'href="{html.escape(download_href, quote=True)}" '
+                    f'download="{html.escape(download_filename, quote=True)}" '
+                    'data-action-download="json">Download action JSON</a>'
+                )
                 if can_auto_run:
-                    run_href = "/api/recovery-action-run?" + urlencode(
-                        {"case": fixture_case, "index": str(index)}
+                    run_href = recovery_action_run_api_path(fixture_case, index)
+                    run_download_href = recovery_action_run_api_path(
+                        fixture_case,
+                        index,
+                        download=True,
+                    )
+                    run_download_filename = recovery_action_run_artifact_filename(
+                        fixture_case,
+                        index,
                     )
                     run_json = html.escape(
                         compact_json(
@@ -1356,6 +1423,12 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                         '<a class="next-step-action-run-link" '
                         f'href="{html.escape(run_href, quote=True)}" '
                         'data-action-run="inspection">Run inspection</a>'
+                    )
+                    run_link += (
+                        '<a class="next-step-inspection-download-link" '
+                        f'href="{html.escape(run_download_href, quote=True)}" '
+                        f'download="{html.escape(run_download_filename, quote=True)}" '
+                        'data-inspection-download="json">Download inspection JSON</a>'
                     )
                     inspection_preview = (
                         '<details class="next-step-inspection-run-json" '
@@ -1406,12 +1479,10 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
         if not isinstance(action, dict):
             continue
         kind = str(action.get("kind", ""))
-        href = "/api/recovery-action?" + urlencode(
-            {"case": fixture_case, "index": str(index)}
-        )
-        run_href = "/api/recovery-action-run?" + urlencode(
-            {"case": fixture_case, "index": str(index)}
-        )
+        href = recovery_action_api_path(fixture_case, index)
+        download_href = recovery_action_api_path(fixture_case, index, download=True)
+        download_filename = recovery_action_artifact_filename(fixture_case, index)
+        run_href = recovery_action_run_api_path(fixture_case, index)
         export_bundle = recovery_action_export_bundle(fixture_case, index)
         export_json = html.escape(compact_json(export_bundle))
         repair_plan = export_bundle.get("repair_plan", {})
@@ -1428,6 +1499,15 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
         run_link = ""
         inspection_preview = ""
         if can_auto_run:
+            run_download_href = recovery_action_run_api_path(
+                fixture_case,
+                index,
+                download=True,
+            )
+            run_download_filename = recovery_action_run_artifact_filename(
+                fixture_case,
+                index,
+            )
             run_json = html.escape(
                 compact_json(
                     recovery_action_inspection_run_bundle(fixture_case, index)
@@ -1437,6 +1517,12 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
                 '<a class="recovery-action-run-link" '
                 f'href="{html.escape(run_href, quote=True)}" '
                 'data-action-run="inspection">Run inspection</a>'
+            )
+            run_link += (
+                '<a class="recovery-action-inspection-download-link" '
+                f'href="{html.escape(run_download_href, quote=True)}" '
+                f'download="{html.escape(run_download_filename, quote=True)}" '
+                'data-inspection-download="json">Download inspection JSON</a>'
             )
             inspection_preview = (
                 '<details class="recovery-action-inspection-run-json" '
@@ -1455,6 +1541,10 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
             f'data-export-can-auto-run="{str(can_auto_run).lower()}" '
             f'data-export-failure-stage="{html.escape(failure_stage, quote=True)}">'
             f'<a href="{html.escape(href, quote=True)}">{html.escape(href)}</a>'
+            '<a class="recovery-action-download-link" '
+            f'href="{html.escape(download_href, quote=True)}" '
+            f'download="{html.escape(download_filename, quote=True)}" '
+            'data-action-download="json">Download action JSON</a>'
             f"{run_link}"
             "<dl>"
             f"<dt>schema</dt><dd><code>{RECOVERY_ACTION_SCHEMA}</code></dd>"
@@ -2698,11 +2788,31 @@ class PipelineHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/recovery-action":
             payload, status = self.handle_recovery_action_api(parsed.query)
-            self.write_json_response(payload, status=status)
+            download_filename = None
+            if status == HTTPStatus.OK and request_wants_download(parsed.query):
+                download_filename = recovery_action_artifact_filename(
+                    str(payload.get("case", "")),
+                    int(payload.get("action_index", 0)),
+                )
+            self.write_json_response(
+                payload,
+                status=status,
+                download_filename=download_filename,
+            )
             return
         if parsed.path == "/api/recovery-action-run":
             payload, status = self.handle_recovery_action_run_api(parsed.query)
-            self.write_json_response(payload, status=status)
+            download_filename = None
+            if status == HTTPStatus.OK and request_wants_download(parsed.query):
+                download_filename = recovery_action_run_artifact_filename(
+                    str(payload.get("case", "")),
+                    int(payload.get("action_index", 0)),
+                )
+            self.write_json_response(
+                payload,
+                status=status,
+                download_filename=download_filename,
+            )
             return
         if parsed.path == "/api/lexicon-patch-drafts":
             response_format = self.patch_response_format(parsed.query)
@@ -2876,10 +2986,16 @@ class PipelineHandler(BaseHTTPRequestHandler):
         self,
         content: dict[str, Any],
         status: HTTPStatus = HTTPStatus.OK,
+        download_filename: str | None = None,
     ) -> None:
         encoded = compact_json(content).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        if download_filename:
+            self.send_header(
+                "Content-Disposition",
+                f'attachment; filename="{download_filename}"',
+            )
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
         self.wfile.write(encoded)

@@ -676,7 +676,11 @@ those action JSON routes with their schema, case, index, action kind, and
 failure stage, so browser checks can verify the export contract without opening
 each link manually. Each export row also includes an expandable `Action JSON`
 preview whose content must match the corresponding
-`diagnostic_recovery_action.v1` API bundle exactly.
+`diagnostic_recovery_action.v1` API bundle exactly. The ordinary API path stays
+separate from a `download=1` path with a stable `.json` filename, and the same
+split is exposed for inspection-run JSON, so browser downloads, archived
+artifacts, and API clients can share the same payload without guessing a file
+name from visible prose.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or
@@ -695,13 +699,15 @@ The companion `/api/diagnostic-fixtures` endpoint returns a
 `diagnostic_fixtures.v1` manifest with each case label, JSON path, HTML path,
 failure stage, recovery action kinds, and a `recovery_action_exports` inventory
 containing per-action JSON export paths for frontends and regression tools.
-Each inventory entry also records the action's `automation_mode`,
-`can_auto_run`, `can_auto_apply`, `target_fields`, and, when the action is a
-read-only inspection, an `inspection_run_api_path` pointing directly to the
-`diagnostic_inspection_run.v1` endpoint. The selector mirrors this distinction
-with a `data-inspection-run-count` hook for each fixture option, so browser
-automation can discover executable diagnostic inspections from the manifest and
-HTML without reconstructing URLs.
+Each inventory entry also records `download_api_path`, `download_filename`, the
+action's `automation_mode`, `can_auto_run`, `can_auto_apply`, `target_fields`,
+and, when the action is a read-only inspection, `inspection_run_api_path`,
+`inspection_run_download_api_path`, and `inspection_run_download_filename`
+pointing directly to the `diagnostic_inspection_run.v1` endpoint and its
+download artifact. The selector mirrors this distinction with a
+`data-inspection-run-count` hook for each fixture option, so browser automation
+can discover executable diagnostic inspections from the manifest and HTML
+without reconstructing URLs.
 The case inventory, display labels, expected failure stages, and expected
 recovery-action kinds are now derived from one `DIAGNOSTIC_FIXTURE_SPECS`
 table of validated `DiagnosticFixtureSpec` entries, so adding a fixture no

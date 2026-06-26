@@ -120,9 +120,13 @@ from web.app import (
     modifier_role_audit,
     next_steps_panel,
     parse_patch_resolution_params,
+    recovery_action_api_path,
+    recovery_action_artifact_filename,
     recovery_action_export_bundle,
     recovery_action_exports_panel,
     recovery_action_inspection_run_bundle,
+    recovery_action_run_api_path,
+    recovery_action_run_artifact_filename,
     recovery_action_repair_plan,
     render_page,
     render_lexicon_patch_text,
@@ -7939,15 +7943,32 @@ class TranslatorTests(unittest.TestCase):
                         "action_index": index,
                         "kind": action_kind,
                         "failure_stage": spec_stages[case],
-                        "api_path": (
-                            f"/api/recovery-action?case={case}&index={index}"
+                        "api_path": recovery_action_api_path(case, index),
+                        "download_api_path": recovery_action_api_path(
+                            case,
+                            index,
+                            download=True,
+                        ),
+                        "download_filename": recovery_action_artifact_filename(
+                            case,
+                            index,
                         ),
                         "automation_mode": repair_plan["automation_mode"],
                         "can_auto_run": can_auto_run,
                         "can_auto_apply": repair_plan["can_auto_apply"],
                         "target_fields": repair_plan["target_fields"],
                         "inspection_run_api_path": (
-                            f"/api/recovery-action-run?case={case}&index={index}"
+                            recovery_action_run_api_path(case, index)
+                            if can_auto_run
+                            else None
+                        ),
+                        "inspection_run_download_api_path": (
+                            recovery_action_run_api_path(case, index, download=True)
+                            if can_auto_run
+                            else None
+                        ),
+                        "inspection_run_download_filename": (
+                            recovery_action_run_artifact_filename(case, index)
                             if can_auto_run
                             else None
                         ),
@@ -8179,6 +8200,17 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn('data-action-export="json"', page)
+        self.assertIn('class="next-step-action-download-link"', page)
+        self.assertIn(
+            'href="/api/recovery-action?case=semantic_readings_export_count_mismatch'
+            '&amp;index=0&amp;download=1"',
+            page,
+        )
+        self.assertIn(
+            'download="diagnostic_recovery_action__semantic_readings_export_count_mismatch__0.json"',
+            page,
+        )
+        self.assertIn('data-action-download="json"', page)
         self.assertNotIn(
             'href="/api/recovery-action-run?case=semantic_readings_export_count_mismatch'
             '&amp;index=0"',
@@ -8200,6 +8232,17 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('class="next-step-action-run-link"', type_page)
         self.assertIn('data-action-run="inspection"', type_page)
+        self.assertIn('class="next-step-inspection-download-link"', type_page)
+        self.assertIn(
+            'href="/api/recovery-action-run?case=type_check_failure'
+            '&amp;index=0&amp;download=1"',
+            type_page,
+        )
+        self.assertIn(
+            'download="diagnostic_inspection_run__type_check_failure__0.json"',
+            type_page,
+        )
+        self.assertIn('data-inspection-download="json"', type_page)
         self.assertIn('class="next-step-inspection-run-json"', type_page)
         self.assertIn(
             'data-inspection-json-schema="diagnostic_inspection_run.v1"',
@@ -8234,6 +8277,17 @@ class TranslatorTests(unittest.TestCase):
             '&amp;index=0"',
             page,
         )
+        self.assertIn('class="recovery-action-download-link"', page)
+        self.assertIn(
+            'href="/api/recovery-action?case=semantic_readings_export_count_mismatch'
+            '&amp;index=0&amp;download=1"',
+            page,
+        )
+        self.assertIn(
+            'download="diagnostic_recovery_action__semantic_readings_export_count_mismatch__0.json"',
+            page,
+        )
+        self.assertIn('data-action-download="json"', page)
         self.assertIn("<dt>schema</dt><dd><code>diagnostic_recovery_action.v1</code></dd>", page)
         self.assertIn("<dt>automation</dt><dd><code>inspection_only</code></dd>", page)
         self.assertIn("<dt>can auto-run</dt><dd><code>true</code></dd>", page)
@@ -8245,6 +8299,17 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('class="recovery-action-run-link"', page)
         self.assertIn('data-action-run="inspection"', page)
+        self.assertIn('class="recovery-action-inspection-download-link"', page)
+        self.assertIn(
+            'href="/api/recovery-action-run?case=semantic_readings_export_count_mismatch'
+            '&amp;index=1&amp;download=1"',
+            page,
+        )
+        self.assertIn(
+            'download="diagnostic_inspection_run__semantic_readings_export_count_mismatch__1.json"',
+            page,
+        )
+        self.assertIn('data-inspection-download="json"', page)
         self.assertIn('class="recovery-action-inspection-run-json"', page)
         self.assertIn(
             'data-inspection-json-schema="diagnostic_inspection_run.v1"',
@@ -8287,7 +8352,19 @@ class TranslatorTests(unittest.TestCase):
                 timeout=5,
             ) as response:
                 payload = json.loads(response.read().decode("utf-8"))
+            with opener.open(
+                f"{base_url}/api/recovery-action?"
+                "case=semantic_readings_missing_export&index=0&download=1",
+                timeout=5,
+            ) as response:
+                download_payload = json.loads(response.read().decode("utf-8"))
+                action_disposition = response.headers.get("Content-Disposition")
         self.assertEqual(payload["schema_version"], "diagnostic_recovery_action.v1")
+        self.assertEqual(download_payload, payload)
+        self.assertEqual(
+            action_disposition,
+            'attachment; filename="diagnostic_recovery_action__semantic_readings_missing_export__0.json"',
+        )
         self.assertEqual(payload["case"], "semantic_readings_missing_export")
         self.assertEqual(payload["action_index"], 0)
         self.assertEqual(payload["failure_stage"], "semantic_readings_check")
@@ -8350,6 +8427,13 @@ class TranslatorTests(unittest.TestCase):
                 timeout=5,
             ) as response:
                 run_payload = json.loads(response.read().decode("utf-8"))
+            with opener.open(
+                f"{base_url}/api/recovery-action-run?"
+                "case=type_check_failure&index=0&download=1",
+                timeout=5,
+            ) as response:
+                run_download_payload = json.loads(response.read().decode("utf-8"))
+                run_disposition = response.headers.get("Content-Disposition")
             with self.assertRaises(HTTPError) as human_review_action:
                 opener.open(
                     f"{base_url}/api/recovery-action-run?"
@@ -8357,6 +8441,11 @@ class TranslatorTests(unittest.TestCase):
                     timeout=5,
                 )
         self.assertEqual(run_payload["schema_version"], RECOVERY_INSPECTION_RUN_SCHEMA)
+        self.assertEqual(run_download_payload, run_payload)
+        self.assertEqual(
+            run_disposition,
+            'attachment; filename="diagnostic_inspection_run__type_check_failure__0.json"',
+        )
         self.assertTrue(run_payload["ok"])
         self.assertEqual(run_payload["action_kind"], "inspect_ast")
         self.assertEqual(run_payload["inspection_results"]["type_check"]["ok"], False)
@@ -8825,6 +8914,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-action-index`", readme)
         self.assertIn("`data-action-contract-kind`", readme)
         self.assertIn("/api/recovery-action?case=semantic_readings_missing_export&index=0", readme)
+        self.assertIn("`download_api_path`", readme)
+        self.assertIn("`download_filename`", readme)
+        self.assertIn("`inspection_run_download_api_path`", readme)
+        self.assertIn("`inspection_run_download_filename`", readme)
+        self.assertIn("`download=1` path", readme)
         self.assertIn("`diagnostic_recovery_action.v1`", readme)
         self.assertIn("`Recovery Action Exports` panel", readme)
         self.assertIn("schema, case, index, action kind, and", readme)
@@ -8904,6 +8998,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Change(Transition(john, life_scale, alive, dead))", readme)
         self.assertIn("Cause(mary, Transition(room, cleanliness_scale, dirty, clean))", readme)
         self.assertIn("CauseWithInstrument(mary, poison, Transition", readme)
+        self.assertIn("separate `download=1` URL", web_design)
+        self.assertIn("stable `.json`", web_design)
+        self.assertIn("`Content-Disposition` attachment header", web_design)
+        self.assertIn("stable JSON filenames", manuscript)
+        self.assertIn("Content-Disposition attachment header", manuscript)
+        self.assertIn("browser-download artifact", manuscript)
         self.assertIn("CauseWithInstrument(john, key, Transition", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
@@ -9518,6 +9618,34 @@ class TranslatorTests(unittest.TestCase):
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         manifest = deepcopy(manifest)
         for fixture in manifest["cases"]:
+            if fixture["case"] == "semantic_readings_missing_export":
+                fixture["recovery_action_exports"][0][
+                    "download_api_path"
+                ] = "/api/recovery-action?case=semantic_readings_missing_export&index=0"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export recovery action download case/index drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "semantic_readings_missing_export":
+                fixture["recovery_action_exports"][0][
+                    "download_filename"
+                ] = "stale-action.json"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_missing_export recovery action download filename drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
             if fixture["case"] == "type_check_failure":
                 fixture["recovery_action_exports"][0][
                     "inspection_run_api_path"
@@ -9526,6 +9654,34 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit,
             "type_check_failure recovery action run case/index drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "type_check_failure":
+                fixture["recovery_action_exports"][0][
+                    "inspection_run_download_api_path"
+                ] = "/api/recovery-action-run?case=type_check_failure&index=0"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure recovery action run download case/index drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "type_check_failure":
+                fixture["recovery_action_exports"][0][
+                    "inspection_run_download_filename"
+                ] = "stale-inspection.json"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure recovery action run download filename drift",
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
@@ -9950,9 +10106,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("diagnostic repair-plan automation drift", verifier)
         self.assertIn("diagnostic inspection-only action drift", verifier)
         self.assertIn("recovery action export manifest drift", verifier)
-        self.assertIn("recovery action export case/index drift", verifier)
+        self.assertIn("{label} case/index drift", verifier)
+        self.assertIn('"recovery action export"', verifier)
         self.assertIn("inspection_run_api_path", verifier)
-        self.assertIn("recovery action run case/index drift", verifier)
+        self.assertIn("download_api_path", verifier)
+        self.assertIn("download_filename", verifier)
+        self.assertIn("inspection_run_download_api_path", verifier)
+        self.assertIn("inspection_run_download_filename", verifier)
+        self.assertIn('"recovery action run"', verifier)
+        self.assertIn("recovery action download filename drift", verifier)
+        self.assertIn("recovery action run download filename drift", verifier)
         self.assertIn("recovery action export repair-plan drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
@@ -9965,6 +10128,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-action-index="{action_index}"', verifier)
         self.assertIn('data-action-contract-kind="{action_kind}"', verifier)
         self.assertIn('data-action-export="json"', verifier)
+        self.assertIn('data-action-download="json"', verifier)
+        self.assertIn('data-inspection-download="json"', verifier)
         self.assertIn('class="panel recovery-action-exports-panel"', verifier)
         self.assertIn('data-export-count="{len(expected_actions)}"', verifier)
         self.assertIn('data-export-action-kind="{html.escape(action_kind, quote=True)}"', verifier)

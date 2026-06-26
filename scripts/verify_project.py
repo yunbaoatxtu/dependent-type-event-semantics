@@ -224,6 +224,67 @@ def validate_fixture_path(case: str, path: str, route: str, label: str) -> None:
         raise SystemExit(f"web route smoke check failed: {case} {label} case drift")
 
 
+def artifact_token(value: str) -> str:
+    return "".join(
+        char if char.isalnum() or char in {"-", "_"} else "-" for char in value
+    )
+
+
+def recovery_action_artifact_filename(case: str, action_index: int) -> str:
+    return f"diagnostic_recovery_action__{artifact_token(case)}__{action_index}.json"
+
+
+def recovery_action_run_artifact_filename(case: str, action_index: int) -> str:
+    return f"diagnostic_inspection_run__{artifact_token(case)}__{action_index}.json"
+
+
+def recovery_action_api_path(
+    case: str,
+    action_index: int,
+    *,
+    download: bool = False,
+) -> str:
+    params = {"case": case, "index": str(action_index)}
+    if download:
+        params["download"] = "1"
+    return f"/api/recovery-action?{urlencode(params)}"
+
+
+def recovery_action_run_api_path(
+    case: str,
+    action_index: int,
+    *,
+    download: bool = False,
+) -> str:
+    params = {"case": case, "index": str(action_index)}
+    if download:
+        params["download"] = "1"
+    return f"/api/recovery-action-run?{urlencode(params)}"
+
+
+def validate_action_route_path(
+    case: str,
+    action_index: int,
+    path: object,
+    route: str,
+    label: str,
+    *,
+    download: bool = False,
+) -> None:
+    if not isinstance(path, str):
+        raise SystemExit(
+            f"web route smoke check failed: {case} incomplete recovery action export metadata"
+        )
+    parsed = urlparse(path)
+    if parsed.path != route:
+        raise SystemExit(f"web route smoke check failed: {case} {label} path drift")
+    expected_query = {"case": [case], "index": [str(action_index)]}
+    if download:
+        expected_query["download"] = ["1"]
+    if parse_qs(parsed.query, keep_blank_values=True) != expected_query:
+        raise SystemExit(f"web route smoke check failed: {case} {label} case/index drift")
+
+
 def validate_recovery_action_export_manifest_entry(
     case: str,
     action_index: int,
@@ -251,38 +312,53 @@ def validate_recovery_action_export_manifest_entry(
             )
     required_fields = [
         "api_path",
+        "download_api_path",
+        "download_filename",
         "automation_mode",
         "can_auto_run",
         "can_auto_apply",
         "target_fields",
         "inspection_run_api_path",
+        "inspection_run_download_api_path",
+        "inspection_run_download_filename",
     ]
     if any(field not in export_entry for field in required_fields):
         raise SystemExit(
             f"web route smoke check failed: {case} incomplete recovery action export metadata"
         )
     api_path = export_entry.get("api_path")
-    if not isinstance(api_path, str):
+    download_api_path = export_entry.get("download_api_path")
+    download_filename = export_entry.get("download_filename")
+    validate_action_route_path(
+        case,
+        action_index,
+        api_path,
+        "/api/recovery-action",
+        "recovery action export",
+    )
+    validate_action_route_path(
+        case,
+        action_index,
+        download_api_path,
+        "/api/recovery-action",
+        "recovery action download",
+        download=True,
+    )
+    if download_filename != recovery_action_artifact_filename(case, action_index):
         raise SystemExit(
-            f"web route smoke check failed: {case} incomplete recovery action export metadata"
-        )
-    parsed = urlparse(api_path)
-    if parsed.path != "/api/recovery-action":
-        raise SystemExit(
-            f"web route smoke check failed: {case} recovery action export path drift"
-        )
-    if parse_qs(parsed.query, keep_blank_values=True) != {
-        "case": [case],
-        "index": [str(action_index)],
-    }:
-        raise SystemExit(
-            f"web route smoke check failed: {case} recovery action export case/index drift"
+            f"web route smoke check failed: {case} recovery action download filename drift"
         )
     automation_mode = export_entry.get("automation_mode")
     can_auto_run = export_entry.get("can_auto_run")
     can_auto_apply = export_entry.get("can_auto_apply")
     target_fields = export_entry.get("target_fields")
     inspection_run_api_path = export_entry.get("inspection_run_api_path")
+    inspection_run_download_api_path = export_entry.get(
+        "inspection_run_download_api_path"
+    )
+    inspection_run_download_filename = export_entry.get(
+        "inspection_run_download_filename"
+    )
     if automation_mode not in VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES:
         raise SystemExit(
             f"web route smoke check failed: {case} recovery action export automation drift"
@@ -301,23 +377,36 @@ def validate_recovery_action_export_manifest_entry(
             f"web route smoke check failed: {case} recovery action export run drift"
         )
     if can_auto_run:
-        if not isinstance(inspection_run_api_path, str):
+        validate_action_route_path(
+            case,
+            action_index,
+            inspection_run_api_path,
+            "/api/recovery-action-run",
+            "recovery action run",
+        )
+        validate_action_route_path(
+            case,
+            action_index,
+            inspection_run_download_api_path,
+            "/api/recovery-action-run",
+            "recovery action run download",
+            download=True,
+        )
+        if inspection_run_download_filename != recovery_action_run_artifact_filename(
+            case,
+            action_index,
+        ):
             raise SystemExit(
-                f"web route smoke check failed: {case} missing recovery action run metadata"
-            )
-        parsed_run = urlparse(inspection_run_api_path)
-        if parsed_run.path != "/api/recovery-action-run":
-            raise SystemExit(
-                f"web route smoke check failed: {case} recovery action run path drift"
-            )
-        if parse_qs(parsed_run.query, keep_blank_values=True) != {
-            "case": [case],
-            "index": [str(action_index)],
-        }:
-            raise SystemExit(
-                f"web route smoke check failed: {case} recovery action run case/index drift"
+                f"web route smoke check failed: {case} recovery action run download filename drift"
             )
     elif inspection_run_api_path is not None:
+        raise SystemExit(
+            f"web route smoke check failed: {case} unsafe recovery action run metadata"
+        )
+    elif (
+        inspection_run_download_api_path is not None
+        or inspection_run_download_filename is not None
+    ):
         raise SystemExit(
             f"web route smoke check failed: {case} unsafe recovery action run metadata"
         )
@@ -1191,8 +1280,22 @@ def validate_diagnostic_fixture_routes(
             raise SystemExit(f"web route smoke check failed: {case} label drift")
         for action_index, action_kind in enumerate(expected_actions):
             export_path = expected_action_exports[action_index].get("api_path", "")
+            export_download_path = expected_action_exports[action_index].get(
+                "download_api_path",
+                "",
+            )
+            export_download_filename = expected_action_exports[action_index].get(
+                "download_filename",
+                "",
+            )
             inspection_run_path = expected_action_exports[action_index].get(
                 "inspection_run_api_path"
+            )
+            inspection_run_download_path = expected_action_exports[action_index].get(
+                "inspection_run_download_api_path"
+            )
+            inspection_run_download_filename = expected_action_exports[action_index].get(
+                "inspection_run_download_filename"
             )
             if action_index < len(payload_actions) and isinstance(
                 payload_actions[action_index], dict
@@ -1220,12 +1323,26 @@ def validate_diagnostic_fixture_routes(
                     'data-action-export="json"',
                 ]
             )
+            next_step_block = html_list_item_block(
+                fixture_page,
+                f'id="recovery-action-{action_index}"',
+                f"{case} next-step action {action_index}",
+            )
+            require_html_fragments(
+                next_step_block,
+                [
+                    'class="next-step-action-download-link"',
+                    'href="'
+                    + html.escape(str(export_download_path), quote=True)
+                    + '"',
+                    'download="'
+                    + html.escape(str(export_download_filename), quote=True)
+                    + '"',
+                    'data-action-download="json"',
+                ],
+                f"{case} next-step action download",
+            )
             if isinstance(inspection_run_path, str):
-                next_step_block = html_list_item_block(
-                    fixture_page,
-                    f'id="recovery-action-{action_index}"',
-                    f"{case} next-step action {action_index}",
-                )
                 expected_run_json = html.escape(
                     recovery_action_inspection_run_preview_json(
                         case,
@@ -1241,6 +1358,14 @@ def validate_diagnostic_fixture_routes(
                         'href="'
                         + html.escape(str(inspection_run_path), quote=True)
                         + '"',
+                        'class="next-step-inspection-download-link"',
+                        'href="'
+                        + html.escape(str(inspection_run_download_path), quote=True)
+                        + '"',
+                        'download="'
+                        + html.escape(str(inspection_run_download_filename), quote=True)
+                        + '"',
+                        'data-inspection-download="json"',
                         'class="next-step-inspection-run-json"',
                         'data-inspection-json-schema="diagnostic_inspection_run.v1"',
                         "<summary>Inspection Run JSON</summary>",
@@ -1379,6 +1504,14 @@ def validate_recovery_action_exports_html_panel(
         automation_mode = str(expected_plan.get("automation_mode", ""))
         can_auto_run = expected_plan.get("can_auto_run") is True
         export_path = expected_action_exports[action_index].get("api_path", "")
+        export_download_path = expected_action_exports[action_index].get(
+            "download_api_path",
+            "",
+        )
+        export_download_filename = expected_action_exports[action_index].get(
+            "download_filename",
+            "",
+        )
         run_path = "/api/recovery-action-run?" + urlencode(
             {"case": case, "index": str(action_index)}
         )
@@ -1401,8 +1534,24 @@ def validate_recovery_action_exports_html_panel(
                 + '"'
             ),
             expected_json,
+            'class="recovery-action-download-link"',
+            'href="'
+            + html.escape(str(export_download_path), quote=True)
+            + '"',
+            'download="'
+            + html.escape(str(export_download_filename), quote=True)
+            + '"',
+            'data-action-download="json"',
         ]
         if can_auto_run:
+            run_download_path = expected_action_exports[action_index].get(
+                "inspection_run_download_api_path",
+                "",
+            )
+            run_download_filename = expected_action_exports[action_index].get(
+                "inspection_run_download_filename",
+                "",
+            )
             expected_run_json = html.escape(
                 recovery_action_inspection_run_preview_json(
                     case,
@@ -1417,6 +1566,12 @@ def validate_recovery_action_exports_html_panel(
                     'class="recovery-action-run-link"',
                     'data-action-run="inspection"',
                     'href="' + html.escape(run_path, quote=True) + '"',
+                    'class="recovery-action-inspection-download-link"',
+                    'href="' + html.escape(str(run_download_path), quote=True) + '"',
+                    'download="'
+                    + html.escape(str(run_download_filename), quote=True)
+                    + '"',
+                    'data-inspection-download="json"',
                     'class="recovery-action-inspection-run-json"',
                     'data-inspection-json-schema="diagnostic_inspection_run.v1"',
                     "<summary>Inspection Run JSON</summary>",

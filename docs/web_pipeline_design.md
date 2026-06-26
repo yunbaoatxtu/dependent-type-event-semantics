@@ -302,6 +302,11 @@ preview with the API-shaped diagnostic run without issuing another request.
 The verifier should compare each preview inside its own action list item, not
 merely search the whole page, so duplicated or stale JSON in a neighboring panel
 cannot mask a bad row.
+The same row should expose a separate `download=1` URL and a stable `.json`
+filename for both the recovery-action bundle and, when available, the inspection
+run bundle. The server should return the same JSON payload with a
+`Content-Disposition` attachment header for those download URLs, while leaving
+the ordinary API path unchanged for clients that want to parse JSON directly.
 This gives browser tools an inspection/export path for one suggested repair
 without scraping the full analysis response. The fixture HTML should also render a
 `Recovery Action Exports` panel that summarizes every such route with
