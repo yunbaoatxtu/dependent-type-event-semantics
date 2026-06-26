@@ -60,12 +60,16 @@ python3 -m translator.natural_language_pipeline \
   "a cat sits on a mat"
 ```
 
-The pipeline includes a conservative fallback parser for simple English
-sentences. It emits four layers that can later be exposed in a web interface:
-the natural-language input, an event-semantics JSON formula, the dependent-type
-translation and AST, and generated Coq code with an optional Coq/Rocq boundary
-check. For unlisted sentences, the fallback analysis is intentionally shallow:
-it identifies a subject, predicate, possible object, common adverbs, count
+The pipeline includes registered construction rules plus a conservative
+fallback parser for residual simple English sentences. It emits four layers
+that can later be exposed in a web interface: the natural-language input, an
+event-semantics JSON formula, the dependent-type translation and AST, and
+generated Coq code with an optional Coq/Rocq boundary check. A registered
+locative-intransitive construction now covers `a cat sits on a mat` as
+`sit(1)(on(mat), cat)`, with `on(mat)` exported as an `Adv` value rather than an
+entity. For still-unregistered sentences, the fallback analysis is
+intentionally shallow: it identifies a subject, predicate, possible object,
+common adverbs, count
 words, simple word or digit `time(s)` count phrases, single-word and multi-word
 temporal expressions, and simple prepositional modifiers. It also uses a small
 shared verb-lemma table to avoid splitting simple adjective+noun subjects at the
@@ -1002,10 +1006,15 @@ the registered `event_counting` construction. It then requests the timed
 variant `/api/analyze?sentence=John+knocked+twice+yesterday&require_coq=1`,
 requiring the same construction to expose
 `at_T(yesterday, repeat(2, knock(0)(john)))` without a fallback draft. The
-ordinary fallback success contract is checked separately with
+same smoke check now also requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
-surfaces to expose the same `fallback_single_reading` row and construction-rule
-draft before the diagnostic fixture sweep begins.
+surfaces to expose `locative_intransitive_predication_single_reading`, the
+registered `locative_intransitive_predication` rule, and `Parameter on_mat :
+Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
+contract is checked separately with
+`/api/analyze?sentence=John+ate&require_coq=1`, requiring both surfaces to
+expose the same `fallback_single_reading` row and construction-rule draft before
+the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
 two quantifier-scope readings, `some_boy_wide_scope` and

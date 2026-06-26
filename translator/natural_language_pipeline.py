@@ -134,13 +134,14 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "transitive_subject_coordination": "John and Mary ate bread",
     "object_coordination": "Mary visited Paris and London",
     "transitive_predicate_coordination": "John ate bread and drank water",
+    "locative_intransitive_predication": "a cat sits on a mat",
     "event_counting": "John knocked twice",
 }
 
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "a cat sits on a mat",
+        "sentence": "John ate",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -433,6 +434,19 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_coq_definitions": ["example_1"],
         "expected_type_check_type": "t",
     },
+    {
+        "rule_id": "locative_intransitive_predication",
+        "sentence": "a cat sits on a mat",
+        "expected_event_analysis": "locative-intransitive-predication",
+        "expected_dependent_type_fragments": ["sit(1)(on(mat), cat)"],
+        "expected_reading_names": [
+            "locative_intransitive_predication_single_reading",
+        ],
+        "expected_reading_sources": ["locative_intransitive_predication"],
+        "expected_reading_scopes": ["registered_single_reading"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
 )
 
 
@@ -678,6 +692,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "binder_signatures": [],
         "quantifier_signatures": [],
         "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "locative_intransitive_predication": {
+        "kind": "application",
+        "predicate_symbols": ["sit"],
+        "predicate_types": [],
+        "entity_symbols": ["cat"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 1,
         "top_level_time_modifier_count": 0,
         "reading_count": 0,
         "clause_count": 0,
@@ -10977,6 +11006,74 @@ def event_counting_pipeline(sentence: str) -> dict[str, Any] | None:
     }
 
 
+def locative_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or ast.get("kind") != "application":
+        return None
+    modifiers = ast.get("modifiers")
+    arguments = ast.get("arguments")
+    modifier_roles = ast.get("modifier_roles", {}).get("roles")
+    role_frame = ast.get("role_frame", {}).get("roles")
+    if (
+        not isinstance(modifiers, list)
+        or not modifiers
+        or not isinstance(arguments, list)
+        or len(arguments) != 1
+        or not isinstance(modifier_roles, list)
+        or len(modifier_roles) != len(modifiers)
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 1
+    ):
+        return None
+    if any(
+        not isinstance(role, dict)
+        or role.get("type") != "Adv"
+        or role.get("semantic_role") != "Location"
+        for role in modifier_roles
+    ):
+        return None
+    subject_role = role_frame[0]
+    if (
+        not isinstance(subject_role, dict)
+        or subject_role.get("role") != "Agent"
+        or subject_role.get("type") != "Entity"
+    ):
+        return None
+    predicate = str(ast.get("function", "predicate"))
+    coq_code = export_module([translation], "coq")
+    return {
+        "kind": "locative_intransitive_predication",
+        "input_sentence": sentence,
+        "event_semantics": {
+            **event_semantics,
+            "analysis": "locative-intransitive-predication",
+            "locative_predication": {
+                "predicate": predicate,
+                "subject": arguments[0],
+                "modifier_count": len(modifiers),
+                "modifier_type": "Adv",
+                "modifier_semantic_role": "Location",
+                "representation": "ModifierSeq-indexed predicate over an Entity subject",
+            },
+        },
+        "dependent_type_translation": translation["translation"],
+        "result_state_lexicon": translation["result_state_lexicon"],
+        "ast": translation["ast"],
+        "type_check": translation["type_check"],
+        "construction_summary": (
+            f"Locative intransitive predication: {predicate} is applied to one "
+            "Entity subject and Location Adv modifier(s) through ModifierSeq, "
+            "without an Event argument or neo-Davidsonian Agent/Theme export."
+        ),
+        "coq_code": coq_code,
+    }
+
+
 def construction_rules() -> list[ConstructionRule]:
     return [
         ConstructionRule(
@@ -11151,6 +11248,19 @@ def construction_rules() -> list[ConstructionRule]:
             ),
         ),
         ConstructionRule(
+            rule_id="locative_intransitive_predication",
+            label="Locative intransitive predication",
+            phenomenon="Intransitive predicate with locative Adv modifier without event variables",
+            analyzer=locative_intransitive_predication_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+                "Parameter on_mat : Entity.",
+            ),
+        ),
+        ConstructionRule(
             rule_id="event_counting",
             label="Event counting",
             phenomenon="Counted predicate occurrences without universal event arguments",
@@ -11230,7 +11340,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
         "fallback": {
             "verification_scope_kind": "fallback_shallow",
             "certification_level": "shallow_scaffold",
-            "example": "John knocked twice",
+            "example": "John ate",
             "guarantees": [
                 "fallback AST/type_check and semantic_readings contract are checked",
                 "generated Coq/Rocq scaffold is checked when requested and available",
