@@ -1436,6 +1436,163 @@ def validate_analyze_perception_success(payload: dict, page: str, sentence: str)
         raise SystemExit("web route smoke check failed: perception page input drift")
 
 
+def validate_analyze_universal_timed_burning_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_universal_timed_burning_success"
+    expected_translation = (
+        "forall x : Entity. forall t : Time. burn(x, t) -> consume(oxygen, t)"
+    )
+    if payload.get("schema_version") != "analyze.v1":
+        raise SystemExit("web route smoke check failed: burning analyze schema drift")
+    if payload.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: burning analyze did not verify")
+    if payload.get("input_sentence") != sentence:
+        raise SystemExit("web route smoke check failed: burning analyze input drift")
+    if payload.get("kind") != "universal_timed_burning":
+        raise SystemExit("web route smoke check failed: burning kind drift")
+    construction_rule = payload.get("construction_rule")
+    if not isinstance(construction_rule, dict):
+        raise SystemExit("web route smoke check failed: burning construction rule missing")
+    if construction_rule.get("id") != "universal_timed_burning":
+        raise SystemExit("web route smoke check failed: burning construction rule drift")
+    forbidden = construction_rule.get("forbidden_coq_fragments")
+    if not isinstance(forbidden, list) or "Parameter Event : Type." not in forbidden or "IN" not in forbidden:
+        raise SystemExit("web route smoke check failed: burning hygiene policy drift")
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit("web route smoke check failed: burning diagnostics missing")
+    if diagnostics.get("summary") != "translation verified":
+        raise SystemExit("web route smoke check failed: burning diagnostics summary drift")
+    if diagnostics.get("failure_stage") is not None:
+        raise SystemExit("web route smoke check failed: burning diagnostics stage drift")
+    if diagnostics.get("recovery_actions") != []:
+        raise SystemExit("web route smoke check failed: burning recovery action drift")
+    stages = diagnostics.get("stages")
+    if not isinstance(stages, dict):
+        raise SystemExit("web route smoke check failed: burning stage map missing")
+    for stage in ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"]:
+        if stages.get(stage) != "passed":
+            raise SystemExit("web route smoke check failed: burning stage drift")
+    event_semantics = payload.get("event_semantics")
+    if not isinstance(event_semantics, dict):
+        raise SystemExit("web route smoke check failed: burning event semantics missing")
+    if event_semantics.get("analysis") != "parsons-event-inclusion":
+        raise SystemExit("web route smoke check failed: burning analysis drift")
+    if event_semantics.get("typed_replacement") != expected_translation:
+        raise SystemExit("web route smoke check failed: burning typed replacement drift")
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit("web route smoke check failed: burning translation drift")
+    ast = payload.get("ast")
+    if not isinstance(ast, dict) or ast.get("kind") != "forall_time":
+        raise SystemExit("web route smoke check failed: burning AST kind drift")
+    if ast.get("binders") != [
+        {"variable": "x", "type": "Entity"},
+        {"variable": "t", "type": "Time"},
+    ]:
+        raise SystemExit("web route smoke check failed: burning binder drift")
+    if ast.get("antecedent") != {
+        "predicate": "burn",
+        "predicate_type": "Entity -> Time -> Prop",
+        "arguments": ["x", "t"],
+    }:
+        raise SystemExit("web route smoke check failed: burning antecedent drift")
+    if ast.get("consequent") != {
+        "predicate": "consume",
+        "predicate_type": "Entity -> Time -> Prop",
+        "arguments": ["oxygen", "t"],
+        "theme": {"name": "oxygen", "type": "Entity"},
+    }:
+        raise SystemExit("web route smoke check failed: burning consequent drift")
+    type_check = payload.get("type_check")
+    if (
+        not isinstance(type_check, dict)
+        or type_check.get("ok") is not True
+        or type_check.get("type") != "Prop"
+    ):
+        raise SystemExit("web route smoke check failed: burning type-check drift")
+    check = payload.get("semantic_readings_check")
+    if (
+        not isinstance(check, dict)
+        or check.get("ok") is not True
+        or check.get("reading_count") != 1
+    ):
+        raise SystemExit("web route smoke check failed: burning reading-count drift")
+    repair = check.get("repair_details")
+    if (
+        not isinstance(repair, dict)
+        or repair.get("expected_coq_definitions") != ["every_burning_consumes_oxygen"]
+        or repair.get("exported_definitions") != ["every_burning_consumes_oxygen"]
+        or repair.get("observed_export_count") != 1
+    ):
+        raise SystemExit("web route smoke check failed: burning repair-detail drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: burning semantic reading drift")
+    reading = readings[0]
+    if not isinstance(reading, dict):
+        raise SystemExit("web route smoke check failed: burning semantic reading malformed")
+    expected_fields = {
+        "name": "universal_timed_burning",
+        "scope": "forall_entity_time",
+        "source": "universal_timed_burning",
+        "dependent_type_translation": expected_translation,
+        "coq_definition": "every_burning_consumes_oxygen",
+    }
+    for field, expected in expected_fields.items():
+        if reading.get(field) != expected:
+            raise SystemExit("web route smoke check failed: burning semantic reading drift")
+    attachment = reading.get("attachment_summary")
+    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
+        raise SystemExit("web route smoke check failed: burning attachment drift")
+    local_type = reading.get("type_check")
+    if (
+        not isinstance(local_type, dict)
+        or local_type.get("ok") is not True
+        or local_type.get("type") != "Prop"
+    ):
+        raise SystemExit("web route smoke check failed: burning reading type drift")
+    coq_code = payload.get("coq_code")
+    if not isinstance(coq_code, str):
+        raise SystemExit("web route smoke check failed: burning Coq export missing")
+    expected_coq_fragments = [
+        "Parameter Time : Type.",
+        "Parameter oxygen : Entity.",
+        "Parameter burn : Entity -> Time -> Prop.",
+        "Parameter consume : Entity -> Time -> Prop.",
+        "Definition every_burning_consumes_oxygen : Prop :=",
+        "forall x : Entity,",
+        "forall t : Time,",
+        "burn x t -> consume oxygen t.",
+        "Check every_burning_consumes_oxygen.",
+    ]
+    for fragment in expected_coq_fragments:
+        if fragment not in coq_code:
+            raise SystemExit("web route smoke check failed: burning Coq export drift")
+    for forbidden_fragment in ["Parameter Event : Type.", "IN", "Agent", "Theme"]:
+        if forbidden_fragment in coq_code:
+            raise SystemExit("web route smoke check failed: burning event export drift")
+    expected_page_fragments = [
+        "universal_timed_burning",
+        "parsons-event-inclusion",
+        html.escape(expected_translation, quote=True),
+        'data-reading-name="universal_timed_burning"',
+        'data-coq-definition="every_burning_consumes_oxygen"',
+        "<dt>scope</dt><dd>forall_entity_time</dd>",
+        "<dt>source</dt><dd>universal_timed_burning</dd>",
+        "<dt>attachment</dt><dd>none</dd>",
+        "<dt>coq</dt><dd>every_burning_consumes_oxygen</dd>",
+    ]
+    for fragment in expected_page_fragments:
+        if fragment not in page:
+            raise SystemExit("web route smoke check failed: burning HTML drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: burning page input drift")
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -2040,6 +2197,17 @@ def run_web_route_smoke_check() -> None:
             perception_payload,
             perception_page,
             perception_sentence,
+        )
+        burning_sentence = "In every burning, oxygen is consumed"
+        burning_query = urlencode({"sentence": burning_sentence, "require_coq": "1"})
+        with opener.open(f"{base_url}/api/analyze?{burning_query}", timeout=5) as response:
+            burning_payload = json.load(response)
+        with opener.open(f"{base_url}/?{burning_query}", timeout=5) as response:
+            burning_page = response.read().decode("utf-8")
+        validate_analyze_universal_timed_burning_success(
+            burning_payload,
+            burning_page,
+            burning_sentence,
         )
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))

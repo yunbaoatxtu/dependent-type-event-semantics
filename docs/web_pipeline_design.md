@@ -409,6 +409,12 @@ It should also exercise a registered perception-complement success path with
 `Mary saw John leave`, requiring `mary_saw_john_leave`,
 `perception_nominalization`, and the `E : Prop -> Entity` nominalizer scaffold
 to remain visible at the HTTP boundary.
+It should also exercise a registered universal timed burning success path with
+`In every burning, oxygen is consumed`, requiring
+`every_burning_consumes_oxygen`, `universal_timed_burning`, and the
+`Time`-indexed `burn : Entity -> Time -> Prop` / `consume : Entity -> Time -> Prop`
+scaffold to remain visible without `Event` or `IN` in the generated Coq/Rocq
+module.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture
