@@ -25,6 +25,7 @@ from scripts.verify_project import (
     validate_diagnostic_contract_html_panel,
     validate_diagnostic_contract_manifest,
     validate_diagnostic_fixture_routes,
+    validate_json_download_http_response,
     validate_recovery_action_export_bundle,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
@@ -8920,6 +8921,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`inspection_run_download_filename`", readme)
         self.assertIn("`download=1` path", readme)
         self.assertIn("live web smoke check now requests", readme)
+        self.assertIn("direct counterexample tests", readme)
         self.assertIn("`diagnostic_recovery_action.v1`", readme)
         self.assertIn("`Recovery Action Exports` panel", readme)
         self.assertIn("schema, case, index, action kind, and", readme)
@@ -9004,9 +9006,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Content-Disposition` attachment header", web_design)
         self.assertIn("content-type,", web_design)
         self.assertIn("content-length, filename, or payload drift", web_design)
+        self.assertIn("when the route smoke check is not", web_design)
         self.assertIn("stable JSON filenames", manuscript)
         self.assertIn("Content-Disposition attachment header", manuscript)
         self.assertIn("content-type, byte-length, filename, or payload drift", manuscript)
+        self.assertIn("without requiring a running server", manuscript)
         self.assertIn("browser-download artifact", manuscript)
         self.assertIn("CauseWithInstrument(john, key, Transition", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
@@ -10026,6 +10030,96 @@ class TranslatorTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(SystemExit, "recovery action export row 0"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_download_response_drift(self) -> None:
+        class FakeHeaders:
+            def __init__(
+                self,
+                content_type: str,
+                content_length: str,
+                content_disposition: str,
+            ) -> None:
+                self._values = {
+                    "Content-Length": content_length,
+                    "Content-Disposition": content_disposition,
+                }
+                self._content_type = content_type
+
+            def get_content_type(self) -> str:
+                return self._content_type
+
+            def get(self, name: str) -> object:
+                return self._values.get(name)
+
+        class FakeResponse:
+            def __init__(
+                self,
+                payload: object,
+                *,
+                status: int = 200,
+                content_type: str = "application/json",
+                content_length: str | None = None,
+                content_disposition: str = 'attachment; filename="action.json"',
+            ) -> None:
+                self.status = status
+                self._raw = json.dumps(payload, sort_keys=True).encode("utf-8")
+                if content_length is None:
+                    content_length = str(len(self._raw))
+                self.headers = FakeHeaders(
+                    content_type,
+                    content_length,
+                    content_disposition,
+                )
+
+            def read(self) -> bytes:
+                return self._raw
+
+        expected_payload = {
+            "schema_version": "diagnostic_recovery_action.v1",
+            "case": "type_check_failure",
+        }
+        validate_json_download_http_response(
+            "type_check_failure",
+            "recovery action",
+            FakeResponse(expected_payload),
+            expected_payload,
+            "action.json",
+        )
+        negative_cases = [
+            (
+                "download status drift",
+                FakeResponse(expected_payload, status=500),
+            ),
+            (
+                "download content type drift",
+                FakeResponse(expected_payload, content_type="text/plain"),
+            ),
+            (
+                "download length drift",
+                FakeResponse(expected_payload, content_length="999"),
+            ),
+            (
+                "download filename drift",
+                FakeResponse(
+                    expected_payload,
+                    content_disposition='attachment; filename="stale.json"',
+                ),
+            ),
+            (
+                "download payload drift",
+                FakeResponse({**expected_payload, "case": "stale_case"}),
+            ),
+        ]
+        for expected_error, response in negative_cases:
+            with self.subTest(expected_error=expected_error):
+                with self.assertRaisesRegex(SystemExit, expected_error):
+                    validate_json_download_http_response(
+                        "type_check_failure",
+                        "recovery action",
+                        response,
+                        expected_payload,
+                        "action.json",
+                    )
 
     def test_verification_runs_web_route_smoke_check(self) -> None:
         verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")

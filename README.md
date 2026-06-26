@@ -682,7 +682,10 @@ split is exposed for inspection-run JSON, so browser downloads, archived
 artifacts, and API clients can share the same payload without guessing a file
 name from visible prose. The project-level live web smoke check now requests
 both ordinary and download paths, compares the JSON payloads, and checks the
-download `Content-Disposition` filename, content type, and byte length.
+download `Content-Disposition` filename, content type, and byte length. The
+download-response validator also has direct counterexample tests for status,
+content-type, content-length, filename, and payload drift, so those HTTP
+artifact guarantees are checked independently of a running web server.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or
