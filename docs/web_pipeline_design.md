@@ -405,6 +405,10 @@ It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
 and HTML reading rows.
+It should also exercise a registered perception-complement success path with
+`Mary saw John leave`, requiring `mary_saw_john_leave`,
+`perception_nominalization`, and the `E : Prop -> Entity` nominalizer scaffold
+to remain visible at the HTTP boundary.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

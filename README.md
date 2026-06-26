@@ -944,6 +944,11 @@ The same live boundary now requests
 two quantifier-scope readings, `some_boy_wide_scope` and
 `some_girl_wide_scope`, against their JSON records, Coq/Rocq definitions, and
 HTML reading rows.
+It also requests
+`/api/analyze?sentence=Mary+saw+John+leave&require_coq=1`, requiring the
+registered perception-complement analysis to export `mary_saw_john_leave`,
+render the `perception_nominalization` reading, and keep the Coq/Rocq scaffold
+at `E : Prop -> Entity` rather than reintroducing event-role declarations.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.
@@ -1375,8 +1380,8 @@ environment's local build tooling rather than requiring a network fetch for
 build dependencies. It also runs a smoke check for the lexicon patch exporter,
 verifying that it can write both the JSON bundle and review-only patch text,
 and a web route smoke check that requests ordinary `/api/analyze` fallback and
-quantifier-scope successes before the diagnostic fixture manifest through the
-local HTTP handler.
+quantifier-scope successes plus a registered perception-complement success
+before the diagnostic fixture manifest through the local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the

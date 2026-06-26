@@ -1338,6 +1338,104 @@ def validate_analyze_quantifier_scope_success(
         raise SystemExit("web route smoke check failed: quantifier page input drift")
 
 
+def validate_analyze_perception_success(payload: dict, page: str, sentence: str) -> None:
+    case = "analyze_perception_success"
+    if payload.get("schema_version") != "analyze.v1":
+        raise SystemExit("web route smoke check failed: perception analyze schema drift")
+    if payload.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: perception analyze did not verify")
+    if payload.get("input_sentence") != sentence:
+        raise SystemExit("web route smoke check failed: perception analyze input drift")
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit("web route smoke check failed: perception diagnostics missing")
+    if diagnostics.get("summary") != "translation verified":
+        raise SystemExit("web route smoke check failed: perception diagnostics summary drift")
+    if diagnostics.get("failure_stage") is not None:
+        raise SystemExit("web route smoke check failed: perception diagnostics stage drift")
+    if diagnostics.get("recovery_actions") != []:
+        raise SystemExit("web route smoke check failed: perception recovery action drift")
+    stages = diagnostics.get("stages")
+    if not isinstance(stages, dict):
+        raise SystemExit("web route smoke check failed: perception stage map missing")
+    for stage in ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"]:
+        if stages.get(stage) != "passed":
+            raise SystemExit("web route smoke check failed: perception stage drift")
+    event_semantics = payload.get("event_semantics")
+    if not isinstance(event_semantics, dict):
+        raise SystemExit("web route smoke check failed: perception event semantics missing")
+    if event_semantics.get("analysis") != "parsons-perception-complement":
+        raise SystemExit("web route smoke check failed: perception analysis drift")
+    if event_semantics.get("typed_replacement") != "see(Mary, E(leave(John)))":
+        raise SystemExit("web route smoke check failed: perception typed replacement drift")
+    if payload.get("dependent_type_translation") != "see(Mary, E(leave(John)))":
+        raise SystemExit("web route smoke check failed: perception translation drift")
+    check = payload.get("semantic_readings_check")
+    if (
+        not isinstance(check, dict)
+        or check.get("ok") is not True
+        or check.get("reading_count") != 1
+    ):
+        raise SystemExit("web route smoke check failed: perception reading-count drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: perception semantic reading drift")
+    reading = readings[0]
+    if not isinstance(reading, dict):
+        raise SystemExit("web route smoke check failed: perception semantic reading malformed")
+    expected_fields = {
+        "name": "primary",
+        "scope": "unspecified",
+        "source": "perception_nominalization",
+        "dependent_type_translation": "see(Mary, E(leave(John)))",
+        "coq_definition": "mary_saw_john_leave",
+    }
+    for field, expected in expected_fields.items():
+        if reading.get(field) != expected:
+            raise SystemExit("web route smoke check failed: perception semantic reading drift")
+    attachment = reading.get("attachment_summary")
+    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
+        raise SystemExit("web route smoke check failed: perception attachment drift")
+    local_type = reading.get("type_check")
+    if (
+        not isinstance(local_type, dict)
+        or local_type.get("ok") is not True
+        or local_type.get("type") != "Prop"
+    ):
+        raise SystemExit("web route smoke check failed: perception reading type drift")
+    coq_code = payload.get("coq_code")
+    if not isinstance(coq_code, str):
+        raise SystemExit("web route smoke check failed: perception Coq export missing")
+    expected_coq_fragments = [
+        "Parameter E : Prop -> Entity.",
+        "Definition mary_saw_john_leave : Prop :=",
+        "see Mary (E (leave John)).",
+        "Check mary_saw_john_leave.",
+    ]
+    for fragment in expected_coq_fragments:
+        if fragment not in coq_code:
+            raise SystemExit("web route smoke check failed: perception Coq export drift")
+    for forbidden in ["Parameter Event", "Agent", "Theme"]:
+        if forbidden in coq_code:
+            raise SystemExit("web route smoke check failed: perception event export drift")
+    expected_page_fragments = [
+        "parsons-perception-complement",
+        "see(Mary, E(leave(John)))",
+        'data-reading-name="primary"',
+        'data-coq-definition="mary_saw_john_leave"',
+        "<dt>scope</dt><dd>unspecified</dd>",
+        "<dt>source</dt><dd>perception_nominalization</dd>",
+        "<dt>attachment</dt><dd>none</dd>",
+        "<dt>coq</dt><dd>mary_saw_john_leave</dd>",
+    ]
+    for fragment in expected_page_fragments:
+        if fragment not in page:
+            raise SystemExit("web route smoke check failed: perception HTML drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: perception page input drift")
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -1931,6 +2029,17 @@ def run_web_route_smoke_check() -> None:
             quantifier_payload,
             quantifier_page,
             quantifier_sentence,
+        )
+        perception_sentence = "Mary saw John leave"
+        perception_query = urlencode({"sentence": perception_sentence, "require_coq": "1"})
+        with opener.open(f"{base_url}/api/analyze?{perception_query}", timeout=5) as response:
+            perception_payload = json.load(response)
+        with opener.open(f"{base_url}/?{perception_query}", timeout=5) as response:
+            perception_page = response.read().decode("utf-8")
+        validate_analyze_perception_success(
+            perception_payload,
+            perception_page,
+            perception_sentence,
         )
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))
