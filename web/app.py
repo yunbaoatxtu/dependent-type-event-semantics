@@ -1643,6 +1643,75 @@ def semantic_warnings_panel(result: dict[str, Any]) -> str:
     )
 
 
+def semantic_reading_typed_modifier_text(value: Any) -> str:
+    if not isinstance(value, list):
+        return "none"
+    items = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("name", ""))
+        modifier_type = str(entry.get("type", "Adv"))
+        site = str(entry.get("site", ""))
+        if not name:
+            continue
+        prefix = f"{site}: " if site else ""
+        items.append(f"{prefix}{name} : {modifier_type}")
+    return "; ".join(items) or "none"
+
+
+def semantic_reading_typed_time_modifier_text(value: Any) -> str:
+    if not isinstance(value, list):
+        return "none"
+    items = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+        operator = str(entry.get("operator", ""))
+        argument = str(entry.get("argument", ""))
+        modifier_type = str(entry.get("type", "Time"))
+        site = str(entry.get("site", ""))
+        if not operator or not argument:
+            continue
+        prefix = f"{site}: " if site else ""
+        items.append(f"{prefix}{operator}_T({argument}) : {modifier_type}")
+    return "; ".join(items) or "none"
+
+
+def semantic_reading_typed_np_restrictor_text(value: Any) -> str:
+    if not isinstance(value, list):
+        return "none"
+    items = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+        predicate = str(entry.get("predicate", ""))
+        predicate_type = str(entry.get("predicate_type", "Entity -> Prop"))
+        site = str(entry.get("site", ""))
+        if not predicate:
+            continue
+        prefix = f"{site}: " if site else ""
+        items.append(f"{prefix}{predicate} : {predicate_type}")
+    return "; ".join(items) or "none"
+
+
+def semantic_reading_relative_object_text(value: Any) -> str:
+    if not isinstance(value, list):
+        return "none"
+    items = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("name", ""))
+        object_type = str(entry.get("type", "Entity"))
+        site = str(entry.get("site", ""))
+        if not name:
+            continue
+        prefix = f"{site}: " if site else ""
+        items.append(f"{prefix}{name} : {object_type}")
+    return "; ".join(items) or "none"
+
+
 def semantic_readings_check_panel(result: dict[str, Any]) -> str:
     check = result.get("semantic_readings_check") or {}
     readings = result.get("semantic_readings") or []
@@ -1755,6 +1824,22 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
             scope = str(reading.get("scope", ""))
             source = str(reading.get("source", ""))
             coq_definition = str(reading.get("coq_definition", ""))
+            attachment_summary = reading.get("attachment_summary") or {}
+            if not isinstance(attachment_summary, dict):
+                attachment_summary = {}
+            attachment_kind = str(attachment_summary.get("kind", "none"))
+            typed_modifiers = semantic_reading_typed_modifier_text(
+                attachment_summary.get("typed_modifiers"),
+            )
+            typed_np_restrictors = semantic_reading_typed_np_restrictor_text(
+                attachment_summary.get("typed_np_restrictors"),
+            )
+            typed_time_modifiers = semantic_reading_typed_time_modifier_text(
+                attachment_summary.get("typed_time_modifiers"),
+            )
+            relative_objects = semantic_reading_relative_object_text(
+                attachment_summary.get("relative_objects"),
+            )
             type_check = reading.get("type_check") or {}
             type_status = (
                 check_status(type_check.get("ok"))
@@ -1769,11 +1854,17 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
                 f'class="semantic-reading-audit semantic-reading-audit--{html.escape(row_status)}" '
                 f'data-reading-name="{html.escape(name, quote=True)}" '
                 f'data-coq-definition="{html.escape(coq_definition, quote=True)}" '
-                f'data-coq-exported="{html.escape(exported_status, quote=True)}">'
+                f'data-coq-exported="{html.escape(exported_status, quote=True)}" '
+                f'data-reading-attachment-kind="{html.escape(attachment_kind, quote=True)}">'
                 f'<strong>{html.escape(name)}</strong>'
                 '<dl>'
                 f'<dt>scope</dt><dd>{html.escape(scope or "none")}</dd>'
                 f'<dt>source</dt><dd>{html.escape(source or "none")}</dd>'
+                f'<dt>attachment</dt><dd>{html.escape(attachment_kind)}</dd>'
+                f'<dt>typed Adv modifiers</dt><dd>{html.escape(typed_modifiers)}</dd>'
+                f'<dt>typed NP restrictors</dt><dd>{html.escape(typed_np_restrictors)}</dd>'
+                f'<dt>typed time modifiers</dt><dd>{html.escape(typed_time_modifiers)}</dd>'
+                f'<dt>relative objects</dt><dd>{html.escape(relative_objects)}</dd>'
                 f'<dt>coq</dt><dd>{html.escape(coq_definition or "none")}</dd>'
                 f'<dt>exported</dt><dd>{html.escape(exported_status)}</dd>'
                 f'<dt>type check</dt><dd>{html.escape(type_status)}</dd>'

@@ -124,7 +124,11 @@ a constant named `the_young_girl`. Likewise,
 `ModifierSeq`-indexed predicate family. A single non-temporal PP after a named
 relative object is treated as another relative-clause `Adv`, not as an entity:
 `some boy who quickly saw Mary in the park loved a girl` renders
-`boy(x_boy) and see(2)(quickly, in(park), x_boy, mary)`. Likewise,
+`boy(x_boy) and see(2)(quickly, in(park), x_boy, mary)`. The normalized
+`semantic_readings` entry carries an `attachment_summary` with
+`kind: subject_relative_adv`, `subject_relative: mary : Entity`, and typed Adv
+modifiers `subject_relative: quickly : Adv` and `subject_relative: in_park : Adv`,
+so API clients can audit the attachment without traversing the raw AST. Likewise,
 `some boy who saw Mary yesterday loved a girl` renders
 `boy(x_boy) and at_T(yesterday, see(x_boy, mary))`. The sentence
 `some boy loved a girl that saw Mary` renders
@@ -946,7 +950,9 @@ AST instead of being hidden behind the status banner.
 The `Semantic Readings Check` panel is likewise structured rather than raw-only:
 it displays the audit status, reading count, exported Prop/PropT definition
 names, and one row per reading with its name, scope, source, Coq/Rocq
-definition, exported status, and reading-local type-check status, followed by
+definition, exported status, reading-local type-check status, attachment kind,
+typed Adv modifiers, typed NP restrictors, typed time modifiers, and relative
+objects, followed by
 classified semantic-reading failure kinds, repair details such as missing
 definition names or export-count mismatches, any semantic-reading errors, and
 the raw JSON record.

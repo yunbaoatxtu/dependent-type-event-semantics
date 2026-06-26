@@ -7223,6 +7223,34 @@ class TranslatorTests(unittest.TestCase):
                 "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
             ),
         )
+        subject_named_summary = subject_named_object_pp_relative["semantic_readings"][0][
+            "attachment_summary"
+        ]
+        self.assertEqual(subject_named_summary["kind"], "subject_relative_adv")
+        self.assertEqual(
+            subject_named_summary["typed_modifiers"],
+            [
+                {
+                    "site": "subject_relative",
+                    "name": "quickly",
+                    "type": "Adv",
+                    "expression": "quickly",
+                    "semantic_role": "Manner",
+                },
+                {
+                    "site": "subject_relative",
+                    "name": "in_park",
+                    "type": "Adv",
+                    "expression": "in(park)",
+                    "semantic_role": "Location",
+                },
+            ],
+        )
+        self.assertEqual(subject_named_summary["typed_np_restrictors"], [])
+        self.assertEqual(
+            subject_named_summary["relative_objects"],
+            [{"site": "subject_relative", "name": "mary", "type": "Entity"}],
+        )
         self.assertIn("Parameter mary : Entity.", subject_named_object_pp_relative["coq_code"])
         self.assertIn("Parameter in_park : Adv.", subject_named_object_pp_relative["coq_code"])
         self.assertNotIn("Parameter in_park_np : Entity -> Prop.", subject_named_object_pp_relative["coq_code"])
@@ -7273,6 +7301,19 @@ class TranslatorTests(unittest.TestCase):
                 "see(2)(quickly, in(park), x_boy, mary))) and "
                 "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
             ),
+        )
+        self.assertEqual(
+            subject_named_object_pp_time_relative["semantic_readings"][0][
+                "attachment_summary"
+            ]["typed_time_modifiers"],
+            [
+                {
+                    "site": "subject_relative",
+                    "operator": "at",
+                    "argument": "yesterday",
+                    "type": "Time",
+                }
+            ],
         )
         self.assertEqual(
             subject_named_object_pp_time_relative["coq_check"]["status"],
@@ -7420,6 +7461,56 @@ class TranslatorTests(unittest.TestCase):
             reading["dependent_type_translation"]
             for reading in object_named_relative_pp["semantic_readings"]
         ]
+        object_named_summaries = [
+            reading["attachment_summary"]
+            for reading in object_named_relative_pp["semantic_readings"]
+        ]
+        self.assertIn(
+            {
+                "kind": "clause_adv",
+                "subject_relative_attachment_kind": None,
+                "object_relative_attachment_kind": None,
+                "object_np_has_postnominal_restrictor": False,
+                "typed_modifiers": [
+                    {
+                        "site": "clause",
+                        "name": "in_park",
+                        "type": "Adv",
+                        "expression": "in(park)",
+                        "semantic_role": "Location",
+                    }
+                ],
+                "typed_time_modifiers": [],
+                "typed_np_restrictors": [],
+                "relative_objects": [
+                    {"site": "object_relative", "name": "mary", "type": "Entity"}
+                ],
+            },
+            object_named_summaries,
+        )
+        self.assertIn(
+            {
+                "kind": "object_relative_adv",
+                "subject_relative_attachment_kind": None,
+                "object_relative_attachment_kind": "object_relative_adv",
+                "object_np_has_postnominal_restrictor": False,
+                "typed_modifiers": [
+                    {
+                        "site": "object_relative",
+                        "name": "in_park",
+                        "type": "Adv",
+                        "expression": "in(park)",
+                        "semantic_role": "Location",
+                    }
+                ],
+                "typed_time_modifiers": [],
+                "typed_np_restrictors": [],
+                "relative_objects": [
+                    {"site": "object_relative", "name": "mary", "type": "Entity"}
+                ],
+            },
+            object_named_summaries,
+        )
         self.assertIn(
             (
                 "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
@@ -7947,6 +8038,30 @@ class TranslatorTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
+            location["semantic_readings"][0]["attachment_summary"]["typed_modifiers"],
+            [
+                {
+                    "site": "clause",
+                    "name": "in_bathroom",
+                    "type": "Adv",
+                    "expression": "in(bathroom)",
+                    "semantic_role": "Location",
+                }
+            ],
+        )
+        self.assertEqual(
+            location["semantic_readings"][2]["attachment_summary"]["typed_np_restrictors"],
+            [
+                {
+                    "site": "object_np",
+                    "predicate": "in_bathroom_np",
+                    "predicate_type": "Entity -> Prop",
+                    "expression": "in(bathroom)",
+                    "semantic_role": "Location",
+                }
+            ],
+        )
+        self.assertEqual(
             location["semantic_readings"][3]["dependent_type_translation"],
             (
                 "exists x_girl : Entity. (girl(x_girl) and in_bathroom_np(x_girl)) "
@@ -7997,6 +8112,29 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "girl(x_girl) and in_park_np(x_girl) and with_telescope_np(x_girl)",
             multi_pp["semantic_readings"][4]["dependent_type_translation"],
+        )
+        self.assertEqual(
+            multi_pp["semantic_readings"][4]["attachment_summary"]["typed_np_restrictors"],
+            [
+                {
+                    "site": "object_np",
+                    "predicate": "in_park_np",
+                    "predicate_type": "Entity -> Prop",
+                    "expression": "in(park)",
+                    "semantic_role": "Location",
+                },
+                {
+                    "site": "object_np",
+                    "predicate": "with_telescope_np",
+                    "predicate_type": "Entity -> Prop",
+                    "expression": "with(telescope)",
+                    "semantic_role": "Instrument",
+                },
+            ],
+        )
+        self.assertEqual(
+            multi_pp["semantic_readings"][4]["attachment_summary"]["typed_modifiers"],
+            [],
         )
         self.assertIn("Parameter in_park_np : Entity -> Prop.", multi_pp["coq_code"])
         self.assertIn("Parameter with_telescope_np : Entity -> Prop.", multi_pp["coq_code"])
@@ -9993,6 +10131,49 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<summary>Raw check JSON</summary>", page)
         self.assertIn("&quot;reading_count&quot;: 2", page)
 
+    def test_web_page_shows_reading_attachment_type_summaries(self) -> None:
+        subject_relative_page = render_page(
+            "some boy who quickly saw Mary in the park loved a girl",
+            require_coq=True,
+        )
+        self.assertIn(
+            'data-reading-attachment-kind="subject_relative_adv"',
+            subject_relative_page,
+        )
+        self.assertIn("<dt>attachment</dt><dd>subject_relative_adv</dd>", subject_relative_page)
+        self.assertIn("subject_relative: quickly : Adv", subject_relative_page)
+        self.assertIn("subject_relative: in_park : Adv", subject_relative_page)
+        self.assertIn("subject_relative: mary : Entity", subject_relative_page)
+        self.assertIn("<dt>typed NP restrictors</dt><dd>none</dd>", subject_relative_page)
+
+        object_relative_page = render_page(
+            "some boy loved a girl that saw Mary in the park",
+            require_coq=True,
+        )
+        self.assertIn(
+            'data-reading-attachment-kind="clause_adv"',
+            object_relative_page,
+        )
+        self.assertIn(
+            'data-reading-attachment-kind="object_relative_adv"',
+            object_relative_page,
+        )
+        self.assertIn("clause: in_park : Adv", object_relative_page)
+        self.assertIn("object_relative: in_park : Adv", object_relative_page)
+        self.assertIn("object_relative: mary : Entity", object_relative_page)
+
+        object_np_page = render_page(
+            "some boy loved some girl in the park with a telescope",
+            require_coq=True,
+        )
+        self.assertIn(
+            'data-reading-attachment-kind="object_np_restrictor"',
+            object_np_page,
+        )
+        self.assertIn("object_np: in_park_np : Entity -&gt; Prop", object_np_page)
+        self.assertIn("object_np: with_telescope_np : Entity -&gt; Prop", object_np_page)
+        self.assertIn("clause: with_telescope : Adv", object_np_page)
+
     def test_semantic_readings_check_panel_shows_missing_export_errors(self) -> None:
         panel_html = semantic_readings_check_panel(
             {
@@ -11453,6 +11634,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who saw a girl in the park loved a cat", readme)
         self.assertIn("some boy who quickly saw Mary in the park loved a girl", readme)
         self.assertIn("mary_in_park", readme)
+        self.assertIn("`attachment_summary`", readme)
+        self.assertIn("subject_relative: mary : Entity", readme)
+        self.assertIn("subject_relative: in_park : Adv", readme)
         self.assertIn("subject_relative_object_np_restrictor", readme)
         self.assertIn("subject_relative_adv", readme)
         self.assertIn("some boy who quickly saw Mary in the park with a telescope loved a girl", readme)
@@ -11517,6 +11701,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("content-type, byte-length, filename, or payload drift", manuscript)
         self.assertIn("without requiring a running server", manuscript)
         self.assertIn("browser-download artifact", manuscript)
+        self.assertIn("attachment_summary", manuscript)
+        self.assertIn("subject_relative: mary : Entity", manuscript)
+        self.assertIn("object_np: in_park_np : Entity -> Prop", manuscript)
+        self.assertIn("data-reading-attachment-kind", manuscript)
         self.assertIn("CauseWithInstrument(john, key, Transition", readme)
         self.assertIn("exists x_agent : Entity. butter(x_agent, toast)", readme)
         self.assertIn("passive argument omission with an existential typed agent", readme)
@@ -11540,6 +11728,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"surface_lexicon"', ast_docs)
         self.assertIn('"surface_modifier": "in(bathroom)"', ast_docs)
         self.assertIn('"normalized_modifier": "in_bathroom"', ast_docs)
+        self.assertIn("`attachment_summary`", ast_docs)
+        self.assertIn('"site": "subject_relative"', ast_docs)
+        self.assertIn('"name": "in_park"', ast_docs)
+        self.assertIn('"predicate": "in_park_np"', ast_docs)
+        self.assertIn("`data-reading-attachment-kind`", ast_docs)
         self.assertIn('"participle": "buttered"', ast_docs)
         self.assertIn('"lemma": "butter"', ast_docs)
         self.assertIn('"frame": "inchoative"', ast_docs)
@@ -11559,6 +11752,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Type Check panel", web_design)
         self.assertIn("`data-reading-name`", web_design)
         self.assertIn("`data-coq-exported`", web_design)
+        self.assertIn("`data-reading-attachment-kind`", web_design)
+        self.assertIn("`attachment_summary`", web_design)
+        self.assertIn("object_np: in_park_np : Entity -> Prop", web_design)
         self.assertIn("`semantic_readings_failure_kinds`", web_design)
         self.assertIn("`semantic_readings_repair_details`", web_design)
         self.assertIn("checked as a fixed schema", web_design)

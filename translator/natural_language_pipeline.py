@@ -1574,9 +1574,176 @@ def attach_default_registered_semantic_reading(
     )
 
 
+def typed_modifier_summary(
+    modifier: dict[str, Any],
+    site: str,
+) -> dict[str, str]:
+    summary = {
+        "site": site,
+        "name": str(modifier.get("name", "")),
+        "type": str(modifier.get("type", "Adv")),
+    }
+    expression = modifier.get("expression")
+    if isinstance(expression, str) and expression:
+        summary["expression"] = expression
+    semantic_role = modifier.get("semantic_role")
+    if isinstance(semantic_role, str) and semantic_role:
+        summary["semantic_role"] = semantic_role
+    return summary
+
+
+def typed_time_modifier_summary(
+    modifier: dict[str, Any],
+    site: str,
+) -> dict[str, str]:
+    summary = {
+        "site": site,
+        "operator": str(modifier.get("operator", "")),
+        "argument": str(modifier.get("argument", "")),
+        "type": "Time",
+    }
+    return summary
+
+
+def typed_np_restrictor_summary(
+    restrictor: dict[str, Any],
+    site: str,
+) -> dict[str, str]:
+    summary = {
+        "site": site,
+        "predicate": str(restrictor.get("predicate", "")),
+        "predicate_type": str(restrictor.get("predicate_type", "Entity -> Prop")),
+    }
+    expression = restrictor.get("expression")
+    if isinstance(expression, str) and expression:
+        summary["expression"] = expression
+    semantic_role = restrictor.get("semantic_role")
+    if isinstance(semantic_role, str) and semantic_role:
+        summary["semantic_role"] = semantic_role
+    return summary
+
+
+def unique_summary_records(records: list[dict[str, str]]) -> list[dict[str, str]]:
+    seen: set[tuple[tuple[str, str], ...]] = set()
+    unique_records: list[dict[str, str]] = []
+    for record in records:
+        key = tuple(sorted(record.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_records.append(record)
+    return unique_records
+
+
+def collect_np_attachment_summary(
+    np: dict[str, Any],
+    site: str,
+    typed_modifiers: list[dict[str, str]],
+    typed_time_modifiers: list[dict[str, str]],
+    typed_np_restrictors: list[dict[str, str]],
+    relative_objects: list[dict[str, str]],
+) -> None:
+    restrictors = np.get("restrictors", [])
+    if not isinstance(restrictors, list):
+        return
+    for restrictor in restrictors:
+        if not isinstance(restrictor, dict):
+            continue
+        kind = restrictor.get("kind")
+        if kind == "relative_clause_restrictor":
+            relative_site = f"{site}_relative"
+            modifiers = restrictor.get("modifiers", [])
+            if isinstance(modifiers, list):
+                typed_modifiers.extend(
+                    typed_modifier_summary(modifier, relative_site)
+                    for modifier in modifiers
+                    if isinstance(modifier, dict)
+                )
+            time_modifiers = restrictor.get("time_modifiers", [])
+            if isinstance(time_modifiers, list):
+                typed_time_modifiers.extend(
+                    typed_time_modifier_summary(modifier, relative_site)
+                    for modifier in time_modifiers
+                    if isinstance(modifier, dict)
+                )
+            relative_object = restrictor.get("object")
+            if isinstance(relative_object, dict) and isinstance(
+                relative_object.get("name"),
+                str,
+            ):
+                relative_objects.append(
+                    {
+                        "site": relative_site,
+                        "name": relative_object["name"],
+                        "type": str(relative_object.get("type", "Entity")),
+                    }
+                )
+            object_np = restrictor.get("object_np")
+            if isinstance(object_np, dict):
+                collect_np_attachment_summary(
+                    object_np,
+                    f"{relative_site}_object",
+                    typed_modifiers,
+                    typed_time_modifiers,
+                    typed_np_restrictors,
+                    relative_objects,
+                )
+            continue
+        if kind == "pp_restrictor":
+            typed_np_restrictors.append(
+                typed_np_restrictor_summary(restrictor, f"{site}_np")
+            )
+
+
+def quantifier_attachment_summary(reading: dict[str, Any]) -> dict[str, Any]:
+    attachment = reading.get("attachment")
+    if not isinstance(attachment, dict):
+        return {}
+    noun_phrases = attachment.get("noun_phrases", {})
+    typed_modifiers: list[dict[str, str]] = []
+    typed_time_modifiers: list[dict[str, str]] = []
+    typed_np_restrictors: list[dict[str, str]] = []
+    relative_objects: list[dict[str, str]] = []
+    for modifier in attachment.get("modifiers", []):
+        if isinstance(modifier, dict):
+            typed_modifiers.append(typed_modifier_summary(modifier, "clause"))
+    for modifier in attachment.get("time_modifiers", []):
+        if isinstance(modifier, dict):
+            typed_time_modifiers.append(typed_time_modifier_summary(modifier, "clause"))
+    if isinstance(noun_phrases, dict):
+        for role in ("subject", "object"):
+            np = noun_phrases.get(role)
+            if isinstance(np, dict):
+                collect_np_attachment_summary(
+                    np,
+                    role,
+                    typed_modifiers,
+                    typed_time_modifiers,
+                    typed_np_restrictors,
+                    relative_objects,
+                )
+    return {
+        "kind": str(attachment.get("kind", "plain")),
+        "subject_relative_attachment_kind": attachment.get(
+            "subject_relative_attachment_kind"
+        ),
+        "object_relative_attachment_kind": attachment.get(
+            "object_relative_attachment_kind"
+        ),
+        "object_np_has_postnominal_restrictor": bool(
+            attachment.get("object_np_has_postnominal_restrictor")
+        ),
+        "typed_modifiers": unique_summary_records(typed_modifiers),
+        "typed_time_modifiers": unique_summary_records(typed_time_modifiers),
+        "typed_np_restrictors": unique_summary_records(typed_np_restrictors),
+        "relative_objects": unique_summary_records(relative_objects),
+    }
+
+
 def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [
-        semantic_reading(
+    semantic_readings: list[dict[str, Any]] = []
+    for reading in readings:
+        semantic = semantic_reading(
             name=reading["name"],
             dependent_type_translation=render_quantifier_reading(reading),
             coq_definition=reading["name"],
@@ -1584,8 +1751,11 @@ def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[st
             type_check={"ok": True, "type": "Prop", "errors": []},
             source="quantifier_scope",
         )
-        for reading in readings
-    ]
+        attachment_summary = quantifier_attachment_summary(reading)
+        if attachment_summary:
+            semantic["attachment_summary"] = attachment_summary
+        semantic_readings.append(semantic)
+    return semantic_readings
 
 
 def check_quantifier_scope_binder_restrictors(

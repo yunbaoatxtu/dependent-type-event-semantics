@@ -945,6 +945,30 @@ translation, Coq definition name, and type-check metadata shape used for other
 ambiguity-producing constructions. `semantic_readings_check` then audits the
 normalized list for duplicate names, missing formulas, failed per-reading
 checks, and Coq definition names that are not actually exported.
+For quantifier readings with PP or relative-clause attachment, each normalized
+reading also carries an `attachment_summary` so clients do not have to traverse
+the full `ast.readings[*].attachment` object. A subject-relative named-object PP
+case records:
+
+```json
+{
+  "kind": "subject_relative_adv",
+  "typed_modifiers": [
+    {"site": "subject_relative", "name": "quickly", "type": "Adv"},
+    {"site": "subject_relative", "name": "in_park", "type": "Adv"}
+  ],
+  "typed_np_restrictors": [],
+  "typed_time_modifiers": [],
+  "relative_objects": [
+    {"site": "subject_relative", "name": "mary", "type": "Entity"}
+  ]
+}
+```
+
+By contrast, an object-NP PP attachment records entries such as
+`{"site": "object_np", "predicate": "in_park_np", "predicate_type": "Entity -> Prop"}`
+under `typed_np_restrictors`. The web panel renders these same summaries with a
+stable `data-reading-attachment-kind` attribute on each reading row.
 At the registered-rule boundary, successful single-reading constructions that
 do not provide a specialized reading list are normalized in the same format:
 the executor extracts the unique exported `Definition ... : Prop/PropT`, emits
