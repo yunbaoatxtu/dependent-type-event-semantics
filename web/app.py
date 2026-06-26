@@ -374,6 +374,41 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
                 f"Diagnostic fixture {case!r} action drift: "
                 f"{observed_action_kinds!r} != {expected_action_kinds!r}"
             )
+        recovery_action_exports = []
+        for index, action in enumerate(recovery_actions):
+            if not isinstance(action, dict):
+                continue
+            kind = str(action.get("kind", ""))
+            repair_plan = recovery_action_repair_plan(
+                case,
+                index,
+                expected_stage,
+                action,
+            )
+            can_auto_run = bool(repair_plan.get("can_auto_run"))
+            recovery_action_exports.append(
+                {
+                    "schema_version": RECOVERY_ACTION_SCHEMA,
+                    "case": case,
+                    "action_index": index,
+                    "kind": kind,
+                    "failure_stage": expected_stage,
+                    "api_path": f"/api/recovery-action?{urlencode({'case': case, 'index': str(index)})}",
+                    "automation_mode": repair_plan.get("automation_mode"),
+                    "can_auto_run": can_auto_run,
+                    "can_auto_apply": bool(repair_plan.get("can_auto_apply")),
+                    "target_fields": [
+                        str(field)
+                        for field in repair_plan.get("target_fields", [])
+                        if isinstance(field, str)
+                    ],
+                    "inspection_run_api_path": (
+                        f"/api/recovery-action-run?{urlencode({'case': case, 'index': str(index)})}"
+                        if can_auto_run
+                        else None
+                    ),
+                }
+            )
         cases.append(
             {
                 "case": case,
@@ -382,17 +417,7 @@ def diagnostic_fixture_manifest() -> dict[str, Any]:
                 "html_path": f"/diagnostic-fixture?{urlencode({'case': case})}",
                 "failure_stage": expected_stage,
                 "recovery_action_kinds": expected_action_kinds,
-                "recovery_action_exports": [
-                    {
-                        "schema_version": RECOVERY_ACTION_SCHEMA,
-                        "case": case,
-                        "action_index": index,
-                        "kind": kind,
-                        "failure_stage": expected_stage,
-                        "api_path": f"/api/recovery-action?{urlencode({'case': case, 'index': str(index)})}",
-                    }
-                    for index, kind in enumerate(expected_action_kinds)
-                ],
+                "recovery_action_exports": recovery_action_exports,
             }
         )
     return {
@@ -1755,10 +1780,17 @@ def diagnostic_fixture_form(result: dict[str, Any]) -> str:
         recovery_action_text = ", ".join(
             str(action) for action in recovery_actions if isinstance(action, str)
         )
+        recovery_action_exports = fixture_case.get("recovery_action_exports", [])
+        inspection_run_count = sum(
+            1
+            for export in recovery_action_exports
+            if isinstance(export, dict) and export.get("can_auto_run") is True
+        )
         options.append(
             f'<option value="{html.escape(case, quote=True)}"{selected} '
             f'data-failure-stage="{html.escape(str(fixture_case.get("failure_stage", "")), quote=True)}" '
-            f'data-recovery-action-kinds="{html.escape(recovery_action_text, quote=True)}">'
+            f'data-recovery-action-kinds="{html.escape(recovery_action_text, quote=True)}" '
+            f'data-inspection-run-count="{inspection_run_count}">'
             f"{html.escape(str(fixture_case.get('label', case)))}</option>"
         )
     return (

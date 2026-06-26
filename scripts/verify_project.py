@@ -230,6 +230,7 @@ def validate_recovery_action_export_manifest_entry(
     expected_stage: str,
     expected_kind: str,
     export_entry: object,
+    expected_action: dict | None = None,
 ) -> None:
     if not isinstance(export_entry, dict):
         raise SystemExit(
@@ -248,6 +249,18 @@ def validate_recovery_action_export_manifest_entry(
                 "web route smoke check failed: "
                 f"{case} recovery action export manifest drift"
             )
+    required_fields = [
+        "api_path",
+        "automation_mode",
+        "can_auto_run",
+        "can_auto_apply",
+        "target_fields",
+        "inspection_run_api_path",
+    ]
+    if any(field not in export_entry for field in required_fields):
+        raise SystemExit(
+            f"web route smoke check failed: {case} incomplete recovery action export metadata"
+        )
     api_path = export_entry.get("api_path")
     if not isinstance(api_path, str):
         raise SystemExit(
@@ -265,6 +278,68 @@ def validate_recovery_action_export_manifest_entry(
         raise SystemExit(
             f"web route smoke check failed: {case} recovery action export case/index drift"
         )
+    automation_mode = export_entry.get("automation_mode")
+    can_auto_run = export_entry.get("can_auto_run")
+    can_auto_apply = export_entry.get("can_auto_apply")
+    target_fields = export_entry.get("target_fields")
+    inspection_run_api_path = export_entry.get("inspection_run_api_path")
+    if automation_mode not in VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES:
+        raise SystemExit(
+            f"web route smoke check failed: {case} recovery action export automation drift"
+        )
+    if type(can_auto_run) is not bool or type(can_auto_apply) is not bool:
+        raise SystemExit(
+            f"web route smoke check failed: {case} recovery action export automation drift"
+        )
+    if not string_list(target_fields):
+        raise SystemExit(
+            f"web route smoke check failed: {case} recovery action export target drift"
+        )
+    expected_can_run = expected_kind in VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
+    if can_auto_run != expected_can_run:
+        raise SystemExit(
+            f"web route smoke check failed: {case} recovery action export run drift"
+        )
+    if can_auto_run:
+        if not isinstance(inspection_run_api_path, str):
+            raise SystemExit(
+                f"web route smoke check failed: {case} missing recovery action run metadata"
+            )
+        parsed_run = urlparse(inspection_run_api_path)
+        if parsed_run.path != "/api/recovery-action-run":
+            raise SystemExit(
+                f"web route smoke check failed: {case} recovery action run path drift"
+            )
+        if parse_qs(parsed_run.query, keep_blank_values=True) != {
+            "case": [case],
+            "index": [str(action_index)],
+        }:
+            raise SystemExit(
+                f"web route smoke check failed: {case} recovery action run case/index drift"
+            )
+    elif inspection_run_api_path is not None:
+        raise SystemExit(
+            f"web route smoke check failed: {case} unsafe recovery action run metadata"
+        )
+    if expected_action is not None:
+        expected_plan = recovery_action_repair_plan_preview(
+            case,
+            action_index,
+            expected_stage,
+            expected_action,
+        )
+        expected_plan_fields = {
+            "automation_mode": expected_plan.get("automation_mode"),
+            "can_auto_run": expected_plan.get("can_auto_run"),
+            "can_auto_apply": expected_plan.get("can_auto_apply"),
+            "target_fields": expected_plan.get("target_fields"),
+        }
+        for field, expected_value in expected_plan_fields.items():
+            if export_entry.get(field) != expected_value:
+                raise SystemExit(
+                    "web route smoke check failed: "
+                    f"{case} recovery action export repair-plan drift"
+                )
 
 
 def nonempty_string_list(value: object) -> bool:
@@ -1029,6 +1104,11 @@ def validate_diagnostic_fixture_routes(
         recovery_action_text = ", ".join(
             str(action) for action in expected_actions if isinstance(action, str)
         )
+        inspection_run_count = sum(
+            1
+            for export in expected_action_exports
+            if isinstance(export, dict) and export.get("can_auto_run") is True
+        )
         expected_fragments = [
             'class="diagnostic-fixture-form"',
             'action="/diagnostic-fixture"',
@@ -1040,17 +1120,33 @@ def validate_diagnostic_fixture_routes(
             f'value="{case}" selected',
             f'data-failure-stage="{expected_stage}"',
             f'data-recovery-action-kinds="{recovery_action_text}"',
+            f'data-inspection-run-count="{inspection_run_count}"',
         ]
         expected_selected_option = (
             f'value="{html.escape(case, quote=True)}" selected '
             f'data-failure-stage="{html.escape(str(expected_stage), quote=True)}" '
-            f'data-recovery-action-kinds="{html.escape(recovery_action_text, quote=True)}">'
+            f'data-recovery-action-kinds="{html.escape(recovery_action_text, quote=True)}" '
+            f'data-inspection-run-count="{inspection_run_count}">'
             f'{html.escape(str(expected_label))}</option>'
         )
         if not isinstance(expected_label, str) or expected_selected_option not in fixture_page:
             raise SystemExit(f"web route smoke check failed: {case} label drift")
         for action_index, action_kind in enumerate(expected_actions):
             export_path = expected_action_exports[action_index].get("api_path", "")
+            inspection_run_path = expected_action_exports[action_index].get(
+                "inspection_run_api_path"
+            )
+            if action_index < len(payload_actions) and isinstance(
+                payload_actions[action_index], dict
+            ):
+                validate_recovery_action_export_manifest_entry(
+                    case,
+                    action_index,
+                    str(expected_stage),
+                    str(action_kind),
+                    expected_action_exports[action_index],
+                    payload_actions[action_index],
+                )
             expected_fragments.extend(
                 [
                     f'id="recovery-action-{action_index}"',
@@ -1066,6 +1162,12 @@ def validate_diagnostic_fixture_routes(
                     'data-action-export="json"',
                 ]
             )
+            if isinstance(inspection_run_path, str):
+                expected_fragments.append(
+                    'href="'
+                    + html.escape(str(inspection_run_path), quote=True)
+                    + '"'
+                )
         for fragment in expected_fragments:
             if fragment not in fixture_page:
                 raise SystemExit(

@@ -323,8 +323,13 @@ The JSON companion `/api/diagnostic-fixtures` should expose a
 path, HTML path, failure stage, recovery action kinds, and
 `recovery_action_exports` per-action export metadata. Each export metadata
 record should name the `diagnostic_recovery_action.v1` schema, case, action
-index, action kind, failure stage, and `/api/recovery-action` path, so clients
-do not have to infer export routes from prose or duplicate URL-building logic.
+index, action kind, failure stage, `/api/recovery-action` path, automation
+mode, `can_auto_run`, `can_auto_apply`, `target_fields`, and either an
+`inspection_run_api_path` for read-only inspection actions or `null` for
+human-review-required repairs. The fixture selector should also expose
+`data-inspection-run-count` on each option, so clients can discover whether a
+case has executable diagnostic inspections before opening the full fixture
+payload.
 The fixture case inventory, visible labels, expected failure stages, and
 expected recovery-action kinds should be derived from a single
 `DIAGNOSTIC_FIXTURE_SPECS` table of validated `DiagnosticFixtureSpec` entries

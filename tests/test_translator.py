@@ -7922,6 +7922,15 @@ class TranslatorTests(unittest.TestCase):
                 action_kinds,
             )
             for index, action_kind in enumerate(action_kinds):
+                payload = diagnostic_fixture_result(case)
+                action = payload["diagnostics"]["recovery_actions"][index]
+                repair_plan = recovery_action_repair_plan(
+                    case,
+                    index,
+                    spec_stages[case],
+                    action,
+                )
+                can_auto_run = bool(repair_plan["can_auto_run"])
                 self.assertEqual(
                     cases[case]["recovery_action_exports"][index],
                     {
@@ -7932,6 +7941,15 @@ class TranslatorTests(unittest.TestCase):
                         "failure_stage": spec_stages[case],
                         "api_path": (
                             f"/api/recovery-action?case={case}&index={index}"
+                        ),
+                        "automation_mode": repair_plan["automation_mode"],
+                        "can_auto_run": can_auto_run,
+                        "can_auto_apply": repair_plan["can_auto_apply"],
+                        "target_fields": repair_plan["target_fields"],
+                        "inspection_run_api_path": (
+                            f"/api/recovery-action-run?case={case}&index={index}"
+                            if can_auto_run
+                            else None
                         ),
                     },
                 )
@@ -8800,6 +8818,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/recovery-action-run?case=<case>&index=<n>", readme)
         self.assertIn("`diagnostic_inspection_run.v1`", readme)
         self.assertIn("target-field snapshot", readme)
+        self.assertIn("`inspection_run_api_path`", readme)
+        self.assertIn("`data-inspection-run-count`", readme)
         self.assertIn("verification commands", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
@@ -8967,9 +8987,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic_inspection_run.v1`", web_design)
         self.assertIn("target-field snapshot", web_design)
         self.assertIn("400 response", web_design)
+        self.assertIn("`inspection_run_api_path`", web_design)
+        self.assertIn("`data-inspection-run-count`", web_design)
         self.assertIn("repair-plan drift", web_design)
         self.assertIn(
-            "visible labels, controls, and JSON inventory cannot silently drift apart",
+            "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
             manuscript,
         )
         self.assertIn("one DIAGNOSTIC_FIXTURE_SPECS table", manuscript)
@@ -8993,6 +9015,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("diagnostic_inspection_run.v1", manuscript)
         self.assertIn("targeted diagnostic field snapshot", manuscript)
         self.assertIn("inspection-run snapshot", manuscript)
+        self.assertIn("nullable inspection_run_api_path entries", manuscript)
+        self.assertIn("data-inspection-run-count hook", manuscript)
         self.assertIn("automation-mode drift", manuscript)
         self.assertIn("repair-plan drift", manuscript)
         self.assertIn("stale action export links", manuscript)
@@ -9464,6 +9488,32 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "type_check_failure":
+                fixture["recovery_action_exports"][0][
+                    "inspection_run_api_path"
+                ] = "/api/recovery-action-run?case=type_check_failure&index=9"
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure recovery action run case/index drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        manifest = deepcopy(manifest)
+        for fixture in manifest["cases"]:
+            if fixture["case"] == "type_check_failure":
+                fixture["recovery_action_exports"][0]["target_fields"] = ["coq_code"]
+                break
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure recovery action export repair-plan drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
     def test_verification_rejects_unknown_diagnostic_fixture_recovery_action_kind(
         self,
     ) -> None:
@@ -9833,12 +9883,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("diagnostic inspection-only action drift", verifier)
         self.assertIn("recovery action export manifest drift", verifier)
         self.assertIn("recovery action export case/index drift", verifier)
+        self.assertIn("inspection_run_api_path", verifier)
+        self.assertIn("recovery action run case/index drift", verifier)
+        self.assertIn("recovery action export repair-plan drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
         self.assertIn('data-fixtures-api="/api/diagnostic-fixtures"', verifier)
         self.assertIn('data-diagnostic-contract-api="/api/diagnostic-contract"', verifier)
         self.assertIn('data-fixture-count="{fixture_count}"', verifier)
         self.assertIn('data-failure-stage="{expected_stage}"', verifier)
         self.assertIn('data-recovery-action-kinds="{recovery_action_text}"', verifier)
+        self.assertIn('data-inspection-run-count="{inspection_run_count}"', verifier)
         self.assertIn('data-action-kind="{action_kind}"', verifier)
         self.assertIn('data-action-index="{action_index}"', verifier)
         self.assertIn('data-action-contract-kind="{action_kind}"', verifier)

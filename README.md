@@ -690,6 +690,13 @@ The companion `/api/diagnostic-fixtures` endpoint returns a
 `diagnostic_fixtures.v1` manifest with each case label, JSON path, HTML path,
 failure stage, recovery action kinds, and a `recovery_action_exports` inventory
 containing per-action JSON export paths for frontends and regression tools.
+Each inventory entry also records the action's `automation_mode`,
+`can_auto_run`, `can_auto_apply`, `target_fields`, and, when the action is a
+read-only inspection, an `inspection_run_api_path` pointing directly to the
+`diagnostic_inspection_run.v1` endpoint. The selector mirrors this distinction
+with a `data-inspection-run-count` hook for each fixture option, so browser
+automation can discover executable diagnostic inspections from the manifest and
+HTML without reconstructing URLs.
 The case inventory, display labels, expected failure stages, and expected
 recovery-action kinds are now derived from one `DIAGNOSTIC_FIXTURE_SPECS`
 table of validated `DiagnosticFixtureSpec` entries, so adding a fixture no
