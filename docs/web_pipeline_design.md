@@ -94,6 +94,10 @@ The page mirrors that version in a compact `API Contract` panel, including the
 the same response contract. It also renders the response `conclusion` in a
 dedicated `Conclusion` panel so the final outcome is visible outside the status
 line.
+For ordinary fallback successes, the API response and HTML panel must agree on
+the same normalized reading row: `fallback_single_reading` from
+`fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
+a passing `semantic_readings_check`.
 `result_state_lexicon` is a list of audit
 records for resultative targets; each record includes the target `state`, its
 `scale`, an optional `default_source_state`, and a `source_policy` such as

@@ -790,6 +790,10 @@ Successful registered rules must expose a passing `semantic_readings_check`.
 Rules with explicit ambiguity keep their specialized readings; otherwise the
 registered-rule boundary creates a conservative single reading from the unique
 exported Coq/Rocq `Definition ... : Prop/PropT`.
+Ordinary fallback successes carry that row in JSON as well: clients should see
+`fallback_single_reading` from `fallback_event_semantics`, linked to
+`example_1`, with a `none` attachment summary and a passing
+`semantic_readings_check`.
 The page also renders an `API Contract` panel with the same schema
 version and endpoint, so browser users and automated clients can check the
 contract without inspecting raw network traffic, and a `Conclusion` panel with

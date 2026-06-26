@@ -9259,6 +9259,42 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["lexicon_patch_draft_count"], 0)
         self.assertEqual(result["lexicon_patch_drafts"], [])
 
+    def test_api_analyze_response_exposes_fallback_semantic_reading_contract(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        result = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+knocked+twice&require_coq=1",
+        )
+        self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertEqual(
+            result["diagnostics"]["stages"]["semantic_readings_check"],
+            "passed",
+        )
+        self.assertEqual(result["diagnostics"]["semantic_readings_failure_kinds"], [])
+        self.assertEqual(result["diagnostics"]["recovery_actions"], [])
+        readings = result["semantic_readings"]
+        self.assertEqual(len(readings), 1)
+        reading = readings[0]
+        self.assertFalse(SEMANTIC_READING_CONTRACT_FIELDS - set(reading))
+        self.assertEqual(reading["name"], "fallback_single_reading")
+        self.assertEqual(reading["scope"], "fallback_single_reading")
+        self.assertEqual(reading["source"], "fallback_event_semantics")
+        self.assertEqual(reading["coq_definition"], "example_1")
+        self.assertEqual(reading["attachment_summary"]["kind"], "none")
+        self.assertTrue(reading["type_check"]["ok"])
+        self.assertEqual(
+            result["semantic_readings_check"]["repair_details"][
+                "expected_coq_definitions"
+            ],
+            ["example_1"],
+        )
+        self.assertEqual(
+            result["diagnostics"]["semantic_readings_repair_details"],
+            result["semantic_readings_check"]["repair_details"],
+        )
+
     def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -11752,6 +11788,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_single_reading`", readme)
         self.assertIn("`fallback_event_semantics`", readme)
         self.assertIn("definition `example_1`", readme)
+        self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
         self.assertIn("stale selector\nlinks", readme)
@@ -12064,6 +12101,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_single_reading`", web_design)
         self.assertIn("`fallback_event_semantics`", web_design)
         self.assertIn("Semantic Readings Check panel", web_design)
+        self.assertIn("API response and HTML panel must agree", web_design)
         self.assertIn(
             "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -12085,6 +12123,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fallback_single_reading", manuscript)
         self.assertIn("fallback_event_semantics", manuscript)
         self.assertIn("example_1 Coq/Rocq definition", manuscript)
+        self.assertIn("both the JSON response and the HTML panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
