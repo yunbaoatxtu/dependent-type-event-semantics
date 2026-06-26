@@ -103,13 +103,18 @@ share a clause predicate: `if John and Mary ate bread quickly in the park yester
 becomes
 `at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
 with `and_T : PropT -> PropT -> PropT`. These exports use no event, Agent, or Theme
-declarations. Clause-level markers outside that certified path, such as
-`who`, `which`, `that`, `whether`, or overextended conditional strings such as
-`if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead
-of being collapsed into entity names and sent to Coq/Rocq. This prevents the
-misleading formula `leave(0)(if_john, mary_cried)` and keeps a relation-clause subject
-such as `the tall boy who Mary saw yesterday quickly opened the old door with a key`
-from being accepted by the lexical state-change rule as a single causer constant.
+declarations. Clause-level markers outside certified paths, such as `which`,
+`whether`, or overextended conditional strings such as
+`if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead of being
+collapsed into entity names and sent to Coq/Rocq. The controlled exception is a
+simple quantifier-NP relative restrictor of the form `who/that` plus one
+intransitive verb: `some boy who laughed loved a girl` renders
+`boy(x_boy) and laugh(x_boy)`, and `some boy loved a girl that smiled` renders
+`girl(x_girl) and smile(x_girl)`. More complex relation-clause subjects, such
+as `the tall boy who Mary saw yesterday quickly opened the old door with a key`,
+are still rejected. This prevents the misleading formula
+`leave(0)(if_john, mary_cried)` and keeps unsupported relatives from being
+accepted by the lexical state-change rule as single causer constants.
 
 Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
 translation, so `Mary admired the painting yesterday` becomes
@@ -385,6 +390,14 @@ with an NP-specific predicate name: `some boy in the park loved some happy girl`
 renders `boy(x_boy) and in_park_np(x_boy)`, declares
 `in_park_np : Entity -> Prop`, and does not collide with the clause-level
 modifier declaration `in_park : Adv`.
+Simple NP-internal relative clauses now use that same restrictor discipline:
+`some boy who laughed loved a girl` records a `relative_clause_restrictors`
+entry for `laugh : Entity -> Prop` and renders
+`boy(x_boy) and laugh(x_boy)`, while
+`some boy loved a girl that smiled` renders
+`girl(x_girl) and smile(x_girl)`. The marker `who` or `that` is not exported as
+an entity, and transitive or multi-word relatives remain outside the certified
+fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.
@@ -998,7 +1011,9 @@ The current prototype has small, testable rules for:
   plain `Entity -> Prop` declaration;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
-  Coq/Rocq validation.
+  Coq/Rocq validation, except for controlled quantifier-NP relatives such as
+  `some boy who laughed loved a girl`, which are rendered as ordinary
+  `Entity -> Prop` binder restrictors.
 
 Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `intact` and `broken` have type `State`,

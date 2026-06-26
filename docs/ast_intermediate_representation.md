@@ -883,6 +883,15 @@ the fronted modifier stops before the quantified subject, so the AST records
 `in_bathroom : Adv` rather than a malformed `in_bathroom_some` name. This makes
 the ambiguity auditable before the Coq formula is rendered and prevents the
 timed or modified sentence from falling back to pseudo-entities such as `some_boy`.
+Simple NP-internal relative clauses are represented in the same binder-level
+shape when they have the controlled form `who/that` plus one intransitive verb.
+For `some boy who laughed loved a girl`, the subject NP stores
+`relative_clause_restrictors` with `laugh : Entity -> Prop`, and the rendered
+restrictor is `boy(x_boy) and laugh(x_boy)`. For
+`some boy loved a girl that smiled`, the object binder analogously stores
+`smile : Entity -> Prop` and renders `girl(x_girl) and smile(x_girl)`. The
+relative marker itself is not exported as a constant; complex or transitive
+relatives stay outside the certified fragment.
 The API result also
 exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
@@ -1437,12 +1446,14 @@ share the same predicate and optional object. Thus
 `if John and Mary ate bread quickly in the park yesterday, Sue cried today` becomes
 `at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
 with `subject_connective.name` equal to `and_T` and
-`subject_connective.type` equal to `PropT -> PropT -> PropT`. Unsupported clause-level markers such as
-`who`, `which`, `that`, `whether`, or an overextended conditional like
-`if John left, Mary cried because Sue left` produce a parsing failure instead of a shallow
-AST. This is deliberately conservative: an unimplemented conditional or
-relative clause must not become an entity name that later passes the Coq/Rocq
-scaffold check.
+`subject_connective.type` equal to `PropT -> PropT -> PropT`. Unsupported clause-level markers
+such as `which`, `whether`, or an overextended conditional
+like `if John left, Mary cried because Sue left` produce a parsing failure
+instead of a shallow AST. The exception is the controlled quantifier-NP
+relative restrictor described above, where `who/that` plus one intransitive verb
+is stored as `relative_clause_restrictors`. This is deliberately conservative:
+an unimplemented conditional or complex relative clause must not become an
+entity name that later passes the Coq/Rocq scaffold check.
 
 Modifier entries are not entity-denoting arguments. The AST records this twice:
 `modifier_vector` preserves the dependent length index, while `modifier_roles`

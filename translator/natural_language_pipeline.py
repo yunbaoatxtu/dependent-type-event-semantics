@@ -93,6 +93,7 @@ UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS = {
     "whose",
     "why",
 }
+RELATIVE_RESTRICTOR_MARKERS = {"that", "who"}
 
 
 @dataclass(frozen=True)
@@ -175,6 +176,46 @@ def strip_surface_coordination_marker(tokens: list[str]) -> list[str]:
     return tokens
 
 
+def parse_relative_restrictor(
+    tokens: list[str],
+) -> tuple[list[str], list[dict[str, Any]]] | None:
+    marker_indices = [
+        index
+        for index, token in enumerate(tokens)
+        if token in RELATIVE_RESTRICTOR_MARKERS
+    ]
+    if not marker_indices:
+        return tokens, []
+    if len(marker_indices) != 1:
+        return None
+    marker_index = marker_indices[0]
+    if marker_index == 0:
+        return None
+    relative_tokens = tokens[marker_index + 1 :]
+    if len(relative_tokens) != 1:
+        return None
+    relative_surface = relative_tokens[0]
+    if (
+        not is_likely_surface_verb(relative_surface)
+        or is_likely_transitive_verb(relative_surface)
+    ):
+        return None
+    predicate = lemma_verb(relative_surface)
+    return (
+        tokens[:marker_index],
+        [
+            {
+                "predicate": predicate,
+                "predicate_type": "Entity -> Prop",
+                "surface": " ".join(tokens[marker_index:]),
+                "marker": tokens[marker_index],
+                "relative_verb": relative_surface,
+                "kind": "relative_clause_restrictor",
+            }
+        ],
+    )
+
+
 def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
     if not tokens:
         return None
@@ -187,7 +228,7 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
         | ARTICLES
         | set(BOOLEAN_COORDINATORS)
         | set(TEMPORAL_RELATION_CONNECTORS)
-        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        | (UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS - RELATIVE_RESTRICTOR_MARKERS)
     )
     forbidden_pp_tokens = (
         (SUPPORTED_SCOPE_DETERMINERS - ARTICLES)
@@ -208,12 +249,19 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
         idx += 1
     if not nominal_tokens:
         return None
+    relative_parse = parse_relative_restrictor(nominal_tokens)
+    if relative_parse is None:
+        return None
+    nominal_tokens, relative_restrictors = relative_parse
+    if not nominal_tokens:
+        return None
     predicates = [lemma_verb(token) for token in nominal_tokens]
     head = predicates[-1]
     restrictors = [
         {"predicate": predicate, "predicate_type": "Entity -> Prop"}
         for predicate in predicates
     ]
+    restrictors.extend(relative_restrictors)
     postnominal_restrictors: list[dict[str, Any]] = []
     while idx < len(tokens):
         preposition = tokens[idx]
@@ -249,6 +297,8 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
     }
     if postnominal_restrictors:
         np["postnominal_restrictors"] = postnominal_restrictors
+    if relative_restrictors:
+        np["relative_clause_restrictors"] = relative_restrictors
     return np
 
 
@@ -9469,7 +9519,10 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
         rules = construction_rules()
-        certified_clause_marker_rules = {"simple_conditional"}
+        certified_clause_marker_rules = {
+            "simple_conditional",
+            "quantifier_scope_ambiguity",
+        }
         for rule in rules:
             if rule.rule_id not in certified_clause_marker_rules:
                 continue
