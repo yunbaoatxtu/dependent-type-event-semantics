@@ -137,11 +137,13 @@ fallback gap through `data-fallback-gap-id`, which gives smoke tests a stable
 hook for checking that shallow fallback success is not presented as a completed
 certification result.
 The manifest also carries a `coverage_matrix` with
-`registered_success_cases`, `fallback_success_cases`, and
-`rejected_unsupported_cases`, plus matching `coverage_matrix_counts`. The page
-exposes those counts through stable `data-coverage-*` attributes and renders
-fallback and rejected example rows with `data-coverage-kind`,
-`data-coverage-sentence`, and, for rejection rows, `data-coverage-marker`.
+`registered_success_cases`, `registered_variant_success_cases`,
+`fallback_success_cases`, and `rejected_unsupported_cases`, plus matching
+`coverage_matrix_counts`. The page exposes those counts through stable
+`data-coverage-*` attributes and renders registered-variant, fallback, and
+rejected example rows with `data-coverage-kind`, `data-coverage-sentence`, and,
+for registered variants, `data-coverage-variant-id`; for rejection rows it also
+uses `data-coverage-marker`.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

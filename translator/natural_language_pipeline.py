@@ -148,6 +148,23 @@ FALLBACK_COVERAGE_EXAMPLES = (
 )
 
 
+REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
+    {
+        "rule_id": "event_counting",
+        "variant_id": "temporal_event_counting",
+        "sentence": "John knocked twice yesterday",
+        "expected_event_analysis": "event-counting",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, repeat(2, knock(0)(john)))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+)
+
+
 FALLBACK_CERTIFICATION_GAPS = (
     {
         "id": "no_registered_construction_rule",
@@ -11150,17 +11167,25 @@ def construction_rules() -> list[ConstructionRule]:
 
 def construction_fragment_manifest() -> dict[str, Any]:
     rules = construction_rules()
+    variant_examples_by_rule: dict[str, list[str]] = {}
+    for variant in REGISTERED_VARIANT_COVERAGE_EXAMPLES:
+        rule_id = str(variant.get("rule_id", ""))
+        sentence = str(variant.get("sentence", ""))
+        if rule_id and sentence:
+            variant_examples_by_rule.setdefault(rule_id, []).append(sentence)
     registered = []
     registered_success_cases = []
     for rule in rules:
         example = CONSTRUCTION_RULE_EXAMPLES.get(rule.rule_id, "")
+        accepted_examples = [example] if example else []
+        accepted_examples.extend(variant_examples_by_rule.get(rule.rule_id, []))
         registered.append(
             {
                 "id": rule.rule_id,
                 "label": rule.label,
                 "phenomenon": rule.phenomenon,
                 "example": example,
-                "accepted_examples": [example] if example else [],
+                "accepted_examples": accepted_examples,
                 "verification_scope_kind": "registered_construction",
                 "certification_level": "construction_rule",
                 "boundary_status": "registered_primary_example",
@@ -11177,6 +11202,9 @@ def construction_fragment_manifest() -> dict[str, Any]:
                     "boundary_status": "registered_primary_example",
                 }
             )
+    registered_variant_success_cases = [
+        dict(example) for example in REGISTERED_VARIANT_COVERAGE_EXAMPLES
+    ]
     fallback_success_cases = [
         dict(example) for example in FALLBACK_COVERAGE_EXAMPLES
     ]
@@ -11215,11 +11243,13 @@ def construction_fragment_manifest() -> dict[str, Any]:
         },
         "coverage_matrix": {
             "registered_success_cases": registered_success_cases,
+            "registered_variant_success_cases": registered_variant_success_cases,
             "fallback_success_cases": fallback_success_cases,
             "rejected_unsupported_cases": rejected_unsupported_cases,
         },
         "coverage_matrix_counts": {
             "registered_success_cases": len(registered_success_cases),
+            "registered_variant_success_cases": len(registered_variant_success_cases),
             "fallback_success_cases": len(fallback_success_cases),
             "rejected_unsupported_cases": len(rejected_unsupported_cases),
         },

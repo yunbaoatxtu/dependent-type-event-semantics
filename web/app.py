@@ -2421,6 +2421,11 @@ def certified_fragment_panel() -> str:
         if isinstance(counts, dict)
         else ""
     )
+    registered_variant_case_count = str(
+        counts.get("registered_variant_success_cases", "")
+        if isinstance(counts, dict)
+        else ""
+    )
     fallback_case_count = str(
         counts.get("fallback_success_cases", "")
         if isinstance(counts, dict)
@@ -2448,9 +2453,22 @@ def certified_fragment_panel() -> str:
         if isinstance(marker, str)
     )
     fallback_items = ""
+    registered_variant_items = ""
     fallback_gap_items = ""
     rejected_items = ""
     if isinstance(coverage, dict):
+        registered_variant_items = "".join(
+            '<li '
+            f'data-coverage-kind="registered_variant_success" '
+            f'data-coverage-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
+            f'data-coverage-variant-id="{html.escape(str(item.get("variant_id", "")), quote=True)}" '
+            f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
+            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}">'
+            f"{html.escape(str(item.get('sentence', '')))}"
+            "</li>"
+            for item in coverage.get("registered_variant_success_cases", [])
+            if isinstance(item, dict)
+        )
         fallback_items = "".join(
             '<li '
             f'data-coverage-kind="fallback_success" '
@@ -2503,6 +2521,7 @@ def certified_fragment_panel() -> str:
         f'data-registered-construction-count="{len(registered)}" '
         f'data-semantic-snapshot-count="{html.escape(semantic_snapshot_count, quote=True)}" '
         f'data-coverage-registered-success-count="{html.escape(registered_case_count, quote=True)}" '
+        f'data-coverage-registered-variant-success-count="{html.escape(registered_variant_case_count, quote=True)}" '
         f'data-coverage-fallback-success-count="{html.escape(fallback_case_count, quote=True)}" '
         f'data-coverage-rejected-unsupported-count="{html.escape(rejected_case_count, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
@@ -2516,6 +2535,7 @@ def certified_fragment_panel() -> str:
         f"<dt>registered rules</dt><dd>{len(registered)}</dd>"
         f"<dt>semantic snapshots</dt><dd>{html.escape(semantic_snapshot_count)}</dd>"
         f"<dt>registered cases</dt><dd>{html.escape(registered_case_count)}</dd>"
+        f"<dt>registered variants</dt><dd>{html.escape(registered_variant_case_count)}</dd>"
         f"<dt>fallback cases</dt><dd>{html.escape(fallback_case_count)}</dd>"
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
@@ -2523,6 +2543,8 @@ def certified_fragment_panel() -> str:
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
         '<div class="certified-fragment-rules"><strong>registered constructions</strong>'
         f"<ul>{rule_items}</ul></div>"
+        '<div class="certified-fragment-coverage"><strong>registered variants</strong>'
+        f"<ul>{registered_variant_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>fallback coverage</strong>'
         f"<ul>{fallback_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>fallback certification gaps</strong>'

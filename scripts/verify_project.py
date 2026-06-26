@@ -2375,16 +2375,22 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     if not isinstance(coverage, dict) or not isinstance(counts, dict):
         raise SystemExit("web route smoke check failed: certified coverage matrix missing")
     registered_cases = coverage.get("registered_success_cases")
+    registered_variant_cases = coverage.get("registered_variant_success_cases")
     fallback_cases = coverage.get("fallback_success_cases")
     rejected_cases = coverage.get("rejected_unsupported_cases")
     if (
         not isinstance(registered_cases, list)
+        or not isinstance(registered_variant_cases, list)
         or not isinstance(fallback_cases, list)
         or not isinstance(rejected_cases, list)
     ):
         raise SystemExit("web route smoke check failed: certified coverage case drift")
     if counts.get("registered_success_cases") != len(registered_cases):
         raise SystemExit("web route smoke check failed: certified registered coverage count drift")
+    if counts.get("registered_variant_success_cases") != len(registered_variant_cases):
+        raise SystemExit(
+            "web route smoke check failed: certified registered variant coverage count drift"
+        )
     if counts.get("fallback_success_cases") != len(fallback_cases):
         raise SystemExit("web route smoke check failed: certified fallback coverage count drift")
     if counts.get("rejected_unsupported_cases") != len(rejected_cases):
@@ -2523,6 +2529,65 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                 "web route smoke check failed: certified rule "
                 f"{rule_id} semantic snapshot export drift"
             )
+    seen_variant_keys: set[tuple[str, str]] = set()
+    for variant in registered_variant_cases:
+        if not isinstance(variant, dict):
+            raise SystemExit(
+                "web route smoke check failed: certified registered variant shape drift"
+            )
+        rule_id = variant.get("rule_id")
+        variant_id = variant.get("variant_id")
+        sentence = variant.get("sentence")
+        expected_fragments = variant.get("expected_dependent_type_fragments")
+        if (
+            not isinstance(rule_id, str)
+            or rule_id not in rules
+            or not isinstance(variant_id, str)
+            or not variant_id
+            or not isinstance(sentence, str)
+            or not sentence
+            or not isinstance(expected_fragments, list)
+            or not expected_fragments
+            or not all(isinstance(fragment, str) and fragment for fragment in expected_fragments)
+            or variant.get("expected_verification_scope_kind") != "registered_construction"
+            or variant.get("expected_certification_level") != "construction_rule"
+            or variant.get("boundary_status") != "registered_variant_example"
+            or not isinstance(variant.get("expected_event_analysis"), str)
+            or not isinstance(variant.get("expected_ast_kind"), str)
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified registered variant schema drift"
+            )
+        key = (rule_id, variant_id)
+        if key in seen_variant_keys:
+            raise SystemExit("web route smoke check failed: duplicate certified registered variant")
+        seen_variant_keys.add(key)
+        accepted_examples = registered_by_id[rule_id].get("accepted_examples")
+        if not isinstance(accepted_examples, list) or sentence not in accepted_examples:
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} variant example drift"
+            )
+        result = run_pipeline(sentence, require_coq=False)
+        if (
+            not result.get("ok")
+            or result.get("construction_rule", {}).get("id") != rule_id
+            or result.get("verification_scope", {}).get("kind") != "registered_construction"
+            or result.get("verification_scope", {}).get("certification_level")
+            != "construction_rule"
+            or result.get("event_semantics", {}).get("analysis")
+            != variant.get("expected_event_analysis")
+            or result.get("ast", {}).get("kind") != variant.get("expected_ast_kind")
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} variant runtime drift"
+            )
+        dependent_type_translation = str(result.get("dependent_type_translation", ""))
+        for fragment in expected_fragments:
+            if fragment not in dependent_type_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified rule "
+                    f"{rule_id} variant translation drift"
+                )
     fallback = manifest.get("fallback")
     if (
         not isinstance(fallback, dict)
@@ -2584,6 +2649,10 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             f'{manifest.get("coverage_matrix_counts", {}).get("registered_success_cases")}"'
         ),
         (
+            'data-coverage-registered-variant-success-count="'
+            f'{manifest.get("coverage_matrix_counts", {}).get("registered_variant_success_cases")}"'
+        ),
+        (
             'data-coverage-fallback-success-count="'
             f'{manifest.get("coverage_matrix_counts", {}).get("fallback_success_cases")}"'
         ),
@@ -2603,6 +2672,16 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     )
     coverage = manifest.get("coverage_matrix", {})
     if isinstance(coverage, dict):
+        expected_fragments.extend(
+            f'data-coverage-variant-id="{html.escape(str(item.get("variant_id", "")), quote=True)}"'
+            for item in coverage.get("registered_variant_success_cases", [])
+            if isinstance(item, dict)
+        )
+        expected_fragments.extend(
+            f'data-coverage-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}"'
+            for item in coverage.get("registered_variant_success_cases", [])
+            if isinstance(item, dict)
+        )
         expected_fragments.extend(
             f'data-coverage-marker="{html.escape(str(item.get("marker", "")), quote=True)}"'
             for item in coverage.get("rejected_unsupported_cases", [])

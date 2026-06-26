@@ -8919,6 +8919,10 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["registered_success_cases"]),
         )
         self.assertEqual(
+            counts["registered_variant_success_cases"],
+            len(coverage["registered_variant_success_cases"]),
+        )
+        self.assertEqual(
             counts["fallback_success_cases"],
             len(coverage["fallback_success_cases"]),
         )
@@ -8927,6 +8931,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
+        self.assertEqual(counts["registered_variant_success_cases"], 1)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         self.assertEqual(
@@ -8972,7 +8977,11 @@ class TranslatorTests(unittest.TestCase):
                 entry["forbidden_coq_fragments"],
                 list(rule.forbidden_coq_fragments),
             )
-            self.assertEqual(entry["accepted_examples"], [entry["example"]])
+            self.assertEqual(entry["accepted_examples"][0], entry["example"])
+            self.assertIn(
+                "John knocked twice yesterday",
+                registered["event_counting"]["accepted_examples"],
+            )
             self.assertEqual(entry["boundary_status"], "registered_primary_example")
 
         for case in coverage["registered_success_cases"]:
@@ -9026,6 +9035,28 @@ class TranslatorTests(unittest.TestCase):
                 self.assertTrue(
                     set(snapshot["expected_coq_definitions"]).issubset(exported),
                 )
+
+        for case in coverage["registered_variant_success_cases"]:
+            with self.subTest(variant=case["variant_id"]):
+                result = run_pipeline(case["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["construction_rule"]["id"], case["rule_id"])
+                self.assertEqual(
+                    result["verification_scope"]["kind"],
+                    case["expected_verification_scope_kind"],
+                )
+                self.assertEqual(
+                    result["verification_scope"]["certification_level"],
+                    case["expected_certification_level"],
+                )
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    case["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], case["expected_ast_kind"])
+                dependent_type_translation = result["dependent_type_translation"]
+                for fragment in case["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, dependent_type_translation)
 
         for case in coverage["fallback_success_cases"]:
             with self.subTest(sentence=case["sentence"]):
@@ -9100,6 +9131,10 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
+            1,
+        )
+        self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
             1,
         )
@@ -9126,6 +9161,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
+        self.assertIn('data-coverage-registered-variant-success-count="1"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -9141,6 +9177,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-semantic-snapshot-analysis="quantifier-scope"', page)
         self.assertIn('data-semantic-snapshot-ast-kind="scope_ambiguity"', page)
+        self.assertIn('data-coverage-kind="registered_variant_success"', page)
+        self.assertIn('data-coverage-rule-id="event_counting"', page)
+        self.assertIn('data-coverage-variant-id="temporal_event_counting"', page)
+        self.assertIn('data-coverage-sentence="John knocked twice yesterday"', page)
         self.assertIn('data-coverage-kind="fallback_success"', page)
         self.assertIn('data-coverage-kind="rejected_unsupported"', page)
         self.assertIn('data-coverage-marker="because"', page)

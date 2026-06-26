@@ -829,11 +829,13 @@ is accepted but what remains to be supplied before a fallback sentence can be
 claimed as certified. The page renders the same data in a `Certified Fragment`
 panel, so users can distinguish the current certified fragment from the
 stronger, still-open goal of arbitrary natural-language certification.
-The same manifest now includes a `coverage_matrix` with three audited slices:
-`registered_success_cases`, `fallback_success_cases`, and
-`rejected_unsupported_cases`. Registered cases point back to each rule's
-primary example, fallback cases remain explicitly shallow, and rejected cases
-record the marker that must stop the pipeline before fallback.
+The same manifest now includes a `coverage_matrix` with four audited slices:
+`registered_success_cases`, `registered_variant_success_cases`,
+`fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases
+point back to each rule's primary example, registered variants capture
+composition examples such as `John knocked twice yesterday` under
+`temporal_event_counting`, fallback cases remain explicitly shallow, and
+rejected cases record the marker that must stop the pipeline before fallback.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and
