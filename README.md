@@ -75,6 +75,16 @@ surface lexicon also normalizes common past-tense forms before translation, so
 examples such as `a dog chased a cat` export `chase` rather than a truncated
 predicate name.
 
+The same entry point now has a certified-fragment safety guard before any
+registered construction rule or fallback sentence analysis runs. Clause-level
+markers that the current parser cannot certify, such as `if`, `who`, `which`,
+`that`, and `whether`, produce a parsing-stage diagnostic instead of being
+collapsed into entity names and sent to Coq/Rocq. For example, `if John left,
+Mary cried` is rejected before it can become the misleading formula
+`leave(0)(if_john, mary_cried)`, and a relation-clause subject such as `the
+tall boy who Mary saw yesterday quickly opened the old door with a key` is not
+accepted by the lexical state-change rule as a single causer constant.
+
 Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
 translation, so `Mary admired the painting yesterday` becomes
 `at_T(yesterday, admire(0)(mary, painting))` rather than treating
@@ -922,7 +932,10 @@ The current prototype has small, testable rules for:
 - passive argument omission with an existential typed agent;
 - event counting with `once`/`twice`/`thrice`, word or digit `time(s)`
   phrases, or explicit `count`;
-- causal-resultative translation into a typed state transition.
+- causal-resultative translation into a typed state transition;
+- a certified-fragment guard that rejects unsupported subordinate,
+  complement, interrogative, and relative-clause markers before fallback or
+  Coq/Rocq validation.
 
 Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `intact` and `broken` have type `State`,
@@ -1206,9 +1219,12 @@ python3 scripts/verify_project.py --require-coq --require-docx
 
 The current implementation is a prototype. It accepts a small JSON
 representation of neo-Davidsonian event formulas and emits a dependent-type
-style rendering. The accompanying paper explains the broader theoretical
-architecture needed to replace event semantics across variable polyadicity,
-argument omission, thematic roles, event quantity, causation, and resultatives.
+style rendering. It also accepts a controlled natural-language fragment, while
+explicitly rejecting sentence forms outside the certified fragment before
+proof-assistant validation. The accompanying paper explains the broader
+theoretical architecture needed to replace event semantics across variable
+polyadicity, argument omission, thematic roles, event quantity, causation, and
+resultatives.
 
 ## Status
 

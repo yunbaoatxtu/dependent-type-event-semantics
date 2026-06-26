@@ -75,6 +75,24 @@ DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
 BOOLEAN_COORDINATORS = {"and": "and_T", "or": "or_T"}
 TEMPORAL_RELATION_CONNECTORS = {"after", "before"}
+UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS = {
+    "although",
+    "because",
+    "if",
+    "that",
+    "though",
+    "unless",
+    "when",
+    "where",
+    "whereas",
+    "whether",
+    "which",
+    "while",
+    "who",
+    "whom",
+    "whose",
+    "why",
+}
 
 
 @dataclass(frozen=True)
@@ -7906,6 +7924,28 @@ def tokenize(sentence: str) -> list[str]:
     return re.findall(r"[A-Za-z0-9_']+", normalize_sentence(sentence))
 
 
+def unsupported_certified_clause_markers(sentence: str) -> list[str]:
+    tokens = tokenize(sentence)
+    return [
+        token for token in tokens if token in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+    ]
+
+
+def reject_unsupported_certified_clause_markers(sentence: str) -> None:
+    markers = unsupported_certified_clause_markers(sentence)
+    if not markers:
+        return
+    quoted_markers = ", ".join(f"'{marker}'" for marker in sorted(set(markers)))
+    raise ValueError(
+        "Unsupported clause-level marker in the current certified fragment: "
+        f"{quoted_markers}. The pipeline refused to send this sentence to "
+        "fallback analysis or Coq/Rocq because it may contain an unimplemented "
+        "subordinate, complement, interrogative, or relative-clause structure. "
+        "Add a registered construction rule or simplify the sentence before "
+        "requesting certification."
+    )
+
+
 def clean_phrase(tokens: list[str]) -> str:
     content = [token for token in tokens if token not in ARTICLES]
     if not content:
@@ -8216,6 +8256,7 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
+        reject_unsupported_certified_clause_markers(sentence)
         for rule in construction_rules():
             registered_result = run_registered_rule(rule, sentence, require_coq)
             if registered_result is not None:

@@ -1287,6 +1287,23 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_pipeline_rejects_uncertified_clause_markers_before_coq(self) -> None:
+        conditional = run_pipeline("if John left, Mary cried", require_coq=True)
+        self.assertFalse(conditional["ok"])
+        self.assertIn("Unsupported clause-level marker", conditional["error"])
+        self.assertIn("'if'", conditional["error"])
+        self.assertNotIn("coq_check", conditional)
+        self.assertNotIn("dependent_type_translation", conditional)
+
+        relative_subject = run_pipeline(
+            "the tall boy who Mary saw yesterday quickly opened the old door with a key",
+            require_coq=True,
+        )
+        self.assertFalse(relative_subject["ok"])
+        self.assertIn("'who'", relative_subject["error"])
+        self.assertNotIn("lexical_state_change", relative_subject.get("kind", ""))
+        self.assertNotIn("coq_check", relative_subject)
+
     def test_fallback_handles_adjective_subject_phrase(self) -> None:
         result = run_pipeline("a black cat sits on a mat", require_coq=True)
         self.assertTrue(result["ok"])
@@ -7029,6 +7046,28 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
 
+    def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
+        result = analyze_sentence("if John left, Mary cried", require_coq=True)
+        self.assertFalse(result["ok"])
+        self.assertIn("Unsupported clause-level marker", result["error"])
+        self.assertIn("'if'", result["error"])
+        self.assertEqual(result["diagnostics"]["summary"], "translation failed")
+        self.assertEqual(result["diagnostics"]["failure_stage"], "parsing")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "not_applicable")
+        self.assertEqual(
+            result["diagnostics"]["recovery_actions"][0]["kind"],
+            "revise_sentence",
+        )
+
+        relative_subject = analyze_sentence(
+            "the tall boy who Mary saw yesterday quickly opened the old door with a key",
+            require_coq=True,
+        )
+        self.assertFalse(relative_subject["ok"])
+        self.assertIn("'who'", relative_subject["error"])
+        self.assertNotIn("state_change_verb_entry", relative_subject)
+
     def test_api_analyze_response_contains_diagnostics(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -8178,6 +8217,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<strong>Add subject and predicate</strong>", page)
         self.assertIn("<code>revise_sentence</code>", page)
         self.assertIn("Use a sentence with at least a recognizable subject and predicate.", page)
+
+    def test_web_page_status_shows_uncertified_clause_marker_failure(self) -> None:
+        page = render_page("if John left, Mary cried", require_coq=True)
+        self.assertIn("Needs attention", page)
+        self.assertIn("Failure stage: natural-language parsing.", page)
+        self.assertIn("Unsupported clause-level marker", page)
+        self.assertIn("&#x27;if&#x27;", page)
+        self.assertNotIn("leave(0)(if_john, mary_cried)", page)
+        self.assertIn("&quot;coq_check&quot;: &quot;not_applicable&quot;", page)
 
     def test_web_page_status_shows_empty_input_failure_stage(self) -> None:
         page = render_page("  ")
@@ -9903,6 +9951,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("smoke check for the lexicon patch exporter", readme)
         self.assertIn("web route smoke check", readme)
         self.assertIn("real local web route", manuscript)
+        self.assertIn("certified-fragment safety guard", readme)
+        self.assertIn("`if John left,", readme)
+        self.assertIn("Mary cried` is rejected", readme)
+        self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
+        self.assertIn("relation-clause subject", readme)
+        self.assertIn("certified-fragment guard", manuscript)
+        self.assertIn("leave(if_john, mary_cried)", manuscript)
+        self.assertIn("negative capability", manuscript)
+        self.assertIn("Clause-level markers outside the", web_design)
+        self.assertIn("current certified fragment", web_design)
+        self.assertIn("`leave(0)(if_john, mary_cried)`", web_design)
+        self.assertIn("Unsupported clause-level markers", ast_docs)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
         self.assertIn("python3 scripts/verify_project.py --require-coq --require-docx", readme)
