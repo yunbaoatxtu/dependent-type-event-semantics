@@ -22,8 +22,12 @@ if str(ROOT) not in sys.path:
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES  # noqa: E402
 from web.diagnostic_contract import (  # noqa: E402
     DIAGNOSTIC_FAILURE_STAGES,
+    DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+    recovery_action_automation_mode,
+    recovery_action_can_auto_run,
 )
 PYCACHE = ROOT / ".pycache"
 COQ_FILE = ROOT / "formalization" / "DependentTypeEventSemantics.v"
@@ -33,6 +37,10 @@ ROCQ_ENV = Path(
 )
 VALID_DIAGNOSTIC_FAILURE_STAGES = DIAGNOSTIC_FAILURE_STAGES
 VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS = DIAGNOSTIC_RECOVERY_ACTION_KINDS
+VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES = (
+    DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES
+)
+VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS = INSPECTION_ONLY_RECOVERY_ACTION_KINDS
 VALID_LEXICON_WARNING_KINDS = {
     "derived_result_scale",
     "source_state_used_as_target",
@@ -688,6 +696,12 @@ def diagnostic_contract_bundle_for_recovery_action() -> dict:
         "failure_stages": sorted(VALID_DIAGNOSTIC_FAILURE_STAGES),
         "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
         "recovery_action_kinds": sorted(VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+        "repair_plan_automation_modes": sorted(
+            VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES
+        ),
+        "inspection_only_recovery_action_kinds": sorted(
+            VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
+        ),
     }
 
 
@@ -764,17 +778,30 @@ def recovery_action_repair_plan_preview(
         "revise_sentence": ["input_sentence"],
     }
     detail = str(expected_action.get("detail") or "Inspect the failing diagnostic stage.")
+    automation_mode = recovery_action_automation_mode(kind)
+    if automation_mode == "inspection_only":
+        action_step = (
+            "Inspect the listed diagnostic field(s); this action is read-only and "
+            "does not mutate semantic readings or Coq/Rocq output."
+        )
+    else:
+        action_step = (
+            "Apply the repair to the listed target field(s) without changing "
+            "unrelated pipeline stages."
+        )
     return {
         "schema_version": "diagnostic_repair_plan.v1",
         "case": case,
         "action_index": action_index,
         "action_kind": kind,
         "failure_stage": expected_stage,
+        "automation_mode": automation_mode,
+        "can_auto_run": recovery_action_can_auto_run(kind),
         "can_auto_apply": False,
         "target_fields": target_fields_by_kind.get(kind, []),
         "steps": [
             detail,
-            "Apply the repair to the listed target field(s) without changing unrelated pipeline stages.",
+            action_step,
             "Re-run deterministic verification after the repair.",
         ],
         "patch_text_preview": recovery_action_patch_preview(expected_action),
@@ -983,6 +1010,18 @@ def validate_diagnostic_contract_manifest(contract: dict) -> None:
         VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS
     ):
         raise SystemExit("web route smoke check failed: diagnostic recovery-action drift")
+    if contract.get("repair_plan_automation_modes") != sorted(
+        VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES
+    ):
+        raise SystemExit(
+            "web route smoke check failed: diagnostic repair-plan automation drift"
+        )
+    if contract.get("inspection_only_recovery_action_kinds") != sorted(
+        VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
+    ):
+        raise SystemExit(
+            "web route smoke check failed: diagnostic inspection-only action drift"
+        )
 
 
 def validate_diagnostic_contract_html_panel(page: str) -> None:
@@ -990,6 +1029,12 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
         "failure_stages": sorted(VALID_DIAGNOSTIC_FAILURE_STAGES),
         "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
         "recovery_action_kinds": sorted(VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+        "repair_plan_automation_modes": sorted(
+            VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES
+        ),
+        "inspection_only_recovery_action_kinds": sorted(
+            VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
+        ),
     }
     expected_fragments = [
         'class="panel diagnostic-contract-panel"',

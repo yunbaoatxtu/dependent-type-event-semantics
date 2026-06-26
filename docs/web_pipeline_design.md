@@ -288,9 +288,12 @@ stage, exact action payload, a `diagnostic_repair_plan.v1` object, and shared
 diagnostic contract. The repair plan should record `can_auto_apply`, target
 fields, ordered repair steps, a review-only patch preview when one can be
 constructed, and verification commands; the verifier should reject repair-plan drift
-rather than trusting prose. This gives browser tools an inspection/export
-path for one suggested repair without scraping the full analysis response. The
-fixture HTML should also render a
+rather than trusting prose. It should also distinguish `automation_mode` values:
+`inspection_only` actions expose `can_auto_run` for read-only checks, while
+semantic or Coq/Rocq repair actions remain `human_review_required` and must not
+be applied silently. This gives browser tools an inspection/export path for one
+suggested repair without scraping the full analysis response. The fixture HTML
+should also render a
 `Recovery Action Exports` panel that summarizes every such route with
 `data-export-schema`, `data-export-case`, `data-export-count`,
 `data-export-action-index`, `data-export-action-kind`, and

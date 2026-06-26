@@ -653,9 +653,13 @@ JSON link such as
 `diagnostic_recovery_action.v1` payload contains the fixture case, action
 index, failure stage, exact action object, a `diagnostic_repair_plan.v1`
 repair plan, and the shared diagnostic contract. The repair plan records
-whether the action can be applied automatically, which target fields it touches,
-ordered repair steps, any review-only patch preview, and verification commands
-that should be rerun after the repair.
+its `automation_mode`, whether the action can be run automatically as a
+read-only inspection, whether it can be applied automatically as a mutation,
+which target fields it touches, ordered repair steps, any review-only patch
+preview, and verification commands that should be rerun after the repair.
+The inspection-only actions such as `inspect_ast`, `inspect_coq`, and
+`inspect_readings` can be auto-run without mutating semantic readings or
+Coq/Rocq output; semantic and export repairs remain human-review-required.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, so browser checks can verify the export contract without opening

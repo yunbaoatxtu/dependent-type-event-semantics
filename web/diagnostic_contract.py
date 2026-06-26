@@ -38,6 +38,29 @@ DIAGNOSTIC_RECOVERY_ACTION_KINDS = frozenset(
         "revise_sentence",
     }
 )
+DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES = frozenset(
+    {
+        "human_review_required",
+        "inspection_only",
+    }
+)
+INSPECTION_ONLY_RECOVERY_ACTION_KINDS = frozenset(
+    {
+        "inspect_ast",
+        "inspect_coq",
+        "inspect_readings",
+    }
+)
+
+
+def recovery_action_automation_mode(action_kind: str) -> str:
+    if action_kind in INSPECTION_ONLY_RECOVERY_ACTION_KINDS:
+        return "inspection_only"
+    return "human_review_required"
+
+
+def recovery_action_can_auto_run(action_kind: str) -> bool:
+    return recovery_action_automation_mode(action_kind) == "inspection_only"
 
 
 @dataclass(frozen=True)

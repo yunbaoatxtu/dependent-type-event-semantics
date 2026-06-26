@@ -15,8 +15,10 @@ from urllib.request import ProxyHandler, build_opener
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES
 from scripts.verify_project import (
+    VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     VALID_DIAGNOSTIC_FAILURE_STAGES,
+    VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     validate_diagnostic_contract_html_panel,
     validate_diagnostic_contract_manifest,
@@ -26,6 +28,8 @@ from scripts.verify_project import (
     validate_lexicon_warning_response,
 )
 from web.diagnostic_contract import (
+    DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
+    INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
 )
 from translator.dependent_type_event_translator import (
@@ -7961,6 +7965,14 @@ class TranslatorTests(unittest.TestCase):
             DIAGNOSTIC_RECOVERY_ACTION_KINDS,
         )
         self.assertIs(
+            VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
+            DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
+        )
+        self.assertIs(
+            VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
+            INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
+        )
+        self.assertIs(
             VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
             REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
         )
@@ -7979,8 +7991,21 @@ class TranslatorTests(unittest.TestCase):
             contract["recovery_action_kinds"],
             sorted(DIAGNOSTIC_RECOVERY_ACTION_KINDS),
         )
+        self.assertEqual(
+            contract["repair_plan_automation_modes"],
+            sorted(DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES),
+        )
+        self.assertEqual(
+            contract["inspection_only_recovery_action_kinds"],
+            sorted(INSPECTION_ONLY_RECOVERY_ACTION_KINDS),
+        )
         self.assertIn("semantic_readings_check", contract["failure_stages"])
         self.assertIn("add_missing_coq_definitions", contract["recovery_action_kinds"])
+        self.assertIn("inspection_only", contract["repair_plan_automation_modes"])
+        self.assertIn(
+            "inspect_readings",
+            contract["inspection_only_recovery_action_kinds"],
+        )
 
     def test_verification_rejects_diagnostic_contract_manifest_drift(self) -> None:
         contract = diagnostic_contract_manifest()
@@ -8003,6 +8028,22 @@ class TranslatorTests(unittest.TestCase):
         bad_actions["recovery_action_kinds"] = ["inspect_readings"]
         with self.assertRaisesRegex(SystemExit, "diagnostic recovery-action drift"):
             validate_diagnostic_contract_manifest(bad_actions)
+
+        bad_modes = deepcopy(contract)
+        bad_modes["repair_plan_automation_modes"] = ["human_review_required"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "diagnostic repair-plan automation drift",
+        ):
+            validate_diagnostic_contract_manifest(bad_modes)
+
+        bad_inspection_kinds = deepcopy(contract)
+        bad_inspection_kinds["inspection_only_recovery_action_kinds"] = ["inspect_ast"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "diagnostic inspection-only action drift",
+        ):
+            validate_diagnostic_contract_manifest(bad_inspection_kinds)
 
     def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-empty case"):
@@ -8176,6 +8217,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(payload["action"], expected_action)
         self.assertEqual(payload["repair_plan"], expected_plan)
         self.assertEqual(payload["repair_plan"]["schema_version"], RECOVERY_REPAIR_PLAN_SCHEMA)
+        self.assertEqual(payload["repair_plan"]["automation_mode"], "human_review_required")
+        self.assertFalse(payload["repair_plan"]["can_auto_run"])
         self.assertFalse(payload["repair_plan"]["can_auto_apply"])
         self.assertIn("coq_code", payload["repair_plan"]["target_fields"])
         self.assertIn("Definition missing_reading : PropT", payload["repair_plan"]["patch_text_preview"])
@@ -8184,6 +8227,20 @@ class TranslatorTests(unittest.TestCase):
             ["python3 scripts/verify_project.py --require-coq --require-docx"],
         )
         self.assertEqual(payload["contract"], diagnostic_contract_manifest())
+
+    def test_recovery_action_repair_plan_marks_inspection_only_actions(self) -> None:
+        bundle = recovery_action_export_bundle("type_check_failure", 0)
+        plan = bundle["repair_plan"]
+        self.assertEqual(bundle["action"]["kind"], "inspect_ast")
+        self.assertEqual(plan["schema_version"], RECOVERY_REPAIR_PLAN_SCHEMA)
+        self.assertEqual(plan["automation_mode"], "inspection_only")
+        self.assertTrue(plan["can_auto_run"])
+        self.assertFalse(plan["can_auto_apply"])
+        self.assertEqual(plan["patch_text_preview"], "")
+        self.assertIn("ast", plan["target_fields"])
+        self.assertIn("type_check", plan["target_fields"])
+        self.assertIn("read-only", plan["steps"][1])
+        self.assertIn("does not mutate semantic readings", plan["steps"][1])
 
     def test_verification_rejects_recovery_action_repair_plan_drift(self) -> None:
         expected = diagnostic_fixture_result("semantic_readings_missing_export")
@@ -8200,6 +8257,27 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "recovery action repair-plan drift"):
             validate_recovery_action_export_bundle(
                 "semantic_readings_missing_export",
+                0,
+                expected_action,
+                stale_bundle,
+            )
+
+    def test_verification_rejects_recovery_action_automation_mode_drift(self) -> None:
+        expected = diagnostic_fixture_result("type_check_failure")
+        expected_action = expected["diagnostics"]["recovery_actions"][0]
+        bundle = recovery_action_export_bundle("type_check_failure", 0)
+        validate_recovery_action_export_bundle(
+            "type_check_failure",
+            0,
+            expected_action,
+            bundle,
+        )
+        stale_bundle = deepcopy(bundle)
+        stale_bundle["repair_plan"]["automation_mode"] = "human_review_required"
+        stale_bundle["repair_plan"]["can_auto_run"] = False
+        with self.assertRaisesRegex(SystemExit, "recovery action repair-plan drift"):
+            validate_recovery_action_export_bundle(
+                "type_check_failure",
                 0,
                 expected_action,
                 stale_bundle,
@@ -8598,6 +8676,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`recovery_action_exports`", readme)
         self.assertIn("per-action JSON export paths", readme)
         self.assertIn("`diagnostic_repair_plan.v1`", readme)
+        self.assertIn("`automation_mode`", readme)
+        self.assertIn("read-only inspection", readme)
+        self.assertIn("human-review-required", readme)
         self.assertIn("verification commands", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
@@ -8757,6 +8838,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`recovery_action_exports`", web_design)
         self.assertIn("per-action export metadata", web_design)
         self.assertIn("`diagnostic_repair_plan.v1`", web_design)
+        self.assertIn("`automation_mode`", web_design)
+        self.assertIn("`inspection_only`", web_design)
+        self.assertIn("`can_auto_run`", web_design)
+        self.assertIn("`human_review_required`", web_design)
         self.assertIn("repair-plan drift", web_design)
         self.assertIn(
             "visible labels, controls, and JSON inventory cannot silently drift apart",
@@ -8778,6 +8863,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("recovery_action_exports inventory", manuscript)
         self.assertIn("per-action export paths", manuscript)
         self.assertIn("diagnostic_repair_plan.v1", manuscript)
+        self.assertIn("repair_plan_automation_modes", manuscript)
+        self.assertIn("inspection_only_recovery_action_kinds", manuscript)
+        self.assertIn("automation-mode drift", manuscript)
         self.assertIn("repair-plan drift", manuscript)
         self.assertIn("stale action export links", manuscript)
         self.assertIn("schema drift", manuscript)
@@ -9560,6 +9648,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("VALID_DIAGNOSTIC_FAILURE_STAGES", verifier)
         self.assertIn("web.diagnostic_contract", verifier)
         self.assertIn("REQUIRED_DIAGNOSTIC_FIXTURE_STAGES", verifier)
+        self.assertIn("VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES", verifier)
+        self.assertIn("VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS", verifier)
         self.assertIn("unknown fixture failure stage", verifier)
         self.assertIn("missing diagnostic fixture stages", verifier)
         self.assertIn("VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS", verifier)
@@ -9606,6 +9696,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("recovery action drift", verifier)
         self.assertIn("recovery action repair-plan drift", verifier)
         self.assertIn("diagnostic_repair_plan.v1", verifier)
+        self.assertIn("diagnostic repair-plan automation drift", verifier)
+        self.assertIn("diagnostic inspection-only action drift", verifier)
         self.assertIn("recovery action export manifest drift", verifier)
         self.assertIn("recovery action export case/index drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)

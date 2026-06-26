@@ -24,9 +24,13 @@ from translator.natural_language_pipeline import (
 )
 from web.diagnostic_contract import (
     DIAGNOSTIC_FAILURE_STAGES,
+    DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     DiagnosticFixtureSpec,
+    INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+    recovery_action_automation_mode,
+    recovery_action_can_auto_run,
 )
 
 
@@ -403,6 +407,10 @@ def diagnostic_contract_manifest() -> dict[str, Any]:
         "failure_stages": sorted(DIAGNOSTIC_FAILURE_STAGES),
         "required_fixture_stages": sorted(REQUIRED_DIAGNOSTIC_FIXTURE_STAGES),
         "recovery_action_kinds": sorted(DIAGNOSTIC_RECOVERY_ACTION_KINDS),
+        "repair_plan_automation_modes": sorted(DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES),
+        "inspection_only_recovery_action_kinds": sorted(
+            INSPECTION_ONLY_RECOVERY_ACTION_KINDS
+        ),
     }
 
 
@@ -482,9 +490,20 @@ def recovery_action_repair_plan(
         "revise_sentence": ["input_sentence"],
     }
     detail = str(action.get("detail") or "Inspect the failing diagnostic stage.")
+    automation_mode = recovery_action_automation_mode(kind)
+    if automation_mode == "inspection_only":
+        action_step = (
+            "Inspect the listed diagnostic field(s); this action is read-only and "
+            "does not mutate semantic readings or Coq/Rocq output."
+        )
+    else:
+        action_step = (
+            "Apply the repair to the listed target field(s) without changing "
+            "unrelated pipeline stages."
+        )
     steps = [
         detail,
-        "Apply the repair to the listed target field(s) without changing unrelated pipeline stages.",
+        action_step,
         "Re-run deterministic verification after the repair.",
     ]
     return {
@@ -493,6 +512,8 @@ def recovery_action_repair_plan(
         "action_index": action_index,
         "action_kind": kind,
         "failure_stage": failure_stage,
+        "automation_mode": automation_mode,
+        "can_auto_run": recovery_action_can_auto_run(kind),
         "can_auto_apply": False,
         "target_fields": target_fields_by_kind.get(kind, []),
         "steps": steps,
@@ -1681,6 +1702,8 @@ def diagnostic_contract_panel() -> str:
         ("Failure Stages", "failure_stages"),
         ("Required Fixture Stages", "required_fixture_stages"),
         ("Recovery Actions", "recovery_action_kinds"),
+        ("Repair Plan Automation Modes", "repair_plan_automation_modes"),
+        ("Inspection-Only Actions", "inspection_only_recovery_action_kinds"),
     ]
     vocabularies = []
     for label, field in sections:
