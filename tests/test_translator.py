@@ -465,6 +465,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(lemma_verb("opened"), "open")
         self.assertEqual(lemma_verb("froze"), "freeze")
         self.assertEqual(lemma_verb("flew"), "fly")
+        self.assertEqual(lemma_verb("cried"), "cry")
         self.assertEqual(lemma_verb("chased"), "chase")
         self.assertEqual(lemma_verb("passed"), "pass")
         self.assertEqual(lemma_verb("missed"), "miss")
@@ -486,6 +487,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("write", COMMON_VERB_LEMMAS)
         self.assertIn("smile", COMMON_VERB_LEMMAS)
         self.assertIn("laugh", COMMON_VERB_LEMMAS)
+        self.assertIn("cry", COMMON_VERB_LEMMAS)
         self.assertIn("eat", COMMON_TRANSITIVE_VERB_LEMMAS)
         self.assertIn("drink", COMMON_TRANSITIVE_VERB_LEMMAS)
         self.assertNotIn("walk", COMMON_TRANSITIVE_VERB_LEMMAS)
@@ -500,6 +502,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(is_likely_surface_verb("waved"))
         self.assertTrue(is_likely_surface_verb("smiled"))
         self.assertTrue(is_likely_surface_verb("laughed"))
+        self.assertTrue(is_likely_surface_verb("cried"))
         self.assertEqual(lemma_verb("smiling"), "smile")
         self.assertEqual(lemma_verb("laughing"), "laugh")
         self.assertFalse(is_likely_surface_verb("cat"))
@@ -1287,13 +1290,55 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["coq_check"]["status"], "passed")
 
-    def test_pipeline_rejects_uncertified_clause_markers_before_coq(self) -> None:
+    def test_simple_conditional_implication_is_checked_before_fallback(self) -> None:
         conditional = run_pipeline("if John left, Mary cried", require_coq=True)
-        self.assertFalse(conditional["ok"])
-        self.assertIn("Unsupported clause-level marker", conditional["error"])
-        self.assertIn("'if'", conditional["error"])
-        self.assertNotIn("coq_check", conditional)
-        self.assertNotIn("dependent_type_translation", conditional)
+        self.assertTrue(conditional["ok"])
+        self.assertEqual(conditional["kind"], "simple_conditional")
+        self.assertEqual(conditional["construction_rule"]["id"], "simple_conditional")
+        self.assertEqual(
+            conditional["dependent_type_translation"],
+            "leave(john) -> cry(mary)",
+        )
+        self.assertEqual(conditional["ast"]["kind"], "conditional_implication")
+        self.assertEqual(
+            conditional["ast"]["antecedent"],
+            {
+                "predicate": "leave",
+                "predicate_type": "Entity -> Prop",
+                "surface_predicate": "left",
+                "subject": {"name": "john", "type": "Entity"},
+            },
+        )
+        self.assertEqual(
+            conditional["ast"]["consequent"],
+            {
+                "predicate": "cry",
+                "predicate_type": "Entity -> Prop",
+                "surface_predicate": "cried",
+                "subject": {"name": "mary", "type": "Entity"},
+            },
+        )
+        self.assertIn("Definition simple_conditional_implication : Prop :=", conditional["coq_code"])
+        self.assertIn("leave john -> cry mary", conditional["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", conditional["coq_code"])
+        self.assertNotIn("Parameter Agent :", conditional["coq_code"])
+        self.assertEqual(conditional["coq_check"]["status"], "passed")
+        self.assertTrue(conditional["semantic_readings_check"]["ok"])
+        self.assertEqual(
+            [reading["name"] for reading in conditional["semantic_readings"]],
+            ["simple_conditional_implication"],
+        )
+
+    def test_pipeline_rejects_uncertified_clause_markers_before_fallback(self) -> None:
+        overextended_conditional = run_pipeline(
+            "if John left, Mary cried loudly",
+            require_coq=True,
+        )
+        self.assertFalse(overextended_conditional["ok"])
+        self.assertIn("Unsupported clause-level marker", overextended_conditional["error"])
+        self.assertIn("'if'", overextended_conditional["error"])
+        self.assertNotIn("coq_check", overextended_conditional)
+        self.assertNotIn("dependent_type_translation", overextended_conditional)
 
         relative_subject = run_pipeline(
             "the tall boy who Mary saw yesterday quickly opened the old door with a key",
@@ -6771,6 +6816,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
+            "simple_conditional": "if John left, Mary cried",
             "passive_argument_omission": "the toast was buttered",
             "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
@@ -6797,6 +6843,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_registered_rule_success_outputs_expose_semantic_readings_check(self) -> None:
         examples = {
+            "simple_conditional": "if John left, Mary cried",
             "passive_argument_omission": "the toast was buttered",
             "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
@@ -7046,8 +7093,26 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
 
-    def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
+    def test_web_analyze_sentence_reports_simple_conditional_success(self) -> None:
         result = analyze_sentence("if John left, Mary cried", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "simple_conditional")
+        self.assertEqual(result["construction_rule"]["id"], "simple_conditional")
+        self.assertEqual(result["diagnostics"]["summary"], "translation verified")
+        self.assertIsNone(result["diagnostics"]["failure_stage"])
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "passed")
+        self.assertEqual(result["diagnostics"]["stages"]["coq_check"], "passed")
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
+
+        page = render_page("if John left, Mary cried", require_coq=True)
+        self.assertIn("Translation verified: Translation succeeded via construction rule simple_conditional.", page)
+        self.assertIn("id: simple_conditional", page)
+        self.assertIn("leave(john) -&gt; cry(mary)", page)
+        self.assertIn("simple_conditional_implication", page)
+        self.assertNotIn("leave(0)(if_john, mary_cried)", page)
+
+    def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
+        result = analyze_sentence("if John left, Mary cried loudly", require_coq=True)
         self.assertFalse(result["ok"])
         self.assertIn("Unsupported clause-level marker", result["error"])
         self.assertIn("'if'", result["error"])
@@ -8219,7 +8284,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Use a sentence with at least a recognizable subject and predicate.", page)
 
     def test_web_page_status_shows_uncertified_clause_marker_failure(self) -> None:
-        page = render_page("if John left, Mary cried", require_coq=True)
+        page = render_page("if John left, Mary cried loudly", require_coq=True)
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: natural-language parsing.", page)
         self.assertIn("Unsupported clause-level marker", page)
@@ -9953,16 +10018,22 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("real local web route", manuscript)
         self.assertIn("certified-fragment safety guard", readme)
         self.assertIn("`if John left,", readme)
-        self.assertIn("Mary cried` is rejected", readme)
+        self.assertIn("Mary cried` is checked as", readme)
+        self.assertIn("`leave(john) -> cry(mary)`", readme)
+        self.assertIn("`if John left, Mary cried loudly`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
         self.assertIn("relation-clause subject", readme)
         self.assertIn("certified-fragment guard", manuscript)
+        self.assertIn("simple-conditional rule", manuscript)
+        self.assertIn("leave(john) -> cry(mary)", manuscript)
         self.assertIn("leave(if_john, mary_cried)", manuscript)
         self.assertIn("negative capability", manuscript)
         self.assertIn("Clause-level markers outside the", web_design)
         self.assertIn("current certified fragment", web_design)
+        self.assertIn("`leave(john) -> cry(mary)`", web_design)
         self.assertIn("`leave(0)(if_john, mary_cried)`", web_design)
         self.assertIn("Unsupported clause-level markers", ast_docs)
+        self.assertIn("`conditional_implication` AST", ast_docs)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
         self.assertIn("python3 scripts/verify_project.py --require-coq --require-docx", readme)

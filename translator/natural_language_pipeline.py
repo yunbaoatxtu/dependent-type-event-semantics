@@ -2514,6 +2514,190 @@ def timed_after_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
 
+def simple_conditional_clause_ast(
+    predicate: str,
+    subject: str,
+    *,
+    surface_predicate: str,
+) -> dict[str, Any]:
+    return {
+        "predicate": predicate,
+        "predicate_type": "Entity -> Prop",
+        "surface_predicate": surface_predicate,
+        "subject": {
+            "name": subject,
+            "type": "Entity",
+        },
+    }
+
+
+def simple_conditional_ast(
+    antecedent: dict[str, Any],
+    consequent: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "kind": "conditional_implication",
+        "antecedent": antecedent,
+        "consequent": consequent,
+        "connective": {
+            "name": "implies",
+            "type": "Prop -> Prop -> Prop",
+        },
+    }
+
+
+def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "conditional_implication":
+        errors.append("conditional.kind must be conditional_implication")
+
+    for field in ("antecedent", "consequent"):
+        clause = ast.get(field)
+        if not isinstance(clause, dict):
+            errors.append(f"conditional.{field} must be a clause object")
+            continue
+        if clause.get("predicate_type") != "Entity -> Prop":
+            errors.append(f"conditional.{field}.predicate_type must be Entity -> Prop")
+        if not isinstance(clause.get("predicate"), str) or not clause.get("predicate"):
+            errors.append(f"conditional.{field}.predicate must be a non-empty string")
+        if not isinstance(clause.get("surface_predicate"), str) or not clause.get("surface_predicate"):
+            errors.append(
+                f"conditional.{field}.surface_predicate must be a non-empty string"
+            )
+        subject = clause.get("subject")
+        if not isinstance(subject, dict):
+            errors.append(f"conditional.{field}.subject must be an object")
+        elif subject.get("type") != "Entity":
+            errors.append(f"conditional.{field}.subject must have type Entity")
+
+    connective = ast.get("connective")
+    if not isinstance(connective, dict):
+        errors.append("conditional.connective must be an object")
+    else:
+        if connective.get("name") != "implies":
+            errors.append("conditional.connective.name must be implies")
+        if connective.get("type") != "Prop -> Prop -> Prop":
+            errors.append("conditional.connective.type must be Prop -> Prop -> Prop")
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, str] | None:
+    if len(tokens) != 2:
+        return None
+    subject, surface_predicate = tokens
+    if (
+        subject in ARTICLES
+        or subject in PREPOSITIONS
+        or subject in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        or surface_predicate in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        or not is_likely_surface_verb(surface_predicate)
+    ):
+        return None
+    return {
+        "subject": clean_phrase([subject]),
+        "predicate": lemma_verb(surface_predicate),
+        "surface_predicate": surface_predicate,
+    }
+
+
+def split_simple_conditional_tokens(tokens: list[str]) -> tuple[list[str], list[str]] | None:
+    if not tokens or tokens[0] != "if":
+        return None
+    if "then" in tokens:
+        then_index = tokens.index("then")
+        antecedent_tokens = tokens[1:then_index]
+        consequent_tokens = tokens[then_index + 1 :]
+        return antecedent_tokens, consequent_tokens
+    if len(tokens) == 5:
+        return tokens[1:3], tokens[3:5]
+    return None
+
+
+def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    split = split_simple_conditional_tokens(tokens)
+    if split is None:
+        return None
+    antecedent_tokens, consequent_tokens = split
+    antecedent_clause = parse_simple_conditional_clause(antecedent_tokens)
+    consequent_clause = parse_simple_conditional_clause(consequent_tokens)
+    if antecedent_clause is None or consequent_clause is None:
+        return None
+
+    antecedent = simple_conditional_clause_ast(**antecedent_clause)
+    consequent = simple_conditional_clause_ast(**consequent_clause)
+    ast = simple_conditional_ast(antecedent, consequent)
+    type_check = check_simple_conditional_ast(ast)
+    antecedent_formula = f"{antecedent['predicate']}({antecedent['subject']['name']})"
+    consequent_formula = f"{consequent['predicate']}({consequent['subject']['name']})"
+    typed_replacement = f"{antecedent_formula} -> {consequent_formula}"
+    coq_definition = "simple_conditional_implication"
+    entity_names = list(
+        dict.fromkeys(
+            [antecedent["subject"]["name"], consequent["subject"]["name"]]
+        )
+    )
+    predicate_names = list(
+        dict.fromkeys([antecedent["predicate"], consequent["predicate"]])
+    )
+    coq_code = "\n".join(
+        [
+            "(* Simple conditional replacement without an event variable. *)",
+            "Parameter Entity : Type.",
+            "",
+            *[f"Parameter {name} : Entity." for name in entity_names],
+            "",
+            *[f"Parameter {name} : Entity -> Prop." for name in predicate_names],
+            "",
+            f"Definition {coq_definition} : Prop :=",
+            (
+                f"  {antecedent['predicate']} {antecedent['subject']['name']} -> "
+                f"{consequent['predicate']} {consequent['subject']['name']}."
+            ),
+            "",
+            f"Check {coq_definition}.",
+            "",
+        ]
+    )
+    event_semantics = {
+        "analysis": "simple-conditional",
+        "source": sentence,
+        "event_style_reference": (
+            f"(exists e. {antecedent['predicate']}(e) and "
+            f"Agent(e, {antecedent['subject']['name']})) -> "
+            f"(exists e'. {consequent['predicate']}(e') and "
+            f"Agent(e', {consequent['subject']['name']}))"
+        ),
+        "typed_replacement": typed_replacement,
+    }
+    return attach_single_semantic_reading(
+        {
+            "kind": "simple_conditional",
+            "input_sentence": sentence,
+            "event_semantics": event_semantics,
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "The if-clause is represented as implication between typed "
+                    "propositions; no Event, Agent, or Theme declaration is exported."
+                ),
+            },
+            "coq_code": coq_code,
+        },
+        name="simple_conditional_implication",
+        coq_definition=coq_definition,
+        source="simple_conditional",
+        scope="antecedent_implies_consequent",
+    )
+
+
 def perception_nominalization_ast(
     perception_predicate: str,
     experiencer: str,
@@ -7636,6 +7820,18 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
 def construction_rules() -> list[ConstructionRule]:
     return [
         ConstructionRule(
+            rule_id="simple_conditional",
+            label="Simple conditional",
+            phenomenon="If-clause implication between typed propositions",
+            analyzer=simple_conditional_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
             rule_id="perception_nominalization",
             label="Perception complement nominalization",
             phenomenon="Parsons/Luo-Shi perception complement",
@@ -8256,8 +8452,18 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
 
 def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
+        rules = construction_rules()
+        certified_clause_marker_rules = {"simple_conditional"}
+        for rule in rules:
+            if rule.rule_id not in certified_clause_marker_rules:
+                continue
+            registered_result = run_registered_rule(rule, sentence, require_coq)
+            if registered_result is not None:
+                return registered_result
         reject_unsupported_certified_clause_markers(sentence)
-        for rule in construction_rules():
+        for rule in rules:
+            if rule.rule_id in certified_clause_marker_rules:
+                continue
             registered_result = run_registered_rule(rule, sentence, require_coq)
             if registered_result is not None:
                 return registered_result

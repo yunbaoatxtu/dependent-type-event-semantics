@@ -1380,11 +1380,15 @@ validity, but it prevents malformed intermediate representations from being
 silently rendered as plausible formulas.
 
 The natural-language entry point now also checks that a sentence is inside the
-certified fragment before any AST is built. Unsupported clause-level markers
-such as `if`, `who`, `which`, `that`, and `whether` produce a parsing failure
-instead of a shallow AST. This is deliberately conservative: an unimplemented
-conditional or relative clause must not become an entity name that later passes
-the Coq/Rocq scaffold check.
+certified fragment before fallback AST construction. A narrow simple
+conditional rule can build a checked `conditional_implication` AST for examples
+such as `if John left, Mary cried`, whose clauses have predicates of type
+`Entity -> Prop` and whose connective has type `Prop -> Prop -> Prop`.
+Unsupported clause-level markers such as `who`, `which`, `that`, `whether`, or
+an overextended conditional like `if John left, Mary cried loudly` produce a
+parsing failure instead of a shallow AST. This is deliberately conservative: an
+unimplemented conditional or relative clause must not become an entity name that
+later passes the Coq/Rocq scaffold check.
 
 Modifier entries are not entity-denoting arguments. The AST records this twice:
 `modifier_vector` preserves the dependent length index, while `modifier_roles`

@@ -464,13 +464,16 @@ Other simple English sentences are handled by the fallback parser. For example,
 `sit(1)(on(mat), cat)` and can be checked by the generated Coq scaffold.
 The modifier `on(mat)` is exported as an `Adv` item, not as an entity.
 
-The fallback path is intentionally guarded. Clause-level markers outside the
-current certified fragment, including `if`, `who`, `which`, `that`, and
-`whether`, stop the analysis at the parsing stage before a registered rule,
-fallback formula, or Coq/Rocq scaffold can be generated. This prevents examples
-such as `if John left, Mary cried` from being certified as
-`leave(0)(if_john, mary_cried)` and prevents relation-clause subjects from
-being swallowed by the lexical state-change rule as one entity constant.
+The fallback path is intentionally guarded. A small allowlisted rule handles
+simple conditionals first, so `if John left, Mary cried` is certified as
+`leave(john) -> cry(mary)` with an implication between typed propositions.
+Clause-level markers outside the current certified fragment, including `who`,
+`which`, `that`, `whether`, and overextended conditional strings such as
+`if John left, Mary cried loudly`, stop the analysis at the parsing stage before a
+fallback formula or Coq/Rocq scaffold can be generated. This prevents malformed
+conditionals from being certified as `leave(0)(if_john, mary_cried)` and
+prevents relation-clause subjects from being swallowed by the lexical
+state-change rule as one entity constant.
 
 Quantifier-scope cases are not sent through the simple fallback parser. The
 sentence `some boy loves some girl` is represented as a scope ambiguity with
