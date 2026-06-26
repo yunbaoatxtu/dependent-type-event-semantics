@@ -359,6 +359,9 @@ Shared Adv modifiers are kept in the same two scope readings as dependent
 modifier sequences: `some boy loved some girl in the bathroom` renders
 `love(1)(in(bathroom), x_boy, x_girl)`, declares `in_bathroom : Adv`, and gives
 `love` the type `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`.
+Predicate-preverbal manner adverbs use the same route: `some boy quickly loved some girl`
+renders `love(1)(quickly, x_boy, x_girl)`, declares `quickly : Adv`, and does
+not produce the pseudo-entity `some_boy_quickly`.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 same readings: the modifier parser stops before the quantified subject and does
 not collapse the phrase into a malformed `in_bathroom_some` constant.

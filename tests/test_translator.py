@@ -7055,6 +7055,73 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(location["semantic_readings_check"]["ok"])
         self.assertEqual(location["coq_check"]["status"], "passed")
 
+        preverbal_manner = run_pipeline(
+            "some boy quickly loved some girl",
+            require_coq=True,
+        )
+        self.assertTrue(preverbal_manner["ok"])
+        self.assertEqual(preverbal_manner["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(preverbal_manner["ast"]["modifiers"][0]["name"], "quickly")
+        self.assertEqual(
+            preverbal_manner["ast"]["readings"][0]["relation"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
+        )
+        self.assertEqual(
+            preverbal_manner["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "girl(x_girl) and love(1)(quickly, x_boy, x_girl)"
+            ),
+        )
+        self.assertIn("Parameter quickly : Adv.", preverbal_manner["coq_code"])
+        self.assertIn(
+            "love 1 (mods_cons 0 quickly mods_nil) x_boy x_girl",
+            preverbal_manner["coq_code"],
+        )
+        self.assertNotIn("some_boy_quickly", preverbal_manner["dependent_type_translation"])
+        self.assertNotIn("Parameter some_boy_quickly : Entity.", preverbal_manner["coq_code"])
+        self.assertNotIn("Parameter some_girl : Entity.", preverbal_manner["coq_code"])
+        self.assertEqual(preverbal_manner["coq_check"]["status"], "passed")
+
+        preverbal_manner_time = run_pipeline(
+            "some boy slowly loved some girl yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(preverbal_manner_time["ok"])
+        self.assertEqual(preverbal_manner_time["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(preverbal_manner_time["ast"]["modifiers"][0]["name"], "slowly")
+        self.assertEqual(
+            preverbal_manner_time["ast"]["readings"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            preverbal_manner_time["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "at_T(yesterday, exists x_boy : Entity. boy(x_boy) and "
+                "exists x_girl : Entity. girl(x_girl) and "
+                "love(1)(slowly, x_boy, x_girl))"
+            ),
+        )
+        self.assertNotIn("some_boy_slowly", preverbal_manner_time["dependent_type_translation"])
+        self.assertEqual(preverbal_manner_time["coq_check"]["status"], "passed")
+
+        preverbal_universal = run_pipeline(
+            "every boy quickly loved a girl yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(preverbal_universal["ok"])
+        self.assertEqual(preverbal_universal["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(preverbal_universal["ast"]["quantifier"], "mixed")
+        self.assertEqual(preverbal_universal["ast"]["modifiers"][0]["name"], "quickly")
+        self.assertIn(
+            "at_T(yesterday, forall x_boy : Entity. boy(x_boy) -> "
+            "exists x_girl : Entity. girl(x_girl) and "
+            "love(1)(quickly, x_boy, x_girl))",
+            preverbal_universal["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertNotIn("every_boy_quickly", preverbal_universal["dependent_type_translation"])
+        self.assertEqual(preverbal_universal["coq_check"]["status"], "passed")
+
         fronted_location = run_pipeline(
             "In the bathroom some boy loved some girl",
             require_coq=True,
@@ -10242,6 +10309,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Clause-level time modifiers now remain", readme)
         self.assertIn("some boy loves some girl yesterday", readme)
         self.assertIn("some boy loved some girl in the bathroom", readme)
+        self.assertIn("some boy quickly loved some girl", readme)
+        self.assertIn("some_boy_quickly", readme)
         self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("a boy loves a", readme)
         self.assertIn("a_boy_wide_scope", readme)
@@ -10482,6 +10551,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("no_boy_wide_scope", manuscript)
         self.assertIn("a boy loves no girl", manuscript)
         self.assertIn("In the bathroom some boy loved some girl", manuscript)
+        self.assertIn("some boy quickly loved some girl", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
         self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
         self.assertIn("in_bathroom_some", manuscript)
@@ -10507,6 +10577,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("no_boy_wide_scope", ast_docs)
         self.assertIn("a boy loves no girl", ast_docs)
         self.assertIn("some boy loved some girl in the bathroom", ast_docs)
+        self.assertIn("some boy quickly loved some girl", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)
         self.assertIn("in_bathroom_some", ast_docs)

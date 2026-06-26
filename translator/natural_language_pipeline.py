@@ -751,22 +751,32 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         *fronted_time_modifiers,
         *later_fronted_time_modifiers,
     ]
+    if len(tokens) < 5 or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS:
+        return None
+    subject_quantifier = tokens[0]
+    subject_noun = lemma_verb(tokens[1])
+    predicate_index = 2
+    preverbal_adv_modifiers: list[dict[str, Any]] = []
+    while predicate_index < len(tokens) and tokens[predicate_index] in COMMON_ADVERBS:
+        preverbal_adv_modifiers.append(modifier_record(tokens[predicate_index]))
+        predicate_index += 1
     if (
-        len(tokens) < 5
-        or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS
-        or tokens[3] not in SUPPORTED_SCOPE_DETERMINERS
+        predicate_index + 2 >= len(tokens)
+        or tokens[predicate_index + 1] not in SUPPORTED_SCOPE_DETERMINERS
     ):
         return None
-    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[5:])
+    verb = lemma_verb(tokens[predicate_index])
+    object_quantifier = tokens[predicate_index + 1]
+    object_noun = lemma_verb(tokens[predicate_index + 2])
+    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[predicate_index + 3 :])
     if trailing_modifiers is None:
         return None
     trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
-    subject_quantifier = tokens[0]
-    object_quantifier = tokens[3]
-    subject_noun = lemma_verb(tokens[1])
-    verb = lemma_verb(tokens[2])
-    object_noun = lemma_verb(tokens[4])
-    adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
+    adv_modifiers = [
+        *fronted_adv_modifiers,
+        *preverbal_adv_modifiers,
+        *trailing_adv_modifiers,
+    ]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     readings = [
         quantifier_scope_reading(

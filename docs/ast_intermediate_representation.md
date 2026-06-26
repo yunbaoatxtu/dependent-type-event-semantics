@@ -854,7 +854,10 @@ record `in_bathroom : Adv` rather than a malformed `in_bathroom_no` name.
 Each reading carries the same `modifiers` list and the relation
 type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
 the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
-proof-assistant scaffold declares `in_bathroom : Adv`. Fronted variants such as
+proof-assistant scaffold declares `in_bathroom : Adv`. Predicate-preverbal
+manner adverbs use the same field: `some boy quickly loved some girl` records
+`quickly : Adv`, renders `love(1)(quickly, x_boy, x_girl)`, and does not build
+a subject constant such as `some_boy_quickly`. Fronted variants such as
 `In the bathroom some boy loved some girl` use the same representation: the
 fronted modifier stops before the quantified subject, so the AST records
 `in_bathroom : Adv` rather than a malformed `in_bathroom_some` name. This makes
