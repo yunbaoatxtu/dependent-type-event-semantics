@@ -1324,6 +1324,25 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         != expected_gap_ids
     ):
         raise SystemExit("web route smoke check failed: fallback certification gap drift")
+    upgrade_plan = payload.get("certification_upgrade_plan")
+    if not isinstance(upgrade_plan, dict):
+        raise SystemExit("web route smoke check failed: fallback upgrade plan missing")
+    if (
+        upgrade_plan.get("schema_version") != "certification_upgrade_plan.v1"
+        or upgrade_plan.get("source_verification_scope") != "fallback_shallow"
+        or upgrade_plan.get("target_certification_level") != "construction_rule"
+        or upgrade_plan.get("candidate_rule_id") != "fallback_knock_repeat_candidate"
+        or upgrade_plan.get("automation_mode") != "human_review_required"
+        or upgrade_plan.get("can_auto_apply") is not False
+    ):
+        raise SystemExit("web route smoke check failed: fallback upgrade plan drift")
+    upgrade_steps = upgrade_plan.get("steps")
+    if (
+        not isinstance(upgrade_steps, list)
+        or [step.get("gap_id") for step in upgrade_steps if isinstance(step, dict)]
+        != expected_gap_ids
+    ):
+        raise SystemExit("web route smoke check failed: fallback upgrade step drift")
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: fallback semantic reading count drift")
@@ -1354,6 +1373,13 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-certification-gap-id="no_registered_construction_rule"',
         'data-certification-gap-id="no_fragment_specific_readings"',
         'data-certification-gap-id="no_construction_hygiene_policy"',
+        "Certification Upgrade Plan",
+        'data-upgrade-plan-schema="certification_upgrade_plan.v1"',
+        'data-upgrade-source-scope="fallback_shallow"',
+        'data-upgrade-target-level="construction_rule"',
+        'data-upgrade-candidate-rule-id="fallback_knock_repeat_candidate"',
+        'data-upgrade-gap-id="no_registered_construction_rule"',
+        'data-upgrade-action-kind="draft_construction_rule"',
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:

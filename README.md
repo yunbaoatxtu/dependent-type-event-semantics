@@ -783,7 +783,8 @@ dependent-type rendering, generated Coq, `result_state_lexicon`,
 `modifier_role_audit`, `lexicon_patch_drafts`, `patch_text_preview`,
 `semantic_readings`, `semantic_readings_check`, `construction_rule`,
 `construction_summary`, `construction_hygiene`, `coq_check`, `diagnostics`,
-and `verification_scope` fields used by the web page. For registered construction rules,
+`verification_scope`, and `certification_upgrade_plan` fields used by the web
+page. For registered construction rules,
 `construction_summary` gives a sentence-local explanation such as
 `Same subject john coordinates eat(bread : Food) and drink(water : Drinkable).`
 The `verification_scope` object makes the certification boundary explicit:
@@ -797,7 +798,11 @@ natural-language interpretation. Fallback scopes also carry
 `no_registered_construction_rule`, `no_fragment_specific_readings`, and
 `no_construction_hygiene_policy`. These gaps record the missing artifacts needed
 to promote a shallow fallback result into a registered, construction-level
-analysis.
+analysis. Fallback responses now also include a `certification_upgrade_plan`
+with `schema_version: "certification_upgrade_plan.v1"`, a generated
+`candidate_rule_id`, the target level `construction_rule`, one upgrade step per
+gap, and the verification command that should pass after the new construction
+has been registered.
 The project-level coverage boundary is available separately at
 `/api/certified-fragment` with `schema_version: "certified_fragment.v1"`.
 That manifest is generated from the live registered construction table rather

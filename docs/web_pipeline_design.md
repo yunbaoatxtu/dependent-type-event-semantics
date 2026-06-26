@@ -105,6 +105,13 @@ natural-language certification. They also expose `certification_gaps`, currently
 `no_registered_construction_rule`, `no_fragment_specific_readings`, and
 `no_construction_hygiene_policy`, so clients can distinguish a successful
 fallback parse from a construction that is ready for rule-level certification.
+Fallback responses also expose `certification_upgrade_plan` with
+`schema_version: "certification_upgrade_plan.v1"`, a generated
+`candidate_rule_id`, `target_certification_level: construction_rule`, and one
+human-review upgrade step per gap. The page renders this as a dedicated
+`Certification Upgrade Plan` panel with stable hooks such as
+`data-upgrade-plan-schema`, `data-upgrade-candidate-rule-id`, and
+`data-upgrade-action-kind`.
 Rejected or failed paths use
 `certification_level: none`.
 The page also exposes a project-level certified-fragment contract. The

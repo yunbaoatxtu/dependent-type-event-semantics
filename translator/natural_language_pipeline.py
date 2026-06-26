@@ -180,6 +180,9 @@ FALLBACK_CERTIFICATION_GAPS = (
 )
 
 
+CERTIFICATION_UPGRADE_PLAN_SCHEMA = "certification_upgrade_plan.v1"
+
+
 def fallback_certification_gap_payload() -> list[dict[str, str]]:
     return [dict(gap) for gap in FALLBACK_CERTIFICATION_GAPS]
 
@@ -754,6 +757,82 @@ def ast_structure_summary(ast: dict[str, Any]) -> dict[str, Any]:
                 else 0
             )
         ),
+    }
+
+
+def _safe_rule_token(value: str) -> str:
+    token = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
+    return token or "unknown"
+
+
+def fallback_candidate_rule_id(ast: dict[str, Any]) -> str:
+    candidate_ast = ast
+    kind = (
+        str(candidate_ast.get("kind", "analysis"))
+        if isinstance(candidate_ast, dict)
+        else "analysis"
+    )
+    if kind == "repeat" and isinstance(candidate_ast.get("body"), dict):
+        candidate_ast = candidate_ast["body"]
+    predicate = (
+        str(candidate_ast.get("function"))
+        if isinstance(candidate_ast, dict) and candidate_ast.get("function")
+        else kind
+    )
+    return f"fallback_{_safe_rule_token(predicate)}_{_safe_rule_token(kind)}_candidate"
+
+
+def fallback_certification_upgrade_plan(
+    sentence: str,
+    ast: dict[str, Any],
+    dependent_type_translation: str,
+) -> dict[str, Any]:
+    action_by_gap = {
+        "no_registered_construction_rule": (
+            "draft_construction_rule",
+            "translator/natural_language_pipeline.py",
+            "Add a ConstructionRule with accepted examples before fallback.",
+        ),
+        "no_fragment_specific_readings": (
+            "add_semantic_readings_contract",
+            "translator/natural_language_pipeline.py",
+            "Replace fallback_single_reading with construction-specific checked readings.",
+        ),
+        "no_construction_hygiene_policy": (
+            "add_construction_hygiene_guard",
+            "scripts/verify_project.py",
+            "Add forbidden Coq/Rocq fragments and verifier fixtures for the new rule.",
+        ),
+    }
+    steps = []
+    for gap in fallback_certification_gap_payload():
+        action_kind, target_artifact, verification = action_by_gap[gap["id"]]
+        steps.append(
+            {
+                "gap_id": gap["id"],
+                "action_kind": action_kind,
+                "label": gap["label"],
+                "detail": gap["detail"],
+                "target_artifact": target_artifact,
+                "required_artifact": gap["required_artifact"],
+                "verification": verification,
+                "can_auto_apply": False,
+            }
+        )
+    return {
+        "schema_version": CERTIFICATION_UPGRADE_PLAN_SCHEMA,
+        "source_verification_scope": "fallback_shallow",
+        "target_certification_level": "construction_rule",
+        "candidate_rule_id": fallback_candidate_rule_id(ast),
+        "source_sentence": sentence,
+        "dependent_type_translation": dependent_type_translation,
+        "ast_summary": ast_structure_summary(ast if isinstance(ast, dict) else {}),
+        "automation_mode": "human_review_required",
+        "can_auto_apply": False,
+        "steps": steps,
+        "verification_commands": [
+            "python3 scripts/verify_project.py --require-coq --require-docx",
+        ],
     }
 
 
@@ -11554,6 +11633,11 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
             "type_check": translation["type_check"],
             "coq_code": coq_code,
             "verification_scope": fallback_verification_scope(),
+            "certification_upgrade_plan": fallback_certification_upgrade_plan(
+                sentence,
+                translation["ast"],
+                translation["translation"],
+            ),
         }
         if translation["type_check"]["ok"]:
             result = attach_single_semantic_reading(

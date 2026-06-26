@@ -2040,6 +2040,81 @@ def verification_scope_panel(result: dict[str, Any]) -> str:
     )
 
 
+def certification_upgrade_plan_panel(result: dict[str, Any]) -> str:
+    plan = result.get("certification_upgrade_plan")
+    if not isinstance(plan, dict):
+        return ""
+    schema = str(plan.get("schema_version", ""))
+    source_scope = str(plan.get("source_verification_scope", ""))
+    target_level = str(plan.get("target_certification_level", ""))
+    candidate_rule_id = str(plan.get("candidate_rule_id", ""))
+    automation_mode = str(plan.get("automation_mode", ""))
+    can_auto_apply = plan.get("can_auto_apply") is True
+    rows = [
+        ("schema", schema),
+        ("source", source_scope),
+        ("target", target_level),
+        ("candidate rule", candidate_rule_id),
+        ("automation", automation_mode),
+        ("auto apply", "yes" if can_auto_apply else "no"),
+    ]
+    step_items = []
+    for step in plan.get("steps", []):
+        if not isinstance(step, dict):
+            continue
+        step_items.append(
+            '<li '
+            f'data-upgrade-gap-id="{html.escape(str(step.get("gap_id", "")), quote=True)}" '
+            f'data-upgrade-action-kind="{html.escape(str(step.get("action_kind", "")), quote=True)}" '
+            f'data-upgrade-target-artifact="{html.escape(str(step.get("target_artifact", "")), quote=True)}">'
+            f'<strong>{html.escape(str(step.get("label", "")))}</strong>'
+            '<dl>'
+            f'<dt>action</dt><dd>{html.escape(str(step.get("action_kind", "")))}</dd>'
+            f'<dt>artifact</dt><dd>{html.escape(str(step.get("target_artifact", "")))}</dd>'
+            f'<dt>required</dt><dd>{html.escape(str(step.get("required_artifact", "")))}</dd>'
+            f'<dt>verification</dt><dd>{html.escape(str(step.get("verification", "")))}</dd>'
+            '</dl>'
+            '</li>'
+        )
+    steps_html = (
+        '<ul class="certification-upgrade-steps">' + "".join(step_items) + "</ul>"
+        if step_items
+        else '<p class="certification-upgrade-empty">No upgrade steps emitted.</p>'
+    )
+    commands = plan.get("verification_commands", [])
+    commands_html = (
+        "".join(f"<li><code>{html.escape(str(command))}</code></li>" for command in commands)
+        if isinstance(commands, list) and commands
+        else "<li>none</li>"
+    )
+    raw_json = html.escape(compact_json(plan))
+    body = (
+        '<dl class="certification-upgrade-details">'
+        + "".join(
+            f"<dt>{html.escape(label)}</dt><dd>{html.escape(value)}</dd>"
+            for label, value in rows
+        )
+        + "</dl>"
+        f"{steps_html}"
+        '<div class="certification-upgrade-commands"><strong>verification commands</strong>'
+        f"<ul>{commands_html}</ul></div>"
+        '<details class="certification-upgrade-raw"><summary>Raw upgrade JSON</summary>'
+        f"<pre>{raw_json}</pre>"
+        "</details>"
+    )
+    return (
+        '<section class="panel certification-upgrade-plan-panel" '
+        f'data-upgrade-plan-schema="{html.escape(schema, quote=True)}" '
+        f'data-upgrade-source-scope="{html.escape(source_scope, quote=True)}" '
+        f'data-upgrade-target-level="{html.escape(target_level, quote=True)}" '
+        f'data-upgrade-candidate-rule-id="{html.escape(candidate_rule_id, quote=True)}" '
+        f'data-upgrade-can-auto-apply="{str(can_auto_apply).lower()}">'
+        "<h2>Certification Upgrade Plan</h2>"
+        f'<div class="certification-upgrade-plan">{body}</div>'
+        "</section>"
+    )
+
+
 def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     entries = result.get("result_state_lexicon", [])
     if not entries:
@@ -2844,6 +2919,54 @@ def render_page(
       color: var(--muted);
       line-height: 1.45;
     }}
+    .certification-upgrade-plan {{
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }}
+    .certification-upgrade-details {{
+      display: grid;
+      grid-template-columns: minmax(86px, auto) minmax(0, 1fr);
+      gap: 5px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .certification-upgrade-details dt,
+    .certification-upgrade-steps dt {{
+      color: var(--muted);
+    }}
+    .certification-upgrade-details dd,
+    .certification-upgrade-steps dd {{
+      margin: 0;
+      word-break: break-word;
+    }}
+    .certification-upgrade-steps {{
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+      font-size: 13px;
+    }}
+    .certification-upgrade-steps dl {{
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 4px 0 0;
+    }}
+    .certification-upgrade-commands {{
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+    }}
+    .certification-upgrade-commands ul {{
+      margin: 0;
+      padding-left: 18px;
+    }}
+    .certification-upgrade-raw pre {{
+      min-height: 80px;
+    }}
     .semantic-readings-check-summary {{
       margin: 0;
       width: fit-content;
@@ -3208,6 +3331,7 @@ def render_page(
       {panel("Diagnostics", diagnostics)}
       {panel("API Contract", api_contract)}
       {verification_scope_panel(result)}
+      {certification_upgrade_plan_panel(result)}
       {certified_fragment_panel()}
       {diagnostic_contract_panel()}
       {panel("Conclusion", conclusion)}

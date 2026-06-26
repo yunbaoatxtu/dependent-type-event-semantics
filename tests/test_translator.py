@@ -52,6 +52,7 @@ from translator.dependent_type_event_translator import (
     translate,
 )
 from translator.natural_language_pipeline import (
+    CERTIFICATION_UPGRADE_PLAN_SCHEMA,
     ConstructionRule,
     ast_structure_summary,
     check_copular_property_ast,
@@ -70,6 +71,7 @@ from translator.natural_language_pipeline import (
     construction_fragment_manifest,
     construction_rules,
     exported_prop_definition_names,
+    fallback_candidate_rule_id,
     fallback_certification_gap_payload,
     run_registered_rule,
     run_pipeline,
@@ -9590,6 +9592,25 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(result["diagnostics"]["semantic_readings_failure_kinds"], [])
         self.assertEqual(result["diagnostics"]["recovery_actions"], [])
+        upgrade_plan = result["certification_upgrade_plan"]
+        self.assertEqual(upgrade_plan["schema_version"], CERTIFICATION_UPGRADE_PLAN_SCHEMA)
+        self.assertEqual(upgrade_plan["source_verification_scope"], "fallback_shallow")
+        self.assertEqual(upgrade_plan["target_certification_level"], "construction_rule")
+        self.assertEqual(upgrade_plan["candidate_rule_id"], "fallback_knock_repeat_candidate")
+        self.assertEqual(upgrade_plan["automation_mode"], "human_review_required")
+        self.assertFalse(upgrade_plan["can_auto_apply"])
+        self.assertEqual(
+            [step["gap_id"] for step in upgrade_plan["steps"]],
+            [gap["id"] for gap in fallback_certification_gap_payload()],
+        )
+        self.assertEqual(
+            upgrade_plan["steps"][0]["action_kind"],
+            "draft_construction_rule",
+        )
+        self.assertEqual(
+            upgrade_plan["verification_commands"],
+            ["python3 scripts/verify_project.py --require-coq --require-docx"],
+        )
         readings = result["semantic_readings"]
         self.assertEqual(len(readings), 1)
         reading = readings[0]
@@ -9610,6 +9631,18 @@ class TranslatorTests(unittest.TestCase):
             result["diagnostics"]["semantic_readings_repair_details"],
             result["semantic_readings_check"]["repair_details"],
         )
+
+    def test_fallback_upgrade_plan_generalizes_to_unregistered_simple_sentences(self) -> None:
+        result = analyze_sentence("a cat sits on a mat", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["verification_scope"]["kind"], "fallback_shallow")
+        plan = result["certification_upgrade_plan"]
+        self.assertEqual(plan["schema_version"], CERTIFICATION_UPGRADE_PLAN_SCHEMA)
+        self.assertEqual(plan["candidate_rule_id"], "fallback_sit_application_candidate")
+        self.assertEqual(plan["source_sentence"], "a cat sits on a mat")
+        self.assertEqual(plan["dependent_type_translation"], "sit(1)(on(mat), cat)")
+        self.assertEqual(plan["ast_summary"]["kind"], "application")
+        self.assertEqual(fallback_candidate_rule_id(result["ast"]), plan["candidate_rule_id"])
 
     def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -10807,6 +10840,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-verification-scope-kind="fallback_shallow"', page)
         self.assertIn('data-certification-gap-id="no_registered_construction_rule"', page)
         self.assertIn("Register a construction rule", page)
+        self.assertIn("Certification Upgrade Plan", page)
+        self.assertIn('data-upgrade-plan-schema="certification_upgrade_plan.v1"', page)
+        self.assertIn('data-upgrade-source-scope="fallback_shallow"', page)
+        self.assertIn('data-upgrade-target-level="construction_rule"', page)
+        self.assertIn(
+            'data-upgrade-candidate-rule-id="fallback_sit_application_candidate"',
+            page,
+        )
+        self.assertIn('data-upgrade-gap-id="no_registered_construction_rule"', page)
+        self.assertIn('data-upgrade-action-kind="draft_construction_rule"', page)
         self.assertIn("No registered construction rule matched", page)
 
     def test_web_page_status_shows_parser_failure_stage(self) -> None:
@@ -12137,6 +12180,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`no_registered_construction_rule`", readme)
         self.assertIn("`no_fragment_specific_readings`", readme)
         self.assertIn("`no_construction_hygiene_policy`", readme)
+        self.assertIn("`certification_upgrade_plan`", readme)
+        self.assertIn('`schema_version: "certification_upgrade_plan.v1"`', readme)
+        self.assertIn("`candidate_rule_id`", readme)
         self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
@@ -12529,6 +12575,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("certification_level construction_rule", manuscript)
         self.assertIn("fallback_shallow", manuscript)
         self.assertIn("certification_gaps", manuscript)
+        self.assertIn("certification_upgrade_plan", manuscript)
+        self.assertIn("candidate_rule_id", manuscript)
         self.assertIn("no_registered_construction_rule", manuscript)
         self.assertIn("no_fragment_specific_readings", manuscript)
         self.assertIn("no_construction_hygiene_policy", manuscript)
@@ -13041,6 +13089,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Conclusion` panel", readme)
         self.assertIn("`construction_rule`", readme)
         self.assertIn("`verification_scope`", readme)
+        self.assertIn("`certification_upgrade_plan`", readme)
         self.assertIn("`certification_level: construction_rule`", readme)
         self.assertIn("`certification_level: shallow_scaffold`", readme)
         self.assertIn("/api/certified-fragment", readme)
@@ -13069,9 +13118,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("dedicated `Conclusion` panel", web_design)
         self.assertIn("`construction_hygiene`", web_design)
         self.assertIn("`verification_scope`", web_design)
+        self.assertIn("`certification_upgrade_plan`", web_design)
         self.assertIn("`kind: registered_construction`", web_design)
         self.assertIn("`kind: fallback_shallow`", web_design)
         self.assertIn("`certification_gaps`", web_design)
+        self.assertIn('`schema_version: "certification_upgrade_plan.v1"`', web_design)
+        self.assertIn("`candidate_rule_id`", web_design)
+        self.assertIn("`Certification Upgrade Plan` panel", web_design)
+        self.assertIn("`data-upgrade-action-kind`", web_design)
         self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
