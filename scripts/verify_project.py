@@ -2114,6 +2114,32 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: certified rule id drift")
     if manifest.get("registered_construction_count") != len(rules):
         raise SystemExit("web route smoke check failed: certified rule count drift")
+    coverage = manifest.get("coverage_matrix")
+    counts = manifest.get("coverage_matrix_counts")
+    if not isinstance(coverage, dict) or not isinstance(counts, dict):
+        raise SystemExit("web route smoke check failed: certified coverage matrix missing")
+    registered_cases = coverage.get("registered_success_cases")
+    fallback_cases = coverage.get("fallback_success_cases")
+    rejected_cases = coverage.get("rejected_unsupported_cases")
+    if (
+        not isinstance(registered_cases, list)
+        or not isinstance(fallback_cases, list)
+        or not isinstance(rejected_cases, list)
+    ):
+        raise SystemExit("web route smoke check failed: certified coverage case drift")
+    if counts.get("registered_success_cases") != len(registered_cases):
+        raise SystemExit("web route smoke check failed: certified registered coverage count drift")
+    if counts.get("fallback_success_cases") != len(fallback_cases):
+        raise SystemExit("web route smoke check failed: certified fallback coverage count drift")
+    if counts.get("rejected_unsupported_cases") != len(rejected_cases):
+        raise SystemExit("web route smoke check failed: certified rejected coverage count drift")
+    registered_case_by_id = {
+        item.get("rule_id"): item
+        for item in registered_cases
+        if isinstance(item, dict) and isinstance(item.get("rule_id"), str)
+    }
+    if set(registered_case_by_id) != set(rules):
+        raise SystemExit("web route smoke check failed: certified registered coverage id drift")
     for rule_id, rule in rules.items():
         item = registered_by_id[rule_id]
         if item.get("label") != rule.label or item.get("phenomenon") != rule.phenomenon:
@@ -2132,6 +2158,20 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} hygiene drift"
             )
+        if not isinstance(item.get("accepted_examples"), list) or not item.get("example"):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} example drift"
+            )
+        case = registered_case_by_id[rule_id]
+        if (
+            case.get("sentence") != item.get("example")
+            or case.get("expected_verification_scope_kind") != "registered_construction"
+            or case.get("expected_certification_level") != "construction_rule"
+            or case.get("boundary_status") != "registered_primary_example"
+        ):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} coverage drift"
+            )
     fallback = manifest.get("fallback")
     if (
         not isinstance(fallback, dict)
@@ -2139,6 +2179,24 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or fallback.get("certification_level") != "shallow_scaffold"
     ):
         raise SystemExit("web route smoke check failed: certified fallback drift")
+    for case in fallback_cases:
+        if (
+            not isinstance(case, dict)
+            or case.get("expected_verification_scope_kind") != "fallback_shallow"
+            or case.get("expected_certification_level") != "shallow_scaffold"
+            or not isinstance(case.get("sentence"), str)
+        ):
+            raise SystemExit("web route smoke check failed: certified fallback coverage drift")
+    for case in rejected_cases:
+        if (
+            not isinstance(case, dict)
+            or case.get("expected_verification_scope_kind")
+            != "rejected_unsupported_fragment"
+            or case.get("expected_certification_level") != "none"
+            or case.get("marker") not in manifest.get("rejected_fragment_markers", [])
+            or not isinstance(case.get("sentence"), str)
+        ):
+            raise SystemExit("web route smoke check failed: certified rejected coverage drift")
     if "who" not in manifest.get("rejected_fragment_markers", []):
         raise SystemExit("web route smoke check failed: certified marker drift")
 
@@ -2155,12 +2213,35 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-full-natural-language-certification="false"',
         'data-fallback-certification-level="shallow_scaffold"',
         f'data-registered-construction-count="{len(registered)}"',
+        (
+            'data-coverage-registered-success-count="'
+            f'{manifest.get("coverage_matrix_counts", {}).get("registered_success_cases")}"'
+        ),
+        (
+            'data-coverage-fallback-success-count="'
+            f'{manifest.get("coverage_matrix_counts", {}).get("fallback_success_cases")}"'
+        ),
+        (
+            'data-coverage-rejected-unsupported-count="'
+            f'{manifest.get("coverage_matrix_counts", {}).get("rejected_unsupported_cases")}"'
+        ),
         "<h2>Certified Fragment</h2>",
     ]
     expected_fragments.extend(
         f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}"'
         for item in registered
     )
+    expected_fragments.extend(
+        f'data-certified-example="{html.escape(str(item.get("example", "")), quote=True)}"'
+        for item in registered
+    )
+    coverage = manifest.get("coverage_matrix", {})
+    if isinstance(coverage, dict):
+        expected_fragments.extend(
+            f'data-coverage-marker="{html.escape(str(item.get("marker", "")), quote=True)}"'
+            for item in coverage.get("rejected_unsupported_cases", [])
+            if isinstance(item, dict)
+        )
     for fragment in expected_fragments:
         if fragment not in page:
             raise SystemExit(

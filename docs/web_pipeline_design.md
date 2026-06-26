@@ -111,6 +111,12 @@ fallback certification level, and the rejected clause-marker set. The
 `Certified Fragment` panel mirrors the same metadata with stable data
 attributes for the schema, API path, registered rule count, fallback level, and
 each registered rule id through `data-certified-rule-id`.
+The manifest also carries a `coverage_matrix` with
+`registered_success_cases`, `fallback_success_cases`, and
+`rejected_unsupported_cases`, plus matching `coverage_matrix_counts`. The page
+exposes those counts through stable `data-coverage-*` attributes and renders
+fallback and rejected example rows with `data-coverage-kind`,
+`data-coverage-sentence`, and, for rejection rows, `data-coverage-marker`.
 For ordinary fallback successes, the API response and HTML panel must agree on
 the same normalized reading row: `fallback_single_reading` from
 `fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
@@ -448,6 +454,9 @@ fallback scaffold.
 The same smoke check should fetch `/api/certified-fragment` and compare the
 manifest with the `Certified Fragment` panel. This keeps the project-level
 coverage boundary synchronized with the registered construction registry.
+It should also validate `coverage_matrix_counts` against the actual matrix
+lists and compare the page's coverage-count attributes and example hooks with
+the JSON manifest.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

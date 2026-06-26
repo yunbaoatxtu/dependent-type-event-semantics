@@ -137,6 +137,34 @@ CONSTRUCTION_RULE_EXAMPLES = {
 }
 
 
+FALLBACK_COVERAGE_EXAMPLES = (
+    {
+        "sentence": "John knocked twice",
+        "expected_verification_scope_kind": "fallback_shallow",
+        "expected_certification_level": "shallow_scaffold",
+        "boundary_status": "structurally_checked_shallow_scaffold",
+    },
+)
+
+
+UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES = (
+    {
+        "sentence": "John left because Mary cried",
+        "marker": "because",
+        "expected_verification_scope_kind": "rejected_unsupported_fragment",
+        "expected_certification_level": "none",
+        "boundary_status": "rejected_before_fallback",
+    },
+    {
+        "sentence": "the boy who Mary saw left",
+        "marker": "who",
+        "expected_verification_scope_kind": "rejected_unsupported_fragment",
+        "expected_certification_level": "none",
+        "boundary_status": "rejected_before_fallback",
+    },
+)
+
+
 def atom(pred: str, *args: str) -> dict[str, Any]:
     return {"pred": pred, "args": list(args)}
 
@@ -10288,18 +10316,38 @@ def construction_rules() -> list[ConstructionRule]:
 def construction_fragment_manifest() -> dict[str, Any]:
     rules = construction_rules()
     registered = []
+    registered_success_cases = []
     for rule in rules:
+        example = CONSTRUCTION_RULE_EXAMPLES.get(rule.rule_id, "")
         registered.append(
             {
                 "id": rule.rule_id,
                 "label": rule.label,
                 "phenomenon": rule.phenomenon,
-                "example": CONSTRUCTION_RULE_EXAMPLES.get(rule.rule_id, ""),
+                "example": example,
+                "accepted_examples": [example] if example else [],
                 "verification_scope_kind": "registered_construction",
                 "certification_level": "construction_rule",
+                "boundary_status": "registered_primary_example",
                 "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
             }
         )
+        if example:
+            registered_success_cases.append(
+                {
+                    "rule_id": rule.rule_id,
+                    "sentence": example,
+                    "expected_verification_scope_kind": "registered_construction",
+                    "expected_certification_level": "construction_rule",
+                    "boundary_status": "registered_primary_example",
+                }
+            )
+    fallback_success_cases = [
+        dict(example) for example in FALLBACK_COVERAGE_EXAMPLES
+    ]
+    rejected_unsupported_cases = [
+        dict(example) for example in UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES
+    ]
     return {
         "schema_version": "certified_fragment.v1",
         "full_natural_language_certification": False,
@@ -10317,6 +10365,16 @@ def construction_fragment_manifest() -> dict[str, Any]:
                 "does not certify full natural-language semantics",
                 "does not resolve unregistered scope, attachment, or discourse ambiguities",
             ],
+        },
+        "coverage_matrix": {
+            "registered_success_cases": registered_success_cases,
+            "fallback_success_cases": fallback_success_cases,
+            "rejected_unsupported_cases": rejected_unsupported_cases,
+        },
+        "coverage_matrix_counts": {
+            "registered_success_cases": len(registered_success_cases),
+            "fallback_success_cases": len(fallback_success_cases),
+            "rejected_unsupported_cases": len(rejected_unsupported_cases),
         },
         "rejected_fragment_markers": sorted(UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS),
         "scope_determiners": {

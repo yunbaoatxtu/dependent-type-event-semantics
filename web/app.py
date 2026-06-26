@@ -2184,10 +2184,29 @@ def certified_fragment_panel() -> str:
         if isinstance(fallback, dict)
         else ""
     )
+    coverage = manifest.get("coverage_matrix", {})
+    counts = manifest.get("coverage_matrix_counts", {})
+    registered_case_count = str(
+        counts.get("registered_success_cases", "")
+        if isinstance(counts, dict)
+        else ""
+    )
+    fallback_case_count = str(
+        counts.get("fallback_success_cases", "")
+        if isinstance(counts, dict)
+        else ""
+    )
+    rejected_case_count = str(
+        counts.get("rejected_unsupported_cases", "")
+        if isinstance(counts, dict)
+        else ""
+    )
     rule_items = "".join(
         '<li '
         f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}" '
-        f'data-certified-level="{html.escape(str(item.get("certification_level", "")), quote=True)}">'
+        f'data-certified-level="{html.escape(str(item.get("certification_level", "")), quote=True)}" '
+        f'data-certified-example="{html.escape(str(item.get("example", "")), quote=True)}" '
+        f'data-boundary-status="{html.escape(str(item.get("boundary_status", "")), quote=True)}">'
         f'<code>{html.escape(str(item.get("id", "")))}</code>'
         f'<span>{html.escape(str(item.get("label", "")))}</span>'
         "</li>"
@@ -2198,11 +2217,37 @@ def certified_fragment_panel() -> str:
         for marker in manifest.get("rejected_fragment_markers", [])
         if isinstance(marker, str)
     )
+    fallback_items = ""
+    rejected_items = ""
+    if isinstance(coverage, dict):
+        fallback_items = "".join(
+            '<li '
+            f'data-coverage-kind="fallback_success" '
+            f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
+            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}">'
+            f"{html.escape(str(item.get('sentence', '')))}"
+            "</li>"
+            for item in coverage.get("fallback_success_cases", [])
+            if isinstance(item, dict)
+        )
+        rejected_items = "".join(
+            '<li '
+            f'data-coverage-kind="rejected_unsupported" '
+            f'data-coverage-marker="{html.escape(str(item.get("marker", "")), quote=True)}" '
+            f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}">'
+            f"{html.escape(str(item.get('sentence', '')))}"
+            "</li>"
+            for item in coverage.get("rejected_unsupported_cases", [])
+            if isinstance(item, dict)
+        )
     return (
         '<section class="panel certified-fragment-panel" '
         f'data-certified-fragment-schema="{html.escape(schema, quote=True)}" '
         'data-certified-fragment-api="/api/certified-fragment" '
         f'data-registered-construction-count="{len(registered)}" '
+        f'data-coverage-registered-success-count="{html.escape(registered_case_count, quote=True)}" '
+        f'data-coverage-fallback-success-count="{html.escape(fallback_case_count, quote=True)}" '
+        f'data-coverage-rejected-unsupported-count="{html.escape(rejected_case_count, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -2212,11 +2257,18 @@ def certified_fragment_panel() -> str:
         "<dt>api</dt><dd><code>/api/certified-fragment</code></dd>"
         f"<dt>full NL</dt><dd>{str(bool(manifest.get('full_natural_language_certification'))).lower()}</dd>"
         f"<dt>registered rules</dt><dd>{len(registered)}</dd>"
+        f"<dt>registered cases</dt><dd>{html.escape(registered_case_count)}</dd>"
+        f"<dt>fallback cases</dt><dd>{html.escape(fallback_case_count)}</dd>"
+        f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
         '<div class="certified-fragment-rules"><strong>registered constructions</strong>'
         f"<ul>{rule_items}</ul></div>"
+        '<div class="certified-fragment-coverage"><strong>fallback coverage</strong>'
+        f"<ul>{fallback_items}</ul></div>"
+        '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'
+        f"<ul>{rejected_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'
         f"<ul>{marker_items}</ul></div>"
         "</div>"
@@ -2990,6 +3042,7 @@ def render_page(
       padding-top: 10px;
     }}
     .certified-fragment-rules,
+    .certified-fragment-coverage,
     .certified-fragment-markers {{
       border-top: 1px solid var(--line);
       padding-top: 10px;
@@ -3000,6 +3053,7 @@ def render_page(
       font-size: 13px;
     }}
     .certified-fragment-rules strong,
+    .certified-fragment-coverage strong,
     .certified-fragment-markers strong {{
       display: block;
       margin-bottom: 8px;
@@ -3014,6 +3068,7 @@ def render_page(
       padding: 0;
     }}
     .certified-fragment-rules ul,
+    .certified-fragment-coverage ul,
     .certified-fragment-markers ul {{
       display: flex;
       flex-wrap: wrap;
@@ -3030,6 +3085,7 @@ def render_page(
       font-size: 12px;
     }}
     .certified-fragment-rules li,
+    .certified-fragment-coverage li,
     .certified-fragment-markers li {{
       border: 1px solid var(--line);
       border-radius: 6px;

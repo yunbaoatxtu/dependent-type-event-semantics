@@ -8891,6 +8891,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(manifest["full_natural_language_certification"])
         self.assertEqual(manifest["registered_construction_count"], len(rules))
         self.assertEqual(set(registered), set(rules))
+        coverage = manifest["coverage_matrix"]
+        counts = manifest["coverage_matrix_counts"]
+        self.assertEqual(
+            counts["registered_success_cases"],
+            len(coverage["registered_success_cases"]),
+        )
+        self.assertEqual(
+            counts["fallback_success_cases"],
+            len(coverage["fallback_success_cases"]),
+        )
+        self.assertEqual(
+            counts["rejected_unsupported_cases"],
+            len(coverage["rejected_unsupported_cases"]),
+        )
+        self.assertEqual(counts["registered_success_cases"], len(rules))
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
             "fallback_shallow",
@@ -8922,6 +8937,49 @@ class TranslatorTests(unittest.TestCase):
                 entry["forbidden_coq_fragments"],
                 list(rule.forbidden_coq_fragments),
             )
+            self.assertEqual(entry["accepted_examples"], [entry["example"]])
+            self.assertEqual(entry["boundary_status"], "registered_primary_example")
+
+        for case in coverage["registered_success_cases"]:
+            with self.subTest(case=case["rule_id"]):
+                result = run_pipeline(case["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["construction_rule"]["id"], case["rule_id"])
+                self.assertEqual(
+                    result["verification_scope"]["kind"],
+                    case["expected_verification_scope_kind"],
+                )
+                self.assertEqual(
+                    result["verification_scope"]["certification_level"],
+                    case["expected_certification_level"],
+                )
+
+        for case in coverage["fallback_success_cases"]:
+            with self.subTest(sentence=case["sentence"]):
+                result = analyze_sentence(case["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(
+                    result["verification_scope"]["kind"],
+                    case["expected_verification_scope_kind"],
+                )
+                self.assertEqual(
+                    result["verification_scope"]["certification_level"],
+                    case["expected_certification_level"],
+                )
+
+        for case in coverage["rejected_unsupported_cases"]:
+            with self.subTest(sentence=case["sentence"]):
+                result = analyze_sentence(case["sentence"], require_coq=True)
+                self.assertFalse(result["ok"])
+                self.assertIn(case["marker"], result["error"])
+                self.assertEqual(
+                    result["verification_scope"]["kind"],
+                    case["expected_verification_scope_kind"],
+                )
+                self.assertEqual(
+                    result["verification_scope"]["certification_level"],
+                    case["expected_certification_level"],
+                )
 
     def test_web_api_and_page_expose_certified_fragment_manifest(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -8942,6 +9000,18 @@ class TranslatorTests(unittest.TestCase):
             manifest["fallback"]["certification_level"],
             "shallow_scaffold",
         )
+        self.assertEqual(
+            manifest["coverage_matrix_counts"]["registered_success_cases"],
+            len(construction_rules()),
+        )
+        self.assertEqual(
+            manifest["coverage_matrix_counts"]["fallback_success_cases"],
+            1,
+        )
+        self.assertEqual(
+            manifest["coverage_matrix_counts"]["rejected_unsupported_cases"],
+            2,
+        )
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -8949,8 +9019,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-certified-fragment-api="/api/certified-fragment"', page)
         self.assertIn('data-full-natural-language-certification="false"', page)
         self.assertIn('data-fallback-certification-level="shallow_scaffold"', page)
+        self.assertIn(
+            f'data-coverage-registered-success-count="{len(construction_rules())}"',
+            page,
+        )
+        self.assertIn('data-coverage-fallback-success-count="1"', page)
+        self.assertIn('data-coverage-rejected-unsupported-count="2"', page)
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
+        self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)
+        self.assertIn('data-coverage-kind="fallback_success"', page)
+        self.assertIn('data-coverage-kind="rejected_unsupported"', page)
+        self.assertIn('data-coverage-marker="because"', page)
+        self.assertIn('data-coverage-marker="who"', page)
         self.assertIn("A successful fallback analysis is intentionally weaker", page)
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
@@ -12339,6 +12420,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("certified_fragment.v1", manuscript)
         self.assertIn("/api/certified-fragment", manuscript)
         self.assertIn("full_natural_language_certification as false", manuscript)
+        self.assertIn("coverage_matrix", manuscript)
+        self.assertIn("registered_success_cases", manuscript)
+        self.assertIn("fallback_success_cases", manuscript)
+        self.assertIn("rejected_unsupported_cases", manuscript)
         self.assertIn("Certified Fragment panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
@@ -12839,6 +12924,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"certified_fragment.v1"', readme)
         self.assertIn("`full_natural_language_certification: false`", readme)
         self.assertIn("`Certified Fragment`", readme)
+        self.assertIn("`coverage_matrix`", readme)
+        self.assertIn("`registered_success_cases`", readme)
+        self.assertIn("`fallback_success_cases`", readme)
+        self.assertIn("`rejected_unsupported_cases`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -12859,6 +12948,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"certified_fragment.v1"', web_design)
         self.assertIn("`Certified Fragment` panel", web_design)
         self.assertIn("`data-certified-rule-id`", web_design)
+        self.assertIn("`coverage_matrix`", web_design)
+        self.assertIn("`coverage_matrix_counts`", web_design)
+        self.assertIn("`data-coverage-kind`", web_design)
+        self.assertIn("`data-coverage-marker`", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
@@ -13614,6 +13707,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("certified_fragment.v1", verifier)
         self.assertIn("data-certified-fragment-schema", verifier)
         self.assertIn("data-certified-rule-id", verifier)
+        self.assertIn("coverage_matrix", verifier)
+        self.assertIn("coverage_matrix_counts", verifier)
+        self.assertIn("data-coverage-registered-success-count", verifier)
+        self.assertIn("data-coverage-marker", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)

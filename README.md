@@ -803,6 +803,11 @@ row with `certification_level: shallow_scaffold`, and the unsupported
 clause-marker guard set. The page renders the same data in a `Certified Fragment`
 panel, so users can distinguish the current certified fragment from the
 stronger, still-open goal of arbitrary natural-language certification.
+The same manifest now includes a `coverage_matrix` with three audited slices:
+`registered_success_cases`, `fallback_success_cases`, and
+`rejected_unsupported_cases`. Registered cases point back to each rule's
+primary example, fallback cases remain explicitly shallow, and rejected cases
+record the marker that must stop the pipeline before fallback.
 Successful registered rules must expose a passing `semantic_readings_check`.
 Rules with explicit ambiguity keep their specialized readings; otherwise the
 registered-rule boundary creates a conservative single reading from the unique
@@ -989,6 +994,11 @@ The smoke check also fetches `/api/certified-fragment` and checks that the
 matching page panel exposes `certified_fragment.v1`, the registered rule count,
 each registered rule id, `full_natural_language_certification=false`, and the
 fallback `shallow_scaffold` level.
+It also checks the coverage-matrix counts and page hooks for registered,
+fallback, and rejected examples. Unit tests run the manifest's registered
+success cases, fallback success cases, and rejected unsupported cases against
+the actual pipeline, so the coverage matrix cannot become a prose-only
+inventory.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.
