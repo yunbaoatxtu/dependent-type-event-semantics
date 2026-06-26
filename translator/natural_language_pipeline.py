@@ -153,8 +153,10 @@ def quantifier_scope_reading(
     verb: str,
     object_noun: str,
     subject_first: bool,
+    modifiers: list[dict[str, Any]] | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
+    modifiers = list(modifiers or [])
     subject = {
         "role": "subject",
         "variable": f"x_{subject_noun}",
@@ -170,7 +172,11 @@ def quantifier_scope_reading(
     scope_order = [subject, obj] if subject_first else [obj, subject]
     relation = {
         "predicate": verb,
-        "predicate_type": "Entity -> Entity -> Prop",
+        "predicate_type": (
+            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+            if modifiers
+            else "Entity -> Entity -> Prop"
+        ),
         "arguments": [subject["variable"], obj["variable"]],
     }
     if subject_first:
@@ -182,8 +188,28 @@ def quantifier_scope_reading(
         "quantifier": "some",
         "scope_order": scope_order,
         "relation": relation,
+        "modifiers": modifiers,
         "time_modifiers": list(time_modifiers or []),
     }
+
+
+def render_quantifier_relation(reading: dict[str, Any], *, coq: bool) -> str:
+    relation = reading["relation"]
+    args = relation["arguments"]
+    modifiers = reading.get("modifiers", [])
+    if modifiers:
+        if coq:
+            return (
+                f"{relation['predicate']} {len(modifiers)} "
+                f"{coq_modifier_sequence(modifiers)} {' '.join(args)}"
+            )
+        return (
+            f"{relation['predicate']}({len(modifiers)})"
+            f"({readable_modifier_arguments(modifiers)}, {', '.join(args)})"
+        )
+    if coq:
+        return f"{relation['predicate']} {' '.join(args)}"
+    return f"{relation['predicate']}({', '.join(args)})"
 
 
 def render_quantifier_time_wrapped_reading(
@@ -201,14 +227,12 @@ def render_quantifier_time_wrapped_reading(
 
 
 def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str:
-    relation = reading["relation"]
-    args = relation["arguments"]
     if coq:
-        body = f"{relation['predicate']} {' '.join(args)}"
+        body = render_quantifier_relation(reading, coq=True)
         connective = "/\\"
         separator = ", "
     else:
-        body = f"{relation['predicate']}({', '.join(args)})"
+        body = render_quantifier_relation(reading, coq=False)
         connective = "and"
         separator = ". "
     for binder in reversed(reading["scope_order"]):
@@ -599,11 +623,19 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
             errors.append(f"readings[{index}].relation must be an object")
             continue
 
+        modifiers = reading.get("modifiers", [])
+        check_coordination_modifiers(errors, modifiers, f"readings[{index}]")
+        has_modifiers = isinstance(modifiers, list) and bool(modifiers)
         observed_orders.append(tuple(str(binder.get("role")) for binder in order))
         relation_args = relation.get("arguments")
-        if relation.get("predicate_type") != "Entity -> Entity -> Prop":
+        expected_relation_type = (
+            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+            if has_modifiers
+            else "Entity -> Entity -> Prop"
+        )
+        if relation.get("predicate_type") != expected_relation_type:
             errors.append(
-                f"readings[{index}].relation must have type Entity -> Entity -> Prop"
+                f"readings[{index}].relation must have type {expected_relation_type}"
             )
         if not isinstance(relation_args, list) or len(relation_args) != 2:
             errors.append(f"readings[{index}].relation.arguments must contain two entities")
@@ -637,14 +669,22 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
 
 def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
+    tokens, fronted_adv_modifiers = split_fronted_adv_modifiers(tokens)
+    tokens, later_fronted_time_modifiers = split_fronted_time_modifiers(tokens)
+    fronted_time_modifiers = [
+        *fronted_time_modifiers,
+        *later_fronted_time_modifiers,
+    ]
     if len(tokens) < 5 or tokens[0] != "some" or tokens[3] != "some":
         return None
-    trailing_time_modifiers = copular_property_time_modifiers(tokens[5:])
-    if trailing_time_modifiers is None:
+    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[5:])
+    if trailing_modifiers is None:
         return None
+    trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
     subject_noun = lemma_verb(tokens[1])
     verb = lemma_verb(tokens[2])
     object_noun = lemma_verb(tokens[4])
+    adv_modifiers = [*fronted_adv_modifiers, *trailing_adv_modifiers]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     readings = [
         quantifier_scope_reading(
@@ -652,6 +692,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             verb,
             object_noun,
             subject_first=True,
+            modifiers=adv_modifiers,
             time_modifiers=time_modifiers,
         ),
         quantifier_scope_reading(
@@ -659,6 +700,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             verb,
             object_noun,
             subject_first=False,
+            modifiers=adv_modifiers,
             time_modifiers=time_modifiers,
         ),
     ]
@@ -667,6 +709,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
+        "modifiers": adv_modifiers,
         "time_modifiers": time_modifiers,
         "readings": [
             {**reading, "formula": render_quantifier_reading(reading)}
@@ -678,9 +721,30 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         [
             "(* Quantifier-scope scaffold for dependent-type event semantics. *)",
             "Parameter Entity : Type.",
+            *(
+                [
+                    "Definition PropT : Type := Prop.",
+                    "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+                    "Parameter ModifierSeq : nat -> Type.",
+                    "Parameter mods_nil : ModifierSeq 0.",
+                    "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
+                ]
+                if adv_modifiers
+                else []
+            ),
             f"Parameter {subject_noun} : Entity -> Prop.",
             f"Parameter {object_noun} : Entity -> Prop.",
-            f"Parameter {verb} : Entity -> Entity -> Prop.",
+            *[
+                f"Parameter {modifier_name} : Adv."
+                for modifier_name in unique_names(
+                    [modifier["name"] for modifier in adv_modifiers]
+                )
+            ],
+            (
+                f"Parameter {verb} : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT."
+                if adv_modifiers
+                else f"Parameter {verb} : Entity -> Entity -> Prop."
+            ),
             *[
                 f"Parameter {time_argument} : Entity."
                 for time_argument in unique_names(
@@ -718,13 +782,16 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         "ast": {
             "kind": "scope_ambiguity",
             "quantifier": "some",
+            "modifiers": adv_modifiers,
+            "time_modifiers": time_modifiers,
             "readings": readings,
         },
         "type_check": {
             **type_check,
             "note": (
                 "Both scope readings are represented with entity predicates "
-                "and a binary relation; time modifiers, when present, scope "
+                "and a binary relation; Adv modifiers stay in a dependent "
+                "modifier sequence, and time modifiers, when present, scope "
                 "over each quantified proposition; no Event argument is introduced."
             ),
         },

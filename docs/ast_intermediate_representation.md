@@ -766,6 +766,17 @@ keeps two readings with explicit quantifier order and predicate types:
 {
   "kind": "scope_ambiguity",
   "quantifier": "some",
+  "modifiers": [
+    {
+      "expression": "in(bathroom)",
+      "name": "in_bathroom",
+      "type": "Adv",
+      "semantic_role": "Location"
+    }
+  ],
+  "time_modifiers": [
+    {"operator": "at", "argument": "yesterday"}
+  ],
   "readings": [
     {
       "name": "some_boy_wide_scope",
@@ -786,9 +797,17 @@ keeps two readings with explicit quantifier order and predicate types:
       ],
       "relation": {
         "predicate": "love",
-        "predicate_type": "Entity -> Entity -> Prop",
+        "predicate_type": "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
         "arguments": ["x_boy", "x_girl"]
       },
+      "modifiers": [
+        {
+          "expression": "in(bathroom)",
+          "name": "in_bathroom",
+          "type": "Adv",
+          "semantic_role": "Location"
+        }
+      ],
       "time_modifiers": [
         {"operator": "at", "argument": "yesterday"}
       ]
@@ -802,8 +821,12 @@ The paired object-wide reading has the same relation arguments but reverses the
 two scope readings. If the sentence has clause-level time, each reading carries
 the same typed `time_modifiers` list and renders as `at_T(yesterday, exists
 x_boy : Entity. ... love(x_boy, x_girl))` or the corresponding object-wide
-scope. This makes the ambiguity
-auditable before the Coq formula is rendered and prevents the timed sentence
+scope. For example, `some boy loved some girl in the bathroom` has a shared
+Adv modifier. If the sentence has a shared Adv modifier, each reading carries the same `modifiers` list and the
+relation type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity ->
+PropT`; the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
+proof-assistant scaffold declares `in_bathroom : Adv`. This makes the ambiguity
+auditable before the Coq formula is rendered and prevents the timed or modified sentence
 from falling back to pseudo-entities such as `some_boy`. The API result also
 exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type

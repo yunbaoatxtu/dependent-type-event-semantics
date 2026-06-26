@@ -319,6 +319,10 @@ inside the same ambiguity analysis instead of triggering the fallback parser:
 `at_T(yesterday, exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity.
 girl(x_girl) and love(x_boy, x_girl))` and its object-wide counterpart, while
 `some boy loves some girl in the morning` uses `during_T(morning, ...)`.
+Shared Adv modifiers are kept in the same two scope readings as dependent
+modifier sequences: `some boy loved some girl in the bathroom` renders
+`love(1)(in(bathroom), x_boy, x_girl)`, declares `in_bathroom : Adv`, and gives
+`love` the type `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:
