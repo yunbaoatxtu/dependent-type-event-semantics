@@ -1035,6 +1035,25 @@ def recovery_action_inspection_run_preview_json(
     )
 
 
+def html_list_item_block(page: str, marker: str, context: str) -> str:
+    marker_start = page.find(marker)
+    if marker_start < 0:
+        raise SystemExit(f"web route smoke check failed: {context} missing {marker}")
+    start = page.rfind("<li", 0, marker_start)
+    if start < 0:
+        raise SystemExit(f"web route smoke check failed: {context} missing list item start")
+    end = page.find("</li>", marker_start)
+    if end < 0:
+        raise SystemExit(f"web route smoke check failed: {context} missing closing list item")
+    return page[start : end + len("</li>")]
+
+
+def require_html_fragments(block: str, fragments: list[str], context: str) -> None:
+    for fragment in fragments:
+        if fragment not in block:
+            raise SystemExit(f"web route smoke check failed: {context} missing {fragment}")
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -1202,16 +1221,32 @@ def validate_diagnostic_fixture_routes(
                 ]
             )
             if isinstance(inspection_run_path, str):
-                expected_fragments.append(
-                    'href="'
-                    + html.escape(str(inspection_run_path), quote=True)
-                    + '"'
+                next_step_block = html_list_item_block(
+                    fixture_page,
+                    f'id="recovery-action-{action_index}"',
+                    f"{case} next-step action {action_index}",
                 )
-                expected_fragments.extend(
+                expected_run_json = html.escape(
+                    recovery_action_inspection_run_preview_json(
+                        case,
+                        action_index,
+                        str(expected_stage),
+                        payload_actions[action_index],
+                        payload,
+                    )
+                )
+                require_html_fragments(
+                    next_step_block,
                     [
+                        'href="'
+                        + html.escape(str(inspection_run_path), quote=True)
+                        + '"',
                         'class="next-step-inspection-run-json"',
                         'data-inspection-json-schema="diagnostic_inspection_run.v1"',
-                    ]
+                        "<summary>Inspection Run JSON</summary>",
+                        expected_run_json,
+                    ],
+                    f"{case} next-step inspection run preview",
                 )
         for fragment in expected_fragments:
             if fragment not in fixture_page:
@@ -1302,13 +1337,17 @@ def validate_recovery_action_exports_html_panel(
     expected_action_exports: list[dict],
     fixture_payload: dict,
 ) -> None:
-    expected_fragments = [
-        'class="panel recovery-action-exports-panel"',
-        'data-export-schema="diagnostic_recovery_action.v1"',
-        f'data-export-case="{html.escape(case, quote=True)}"',
-        f'data-export-count="{len(expected_actions)}"',
-        "<h2>Recovery Action Exports</h2>",
-    ]
+    require_html_fragments(
+        page,
+        [
+            'class="panel recovery-action-exports-panel"',
+            'data-export-schema="diagnostic_recovery_action.v1"',
+            f'data-export-case="{html.escape(case, quote=True)}"',
+            f'data-export-count="{len(expected_actions)}"',
+            "<h2>Recovery Action Exports</h2>",
+        ],
+        f"{case} recovery action exports panel",
+    )
     for action_index, action_kind in enumerate(expected_actions):
         if action_index >= len(expected_action_payloads) or not isinstance(
             expected_action_payloads[action_index],
@@ -1318,6 +1357,11 @@ def validate_recovery_action_exports_html_panel(
                 "web route smoke check failed: recovery action exports panel missing "
                 f"payload for {case} action {action_index}"
             )
+        row = html_list_item_block(
+            page,
+            f'data-export-action-index="{action_index}"',
+            f"{case} recovery action export row {action_index}",
+        )
         expected_json = html.escape(
             recovery_action_export_preview_json(
                 case,
@@ -1338,28 +1382,26 @@ def validate_recovery_action_exports_html_panel(
         run_path = "/api/recovery-action-run?" + urlencode(
             {"case": case, "index": str(action_index)}
         )
-        expected_fragments.extend(
-            [
-                'class="recovery-action-export"',
-                f'data-export-action-index="{action_index}"',
-                f'data-export-action-kind="{html.escape(action_kind, quote=True)}"',
-                (
-                    'data-export-automation-mode="'
-                    + html.escape(automation_mode, quote=True)
-                    + '"'
-                ),
-                f'data-export-can-auto-run="{str(can_auto_run).lower()}"',
-                f'data-export-failure-stage="{html.escape(expected_stage, quote=True)}"',
-                f'data-export-json-schema="diagnostic_recovery_action.v1"',
-                "<summary>Action JSON</summary>",
-                (
-                    'href="'
-                    + html.escape(str(export_path), quote=True)
-                    + '"'
-                ),
-                expected_json,
-            ]
-        )
+        expected_fragments = [
+            'class="recovery-action-export"',
+            f'data-export-action-index="{action_index}"',
+            f'data-export-action-kind="{html.escape(action_kind, quote=True)}"',
+            (
+                'data-export-automation-mode="'
+                + html.escape(automation_mode, quote=True)
+                + '"'
+            ),
+            f'data-export-can-auto-run="{str(can_auto_run).lower()}"',
+            f'data-export-failure-stage="{html.escape(expected_stage, quote=True)}"',
+            f'data-export-json-schema="diagnostic_recovery_action.v1"',
+            "<summary>Action JSON</summary>",
+            (
+                'href="'
+                + html.escape(str(export_path), quote=True)
+                + '"'
+            ),
+            expected_json,
+        ]
         if can_auto_run:
             expected_run_json = html.escape(
                 recovery_action_inspection_run_preview_json(
@@ -1381,12 +1423,11 @@ def validate_recovery_action_exports_html_panel(
                     expected_run_json,
                 ]
             )
-    for fragment in expected_fragments:
-        if fragment not in page:
-            raise SystemExit(
-                "web route smoke check failed: recovery action exports panel missing "
-                f"{fragment} for {case}"
-            )
+        require_html_fragments(
+            row,
+            expected_fragments,
+            f"{case} recovery action export row {action_index}",
+        )
 
 
 def validate_lexicon_patch_http_routes(port: int, opener) -> None:

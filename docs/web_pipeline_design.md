@@ -299,6 +299,9 @@ For fixture pages, the same bundle should be rendered as an expandable
 `Inspection Run JSON` preview in both the `Next Steps` list and the
 `Recovery Action Exports` panel, so browser checks can compare the visible
 preview with the API-shaped diagnostic run without issuing another request.
+The verifier should compare each preview inside its own action list item, not
+merely search the whole page, so duplicated or stale JSON in a neighboring panel
+cannot mask a bad row.
 This gives browser tools an inspection/export path for one suggested repair
 without scraping the full analysis response. The fixture HTML should also render a
 `Recovery Action Exports` panel that summarizes every such route with

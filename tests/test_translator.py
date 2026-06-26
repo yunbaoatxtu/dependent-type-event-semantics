@@ -9813,7 +9813,7 @@ class TranslatorTests(unittest.TestCase):
             'data-export-count="1"',
             1,
         )
-        with self.assertRaisesRegex(SystemExit, "recovery action exports panel missing"):
+        with self.assertRaisesRegex(SystemExit, "recovery action exports panel"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
     def test_verification_rejects_recovery_action_export_json_preview_drift(self) -> None:
@@ -9826,7 +9826,45 @@ class TranslatorTests(unittest.TestCase):
             "&quot;schema_version&quot;: &quot;diagnostic_recovery_action.v0&quot;",
             1,
         )
-        with self.assertRaisesRegex(SystemExit, "recovery action exports panel missing"):
+        with self.assertRaisesRegex(SystemExit, "recovery action export row 0"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_next_step_inspection_run_preview_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = dict(pages)
+        case = "type_check_failure"
+        expected = html.escape(
+            compact_json(recovery_action_inspection_run_bundle(case, 0))
+        )
+        stale = expected.replace(
+            "diagnostic_inspection_run.v1",
+            "diagnostic_inspection_run.v0",
+        )
+        pages[case] = pages[case].replace(expected, stale, 1)
+        with self.assertRaisesRegex(SystemExit, "next-step inspection run preview"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_recovery_action_inspection_preview_row_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = dict(pages)
+        case = "type_check_failure"
+        expected = html.escape(
+            compact_json(recovery_action_inspection_run_bundle(case, 0))
+        )
+        first = pages[case].find(expected)
+        second = pages[case].find(expected, first + len(expected))
+        self.assertGreaterEqual(first, 0)
+        self.assertGreaterEqual(second, 0)
+        stale = expected.replace(
+            "diagnostic_inspection_run.v1",
+            "diagnostic_inspection_run.v0",
+        )
+        pages[case] = (
+            pages[case][:second]
+            + stale
+            + pages[case][second + len(expected) :]
+        )
+        with self.assertRaisesRegex(SystemExit, "recovery action export row 0"):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
     def test_verification_runs_web_route_smoke_check(self) -> None:

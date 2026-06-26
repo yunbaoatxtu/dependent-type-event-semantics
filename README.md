@@ -668,7 +668,9 @@ Human-review-required repairs are rejected at that endpoint rather than
 silently applied. Fixture pages also render an expandable `Inspection Run JSON`
 preview for every auto-runnable inspection action in both the `Next Steps` list
 and the `Recovery Action Exports` panel, and that preview must match the same
-`diagnostic_inspection_run.v1` bundle served by the API.
+`diagnostic_inspection_run.v1` bundle served by the API. The verifier checks
+the preview inside the corresponding action row, so a stale preview elsewhere
+on the page cannot satisfy the diagnostic contract by accident.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, so browser checks can verify the export contract without opening
