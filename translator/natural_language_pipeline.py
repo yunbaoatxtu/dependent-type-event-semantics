@@ -2600,6 +2600,61 @@ def simple_conditional_ast(
     }
 
 
+def simple_conditional_clause_object_type(clause: dict[str, Any]) -> str | None:
+    obj = clause.get("object")
+    if isinstance(obj, dict) and isinstance(obj.get("type"), str):
+        return obj["type"]
+    return None
+
+
+def simple_conditional_modifier_indexed_predicate_type(clause: dict[str, Any]) -> str:
+    object_type = simple_conditional_clause_object_type(clause)
+    if object_type is None:
+        return "forall n : nat, ModifierSeq n -> Entity -> PropT"
+    return f"forall n : nat, ModifierSeq n -> Entity -> {object_type} -> PropT"
+
+
+def simple_conditional_plain_predicate_type(clause: dict[str, Any]) -> str:
+    object_type = simple_conditional_clause_object_type(clause)
+    if object_type is None:
+        return "Entity -> Prop"
+    return f"Entity -> {object_type} -> Prop"
+
+
+def simple_conditional_clause_uses_modifier_signature(clause: dict[str, Any]) -> bool:
+    return clause.get("predicate_type") == simple_conditional_modifier_indexed_predicate_type(clause)
+
+
+def normalize_simple_conditional_predicate_signatures(ast: dict[str, Any]) -> dict[str, Any]:
+    clauses = [
+        clause
+        for clause in (ast.get("antecedent"), ast.get("consequent"))
+        if isinstance(clause, dict)
+    ]
+    predicate_groups: dict[tuple[str, str | None], list[dict[str, Any]]] = {}
+    for clause in clauses:
+        predicate = clause.get("predicate")
+        if not isinstance(predicate, str) or not predicate:
+            continue
+        key = (predicate, simple_conditional_clause_object_type(clause))
+        predicate_groups.setdefault(key, []).append(clause)
+
+    for group in predicate_groups.values():
+        if not any(
+            clause.get("modifiers")
+            or clause.get("predicate_type") == simple_conditional_modifier_indexed_predicate_type(clause)
+            for clause in group
+        ):
+            continue
+        for clause in group:
+            clause["predicate_type"] = simple_conditional_modifier_indexed_predicate_type(clause)
+            clause.setdefault("modifiers", [])
+            subject_connective = clause.get("subject_connective")
+            if isinstance(subject_connective, dict):
+                subject_connective["type"] = "PropT -> PropT -> PropT"
+    return ast
+
+
 def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     if ast.get("kind") != "conditional_implication":
@@ -2663,6 +2718,10 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
         )
         modifiers = clause.get("modifiers", [])
         has_modifiers = isinstance(modifiers, list) and bool(modifiers)
+        uses_modifier_signature = has_modifiers or (
+            isinstance(predicate_type, str)
+            and predicate_type == simple_conditional_modifier_indexed_predicate_type(clause)
+        )
         check_coordination_modifiers(
             errors,
             modifiers,
@@ -2710,7 +2769,7 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
             else:
                 expected_subject_connective_type = (
                     "PropT -> PropT -> PropT"
-                    if has_modifiers
+                    if uses_modifier_signature
                     else "Prop -> Prop -> Prop"
                 )
                 if subject_connective.get("name") not in {"and_T", "or_T"}:
@@ -2743,7 +2802,7 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
         if obj is None:
             expected_predicate_type = (
                 "forall n : nat, ModifierSeq n -> Entity -> PropT"
-                if has_modifiers
+                if uses_modifier_signature
                 else "Entity -> Prop"
             )
             if predicate_type != expected_predicate_type:
@@ -2763,7 +2822,7 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
             else:
                 expected_predicate_type = (
                     f"forall n : nat, ModifierSeq n -> Entity -> {object_type} -> PropT"
-                    if has_modifiers
+                    if uses_modifier_signature
                     else f"Entity -> {object_type} -> Prop"
                 )
             if (
@@ -3041,9 +3100,10 @@ def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> s
     predicate = clause["predicate"]
     obj = clause.get("object")
     modifiers = clause.get("modifiers", [])
+    uses_modifier_signature = simple_conditional_clause_uses_modifier_signature(clause)
 
     def atomic_formula(subject_name: str) -> str:
-        if modifiers:
+        if uses_modifier_signature:
             modifier_count = len(modifiers)
             if coq:
                 modifier_sequence = coq_modifier_sequence(modifiers)
@@ -3055,10 +3115,12 @@ def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> s
                 )
             modifier_args = readable_modifier_arguments(modifiers)
             if obj is None:
-                return f"{predicate}({modifier_count})({modifier_args}, {subject_name})"
+                if modifier_args:
+                    return f"{predicate}({modifier_count})({modifier_args}, {subject_name})"
+                return f"{predicate}(0)({subject_name})"
             return (
                 f"{predicate}({modifier_count})"
-                f"({modifier_args}, {subject_name}, {obj['name']})"
+                f"({modifier_args + ', ' if modifier_args else ''}{subject_name}, {obj['name']})"
             )
         if obj is None:
             return f"{predicate} {subject_name}" if coq else f"{predicate}({subject_name})"
@@ -3177,6 +3239,7 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
     antecedent = simple_conditional_clause_ast(**antecedent_clause)
     consequent = simple_conditional_clause_ast(**consequent_clause)
     ast = simple_conditional_ast(antecedent, consequent)
+    normalize_simple_conditional_predicate_signatures(ast)
     type_check = check_simple_conditional_ast(ast)
     antecedent_formula = simple_conditional_clause_formula(antecedent, coq=False)
     consequent_formula = simple_conditional_clause_formula(consequent, coq=False)
@@ -3203,6 +3266,10 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
         for clause in (antecedent, consequent)
         for modifier in clause.get("modifiers", [])
     ]
+    has_modifier_signature = any(
+        simple_conditional_clause_uses_modifier_signature(clause)
+        for clause in (antecedent, consequent)
+    )
     has_negation = any(
         clause.get("negated", False) for clause in (antecedent, consequent)
     )
@@ -3213,7 +3280,7 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
             connective_name = subject_connective["name"]
             connective_type = (
                 "PropT -> PropT -> PropT"
-                if adv_modifiers
+                if has_modifier_signature
                 else subject_connective["type"]
             )
             previous_type = subject_connective_types.get(connective_name)
@@ -3234,7 +3301,7 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
                     "Parameter mods_nil : ModifierSeq 0.",
                     "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
                 ]
-                if adv_modifiers
+                if has_modifier_signature
                 else []
             ),
             *[

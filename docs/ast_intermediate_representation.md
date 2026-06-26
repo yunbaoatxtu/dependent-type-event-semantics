@@ -1389,7 +1389,14 @@ such as `if John left, Mary cried`, whose clauses have predicates of type
 `modifiers` list and force the predicate type through `ModifierSeq`, so
 `if John ate bread quickly, Mary cried loudly` becomes
 `eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`, with both surface
-adverbs checked as `Adv`. Clause-local time modifiers remain separate in each
+adverbs checked as `Adv`. If one branch uses a modified instance of a predicate
+and the other branch uses the same predicate without surface modifiers, the
+checker normalizes both clauses to the same dependent predicate family and
+renders the unmodified branch with the zero-length modifier vector. For
+example, `if John left quickly, Mary left` becomes
+`leave(1)(quickly, john) -> leave(0)(mary)`, and the Coq/Rocq term supplies
+`mods_nil` to the second `leave` call instead of declaring a second
+`Entity -> Prop` constant. Clause-local time modifiers remain separate in each
 clause's `time_modifiers` list and render around that clause's proposition, so
 `if John left in the park yesterday, Mary cried today` becomes
 `at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`.

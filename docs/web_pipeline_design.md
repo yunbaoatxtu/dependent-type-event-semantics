@@ -478,6 +478,11 @@ the same ModifierSeq convention used by the Luo-Shi modifier rules:
 `if John ate bread quickly, Mary cried loudly` is displayed as
 `eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`, and the generated
 scaffold declares `quickly : Adv`, `loudly : Adv`, `ModifierSeq`, and `PropT`.
+The same panel now shows mixed modified/unmodified uses of one predicate with a
+single lifted signature: `if John left quickly, Mary left` is displayed as
+`leave(1)(quickly, john) -> leave(0)(mary)`, and the generated Coq/Rocq term
+uses `mods_nil` for the zero-modifier branch rather than a second plain
+`leave : Entity -> Prop` declaration.
 Conditional-clause do-support negation is
 shown as proposition-level negation over the timed clause, so
 `if John did not leave quickly, Mary cried today` appears as

@@ -1518,6 +1518,97 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("in(e, park)", timed_location["event_semantics"]["event_style_reference"])
         self.assertEqual(timed_location["coq_check"]["status"], "passed")
 
+    def test_simple_conditional_implication_lifts_mixed_modifier_signatures(self) -> None:
+        antecedent_modifier = run_pipeline(
+            "if John left quickly, Mary left",
+            require_coq=True,
+        )
+        self.assertTrue(antecedent_modifier["ok"])
+        self.assertEqual(
+            antecedent_modifier["dependent_type_translation"],
+            "leave(1)(quickly, john) -> leave(0)(mary)",
+        )
+        self.assertEqual(
+            antecedent_modifier["ast"]["antecedent"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> PropT",
+        )
+        self.assertEqual(
+            antecedent_modifier["ast"]["consequent"]["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> PropT",
+        )
+        self.assertEqual(antecedent_modifier["ast"]["consequent"]["modifiers"], [])
+        self.assertIn(
+            "Parameter leave : forall n : nat, ModifierSeq n -> Entity -> PropT.",
+            antecedent_modifier["coq_code"],
+        )
+        self.assertIn(
+            "leave 1 (mods_cons 0 quickly mods_nil) john -> leave 0 mods_nil mary",
+            antecedent_modifier["coq_code"],
+        )
+        self.assertNotIn("Parameter leave : Entity -> Prop.", antecedent_modifier["coq_code"])
+        self.assertEqual(antecedent_modifier["coq_check"]["status"], "passed")
+
+        consequent_modifier = run_pipeline(
+            "if John left, Mary left quickly",
+            require_coq=True,
+        )
+        self.assertTrue(consequent_modifier["ok"])
+        self.assertEqual(
+            consequent_modifier["dependent_type_translation"],
+            "leave(0)(john) -> leave(1)(quickly, mary)",
+        )
+        self.assertIn(
+            "leave 0 mods_nil john -> leave 1 (mods_cons 0 quickly mods_nil) mary",
+            consequent_modifier["coq_code"],
+        )
+        self.assertEqual(consequent_modifier["coq_check"]["status"], "passed")
+
+        transitive_mixed = run_pipeline(
+            "if John ate bread quickly, Mary ate bread",
+            require_coq=True,
+        )
+        self.assertTrue(transitive_mixed["ok"])
+        self.assertEqual(
+            transitive_mixed["dependent_type_translation"],
+            "eat(1)(quickly, john, bread) -> eat(0)(mary, bread)",
+        )
+        self.assertEqual(transitive_mixed["ast"]["consequent"]["object"], {"name": "bread", "type": "Food"})
+        self.assertIn(
+            "Parameter eat : forall n : nat, ModifierSeq n -> Entity -> Food -> PropT.",
+            transitive_mixed["coq_code"],
+        )
+        self.assertIn(
+            "eat 1 (mods_cons 0 quickly mods_nil) john bread -> eat 0 mods_nil mary bread",
+            transitive_mixed["coq_code"],
+        )
+        self.assertEqual(transitive_mixed["coq_check"]["status"], "passed")
+
+        coordinated_mixed = run_pipeline(
+            "if John and Mary left quickly, Sue left",
+            require_coq=True,
+        )
+        self.assertTrue(coordinated_mixed["ok"])
+        self.assertEqual(
+            coordinated_mixed["dependent_type_translation"],
+            "and_T(leave(1)(quickly, john), leave(1)(quickly, mary)) -> leave(0)(sue)",
+        )
+        self.assertEqual(
+            coordinated_mixed["ast"]["antecedent"]["subject_connective"],
+            {"name": "and_T", "type": "PropT -> PropT -> PropT"},
+        )
+        self.assertIn("Parameter and_T : PropT -> PropT -> PropT.", coordinated_mixed["coq_code"])
+        self.assertEqual(coordinated_mixed["coq_check"]["status"], "passed")
+
+        bad_signature = deepcopy(antecedent_modifier["ast"])
+        bad_signature["consequent"]["predicate_type"] = "Entity -> Prop"
+        type_check = check_simple_conditional_ast(bad_signature)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "conditional predicate leave has conflicting types: "
+            "forall n : nat, ModifierSeq n -> Entity -> PropT vs Entity -> Prop",
+            type_check["errors"],
+        )
+
     def test_simple_conditional_implication_preserves_clause_negation(self) -> None:
         antecedent_negation = run_pipeline(
             "if John did not leave yesterday, Mary cried today",
@@ -10397,6 +10488,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"expression": "in(park)"', ast_docs)
         self.assertIn('"name": "in_park"', ast_docs)
         self.assertIn("ModifierSeq n -> Entity -> PropT", ast_docs)
+        self.assertIn("if John left quickly, Mary left", readme)
+        self.assertIn("leave(1)(quickly, john) -> leave(0)(mary)", readme)
+        self.assertIn("zero-length modifier vector", readme)
+        self.assertIn("mods_nil", readme)
+        self.assertIn("if John left quickly, Mary left", ast_docs)
+        self.assertIn("leave(1)(quickly, john) -> leave(0)(mary)", ast_docs)
+        self.assertIn("zero-length modifier vector", ast_docs)
+        self.assertIn("mods_nil", ast_docs)
+        self.assertIn("if John left quickly, Mary left", web_design)
+        self.assertIn("leave(1)(quickly, john) -> leave(0)(mary)", web_design)
+        self.assertIn("leave : Entity -> Prop", web_design)
+        self.assertIn("If John left quickly, Mary left", manuscript)
+        self.assertIn("leave(1)(quickly, john) -> leave(0)(mary)", manuscript)
+        self.assertIn("forall n : nat, ModifierSeq n -> Entity -> PropT", manuscript)
+        self.assertIn("if John ate bread quickly, Mary ate bread", manuscript)
         self.assertIn("`construction_summary`", readme)
         self.assertIn("Same subject john coordinates eat(bread : Food)", readme)
         self.assertIn("In the park John walked and talked", readme)

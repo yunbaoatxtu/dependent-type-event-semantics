@@ -83,7 +83,12 @@ Mary drank water` is checked as `eat(john, bread) -> drink(mary, water)` with
 `bread : Food` and `water : Drinkable`. Clause-level Adv modifiers are stored
 as `Adv` values and passed through a `ModifierSeq`, so
 `if John ate bread quickly, Mary cried loudly` becomes
-`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`. Clause-level time
+`eat(1)(quickly, john, bread) -> cry(1)(loudly, mary)`. When the same
+conditional predicate appears once with Adv modifiers and once without them,
+the unmodified clause is lifted to the same dependent signature and receives
+the zero-length modifier vector: `if John left quickly, Mary left` becomes
+`leave(1)(quickly, john) -> leave(0)(mary)`, with `mods_nil` in the generated
+Coq/Rocq term. Clause-level time
 modifiers scope over their own proposition, so
 `if John left in the park yesterday, Mary cried today` becomes
 `at_T(yesterday, leave(1)(in(park), john)) -> at_T(today, cry(mary))`. The same certified
@@ -958,6 +963,10 @@ The current prototype has small, testable rules for:
   `eat(1)(quickly, john, bread)`, clause-local do-support negation such as
   `not_T(leave(1)(quickly, john))`, and two-subject clause coordination such as
   `and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))`;
+  the same predicate can also mix a modified and unmodified clause, as in
+  `if John left quickly, Mary left`, where the unmodified branch is rendered
+  as `leave(0)(mary)` and checked with `mods_nil` rather than a conflicting
+  plain `Entity -> Prop` declaration;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation.
