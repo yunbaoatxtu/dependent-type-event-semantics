@@ -178,9 +178,19 @@ def strip_surface_coordination_marker(tokens: list[str]) -> list[str]:
 def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
     if not tokens:
         return None
-    forbidden_tokens = (
+    forbidden_nominal_tokens = (
         SUPPORTED_SCOPE_DETERMINERS
-        | PREPOSITIONS
+        | COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | ARTICLES
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+    )
+    forbidden_pp_tokens = (
+        SUPPORTED_SCOPE_DETERMINERS
         | COMMON_ADVERBS
         | TEMPORAL_ADVERBS
         | COUNT_WORDS
@@ -189,20 +199,57 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
         | set(TEMPORAL_RELATION_CONNECTORS)
         | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
     )
-    if any(token in forbidden_tokens for token in tokens):
+    nominal_tokens: list[str] = []
+    idx = 0
+    while idx < len(tokens) and tokens[idx] not in PREPOSITIONS:
+        if tokens[idx] in forbidden_nominal_tokens:
+            return None
+        nominal_tokens.append(tokens[idx])
+        idx += 1
+    if not nominal_tokens:
         return None
-    predicates = [lemma_verb(token) for token in tokens]
+    predicates = [lemma_verb(token) for token in nominal_tokens]
     head = predicates[-1]
     restrictors = [
         {"predicate": predicate, "predicate_type": "Entity -> Prop"}
         for predicate in predicates
     ]
-    return {
+    postnominal_restrictors: list[dict[str, Any]] = []
+    while idx < len(tokens):
+        preposition = tokens[idx]
+        if preposition not in PREPOSITIONS:
+            return None
+        if temporal_prepositional_phrase_value(tokens, idx) is not None:
+            return None
+        idx += 1
+        phrase: list[str] = []
+        while idx < len(tokens) and tokens[idx] not in PREPOSITIONS:
+            if tokens[idx] in forbidden_pp_tokens:
+                return None
+            phrase.append(tokens[idx])
+            idx += 1
+        if not any(token not in ARTICLES for token in phrase):
+            return None
+        expression = modifier_expression(preposition, phrase)
+        pp_restrictor = {
+            "predicate": f"{normalize_surface_name(expression)}_np",
+            "predicate_type": "Entity -> Prop",
+            "expression": expression,
+            "semantic_role": modifier_semantic_role(expression),
+            "argument": clean_phrase(phrase),
+            "kind": "pp_restrictor",
+        }
+        restrictors.append(pp_restrictor)
+        postnominal_restrictors.append(pp_restrictor)
+    np = {
         "surface": " ".join(tokens),
         "head": head,
         "adjectives": predicates[:-1],
         "restrictors": restrictors,
     }
+    if postnominal_restrictors:
+        np["postnominal_restrictors"] = postnominal_restrictors
+    return np
 
 
 def split_preverbal_adv_modifiers(

@@ -368,6 +368,11 @@ renders `(young(x_boy) and boy(x_boy))` and
 `(happy(x_girl) and girl(x_girl))`, with `young`, `boy`, `happy`, and `girl`
 all exported as `Entity -> Prop` predicates, not pseudo-entities such as
 `some_young_boy_quickly` or `some_happy_girl`.
+Postnominal PP material inside a quantified NP uses the same restrictor field
+with an NP-specific predicate name: `some boy in the park loved some happy girl`
+renders `boy(x_boy) and in_park_np(x_boy)`, declares
+`in_park_np : Entity -> Prop`, and does not collide with the clause-level
+modifier declaration `in_park : Adv`.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 same readings: the modifier parser stops before the quantified subject and does
 not collapse the phrase into a malformed `in_bathroom_some` constant.

@@ -6811,6 +6811,63 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("some_young_boy_quickly", result["dependent_type_translation"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+        pp_restrictor = run_pipeline(
+            "some boy in the park loved some happy girl",
+            require_coq=True,
+        )
+        self.assertTrue(pp_restrictor["ok"])
+        self.assertEqual(pp_restrictor["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            pp_restrictor["ast"]["noun_phrases"]["subject"]["postnominal_restrictors"],
+            [
+                {
+                    "predicate": "in_park_np",
+                    "predicate_type": "Entity -> Prop",
+                    "expression": "in(park)",
+                    "semantic_role": "Location",
+                    "argument": "park",
+                    "kind": "pp_restrictor",
+                }
+            ],
+        )
+        self.assertEqual(
+            pp_restrictor["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "exists x_boy : Entity. (boy(x_boy) and in_park_np(x_boy)) and "
+                "exists x_girl : Entity. (happy(x_girl) and girl(x_girl)) and "
+                "love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn("Parameter in_park_np : Entity -> Prop.", pp_restrictor["coq_code"])
+        self.assertNotIn("Parameter in_park : Adv.", pp_restrictor["coq_code"])
+        self.assertNotIn("Parameter some_boy_in_park : Entity.", pp_restrictor["coq_code"])
+        self.assertNotIn("Parameter some_happy_girl : Entity.", pp_restrictor["coq_code"])
+        self.assertNotIn("some_boy_in_park", pp_restrictor["dependent_type_translation"])
+        self.assertEqual(pp_restrictor["coq_check"]["status"], "passed")
+
+        pp_and_clause_adv = run_pipeline(
+            "every boy in the park quickly loved a happy girl in the bathroom yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(pp_and_clause_adv["ok"])
+        self.assertEqual(pp_and_clause_adv["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(pp_and_clause_adv["ast"]["quantifier"], "mixed")
+        self.assertEqual(
+            [modifier["name"] for modifier in pp_and_clause_adv["ast"]["modifiers"]],
+            ["quickly", "in_bathroom"],
+        )
+        self.assertIn(
+            "at_T(yesterday, forall x_boy : Entity. "
+            "(boy(x_boy) and in_park_np(x_boy)) -> exists x_girl : Entity. "
+            "(happy(x_girl) and girl(x_girl)) and "
+            "love(2)(quickly, in(bathroom), x_boy, x_girl))",
+            pp_and_clause_adv["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertIn("Parameter in_park_np : Entity -> Prop.", pp_and_clause_adv["coq_code"])
+        self.assertIn("Parameter in_bathroom : Adv.", pp_and_clause_adv["coq_code"])
+        self.assertNotIn("Parameter in_park : Adv.", pp_and_clause_adv["coq_code"])
+        self.assertEqual(pp_and_clause_adv["coq_check"]["status"], "passed")
+
         mixed = run_pipeline(
             "every young boy quickly loved a happy girl yesterday",
             require_coq=True,
@@ -7314,6 +7371,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "readings[0].scope_order[0].restrictors must include the head predicate",
+            type_check["errors"],
+        )
+
+        pp_result = run_pipeline("some boy in the park loves some happy girl", require_coq=False)
+        pp_readings = pp_result["ast"]["readings"]
+        pp_readings[0]["scope_order"][0]["restrictors"][1]["predicate_type"] = "Adv"
+        type_check = check_quantifier_scope_readings(pp_readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0].scope_order[0].restrictors[1] "
+            "must have predicate type Entity -> Prop",
             type_check["errors"],
         )
 
@@ -10414,6 +10482,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some young boy quickly loved some happy girl", readme)
         self.assertIn("young(x_boy) and boy(x_boy)", readme)
         self.assertIn("some_young_boy_quickly", readme)
+        self.assertIn("some boy in the park loved some happy girl", readme)
+        self.assertIn("in_park_np : Entity -> Prop", readme)
         self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("a boy loves a", readme)
         self.assertIn("a_boy_wide_scope", readme)
@@ -10657,6 +10727,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy quickly loved some girl", manuscript)
         self.assertIn("some young boy quickly loved some happy girl", manuscript)
         self.assertIn("some_happy_girl", manuscript)
+        self.assertIn("some boy in the park loved some happy girl", manuscript)
+        self.assertIn("in_park_np : Entity -> Prop", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
         self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
         self.assertIn("in_bathroom_some", manuscript)
@@ -10686,6 +10758,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some young boy quickly loved some happy girl", ast_docs)
         self.assertIn("`restrictors`", ast_docs)
         self.assertIn("some_young_boy_quickly", ast_docs)
+        self.assertIn("some boy in the park loved some happy girl", ast_docs)
+        self.assertIn("in_park_np : Entity -> Prop", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)
         self.assertIn("in_bathroom_some", ast_docs)

@@ -862,7 +862,11 @@ the binder-level `restrictors` field: `some young boy quickly loved some happy g
 records subject restrictors `young : Entity -> Prop` and `boy : Entity -> Prop`,
 object restrictors `happy : Entity -> Prop` and `girl : Entity -> Prop`, and
 renders `(young(x_boy) and boy(x_boy))` rather than a pseudo-entity such as
-`some_young_boy_quickly`. Fronted variants such as
+`some_young_boy_quickly`. Postnominal PP material inside the quantified NP is
+also a restrictor, not an event modifier: `some boy in the park loved some happy girl`
+records `in_park_np : Entity -> Prop` in the subject binder and renders
+`boy(x_boy) and in_park_np(x_boy)`, leaving the clause-level `in_park : Adv`
+name available for genuine predicate modification. Fronted variants such as
 `In the bathroom some boy loved some girl` use the same representation: the
 fronted modifier stops before the quantified subject, so the AST records
 `in_bathroom : Adv` rather than a malformed `in_bathroom_some` name. This makes
