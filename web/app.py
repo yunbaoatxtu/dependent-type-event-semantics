@@ -15,6 +15,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from translator.dependent_type_event_translator import STATE_LEXICON
 from translator.natural_language_pipeline import (
     check_semantic_readings,
+    construction_fragment_manifest,
     exported_prop_definition_names,
     failure_verification_scope,
     run_pipeline,
@@ -39,6 +40,7 @@ from web.diagnostic_contract import (
 DEFAULT_SENTENCE = "John knocked twice"
 ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
+CERTIFIED_FRAGMENT_SCHEMA = "certified_fragment.v1"
 DIAGNOSTIC_CONTRACT_SCHEMA = "diagnostic_contract.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 RECOVERY_ACTION_SCHEMA = "diagnostic_recovery_action.v1"
@@ -2168,6 +2170,60 @@ def diagnostic_contract_panel() -> str:
     )
 
 
+def certified_fragment_panel() -> str:
+    manifest = construction_fragment_manifest()
+    schema = str(manifest.get("schema_version", ""))
+    registered = [
+        item
+        for item in manifest.get("registered_constructions", [])
+        if isinstance(item, dict)
+    ]
+    fallback = manifest.get("fallback", {})
+    fallback_level = (
+        str(fallback.get("certification_level", ""))
+        if isinstance(fallback, dict)
+        else ""
+    )
+    rule_items = "".join(
+        '<li '
+        f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}" '
+        f'data-certified-level="{html.escape(str(item.get("certification_level", "")), quote=True)}">'
+        f'<code>{html.escape(str(item.get("id", "")))}</code>'
+        f'<span>{html.escape(str(item.get("label", "")))}</span>'
+        "</li>"
+        for item in registered
+    )
+    marker_items = "".join(
+        f"<li><code>{html.escape(str(marker))}</code></li>"
+        for marker in manifest.get("rejected_fragment_markers", [])
+        if isinstance(marker, str)
+    )
+    return (
+        '<section class="panel certified-fragment-panel" '
+        f'data-certified-fragment-schema="{html.escape(schema, quote=True)}" '
+        'data-certified-fragment-api="/api/certified-fragment" '
+        f'data-registered-construction-count="{len(registered)}" '
+        f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
+        f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
+        "<h2>Certified Fragment</h2>"
+        '<div class="certified-fragment">'
+        "<dl>"
+        f"<dt>schema</dt><dd><code>{html.escape(schema)}</code></dd>"
+        "<dt>api</dt><dd><code>/api/certified-fragment</code></dd>"
+        f"<dt>full NL</dt><dd>{str(bool(manifest.get('full_natural_language_certification'))).lower()}</dd>"
+        f"<dt>registered rules</dt><dd>{len(registered)}</dd>"
+        f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
+        "</dl>"
+        f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
+        '<div class="certified-fragment-rules"><strong>registered constructions</strong>'
+        f"<ul>{rule_items}</ul></div>"
+        '<div class="certified-fragment-markers"><strong>rejected markers</strong>'
+        f"<ul>{marker_items}</ul></div>"
+        "</div>"
+        "</section>"
+    )
+
+
 def lexicon_resolve_form(draft: dict[str, Any], sentence: str, require_coq: bool) -> str:
     if not draft.get("requires_human_choice"):
         return ""
@@ -2896,7 +2952,19 @@ def render_page(
       display: grid;
       gap: 12px;
     }}
+    .certified-fragment {{
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }}
     .diagnostic-contract dl {{
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 13px;
+    }}
+    .certified-fragment dl {{
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       gap: 4px 10px;
@@ -2906,11 +2974,23 @@ def render_page(
     .diagnostic-contract dt {{
       color: var(--muted);
     }}
+    .certified-fragment dt {{
+      color: var(--muted);
+    }}
     .diagnostic-contract dd {{
       margin: 0;
       word-break: break-word;
     }}
+    .certified-fragment dd {{
+      margin: 0;
+      word-break: break-word;
+    }}
     .diagnostic-contract-vocabulary {{
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }}
+    .certified-fragment-rules,
+    .certified-fragment-markers {{
       border-top: 1px solid var(--line);
       padding-top: 10px;
     }}
@@ -2919,7 +2999,22 @@ def render_page(
       margin-bottom: 8px;
       font-size: 13px;
     }}
+    .certified-fragment-rules strong,
+    .certified-fragment-markers strong {{
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }}
     .diagnostic-contract-vocabulary ul {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }}
+    .certified-fragment-rules ul,
+    .certified-fragment-markers ul {{
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
@@ -2933,6 +3028,17 @@ def render_page(
       background: var(--surface);
       padding: 4px 7px;
       font-size: 12px;
+    }}
+    .certified-fragment-rules li,
+    .certified-fragment-markers li {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      padding: 4px 7px;
+      font-size: 12px;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
     }}
     h2 {{
       font-size: 14px;
@@ -2982,6 +3088,7 @@ def render_page(
       {panel("Diagnostics", diagnostics)}
       {panel("API Contract", api_contract)}
       {verification_scope_panel(result)}
+      {certified_fragment_panel()}
       {diagnostic_contract_panel()}
       {panel("Conclusion", conclusion)}
       {semantic_warnings_panel(result)}
@@ -3020,6 +3127,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/diagnostic-contract":
             self.write_json_response(self.handle_diagnostic_contract_api())
+            return
+        if parsed.path == "/api/certified-fragment":
+            self.write_json_response(self.handle_certified_fragment_api())
             return
         if parsed.path == "/api/recovery-action":
             payload, status = self.handle_recovery_action_api(parsed.query)
@@ -3107,6 +3217,9 @@ class PipelineHandler(BaseHTTPRequestHandler):
 
     def handle_diagnostic_contract_api(self) -> dict[str, Any]:
         return diagnostic_contract_manifest()
+
+    def handle_certified_fragment_api(self) -> dict[str, Any]:
+        return construction_fragment_manifest()
 
     def handle_recovery_action_api(self, query: str) -> tuple[dict[str, Any], HTTPStatus]:
         params = parse_qs(query)

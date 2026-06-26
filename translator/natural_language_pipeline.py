@@ -118,6 +118,25 @@ class ConstructionRule:
     forbidden_coq_fragments: tuple[str, ...] = ()
 
 
+CONSTRUCTION_RULE_EXAMPLES = {
+    "simple_conditional": "if John left, Mary cried",
+    "perception_nominalization": "Mary saw John leave",
+    "universal_timed_burning": "In every burning, oxygen is consumed",
+    "timed_after": "after the singing of the Marseillaise, John saluted the flag",
+    "quantifier_scope_ambiguity": "some boy loves some girl",
+    "lexical_state_change": "the door opened",
+    "stative_result_state": "the vase is broken",
+    "passive_argument_omission": "the toast was buttered",
+    "copular_property": "Mary is happy",
+    "do_support_negation": "John did not walk",
+    "predicate_coordination": "John walked and talked",
+    "subject_coordination": "John and Mary walked",
+    "transitive_subject_coordination": "John and Mary ate bread",
+    "object_coordination": "Mary visited Paris and London",
+    "transitive_predicate_coordination": "John ate bread and drank water",
+}
+
+
 def atom(pred: str, *args: str) -> dict[str, Any]:
     return {"pred": pred, "args": list(args)}
 
@@ -10264,6 +10283,52 @@ def construction_rules() -> list[ConstructionRule]:
             ),
         ),
     ]
+
+
+def construction_fragment_manifest() -> dict[str, Any]:
+    rules = construction_rules()
+    registered = []
+    for rule in rules:
+        registered.append(
+            {
+                "id": rule.rule_id,
+                "label": rule.label,
+                "phenomenon": rule.phenomenon,
+                "example": CONSTRUCTION_RULE_EXAMPLES.get(rule.rule_id, ""),
+                "verification_scope_kind": "registered_construction",
+                "certification_level": "construction_rule",
+                "forbidden_coq_fragments": list(rule.forbidden_coq_fragments),
+            }
+        )
+    return {
+        "schema_version": "certified_fragment.v1",
+        "full_natural_language_certification": False,
+        "registered_construction_count": len(registered),
+        "registered_constructions": registered,
+        "fallback": {
+            "verification_scope_kind": "fallback_shallow",
+            "certification_level": "shallow_scaffold",
+            "example": "John knocked twice",
+            "guarantees": [
+                "fallback AST/type_check and semantic_readings contract are checked",
+                "generated Coq/Rocq scaffold is checked when requested and available",
+            ],
+            "limitations": [
+                "does not certify full natural-language semantics",
+                "does not resolve unregistered scope, attachment, or discourse ambiguities",
+            ],
+        },
+        "rejected_fragment_markers": sorted(UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS),
+        "scope_determiners": {
+            "existential": sorted(EXISTENTIAL_SCOPE_DETERMINERS),
+            "universal": sorted(UNIVERSAL_SCOPE_DETERMINERS),
+            "negative": sorted(NEGATIVE_SCOPE_DETERMINERS),
+        },
+        "methodological_guard": (
+            "A successful fallback analysis is intentionally weaker than a "
+            "registered construction-rule success."
+        ),
+    }
 
 
 def check_forbidden_coq_fragments(

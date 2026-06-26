@@ -2092,6 +2092,83 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
             )
 
 
+def validate_certified_fragment_manifest(manifest: dict) -> None:
+    from translator.natural_language_pipeline import construction_rules
+
+    if manifest.get("schema_version") != "certified_fragment.v1":
+        raise SystemExit("web route smoke check failed: wrong certified fragment schema")
+    if manifest.get("full_natural_language_certification") is not False:
+        raise SystemExit(
+            "web route smoke check failed: certified fragment full-NL boundary drift"
+        )
+    registered = manifest.get("registered_constructions")
+    if not isinstance(registered, list) or not registered:
+        raise SystemExit("web route smoke check failed: missing certified rules")
+    rules = {rule.rule_id: rule for rule in construction_rules()}
+    registered_by_id = {
+        item.get("id"): item
+        for item in registered
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    if set(registered_by_id) != set(rules):
+        raise SystemExit("web route smoke check failed: certified rule id drift")
+    if manifest.get("registered_construction_count") != len(rules):
+        raise SystemExit("web route smoke check failed: certified rule count drift")
+    for rule_id, rule in rules.items():
+        item = registered_by_id[rule_id]
+        if item.get("label") != rule.label or item.get("phenomenon") != rule.phenomenon:
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} metadata drift"
+            )
+        if item.get("verification_scope_kind") != "registered_construction":
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} scope drift"
+            )
+        if item.get("certification_level") != "construction_rule":
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} level drift"
+            )
+        if item.get("forbidden_coq_fragments") != list(rule.forbidden_coq_fragments):
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} hygiene drift"
+            )
+    fallback = manifest.get("fallback")
+    if (
+        not isinstance(fallback, dict)
+        or fallback.get("verification_scope_kind") != "fallback_shallow"
+        or fallback.get("certification_level") != "shallow_scaffold"
+    ):
+        raise SystemExit("web route smoke check failed: certified fallback drift")
+    if "who" not in manifest.get("rejected_fragment_markers", []):
+        raise SystemExit("web route smoke check failed: certified marker drift")
+
+
+def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
+    registered = [
+        item for item in manifest.get("registered_constructions", [])
+        if isinstance(item, dict)
+    ]
+    expected_fragments = [
+        'class="panel certified-fragment-panel"',
+        'data-certified-fragment-schema="certified_fragment.v1"',
+        'data-certified-fragment-api="/api/certified-fragment"',
+        'data-full-natural-language-certification="false"',
+        'data-fallback-certification-level="shallow_scaffold"',
+        f'data-registered-construction-count="{len(registered)}"',
+        "<h2>Certified Fragment</h2>",
+    ]
+    expected_fragments.extend(
+        f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}"'
+        for item in registered
+    )
+    for fragment in expected_fragments:
+        if fragment not in page:
+            raise SystemExit(
+                "web route smoke check failed: certified fragment panel missing "
+                f"{fragment}"
+            )
+
+
 def validate_recovery_action_exports_html_panel(
     page: str,
     case: str,
@@ -2403,6 +2480,13 @@ def run_web_route_smoke_check() -> None:
         )
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))
+        with opener.open(f"{base_url}/api/certified-fragment", timeout=5) as response:
+            certified_fragment_manifest = json.load(response)
+        validate_certified_fragment_manifest(certified_fragment_manifest)
+        validate_certified_fragment_html_panel(
+            fallback_page,
+            certified_fragment_manifest,
+        )
         with opener.open(f"{base_url}/api/diagnostic-fixtures", timeout=5) as response:
             manifest = json.load(response)
         manifest_cases = manifest.get("cases", [])

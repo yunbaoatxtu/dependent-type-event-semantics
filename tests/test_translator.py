@@ -65,6 +65,7 @@ from translator.natural_language_pipeline import (
     check_timed_after_ast,
     check_transitive_predicate_coordination_ast,
     check_universal_timed_ast,
+    construction_fragment_manifest,
     construction_rules,
     exported_prop_definition_names,
     run_registered_rule,
@@ -104,6 +105,7 @@ from translator.surface_lexicon import (
 )
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
+    CERTIFIED_FRAGMENT_SCHEMA,
     DIAGNOSTIC_CONTRACT_SCHEMA,
     DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
     DIAGNOSTIC_FAILURE_STAGES,
@@ -8878,6 +8880,79 @@ class TranslatorTests(unittest.TestCase):
             rules["transitive_predicate_coordination"].forbidden_coq_fragments,
         )
 
+    def test_certified_fragment_manifest_tracks_registered_rules(self) -> None:
+        manifest = construction_fragment_manifest()
+        rules = {rule.rule_id: rule for rule in construction_rules()}
+        registered = {
+            entry["id"]: entry
+            for entry in manifest["registered_constructions"]
+        }
+        self.assertEqual(manifest["schema_version"], CERTIFIED_FRAGMENT_SCHEMA)
+        self.assertFalse(manifest["full_natural_language_certification"])
+        self.assertEqual(manifest["registered_construction_count"], len(rules))
+        self.assertEqual(set(registered), set(rules))
+        self.assertEqual(
+            manifest["fallback"]["verification_scope_kind"],
+            "fallback_shallow",
+        )
+        self.assertEqual(
+            manifest["fallback"]["certification_level"],
+            "shallow_scaffold",
+        )
+        self.assertIn(
+            "does not certify full natural-language semantics",
+            manifest["fallback"]["limitations"],
+        )
+        self.assertIn("who", manifest["rejected_fragment_markers"])
+        self.assertIn("because", manifest["rejected_fragment_markers"])
+        self.assertIn("some", manifest["scope_determiners"]["existential"])
+        self.assertIn("every", manifest["scope_determiners"]["universal"])
+        self.assertIn("no", manifest["scope_determiners"]["negative"])
+        for rule_id, rule in rules.items():
+            entry = registered[rule_id]
+            self.assertEqual(entry["label"], rule.label)
+            self.assertEqual(entry["phenomenon"], rule.phenomenon)
+            self.assertEqual(entry["certification_level"], "construction_rule")
+            self.assertEqual(
+                entry["verification_scope_kind"],
+                "registered_construction",
+            )
+            self.assertTrue(entry["example"])
+            self.assertEqual(
+                entry["forbidden_coq_fragments"],
+                list(rule.forbidden_coq_fragments),
+            )
+
+    def test_web_api_and_page_expose_certified_fragment_manifest(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        manifest = PipelineHandler.handle_certified_fragment_api(handler)
+        self.assertEqual(manifest["schema_version"], CERTIFIED_FRAGMENT_SCHEMA)
+        self.assertFalse(manifest["full_natural_language_certification"])
+        self.assertEqual(
+            manifest["registered_construction_count"],
+            len(construction_rules()),
+        )
+        rule_ids = {
+            entry["id"]
+            for entry in manifest["registered_constructions"]
+        }
+        self.assertIn("quantifier_scope_ambiguity", rule_ids)
+        self.assertIn("perception_nominalization", rule_ids)
+        self.assertEqual(
+            manifest["fallback"]["certification_level"],
+            "shallow_scaffold",
+        )
+
+        page = render_page("John knocked twice", require_coq=True)
+        self.assertIn("Certified Fragment", page)
+        self.assertIn('data-certified-fragment-schema="certified_fragment.v1"', page)
+        self.assertIn('data-certified-fragment-api="/api/certified-fragment"', page)
+        self.assertIn('data-full-natural-language-certification="false"', page)
+        self.assertIn('data-fallback-certification-level="shallow_scaffold"', page)
+        self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
+        self.assertIn('data-certified-rule-id="perception_nominalization"', page)
+        self.assertIn("A successful fallback analysis is intentionally weaker", page)
+
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
             "simple_conditional": "if John left, Mary cried",
@@ -12261,6 +12336,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("certification_level shallow_scaffold", manuscript)
         self.assertIn("certification_level none", manuscript.lower())
         self.assertIn("Verification Scope panel", manuscript)
+        self.assertIn("certified_fragment.v1", manuscript)
+        self.assertIn("/api/certified-fragment", manuscript)
+        self.assertIn("full_natural_language_certification as false", manuscript)
+        self.assertIn("Certified Fragment panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
@@ -12756,6 +12835,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`verification_scope`", readme)
         self.assertIn("`certification_level: construction_rule`", readme)
         self.assertIn("`certification_level: shallow_scaffold`", readme)
+        self.assertIn("/api/certified-fragment", readme)
+        self.assertIn('"certified_fragment.v1"', readme)
+        self.assertIn("`full_natural_language_certification: false`", readme)
+        self.assertIn("`Certified Fragment`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -12772,6 +12855,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`kind: registered_construction`", web_design)
         self.assertIn("`kind: fallback_shallow`", web_design)
         self.assertIn("`certification_level: none`", web_design)
+        self.assertIn("/api/certified-fragment", web_design)
+        self.assertIn('"certified_fragment.v1"', web_design)
+        self.assertIn("`Certified Fragment` panel", web_design)
+        self.assertIn("`data-certified-rule-id`", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
@@ -13516,11 +13603,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def recovery_action_repair_plan_preview(", verifier)
         self.assertIn("def validate_recovery_action_export_manifest_entry(", verifier)
         self.assertIn("def validate_recovery_action_exports_html_panel(", verifier)
+        self.assertIn("def validate_certified_fragment_manifest(", verifier)
+        self.assertIn("def validate_certified_fragment_html_panel(", verifier)
         self.assertIn("def recovery_action_inspection_run_preview_json(", verifier)
         self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
         self.assertIn("/api/diagnostic-contract", verifier)
         self.assertIn("diagnostic_contract.v1", verifier)
+        self.assertIn("/api/certified-fragment", verifier)
+        self.assertIn("certified_fragment.v1", verifier)
+        self.assertIn("data-certified-fragment-schema", verifier)
+        self.assertIn("data-certified-rule-id", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)

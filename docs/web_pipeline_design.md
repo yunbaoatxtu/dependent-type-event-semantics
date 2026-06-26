@@ -103,6 +103,14 @@ successes must expose `kind: fallback_shallow` and
 that the result is a structurally checked scaffold rather than full
 natural-language certification. Rejected or failed paths use
 `certification_level: none`.
+The page also exposes a project-level certified-fragment contract. The
+`/api/certified-fragment` endpoint returns `schema_version:
+"certified_fragment.v1"`, `full_natural_language_certification: false`, all
+registered construction rules generated from the live analyzer registry, the
+fallback certification level, and the rejected clause-marker set. The
+`Certified Fragment` panel mirrors the same metadata with stable data
+attributes for the schema, API path, registered rule count, fallback level, and
+each registered rule id through `data-certified-rule-id`.
 For ordinary fallback successes, the API response and HTML panel must agree on
 the same normalized reading row: `fallback_single_reading` from
 `fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
@@ -437,6 +445,9 @@ Those helpers should also check the `verification_scope` JSON object and the
 matching HTML data attributes, so browser and API clients can tell whether a
 successful result is a construction-rule certification or only a shallow
 fallback scaffold.
+The same smoke check should fetch `/api/certified-fragment` and compare the
+manifest with the `Certified Fragment` panel. This keeps the project-level
+coverage boundary synchronized with the registered construction registry.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture
