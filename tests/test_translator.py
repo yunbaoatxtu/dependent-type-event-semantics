@@ -6753,6 +6753,84 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotEqual(intransitive.get("kind"), "quantifier_scope_ambiguity")
         self.assertEqual(intransitive["coq_check"]["status"], "passed")
 
+    def test_quantifier_scope_ambiguity_preserves_np_restrictors(self) -> None:
+        result = run_pipeline(
+            "some young boy quickly loved some happy girl",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            result["ast"]["noun_phrases"]["subject"],
+            {
+                "surface": "young boy",
+                "head": "boy",
+                "adjectives": ["young"],
+                "restrictors": [
+                    {"predicate": "young", "predicate_type": "Entity -> Prop"},
+                    {"predicate": "boy", "predicate_type": "Entity -> Prop"},
+                ],
+            },
+        )
+        self.assertEqual(
+            result["ast"]["noun_phrases"]["object"],
+            {
+                "surface": "happy girl",
+                "head": "girl",
+                "adjectives": ["happy"],
+                "restrictors": [
+                    {"predicate": "happy", "predicate_type": "Entity -> Prop"},
+                    {"predicate": "girl", "predicate_type": "Entity -> Prop"},
+                ],
+            },
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "exists x_boy : Entity. (young(x_boy) and boy(x_boy)) and "
+                "exists x_girl : Entity. (happy(x_girl) and girl(x_girl)) and "
+                "love(1)(quickly, x_boy, x_girl)"
+            ),
+        )
+        self.assertEqual(
+            result["semantic_readings"][1]["dependent_type_translation"],
+            (
+                "exists x_girl : Entity. (happy(x_girl) and girl(x_girl)) and "
+                "exists x_boy : Entity. (young(x_boy) and boy(x_boy)) and "
+                "love(1)(quickly, x_boy, x_girl)"
+            ),
+        )
+        self.assertIn("Parameter young : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter boy : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter happy : Entity -> Prop.", result["coq_code"])
+        self.assertIn("Parameter girl : Entity -> Prop.", result["coq_code"])
+        self.assertIn("(young x_boy /\\ boy x_boy)", result["coq_code"])
+        self.assertIn("(happy x_girl /\\ girl x_girl)", result["coq_code"])
+        self.assertNotIn("Parameter some_young_boy_quickly : Entity.", result["coq_code"])
+        self.assertNotIn("Parameter some_happy_girl : Entity.", result["coq_code"])
+        self.assertNotIn("some_young_boy_quickly", result["dependent_type_translation"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+        mixed = run_pipeline(
+            "every young boy quickly loved a happy girl yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(mixed["ok"])
+        self.assertEqual(mixed["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(mixed["ast"]["quantifier"], "mixed")
+        self.assertEqual(
+            mixed["ast"]["readings"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn(
+            "at_T(yesterday, forall x_boy : Entity. "
+            "(young(x_boy) and boy(x_boy)) -> exists x_girl : Entity. "
+            "(happy(x_girl) and girl(x_girl)) and "
+            "love(1)(quickly, x_boy, x_girl))",
+            mixed["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertEqual(mixed["coq_check"]["status"], "passed")
+
     def test_quantifier_scope_ambiguity_accepts_universal_existential_mix(self) -> None:
         subject_universal = run_pipeline("every boy loves a girl", require_coq=True)
         self.assertTrue(subject_universal["ok"])
@@ -7214,6 +7292,28 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "readings[0].scope_order[0] must use a supported scope quantifier",
+            type_check["errors"],
+        )
+
+    def test_quantifier_scope_rejects_bad_np_restrictor(self) -> None:
+        result = run_pipeline("some young boy loves some happy girl", require_coq=False)
+        readings = result["ast"]["readings"]
+        readings[0]["scope_order"][0]["restrictors"][0]["predicate_type"] = "Entity"
+        type_check = check_quantifier_scope_readings(readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0].scope_order[0].restrictors[0] "
+            "must have predicate type Entity -> Prop",
+            type_check["errors"],
+        )
+
+        readings[0]["scope_order"][0]["restrictors"] = [
+            {"predicate": "young", "predicate_type": "Entity -> Prop"}
+        ]
+        type_check = check_quantifier_scope_readings(readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0].scope_order[0].restrictors must include the head predicate",
             type_check["errors"],
         )
 
@@ -10311,6 +10411,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy loved some girl in the bathroom", readme)
         self.assertIn("some boy quickly loved some girl", readme)
         self.assertIn("some_boy_quickly", readme)
+        self.assertIn("some young boy quickly loved some happy girl", readme)
+        self.assertIn("young(x_boy) and boy(x_boy)", readme)
+        self.assertIn("some_young_boy_quickly", readme)
         self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("a boy loves a", readme)
         self.assertIn("a_boy_wide_scope", readme)
@@ -10552,6 +10655,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("a boy loves no girl", manuscript)
         self.assertIn("In the bathroom some boy loved some girl", manuscript)
         self.assertIn("some boy quickly loved some girl", manuscript)
+        self.assertIn("some young boy quickly loved some happy girl", manuscript)
+        self.assertIn("some_happy_girl", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
         self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
         self.assertIn("in_bathroom_some", manuscript)
@@ -10578,6 +10683,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("a boy loves no girl", ast_docs)
         self.assertIn("some boy loved some girl in the bathroom", ast_docs)
         self.assertIn("some boy quickly loved some girl", ast_docs)
+        self.assertIn("some young boy quickly loved some happy girl", ast_docs)
+        self.assertIn("`restrictors`", ast_docs)
+        self.assertIn("some_young_boy_quickly", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)
         self.assertIn("in_bathroom_some", ast_docs)

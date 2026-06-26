@@ -175,23 +175,87 @@ def strip_surface_coordination_marker(tokens: list[str]) -> list[str]:
     return tokens
 
 
+def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
+    if not tokens:
+        return None
+    forbidden_tokens = (
+        SUPPORTED_SCOPE_DETERMINERS
+        | PREPOSITIONS
+        | COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+    )
+    if any(token in forbidden_tokens for token in tokens):
+        return None
+    predicates = [lemma_verb(token) for token in tokens]
+    head = predicates[-1]
+    restrictors = [
+        {"predicate": predicate, "predicate_type": "Entity -> Prop"}
+        for predicate in predicates
+    ]
+    return {
+        "surface": " ".join(tokens),
+        "head": head,
+        "adjectives": predicates[:-1],
+        "restrictors": restrictors,
+    }
+
+
+def split_preverbal_adv_modifiers(
+    tokens: list[str],
+) -> tuple[list[str], list[dict[str, Any]]]:
+    noun_tokens = list(tokens)
+    modifiers: list[dict[str, Any]] = []
+    while noun_tokens and noun_tokens[-1] in COMMON_ADVERBS:
+        modifiers.insert(0, modifier_record(noun_tokens.pop()))
+    return noun_tokens, modifiers
+
+
+def quantifier_scope_predicate_names(readings: list[dict[str, Any]]) -> list[str]:
+    names: list[str] = []
+    for reading in readings:
+        for binder in reading.get("scope_order", []):
+            if not isinstance(binder, dict):
+                continue
+            restrictors = binder.get("restrictors")
+            if isinstance(restrictors, list):
+                for restrictor in restrictors:
+                    if isinstance(restrictor, dict) and isinstance(
+                        restrictor.get("predicate"),
+                        str,
+                    ):
+                        names.append(restrictor["predicate"])
+                continue
+            if isinstance(binder.get("predicate"), str):
+                names.append(binder["predicate"])
+    return unique_names(names)
+
+
 def quantifier_scope_reading(
-    subject_noun: str,
+    subject_np: dict[str, Any],
     subject_quantifier: str,
     verb: str,
-    object_noun: str,
+    object_np: dict[str, Any],
     object_quantifier: str,
     subject_first: bool,
     modifiers: list[dict[str, Any]] | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     modifiers = list(modifiers or [])
+    subject_noun = subject_np["head"]
+    object_noun = object_np["head"]
     subject = {
         "role": "subject",
         "quantifier": subject_quantifier,
         "variable": f"x_{subject_noun}",
         "predicate": subject_noun,
         "predicate_type": "Entity -> Prop",
+        "surface": subject_np["surface"],
+        "restrictors": subject_np["restrictors"],
     }
     obj = {
         "role": "object",
@@ -199,6 +263,8 @@ def quantifier_scope_reading(
         "variable": f"x_{object_noun}",
         "predicate": object_noun,
         "predicate_type": "Entity -> Prop",
+        "surface": object_np["surface"],
+        "restrictors": object_np["restrictors"],
     }
     scope_order = [subject, obj] if subject_first else [obj, subject]
     relation = {
@@ -259,6 +325,39 @@ def render_quantifier_time_wrapped_reading(
     return body
 
 
+def quantifier_binder_restrictor_applications(
+    binder: dict[str, Any],
+    *,
+    coq: bool,
+) -> list[str]:
+    var = binder["variable"]
+    restrictors = binder.get("restrictors")
+    if not isinstance(restrictors, list) or not restrictors:
+        restrictors = [
+            {
+                "predicate": binder["predicate"],
+                "predicate_type": binder.get("predicate_type", "Entity -> Prop"),
+            }
+        ]
+    applications: list[str] = []
+    for restrictor in restrictors:
+        predicate = restrictor["predicate"]
+        applications.append(f"{predicate} {var}" if coq else f"{predicate}({var})")
+    return applications
+
+
+def render_quantifier_binder_restrictor(
+    binder: dict[str, Any],
+    *,
+    coq: bool,
+) -> str:
+    applications = quantifier_binder_restrictor_applications(binder, coq=coq)
+    if len(applications) == 1:
+        return applications[0]
+    connective = " /\\ " if coq else " and "
+    return f"({connective.join(applications)})"
+
+
 def render_quantifier_binder(
     binder: dict[str, Any],
     body: str,
@@ -266,28 +365,26 @@ def render_quantifier_binder(
     coq: bool,
 ) -> str:
     var = binder["variable"]
-    predicate = binder["predicate"]
     quantifier = binder.get("quantifier")
+    restrictor_application = render_quantifier_binder_restrictor(binder, coq=coq)
     if coq:
-        predicate_application = f"{predicate} {var}"
         if quantifier in EXISTENTIAL_SCOPE_DETERMINERS:
             if body.startswith("forall "):
                 body = f"({body})"
-            return f"exists {var} : Entity, {predicate_application} /\\ {body}"
+            return f"exists {var} : Entity, {restrictor_application} /\\ {body}"
         if quantifier in UNIVERSAL_SCOPE_DETERMINERS:
-            return f"forall {var} : Entity, {predicate_application} -> {body}"
+            return f"forall {var} : Entity, {restrictor_application} -> {body}"
         if quantifier in NEGATIVE_SCOPE_DETERMINERS:
-            return f"forall {var} : Entity, {predicate_application} -> ~ ({body})"
+            return f"forall {var} : Entity, {restrictor_application} -> ~ ({body})"
     else:
-        predicate_application = f"{predicate}({var})"
         if quantifier in EXISTENTIAL_SCOPE_DETERMINERS:
             if body.startswith("forall "):
                 body = f"({body})"
-            return f"exists {var} : Entity. {predicate_application} and {body}"
+            return f"exists {var} : Entity. {restrictor_application} and {body}"
         if quantifier in UNIVERSAL_SCOPE_DETERMINERS:
-            return f"forall {var} : Entity. {predicate_application} -> {body}"
+            return f"forall {var} : Entity. {restrictor_application} -> {body}"
         if quantifier in NEGATIVE_SCOPE_DETERMINERS:
-            return f"forall {var} : Entity. {predicate_application} -> not ({body})"
+            return f"forall {var} : Entity. {restrictor_application} -> not ({body})"
     raise ValueError(f"unsupported quantifier: {quantifier!r}")
 
 
@@ -678,6 +775,42 @@ def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[st
     ]
 
 
+def check_quantifier_scope_binder_restrictors(
+    errors: list[str],
+    binder: dict[str, Any],
+    context: str,
+) -> None:
+    restrictors = binder.get("restrictors")
+    if restrictors is None:
+        return
+    if not isinstance(restrictors, list) or not restrictors:
+        errors.append(f"{context}.restrictors must be a non-empty list")
+        return
+    restrictor_predicates: list[str] = []
+    for restrictor_index, restrictor in enumerate(restrictors):
+        if not isinstance(restrictor, dict):
+            errors.append(f"{context}.restrictors[{restrictor_index}] must be an object")
+            continue
+        predicate = restrictor.get("predicate")
+        if not isinstance(predicate, str) or not predicate:
+            errors.append(
+                f"{context}.restrictors[{restrictor_index}].predicate must be non-empty"
+            )
+        else:
+            restrictor_predicates.append(predicate)
+        if restrictor.get("predicate_type") != "Entity -> Prop":
+            errors.append(
+                f"{context}.restrictors[{restrictor_index}] "
+                "must have predicate type Entity -> Prop"
+            )
+    if (
+        isinstance(binder.get("predicate"), str)
+        and restrictor_predicates
+        and binder["predicate"] not in restrictor_predicates
+    ):
+        errors.append(f"{context}.restrictors must include the head predicate")
+
+
 def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
     errors: list[str] = []
     if len(readings) != 2:
@@ -730,6 +863,11 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
                 errors.append(
                     f"readings[{index}].scope_order[{binder_index}] must bind a variable"
                 )
+            check_quantifier_scope_binder_restrictors(
+                errors,
+                binder,
+                f"readings[{index}].scope_order[{binder_index}]",
+            )
 
     if set(observed_orders) != {("subject", "object"), ("object", "subject")}:
         errors.append(
@@ -754,24 +892,60 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     if len(tokens) < 5 or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS:
         return None
     subject_quantifier = tokens[0]
-    subject_noun = lemma_verb(tokens[1])
-    predicate_index = 2
-    preverbal_adv_modifiers: list[dict[str, Any]] = []
-    while predicate_index < len(tokens) and tokens[predicate_index] in COMMON_ADVERBS:
-        preverbal_adv_modifiers.append(modifier_record(tokens[predicate_index]))
-        predicate_index += 1
-    if (
-        predicate_index + 2 >= len(tokens)
-        or tokens[predicate_index + 1] not in SUPPORTED_SCOPE_DETERMINERS
-    ):
+    parsed_scope: tuple[
+        dict[str, Any],
+        list[dict[str, Any]],
+        str,
+        str,
+        dict[str, Any],
+        list[dict[str, Any]],
+        list[dict[str, str]],
+    ] | None = None
+    for object_quantifier_index in range(3, len(tokens) - 1):
+        object_quantifier = tokens[object_quantifier_index]
+        if object_quantifier not in SUPPORTED_SCOPE_DETERMINERS:
+            continue
+        predicate_index = object_quantifier_index - 1
+        if not is_likely_transitive_verb(tokens[predicate_index]):
+            continue
+        subject_np_tokens, preverbal_adv_modifiers = split_preverbal_adv_modifiers(
+            tokens[1:predicate_index]
+        )
+        subject_np = quantifier_np(subject_np_tokens)
+        if subject_np is None:
+            continue
+        verb = lemma_verb(tokens[predicate_index])
+        for object_np_end in range(object_quantifier_index + 2, len(tokens) + 1):
+            object_np = quantifier_np(tokens[object_quantifier_index + 1 : object_np_end])
+            if object_np is None:
+                continue
+            trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[object_np_end:])
+            if trailing_modifiers is None:
+                continue
+            trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+            parsed_scope = (
+                subject_np,
+                preverbal_adv_modifiers,
+                verb,
+                object_quantifier,
+                object_np,
+                trailing_adv_modifiers,
+                trailing_time_modifiers,
+            )
+            break
+        if parsed_scope is not None:
+            break
+    if parsed_scope is None:
         return None
-    verb = lemma_verb(tokens[predicate_index])
-    object_quantifier = tokens[predicate_index + 1]
-    object_noun = lemma_verb(tokens[predicate_index + 2])
-    trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[predicate_index + 3 :])
-    if trailing_modifiers is None:
-        return None
-    trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+    (
+        subject_np,
+        preverbal_adv_modifiers,
+        verb,
+        object_quantifier,
+        object_np,
+        trailing_adv_modifiers,
+        trailing_time_modifiers,
+    ) = parsed_scope
     adv_modifiers = [
         *fronted_adv_modifiers,
         *preverbal_adv_modifiers,
@@ -780,20 +954,20 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     readings = [
         quantifier_scope_reading(
-            subject_noun,
+            subject_np,
             subject_quantifier,
             verb,
-            object_noun,
+            object_np,
             object_quantifier,
             subject_first=True,
             modifiers=adv_modifiers,
             time_modifiers=time_modifiers,
         ),
         quantifier_scope_reading(
-            subject_noun,
+            subject_np,
             subject_quantifier,
             verb,
-            object_noun,
+            object_np,
             object_quantifier,
             subject_first=False,
             modifiers=adv_modifiers,
@@ -808,6 +982,10 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         "quantifiers": {
             "subject": subject_quantifier,
             "object": object_quantifier,
+        },
+        "noun_phrases": {
+            "subject": subject_np,
+            "object": object_np,
         },
         "modifiers": adv_modifiers,
         "time_modifiers": time_modifiers,
@@ -832,8 +1010,10 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                 if adv_modifiers
                 else []
             ),
-            f"Parameter {subject_noun} : Entity -> Prop.",
-            f"Parameter {object_noun} : Entity -> Prop.",
+            *[
+                f"Parameter {predicate_name} : Entity -> Prop."
+                for predicate_name in quantifier_scope_predicate_names(readings)
+            ],
             *[
                 f"Parameter {modifier_name} : Adv."
                 for modifier_name in unique_names(
@@ -885,6 +1065,10 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             "quantifiers": {
                 "subject": subject_quantifier,
                 "object": object_quantifier,
+            },
+            "noun_phrases": {
+                "subject": subject_np,
+                "object": object_np,
             },
             "modifiers": adv_modifiers,
             "time_modifiers": time_modifiers,

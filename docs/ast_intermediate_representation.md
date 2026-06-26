@@ -857,7 +857,12 @@ the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
 proof-assistant scaffold declares `in_bathroom : Adv`. Predicate-preverbal
 manner adverbs use the same field: `some boy quickly loved some girl` records
 `quickly : Adv`, renders `love(1)(quickly, x_boy, x_girl)`, and does not build
-a subject constant such as `some_boy_quickly`. Fronted variants such as
+a subject constant such as `some_boy_quickly`. Intersective adjective NPs use
+the binder-level `restrictors` field: `some young boy quickly loved some happy girl`
+records subject restrictors `young : Entity -> Prop` and `boy : Entity -> Prop`,
+object restrictors `happy : Entity -> Prop` and `girl : Entity -> Prop`, and
+renders `(young(x_boy) and boy(x_boy))` rather than a pseudo-entity such as
+`some_young_boy_quickly`. Fronted variants such as
 `In the bathroom some boy loved some girl` use the same representation: the
 fronted modifier stops before the quantified subject, so the AST records
 `in_bathroom : Adv` rather than a malformed `in_bathroom_some` name. This makes

@@ -362,6 +362,12 @@ modifier sequences: `some boy loved some girl in the bathroom` renders
 Predicate-preverbal manner adverbs use the same route: `some boy quickly loved some girl`
 renders `love(1)(quickly, x_boy, x_girl)`, declares `quickly : Adv`, and does
 not produce the pseudo-entity `some_boy_quickly`.
+Intersective adjective NPs are kept inside the binder restrictor rather than
+collapsed into entity names: `some young boy quickly loved some happy girl`
+renders `(young(x_boy) and boy(x_boy))` and
+`(happy(x_girl) and girl(x_girl))`, with `young`, `boy`, `happy`, and `girl`
+all exported as `Entity -> Prop` predicates, not pseudo-entities such as
+`some_young_boy_quickly` or `some_happy_girl`.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 same readings: the modifier parser stops before the quantified subject and does
 not collapse the phrase into a malformed `in_bathroom_some` constant.
