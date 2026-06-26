@@ -108,19 +108,22 @@ declarations. Clause-level markers outside certified paths, such as `which`,
 `if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead of being
 collapsed into entity names and sent to Coq/Rocq. The controlled exception is a
 simple quantifier-NP relative restrictor of the form `who/that` plus either one
-intransitive verb or one transitive verb with one entity object, optionally
-followed by certified temporal modifiers:
+intransitive verb or one transitive verb with one entity object, optionally with
+common Adv modifiers and certified temporal modifiers:
 `some boy who laughed loved a girl` renders
 `boy(x_boy) and laugh(x_boy)`, `some boy who saw Mary loved a girl` renders
 `boy(x_boy) and see(x_boy, mary)`, and
+`some boy who quickly saw Mary loved a girl` renders
+`boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
+`ModifierSeq`-indexed predicate family. Likewise,
 `some boy who saw Mary yesterday loved a girl` renders
 `boy(x_boy) and at_T(yesterday, see(x_boy, mary))`. The sentence
 `some boy loved a girl that saw Mary` renders
 `girl(x_girl) and see(x_girl, mary)`, while
-`some boy loved a girl that saw Mary yesterday` exposes both the main-clause
-time reading and the object-relative-time reading. More complex relation-clause subjects,
+`some boy loved a girl that saw Mary quickly` exposes both the main-clause Adv
+reading and the object-relative-Adv reading. More complex relation-clause subjects,
 such as `the tall boy who Mary saw yesterday quickly opened the old door with a key`
-or `some boy who quickly saw Mary yesterday loved a girl`, are still rejected. This prevents the misleading formula
+or `some boy who quickly saw Mary in the park loved a girl`, are still rejected. This prevents the misleading formula
 `leave(0)(if_john, mary_cried)` and keeps unsupported relatives from being
 accepted by the lexical state-change rule as single causer constants.
 
@@ -410,9 +413,18 @@ declares `see : Entity -> Entity -> Prop` and `mary : Entity`, then renders
 inside the binder restrictor: `some boy who saw Mary yesterday loved a girl`
 renders `boy(x_boy) and at_T(yesterday, see(x_boy, mary))`, and the object-side
 variant `some boy loved a girl that saw Mary yesterday` exposes an
-`object_relative_time` branch alongside the main-clause time branch. The marker
-`who` or `that` is not exported as an entity, and relatives with Adv or
-multi-word object structure remain outside the certified fragment.
+`object_relative_time` branch alongside the main-clause time branch. Ordinary
+Adv modifiers inside the relative clause use the same dependent modifier
+sequence as clause-level modifiers: `some boy who quickly saw Mary loved a girl`
+declares `see : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`,
+declares `quickly : Adv`, and renders
+`boy(x_boy) and see(1)(quickly, x_boy, mary)`. If the trailing modifier can
+attach either to the main clause or to the object relative, as in
+`some boy loved a girl that saw Mary quickly`, the AST exposes both a
+`clause_adv` branch and an `object_relative_adv` branch; the unmodified
+relative branch uses `see(0)(x_girl, mary)` with `mods_nil`. The marker `who`
+or `that` is not exported as an entity, and relatives with PP Adv or multi-word
+object structure remain outside the certified fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.
@@ -1029,9 +1041,11 @@ The current prototype has small, testable rules for:
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as
   `some boy who laughed loved a girl` and
   `some boy who saw Mary loved a girl`, plus timed variants such as
-  `some boy who saw Mary yesterday loved a girl`, which are rendered as ordinary
-  binder restrictors over `Entity -> Prop` or `Entity -> Entity -> Prop`
-  predicates, with temporal operators scoped inside the restrictor when present.
+  `some boy who saw Mary yesterday loved a girl` and Adv variants such as
+  `some boy who quickly saw Mary loved a girl`, which are rendered as ordinary
+  binder restrictors over `Entity -> Prop`, `Entity -> Entity -> Prop`, or
+  `ModifierSeq`-indexed predicates, with temporal operators scoped inside the
+  restrictor when present.
 
 Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `intact` and `broken` have type `State`,

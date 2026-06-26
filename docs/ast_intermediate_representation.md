@@ -886,7 +886,8 @@ timed or modified sentence from falling back to pseudo-entities such as `some_bo
 Simple NP-internal relative clauses are represented in the same binder-level
 shape when they have the controlled form `who/that` plus either one
 intransitive verb or one transitive verb with one entity object. The relative
-predicate may also carry certified temporal modifiers.
+predicate may also carry ordinary Adv modifiers and certified temporal
+modifiers.
 For `some boy who laughed loved a girl`, the subject NP stores
 `relative_clause_restrictors` with `laugh : Entity -> Prop`, and the rendered
 restrictor is `boy(x_boy) and laugh(x_boy)`. For
@@ -901,9 +902,17 @@ plus `object: {"name": "mary", "type": "Entity"}` and renders
 relative restrictor and renders
 `boy(x_boy) and at_T(yesterday, see(x_boy, mary))`. On the object side,
 `some boy loved a girl that saw Mary yesterday` exposes both a main-clause
-time branch and an `object_relative_time` branch. The relative marker itself is
-not exported as a constant; relatives with Adv or multi-word object structure
-stay outside the certified fragment.
+time branch and an `object_relative_time` branch. With an internal Adv,
+`some boy who quickly saw Mary loved a girl` stores a `modifiers` list with
+`quickly : Adv`, lifts `see` to
+`forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, and renders
+`boy(x_boy) and see(1)(quickly, x_boy, mary)`. A trailing Adv can be ambiguous:
+`some boy loved a girl that saw Mary quickly` produces a `clause_adv` branch and
+an `object_relative_adv` branch; the former renders the relative as
+`see(0)(x_girl, mary)` with `mods_nil`, while the latter renders
+`see(1)(quickly, x_girl, mary)`. The relative marker itself is not exported as a
+constant; relatives with PP Adv or multi-word object structure stay outside the
+certified fragment.
 The API result also
 exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
@@ -1464,7 +1473,7 @@ like `if John left, Mary cried because Sue left` produce a parsing failure
 instead of a shallow AST. The exception is the controlled quantifier-NP
 relative restrictor described above, where `who/that` plus one intransitive verb
 or a one-object transitive predicate, optionally with certified temporal
-modifiers, is stored as `relative_clause_restrictors`.
+modifiers and ordinary Adv modifiers, is stored as `relative_clause_restrictors`.
 This is deliberately conservative:
 an unimplemented conditional or complex relative clause must not become an
 entity name that later passes the Coq/Rocq scaffold check.

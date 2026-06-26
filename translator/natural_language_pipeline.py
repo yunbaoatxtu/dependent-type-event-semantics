@@ -94,6 +94,12 @@ UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS = {
     "why",
 }
 RELATIVE_RESTRICTOR_MARKERS = {"that", "who"}
+MODIFIER_INDEXED_UNARY_RELATION = (
+    "forall n : nat, ModifierSeq n -> Entity -> PropT"
+)
+MODIFIER_INDEXED_BINARY_RELATION = (
+    "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+)
 
 
 @dataclass(frozen=True)
@@ -194,6 +200,11 @@ def parse_relative_restrictor(
     relative_tokens = tokens[marker_index + 1 :]
     if not relative_tokens:
         return None
+    leading_modifiers: list[dict[str, Any]] = []
+    while relative_tokens and relative_tokens[0] in COMMON_ADVERBS:
+        leading_modifiers.append(modifier_record(relative_tokens.pop(0)))
+    if not relative_tokens:
+        return None
     relative_surface = relative_tokens[0]
     if not (
         is_likely_surface_verb(relative_surface)
@@ -202,30 +213,42 @@ def parse_relative_restrictor(
         return None
     predicate = lemma_verb(relative_surface)
     if len(relative_tokens) == 1 or not is_likely_transitive_verb(relative_surface):
-        time_modifiers = copular_property_time_modifiers(relative_tokens[1:])
-        if time_modifiers is None:
+        trailing_modifiers = split_common_adv_and_time_modifiers(relative_tokens[1:])
+        if trailing_modifiers is None:
             return None
+        adv_modifiers, time_modifiers = trailing_modifiers
+        modifiers = [*leading_modifiers, *adv_modifiers]
         if is_likely_transitive_verb(relative_surface):
             return None
         restrictor: dict[str, Any] = {
             "predicate": predicate,
-            "predicate_type": "Entity -> Prop",
+            "predicate_type": (
+                MODIFIER_INDEXED_UNARY_RELATION if modifiers else "Entity -> Prop"
+            ),
             "surface": " ".join(tokens[marker_index:]),
             "marker": tokens[marker_index],
             "relative_verb": relative_surface,
             "kind": "relative_clause_restrictor",
         }
+        if modifiers:
+            restrictor["modifiers"] = modifiers
         if time_modifiers:
             restrictor["time_modifiers"] = time_modifiers
         return (tokens[:marker_index], [restrictor])
     if len(relative_tokens) >= 2 and is_likely_transitive_verb(relative_surface):
-        time_modifiers = copular_property_time_modifiers(relative_tokens[2:])
-        if time_modifiers is None:
+        trailing_modifiers = split_common_adv_and_time_modifiers(relative_tokens[2:])
+        if trailing_modifiers is None:
             return None
+        adv_modifiers, time_modifiers = trailing_modifiers
+        modifiers = [*leading_modifiers, *adv_modifiers]
         obj = normalize_surface_name(relative_tokens[1])
         restrictor = {
             "predicate": predicate,
-            "predicate_type": "Entity -> Entity -> Prop",
+            "predicate_type": (
+                MODIFIER_INDEXED_BINARY_RELATION
+                if modifiers
+                else "Entity -> Entity -> Prop"
+            ),
             "surface": " ".join(tokens[marker_index:]),
             "marker": tokens[marker_index],
             "relative_verb": relative_surface,
@@ -236,6 +259,8 @@ def parse_relative_restrictor(
             },
             "kind": "relative_clause_restrictor",
         }
+        if modifiers:
+            restrictor["modifiers"] = modifiers
         if time_modifiers:
             restrictor["time_modifiers"] = time_modifiers
         return (tokens[:marker_index], [restrictor])
@@ -277,6 +302,8 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
     if relative_parse is None:
         return None
     nominal_tokens, relative_restrictors = relative_parse
+    if relative_restrictors and idx < len(tokens):
+        return None
     if any(token in forbidden_nominal_tokens for token in nominal_tokens):
         return None
     if not nominal_tokens:
@@ -426,6 +453,30 @@ def quantifier_scope_restrictor_time_modifiers(
     return modifiers
 
 
+def quantifier_scope_restrictor_adv_modifiers(
+    readings: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    modifiers: list[dict[str, Any]] = []
+    for reading in readings:
+        for binder in reading.get("scope_order", []):
+            if not isinstance(binder, dict):
+                continue
+            restrictors = binder.get("restrictors")
+            if not isinstance(restrictors, list):
+                continue
+            for restrictor in restrictors:
+                if not isinstance(restrictor, dict):
+                    continue
+                adv_modifiers = restrictor.get("modifiers", [])
+                if isinstance(adv_modifiers, list):
+                    modifiers.extend(
+                        modifier
+                        for modifier in adv_modifiers
+                        if isinstance(modifier, dict)
+                    )
+    return modifiers
+
+
 def quantifier_scope_reading(
     subject_np: dict[str, Any],
     subject_quantifier: str,
@@ -490,17 +541,32 @@ def quantifier_scope_reading(
     return reading
 
 
-MODIFIER_INDEXED_BINARY_RELATION = (
-    "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-)
-
-
 def quantifier_readings_use_modifier_family(readings: list[dict[str, Any]]) -> bool:
     return any(
         bool(reading.get("modifiers"))
         or reading.get("relation", {}).get("predicate_type")
         == MODIFIER_INDEXED_BINARY_RELATION
         for reading in readings
+    )
+
+
+def quantifier_readings_use_restrictor_modifier_family(
+    readings: list[dict[str, Any]],
+) -> bool:
+    return any(
+        isinstance(binder, dict)
+        and isinstance(binder.get("restrictors"), list)
+        and any(
+            isinstance(restrictor, dict)
+            and (
+                bool(restrictor.get("modifiers"))
+                or restrictor.get("predicate_type")
+                in {MODIFIER_INDEXED_UNARY_RELATION, MODIFIER_INDEXED_BINARY_RELATION}
+            )
+            for restrictor in binder["restrictors"]
+        )
+        for reading in readings
+        for binder in reading.get("scope_order", [])
     )
 
 
@@ -511,6 +577,52 @@ def lift_quantifier_readings_to_modifier_family(
         return readings
     for reading in readings:
         reading["relation"]["predicate_type"] = MODIFIER_INDEXED_BINARY_RELATION
+    return readings
+
+
+def lift_quantifier_restrictors_to_modifier_family(
+    readings: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    modifier_family_by_predicate: dict[str, str] = {}
+    for reading in readings:
+        for binder in reading.get("scope_order", []):
+            if not isinstance(binder, dict):
+                continue
+            restrictors = binder.get("restrictors")
+            if not isinstance(restrictors, list):
+                continue
+            for restrictor in restrictors:
+                if not isinstance(restrictor, dict):
+                    continue
+                predicate = restrictor.get("predicate")
+                predicate_type = restrictor.get("predicate_type")
+                if not isinstance(predicate, str):
+                    continue
+                if predicate_type in {
+                    MODIFIER_INDEXED_UNARY_RELATION,
+                    MODIFIER_INDEXED_BINARY_RELATION,
+                }:
+                    modifier_family_by_predicate[predicate] = predicate_type
+
+    if not modifier_family_by_predicate:
+        return readings
+
+    for reading in readings:
+        for binder in reading.get("scope_order", []):
+            if not isinstance(binder, dict):
+                continue
+            restrictors = binder.get("restrictors")
+            if not isinstance(restrictors, list):
+                continue
+            for restrictor in restrictors:
+                if not isinstance(restrictor, dict):
+                    continue
+                predicate = restrictor.get("predicate")
+                lifted_type = modifier_family_by_predicate.get(predicate)
+                if lifted_type is None:
+                    continue
+                restrictor["predicate_type"] = lifted_type
+                restrictor.setdefault("modifiers", [])
     return readings
 
 
@@ -569,7 +681,38 @@ def quantifier_binder_restrictor_applications(
     applications: list[str] = []
     for restrictor in restrictors:
         predicate = restrictor["predicate"]
-        if restrictor.get("predicate_type") == "Entity -> Entity -> Prop":
+        predicate_type = restrictor.get("predicate_type")
+        modifiers = restrictor.get("modifiers", [])
+        if predicate_type == MODIFIER_INDEXED_BINARY_RELATION:
+            obj = restrictor["object"]["name"]
+            if coq:
+                application = (
+                    f"{predicate} {len(modifiers)} "
+                    f"{coq_modifier_sequence(modifiers)} {var} {obj}"
+                )
+            else:
+                if modifiers:
+                    application = (
+                        f"{predicate}({len(modifiers)})"
+                        f"({readable_modifier_arguments(modifiers)}, {var}, {obj})"
+                    )
+                else:
+                    application = f"{predicate}(0)({var}, {obj})"
+        elif predicate_type == MODIFIER_INDEXED_UNARY_RELATION:
+            if coq:
+                application = (
+                    f"{predicate} {len(modifiers)} "
+                    f"{coq_modifier_sequence(modifiers)} {var}"
+                )
+            else:
+                if modifiers:
+                    application = (
+                        f"{predicate}({len(modifiers)})"
+                        f"({readable_modifier_arguments(modifiers)}, {var})"
+                    )
+                else:
+                    application = f"{predicate}(0)({var})"
+        elif predicate_type == "Entity -> Entity -> Prop":
             obj = restrictor["object"]["name"]
             application = (
                 f"{predicate} {var} {obj}" if coq else f"{predicate}({var}, {obj})"
@@ -1039,17 +1182,38 @@ def check_quantifier_scope_binder_restrictors(
         else:
             restrictor_predicates.append(predicate)
         predicate_type = restrictor.get("predicate_type")
-        if predicate_type not in {"Entity -> Prop", "Entity -> Entity -> Prop"}:
+        modifier_family_types = {
+            MODIFIER_INDEXED_UNARY_RELATION,
+            MODIFIER_INDEXED_BINARY_RELATION,
+        }
+        if predicate_type not in {
+            "Entity -> Prop",
+            "Entity -> Entity -> Prop",
+            *modifier_family_types,
+        }:
             errors.append(
                 f"{context}.restrictors[{restrictor_index}] "
-                "must have predicate type Entity -> Prop or Entity -> Entity -> Prop"
+                "must have predicate type Entity -> Prop, Entity -> Entity -> Prop, "
+                "or a ModifierSeq-indexed restrictor type"
+            )
+        modifiers = restrictor.get("modifiers", [])
+        check_coordination_modifiers(
+            errors,
+            modifiers,
+            f"{context}.restrictors[{restrictor_index}]",
+        )
+        has_modifiers = isinstance(modifiers, list) and bool(modifiers)
+        if predicate_type not in modifier_family_types and has_modifiers:
+            errors.append(
+                f"{context}.restrictors[{restrictor_index}] "
+                "must use a ModifierSeq-indexed predicate type when modifiers are present"
             )
         check_time_modifiers(
             errors,
             restrictor.get("time_modifiers", []),
             f"{context}.restrictors[{restrictor_index}]",
         )
-        if predicate_type == "Entity -> Entity -> Prop":
+        if predicate_type in {"Entity -> Entity -> Prop", MODIFIER_INDEXED_BINARY_RELATION}:
             obj = restrictor.get("object")
             if not isinstance(obj, dict):
                 errors.append(
@@ -1182,12 +1346,20 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             if trailing_modifiers is None:
                 continue
             trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+            object_has_relative_adv = any(
+                bool(restrictor.get("modifiers"))
+                for restrictor in object_np.get("relative_clause_restrictors", [])
+            )
             object_has_relative_time = any(
                 bool(restrictor.get("time_modifiers"))
                 for restrictor in object_np.get("relative_clause_restrictors", [])
             )
             if object_np.get("postnominal_restrictors"):
                 attachment_kind = "object_np_restrictor"
+            elif object_has_relative_adv and object_has_relative_time:
+                attachment_kind = "object_relative_adv_time"
+            elif object_has_relative_adv:
+                attachment_kind = "object_relative_adv"
             elif object_has_relative_time:
                 attachment_kind = "object_relative_time"
             elif fronted_adv_modifiers or preverbal_adv_modifiers or trailing_adv_modifiers:
@@ -1296,10 +1468,11 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                 ),
             ]
         )
+    readings = lift_quantifier_restrictors_to_modifier_family(readings)
     readings = lift_quantifier_readings_to_modifier_family(readings)
     type_check = check_quantifier_scope_readings(readings)
     semantic_readings = quantifier_semantic_readings(readings)
-    all_adv_modifiers = [
+    all_adv_modifiers = quantifier_scope_restrictor_adv_modifiers(readings) + [
         modifier
         for reading in readings
         for modifier in reading.get("modifiers", [])
@@ -1309,10 +1482,14 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         for reading in readings
         for modifier in reading.get("time_modifiers", [])
     ]
-    uses_modifier_family = quantifier_readings_use_modifier_family(readings)
+    uses_relation_modifier_family = quantifier_readings_use_modifier_family(readings)
+    uses_modifier_scaffold = (
+        uses_relation_modifier_family
+        or quantifier_readings_use_restrictor_modifier_family(readings)
+    )
     verb_declaration_type = (
         "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-        if uses_modifier_family
+        if uses_relation_modifier_family
         else "Entity -> Entity -> Prop"
     )
     predicate_declarations = unique_typed_declarations(
@@ -1353,7 +1530,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                     "Parameter mods_nil : ModifierSeq 0.",
                     "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
                 ]
-                if uses_modifier_family
+                if uses_modifier_scaffold
                 else []
             ),
             *[
@@ -6216,6 +6393,20 @@ def split_shared_adv_and_time_modifiers(
     if time_modifiers is None:
         return None
     return adv_modifiers, time_modifiers
+
+
+def split_common_adv_and_time_modifiers(
+    tokens: list[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]] | None:
+    modifiers: list[dict[str, Any]] = []
+    idx = 0
+    while idx < len(tokens) and tokens[idx] in COMMON_ADVERBS:
+        modifiers.append(modifier_record(tokens[idx]))
+        idx += 1
+    time_modifiers = copular_property_time_modifiers(tokens[idx:])
+    if time_modifiers is None:
+        return None
+    return modifiers, time_modifiers
 
 
 def check_coordination_modifiers(

@@ -1895,7 +1895,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("coq_check", relative_subject)
 
         complex_relative_restrictor = run_pipeline(
-            "some boy who quickly saw Mary yesterday loved a girl",
+            "some boy who quickly saw Mary in the park loved a girl",
             require_coq=True,
         )
         self.assertFalse(complex_relative_restrictor["ok"])
@@ -7013,6 +7013,83 @@ class TranslatorTests(unittest.TestCase):
             "passed",
         )
 
+        subject_adv_relative = run_pipeline(
+            "some boy who quickly saw Mary loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_adv_relative["ok"])
+        self.assertEqual(subject_adv_relative["kind"], "quantifier_scope_ambiguity")
+        subject_adv_restrictor = subject_adv_relative["ast"]["noun_phrases"]["subject"][
+            "relative_clause_restrictors"
+        ][0]
+        self.assertEqual(
+            subject_adv_restrictor["predicate_type"],
+            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
+        )
+        self.assertEqual(
+            [modifier["name"] for modifier in subject_adv_restrictor["modifiers"]],
+            ["quickly"],
+        )
+        self.assertEqual(
+            subject_adv_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and see(1)(quickly, x_boy, mary)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn(
+            "Parameter see : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
+            subject_adv_relative["coq_code"],
+        )
+        self.assertIn("Parameter love : Entity -> Entity -> Prop.", subject_adv_relative["coq_code"])
+        self.assertIn("Parameter quickly : Adv.", subject_adv_relative["coq_code"])
+        self.assertIn(
+            "see 1 (mods_cons 0 quickly mods_nil) x_boy mary",
+            subject_adv_relative["coq_code"],
+        )
+        self.assertEqual(subject_adv_relative["coq_check"]["status"], "passed")
+
+        subject_adv_time_relative = run_pipeline(
+            "some boy who quickly saw Mary yesterday loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_adv_time_relative["ok"])
+        self.assertEqual(
+            subject_adv_time_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and at_T(yesterday, see(1)(quickly, x_boy, mary))) "
+                "and exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertEqual(subject_adv_time_relative["coq_check"]["status"], "passed")
+
+        subject_adv_intransitive_relative = run_pipeline(
+            "some boy who quickly laughed loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_adv_intransitive_relative["ok"])
+        self.assertEqual(
+            subject_adv_intransitive_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and laugh(1)(quickly, x_boy)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn(
+            "Parameter laugh : forall n : nat, ModifierSeq n -> Entity -> PropT.",
+            subject_adv_intransitive_relative["coq_code"],
+        )
+        self.assertEqual(subject_adv_intransitive_relative["coq_check"]["status"], "passed")
+
         object_transitive_relative = run_pipeline(
             "some boy loved a girl that saw Mary",
             require_coq=True,
@@ -7078,6 +7155,64 @@ class TranslatorTests(unittest.TestCase):
             object_timed_relative["coq_code"],
         )
         self.assertEqual(object_timed_relative["coq_check"]["status"], "passed")
+
+        object_adv_relative = run_pipeline(
+            "some boy loved a girl that quickly saw Mary",
+            require_coq=True,
+        )
+        self.assertTrue(object_adv_relative["ok"])
+        self.assertEqual(
+            [variant["kind"] for variant in object_adv_relative["ast"]["attachment_variants"]],
+            ["object_relative_adv"],
+        )
+        self.assertEqual(
+            object_adv_relative["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and see(1)(quickly, x_girl, mary)) and "
+                "love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn(
+            "Parameter see : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
+            object_adv_relative["coq_code"],
+        )
+        self.assertEqual(object_adv_relative["coq_check"]["status"], "passed")
+
+        object_trailing_adv_relative = run_pipeline(
+            "some boy loved a girl that saw Mary quickly",
+            require_coq=True,
+        )
+        self.assertTrue(object_trailing_adv_relative["ok"])
+        self.assertEqual(
+            [variant["kind"] for variant in object_trailing_adv_relative["ast"]["attachment_variants"]],
+            ["clause_adv", "object_relative_adv"],
+        )
+        object_trailing_adv_formulas = [
+            reading["dependent_type_translation"]
+            for reading in object_trailing_adv_relative["semantic_readings"]
+        ]
+        self.assertIn(
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and see(0)(x_girl, mary)) and "
+                "love(1)(quickly, x_boy, x_girl)"
+            ),
+            object_trailing_adv_formulas,
+        )
+        self.assertIn(
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and see(1)(quickly, x_girl, mary)) and "
+                "love(0)(x_boy, x_girl)"
+            ),
+            object_trailing_adv_formulas,
+        )
+        self.assertIn(
+            "Definition some_boy_wide_scope_object_relative_adv : Prop :=",
+            object_trailing_adv_relative["coq_code"],
+        )
+        self.assertEqual(object_trailing_adv_relative["coq_check"]["status"], "passed")
 
         pp_and_clause_adv = run_pipeline(
             "every boy in the park quickly loved a happy girl in the bathroom yesterday",
@@ -7668,7 +7803,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "readings[0].scope_order[0].restrictors[0] "
-            "must have predicate type Entity -> Prop or Entity -> Entity -> Prop",
+            "must have predicate type Entity -> Prop, Entity -> Entity -> Prop, "
+            "or a ModifierSeq-indexed restrictor type",
             type_check["errors"],
         )
 
@@ -7689,7 +7825,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "readings[0].scope_order[0].restrictors[1] "
-            "must have predicate type Entity -> Prop or Entity -> Entity -> Prop",
+            "must have predicate type Entity -> Prop, Entity -> Entity -> Prop, "
+            "or a ModifierSeq-indexed restrictor type",
             type_check["errors"],
         )
 
@@ -7719,6 +7856,33 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "readings[0].scope_order[0].restrictors[1] "
             "time_modifiers[0].operator must be at or during",
+            type_check["errors"],
+        )
+
+        adv_relative_result = run_pipeline(
+            "some boy who quickly saw Mary loved a girl",
+            require_coq=False,
+        )
+        adv_relative_readings = adv_relative_result["ast"]["readings"]
+        adv_relative_readings[0]["scope_order"][0]["restrictors"][1][
+            "modifiers"
+        ][0]["type"] = "Entity"
+        type_check = check_quantifier_scope_readings(adv_relative_readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0].scope_order[0].restrictors[1] modifiers[0] must have type Adv",
+            type_check["errors"],
+        )
+
+        adv_relative_readings = adv_relative_result["ast"]["readings"]
+        adv_relative_readings[0]["scope_order"][0]["restrictors"][1][
+            "predicate_type"
+        ] = "Entity -> Entity -> Prop"
+        type_check = check_quantifier_scope_readings(adv_relative_readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0].scope_order[0].restrictors[1] "
+            "must use a ModifierSeq-indexed predicate type when modifiers are present",
             type_check["errors"],
         )
 
@@ -10835,6 +10999,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who saw Mary yesterday loved a girl", readme)
         self.assertIn("at_T(yesterday, see(x_boy, mary))", readme)
         self.assertIn("object_relative_time", readme)
+        self.assertIn("some boy who quickly saw Mary loved a girl", readme)
+        self.assertIn("see(1)(quickly, x_boy, mary)", readme)
+        self.assertIn("object_relative_adv", readme)
+        self.assertIn("some boy who quickly saw Mary in the park loved a girl", readme)
         self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("a boy loves a", readme)
         self.assertIn("a_boy_wide_scope", readme)
@@ -11093,6 +11261,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who saw Mary yesterday loved a girl", manuscript)
         self.assertIn("boy(x_boy) and at_T(yesterday, see(x_boy, mary))", manuscript)
         self.assertIn("object-relative-time reading", manuscript)
+        self.assertIn("some boy who quickly saw Mary loved a girl", manuscript)
+        self.assertIn("see(1)(quickly, x_boy, mary)", manuscript)
+        self.assertIn("object-relative-Adv reading", manuscript)
+        self.assertIn("PP Adv or multi-word object structure", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
         self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
         self.assertIn("in_bathroom_some", manuscript)
@@ -11138,6 +11310,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who saw Mary yesterday loved a girl", ast_docs)
         self.assertIn('"argument": "yesterday"', ast_docs)
         self.assertIn("object_relative_time", ast_docs)
+        self.assertIn("some boy who quickly saw Mary loved a girl", ast_docs)
+        self.assertIn("quickly : Adv", ast_docs)
+        self.assertIn("object_relative_adv", ast_docs)
+        self.assertIn("see(0)(x_girl, mary)", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)
         self.assertIn("in_bathroom_some", ast_docs)
