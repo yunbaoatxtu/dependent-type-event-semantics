@@ -1192,46 +1192,97 @@ def validate_successful_semantic_reading_contract(
             )
 
 
-def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -> None:
-    case = "analyze_fallback_success"
+def validate_analyze_success_envelope(
+    payload: dict,
+    sentence: str,
+    label: str,
+    required_stages: list[str],
+) -> dict:
     if payload.get("schema_version") != "analyze.v1":
-        raise SystemExit("web route smoke check failed: fallback analyze schema drift")
+        raise SystemExit(f"web route smoke check failed: {label} analyze schema drift")
     if payload.get("ok") is not True:
-        raise SystemExit("web route smoke check failed: fallback analyze did not verify")
+        raise SystemExit(f"web route smoke check failed: {label} analyze did not verify")
     if payload.get("input_sentence") != sentence:
-        raise SystemExit("web route smoke check failed: fallback analyze input drift")
+        raise SystemExit(f"web route smoke check failed: {label} analyze input drift")
     diagnostics = payload.get("diagnostics")
     if not isinstance(diagnostics, dict):
-        raise SystemExit("web route smoke check failed: fallback diagnostics missing")
+        raise SystemExit(f"web route smoke check failed: {label} diagnostics missing")
     if diagnostics.get("summary") != "translation verified":
-        raise SystemExit("web route smoke check failed: fallback diagnostics summary drift")
+        raise SystemExit(f"web route smoke check failed: {label} diagnostics summary drift")
     if diagnostics.get("failure_stage") is not None:
-        raise SystemExit("web route smoke check failed: fallback diagnostics stage drift")
+        raise SystemExit(f"web route smoke check failed: {label} diagnostics stage drift")
     if diagnostics.get("recovery_actions") != []:
-        raise SystemExit("web route smoke check failed: fallback recovery action drift")
+        raise SystemExit(f"web route smoke check failed: {label} recovery action drift")
     stages = diagnostics.get("stages")
-    if not isinstance(stages, dict) or stages.get("semantic_readings_check") != "passed":
-        raise SystemExit("web route smoke check failed: fallback semantic stage drift")
+    if not isinstance(stages, dict):
+        raise SystemExit(f"web route smoke check failed: {label} stage map missing")
+    for stage in required_stages:
+        if stages.get(stage) != "passed":
+            raise SystemExit(f"web route smoke check failed: {label} stage drift")
+    return diagnostics
+
+
+def require_text_fragments(text: str, fragments: list[str], label: str) -> None:
+    for fragment in fragments:
+        if fragment not in text:
+            raise SystemExit(f"web route smoke check failed: {label} drift")
+
+
+def forbid_text_fragments(text: str, fragments: list[str], label: str) -> None:
+    for fragment in fragments:
+        if fragment in text:
+            raise SystemExit(f"web route smoke check failed: {label} drift")
+
+
+def validate_semantic_reading_summary(
+    reading: dict,
+    expected_fields: dict[str, str],
+    attachment_kind: str,
+    label: str,
+    expected_type: str | None = "Prop",
+) -> None:
+    if not isinstance(reading, dict):
+        raise SystemExit(f"web route smoke check failed: {label} semantic reading malformed")
+    for field, expected in expected_fields.items():
+        if reading.get(field) != expected:
+            raise SystemExit(f"web route smoke check failed: {label} semantic reading drift")
+    attachment = reading.get("attachment_summary")
+    if not isinstance(attachment, dict) or attachment.get("kind") != attachment_kind:
+        raise SystemExit(f"web route smoke check failed: {label} attachment drift")
+    if expected_type is None:
+        return
+    local_type = reading.get("type_check")
+    if (
+        not isinstance(local_type, dict)
+        or local_type.get("ok") is not True
+        or local_type.get("type") != expected_type
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} reading type drift")
+
+
+def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -> None:
+    case = "analyze_fallback_success"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "fallback",
+        ["semantic_readings_check"],
+    )
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: fallback semantic reading count drift")
-    reading = readings[0]
-    if not isinstance(reading, dict):
-        raise SystemExit("web route smoke check failed: fallback semantic reading malformed")
-    expected_fields = {
-        "name": "fallback_single_reading",
-        "scope": "fallback_single_reading",
-        "source": "fallback_event_semantics",
-        "coq_definition": "example_1",
-    }
-    for field, expected in expected_fields.items():
-        if reading.get(field) != expected:
-            raise SystemExit(
-                "web route smoke check failed: fallback semantic reading drift"
-            )
-    attachment = reading.get("attachment_summary")
-    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
-        raise SystemExit("web route smoke check failed: fallback attachment drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "fallback_single_reading",
+            "scope": "fallback_single_reading",
+            "source": "fallback_event_semantics",
+            "coq_definition": "example_1",
+        },
+        "none",
+        "fallback",
+        expected_type=None,
+    )
     coq_code = payload.get("coq_code")
     if not isinstance(coq_code, str) or "Definition example_1" not in coq_code:
         raise SystemExit("web route smoke check failed: fallback Coq export drift")
@@ -1244,9 +1295,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         "<dt>coq</dt><dd>example_1</dd>",
         "<dt>attachment</dt><dd>none</dd>",
     ]
-    for fragment in expected_page_fragments:
-        if fragment not in page:
-            raise SystemExit("web route smoke check failed: fallback HTML drift")
+    require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: fallback page input drift")
 
@@ -1257,27 +1306,12 @@ def validate_analyze_quantifier_scope_success(
     sentence: str,
 ) -> None:
     case = "analyze_quantifier_scope_success"
-    if payload.get("schema_version") != "analyze.v1":
-        raise SystemExit("web route smoke check failed: quantifier analyze schema drift")
-    if payload.get("ok") is not True:
-        raise SystemExit("web route smoke check failed: quantifier analyze did not verify")
-    if payload.get("input_sentence") != sentence:
-        raise SystemExit("web route smoke check failed: quantifier analyze input drift")
-    diagnostics = payload.get("diagnostics")
-    if not isinstance(diagnostics, dict):
-        raise SystemExit("web route smoke check failed: quantifier diagnostics missing")
-    if diagnostics.get("summary") != "translation verified":
-        raise SystemExit("web route smoke check failed: quantifier diagnostics summary drift")
-    if diagnostics.get("failure_stage") is not None:
-        raise SystemExit("web route smoke check failed: quantifier diagnostics stage drift")
-    if diagnostics.get("recovery_actions") != []:
-        raise SystemExit("web route smoke check failed: quantifier recovery action drift")
-    stages = diagnostics.get("stages")
-    if not isinstance(stages, dict):
-        raise SystemExit("web route smoke check failed: quantifier stage map missing")
-    for stage in ["semantic_readings_check", "construction_hygiene", "coq_check"]:
-        if stages.get(stage) != "passed":
-            raise SystemExit("web route smoke check failed: quantifier stage drift")
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "quantifier",
+        ["semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
     check = payload.get("semantic_readings_check")
     if (
         not isinstance(check, dict)
@@ -1296,32 +1330,22 @@ def validate_analyze_quantifier_scope_success(
     if not isinstance(coq_code, str):
         raise SystemExit("web route smoke check failed: quantifier Coq export missing")
     for reading, (name, scope) in zip(readings, expected_readings):
-        if not isinstance(reading, dict):
-            raise SystemExit("web route smoke check failed: quantifier semantic reading malformed")
-        expected_fields = {
-            "name": name,
-            "scope": scope,
-            "source": "quantifier_scope",
-            "coq_definition": name,
-        }
-        for field, expected in expected_fields.items():
-            if reading.get(field) != expected:
-                raise SystemExit(
-                    "web route smoke check failed: quantifier semantic reading drift"
-                )
-        attachment = reading.get("attachment_summary")
-        if not isinstance(attachment, dict) or attachment.get("kind") != "plain":
-            raise SystemExit("web route smoke check failed: quantifier attachment drift")
-        local_type = reading.get("type_check")
-        if (
-            not isinstance(local_type, dict)
-            or local_type.get("ok") is not True
-            or local_type.get("type") != "Prop"
-        ):
-            raise SystemExit("web route smoke check failed: quantifier reading type drift")
-        for fragment in [f"Definition {name} : Prop :=", f"Check {name}."]:
-            if fragment not in coq_code:
-                raise SystemExit("web route smoke check failed: quantifier Coq export drift")
+        validate_semantic_reading_summary(
+            reading,
+            {
+                "name": name,
+                "scope": scope,
+                "source": "quantifier_scope",
+                "coq_definition": name,
+            },
+            "plain",
+            "quantifier",
+        )
+        require_text_fragments(
+            coq_code,
+            [f"Definition {name} : Prop :=", f"Check {name}."],
+            "quantifier Coq export",
+        )
         expected_page_fragments = [
             f'data-reading-name="{name}"',
             f'data-coq-definition="{name}"',
@@ -1330,9 +1354,7 @@ def validate_analyze_quantifier_scope_success(
             "<dt>attachment</dt><dd>plain</dd>",
             f"<dt>coq</dt><dd>{name}</dd>",
         ]
-        for fragment in expected_page_fragments:
-            if fragment not in page:
-                raise SystemExit("web route smoke check failed: quantifier HTML drift")
+        require_text_fragments(page, expected_page_fragments, "quantifier HTML")
     validate_successful_semantic_reading_contract(case, payload, page)
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: quantifier page input drift")
@@ -1340,27 +1362,12 @@ def validate_analyze_quantifier_scope_success(
 
 def validate_analyze_perception_success(payload: dict, page: str, sentence: str) -> None:
     case = "analyze_perception_success"
-    if payload.get("schema_version") != "analyze.v1":
-        raise SystemExit("web route smoke check failed: perception analyze schema drift")
-    if payload.get("ok") is not True:
-        raise SystemExit("web route smoke check failed: perception analyze did not verify")
-    if payload.get("input_sentence") != sentence:
-        raise SystemExit("web route smoke check failed: perception analyze input drift")
-    diagnostics = payload.get("diagnostics")
-    if not isinstance(diagnostics, dict):
-        raise SystemExit("web route smoke check failed: perception diagnostics missing")
-    if diagnostics.get("summary") != "translation verified":
-        raise SystemExit("web route smoke check failed: perception diagnostics summary drift")
-    if diagnostics.get("failure_stage") is not None:
-        raise SystemExit("web route smoke check failed: perception diagnostics stage drift")
-    if diagnostics.get("recovery_actions") != []:
-        raise SystemExit("web route smoke check failed: perception recovery action drift")
-    stages = diagnostics.get("stages")
-    if not isinstance(stages, dict):
-        raise SystemExit("web route smoke check failed: perception stage map missing")
-    for stage in ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"]:
-        if stages.get(stage) != "passed":
-            raise SystemExit("web route smoke check failed: perception stage drift")
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "perception",
+        ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
     event_semantics = payload.get("event_semantics")
     if not isinstance(event_semantics, dict):
         raise SystemExit("web route smoke check failed: perception event semantics missing")
@@ -1380,29 +1387,18 @@ def validate_analyze_perception_success(payload: dict, page: str, sentence: str)
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: perception semantic reading drift")
-    reading = readings[0]
-    if not isinstance(reading, dict):
-        raise SystemExit("web route smoke check failed: perception semantic reading malformed")
-    expected_fields = {
-        "name": "primary",
-        "scope": "unspecified",
-        "source": "perception_nominalization",
-        "dependent_type_translation": "see(Mary, E(leave(John)))",
-        "coq_definition": "mary_saw_john_leave",
-    }
-    for field, expected in expected_fields.items():
-        if reading.get(field) != expected:
-            raise SystemExit("web route smoke check failed: perception semantic reading drift")
-    attachment = reading.get("attachment_summary")
-    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
-        raise SystemExit("web route smoke check failed: perception attachment drift")
-    local_type = reading.get("type_check")
-    if (
-        not isinstance(local_type, dict)
-        or local_type.get("ok") is not True
-        or local_type.get("type") != "Prop"
-    ):
-        raise SystemExit("web route smoke check failed: perception reading type drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "primary",
+            "scope": "unspecified",
+            "source": "perception_nominalization",
+            "dependent_type_translation": "see(Mary, E(leave(John)))",
+            "coq_definition": "mary_saw_john_leave",
+        },
+        "none",
+        "perception",
+    )
     coq_code = payload.get("coq_code")
     if not isinstance(coq_code, str):
         raise SystemExit("web route smoke check failed: perception Coq export missing")
@@ -1412,12 +1408,8 @@ def validate_analyze_perception_success(payload: dict, page: str, sentence: str)
         "see Mary (E (leave John)).",
         "Check mary_saw_john_leave.",
     ]
-    for fragment in expected_coq_fragments:
-        if fragment not in coq_code:
-            raise SystemExit("web route smoke check failed: perception Coq export drift")
-    for forbidden in ["Parameter Event", "Agent", "Theme"]:
-        if forbidden in coq_code:
-            raise SystemExit("web route smoke check failed: perception event export drift")
+    require_text_fragments(coq_code, expected_coq_fragments, "perception Coq export")
+    forbid_text_fragments(coq_code, ["Parameter Event", "Agent", "Theme"], "perception event export")
     expected_page_fragments = [
         "parsons-perception-complement",
         "see(Mary, E(leave(John)))",
@@ -1428,9 +1420,7 @@ def validate_analyze_perception_success(payload: dict, page: str, sentence: str)
         "<dt>attachment</dt><dd>none</dd>",
         "<dt>coq</dt><dd>mary_saw_john_leave</dd>",
     ]
-    for fragment in expected_page_fragments:
-        if fragment not in page:
-            raise SystemExit("web route smoke check failed: perception HTML drift")
+    require_text_fragments(page, expected_page_fragments, "perception HTML")
     validate_successful_semantic_reading_contract(case, payload, page)
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: perception page input drift")
@@ -1442,12 +1432,12 @@ def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str
         "exists t_sing t_salute : Time. sing(Marseillaise, t_sing) and "
         "salute(John, flag, t_salute) and before(t_sing, t_salute)"
     )
-    if payload.get("schema_version") != "analyze.v1":
-        raise SystemExit("web route smoke check failed: timed-after analyze schema drift")
-    if payload.get("ok") is not True:
-        raise SystemExit("web route smoke check failed: timed-after analyze did not verify")
-    if payload.get("input_sentence") != sentence:
-        raise SystemExit("web route smoke check failed: timed-after analyze input drift")
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "timed-after",
+        ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
     if payload.get("kind") != "timed_after":
         raise SystemExit("web route smoke check failed: timed-after kind drift")
     construction_rule = payload.get("construction_rule")
@@ -1462,21 +1452,6 @@ def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str
         or "exists e : Event" not in forbidden
     ):
         raise SystemExit("web route smoke check failed: timed-after hygiene policy drift")
-    diagnostics = payload.get("diagnostics")
-    if not isinstance(diagnostics, dict):
-        raise SystemExit("web route smoke check failed: timed-after diagnostics missing")
-    if diagnostics.get("summary") != "translation verified":
-        raise SystemExit("web route smoke check failed: timed-after diagnostics summary drift")
-    if diagnostics.get("failure_stage") is not None:
-        raise SystemExit("web route smoke check failed: timed-after diagnostics stage drift")
-    if diagnostics.get("recovery_actions") != []:
-        raise SystemExit("web route smoke check failed: timed-after recovery action drift")
-    stages = diagnostics.get("stages")
-    if not isinstance(stages, dict):
-        raise SystemExit("web route smoke check failed: timed-after stage map missing")
-    for stage in ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"]:
-        if stages.get(stage) != "passed":
-            raise SystemExit("web route smoke check failed: timed-after stage drift")
     event_semantics = payload.get("event_semantics")
     if not isinstance(event_semantics, dict):
         raise SystemExit("web route smoke check failed: timed-after event semantics missing")
@@ -1540,29 +1515,18 @@ def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: timed-after semantic reading drift")
-    reading = readings[0]
-    if not isinstance(reading, dict):
-        raise SystemExit("web route smoke check failed: timed-after semantic reading malformed")
-    expected_fields = {
-        "name": "timed_after_singing_salute",
-        "scope": "time_before_salute",
-        "source": "timed_after",
-        "dependent_type_translation": expected_translation,
-        "coq_definition": "after_singing_salute",
-    }
-    for field, expected in expected_fields.items():
-        if reading.get(field) != expected:
-            raise SystemExit("web route smoke check failed: timed-after semantic reading drift")
-    attachment = reading.get("attachment_summary")
-    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
-        raise SystemExit("web route smoke check failed: timed-after attachment drift")
-    local_type = reading.get("type_check")
-    if (
-        not isinstance(local_type, dict)
-        or local_type.get("ok") is not True
-        or local_type.get("type") != "Prop"
-    ):
-        raise SystemExit("web route smoke check failed: timed-after reading type drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "timed_after_singing_salute",
+            "scope": "time_before_salute",
+            "source": "timed_after",
+            "dependent_type_translation": expected_translation,
+            "coq_definition": "after_singing_salute",
+        },
+        "none",
+        "timed-after",
+    )
     coq_code = payload.get("coq_code")
     if not isinstance(coq_code, str):
         raise SystemExit("web route smoke check failed: timed-after Coq export missing")
@@ -1582,17 +1546,12 @@ def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str
         "before t_sing t_salute.",
         "Check after_singing_salute.",
     ]
-    for fragment in expected_coq_fragments:
-        if fragment not in coq_code:
-            raise SystemExit("web route smoke check failed: timed-after Coq export drift")
-    for forbidden_fragment in [
-        "Parameter Event : Type.",
-        "exists e : Event",
-        "Agent",
-        "Theme",
-    ]:
-        if forbidden_fragment in coq_code:
-            raise SystemExit("web route smoke check failed: timed-after event export drift")
+    require_text_fragments(coq_code, expected_coq_fragments, "timed-after Coq export")
+    forbid_text_fragments(
+        coq_code,
+        ["Parameter Event : Type.", "exists e : Event", "Agent", "Theme"],
+        "timed-after event export",
+    )
     expected_page_fragments = [
         "timed_after",
         "parsons-after-event-talk",
@@ -1604,9 +1563,7 @@ def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str
         "<dt>attachment</dt><dd>none</dd>",
         "<dt>coq</dt><dd>after_singing_salute</dd>",
     ]
-    for fragment in expected_page_fragments:
-        if fragment not in page:
-            raise SystemExit("web route smoke check failed: timed-after HTML drift")
+    require_text_fragments(page, expected_page_fragments, "timed-after HTML")
     validate_successful_semantic_reading_contract(case, payload, page)
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: timed-after page input drift")
@@ -1621,12 +1578,12 @@ def validate_analyze_universal_timed_burning_success(
     expected_translation = (
         "forall x : Entity. forall t : Time. burn(x, t) -> consume(oxygen, t)"
     )
-    if payload.get("schema_version") != "analyze.v1":
-        raise SystemExit("web route smoke check failed: burning analyze schema drift")
-    if payload.get("ok") is not True:
-        raise SystemExit("web route smoke check failed: burning analyze did not verify")
-    if payload.get("input_sentence") != sentence:
-        raise SystemExit("web route smoke check failed: burning analyze input drift")
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "burning",
+        ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"],
+    )
     if payload.get("kind") != "universal_timed_burning":
         raise SystemExit("web route smoke check failed: burning kind drift")
     construction_rule = payload.get("construction_rule")
@@ -1637,21 +1594,6 @@ def validate_analyze_universal_timed_burning_success(
     forbidden = construction_rule.get("forbidden_coq_fragments")
     if not isinstance(forbidden, list) or "Parameter Event : Type." not in forbidden or "IN" not in forbidden:
         raise SystemExit("web route smoke check failed: burning hygiene policy drift")
-    diagnostics = payload.get("diagnostics")
-    if not isinstance(diagnostics, dict):
-        raise SystemExit("web route smoke check failed: burning diagnostics missing")
-    if diagnostics.get("summary") != "translation verified":
-        raise SystemExit("web route smoke check failed: burning diagnostics summary drift")
-    if diagnostics.get("failure_stage") is not None:
-        raise SystemExit("web route smoke check failed: burning diagnostics stage drift")
-    if diagnostics.get("recovery_actions") != []:
-        raise SystemExit("web route smoke check failed: burning recovery action drift")
-    stages = diagnostics.get("stages")
-    if not isinstance(stages, dict):
-        raise SystemExit("web route smoke check failed: burning stage map missing")
-    for stage in ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"]:
-        if stages.get(stage) != "passed":
-            raise SystemExit("web route smoke check failed: burning stage drift")
     event_semantics = payload.get("event_semantics")
     if not isinstance(event_semantics, dict):
         raise SystemExit("web route smoke check failed: burning event semantics missing")
@@ -1707,29 +1649,18 @@ def validate_analyze_universal_timed_burning_success(
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: burning semantic reading drift")
-    reading = readings[0]
-    if not isinstance(reading, dict):
-        raise SystemExit("web route smoke check failed: burning semantic reading malformed")
-    expected_fields = {
-        "name": "universal_timed_burning",
-        "scope": "forall_entity_time",
-        "source": "universal_timed_burning",
-        "dependent_type_translation": expected_translation,
-        "coq_definition": "every_burning_consumes_oxygen",
-    }
-    for field, expected in expected_fields.items():
-        if reading.get(field) != expected:
-            raise SystemExit("web route smoke check failed: burning semantic reading drift")
-    attachment = reading.get("attachment_summary")
-    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
-        raise SystemExit("web route smoke check failed: burning attachment drift")
-    local_type = reading.get("type_check")
-    if (
-        not isinstance(local_type, dict)
-        or local_type.get("ok") is not True
-        or local_type.get("type") != "Prop"
-    ):
-        raise SystemExit("web route smoke check failed: burning reading type drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "universal_timed_burning",
+            "scope": "forall_entity_time",
+            "source": "universal_timed_burning",
+            "dependent_type_translation": expected_translation,
+            "coq_definition": "every_burning_consumes_oxygen",
+        },
+        "none",
+        "burning",
+    )
     coq_code = payload.get("coq_code")
     if not isinstance(coq_code, str):
         raise SystemExit("web route smoke check failed: burning Coq export missing")
@@ -1744,12 +1675,12 @@ def validate_analyze_universal_timed_burning_success(
         "burn x t -> consume oxygen t.",
         "Check every_burning_consumes_oxygen.",
     ]
-    for fragment in expected_coq_fragments:
-        if fragment not in coq_code:
-            raise SystemExit("web route smoke check failed: burning Coq export drift")
-    for forbidden_fragment in ["Parameter Event : Type.", "IN", "Agent", "Theme"]:
-        if forbidden_fragment in coq_code:
-            raise SystemExit("web route smoke check failed: burning event export drift")
+    require_text_fragments(coq_code, expected_coq_fragments, "burning Coq export")
+    forbid_text_fragments(
+        coq_code,
+        ["Parameter Event : Type.", "IN", "Agent", "Theme"],
+        "burning event export",
+    )
     expected_page_fragments = [
         "universal_timed_burning",
         "parsons-event-inclusion",
@@ -1761,9 +1692,7 @@ def validate_analyze_universal_timed_burning_success(
         "<dt>attachment</dt><dd>none</dd>",
         "<dt>coq</dt><dd>every_burning_consumes_oxygen</dd>",
     ]
-    for fragment in expected_page_fragments:
-        if fragment not in page:
-            raise SystemExit("web route smoke check failed: burning HTML drift")
+    require_text_fragments(page, expected_page_fragments, "burning HTML")
     validate_successful_semantic_reading_contract(case, payload, page)
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: burning page input drift")

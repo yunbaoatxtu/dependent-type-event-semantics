@@ -960,6 +960,10 @@ requiring the registered universal timed burning analysis to export
 `every_burning_consumes_oxygen`, render the `universal_timed_burning` reading,
 and keep the scaffold at `Time`, `burn : Entity -> Time -> Prop`, and
 `consume : Entity -> Time -> Prop` rather than reintroducing `Event` or `IN`.
+These ordinary success checks now share the same success-envelope,
+semantic-reading-summary, and fragment guards in the verifier, so fallback,
+quantifier, perception, timed-after, and burning cases cannot silently drift
+through five separately maintained copies of the same HTTP acceptance logic.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.

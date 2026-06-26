@@ -420,6 +420,10 @@ It should also exercise a registered universal timed burning success path with
 `Time`-indexed `burn : Entity -> Time -> Prop` / `consume : Entity -> Time -> Prop`
 scaffold to remain visible without `Event` or `IN` in the generated Coq/Rocq
 module.
+The verifier should implement these ordinary success cases through shared
+success-envelope, semantic-reading-summary, and text-fragment helpers rather
+than five hand-maintained copies, so adding a new registered success case
+extends one audited acceptance shape.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture
