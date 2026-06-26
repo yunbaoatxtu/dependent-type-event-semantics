@@ -996,6 +996,45 @@ def recovery_action_export_preview_json(
     )
 
 
+def recovery_action_inspection_run_preview_json(
+    case: str,
+    action_index: int,
+    expected_stage: str,
+    expected_action: dict,
+    fixture_payload: dict,
+) -> str:
+    repair_plan = recovery_action_repair_plan_preview(
+        case,
+        action_index,
+        expected_stage,
+        expected_action,
+    )
+    target_fields = repair_plan.get("target_fields")
+    inspection_results = {
+        field: nested_field_value(fixture_payload, field)
+        for field in target_fields
+    }
+    return json.dumps(
+        {
+            "schema_version": "diagnostic_inspection_run.v1",
+            "ok": True,
+            "case": case,
+            "action_index": action_index,
+            "action_kind": expected_action.get("kind"),
+            "failure_stage": expected_stage,
+            "automation_mode": repair_plan.get("automation_mode"),
+            "can_auto_run": repair_plan.get("can_auto_run"),
+            "can_auto_apply": repair_plan.get("can_auto_apply"),
+            "target_fields": target_fields,
+            "inspection_results": inspection_results,
+            "repair_plan": repair_plan,
+            "contract": diagnostic_contract_bundle_for_recovery_action(),
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -1168,6 +1207,12 @@ def validate_diagnostic_fixture_routes(
                     + html.escape(str(inspection_run_path), quote=True)
                     + '"'
                 )
+                expected_fragments.extend(
+                    [
+                        'class="next-step-inspection-run-json"',
+                        'data-inspection-json-schema="diagnostic_inspection_run.v1"',
+                    ]
+                )
         for fragment in expected_fragments:
             if fragment not in fixture_page:
                 raise SystemExit(
@@ -1182,6 +1227,7 @@ def validate_diagnostic_fixture_routes(
             expected_actions,
             payload_actions,
             expected_action_exports,
+            payload,
         )
 
 
@@ -1254,6 +1300,7 @@ def validate_recovery_action_exports_html_panel(
     expected_actions: list[str],
     expected_action_payloads: list[dict],
     expected_action_exports: list[dict],
+    fixture_payload: dict,
 ) -> None:
     expected_fragments = [
         'class="panel recovery-action-exports-panel"',
@@ -1314,11 +1361,24 @@ def validate_recovery_action_exports_html_panel(
             ]
         )
         if can_auto_run:
+            expected_run_json = html.escape(
+                recovery_action_inspection_run_preview_json(
+                    case,
+                    action_index,
+                    expected_stage,
+                    expected_action_payloads[action_index],
+                    fixture_payload,
+                )
+            )
             expected_fragments.extend(
                 [
                     'class="recovery-action-run-link"',
                     'data-action-run="inspection"',
                     'href="' + html.escape(run_path, quote=True) + '"',
+                    'class="recovery-action-inspection-run-json"',
+                    'data-inspection-json-schema="diagnostic_inspection_run.v1"',
+                    "<summary>Inspection Run JSON</summary>",
+                    expected_run_json,
                 ]
             )
     for fragment in expected_fragments:

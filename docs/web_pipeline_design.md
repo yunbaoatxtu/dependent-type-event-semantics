@@ -295,6 +295,10 @@ be applied silently. The companion
 `/api/recovery-action-run?case=<case>&index=<n>` endpoint should return a
 `diagnostic_inspection_run.v1` target-field snapshot only for inspection-only
 actions and should reject human-review-required actions with a 400 response.
+For fixture pages, the same bundle should be rendered as an expandable
+`Inspection Run JSON` preview in both the `Next Steps` list and the
+`Recovery Action Exports` panel, so browser checks can compare the visible
+preview with the API-shaped diagnostic run without issuing another request.
 This gives browser tools an inspection/export path for one suggested repair
 without scraping the full analysis response. The fixture HTML should also render a
 `Recovery Action Exports` panel that summarizes every such route with

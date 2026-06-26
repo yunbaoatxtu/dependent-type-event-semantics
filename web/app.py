@@ -1326,6 +1326,7 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                 )
             action_link = ""
             run_link = ""
+            inspection_preview = ""
             automation_mode = ""
             can_auto_run = False
             if fixture_case:
@@ -1346,10 +1347,22 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                     run_href = "/api/recovery-action-run?" + urlencode(
                         {"case": fixture_case, "index": str(index)}
                     )
+                    run_json = html.escape(
+                        compact_json(
+                            recovery_action_inspection_run_bundle(fixture_case, index)
+                        )
+                    )
                     run_link = (
                         '<a class="next-step-action-run-link" '
                         f'href="{html.escape(run_href, quote=True)}" '
                         'data-action-run="inspection">Run inspection</a>'
+                    )
+                    inspection_preview = (
+                        '<details class="next-step-inspection-run-json" '
+                        f'data-inspection-json-schema="{RECOVERY_INSPECTION_RUN_SCHEMA}">'
+                        "<summary>Inspection Run JSON</summary>"
+                        f"<pre>{run_json}</pre>"
+                        "</details>"
                     )
             items.append(
                 '<li '
@@ -1367,6 +1380,7 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                 f"{details_html}"
                 f"{action_link}"
                 f"{run_link}"
+                f"{inspection_preview}"
                 "</li>"
             )
         body = '<ul class="next-step-list">' + "".join(items) + "</ul>"
@@ -1412,11 +1426,24 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
             else False
         )
         run_link = ""
+        inspection_preview = ""
         if can_auto_run:
+            run_json = html.escape(
+                compact_json(
+                    recovery_action_inspection_run_bundle(fixture_case, index)
+                )
+            )
             run_link = (
                 '<a class="recovery-action-run-link" '
                 f'href="{html.escape(run_href, quote=True)}" '
                 'data-action-run="inspection">Run inspection</a>'
+            )
+            inspection_preview = (
+                '<details class="recovery-action-inspection-run-json" '
+                f'data-inspection-json-schema="{RECOVERY_INSPECTION_RUN_SCHEMA}">'
+                "<summary>Inspection Run JSON</summary>"
+                f"<pre>{run_json}</pre>"
+                "</details>"
             )
         items.append(
             '<li class="recovery-action-export" '
@@ -1443,6 +1470,7 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
             "<summary>Action JSON</summary>"
             f"<pre>{export_json}</pre>"
             "</details>"
+            f"{inspection_preview}"
             "</li>"
         )
     body = (

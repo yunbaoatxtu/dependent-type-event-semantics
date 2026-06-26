@@ -8200,6 +8200,16 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('class="next-step-action-run-link"', type_page)
         self.assertIn('data-action-run="inspection"', type_page)
+        self.assertIn('class="next-step-inspection-run-json"', type_page)
+        self.assertIn(
+            'data-inspection-json-schema="diagnostic_inspection_run.v1"',
+            type_page,
+        )
+        self.assertIn("<summary>Inspection Run JSON</summary>", type_page)
+        self.assertIn(
+            html.escape(compact_json(recovery_action_inspection_run_bundle("type_check_failure", 0))),
+            type_page,
+        )
 
     def test_diagnostic_fixture_page_renders_recovery_action_exports_panel(self) -> None:
         result = diagnostic_fixture_result("semantic_readings_export_count_mismatch")
@@ -8235,14 +8245,25 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('class="recovery-action-run-link"', page)
         self.assertIn('data-action-run="inspection"', page)
+        self.assertIn('class="recovery-action-inspection-run-json"', page)
+        self.assertIn(
+            'data-inspection-json-schema="diagnostic_inspection_run.v1"',
+            page,
+        )
         self.assertIn('class="recovery-action-export-json"', page)
         self.assertIn('data-export-json-schema="diagnostic_recovery_action.v1"', page)
         self.assertIn("<summary>Action JSON</summary>", page)
+        self.assertIn("<summary>Inspection Run JSON</summary>", page)
         expected_bundle = recovery_action_export_bundle(
             "semantic_readings_export_count_mismatch",
             0,
         )
         self.assertIn(html.escape(compact_json(expected_bundle)), page)
+        expected_run_bundle = recovery_action_inspection_run_bundle(
+            "semantic_readings_export_count_mismatch",
+            1,
+        )
+        self.assertIn(html.escape(compact_json(expected_run_bundle)), page)
 
     def test_recovery_action_exports_panel_is_fixture_only(self) -> None:
         result = analyze_sentence("John knocked twice", require_coq=False)
@@ -8820,6 +8841,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("target-field snapshot", readme)
         self.assertIn("`inspection_run_api_path`", readme)
         self.assertIn("`data-inspection-run-count`", readme)
+        self.assertIn("expandable `Inspection Run JSON`", readme)
+        self.assertIn("preview must match the same", readme)
         self.assertIn("verification commands", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
@@ -8989,6 +9012,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("400 response", web_design)
         self.assertIn("`inspection_run_api_path`", web_design)
         self.assertIn("`data-inspection-run-count`", web_design)
+        self.assertIn("`Inspection Run JSON` preview", web_design)
+        self.assertIn("API-shaped diagnostic run", web_design)
         self.assertIn("repair-plan drift", web_design)
         self.assertIn(
             "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
@@ -9017,6 +9042,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("inspection-run snapshot", manuscript)
         self.assertIn("nullable inspection_run_api_path entries", manuscript)
         self.assertIn("data-inspection-run-count hook", manuscript)
+        self.assertIn("Inspection Run JSON preview", manuscript)
+        self.assertIn("rendered inspection-run preview", manuscript)
         self.assertIn("automation-mode drift", manuscript)
         self.assertIn("repair-plan drift", manuscript)
         self.assertIn("stale action export links", manuscript)
@@ -9812,6 +9839,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def recovery_action_repair_plan_preview(", verifier)
         self.assertIn("def validate_recovery_action_export_manifest_entry(", verifier)
         self.assertIn("def validate_recovery_action_exports_html_panel(", verifier)
+        self.assertIn("def recovery_action_inspection_run_preview_json(", verifier)
         self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
         self.assertIn("sys.path.insert(0, str(ROOT))", verifier)
         self.assertIn("/api/diagnostic-contract", verifier)
@@ -9879,6 +9907,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("diagnostic_repair_plan.v1", verifier)
         self.assertIn("diagnostic_inspection_run.v1", verifier)
         self.assertIn("inspection run {field} value drift", verifier)
+        self.assertIn("next-step-inspection-run-json", verifier)
+        self.assertIn("recovery-action-inspection-run-json", verifier)
         self.assertIn("diagnostic repair-plan automation drift", verifier)
         self.assertIn("diagnostic inspection-only action drift", verifier)
         self.assertIn("recovery action export manifest drift", verifier)
