@@ -1384,6 +1384,91 @@ class TranslatorTests(unittest.TestCase):
             "eat(john, bread) -> drink(mary, water)",
         )
 
+    def test_simple_conditional_implication_preserves_clause_times(self) -> None:
+        conditional = run_pipeline(
+            "if John left yesterday, Mary cried today",
+            require_coq=True,
+        )
+        self.assertTrue(conditional["ok"])
+        self.assertEqual(
+            conditional["dependent_type_translation"],
+            "at_T(yesterday, leave(john)) -> at_T(today, cry(mary))",
+        )
+        self.assertEqual(
+            conditional["ast"]["antecedent"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            conditional["ast"]["consequent"]["time_modifiers"],
+            [{"operator": "at", "argument": "today"}],
+        )
+        self.assertIn("Parameter yesterday : Entity.", conditional["coq_code"])
+        self.assertIn("Parameter today : Entity.", conditional["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", conditional["coq_code"])
+        self.assertIn(
+            "at_T yesterday (leave john) -> at_T today (cry mary)",
+            conditional["coq_code"],
+        )
+        self.assertEqual(conditional["coq_check"]["status"], "passed")
+
+    def test_simple_conditional_implication_combines_typed_objects_and_times(self) -> None:
+        conditional = run_pipeline(
+            "if John ate bread yesterday, Mary drank water today",
+            require_coq=True,
+        )
+        self.assertTrue(conditional["ok"])
+        self.assertEqual(
+            conditional["dependent_type_translation"],
+            "at_T(yesterday, eat(john, bread)) -> at_T(today, drink(mary, water))",
+        )
+        self.assertEqual(
+            conditional["ast"]["antecedent"],
+            {
+                "predicate": "eat",
+                "predicate_type": "Entity -> Food -> Prop",
+                "surface_predicate": "ate",
+                "subject": {"name": "john", "type": "Entity"},
+                "object": {"name": "bread", "type": "Food"},
+                "time_modifiers": [{"operator": "at", "argument": "yesterday"}],
+            },
+        )
+        self.assertEqual(
+            conditional["ast"]["consequent"],
+            {
+                "predicate": "drink",
+                "predicate_type": "Entity -> Drinkable -> Prop",
+                "surface_predicate": "drank",
+                "subject": {"name": "mary", "type": "Entity"},
+                "object": {"name": "water", "type": "Drinkable"},
+                "time_modifiers": [{"operator": "at", "argument": "today"}],
+            },
+        )
+        self.assertIn("Parameter Food : Type.", conditional["coq_code"])
+        self.assertIn("Parameter Drinkable : Type.", conditional["coq_code"])
+        self.assertIn("Parameter yesterday : Entity.", conditional["coq_code"])
+        self.assertIn("Parameter today : Entity.", conditional["coq_code"])
+        self.assertIn(
+            "at_T yesterday (eat john bread) -> at_T today (drink mary water)",
+            conditional["coq_code"],
+        )
+        self.assertIn("at(e, yesterday)", conditional["event_semantics"]["event_style_reference"])
+        self.assertIn("at(e', today)", conditional["event_semantics"]["event_style_reference"])
+        self.assertEqual(conditional["coq_check"]["status"], "passed")
+
+        prepositional_time = run_pipeline(
+            "if John ate bread in the morning then Mary drank water at noon",
+            require_coq=True,
+        )
+        self.assertTrue(prepositional_time["ok"])
+        self.assertEqual(
+            prepositional_time["dependent_type_translation"],
+            "during_T(morning, eat(john, bread)) -> at_T(noon, drink(mary, water))",
+        )
+        self.assertIn(
+            "during_T morning (eat john bread) -> at_T noon (drink mary water)",
+            prepositional_time["coq_code"],
+        )
+
     def test_pipeline_rejects_uncertified_clause_markers_before_fallback(self) -> None:
         overextended_conditional = run_pipeline(
             "if John left, Mary cried loudly",
@@ -7193,6 +7278,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter bread : Food.", transitive_page)
         self.assertIn("Parameter water : Drinkable.", transitive_page)
 
+        timed_page = render_page(
+            "if John left yesterday, Mary cried today",
+            require_coq=True,
+        )
+        self.assertIn(
+            "at_T(yesterday, leave(john)) -&gt; at_T(today, cry(mary))",
+            timed_page,
+        )
+        self.assertIn("Parameter at_T : Entity -&gt; Prop -&gt; Prop.", timed_page)
+
     def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
         result = analyze_sentence("if John left, Mary cried loudly", require_coq=True)
         self.assertFalse(result["ok"])
@@ -10105,6 +10200,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`if John ate bread,", readme)
         self.assertIn("`eat(john, bread) -> drink(mary, water)`", readme)
         self.assertIn("`water : Drinkable`", readme)
+        self.assertIn("`if John left yesterday, Mary cried today`", readme)
+        self.assertIn(
+            "`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`",
+            readme,
+        )
         self.assertIn("`if John left, Mary cried loudly`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
         self.assertIn("relation-clause subject", readme)
@@ -10113,16 +10213,25 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("leave(john) -> cry(mary)", manuscript)
         self.assertIn("eat(john, bread) -> drink(mary, water)", manuscript)
         self.assertIn("water : Drinkable", manuscript)
+        self.assertIn(
+            "at_T(yesterday, leave(john)) -> at_T(today, cry(mary))",
+            manuscript,
+        )
         self.assertIn("leave(if_john, mary_cried)", manuscript)
         self.assertIn("negative capability", manuscript)
         self.assertIn("Clause-level markers outside the", web_design)
         self.assertIn("current certified fragment", web_design)
         self.assertIn("`leave(john) -> cry(mary)`", web_design)
         self.assertIn("`eat(john, bread) -> drink(mary, water)`", web_design)
+        self.assertIn(
+            "`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`",
+            web_design,
+        )
         self.assertIn("`leave(0)(if_john, mary_cried)`", web_design)
         self.assertIn("Unsupported clause-level markers", ast_docs)
         self.assertIn("`conditional_implication` AST", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
+        self.assertIn("`time_modifiers` list", ast_docs)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
         self.assertIn("python3 scripts/verify_project.py --require-coq --require-docx", readme)

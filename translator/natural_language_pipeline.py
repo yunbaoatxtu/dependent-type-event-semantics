@@ -2521,8 +2521,10 @@ def simple_conditional_clause_ast(
     surface_predicate: str,
     obj: str | None = None,
     object_type: str | None = None,
+    time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     predicate_type = "Entity -> Prop"
+    time_modifiers = list(time_modifiers or [])
     clause = {
         "predicate": predicate,
         "predicate_type": predicate_type,
@@ -2539,6 +2541,8 @@ def simple_conditional_clause_ast(
             "name": obj,
             "type": object_type,
         }
+    if time_modifiers:
+        clause["time_modifiers"] = time_modifiers
     return clause
 
 
@@ -2589,6 +2593,11 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
             errors.append(
                 f"conditional.{field}.surface_predicate must be a non-empty string"
             )
+        check_time_modifiers(
+            errors,
+            clause.get("time_modifiers", []),
+            f"conditional.{field}",
+        )
         subject = clause.get("subject")
         if not isinstance(subject, dict):
             errors.append(f"conditional.{field}.subject must be an object")
@@ -2677,6 +2686,18 @@ def parse_simple_conditional_object_tokens(tokens: list[str]) -> str | None:
     return obj
 
 
+def parse_simple_conditional_time_modifiers(
+    tokens: list[str],
+) -> list[dict[str, str]] | None:
+    modifier_parse = split_shared_adv_and_time_modifiers(tokens)
+    if modifier_parse is None:
+        return None
+    adv_modifiers, time_modifiers = modifier_parse
+    if adv_modifiers:
+        return None
+    return time_modifiers
+
+
 def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
     if len(tokens) < 2:
         return None
@@ -2698,18 +2719,37 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
             "predicate": predicate,
             "surface_predicate": surface_predicate,
         }
+    tail_tokens = tokens[2:]
     if not is_likely_transitive_verb(surface_predicate):
+        time_modifiers = parse_simple_conditional_time_modifiers(tail_tokens)
+        if time_modifiers is None:
+            return None
+        return {
+            "subject": clean_phrase([subject]),
+            "predicate": predicate,
+            "surface_predicate": surface_predicate,
+            "time_modifiers": time_modifiers,
+        }
+    candidates: list[dict[str, Any]] = []
+    for split_index in range(1, len(tail_tokens) + 1):
+        object_tokens = tail_tokens[:split_index]
+        time_tokens = tail_tokens[split_index:]
+        obj = parse_simple_conditional_object_tokens(object_tokens)
+        time_modifiers = parse_simple_conditional_time_modifiers(time_tokens)
+        if obj is not None and time_modifiers is not None:
+            candidates.append(
+                {
+                    "subject": clean_phrase([subject]),
+                    "predicate": predicate,
+                    "surface_predicate": surface_predicate,
+                    "obj": obj,
+                    "object_type": object_type_for_transitive_predicate(predicate),
+                    "time_modifiers": time_modifiers,
+                }
+            )
+    if len(candidates) != 1:
         return None
-    obj = parse_simple_conditional_object_tokens(tokens[2:])
-    if obj is None:
-        return None
-    return {
-        "subject": clean_phrase([subject]),
-        "predicate": predicate,
-        "surface_predicate": surface_predicate,
-        "obj": obj,
-        "object_type": object_type_for_transitive_predicate(predicate),
-    }
+    return candidates[0]
 
 
 def split_simple_conditional_tokens(tokens: list[str]) -> tuple[list[str], list[str]] | None:
@@ -2740,11 +2780,18 @@ def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> s
     subject = clause["subject"]["name"]
     obj = clause.get("object")
     if obj is None:
-        return f"{predicate} {subject}" if coq else f"{predicate}({subject})"
-    object_name = obj["name"]
-    if coq:
-        return f"{predicate} {subject} {object_name}"
-    return f"{predicate}({subject}, {object_name})"
+        body = f"{predicate} {subject}" if coq else f"{predicate}({subject})"
+    else:
+        object_name = obj["name"]
+        if coq:
+            body = f"{predicate} {subject} {object_name}"
+        else:
+            body = f"{predicate}({subject}, {object_name})"
+    return render_quantifier_time_wrapped_reading(
+        body,
+        clause.get("time_modifiers", []),
+        coq=coq,
+    )
 
 
 def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) -> str:
@@ -2755,6 +2802,8 @@ def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) 
     obj = clause.get("object")
     if isinstance(obj, dict):
         parts.append(f"Theme({event_name}, {obj['name']})")
+    for modifier in clause.get("time_modifiers", []):
+        parts.append(f"{modifier['operator']}({event_name}, {modifier['argument']})")
     return " and ".join(parts)
 
 
@@ -2769,6 +2818,8 @@ def simple_conditional_declarations(
         obj = clause.get("object")
         if isinstance(obj, dict):
             value_declarations[obj["name"]] = obj["type"]
+        for modifier in clause.get("time_modifiers", []):
+            value_declarations[modifier["argument"]] = "Entity"
         predicate_declarations[clause["predicate"]] = clause["predicate_type"]
     return value_declarations, predicate_declarations
 
@@ -2803,6 +2854,11 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
             if value_type != "Entity"
         )
     )
+    time_modifiers = [
+        modifier
+        for clause in (antecedent, consequent)
+        for modifier in clause.get("time_modifiers", [])
+    ]
     coq_antecedent = simple_conditional_clause_formula(antecedent, coq=True)
     coq_consequent = simple_conditional_clause_formula(consequent, coq=True)
     coq_code = "\n".join(
@@ -2820,6 +2876,14 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
                 f"Parameter {name} : {predicate_type}."
                 for name, predicate_type in predicate_declarations.items()
             ],
+            *(
+                [
+                    "Parameter at_T : Entity -> Prop -> Prop.",
+                    "Parameter during_T : Entity -> Prop -> Prop.",
+                ]
+                if time_modifiers
+                else []
+            ),
             "",
             f"Definition {coq_definition} : Prop :=",
             f"  {coq_antecedent} -> {coq_consequent}.",

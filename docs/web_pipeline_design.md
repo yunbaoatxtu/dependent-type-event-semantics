@@ -470,6 +470,10 @@ simple conditionals first, so `if John left, Mary cried` is certified as
 same route covers simple typed-object clauses: `if John ate bread, Mary drank
 water` is certified as `eat(john, bread) -> drink(mary, water)` while preserving
 `bread : Food` and `water : Drinkable` in the generated Coq/Rocq scaffold.
+Clause-local time modifiers are also visible in the same panels:
+`if John left yesterday, Mary cried today` is certified as
+`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`, with `at_T` declared
+at type `Entity -> Prop -> Prop`.
 Clause-level markers outside the current certified fragment, including `who`,
 `which`, `that`, `whether`, and overextended conditional strings such as
 `if John left, Mary cried loudly`, stop the analysis at the parsing stage before a

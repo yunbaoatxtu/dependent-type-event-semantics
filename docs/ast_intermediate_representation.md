@@ -1385,12 +1385,16 @@ conditional rule can build a checked `conditional_implication` AST for examples
 such as `if John left, Mary cried`, whose clauses have predicates of type
 `Entity -> Prop`, and `if John ate bread, Mary drank water`, whose clauses keep
 `bread : Food`, `water : Drinkable`, and predicate types such as
-`Entity -> Food -> Prop`. The connective itself has type
-`Prop -> Prop -> Prop`. Unsupported clause-level markers such as `who`,
-`which`, `that`, `whether`, or an overextended conditional like `if John left,
-Mary cried loudly` produce a parsing failure instead of a shallow AST. This is
-deliberately conservative: an unimplemented conditional or relative clause must
-not become an entity name that later passes the Coq/Rocq scaffold check.
+`Entity -> Food -> Prop`. Clause-local time modifiers are stored in each
+clause's `time_modifiers` list and rendered around that clause's proposition,
+so `if John left yesterday, Mary cried today` becomes
+`at_T(yesterday, leave(john)) -> at_T(today, cry(mary))`. The connective itself
+has type `Prop -> Prop -> Prop`. Unsupported clause-level markers such as
+`who`, `which`, `that`, `whether`, or an overextended conditional like
+`if John left, Mary cried loudly` produce a parsing failure instead of a shallow
+AST. This is deliberately conservative: an unimplemented conditional or
+relative clause must not become an entity name that later passes the Coq/Rocq
+scaffold check.
 
 Modifier entries are not entity-denoting arguments. The AST records this twice:
 `modifier_vector` preserves the dependent length index, while `modifier_roles`
