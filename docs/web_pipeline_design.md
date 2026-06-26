@@ -358,10 +358,11 @@ contract module for the controlled failure-stage and recovery-action
 vocabularies, so verifier acceptance cannot drift from UI construction.
 The same vocabulary should be exposed to clients at `/api/diagnostic-contract`
 as a `diagnostic_contract.v1` manifest containing `failure_stages`,
-`required_fixture_stages`, and `recovery_action_kinds`.
+`required_fixture_stages`, `recovery_action_kinds`, and
+`semantic_reading_fields`.
 The verifier should reject schema drift, failure-stage drift,
-required-fixture-stage drift, recovery-action drift, and stale selector links
-to that contract endpoint.
+required-fixture-stage drift, recovery-action drift, semantic-reading field
+drift, and stale selector links to that contract endpoint.
 The ordinary HTML page should render the same contract as a `Diagnostic
 Contract` panel with stable `data-contract-schema`, `data-contract-api`,
 `data-contract-field`, `data-contract-count`, and `data-contract-token` hooks,
@@ -377,6 +378,9 @@ deterministic check suite that exercises the backend pipeline.
 It should iterate over every case advertised by the manifest and compare the
 API payload, selected HTML option, API/HTML route case parameter, failure stage,
 and recovery-action metadata.
+For fixture cases with a passing `semantic_readings_check`, it should also check
+that each semantic reading carries the contract fields and that the JSON
+`reading_explanation` text appears in the HTML row as `interpretation`.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

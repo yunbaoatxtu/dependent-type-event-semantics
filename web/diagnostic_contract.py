@@ -51,6 +51,18 @@ INSPECTION_ONLY_RECOVERY_ACTION_KINDS = frozenset(
         "inspect_readings",
     }
 )
+SEMANTIC_READING_CONTRACT_FIELDS = frozenset(
+    {
+        "attachment_summary",
+        "coq_definition",
+        "dependent_type_translation",
+        "name",
+        "reading_explanation",
+        "scope",
+        "source",
+        "type_check",
+    }
+)
 
 
 def recovery_action_automation_mode(action_kind: str) -> str:

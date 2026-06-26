@@ -909,10 +909,11 @@ the browser/API route checks cannot accept a stage name that the UI layer would
 reject.
 The same vocabulary is exposed to clients at `/api/diagnostic-contract` as a
 `diagnostic_contract.v1` manifest containing `failure_stages`,
-`required_fixture_stages`, and `recovery_action_kinds`.
+`required_fixture_stages`, `recovery_action_kinds`, and
+`semantic_reading_fields`.
 The verifier rejects schema drift, failure-stage drift, required-fixture-stage
-drift, recovery-action drift, and stale selector links to that contract
-endpoint.
+drift, recovery-action drift, semantic-reading field drift, and stale selector
+links to that contract endpoint.
 The ordinary HTML page now renders the same vocabulary in a `Diagnostic
 Contract` panel with `data-contract-schema`, `data-contract-api`,
 `data-contract-field`, `data-contract-count`, and `data-contract-token` hooks,
@@ -928,6 +929,9 @@ outside the unit-test renderer as well.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.
+For fixture cases whose `semantic_readings_check` passes, the same smoke check
+also requires each normalized reading to carry the contract fields and verifies
+that `reading_explanation` is rendered as the row's `interpretation`.
 Fixture `failure_stage` values are checked against the same controlled set used
 by ordinary diagnostics: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

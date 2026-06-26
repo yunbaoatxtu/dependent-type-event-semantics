@@ -20,6 +20,7 @@ from scripts.verify_project import (
     VALID_DIAGNOSTIC_FAILURE_STAGES,
     VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    SEMANTIC_READING_CONTRACT_FIELDS as VERIFIER_SEMANTIC_READING_CONTRACT_FIELDS,
     validate_recovery_action_inspection_run_bundle,
     validate_recovery_action_inspection_run_rejection,
     validate_diagnostic_contract_html_panel,
@@ -34,6 +35,7 @@ from web.diagnostic_contract import (
     DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+    SEMANTIC_READING_CONTRACT_FIELDS,
 )
 from translator.dependent_type_event_translator import (
     SOURCE_STATE_BY_TARGET_STATE,
@@ -10746,6 +10748,10 @@ class TranslatorTests(unittest.TestCase):
             VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
             REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
         )
+        self.assertIs(
+            VERIFIER_SEMANTIC_READING_CONTRACT_FIELDS,
+            SEMANTIC_READING_CONTRACT_FIELDS,
+        )
 
     def test_diagnostic_contract_api_exposes_controlled_vocabularies(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -10769,9 +10775,14 @@ class TranslatorTests(unittest.TestCase):
             contract["inspection_only_recovery_action_kinds"],
             sorted(INSPECTION_ONLY_RECOVERY_ACTION_KINDS),
         )
+        self.assertEqual(
+            contract["semantic_reading_fields"],
+            sorted(SEMANTIC_READING_CONTRACT_FIELDS),
+        )
         self.assertIn("semantic_readings_check", contract["failure_stages"])
         self.assertIn("add_missing_coq_definitions", contract["recovery_action_kinds"])
         self.assertIn("inspection_only", contract["repair_plan_automation_modes"])
+        self.assertIn("reading_explanation", contract["semantic_reading_fields"])
         self.assertIn(
             "inspect_readings",
             contract["inspection_only_recovery_action_kinds"],
@@ -10814,6 +10825,14 @@ class TranslatorTests(unittest.TestCase):
             "diagnostic inspection-only action drift",
         ):
             validate_diagnostic_contract_manifest(bad_inspection_kinds)
+
+        bad_semantic_fields = deepcopy(contract)
+        bad_semantic_fields["semantic_reading_fields"] = ["name"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "diagnostic semantic-reading field drift",
+        ):
+            validate_diagnostic_contract_manifest(bad_semantic_fields)
 
     def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-empty case"):
@@ -11614,9 +11633,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-contract", readme)
         self.assertIn("`diagnostic_contract.v1` manifest", readme)
         self.assertIn("`required_fixture_stages`", readme)
+        self.assertIn("`semantic_reading_fields`", readme)
+        self.assertIn("semantic-reading field drift", readme)
+        self.assertIn("`reading_explanation` is rendered as the row's `interpretation`", readme)
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
-        self.assertIn("stale selector links", readme)
+        self.assertIn("stale selector\nlinks", readme)
         self.assertIn("`Diagnostic\nContract` panel", readme)
         self.assertIn("`data-contract-token`", readme)
         self.assertIn("stage, and action lists", readme)
@@ -11869,6 +11891,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-contract", web_design)
         self.assertIn("`diagnostic_contract.v1` manifest", web_design)
         self.assertIn("`required_fixture_stages`", web_design)
+        self.assertIn("`semantic_reading_fields`", web_design)
+        self.assertIn("semantic-reading field", web_design)
+        self.assertIn("JSON\n`reading_explanation` text appears", web_design)
         self.assertIn("schema drift", web_design)
         self.assertIn("required-fixture-stage", web_design)
         self.assertIn("stale selector links", web_design)
@@ -11929,6 +11954,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-contract", manuscript)
         self.assertIn("diagnostic_contract.v1 manifest", manuscript)
         self.assertIn("required_fixture_stages", manuscript)
+        self.assertIn("semantic_reading_fields", manuscript)
+        self.assertIn("semantic-reading-field drift", manuscript)
+        self.assertIn("reading_explanation is rendered", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
@@ -12510,6 +12538,30 @@ class TranslatorTests(unittest.TestCase):
         manifest = deepcopy(manifest)
         manifest["cases"][0].pop("recovery_action_exports")
         with self.assertRaisesRegex(SystemExit, "incomplete fixture case metadata"):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_fixture_semantic_reading_contract_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["type_check_failure"]["semantic_readings"][0].pop(
+            "reading_explanation"
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure semantic reading 0 missing contract fields reading_explanation",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        pages = deepcopy(pages)
+        pages["type_check_failure"] = pages["type_check_failure"].replace(
+            "Diagnostic fixture reading fixture_reading is an already",
+            "Stale diagnostic fixture explanation is an already",
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure semantic reading 0 reading_explanation HTML drift",
+        ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
     def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
@@ -13173,6 +13225,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("REQUIRED_DIAGNOSTIC_FIXTURE_STAGES", verifier)
         self.assertIn("VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES", verifier)
         self.assertIn("VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS", verifier)
+        self.assertIn("SEMANTIC_READING_CONTRACT_FIELDS", verifier)
         self.assertIn("unknown fixture failure stage", verifier)
         self.assertIn("missing diagnostic fixture stages", verifier)
         self.assertIn("VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS", verifier)
@@ -13182,6 +13235,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("invalid recovery action reading_indices", verifier)
         self.assertIn("invalid recovery action export counts", verifier)
         self.assertIn("def validate_semantic_readings_repair_details(", verifier)
+        self.assertIn("def validate_successful_semantic_reading_contract(", verifier)
+        self.assertIn("reading_explanation HTML drift", verifier)
         self.assertIn("incomplete semantic readings repair details", verifier)
         self.assertIn("invalid semantic readings repair details", verifier)
         self.assertIn("def validate_recovery_action_matches_repair_details(", verifier)

@@ -29,6 +29,7 @@ from web.diagnostic_contract import (
     DiagnosticFixtureSpec,
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+    SEMANTIC_READING_CONTRACT_FIELDS,
     recovery_action_automation_mode,
     recovery_action_can_auto_run,
 )
@@ -193,8 +194,20 @@ def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> di
         {
             "name": "fixture_reading",
             "source": "diagnostic_fixture",
+            "scope": "diagnostic_fixture",
             "dependent_type_translation": "fixture_reading : Prop",
             "coq_definition": "fixture_reading",
+            "attachment_summary": {
+                "kind": "diagnostic_fixture",
+                "typed_modifiers": [],
+                "typed_np_restrictors": [],
+                "typed_time_modifiers": [],
+                "relative_objects": [],
+            },
+            "reading_explanation": (
+                "Diagnostic fixture reading fixture_reading is an already "
+                "well-formed Prop export used to exercise later failure stages."
+            ),
             "type_check": {"ok": True, "type": "Prop", "errors": []},
         }
     ]
@@ -487,6 +500,7 @@ def diagnostic_contract_manifest() -> dict[str, Any]:
         "inspection_only_recovery_action_kinds": sorted(
             INSPECTION_ONLY_RECOVERY_ACTION_KINDS
         ),
+        "semantic_reading_fields": sorted(SEMANTIC_READING_CONTRACT_FIELDS),
     }
 
 
@@ -2031,6 +2045,7 @@ def diagnostic_contract_panel() -> str:
         ("Recovery Actions", "recovery_action_kinds"),
         ("Repair Plan Automation Modes", "repair_plan_automation_modes"),
         ("Inspection-Only Actions", "inspection_only_recovery_action_kinds"),
+        ("Semantic Reading Fields", "semantic_reading_fields"),
     ]
     vocabularies = []
     for label, field in sections:

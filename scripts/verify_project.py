@@ -26,6 +26,7 @@ from web.diagnostic_contract import (  # noqa: E402
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
+    SEMANTIC_READING_CONTRACT_FIELDS,
     recovery_action_automation_mode,
     recovery_action_can_auto_run,
 )
@@ -950,6 +951,7 @@ def diagnostic_contract_bundle_for_recovery_action() -> dict:
         "inspection_only_recovery_action_kinds": sorted(
             VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
         ),
+        "semantic_reading_fields": sorted(SEMANTIC_READING_CONTRACT_FIELDS),
     }
 
 
@@ -1143,6 +1145,53 @@ def require_html_fragments(block: str, fragments: list[str], context: str) -> No
             raise SystemExit(f"web route smoke check failed: {context} missing {fragment}")
 
 
+def validate_successful_semantic_reading_contract(
+    case: str,
+    payload: dict,
+    page: str,
+) -> None:
+    check = payload.get("semantic_readings_check")
+    if not isinstance(check, dict) or check.get("ok") is not True:
+        return
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or not readings:
+        raise SystemExit(
+            f"web route smoke check failed: {case} missing successful semantic readings"
+        )
+    for index, reading in enumerate(readings):
+        if not isinstance(reading, dict):
+            raise SystemExit(
+                f"web route smoke check failed: {case} malformed semantic reading {index}"
+            )
+        missing_fields = sorted(
+            field
+            for field in SEMANTIC_READING_CONTRACT_FIELDS
+            if field not in reading
+        )
+        if missing_fields:
+            raise SystemExit(
+                f"web route smoke check failed: {case} semantic reading {index} "
+                "missing contract fields "
+                + ", ".join(missing_fields)
+            )
+        explanation = reading.get("reading_explanation")
+        if not isinstance(explanation, str) or not explanation.strip():
+            raise SystemExit(
+                f"web route smoke check failed: {case} semantic reading {index} "
+                "missing reading_explanation"
+            )
+        expected_interpretation = (
+            "<dt>interpretation</dt><dd>"
+            + html.escape(explanation)
+            + "</dd>"
+        )
+        if expected_interpretation not in page:
+            raise SystemExit(
+                f"web route smoke check failed: {case} semantic reading {index} "
+                "reading_explanation HTML drift"
+            )
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -1248,6 +1297,7 @@ def validate_diagnostic_fixture_routes(
         if not isinstance(payload_fixture, dict) or payload_fixture.get("case") != case:
             raise SystemExit(f"web route smoke check failed: {case} payload case drift")
         fixture_page = fixture_pages.get(case, "")
+        validate_successful_semantic_reading_contract(case, payload, fixture_page)
         recovery_action_text = ", ".join(
             str(action) for action in expected_actions if isinstance(action, str)
         )
@@ -1414,6 +1464,12 @@ def validate_diagnostic_contract_manifest(contract: dict) -> None:
         raise SystemExit(
             "web route smoke check failed: diagnostic inspection-only action drift"
         )
+    if contract.get("semantic_reading_fields") != sorted(
+        SEMANTIC_READING_CONTRACT_FIELDS
+    ):
+        raise SystemExit(
+            "web route smoke check failed: diagnostic semantic-reading field drift"
+        )
 
 
 def validate_diagnostic_contract_html_panel(page: str) -> None:
@@ -1427,6 +1483,7 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
         "inspection_only_recovery_action_kinds": sorted(
             VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
         ),
+        "semantic_reading_fields": sorted(SEMANTIC_READING_CONTRACT_FIELDS),
     }
     expected_fragments = [
         'class="panel diagnostic-contract-panel"',
