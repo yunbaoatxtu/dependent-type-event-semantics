@@ -11789,6 +11789,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_event_semantics`", readme)
         self.assertIn("definition `example_1`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
+        self.assertIn(
+            "/api/analyze?sentence=John+knocked+twice&require_coq=1",
+            readme,
+        )
+        self.assertIn("matching HTML\npage", readme)
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
         self.assertIn("stale selector\nlinks", readme)
@@ -12102,6 +12107,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_event_semantics`", web_design)
         self.assertIn("Semantic Readings Check panel", web_design)
         self.assertIn("API response and HTML panel must agree", web_design)
+        self.assertIn("ordinary `/api/analyze`\nsuccess path directly", web_design)
+        self.assertIn("John knocked twice", web_design)
         self.assertIn(
             "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -12124,6 +12131,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("fallback_event_semantics", manuscript)
         self.assertIn("example_1 Coq/Rocq definition", manuscript)
         self.assertIn("both the JSON response and the HTML panel", manuscript)
+        self.assertIn("ordinary /api/analyze path directly", manuscript)
+        self.assertIn("John knocked twice", manuscript)
+        self.assertIn("live HTTP acceptance boundary", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
@@ -13403,6 +13413,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("invalid recovery action export counts", verifier)
         self.assertIn("def validate_semantic_readings_repair_details(", verifier)
         self.assertIn("def validate_successful_semantic_reading_contract(", verifier)
+        self.assertIn("def validate_analyze_fallback_success(", verifier)
+        self.assertIn("analyze_fallback_success", verifier)
+        self.assertIn("/api/analyze?", verifier)
+        self.assertIn("John knocked twice", verifier)
+        self.assertIn("fallback_single_reading", verifier)
+        self.assertIn("fallback_event_semantics", verifier)
+        self.assertIn('data-reading-name="fallback_single_reading"', verifier)
+        self.assertIn('data-coq-definition="example_1"', verifier)
+        self.assertIn("fallback semantic reading drift", verifier)
         self.assertIn("reading_explanation HTML drift", verifier)
         self.assertIn("incomplete semantic readings repair details", verifier)
         self.assertIn("invalid semantic readings repair details", verifier)

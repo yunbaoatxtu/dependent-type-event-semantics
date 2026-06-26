@@ -397,6 +397,10 @@ Successful ordinary fallback analyses should enter the same interface as
 `fallback_single_reading`, sourced from `fallback_event_semantics`, linked to
 `example_1`, and rendered in the Semantic Readings Check panel with a `none`
 attachment summary rather than bypassing the semantic-reading audit.
+The project-level web smoke check should exercise that ordinary `/api/analyze`
+success path directly, using `John knocked twice` and the matching HTML page
+before it walks the diagnostic fixtures, so fallback success cannot drift from
+the normalized semantic-reading interface.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

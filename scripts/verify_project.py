@@ -1192,6 +1192,65 @@ def validate_successful_semantic_reading_contract(
             )
 
 
+def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -> None:
+    case = "analyze_fallback_success"
+    if payload.get("schema_version") != "analyze.v1":
+        raise SystemExit("web route smoke check failed: fallback analyze schema drift")
+    if payload.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: fallback analyze did not verify")
+    if payload.get("input_sentence") != sentence:
+        raise SystemExit("web route smoke check failed: fallback analyze input drift")
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit("web route smoke check failed: fallback diagnostics missing")
+    if diagnostics.get("summary") != "translation verified":
+        raise SystemExit("web route smoke check failed: fallback diagnostics summary drift")
+    if diagnostics.get("failure_stage") is not None:
+        raise SystemExit("web route smoke check failed: fallback diagnostics stage drift")
+    if diagnostics.get("recovery_actions") != []:
+        raise SystemExit("web route smoke check failed: fallback recovery action drift")
+    stages = diagnostics.get("stages")
+    if not isinstance(stages, dict) or stages.get("semantic_readings_check") != "passed":
+        raise SystemExit("web route smoke check failed: fallback semantic stage drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: fallback semantic reading count drift")
+    reading = readings[0]
+    if not isinstance(reading, dict):
+        raise SystemExit("web route smoke check failed: fallback semantic reading malformed")
+    expected_fields = {
+        "name": "fallback_single_reading",
+        "scope": "fallback_single_reading",
+        "source": "fallback_event_semantics",
+        "coq_definition": "example_1",
+    }
+    for field, expected in expected_fields.items():
+        if reading.get(field) != expected:
+            raise SystemExit(
+                "web route smoke check failed: fallback semantic reading drift"
+            )
+    attachment = reading.get("attachment_summary")
+    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
+        raise SystemExit("web route smoke check failed: fallback attachment drift")
+    coq_code = payload.get("coq_code")
+    if not isinstance(coq_code, str) or "Definition example_1" not in coq_code:
+        raise SystemExit("web route smoke check failed: fallback Coq export drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        "Semantic Readings Check",
+        'data-reading-name="fallback_single_reading"',
+        'data-coq-definition="example_1"',
+        "<dt>source</dt><dd>fallback_event_semantics</dd>",
+        "<dt>coq</dt><dd>example_1</dd>",
+        "<dt>attachment</dt><dd>none</dd>",
+    ]
+    for fragment in expected_page_fragments:
+        if fragment not in page:
+            raise SystemExit("web route smoke check failed: fallback HTML drift")
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: fallback page input drift")
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -1762,10 +1821,22 @@ def run_web_route_smoke_check() -> None:
     thread.start()
     try:
         port = server.server_address[1]
+        base_url = f"http://127.0.0.1:{port}"
         opener = build_opener(ProxyHandler({}))
-        with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-contract", timeout=5) as response:
+        fallback_sentence = "John knocked twice"
+        fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
+        with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
+            fallback_payload = json.load(response)
+        with opener.open(f"{base_url}/?{fallback_query}", timeout=5) as response:
+            fallback_page = response.read().decode("utf-8")
+        validate_analyze_fallback_success(
+            fallback_payload,
+            fallback_page,
+            fallback_sentence,
+        )
+        with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))
-        with opener.open(f"http://127.0.0.1:{port}/api/diagnostic-fixtures", timeout=5) as response:
+        with opener.open(f"{base_url}/api/diagnostic-fixtures", timeout=5) as response:
             manifest = json.load(response)
         manifest_cases = manifest.get("cases", [])
         if not isinstance(manifest_cases, list):
@@ -1780,7 +1851,7 @@ def run_web_route_smoke_check() -> None:
             html_path = fixture.get("html_path")
             if not all(isinstance(value, str) for value in [case, api_path, html_path]):
                 raise SystemExit("web route smoke check failed: incomplete fixture case metadata")
-            with opener.open(f"http://127.0.0.1:{port}{api_path}", timeout=5) as response:
+            with opener.open(f"{base_url}{api_path}", timeout=5) as response:
                 fixture_payloads[case] = json.load(response)
             actions = fixture_payloads[case].get("diagnostics", {}).get("recovery_actions", [])
             if not isinstance(actions, list):
@@ -1802,7 +1873,7 @@ def run_web_route_smoke_check() -> None:
                 action_export = action_exports[action_index]
                 query = urlencode({"case": case, "index": str(action_index)})
                 with opener.open(
-                    f"http://127.0.0.1:{port}/api/recovery-action?{query}",
+                    f"{base_url}/api/recovery-action?{query}",
                     timeout=5,
                 ) as response:
                     action_bundle = json.load(response)
@@ -1819,7 +1890,7 @@ def run_web_route_smoke_check() -> None:
                         f"{case} missing recovery action download metadata"
                     )
                 with opener.open(
-                    f"http://127.0.0.1:{port}{download_path}",
+                    f"{base_url}{download_path}",
                     timeout=5,
                 ) as response:
                     validate_json_download_http_response(
@@ -1829,7 +1900,7 @@ def run_web_route_smoke_check() -> None:
                         action_bundle,
                         action_export.get("download_filename"),
                     )
-                run_url = f"http://127.0.0.1:{port}/api/recovery-action-run?{query}"
+                run_url = f"{base_url}/api/recovery-action-run?{query}"
                 if action_bundle.get("repair_plan", {}).get("can_auto_run") is True:
                     with opener.open(run_url, timeout=5) as response:
                         run_payload = json.load(response)
@@ -1849,7 +1920,7 @@ def run_web_route_smoke_check() -> None:
                             f"{case} missing recovery action run download metadata"
                         )
                     with opener.open(
-                        f"http://127.0.0.1:{port}{run_download_path}",
+                        f"{base_url}{run_download_path}",
                         timeout=5,
                     ) as response:
                         validate_json_download_http_response(
@@ -1879,7 +1950,7 @@ def run_web_route_smoke_check() -> None:
                             "web route smoke check failed: "
                             f"{case} inspection run accepted human-review action"
                         )
-            with opener.open(f"http://127.0.0.1:{port}{html_path}", timeout=5) as response:
+            with opener.open(f"{base_url}{html_path}", timeout=5) as response:
                 fixture_pages[case] = response.read().decode("utf-8")
         validate_lexicon_patch_http_routes(port, opener)
     finally:
