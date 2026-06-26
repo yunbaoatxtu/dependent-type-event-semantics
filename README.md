@@ -660,6 +660,12 @@ preview, and verification commands that should be rerun after the repair.
 The inspection-only actions such as `inspect_ast`, `inspect_coq`, and
 `inspect_readings` can be auto-run without mutating semantic readings or
 Coq/Rocq output; semantic and export repairs remain human-review-required.
+The companion `/api/recovery-action-run?case=<case>&index=<n>` endpoint emits a
+`diagnostic_inspection_run.v1` bundle only for those inspection-only actions,
+returning a target-field snapshot such as `ast`, `type_check`,
+`semantic_readings`, `semantic_readings_check`, `coq_code`, or `coq_check`.
+Human-review-required repairs are rejected at that endpoint rather than
+silently applied.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, so browser checks can verify the export contract without opening

@@ -690,6 +690,90 @@ def validate_recovery_action_export_bundle(
     validate_diagnostic_contract_manifest(contract)
 
 
+def nested_field_value(payload: dict, path: str) -> object:
+    current: object = payload
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return None
+        current = current[part]
+    return current
+
+
+def validate_recovery_action_inspection_run_bundle(
+    case: str,
+    action_index: int,
+    expected_action_bundle: dict,
+    fixture_payload: dict,
+    run_bundle: dict,
+) -> None:
+    repair_plan = expected_action_bundle.get("repair_plan", {})
+    expected_action = expected_action_bundle.get("action", {})
+    if run_bundle.get("schema_version") != "diagnostic_inspection_run.v1":
+        raise SystemExit(f"web route smoke check failed: {case} inspection run schema drift")
+    if run_bundle.get("ok") is not True:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run ok drift")
+    if run_bundle.get("case") != case:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run case drift")
+    if run_bundle.get("action_index") != action_index:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run index drift")
+    if run_bundle.get("action_kind") != expected_action.get("kind"):
+        raise SystemExit(f"web route smoke check failed: {case} inspection run kind drift")
+    if run_bundle.get("failure_stage") != expected_action_bundle.get("failure_stage"):
+        raise SystemExit(f"web route smoke check failed: {case} inspection run stage drift")
+    if run_bundle.get("automation_mode") != repair_plan.get("automation_mode"):
+        raise SystemExit(f"web route smoke check failed: {case} inspection run automation drift")
+    if run_bundle.get("can_auto_run") is not True:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run auto-run drift")
+    if run_bundle.get("can_auto_apply") is not False:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run apply drift")
+    expected_fields = repair_plan.get("target_fields")
+    if run_bundle.get("target_fields") != expected_fields:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run field drift")
+    inspection_results = run_bundle.get("inspection_results")
+    if not isinstance(inspection_results, dict):
+        raise SystemExit(f"web route smoke check failed: {case} inspection run result drift")
+    for field in expected_fields:
+        if inspection_results.get(field) != nested_field_value(fixture_payload, field):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} inspection run {field} value drift"
+            )
+    if run_bundle.get("repair_plan") != repair_plan:
+        raise SystemExit(f"web route smoke check failed: {case} inspection run plan drift")
+    contract = run_bundle.get("contract")
+    if not isinstance(contract, dict):
+        raise SystemExit(f"web route smoke check failed: {case} inspection run contract drift")
+    validate_diagnostic_contract_manifest(contract)
+
+
+def validate_recovery_action_inspection_run_rejection(
+    case: str,
+    action_index: int,
+    expected_action_bundle: dict,
+    run_bundle: dict,
+) -> None:
+    repair_plan = expected_action_bundle.get("repair_plan", {})
+    expected_action = expected_action_bundle.get("action", {})
+    if run_bundle.get("schema_version") != "diagnostic_inspection_run.v1":
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection schema drift")
+    if run_bundle.get("ok") is not False:
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection ok drift")
+    if run_bundle.get("case") != case:
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection case drift")
+    if run_bundle.get("action_index") != action_index:
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection index drift")
+    if run_bundle.get("action_kind") != expected_action.get("kind"):
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection kind drift")
+    if run_bundle.get("automation_mode") != repair_plan.get("automation_mode"):
+        raise SystemExit(
+            f"web route smoke check failed: {case} inspection rejection automation drift"
+        )
+    if run_bundle.get("can_auto_run") is not False:
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection run drift")
+    if "requires human review" not in str(run_bundle.get("error", "")):
+        raise SystemExit(f"web route smoke check failed: {case} inspection rejection error drift")
+
+
 def diagnostic_contract_bundle_for_recovery_action() -> dict:
     return {
         "schema_version": "diagnostic_contract.v1",
@@ -1093,12 +1177,29 @@ def validate_recovery_action_exports_html_panel(
                 expected_action_payloads[action_index],
             )
         )
+        expected_plan = recovery_action_repair_plan_preview(
+            case,
+            action_index,
+            expected_stage,
+            expected_action_payloads[action_index],
+        )
+        automation_mode = str(expected_plan.get("automation_mode", ""))
+        can_auto_run = expected_plan.get("can_auto_run") is True
         export_path = expected_action_exports[action_index].get("api_path", "")
+        run_path = "/api/recovery-action-run?" + urlencode(
+            {"case": case, "index": str(action_index)}
+        )
         expected_fragments.extend(
             [
                 'class="recovery-action-export"',
                 f'data-export-action-index="{action_index}"',
                 f'data-export-action-kind="{html.escape(action_kind, quote=True)}"',
+                (
+                    'data-export-automation-mode="'
+                    + html.escape(automation_mode, quote=True)
+                    + '"'
+                ),
+                f'data-export-can-auto-run="{str(can_auto_run).lower()}"',
                 f'data-export-failure-stage="{html.escape(expected_stage, quote=True)}"',
                 f'data-export-json-schema="diagnostic_recovery_action.v1"',
                 "<summary>Action JSON</summary>",
@@ -1110,6 +1211,14 @@ def validate_recovery_action_exports_html_panel(
                 expected_json,
             ]
         )
+        if can_auto_run:
+            expected_fragments.extend(
+                [
+                    'class="recovery-action-run-link"',
+                    'data-action-run="inspection"',
+                    'href="' + html.escape(run_path, quote=True) + '"',
+                ]
+            )
     for fragment in expected_fragments:
         if fragment not in page:
             raise SystemExit(
@@ -1235,12 +1344,43 @@ def run_web_route_smoke_check() -> None:
                     f"http://127.0.0.1:{port}/api/recovery-action?{query}",
                     timeout=5,
                 ) as response:
+                    action_bundle = json.load(response)
                     validate_recovery_action_export_bundle(
                         case,
                         action_index,
                         action,
-                        json.load(response),
+                        action_bundle,
                     )
+                run_url = f"http://127.0.0.1:{port}/api/recovery-action-run?{query}"
+                if action_bundle.get("repair_plan", {}).get("can_auto_run") is True:
+                    with opener.open(run_url, timeout=5) as response:
+                        validate_recovery_action_inspection_run_bundle(
+                            case,
+                            action_index,
+                            action_bundle,
+                            fixture_payloads[case],
+                            json.load(response),
+                        )
+                else:
+                    try:
+                        opener.open(run_url, timeout=5)
+                    except HTTPError as error:
+                        if error.code != 400:
+                            raise SystemExit(
+                                "web route smoke check failed: "
+                                f"{case} inspection rejection status drift"
+                            ) from error
+                        validate_recovery_action_inspection_run_rejection(
+                            case,
+                            action_index,
+                            action_bundle,
+                            json.loads(error.read().decode("utf-8")),
+                        )
+                    else:
+                        raise SystemExit(
+                            "web route smoke check failed: "
+                            f"{case} inspection run accepted human-review action"
+                        )
             with opener.open(f"http://127.0.0.1:{port}{html_path}", timeout=5) as response:
                 fixture_pages[case] = response.read().decode("utf-8")
         validate_lexicon_patch_http_routes(port, opener)

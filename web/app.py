@@ -41,6 +41,7 @@ DIAGNOSTIC_CONTRACT_SCHEMA = "diagnostic_contract.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
 RECOVERY_ACTION_SCHEMA = "diagnostic_recovery_action.v1"
 RECOVERY_REPAIR_PLAN_SCHEMA = "diagnostic_repair_plan.v1"
+RECOVERY_INSPECTION_RUN_SCHEMA = "diagnostic_inspection_run.v1"
 LEXICON_SOURCE_PLACEHOLDER = "<choose_source_state>"
 DEFAULT_DIAGNOSTIC_FIXTURE_CASE = "semantic_readings_missing_export"
 DIAGNOSTIC_FIXTURE_SPECS = (
@@ -432,6 +433,41 @@ def recovery_action_export_bundle(case: str, action_index: int) -> dict[str, Any
             str(failure_stage),
             action,
         ),
+        "contract": diagnostic_contract_manifest(),
+    }
+
+
+def nested_field_value(payload: dict[str, Any], path: str) -> Any:
+    current: Any = payload
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return None
+        current = current[part]
+    return current
+
+
+def recovery_action_inspection_run_bundle(case: str, action_index: int) -> dict[str, Any]:
+    result = diagnostic_fixture_result(case)
+    export_bundle = recovery_action_export_bundle(case, action_index)
+    repair_plan = export_bundle["repair_plan"]
+    target_fields = string_list(repair_plan.get("target_fields"))
+    inspection_results = {
+        field: nested_field_value(result, field)
+        for field in target_fields
+    }
+    return {
+        "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+        "ok": True,
+        "case": case,
+        "action_index": action_index,
+        "action_kind": export_bundle["action"].get("kind"),
+        "failure_stage": export_bundle["failure_stage"],
+        "automation_mode": repair_plan.get("automation_mode"),
+        "can_auto_run": repair_plan.get("can_auto_run"),
+        "can_auto_apply": repair_plan.get("can_auto_apply"),
+        "target_fields": target_fields,
+        "inspection_results": inspection_results,
+        "repair_plan": repair_plan,
         "contract": diagnostic_contract_manifest(),
     }
 
@@ -1264,21 +1300,40 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                     + "</dl>"
                 )
             action_link = ""
+            run_link = ""
+            automation_mode = ""
+            can_auto_run = False
             if fixture_case:
                 href = "/api/recovery-action?" + urlencode(
                     {"case": fixture_case, "index": str(index)}
                 )
+                export_bundle = recovery_action_export_bundle(fixture_case, index)
+                repair_plan = export_bundle.get("repair_plan", {})
+                if isinstance(repair_plan, dict):
+                    automation_mode = str(repair_plan.get("automation_mode", ""))
+                    can_auto_run = repair_plan.get("can_auto_run") is True
                 action_link = (
                     '<a class="next-step-action-link" '
                     f'href="{html.escape(href, quote=True)}" '
                     'data-action-export="json">Open action JSON</a>'
                 )
+                if can_auto_run:
+                    run_href = "/api/recovery-action-run?" + urlencode(
+                        {"case": fixture_case, "index": str(index)}
+                    )
+                    run_link = (
+                        '<a class="next-step-action-run-link" '
+                        f'href="{html.escape(run_href, quote=True)}" '
+                        'data-action-run="inspection">Run inspection</a>'
+                    )
             items.append(
                 '<li '
                 f'id="recovery-action-{index}" '
                 f'class="next-step next-step--{html.escape(kind_class)}" '
                 f'data-action-kind="{html.escape(kind)}" '
                 f'data-action-index="{index}" '
+                f'data-action-automation-mode="{html.escape(automation_mode, quote=True)}" '
+                f'data-action-can-auto-run="{str(can_auto_run).lower()}" '
                 'data-action-contract-api="/api/diagnostic-contract" '
                 f'data-action-contract-kind="{html.escape(kind)}">'
                 f'<strong>{html.escape(label)}</strong>'
@@ -1286,6 +1341,7 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                 f'<p>{html.escape(detail)}</p>'
                 f"{details_html}"
                 f"{action_link}"
+                f"{run_link}"
                 "</li>"
             )
         body = '<ul class="next-step-list">' + "".join(items) + "</ul>"
@@ -1314,21 +1370,47 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
         href = "/api/recovery-action?" + urlencode(
             {"case": fixture_case, "index": str(index)}
         )
+        run_href = "/api/recovery-action-run?" + urlencode(
+            {"case": fixture_case, "index": str(index)}
+        )
         export_bundle = recovery_action_export_bundle(fixture_case, index)
         export_json = html.escape(compact_json(export_bundle))
+        repair_plan = export_bundle.get("repair_plan", {})
+        automation_mode = (
+            str(repair_plan.get("automation_mode", ""))
+            if isinstance(repair_plan, dict)
+            else ""
+        )
+        can_auto_run = (
+            repair_plan.get("can_auto_run") is True
+            if isinstance(repair_plan, dict)
+            else False
+        )
+        run_link = ""
+        if can_auto_run:
+            run_link = (
+                '<a class="recovery-action-run-link" '
+                f'href="{html.escape(run_href, quote=True)}" '
+                'data-action-run="inspection">Run inspection</a>'
+            )
         items.append(
             '<li class="recovery-action-export" '
             f'data-export-schema="{RECOVERY_ACTION_SCHEMA}" '
             f'data-export-case="{html.escape(fixture_case, quote=True)}" '
             f'data-export-action-index="{index}" '
             f'data-export-action-kind="{html.escape(kind, quote=True)}" '
+            f'data-export-automation-mode="{html.escape(automation_mode, quote=True)}" '
+            f'data-export-can-auto-run="{str(can_auto_run).lower()}" '
             f'data-export-failure-stage="{html.escape(failure_stage, quote=True)}">'
             f'<a href="{html.escape(href, quote=True)}">{html.escape(href)}</a>'
+            f"{run_link}"
             "<dl>"
             f"<dt>schema</dt><dd><code>{RECOVERY_ACTION_SCHEMA}</code></dd>"
             f"<dt>case</dt><dd><code>{html.escape(fixture_case)}</code></dd>"
             f"<dt>index</dt><dd><code>{index}</code></dd>"
             f"<dt>kind</dt><dd><code>{html.escape(kind)}</code></dd>"
+            f"<dt>automation</dt><dd><code>{html.escape(automation_mode)}</code></dd>"
+            f"<dt>can auto-run</dt><dd><code>{str(can_auto_run).lower()}</code></dd>"
             f"<dt>stage</dt><dd><code>{html.escape(failure_stage)}</code></dd>"
             "</dl>"
             '<details class="recovery-action-export-json" '
@@ -2558,6 +2640,10 @@ class PipelineHandler(BaseHTTPRequestHandler):
             payload, status = self.handle_recovery_action_api(parsed.query)
             self.write_json_response(payload, status=status)
             return
+        if parsed.path == "/api/recovery-action-run":
+            payload, status = self.handle_recovery_action_run_api(parsed.query)
+            self.write_json_response(payload, status=status)
+            return
         if parsed.path == "/api/lexicon-patch-drafts":
             response_format = self.patch_response_format(parsed.query)
             if response_format == "patch":
@@ -2657,6 +2743,39 @@ class PipelineHandler(BaseHTTPRequestHandler):
                 HTTPStatus.BAD_REQUEST,
             )
         return recovery_action_export_bundle(case, action_index), HTTPStatus.OK
+
+    def handle_recovery_action_run_api(self, query: str) -> tuple[dict[str, Any], HTTPStatus]:
+        payload, status = self.handle_recovery_action_api(query)
+        if status != HTTPStatus.OK:
+            payload = dict(payload)
+            payload["schema_version"] = RECOVERY_INSPECTION_RUN_SCHEMA
+            return payload, status
+        repair_plan = payload.get("repair_plan", {})
+        if not isinstance(repair_plan, dict) or repair_plan.get("can_auto_run") is not True:
+            return (
+                {
+                    "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+                    "ok": False,
+                    "case": payload.get("case"),
+                    "action_index": payload.get("action_index"),
+                    "action_kind": payload.get("action", {}).get("kind")
+                    if isinstance(payload.get("action"), dict)
+                    else None,
+                    "automation_mode": repair_plan.get("automation_mode")
+                    if isinstance(repair_plan, dict)
+                    else None,
+                    "can_auto_run": False,
+                    "error": "Recovery action requires human review and cannot be auto-run.",
+                },
+                HTTPStatus.BAD_REQUEST,
+            )
+        return (
+            recovery_action_inspection_run_bundle(
+                str(payload["case"]),
+                int(payload["action_index"]),
+            ),
+            HTTPStatus.OK,
+        )
 
     def handle_patch_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)

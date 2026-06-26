@@ -291,9 +291,12 @@ constructed, and verification commands; the verifier should reject repair-plan d
 rather than trusting prose. It should also distinguish `automation_mode` values:
 `inspection_only` actions expose `can_auto_run` for read-only checks, while
 semantic or Coq/Rocq repair actions remain `human_review_required` and must not
-be applied silently. This gives browser tools an inspection/export path for one
-suggested repair without scraping the full analysis response. The fixture HTML
-should also render a
+be applied silently. The companion
+`/api/recovery-action-run?case=<case>&index=<n>` endpoint should return a
+`diagnostic_inspection_run.v1` target-field snapshot only for inspection-only
+actions and should reject human-review-required actions with a 400 response.
+This gives browser tools an inspection/export path for one suggested repair
+without scraping the full analysis response. The fixture HTML should also render a
 `Recovery Action Exports` panel that summarizes every such route with
 `data-export-schema`, `data-export-case`, `data-export-count`,
 `data-export-action-index`, `data-export-action-kind`, and
