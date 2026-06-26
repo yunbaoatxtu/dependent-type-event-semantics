@@ -651,7 +651,11 @@ automation. Diagnostic fixture pages also expose each action through a stable
 JSON link such as
 `/api/recovery-action?case=semantic_readings_missing_export&index=0`, whose
 `diagnostic_recovery_action.v1` payload contains the fixture case, action
-index, failure stage, exact action object, and the shared diagnostic contract.
+index, failure stage, exact action object, a `diagnostic_repair_plan.v1`
+repair plan, and the shared diagnostic contract. The repair plan records
+whether the action can be applied automatically, which target fields it touches,
+ordered repair steps, any review-only patch preview, and verification commands
+that should be rerun after the repair.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, so browser checks can verify the export contract without opening

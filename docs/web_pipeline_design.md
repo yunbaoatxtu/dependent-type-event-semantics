@@ -284,9 +284,13 @@ should display it in a compact `next-step-details` table. Diagnostic fixture
 pages should also expose each action through
 `/api/recovery-action?case=<case>&index=<n>`, returning a
 `diagnostic_recovery_action.v1` object with the case, action index, failure
-stage, exact action payload, and shared diagnostic contract. This gives browser
-tools an inspection/export path for one suggested repair without scraping the
-full analysis response. The fixture HTML should also render a
+stage, exact action payload, a `diagnostic_repair_plan.v1` object, and shared
+diagnostic contract. The repair plan should record `can_auto_apply`, target
+fields, ordered repair steps, a review-only patch preview when one can be
+constructed, and verification commands; the verifier should reject repair-plan drift
+rather than trusting prose. This gives browser tools an inspection/export
+path for one suggested repair without scraping the full analysis response. The
+fixture HTML should also render a
 `Recovery Action Exports` panel that summarizes every such route with
 `data-export-schema`, `data-export-case`, `data-export-count`,
 `data-export-action-index`, `data-export-action-kind`, and

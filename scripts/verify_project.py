@@ -665,6 +665,15 @@ def validate_recovery_action_export_bundle(
         raise SystemExit(f"web route smoke check failed: {case} recovery action index drift")
     if bundle.get("action") != expected_action:
         raise SystemExit(f"web route smoke check failed: {case} recovery action payload drift")
+    repair_plan = bundle.get("repair_plan")
+    expected_repair_plan = recovery_action_repair_plan_preview(
+        case,
+        action_index,
+        str(bundle.get("failure_stage")),
+        expected_action,
+    )
+    if repair_plan != expected_repair_plan:
+        raise SystemExit(f"web route smoke check failed: {case} recovery action repair-plan drift")
     if not isinstance(bundle.get("failure_stage"), str):
         raise SystemExit(f"web route smoke check failed: {case} recovery action stage drift")
     contract = bundle.get("contract")
@@ -682,6 +691,99 @@ def diagnostic_contract_bundle_for_recovery_action() -> dict:
     }
 
 
+def recovery_action_string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
+
+
+def recovery_action_integer_list(value: object) -> list[int]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, int)]
+
+
+def recovery_action_patch_preview(action: dict) -> str:
+    kind = str(action.get("kind", ""))
+    if kind == "add_missing_coq_definitions":
+        definitions = recovery_action_string_list(action.get("target_definitions"))
+        lines = ["(* candidate Coq/Rocq exports; review formulas before applying *)"]
+        lines.extend(
+            f"Definition {name} : PropT := (* TODO: checked semantic reading formula *)."
+            for name in definitions
+        )
+        return "\n".join(lines)
+    if kind == "rename_duplicate_readings":
+        names = ", ".join(recovery_action_string_list(action.get("duplicate_reading_names")))
+        return f"# rename duplicate semantic_readings entries: {names}"
+    if kind == "fix_malformed_readings":
+        indices = ", ".join(
+            str(index) for index in recovery_action_integer_list(action.get("reading_indices"))
+        )
+        return f"# repair malformed semantic_readings record indices: {indices}"
+    if kind == "fix_reading_type_checks":
+        indices = ", ".join(
+            str(index) for index in recovery_action_integer_list(action.get("reading_indices"))
+        )
+        return f"# repair reading-local type_check failures at indices: {indices}"
+    if kind == "normalize_reading_exports":
+        expected = action.get("expected_export_count")
+        observed = action.get("observed_export_count")
+        definitions = (
+            ", ".join(recovery_action_string_list(action.get("exported_definitions")))
+            or "none"
+        )
+        return (
+            "# normalize Prop/PropT exports\n"
+            f"# expected_export_count={expected}; observed_export_count={observed}\n"
+            f"# exported_definitions={definitions}"
+        )
+    if kind == "add_semantic_readings":
+        return "# emit at least one semantic_readings record before Coq/Rocq export"
+    return ""
+
+
+def recovery_action_repair_plan_preview(
+    case: str,
+    action_index: int,
+    expected_stage: str,
+    expected_action: dict,
+) -> dict:
+    kind = str(expected_action.get("kind", ""))
+    target_fields_by_kind = {
+        "add_missing_coq_definitions": ["coq_code", "semantic_readings"],
+        "add_semantic_readings": ["semantic_readings"],
+        "edit_input": ["input_sentence"],
+        "fix_malformed_readings": ["semantic_readings"],
+        "fix_reading_type_checks": ["semantic_readings.type_check"],
+        "inspect_ast": ["ast", "type_check"],
+        "inspect_coq": ["coq_code", "coq_check"],
+        "inspect_readings": ["semantic_readings", "semantic_readings_check", "coq_code"],
+        "normalize_reading_exports": ["coq_code", "semantic_readings_check"],
+        "rename_duplicate_readings": ["semantic_readings.name"],
+        "revise_sentence": ["input_sentence"],
+    }
+    detail = str(expected_action.get("detail") or "Inspect the failing diagnostic stage.")
+    return {
+        "schema_version": "diagnostic_repair_plan.v1",
+        "case": case,
+        "action_index": action_index,
+        "action_kind": kind,
+        "failure_stage": expected_stage,
+        "can_auto_apply": False,
+        "target_fields": target_fields_by_kind.get(kind, []),
+        "steps": [
+            detail,
+            "Apply the repair to the listed target field(s) without changing unrelated pipeline stages.",
+            "Re-run deterministic verification after the repair.",
+        ],
+        "patch_text_preview": recovery_action_patch_preview(expected_action),
+        "verification_commands": [
+            "python3 scripts/verify_project.py --require-coq --require-docx",
+        ],
+    }
+
+
 def recovery_action_export_preview_json(
     case: str,
     action_index: int,
@@ -695,6 +797,12 @@ def recovery_action_export_preview_json(
             "action_index": action_index,
             "failure_stage": expected_stage,
             "action": expected_action,
+            "repair_plan": recovery_action_repair_plan_preview(
+                case,
+                action_index,
+                expected_stage,
+                expected_action,
+            ),
             "contract": diagnostic_contract_bundle_for_recovery_action(),
         },
         ensure_ascii=False,

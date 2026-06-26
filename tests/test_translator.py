@@ -21,6 +21,7 @@ from scripts.verify_project import (
     validate_diagnostic_contract_html_panel,
     validate_diagnostic_contract_manifest,
     validate_diagnostic_fixture_routes,
+    validate_recovery_action_export_bundle,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
 )
@@ -100,6 +101,7 @@ from web.app import (
     DIAGNOSTIC_FIXTURE_LABELS,
     DIAGNOSTIC_FIXTURE_SPECS,
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    RECOVERY_REPAIR_PLAN_SCHEMA,
     DiagnosticFixtureSpec,
     PipelineHandler,
     analyze_sentence,
@@ -113,6 +115,7 @@ from web.app import (
     parse_patch_resolution_params,
     recovery_action_export_bundle,
     recovery_action_exports_panel,
+    recovery_action_repair_plan,
     render_page,
     render_lexicon_patch_text,
     result_state_warning_for_entry,
@@ -8153,6 +8156,12 @@ class TranslatorTests(unittest.TestCase):
     def test_recovery_action_api_exposes_fixture_action_and_contract(self) -> None:
         expected = diagnostic_fixture_result("semantic_readings_missing_export")
         expected_action = expected["diagnostics"]["recovery_actions"][0]
+        expected_plan = recovery_action_repair_plan(
+            "semantic_readings_missing_export",
+            0,
+            "semantic_readings_check",
+            expected_action,
+        )
         with pipeline_server() as (base_url, opener):
             with opener.open(
                 f"{base_url}/api/recovery-action?"
@@ -8165,7 +8174,36 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(payload["action_index"], 0)
         self.assertEqual(payload["failure_stage"], "semantic_readings_check")
         self.assertEqual(payload["action"], expected_action)
+        self.assertEqual(payload["repair_plan"], expected_plan)
+        self.assertEqual(payload["repair_plan"]["schema_version"], RECOVERY_REPAIR_PLAN_SCHEMA)
+        self.assertFalse(payload["repair_plan"]["can_auto_apply"])
+        self.assertIn("coq_code", payload["repair_plan"]["target_fields"])
+        self.assertIn("Definition missing_reading : PropT", payload["repair_plan"]["patch_text_preview"])
+        self.assertEqual(
+            payload["repair_plan"]["verification_commands"],
+            ["python3 scripts/verify_project.py --require-coq --require-docx"],
+        )
         self.assertEqual(payload["contract"], diagnostic_contract_manifest())
+
+    def test_verification_rejects_recovery_action_repair_plan_drift(self) -> None:
+        expected = diagnostic_fixture_result("semantic_readings_missing_export")
+        expected_action = expected["diagnostics"]["recovery_actions"][0]
+        bundle = recovery_action_export_bundle("semantic_readings_missing_export", 0)
+        validate_recovery_action_export_bundle(
+            "semantic_readings_missing_export",
+            0,
+            expected_action,
+            bundle,
+        )
+        stale_bundle = deepcopy(bundle)
+        stale_bundle["repair_plan"]["schema_version"] = "diagnostic_repair_plan.v0"
+        with self.assertRaisesRegex(SystemExit, "recovery action repair-plan drift"):
+            validate_recovery_action_export_bundle(
+                "semantic_readings_missing_export",
+                0,
+                expected_action,
+                stale_bundle,
+            )
 
     def test_recovery_action_api_rejects_unknown_case_or_index(self) -> None:
         with pipeline_server() as (base_url, opener):
@@ -8559,6 +8597,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("API bundle exactly", readme)
         self.assertIn("`recovery_action_exports`", readme)
         self.assertIn("per-action JSON export paths", readme)
+        self.assertIn("`diagnostic_repair_plan.v1`", readme)
+        self.assertIn("verification commands", readme)
         self.assertIn("`diagnostics.recovery_hint` gives a short next-step suggestion", readme)
         self.assertIn("`diagnostics.recovery_actions` exposes the same advice", readme)
         self.assertIn("controlled diagnostic action set", readme)
@@ -8716,6 +8756,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("match that JSON", web_design)
         self.assertIn("`recovery_action_exports`", web_design)
         self.assertIn("per-action export metadata", web_design)
+        self.assertIn("`diagnostic_repair_plan.v1`", web_design)
+        self.assertIn("repair-plan drift", web_design)
         self.assertIn(
             "visible labels, controls, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -8735,6 +8777,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("stale action JSON previews", manuscript)
         self.assertIn("recovery_action_exports inventory", manuscript)
         self.assertIn("per-action export paths", manuscript)
+        self.assertIn("diagnostic_repair_plan.v1", manuscript)
+        self.assertIn("repair-plan drift", manuscript)
         self.assertIn("stale action export links", manuscript)
         self.assertIn("schema drift", manuscript)
         self.assertIn("required-fixture-stage drift", manuscript)
@@ -9497,6 +9541,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
         self.assertIn("def validate_diagnostic_contract_manifest(", verifier)
         self.assertIn("def validate_recovery_action_export_bundle(", verifier)
+        self.assertIn("def recovery_action_repair_plan_preview(", verifier)
         self.assertIn("def validate_recovery_action_export_manifest_entry(", verifier)
         self.assertIn("def validate_recovery_action_exports_html_panel(", verifier)
         self.assertIn("def validate_diagnostic_fixture_routes(", verifier)
@@ -9559,6 +9604,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("stage drift", verifier)
         self.assertIn("label drift", verifier)
         self.assertIn("recovery action drift", verifier)
+        self.assertIn("recovery action repair-plan drift", verifier)
+        self.assertIn("diagnostic_repair_plan.v1", verifier)
         self.assertIn("recovery action export manifest drift", verifier)
         self.assertIn("recovery action export case/index drift", verifier)
         self.assertIn('data-fixtures-schema="diagnostic_fixtures.v1"', verifier)
