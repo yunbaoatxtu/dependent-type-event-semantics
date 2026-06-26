@@ -885,8 +885,8 @@ the ambiguity auditable before the Coq formula is rendered and prevents the
 timed or modified sentence from falling back to pseudo-entities such as `some_boy`.
 Simple NP-internal relative clauses are represented in the same binder-level
 shape when they have the controlled form `who/that` plus either one
-intransitive verb or one transitive verb with one entity object. The relative
-predicate may also carry ordinary Adv modifiers and certified temporal
+intransitive verb or one transitive verb with either one entity object or a
+controlled determiner phrase object. The relative predicate may also carry ordinary Adv modifiers and certified temporal
 modifiers.
 For `some boy who laughed loved a girl`, the subject NP stores
 `relative_clause_restrictors` with `laugh : Entity -> Prop`, and the rendered
@@ -896,7 +896,15 @@ restrictor is `boy(x_boy) and laugh(x_boy)`. For
 same restrictor list can store a binary predicate:
 `some boy who saw Mary loved a girl` stores `see : Entity -> Entity -> Prop`
 plus `object: {"name": "mary", "type": "Entity"}` and renders
-`boy(x_boy) and see(x_boy, mary)`. With an internal time modifier,
+`boy(x_boy) and see(x_boy, mary)`. For an NP object,
+`some boy who saw a girl loved a cat` stores
+`object_np: {"surface": "a girl", "quantifier": "a", "variable": "x_rel_girl",
+"head": "girl", "restrictors": [{"predicate": "girl",
+"predicate_type": "Entity -> Prop"}]}` and renders
+`boy(x_boy) and exists x_rel_girl : Entity. girl(x_rel_girl) and see(x_boy, x_rel_girl)`.
+For `some boy who saw the young girl loved a cat`, the same `object_np` shape
+stores `quantifier: "the"` and two restrictors, `young` and `girl`, rather than
+exporting a `the_young_girl : Entity` constant. With an internal time modifier,
 `some boy who saw Mary yesterday loved a girl` stores
 `time_modifiers: [{"operator": "at", "argument": "yesterday"}]` on the
 relative restrictor and renders
@@ -1472,11 +1480,13 @@ such as `which`, `whether`, or an overextended conditional
 like `if John left, Mary cried because Sue left` produce a parsing failure
 instead of a shallow AST. The exception is the controlled quantifier-NP
 relative restrictor described above, where `who/that` plus one intransitive verb
-or a one-object transitive predicate, optionally with certified temporal
-modifiers and ordinary Adv modifiers, is stored as `relative_clause_restrictors`.
+or a one-object transitive predicate, optionally with a controlled determiner
+phrase object, certified temporal modifiers, and ordinary Adv modifiers, is
+stored as `relative_clause_restrictors`.
 This is deliberately conservative:
-an unimplemented conditional or complex relative clause must not become an
-entity name that later passes the Coq/Rocq scaffold check.
+an unimplemented conditional, a relative-object PP such as `a girl in the park`,
+or another complex relative clause must not become an entity name that later
+passes the Coq/Rocq scaffold check.
 
 Modifier entries are not entity-denoting arguments. The AST records this twice:
 `modifier_vector` preserves the dependent length index, while `modifier_roles`

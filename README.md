@@ -108,11 +108,17 @@ declarations. Clause-level markers outside certified paths, such as `which`,
 `if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead of being
 collapsed into entity names and sent to Coq/Rocq. The controlled exception is a
 simple quantifier-NP relative restrictor of the form `who/that` plus either one
-intransitive verb or one transitive verb with one entity object, optionally with
-common Adv modifiers and certified temporal modifiers:
+intransitive verb or one transitive verb with either one entity object or a
+controlled determiner phrase object, optionally with common Adv modifiers and
+certified temporal modifiers:
 `some boy who laughed loved a girl` renders
 `boy(x_boy) and laugh(x_boy)`, `some boy who saw Mary loved a girl` renders
 `boy(x_boy) and see(x_boy, mary)`, and
+`some boy who saw a girl loved a cat` renders
+`boy(x_boy) and exists x_rel_girl : Entity. girl(x_rel_girl) and see(x_boy, x_rel_girl)`,
+while `some boy who saw the young girl loved a cat` renders the internal
+object description as `(young(x_rel_girl) and girl(x_rel_girl))` rather than as
+a constant named `the_young_girl`. Likewise,
 `some boy who quickly saw Mary loved a girl` renders
 `boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
 `ModifierSeq`-indexed predicate family. Likewise,
@@ -123,7 +129,9 @@ common Adv modifiers and certified temporal modifiers:
 `some boy loved a girl that saw Mary quickly` exposes both the main-clause Adv
 reading and the object-relative-Adv reading. More complex relation-clause subjects,
 such as `the tall boy who Mary saw yesterday quickly opened the old door with a key`
-or `some boy who quickly saw Mary in the park loved a girl`, are still rejected. This prevents the misleading formula
+or `some boy who quickly saw Mary in the park loved a girl`, are still rejected;
+so are relative-object NPs with PP material, such as
+`some boy who saw a girl in the park loved a cat`. This prevents the misleading formula
 `leave(0)(if_john, mary_cried)` and keeps unsupported relatives from being
 accepted by the lexical state-change rule as single causer constants.
 
@@ -409,7 +417,15 @@ entry for `laugh : Entity -> Prop` and renders
 `girl(x_girl) and smile(x_girl)`. The same field can store a controlled
 transitive relative predicate with one entity object: `some boy who saw Mary loved a girl`
 declares `see : Entity -> Entity -> Prop` and `mary : Entity`, then renders
-`boy(x_boy) and see(x_boy, mary)`. A relative-internal time modifier remains
+`boy(x_boy) and see(x_boy, mary)`. It can also store a controlled determiner
+phrase object with its own internal existential binder:
+`some boy who saw a girl loved a cat` records an `object_np` with
+`variable: "x_rel_girl"` and `girl : Entity -> Prop`, then renders
+`boy(x_boy) and exists x_rel_girl : Entity. girl(x_rel_girl) and see(x_boy, x_rel_girl)`.
+For descriptive definites such as
+`some boy who saw the young girl loved a cat`, the object NP restrictors are
+`young : Entity -> Prop` and `girl : Entity -> Prop`; no `the_young_girl`
+entity constant is exported. A relative-internal time modifier remains
 inside the binder restrictor: `some boy who saw Mary yesterday loved a girl`
 renders `boy(x_boy) and at_T(yesterday, see(x_boy, mary))`, and the object-side
 variant `some boy loved a girl that saw Mary yesterday` exposes an
@@ -423,8 +439,8 @@ attach either to the main clause or to the object relative, as in
 `some boy loved a girl that saw Mary quickly`, the AST exposes both a
 `clause_adv` branch and an `object_relative_adv` branch; the unmodified
 relative branch uses `see(0)(x_girl, mary)` with `mods_nil`. The marker `who`
-or `that` is not exported as an entity, and relatives with PP Adv or multi-word
-object structure remain outside the certified fragment.
+or `that` is not exported as an entity, and relative-object NPs with PP
+material such as `a girl in the park` remain outside the certified fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.

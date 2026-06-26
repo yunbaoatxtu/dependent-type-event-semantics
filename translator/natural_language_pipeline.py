@@ -94,6 +94,7 @@ UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS = {
     "why",
 }
 RELATIVE_RESTRICTOR_MARKERS = {"that", "who"}
+RELATIVE_OBJECT_NP_DETERMINERS = EXISTENTIAL_SCOPE_DETERMINERS | ARTICLES
 MODIFIER_INDEXED_UNARY_RELATION = (
     "forall n : nat, ModifierSeq n -> Entity -> PropT"
 )
@@ -236,6 +237,28 @@ def parse_relative_restrictor(
             restrictor["time_modifiers"] = time_modifiers
         return (tokens[:marker_index], [restrictor])
     if len(relative_tokens) >= 2 and is_likely_transitive_verb(relative_surface):
+        relative_object_np = parse_relative_object_np(relative_tokens[1:])
+        if relative_object_np is not None:
+            object_np, adv_modifiers, time_modifiers, _consumed = relative_object_np
+            modifiers = [*leading_modifiers, *adv_modifiers]
+            restrictor = {
+                "predicate": predicate,
+                "predicate_type": (
+                    MODIFIER_INDEXED_BINARY_RELATION
+                    if modifiers
+                    else "Entity -> Entity -> Prop"
+                ),
+                "surface": " ".join(tokens[marker_index:]),
+                "marker": tokens[marker_index],
+                "relative_verb": relative_surface,
+                "object_np": object_np,
+                "kind": "relative_clause_restrictor",
+            }
+            if modifiers:
+                restrictor["modifiers"] = modifiers
+            if time_modifiers:
+                restrictor["time_modifiers"] = time_modifiers
+            return (tokens[:marker_index], [restrictor])
         trailing_modifiers = split_common_adv_and_time_modifiers(relative_tokens[2:])
         if trailing_modifiers is None:
             return None
@@ -264,6 +287,53 @@ def parse_relative_restrictor(
         if time_modifiers:
             restrictor["time_modifiers"] = time_modifiers
         return (tokens[:marker_index], [restrictor])
+    return None
+
+
+def parse_relative_object_np(
+    tokens: list[str],
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, str]], int] | None:
+    if len(tokens) < 2 or tokens[0] not in RELATIVE_OBJECT_NP_DETERMINERS:
+        return None
+    forbidden_nominal_tokens = (
+        COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        | PREPOSITIONS
+    )
+    for end in range(2, len(tokens) + 1):
+        nominal_tokens = tokens[1:end]
+        if (
+            not nominal_tokens
+            or any(token in forbidden_nominal_tokens for token in nominal_tokens)
+            or any(token in RELATIVE_OBJECT_NP_DETERMINERS for token in nominal_tokens)
+        ):
+            continue
+        trailing_modifiers = split_common_adv_and_time_modifiers(tokens[end:])
+        if trailing_modifiers is None:
+            continue
+        adv_modifiers, time_modifiers = trailing_modifiers
+        predicates = [lemma_verb(token) for token in nominal_tokens]
+        head = predicates[-1]
+        variable = f"x_rel_{head}"
+        restrictors = [
+            {"predicate": predicate, "predicate_type": "Entity -> Prop"}
+            for predicate in predicates
+        ]
+        object_np = {
+            "surface": " ".join(tokens[:end]),
+            "quantifier": tokens[0],
+            "variable": variable,
+            "type": "Entity",
+            "head": head,
+            "adjectives": predicates[:-1],
+            "restrictors": restrictors,
+        }
+        return object_np, adv_modifiers, time_modifiers, end
     return None
 
 
@@ -408,6 +478,18 @@ def quantifier_scope_restrictor_predicate_declarations(
                 predicate_type = restrictor.get("predicate_type")
                 if isinstance(predicate, str) and isinstance(predicate_type, str):
                     declarations.append((predicate, predicate_type))
+                object_np = restrictor.get("object_np")
+                if isinstance(object_np, dict):
+                    for np_restrictor in object_np.get("restrictors", []):
+                        if not isinstance(np_restrictor, dict):
+                            continue
+                        np_predicate = np_restrictor.get("predicate")
+                        np_predicate_type = np_restrictor.get("predicate_type")
+                        if isinstance(np_predicate, str) and isinstance(
+                            np_predicate_type,
+                            str,
+                        ):
+                            declarations.append((np_predicate, np_predicate_type))
     return unique_typed_declarations(declarations)
 
 
@@ -664,6 +746,78 @@ def render_quantifier_time_wrapped_reading(
     return body
 
 
+def render_entity_predicate_applications(
+    restrictors: list[dict[str, Any]],
+    variable: str,
+    *,
+    coq: bool,
+) -> str:
+    applications = [
+        f"{restrictor['predicate']} {variable}"
+        if coq
+        else f"{restrictor['predicate']}({variable})"
+        for restrictor in restrictors
+    ]
+    if len(applications) == 1:
+        return applications[0]
+    connective = " /\\ " if coq else " and "
+    return f"({connective.join(applications)})"
+
+
+def relative_binary_object_variable(restrictor: dict[str, Any]) -> str:
+    object_np = restrictor.get("object_np")
+    if isinstance(object_np, dict):
+        return object_np["variable"]
+    return restrictor["object"]["name"]
+
+
+def render_binary_restrictor_relation(
+    restrictor: dict[str, Any],
+    subject_variable: str,
+    *,
+    coq: bool,
+) -> str:
+    predicate = restrictor["predicate"]
+    predicate_type = restrictor.get("predicate_type")
+    modifiers = restrictor.get("modifiers", [])
+    obj = relative_binary_object_variable(restrictor)
+    if predicate_type == MODIFIER_INDEXED_BINARY_RELATION:
+        if coq:
+            return (
+                f"{predicate} {len(modifiers)} "
+                f"{coq_modifier_sequence(modifiers)} {subject_variable} {obj}"
+            )
+        if modifiers:
+            return (
+                f"{predicate}({len(modifiers)})"
+                f"({readable_modifier_arguments(modifiers)}, {subject_variable}, {obj})"
+            )
+        return f"{predicate}(0)({subject_variable}, {obj})"
+    if coq:
+        return f"{predicate} {subject_variable} {obj}"
+    return f"{predicate}({subject_variable}, {obj})"
+
+
+def render_relative_object_np_application(
+    restrictor: dict[str, Any],
+    relation_application: str,
+    *,
+    coq: bool,
+) -> str:
+    object_np = restrictor.get("object_np")
+    if not isinstance(object_np, dict):
+        return relation_application
+    variable = object_np["variable"]
+    restrictor_application = render_entity_predicate_applications(
+        object_np["restrictors"],
+        variable,
+        coq=coq,
+    )
+    if coq:
+        return f"exists {variable} : Entity, {restrictor_application} /\\ {relation_application}"
+    return f"exists {variable} : Entity. {restrictor_application} and {relation_application}"
+
+
 def quantifier_binder_restrictor_applications(
     binder: dict[str, Any],
     *,
@@ -684,20 +838,16 @@ def quantifier_binder_restrictor_applications(
         predicate_type = restrictor.get("predicate_type")
         modifiers = restrictor.get("modifiers", [])
         if predicate_type == MODIFIER_INDEXED_BINARY_RELATION:
-            obj = restrictor["object"]["name"]
-            if coq:
-                application = (
-                    f"{predicate} {len(modifiers)} "
-                    f"{coq_modifier_sequence(modifiers)} {var} {obj}"
-                )
-            else:
-                if modifiers:
-                    application = (
-                        f"{predicate}({len(modifiers)})"
-                        f"({readable_modifier_arguments(modifiers)}, {var}, {obj})"
-                    )
-                else:
-                    application = f"{predicate}(0)({var}, {obj})"
+            application = render_binary_restrictor_relation(
+                restrictor,
+                var,
+                coq=coq,
+            )
+            application = render_relative_object_np_application(
+                restrictor,
+                application,
+                coq=coq,
+            )
         elif predicate_type == MODIFIER_INDEXED_UNARY_RELATION:
             if coq:
                 application = (
@@ -713,9 +863,15 @@ def quantifier_binder_restrictor_applications(
                 else:
                     application = f"{predicate}(0)({var})"
         elif predicate_type == "Entity -> Entity -> Prop":
-            obj = restrictor["object"]["name"]
-            application = (
-                f"{predicate} {var} {obj}" if coq else f"{predicate}({var}, {obj})"
+            application = render_binary_restrictor_relation(
+                restrictor,
+                var,
+                coq=coq,
+            )
+            application = render_relative_object_np_application(
+                restrictor,
+                application,
+                coq=coq,
             )
         else:
             application = f"{predicate} {var}" if coq else f"{predicate}({var})"
@@ -1215,11 +1371,15 @@ def check_quantifier_scope_binder_restrictors(
         )
         if predicate_type in {"Entity -> Entity -> Prop", MODIFIER_INDEXED_BINARY_RELATION}:
             obj = restrictor.get("object")
-            if not isinstance(obj, dict):
+            object_np = restrictor.get("object_np")
+            has_object = isinstance(obj, dict)
+            has_object_np = isinstance(object_np, dict)
+            if has_object and has_object_np:
                 errors.append(
-                    f"{context}.restrictors[{restrictor_index}].object must be an object"
+                    f"{context}.restrictors[{restrictor_index}] "
+                    "cannot contain both object and object_np"
                 )
-            else:
+            elif has_object:
                 if not isinstance(obj.get("name"), str) or not obj["name"]:
                     errors.append(
                         f"{context}.restrictors[{restrictor_index}].object.name "
@@ -1230,11 +1390,56 @@ def check_quantifier_scope_binder_restrictors(
                         f"{context}.restrictors[{restrictor_index}].object.type "
                         "must be Entity"
                     )
+            elif has_object_np:
+                check_relative_object_np(
+                    errors,
+                    object_np,
+                    f"{context}.restrictors[{restrictor_index}].object_np",
+                )
+            else:
+                errors.append(
+                    f"{context}.restrictors[{restrictor_index}].object must be an object"
+                )
     if (
         isinstance(binder.get("predicate"), str)
         and restrictor_predicates
         and binder["predicate"] not in restrictor_predicates
     ):
+        errors.append(f"{context}.restrictors must include the head predicate")
+
+
+def check_relative_object_np(
+    errors: list[str],
+    object_np: dict[str, Any],
+    context: str,
+) -> None:
+    if object_np.get("quantifier") not in RELATIVE_OBJECT_NP_DETERMINERS:
+        errors.append(f"{context}.quantifier must be a supported relative-object NP determiner")
+    if not isinstance(object_np.get("variable"), str) or not object_np["variable"]:
+        errors.append(f"{context}.variable must be non-empty")
+    if object_np.get("type") != "Entity":
+        errors.append(f"{context}.type must be Entity")
+    if not isinstance(object_np.get("head"), str) or not object_np["head"]:
+        errors.append(f"{context}.head must be non-empty")
+    restrictors = object_np.get("restrictors")
+    if not isinstance(restrictors, list) or not restrictors:
+        errors.append(f"{context}.restrictors must be a non-empty list")
+        return
+    predicates: list[str] = []
+    for index, restrictor in enumerate(restrictors):
+        if not isinstance(restrictor, dict):
+            errors.append(f"{context}.restrictors[{index}] must be an object")
+            continue
+        predicate = restrictor.get("predicate")
+        if not isinstance(predicate, str) or not predicate:
+            errors.append(f"{context}.restrictors[{index}].predicate must be non-empty")
+        else:
+            predicates.append(predicate)
+        if restrictor.get("predicate_type") != "Entity -> Prop":
+            errors.append(
+                f"{context}.restrictors[{index}].predicate_type must be Entity -> Prop"
+            )
+    if isinstance(object_np.get("head"), str) and object_np["head"] not in predicates:
         errors.append(f"{context}.restrictors must include the head predicate")
 
 
