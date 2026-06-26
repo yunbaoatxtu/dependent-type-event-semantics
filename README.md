@@ -107,12 +107,15 @@ declarations. Clause-level markers outside certified paths, such as `which`,
 `whether`, or overextended conditional strings such as
 `if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead of being
 collapsed into entity names and sent to Coq/Rocq. The controlled exception is a
-simple quantifier-NP relative restrictor of the form `who/that` plus one
-intransitive verb: `some boy who laughed loved a girl` renders
-`boy(x_boy) and laugh(x_boy)`, and `some boy loved a girl that smiled` renders
-`girl(x_girl) and smile(x_girl)`. More complex relation-clause subjects, such
-as `the tall boy who Mary saw yesterday quickly opened the old door with a key`,
-are still rejected. This prevents the misleading formula
+simple quantifier-NP relative restrictor of the form `who/that` plus either one
+intransitive verb or one transitive verb with one entity object:
+`some boy who laughed loved a girl` renders
+`boy(x_boy) and laugh(x_boy)`, `some boy who saw Mary loved a girl` renders
+`boy(x_boy) and see(x_boy, mary)`, and
+`some boy loved a girl that saw Mary` renders
+`girl(x_girl) and see(x_girl, mary)`. More complex relation-clause subjects,
+such as `the tall boy who Mary saw yesterday quickly opened the old door with a key`
+or `some boy who saw Mary yesterday loved a girl`, are still rejected. This prevents the misleading formula
 `leave(0)(if_john, mary_cried)` and keeps unsupported relatives from being
 accepted by the lexical state-change rule as single causer constants.
 
@@ -395,9 +398,12 @@ Simple NP-internal relative clauses now use that same restrictor discipline:
 entry for `laugh : Entity -> Prop` and renders
 `boy(x_boy) and laugh(x_boy)`, while
 `some boy loved a girl that smiled` renders
-`girl(x_girl) and smile(x_girl)`. The marker `who` or `that` is not exported as
-an entity, and transitive or multi-word relatives remain outside the certified
-fragment.
+`girl(x_girl) and smile(x_girl)`. The same field can store a controlled
+transitive relative predicate with one entity object: `some boy who saw Mary loved a girl`
+declares `see : Entity -> Entity -> Prop` and `mary : Entity`, then renders
+`boy(x_boy) and see(x_boy, mary)`. The marker `who` or `that` is not exported as
+an entity, and relatives with extra time, Adv, or multi-word object structure
+remain outside the certified fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.
@@ -1012,8 +1018,9 @@ The current prototype has small, testable rules for:
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as
-  `some boy who laughed loved a girl`, which are rendered as ordinary
-  `Entity -> Prop` binder restrictors.
+  `some boy who laughed loved a girl` and
+  `some boy who saw Mary loved a girl`, which are rendered as ordinary binder
+  restrictors over `Entity -> Prop` or `Entity -> Entity -> Prop` predicates.
 
 Resultatives now export result states separately from ordinary individuals:
 `vase` has type `Entity`, while `intact` and `broken` have type `State`,

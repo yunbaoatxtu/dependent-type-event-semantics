@@ -884,14 +884,19 @@ the fronted modifier stops before the quantified subject, so the AST records
 the ambiguity auditable before the Coq formula is rendered and prevents the
 timed or modified sentence from falling back to pseudo-entities such as `some_boy`.
 Simple NP-internal relative clauses are represented in the same binder-level
-shape when they have the controlled form `who/that` plus one intransitive verb.
+shape when they have the controlled form `who/that` plus either one
+intransitive verb or one transitive verb with one entity object.
 For `some boy who laughed loved a girl`, the subject NP stores
 `relative_clause_restrictors` with `laugh : Entity -> Prop`, and the rendered
 restrictor is `boy(x_boy) and laugh(x_boy)`. For
 `some boy loved a girl that smiled`, the object binder analogously stores
 `smile : Entity -> Prop` and renders `girl(x_girl) and smile(x_girl)`. The
-relative marker itself is not exported as a constant; complex or transitive
-relatives stay outside the certified fragment.
+same restrictor list can store a binary predicate:
+`some boy who saw Mary loved a girl` stores `see : Entity -> Entity -> Prop`
+plus `object: {"name": "mary", "type": "Entity"}` and renders
+`boy(x_boy) and see(x_boy, mary)`. The relative marker itself is not exported
+as a constant; relatives with extra time, Adv, or multi-word object structure
+stay outside the certified fragment.
 The API result also
 exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
@@ -1451,7 +1456,8 @@ such as `which`, `whether`, or an overextended conditional
 like `if John left, Mary cried because Sue left` produce a parsing failure
 instead of a shallow AST. The exception is the controlled quantifier-NP
 relative restrictor described above, where `who/that` plus one intransitive verb
-is stored as `relative_clause_restrictors`. This is deliberately conservative:
+or a one-object transitive predicate is stored as `relative_clause_restrictors`.
+This is deliberately conservative:
 an unimplemented conditional or complex relative clause must not become an
 entity name that later passes the Coq/Rocq scaffold check.
 

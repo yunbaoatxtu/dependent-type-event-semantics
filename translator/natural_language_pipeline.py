@@ -192,28 +192,52 @@ def parse_relative_restrictor(
     if marker_index == 0:
         return None
     relative_tokens = tokens[marker_index + 1 :]
-    if len(relative_tokens) != 1:
+    if not relative_tokens:
         return None
     relative_surface = relative_tokens[0]
-    if (
-        not is_likely_surface_verb(relative_surface)
+    if not (
+        is_likely_surface_verb(relative_surface)
         or is_likely_transitive_verb(relative_surface)
     ):
         return None
     predicate = lemma_verb(relative_surface)
-    return (
-        tokens[:marker_index],
-        [
-            {
-                "predicate": predicate,
-                "predicate_type": "Entity -> Prop",
-                "surface": " ".join(tokens[marker_index:]),
-                "marker": tokens[marker_index],
-                "relative_verb": relative_surface,
-                "kind": "relative_clause_restrictor",
-            }
-        ],
-    )
+    if len(relative_tokens) == 1:
+        if is_likely_transitive_verb(relative_surface):
+            return None
+        return (
+            tokens[:marker_index],
+            [
+                {
+                    "predicate": predicate,
+                    "predicate_type": "Entity -> Prop",
+                    "surface": " ".join(tokens[marker_index:]),
+                    "marker": tokens[marker_index],
+                    "relative_verb": relative_surface,
+                    "kind": "relative_clause_restrictor",
+                }
+            ],
+        )
+    if len(relative_tokens) == 2 and is_likely_transitive_verb(relative_surface):
+        obj = normalize_surface_name(relative_tokens[1])
+        return (
+            tokens[:marker_index],
+            [
+                {
+                    "predicate": predicate,
+                    "predicate_type": "Entity -> Entity -> Prop",
+                    "surface": " ".join(tokens[marker_index:]),
+                    "marker": tokens[marker_index],
+                    "relative_verb": relative_surface,
+                    "object": {
+                        "name": obj,
+                        "surface": relative_tokens[1],
+                        "type": "Entity",
+                    },
+                    "kind": "relative_clause_restrictor",
+                }
+            ],
+        )
+    return None
 
 
 def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
@@ -328,7 +352,51 @@ def quantifier_scope_predicate_names(readings: list[dict[str, Any]]) -> list[str
                         names.append(restrictor["predicate"])
                 continue
             if isinstance(binder.get("predicate"), str):
-                names.append(binder["predicate"])
+                    names.append(binder["predicate"])
+    return unique_names(names)
+
+
+def quantifier_scope_restrictor_predicate_declarations(
+    readings: list[dict[str, Any]],
+) -> list[tuple[str, str]]:
+    declarations: list[tuple[str, str]] = []
+    for reading in readings:
+        for binder in reading.get("scope_order", []):
+            if not isinstance(binder, dict):
+                continue
+            restrictors = binder.get("restrictors")
+            if not isinstance(restrictors, list):
+                restrictors = [
+                    {
+                        "predicate": binder.get("predicate"),
+                        "predicate_type": binder.get("predicate_type", "Entity -> Prop"),
+                    }
+                ]
+            for restrictor in restrictors:
+                if not isinstance(restrictor, dict):
+                    continue
+                predicate = restrictor.get("predicate")
+                predicate_type = restrictor.get("predicate_type")
+                if isinstance(predicate, str) and isinstance(predicate_type, str):
+                    declarations.append((predicate, predicate_type))
+    return unique_typed_declarations(declarations)
+
+
+def quantifier_scope_relative_object_names(readings: list[dict[str, Any]]) -> list[str]:
+    names: list[str] = []
+    for reading in readings:
+        for binder in reading.get("scope_order", []):
+            if not isinstance(binder, dict):
+                continue
+            restrictors = binder.get("restrictors")
+            if not isinstance(restrictors, list):
+                continue
+            for restrictor in restrictors:
+                if not isinstance(restrictor, dict):
+                    continue
+                obj = restrictor.get("object")
+                if isinstance(obj, dict) and isinstance(obj.get("name"), str):
+                    names.append(obj["name"])
     return unique_names(names)
 
 
@@ -475,7 +543,13 @@ def quantifier_binder_restrictor_applications(
     applications: list[str] = []
     for restrictor in restrictors:
         predicate = restrictor["predicate"]
-        applications.append(f"{predicate} {var}" if coq else f"{predicate}({var})")
+        if restrictor.get("predicate_type") == "Entity -> Entity -> Prop":
+            obj = restrictor["object"]["name"]
+            applications.append(
+                f"{predicate} {var} {obj}" if coq else f"{predicate}({var}, {obj})"
+            )
+        else:
+            applications.append(f"{predicate} {var}" if coq else f"{predicate}({var})")
     return applications
 
 
@@ -931,11 +1005,29 @@ def check_quantifier_scope_binder_restrictors(
             )
         else:
             restrictor_predicates.append(predicate)
-        if restrictor.get("predicate_type") != "Entity -> Prop":
+        predicate_type = restrictor.get("predicate_type")
+        if predicate_type not in {"Entity -> Prop", "Entity -> Entity -> Prop"}:
             errors.append(
                 f"{context}.restrictors[{restrictor_index}] "
-                "must have predicate type Entity -> Prop"
+                "must have predicate type Entity -> Prop or Entity -> Entity -> Prop"
             )
+        if predicate_type == "Entity -> Entity -> Prop":
+            obj = restrictor.get("object")
+            if not isinstance(obj, dict):
+                errors.append(
+                    f"{context}.restrictors[{restrictor_index}].object must be an object"
+                )
+            else:
+                if not isinstance(obj.get("name"), str) or not obj["name"]:
+                    errors.append(
+                        f"{context}.restrictors[{restrictor_index}].object.name "
+                        "must be non-empty"
+                    )
+                if obj.get("type") != "Entity":
+                    errors.append(
+                        f"{context}.restrictors[{restrictor_index}].object.type "
+                        "must be Entity"
+                    )
     if (
         isinstance(binder.get("predicate"), str)
         and restrictor_predicates
@@ -1174,6 +1266,17 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         for modifier in reading.get("time_modifiers", [])
     ]
     uses_modifier_family = quantifier_readings_use_modifier_family(readings)
+    verb_declaration_type = (
+        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+        if uses_modifier_family
+        else "Entity -> Entity -> Prop"
+    )
+    predicate_declarations = unique_typed_declarations(
+        [
+            *quantifier_scope_restrictor_predicate_declarations(readings),
+            (verb, verb_declaration_type),
+        ]
+    )
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
@@ -1210,8 +1313,12 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                 else []
             ),
             *[
-                f"Parameter {predicate_name} : Entity -> Prop."
-                for predicate_name in quantifier_scope_predicate_names(readings)
+                f"Parameter {name} : Entity."
+                for name in quantifier_scope_relative_object_names(readings)
+            ],
+            *[
+                f"Parameter {name} : {type_name}."
+                for name, type_name in predicate_declarations
             ],
             *[
                 f"Parameter {modifier_name} : Adv."
@@ -1219,11 +1326,6 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                     [modifier["name"] for modifier in all_adv_modifiers]
                 )
             ],
-            (
-                f"Parameter {verb} : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT."
-                if uses_modifier_family
-                else f"Parameter {verb} : Entity -> Entity -> Prop."
-            ),
             *[
                 f"Parameter {time_argument} : Entity."
                 for time_argument in unique_names(

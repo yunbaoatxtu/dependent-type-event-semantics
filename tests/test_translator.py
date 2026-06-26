@@ -1894,14 +1894,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("lexical_state_change", relative_subject.get("kind", ""))
         self.assertNotIn("coq_check", relative_subject)
 
-        transitive_relative_restrictor = run_pipeline(
-            "some boy who saw Mary loved a girl",
+        complex_relative_restrictor = run_pipeline(
+            "some boy who saw Mary yesterday loved a girl",
             require_coq=True,
         )
-        self.assertFalse(transitive_relative_restrictor["ok"])
-        self.assertIn("'who'", transitive_relative_restrictor["error"])
-        self.assertNotIn("quantifier_scope_ambiguity", transitive_relative_restrictor.get("kind", ""))
-        self.assertNotIn("coq_check", transitive_relative_restrictor)
+        self.assertFalse(complex_relative_restrictor["ok"])
+        self.assertIn("'who'", complex_relative_restrictor["error"])
+        self.assertNotIn("quantifier_scope_ambiguity", complex_relative_restrictor.get("kind", ""))
+        self.assertNotIn("coq_check", complex_relative_restrictor)
 
     def test_fallback_handles_adjective_subject_phrase(self) -> None:
         result = run_pipeline("a black cat sits on a mat", require_coq=True)
@@ -6919,6 +6919,82 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter that :", object_relative["coq_code"])
         self.assertEqual(object_relative["coq_check"]["status"], "passed")
 
+        subject_transitive_relative = run_pipeline(
+            "some boy who saw Mary loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_transitive_relative["ok"])
+        self.assertEqual(subject_transitive_relative["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            subject_transitive_relative["ast"]["noun_phrases"]["subject"][
+                "relative_clause_restrictors"
+            ],
+            [
+                {
+                    "predicate": "see",
+                    "predicate_type": "Entity -> Entity -> Prop",
+                    "surface": "who saw mary",
+                    "marker": "who",
+                    "relative_verb": "saw",
+                    "object": {
+                        "name": "mary",
+                        "surface": "mary",
+                        "type": "Entity",
+                    },
+                    "kind": "relative_clause_restrictor",
+                }
+            ],
+        )
+        self.assertEqual(
+            subject_transitive_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. (boy(x_boy) and see(x_boy, mary)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn(
+            "Parameter see : Entity -> Entity -> Prop.",
+            subject_transitive_relative["coq_code"],
+        )
+        self.assertIn("Parameter mary : Entity.", subject_transitive_relative["coq_code"])
+        self.assertIn("(boy x_boy /\\ see x_boy mary)", subject_transitive_relative["coq_code"])
+        self.assertNotIn("boy_who_saw_mary", subject_transitive_relative["dependent_type_translation"])
+        self.assertNotIn("Parameter who :", subject_transitive_relative["coq_code"])
+        self.assertEqual(subject_transitive_relative["coq_check"]["status"], "passed")
+
+        object_transitive_relative = run_pipeline(
+            "some boy loved a girl that saw Mary",
+            require_coq=True,
+        )
+        self.assertTrue(object_transitive_relative["ok"])
+        self.assertEqual(object_transitive_relative["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            object_transitive_relative["ast"]["noun_phrases"]["object"][
+                "relative_clause_restrictors"
+            ][0]["predicate_type"],
+            "Entity -> Entity -> Prop",
+        )
+        self.assertEqual(
+            object_transitive_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. boy(x_boy) and "
+                "exists x_girl : Entity. (girl(x_girl) and see(x_girl, mary)) and "
+                "love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn(
+            "Parameter see : Entity -> Entity -> Prop.",
+            object_transitive_relative["coq_code"],
+        )
+        self.assertIn("Parameter mary : Entity.", object_transitive_relative["coq_code"])
+        self.assertNotIn("girl_that_saw_mary", object_transitive_relative["dependent_type_translation"])
+        self.assertNotIn("Parameter that :", object_transitive_relative["coq_code"])
+        self.assertEqual(object_transitive_relative["coq_check"]["status"], "passed")
+
         pp_and_clause_adv = run_pipeline(
             "every boy in the park quickly loved a happy girl in the bathroom yesterday",
             require_coq=True,
@@ -7508,7 +7584,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "readings[0].scope_order[0].restrictors[0] "
-            "must have predicate type Entity -> Prop",
+            "must have predicate type Entity -> Prop or Entity -> Entity -> Prop",
             type_check["errors"],
         )
 
@@ -7529,7 +7605,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "readings[0].scope_order[0].restrictors[1] "
-            "must have predicate type Entity -> Prop",
+            "must have predicate type Entity -> Prop or Entity -> Entity -> Prop",
+            type_check["errors"],
+        )
+
+        relative_result = run_pipeline(
+            "some boy who saw Mary loved a girl",
+            require_coq=False,
+        )
+        relative_readings = relative_result["ast"]["readings"]
+        del relative_readings[0]["scope_order"][0]["restrictors"][1]["object"]
+        type_check = check_quantifier_scope_readings(relative_readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0].scope_order[0].restrictors[1].object must be an object",
             type_check["errors"],
         )
 
@@ -10640,6 +10729,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who laughed loved a girl", readme)
         self.assertIn("relative_clause_restrictors", readme)
         self.assertIn("girl(x_girl) and smile(x_girl)", readme)
+        self.assertIn("some boy who saw Mary loved a girl", readme)
+        self.assertIn("see(x_boy, mary)", readme)
+        self.assertIn("Entity -> Entity -> Prop", readme)
         self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("a boy loves a", readme)
         self.assertIn("a_boy_wide_scope", readme)
@@ -10893,6 +10985,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who laughed loved a girl", manuscript)
         self.assertIn("boy(x_boy) and laugh(x_boy)", manuscript)
         self.assertIn("some boy loved a girl that smiled", manuscript)
+        self.assertIn("some boy who saw Mary loved a girl", manuscript)
+        self.assertIn("girl(x_girl) and see(x_girl, mary)", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
         self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
         self.assertIn("in_bathroom_some", manuscript)
@@ -10932,6 +11026,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who laughed loved a girl", ast_docs)
         self.assertIn("relative_clause_restrictors", ast_docs)
         self.assertIn("girl(x_girl) and smile(x_girl)", ast_docs)
+        self.assertIn("some boy who saw Mary loved a girl", ast_docs)
+        self.assertIn('"name": "mary"', ast_docs)
+        self.assertIn("see(x_boy, mary)", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)
         self.assertIn("in_bathroom_some", ast_docs)
