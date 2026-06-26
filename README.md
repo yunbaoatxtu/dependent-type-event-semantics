@@ -932,6 +932,14 @@ recovery-action metadata for each one.
 For fixture cases whose `semantic_readings_check` passes, the same smoke check
 also requires each normalized reading to carry the contract fields and verifies
 that `reading_explanation` is rendered as the row's `interpretation`.
+The core `check_semantic_readings` boundary now enforces the same normalized
+reading contract for ordinary analyzer outputs: missing `scope`, `source`,
+`coq_definition`, `type_check`, `attachment_summary`, or `reading_explanation`
+is a malformed semantic-reading failure before construction hygiene or
+Coq/Rocq validation can run. The shared `semantic_reading` constructor emits a
+`none` attachment summary and a conservative interpretation sentence for
+single-reading constructions that do not have specialized PP, time, or relative
+attachments.
 Fixture `failure_stage` values are checked against the same controlled set used
 by ordinary diagnostics: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

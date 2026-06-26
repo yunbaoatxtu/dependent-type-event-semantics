@@ -381,6 +381,14 @@ and recovery-action metadata.
 For fixture cases with a passing `semantic_readings_check`, it should also check
 that each semantic reading carries the contract fields and that the JSON
 `reading_explanation` text appears in the HTML row as `interpretation`.
+The core analyzer boundary should enforce the same normalized reading contract:
+`check_semantic_readings` should classify a reading with missing `scope`,
+`source`, `coq_definition`, `type_check`, `attachment_summary`, or
+`reading_explanation` as `malformed_readings`, before construction hygiene or
+Coq/Rocq validation runs. The shared constructor should give ordinary
+single-reading outputs a `none` attachment summary and a conservative
+interpretation sentence, so specialized attachment explanations extend a stable
+schema instead of patching one in later.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

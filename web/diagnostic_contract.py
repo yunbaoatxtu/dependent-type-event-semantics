@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from translator.semantic_reading_contract import SEMANTIC_READING_CONTRACT_FIELDS
+
 
 DIAGNOSTIC_FAILURE_STAGES = frozenset(
     {
@@ -51,20 +53,6 @@ INSPECTION_ONLY_RECOVERY_ACTION_KINDS = frozenset(
         "inspect_readings",
     }
 )
-SEMANTIC_READING_CONTRACT_FIELDS = frozenset(
-    {
-        "attachment_summary",
-        "coq_definition",
-        "dependent_type_translation",
-        "name",
-        "reading_explanation",
-        "scope",
-        "source",
-        "type_check",
-    }
-)
-
-
 def recovery_action_automation_mode(action_kind: str) -> str:
     if action_kind in INSPECTION_ONLY_RECOVERY_ACTION_KINDS:
         return "inspection_only"

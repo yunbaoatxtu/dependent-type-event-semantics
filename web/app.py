@@ -217,8 +217,20 @@ def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> di
         {
             "name": "missing_reading",
             "source": "diagnostic_fixture",
+            "scope": "diagnostic_fixture",
             "dependent_type_translation": "missing_reading : PropT",
             "coq_definition": "missing_reading",
+            "attachment_summary": {
+                "kind": "diagnostic_fixture",
+                "typed_modifiers": [],
+                "typed_np_restrictors": [],
+                "typed_time_modifiers": [],
+                "relative_objects": [],
+            },
+            "reading_explanation": (
+                "Diagnostic fixture reading missing_reading is well-formed but "
+                "intentionally absent from the exported Coq/Rocq definitions."
+            ),
             "type_check": {"ok": True, "type": "PropT", "errors": []},
         }
     ]
@@ -262,8 +274,20 @@ def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> di
             {
                 "name": "bad_type",
                 "source": "diagnostic_fixture",
+                "scope": "diagnostic_fixture",
                 "dependent_type_translation": "bad_type : Prop",
                 "coq_definition": "bad_type",
+                "attachment_summary": {
+                    "kind": "diagnostic_fixture",
+                    "typed_modifiers": [],
+                    "typed_np_restrictors": [],
+                    "typed_time_modifiers": [],
+                    "relative_objects": [],
+                },
+                "reading_explanation": (
+                    "Diagnostic fixture reading bad_type is structurally complete "
+                    "but intentionally carries a failing reading-local type check."
+                ),
                 "type_check": {
                     "ok": False,
                     "type": None,

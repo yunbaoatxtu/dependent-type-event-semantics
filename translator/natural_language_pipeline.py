@@ -27,6 +27,12 @@ from translator.dependent_type_event_translator import (
     state_lexicon_metadata,
     translate,
 )
+from translator.semantic_reading_contract import (
+    SEMANTIC_READING_ATTACHMENT_FIELDS,
+    SEMANTIC_READING_CONTRACT_FIELDS,
+    empty_attachment_summary,
+    semantic_reading_default_explanation,
+)
 from translator.state_change_lexicon import (
     STATE_CHANGE_VERB_REGISTRY,
     STATE_CHANGE_VERB_TARGETS,
@@ -1251,21 +1257,35 @@ def semantic_reading(
     scope_policy: dict[str, str] | None = None,
     type_check: dict[str, Any] | None = None,
     source: str | None = None,
+    attachment_summary: dict[str, Any] | None = None,
+    reading_explanation: str | None = None,
 ) -> dict[str, Any]:
+    normalized_scope = scope or "unspecified"
+    normalized_source = source or "unspecified"
+    normalized_attachment = (
+        copy.deepcopy(attachment_summary)
+        if isinstance(attachment_summary, dict)
+        else empty_attachment_summary()
+    )
+    normalized_explanation = reading_explanation or semantic_reading_default_explanation(
+        name=name,
+        source=normalized_source,
+        scope=normalized_scope,
+        attachment_summary=normalized_attachment,
+    )
     reading: dict[str, Any] = {
         "name": name,
+        "source": normalized_source,
+        "scope": normalized_scope,
         "dependent_type_translation": dependent_type_translation,
+        "coq_definition": coq_definition or "",
+        "attachment_summary": normalized_attachment,
+        "reading_explanation": normalized_explanation,
     }
-    if coq_definition is not None:
-        reading["coq_definition"] = coq_definition
-    if scope is not None:
-        reading["scope"] = scope
     if scope_policy is not None:
         reading["scope_policy"] = scope_policy
     if type_check is not None:
         reading["type_check"] = type_check
-    if source is not None:
-        reading["source"] = source
     return reading
 
 
@@ -1298,6 +1318,13 @@ def semantic_reading_error_kind(error: str) -> str:
         or ".dependent_type_translation must be a non-empty string" in error
         or ".coq_definition must be a non-empty string" in error
         or ".reading_explanation must be a non-empty string" in error
+        or "missing required contract field(s)" in error
+        or ".scope must be a non-empty string" in error
+        or ".source must be a non-empty string" in error
+        or ".attachment_summary must be an object" in error
+        or ".attachment_summary missing field(s)" in error
+        or ".attachment_summary.kind must be a non-empty string" in error
+        or ".attachment_summary." in error
         or ".scope_policy must map strings to strings" in error
     ):
         return "malformed_readings"
@@ -1402,6 +1429,16 @@ def check_semantic_readings(
             malformed_reading_indices.append(index)
             continue
         malformed = False
+        missing_contract_fields = sorted(
+            field for field in SEMANTIC_READING_CONTRACT_FIELDS if field not in reading
+        )
+        if missing_contract_fields:
+            errors.append(
+                "semantic_readings"
+                f"[{index}] missing required contract field(s): "
+                + ", ".join(missing_contract_fields)
+            )
+            malformed = True
         name = reading.get("name")
         if not isinstance(name, str) or not name:
             errors.append(f"semantic_readings[{index}].name must be a non-empty string")
@@ -1411,6 +1448,14 @@ def check_semantic_readings(
             duplicate_reading_names.append(name)
         else:
             seen_names.add(name)
+        source = reading.get("source")
+        if not isinstance(source, str) or not source.strip():
+            errors.append(f"semantic_readings[{index}].source must be a non-empty string")
+            malformed = True
+        scope = reading.get("scope")
+        if not isinstance(scope, str) or not scope.strip():
+            errors.append(f"semantic_readings[{index}].scope must be a non-empty string")
+            malformed = True
         translation = reading.get("dependent_type_translation")
         if not isinstance(translation, str) or not translation.strip():
             errors.append(
@@ -1419,25 +1464,24 @@ def check_semantic_readings(
             )
             malformed = True
         coq_definition = reading.get("coq_definition")
-        if coq_definition is not None:
-            if not isinstance(coq_definition, str) or not coq_definition:
-                errors.append(
-                    f"semantic_readings[{index}].coq_definition must be a non-empty string"
-                )
-                malformed = True
-            else:
-                expected_coq_definitions.append(coq_definition)
-            if (
-                isinstance(coq_definition, str)
-                and coq_definition
-                and coq_code
-                and coq_definition not in exported_definition_set
-            ):
-                errors.append(
-                    "semantic_readings"
-                    f"[{index}].coq_definition {coq_definition!r} is not exported"
-                )
-                missing_coq_definitions.append(coq_definition)
+        if not isinstance(coq_definition, str) or not coq_definition:
+            errors.append(
+                f"semantic_readings[{index}].coq_definition must be a non-empty string"
+            )
+            malformed = True
+        else:
+            expected_coq_definitions.append(coq_definition)
+        if (
+            isinstance(coq_definition, str)
+            and coq_definition
+            and coq_code
+            and coq_definition not in exported_definition_set
+        ):
+            errors.append(
+                "semantic_readings"
+                f"[{index}].coq_definition {coq_definition!r} is not exported"
+            )
+            missing_coq_definitions.append(coq_definition)
         scope_policy = reading.get("scope_policy")
         if scope_policy is not None and (
             not isinstance(scope_policy, dict)
@@ -1456,6 +1500,43 @@ def check_semantic_readings(
                 f"semantic_readings[{index}].reading_explanation must be a non-empty string"
             )
             malformed = True
+        attachment_summary = reading.get("attachment_summary")
+        if not isinstance(attachment_summary, dict):
+            errors.append(f"semantic_readings[{index}].attachment_summary must be an object")
+            malformed = True
+        else:
+            missing_attachment_fields = sorted(
+                field
+                for field in SEMANTIC_READING_ATTACHMENT_FIELDS
+                if field not in attachment_summary
+            )
+            if missing_attachment_fields:
+                errors.append(
+                    "semantic_readings"
+                    f"[{index}].attachment_summary missing field(s): "
+                    + ", ".join(missing_attachment_fields)
+                )
+                malformed = True
+            kind = attachment_summary.get("kind")
+            if not isinstance(kind, str) or not kind.strip():
+                errors.append(
+                    f"semantic_readings[{index}].attachment_summary.kind "
+                    "must be a non-empty string"
+                )
+                malformed = True
+            for field in (
+                "typed_modifiers",
+                "typed_np_restrictors",
+                "typed_time_modifiers",
+                "relative_objects",
+            ):
+                value = attachment_summary.get(field)
+                if not isinstance(value, list):
+                    errors.append(
+                        "semantic_readings"
+                        f"[{index}].attachment_summary.{field} must be a list"
+                    )
+                    malformed = True
         type_check = reading.get("type_check")
         if type_check is not None:
             if not isinstance(type_check, dict):
@@ -1464,6 +1545,9 @@ def check_semantic_readings(
             elif type_check.get("ok") is not True:
                 errors.append(f"semantic_readings[{index}].type_check must have ok=true")
                 failed_type_check_indices.append(index)
+        else:
+            errors.append(f"semantic_readings[{index}].type_check must be an object")
+            malformed = True
         if malformed:
             malformed_reading_indices.append(index)
     return semantic_readings_check_payload(

@@ -8547,14 +8547,34 @@ class TranslatorTests(unittest.TestCase):
             [
                 {
                     "name": "reading",
+                    "source": "unit_test",
+                    "scope": "duplicate_name",
                     "dependent_type_translation": "p",
                     "coq_definition": "reading",
+                    "attachment_summary": {
+                        "kind": "none",
+                        "typed_modifiers": [],
+                        "typed_np_restrictors": [],
+                        "typed_time_modifiers": [],
+                        "relative_objects": [],
+                    },
+                    "reading_explanation": "Unit-test reading p.",
                     "type_check": {"ok": True},
                 },
                 {
                     "name": "reading",
+                    "source": "unit_test",
+                    "scope": "duplicate_name",
                     "dependent_type_translation": "q",
                     "coq_definition": "missing_reading",
+                    "attachment_summary": {
+                        "kind": "none",
+                        "typed_modifiers": [],
+                        "typed_np_restrictors": [],
+                        "typed_time_modifiers": [],
+                        "relative_objects": [],
+                    },
+                    "reading_explanation": "Unit-test reading q.",
                     "type_check": {"ok": True},
                 },
             ],
@@ -8597,8 +8617,17 @@ class TranslatorTests(unittest.TestCase):
             [
                 {
                     "name": "reading",
+                    "source": "unit_test",
+                    "scope": "bad_explanation",
                     "dependent_type_translation": "p",
                     "coq_definition": "reading",
+                    "attachment_summary": {
+                        "kind": "none",
+                        "typed_modifiers": [],
+                        "typed_np_restrictors": [],
+                        "typed_time_modifiers": [],
+                        "relative_objects": [],
+                    },
                     "reading_explanation": "",
                     "type_check": {"ok": True},
                 }
@@ -8611,6 +8640,33 @@ class TranslatorTests(unittest.TestCase):
             malformed_explanation["errors"],
         )
         self.assertEqual(malformed_explanation["failure_kinds"], ["malformed_readings"])
+
+        missing_contract_field = check_semantic_readings(
+            [
+                {
+                    "name": "reading",
+                    "source": "unit_test",
+                    "scope": "missing_contract_field",
+                    "dependent_type_translation": "p",
+                    "coq_definition": "reading",
+                    "reading_explanation": "Unit-test reading with a missing attachment summary.",
+                    "type_check": {"ok": True},
+                }
+            ],
+            "Definition reading : Prop := True.",
+        )
+        self.assertFalse(missing_contract_field["ok"])
+        self.assertIn(
+            (
+                "semantic_readings[0] missing required contract field(s): "
+                "attachment_summary"
+            ),
+            missing_contract_field["errors"],
+        )
+        self.assertEqual(
+            missing_contract_field["failure_kinds"],
+            ["malformed_readings"],
+        )
         diagnostics = build_diagnostics(
             {
                 "ok": False,
@@ -8642,8 +8698,18 @@ class TranslatorTests(unittest.TestCase):
             [
                 {
                     "name": "bad_type",
+                    "source": "unit_test",
+                    "scope": "bad_type",
                     "dependent_type_translation": "p",
                     "coq_definition": "bad_type",
+                    "attachment_summary": {
+                        "kind": "none",
+                        "typed_modifiers": [],
+                        "typed_np_restrictors": [],
+                        "typed_time_modifiers": [],
+                        "relative_objects": [],
+                    },
+                    "reading_explanation": "Unit-test bad type reading.",
                     "type_check": {"ok": False},
                 },
                 {
@@ -11636,6 +11702,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_reading_fields`", readme)
         self.assertIn("semantic-reading field drift", readme)
         self.assertIn("`reading_explanation` is rendered as the row's `interpretation`", readme)
+        self.assertIn("The core `check_semantic_readings` boundary", readme)
+        self.assertIn("missing `scope`, `source`,", readme)
+        self.assertIn("`none` attachment summary", readme)
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
         self.assertIn("stale selector\nlinks", readme)
@@ -11894,6 +11963,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_reading_fields`", web_design)
         self.assertIn("semantic-reading field", web_design)
         self.assertIn("JSON\n`reading_explanation` text appears", web_design)
+        self.assertIn("The core analyzer boundary", web_design)
+        self.assertIn("as `malformed_readings`", web_design)
+        self.assertIn("a `none` attachment summary", web_design)
         self.assertIn("schema drift", web_design)
         self.assertIn("required-fixture-stage", web_design)
         self.assertIn("stale selector links", web_design)
@@ -11957,6 +12029,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("semantic_reading_fields", manuscript)
         self.assertIn("semantic-reading-field drift", manuscript)
         self.assertIn("reading_explanation is rendered", manuscript)
+        self.assertIn("The core check_semantic_readings boundary", manuscript)
+        self.assertIn("classified as malformed_readings", manuscript)
+        self.assertIn("none attachment summary", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
