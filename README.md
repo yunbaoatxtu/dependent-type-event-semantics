@@ -313,7 +313,12 @@ is rendered. Coq/Rocq verifies the exported formal terms; it does not by itself
 prove that an arbitrary natural-language parse is the only correct semantic
 analysis. The quantifier-scope scaffold does not introduce an `Event` type:
 `boy` and `girl` are predicates of type `Entity -> Prop`, and `love` is typed
-directly as `Entity -> Entity -> Prop`.
+directly as `Entity -> Entity -> Prop`. Clause-level time modifiers now remain
+inside the same ambiguity analysis instead of triggering the fallback parser:
+`some boy loves some girl yesterday` yields the two scope readings
+`at_T(yesterday, exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity.
+girl(x_girl) and love(x_boy, x_girl))` and its object-wide counterpart, while
+`some boy loves some girl in the morning` uses `during_T(morning, ...)`.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:

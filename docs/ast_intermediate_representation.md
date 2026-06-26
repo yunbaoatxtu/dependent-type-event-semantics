@@ -788,15 +788,24 @@ keeps two readings with explicit quantifier order and predicate types:
         "predicate": "love",
         "predicate_type": "Entity -> Entity -> Prop",
         "arguments": ["x_boy", "x_girl"]
-      }
+      },
+      "time_modifiers": [
+        {"operator": "at", "argument": "yesterday"}
+      ]
     }
   ]
 }
 ```
 
 The paired object-wide reading has the same relation arguments but reverses the
-`scope_order`. This makes the ambiguity auditable before the Coq formula is
-rendered. The API result also exposes the two formulas through top-level
+`scope_order`. For example, `some boy loves some girl yesterday` has the same
+two scope readings. If the sentence has clause-level time, each reading carries
+the same typed `time_modifiers` list and renders as `at_T(yesterday, exists
+x_boy : Entity. ... love(x_boy, x_girl))` or the corresponding object-wide
+scope. This makes the ambiguity
+auditable before the Coq formula is rendered and prevents the timed sentence
+from falling back to pseudo-entities such as `some_boy`. The API result also
+exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
 translation, Coq definition name, and type-check metadata shape used for other
 ambiguity-producing constructions. `semantic_readings_check` then audits the

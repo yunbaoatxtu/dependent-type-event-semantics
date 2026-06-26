@@ -6058,6 +6058,67 @@ class TranslatorTests(unittest.TestCase):
                 self.assertEqual(binder["predicate_type"], "Entity -> Prop")
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_quantifier_scope_ambiguity_preserves_time_modifiers(self) -> None:
+        trailing = run_pipeline("some boy loves some girl yesterday", require_coq=True)
+        self.assertTrue(trailing["ok"])
+        self.assertEqual(trailing["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            trailing["ast"]["readings"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            trailing["event_semantics"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            trailing["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "at_T(yesterday, exists x_boy : Entity. boy(x_boy) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl))"
+            ),
+        )
+        self.assertEqual(
+            trailing["semantic_readings"][1]["dependent_type_translation"],
+            (
+                "at_T(yesterday, exists x_girl : Entity. girl(x_girl) and "
+                "exists x_boy : Entity. boy(x_boy) and love(x_boy, x_girl))"
+            ),
+        )
+        self.assertIn("Parameter yesterday : Entity.", trailing["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", trailing["coq_code"])
+        self.assertIn(
+            "at_T yesterday (exists x_boy : Entity, boy x_boy",
+            trailing["coq_code"],
+        )
+        self.assertNotIn("Parameter some_boy : Entity.", trailing["coq_code"])
+        self.assertNotIn("Parameter some_girl : Entity.", trailing["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", trailing["coq_code"])
+        self.assertEqual(trailing["semantic_readings_check"]["ok"], True)
+        self.assertEqual(trailing["coq_check"]["status"], "passed")
+
+        fronted = run_pipeline("yesterday some boy loves some girl", require_coq=True)
+        self.assertTrue(fronted["ok"])
+        self.assertEqual(fronted["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            fronted["semantic_readings"][0]["dependent_type_translation"],
+            trailing["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertEqual(fronted["coq_check"]["status"], "passed")
+
+        interval = run_pipeline("some boy loves some girl in the morning", require_coq=True)
+        self.assertTrue(interval["ok"])
+        self.assertEqual(interval["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            interval["ast"]["readings"][0]["time_modifiers"],
+            [{"operator": "during", "argument": "morning"}],
+        )
+        self.assertIn(
+            "during_T(morning, exists x_boy : Entity.",
+            interval["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertIn("Parameter during_T : Entity -> Prop -> Prop.", interval["coq_code"])
+        self.assertEqual(interval["coq_check"]["status"], "passed")
+
     def test_quantifier_scope_rejects_duplicate_scope_order(self) -> None:
         result = run_pipeline("some boy loves some girl", require_coq=False)
         readings = result["ast"]["readings"]
@@ -6066,6 +6127,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "scope readings must include both subject-wide and object-wide orders",
+            type_check["errors"],
+        )
+
+    def test_quantifier_scope_rejects_bad_time_modifier(self) -> None:
+        result = run_pipeline("some boy loves some girl yesterday", require_coq=False)
+        readings = result["ast"]["readings"]
+        readings[0]["time_modifiers"][0]["operator"] = "inside"
+        type_check = check_quantifier_scope_readings(readings)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "readings[0] time_modifiers[0].operator must be at or during",
             type_check["errors"],
         )
 
@@ -9036,6 +9108,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`from_home : Adv`", readme)
         self.assertIn("`to_school : Adv`", readme)
         self.assertIn("paths like `ast.body`", readme)
+        self.assertIn("Clause-level time modifiers now remain", readme)
+        self.assertIn("some boy loves some girl yesterday", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("time modifiers at the clause boundary", readme)
         self.assertIn("during_T(morning, exists x_agent : Entity.", readme)
@@ -9254,12 +9328,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
+        self.assertIn("quantifier-scope component now has the same clause-level temporal discipline", manuscript)
+        self.assertIn("quantifier-scope time modifier whose operator is not licensed", manuscript)
         self.assertIn("passive clause-level time modifiers", manuscript)
         self.assertIn("passive time_modifiers have at_T/during_T shape", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
         self.assertIn('"time_modifiers"', ast_docs)
+        self.assertIn("some boy loves some girl yesterday", ast_docs)
+        self.assertIn("pseudo-entities such as `some_boy`", ast_docs)
         self.assertIn("at_T(yesterday, butter(john, toast))", ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
         self.assertIn("predicate_coordination", ast_docs)

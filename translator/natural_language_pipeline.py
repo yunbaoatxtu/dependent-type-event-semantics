@@ -153,6 +153,7 @@ def quantifier_scope_reading(
     verb: str,
     object_noun: str,
     subject_first: bool,
+    time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     subject = {
         "role": "subject",
@@ -181,7 +182,22 @@ def quantifier_scope_reading(
         "quantifier": "some",
         "scope_order": scope_order,
         "relation": relation,
+        "time_modifiers": list(time_modifiers or []),
     }
+
+
+def render_quantifier_time_wrapped_reading(
+    body: str,
+    time_modifiers: list[dict[str, str]],
+    *,
+    coq: bool,
+) -> str:
+    for modifier in time_modifiers:
+        if coq:
+            body = f"{modifier['operator']}_T {modifier['argument']} ({body})"
+        else:
+            body = f"{modifier['operator']}_T({modifier['argument']}, {body})"
+    return body
 
 
 def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str:
@@ -210,7 +226,11 @@ def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str
                 f"exists {var} : Entity{separator}"
                 f"{predicate_application} {connective} {body}"
             )
-    return body
+    return render_quantifier_time_wrapped_reading(
+        body,
+        reading.get("time_modifiers", []),
+        coq=coq,
+    )
 
 
 def quantifier_scope_coq(reading: dict[str, Any]) -> str:
@@ -587,6 +607,7 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
             )
         if not isinstance(relation_args, list) or len(relation_args) != 2:
             errors.append(f"readings[{index}].relation.arguments must contain two entities")
+        check_time_modifiers(errors, reading.get("time_modifiers", []), f"readings[{index}]")
 
         for binder_index, binder in enumerate(order):
             if not isinstance(binder, dict):
@@ -615,21 +636,38 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
 
 
 def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
-    tokens = tokenize(sentence)
-    if len(tokens) != 5 or tokens[0] != "some" or tokens[3] != "some":
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
+    if len(tokens) < 5 or tokens[0] != "some" or tokens[3] != "some":
+        return None
+    trailing_time_modifiers = copular_property_time_modifiers(tokens[5:])
+    if trailing_time_modifiers is None:
         return None
     subject_noun = lemma_verb(tokens[1])
     verb = lemma_verb(tokens[2])
     object_noun = lemma_verb(tokens[4])
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
     readings = [
-        quantifier_scope_reading(subject_noun, verb, object_noun, subject_first=True),
-        quantifier_scope_reading(subject_noun, verb, object_noun, subject_first=False),
+        quantifier_scope_reading(
+            subject_noun,
+            verb,
+            object_noun,
+            subject_first=True,
+            time_modifiers=time_modifiers,
+        ),
+        quantifier_scope_reading(
+            subject_noun,
+            verb,
+            object_noun,
+            subject_first=False,
+            time_modifiers=time_modifiers,
+        ),
     ]
     type_check = check_quantifier_scope_readings(readings)
     semantic_readings = quantifier_semantic_readings(readings)
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
+        "time_modifiers": time_modifiers,
         "readings": [
             {**reading, "formula": render_quantifier_reading(reading)}
             for reading in readings
@@ -643,6 +681,20 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             f"Parameter {subject_noun} : Entity -> Prop.",
             f"Parameter {object_noun} : Entity -> Prop.",
             f"Parameter {verb} : Entity -> Entity -> Prop.",
+            *[
+                f"Parameter {time_argument} : Entity."
+                for time_argument in unique_names(
+                    [modifier["argument"] for modifier in time_modifiers]
+                )
+            ],
+            *(
+                [
+                    "Parameter at_T : Entity -> Prop -> Prop.",
+                    "Parameter during_T : Entity -> Prop -> Prop.",
+                ]
+                if time_modifiers
+                else []
+            ),
             "",
             quantifier_scope_coq(readings[0]),
             quantifier_scope_coq(readings[1]),
@@ -672,7 +724,8 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             **type_check,
             "note": (
                 "Both scope readings are represented with entity predicates "
-                "and a binary relation; no Event argument is introduced."
+                "and a binary relation; time modifiers, when present, scope "
+                "over each quantified proposition; no Event argument is introduced."
             ),
         },
         "coq_code": coq_code,
