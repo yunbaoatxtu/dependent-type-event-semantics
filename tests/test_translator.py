@@ -6178,6 +6178,52 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(location["semantic_readings_check"]["ok"])
         self.assertEqual(location["coq_check"]["status"], "passed")
 
+        fronted_location = run_pipeline(
+            "In the bathroom some boy loved some girl",
+            require_coq=True,
+        )
+        self.assertTrue(fronted_location["ok"])
+        self.assertEqual(fronted_location["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(fronted_location["ast"]["modifiers"], location["ast"]["modifiers"])
+        self.assertEqual(
+            fronted_location["semantic_readings"],
+            location["semantic_readings"],
+        )
+        self.assertNotIn("in_bathroom_some", fronted_location["dependent_type_translation"])
+        self.assertNotIn("Parameter some_boy : Entity.", fronted_location["coq_code"])
+        self.assertEqual(fronted_location["coq_check"]["status"], "passed")
+
+        comma_fronted_location = run_pipeline(
+            "In the bathroom, some boy loved some girl",
+            require_coq=True,
+        )
+        self.assertTrue(comma_fronted_location["ok"])
+        self.assertEqual(comma_fronted_location["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            comma_fronted_location["semantic_readings"],
+            location["semantic_readings"],
+        )
+
+        fronted_time_location = run_pipeline(
+            "Yesterday in the bathroom some boy loved some girl",
+            require_coq=True,
+        )
+        self.assertTrue(fronted_time_location["ok"])
+        self.assertEqual(fronted_time_location["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(fronted_time_location["ast"]["modifiers"], location["ast"]["modifiers"])
+        self.assertEqual(
+            fronted_time_location["ast"]["readings"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn(
+            "at_T(yesterday, exists x_boy : Entity. boy(x_boy) and "
+            "exists x_girl : Entity. girl(x_girl) and "
+            "love(1)(in(bathroom), x_boy, x_girl))",
+            fronted_time_location["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertNotIn("in_bathroom_some", fronted_time_location["dependent_type_translation"])
+        self.assertEqual(fronted_time_location["coq_check"]["status"], "passed")
+
         manner_time = run_pipeline("some boy loves some girl slowly yesterday", require_coq=True)
         self.assertTrue(manner_time["ok"])
         self.assertEqual(manner_time["kind"], "quantifier_scope_ambiguity")
@@ -9197,7 +9243,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Clause-level time modifiers now remain", readme)
         self.assertIn("some boy loves some girl yesterday", readme)
         self.assertIn("some boy loved some girl in the bathroom", readme)
+        self.assertIn("In the bathroom some boy loved some girl", readme)
         self.assertIn("love(1)(in(bathroom), x_boy, x_girl)", readme)
+        self.assertIn("in_bathroom_some", readme)
         self.assertIn("the toast was buttered by John", readme)
         self.assertIn("time modifiers at the clause boundary", readme)
         self.assertIn("during_T(morning, exists x_agent : Entity.", readme)
@@ -9417,6 +9465,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
         self.assertIn("quantifier-scope component now has the same clause-level temporal and modifier discipline", manuscript)
+        self.assertIn("In the bathroom some boy loved some girl", manuscript)
+        self.assertIn("in_bathroom_some", manuscript)
         self.assertIn("quantifier-scope time modifier whose operator is not licensed", manuscript)
         self.assertIn("quantifier-scope Adv modifier whose audit type is not Adv", manuscript)
         self.assertIn("passive clause-level time modifiers", manuscript)
@@ -9427,7 +9477,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"time_modifiers"', ast_docs)
         self.assertIn("some boy loves some girl yesterday", ast_docs)
         self.assertIn("some boy loved some girl in the bathroom", ast_docs)
+        self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)
+        self.assertIn("in_bathroom_some", ast_docs)
         self.assertIn("pseudo-entities such as `some_boy`", ast_docs)
         self.assertIn("at_T(yesterday, butter(john, toast))", ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)

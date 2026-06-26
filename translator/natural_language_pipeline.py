@@ -62,6 +62,7 @@ ROCQ_ENV = Path(
 )
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
+QUANTIFIER_SUBJECT_DETERMINERS = {"some", "every", "each", "all", "no"}
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
 BOOLEAN_COORDINATORS = {"and": "and_T", "or": "or_T"}
@@ -4633,6 +4634,9 @@ def starts_surface_subject_boundary(tokens: list[str], position: int) -> bool:
     subject_start = position
     starts_with_article = False
     if subject_start < len(tokens) and tokens[subject_start] in ARTICLES:
+        starts_with_article = True
+        subject_start += 1
+    elif subject_start < len(tokens) and tokens[subject_start] in QUANTIFIER_SUBJECT_DETERMINERS:
         starts_with_article = True
         subject_start += 1
     if subject_start >= len(tokens):

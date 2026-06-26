@@ -822,12 +822,16 @@ two scope readings. If the sentence has clause-level time, each reading carries
 the same typed `time_modifiers` list and renders as `at_T(yesterday, exists
 x_boy : Entity. ... love(x_boy, x_girl))` or the corresponding object-wide
 scope. For example, `some boy loved some girl in the bathroom` has a shared
-Adv modifier. If the sentence has a shared Adv modifier, each reading carries the same `modifiers` list and the
-relation type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity ->
-PropT`; the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
-proof-assistant scaffold declares `in_bathroom : Adv`. This makes the ambiguity
-auditable before the Coq formula is rendered and prevents the timed or modified sentence
-from falling back to pseudo-entities such as `some_boy`. The API result also
+Adv modifier. Each reading carries the same `modifiers` list and the relation
+type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
+the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
+proof-assistant scaffold declares `in_bathroom : Adv`. Fronted variants such as
+`In the bathroom some boy loved some girl` use the same representation: the
+fronted modifier stops before the quantified subject, so the AST records
+`in_bathroom : Adv` rather than a malformed `in_bathroom_some` name. This makes
+the ambiguity auditable before the Coq formula is rendered and prevents the
+timed or modified sentence from falling back to pseudo-entities such as `some_boy`.
+The API result also
 exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
 translation, Coq definition name, and type-check metadata shape used for other

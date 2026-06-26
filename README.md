@@ -323,6 +323,9 @@ Shared Adv modifiers are kept in the same two scope readings as dependent
 modifier sequences: `some boy loved some girl in the bathroom` renders
 `love(1)(in(bathroom), x_boy, x_girl)`, declares `in_bathroom : Adv`, and gives
 `love` the type `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`.
+Fronted variants such as `In the bathroom some boy loved some girl` use the
+same readings: the modifier parser stops before the quantified subject and does
+not collapse the phrase into a malformed `in_bathroom_some` constant.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:
