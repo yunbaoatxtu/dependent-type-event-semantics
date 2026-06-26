@@ -1664,6 +1664,38 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         raise SystemExit("web route smoke check failed: unknown format error drift")
 
 
+def validate_json_download_http_response(
+    case: str,
+    label: str,
+    response,
+    expected_payload: dict,
+    expected_filename: object,
+) -> None:
+    raw = response.read()
+    if response.status != 200:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} download status drift"
+        )
+    if response.headers.get_content_type() != "application/json":
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} download content type drift"
+        )
+    if response.headers.get("Content-Length") != str(len(raw)):
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} download length drift"
+        )
+    expected_disposition = f'attachment; filename="{expected_filename}"'
+    if response.headers.get("Content-Disposition") != expected_disposition:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} download filename drift"
+        )
+    observed_payload = json.loads(raw.decode("utf-8"))
+    if observed_payload != expected_payload:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} download payload drift"
+        )
+
+
 def run_web_route_smoke_check() -> None:
     from web.app import PipelineHandler
 
@@ -1696,7 +1728,21 @@ def run_web_route_smoke_check() -> None:
             actions = fixture_payloads[case].get("diagnostics", {}).get("recovery_actions", [])
             if not isinstance(actions, list):
                 raise SystemExit(f"web route smoke check failed: {case} missing recovery actions")
+            action_exports = fixture.get("recovery_action_exports", [])
+            if not isinstance(action_exports, list):
+                raise SystemExit(
+                    f"web route smoke check failed: {case} missing recovery action exports"
+                )
             for action_index, action in enumerate(actions):
+                if action_index >= len(action_exports) or not isinstance(
+                    action_exports[action_index],
+                    dict,
+                ):
+                    raise SystemExit(
+                        "web route smoke check failed: "
+                        f"{case} missing recovery action export metadata"
+                    )
+                action_export = action_exports[action_index]
                 query = urlencode({"case": case, "index": str(action_index)})
                 with opener.open(
                     f"http://127.0.0.1:{port}/api/recovery-action?{query}",
@@ -1709,15 +1755,52 @@ def run_web_route_smoke_check() -> None:
                         action,
                         action_bundle,
                     )
+                download_path = action_export.get("download_api_path")
+                if not isinstance(download_path, str):
+                    raise SystemExit(
+                        "web route smoke check failed: "
+                        f"{case} missing recovery action download metadata"
+                    )
+                with opener.open(
+                    f"http://127.0.0.1:{port}{download_path}",
+                    timeout=5,
+                ) as response:
+                    validate_json_download_http_response(
+                        str(case),
+                        "recovery action",
+                        response,
+                        action_bundle,
+                        action_export.get("download_filename"),
+                    )
                 run_url = f"http://127.0.0.1:{port}/api/recovery-action-run?{query}"
                 if action_bundle.get("repair_plan", {}).get("can_auto_run") is True:
                     with opener.open(run_url, timeout=5) as response:
+                        run_payload = json.load(response)
                         validate_recovery_action_inspection_run_bundle(
                             case,
                             action_index,
                             action_bundle,
                             fixture_payloads[case],
-                            json.load(response),
+                            run_payload,
+                        )
+                    run_download_path = action_export.get(
+                        "inspection_run_download_api_path"
+                    )
+                    if not isinstance(run_download_path, str):
+                        raise SystemExit(
+                            "web route smoke check failed: "
+                            f"{case} missing recovery action run download metadata"
+                        )
+                    with opener.open(
+                        f"http://127.0.0.1:{port}{run_download_path}",
+                        timeout=5,
+                    ) as response:
+                        validate_json_download_http_response(
+                            str(case),
+                            "recovery action run",
+                            response,
+                            run_payload,
+                            action_export.get("inspection_run_download_filename"),
                         )
                 else:
                     try:

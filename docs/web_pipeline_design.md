@@ -307,6 +307,8 @@ filename for both the recovery-action bundle and, when available, the inspection
 run bundle. The server should return the same JSON payload with a
 `Content-Disposition` attachment header for those download URLs, while leaving
 the ordinary API path unchanged for clients that want to parse JSON directly.
+The live web smoke check should request both forms and reject content-type,
+content-length, filename, or payload drift at the HTTP boundary.
 This gives browser tools an inspection/export path for one suggested repair
 without scraping the full analysis response. The fixture HTML should also render a
 `Recovery Action Exports` panel that summarizes every such route with

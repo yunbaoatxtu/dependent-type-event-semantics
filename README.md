@@ -680,7 +680,9 @@ preview whose content must match the corresponding
 separate from a `download=1` path with a stable `.json` filename, and the same
 split is exposed for inspection-run JSON, so browser downloads, archived
 artifacts, and API clients can share the same payload without guessing a file
-name from visible prose.
+name from visible prose. The project-level live web smoke check now requests
+both ordinary and download paths, compares the JSON payloads, and checks the
+download `Content-Disposition` filename, content type, and byte length.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or
