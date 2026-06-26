@@ -166,6 +166,11 @@ translation, so `Mary admired the painting yesterday` becomes
 Count phrases behave similarly: `Mary visited Paris three times` becomes
 `repeat(3, visit(0)(mary, paris))`, not `visit(0)(mary, paris_three_times)`.
 The digit form `Mary visited Paris 3 times` follows the same path.
+When a temporal adverb scopes over the counted proposition, the registered
+`event_counting` construction preserves the outer time wrapper, so
+`John knocked twice yesterday` is reported as
+`at_T(yesterday, repeat(2, knock(0)(john)))` rather than falling back to a
+shallow draft.
 Multi-word temporal phrases are also boundary-aware: `Mary admired the painting
 last night` becomes `at_T(last_night, admire(0)(mary, painting))`, and
 `John walked to school this morning` keeps `to(school)` separate from
@@ -991,8 +996,11 @@ outside the unit-test renderer as well.
 It also requests the registered event-counting route
 `/api/analyze?sentence=John+knocked+twice&require_coq=1` and the matching HTML
 page, requiring both surfaces to expose `event_counting_single_reading` under
-the registered `event_counting` construction. The ordinary fallback success
-contract is checked separately with
+the registered `event_counting` construction. It then requests the timed
+variant `/api/analyze?sentence=John+knocked+twice+yesterday&require_coq=1`,
+requiring the same construction to expose
+`at_T(yesterday, repeat(2, knock(0)(john)))` without a fallback draft. The
+ordinary fallback success contract is checked separately with
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose the same `fallback_single_reading` row and construction-rule
 draft before the diagnostic fixture sweep begins.

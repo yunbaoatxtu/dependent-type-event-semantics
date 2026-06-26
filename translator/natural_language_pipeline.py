@@ -10900,6 +10900,16 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
 
+def event_counting_repeat_term(ast: Any) -> dict[str, Any] | None:
+    if not isinstance(ast, dict):
+        return None
+    if ast.get("kind") == "repeat":
+        return ast
+    if ast.get("kind") == "time":
+        return event_counting_repeat_term(ast.get("body"))
+    return None
+
+
 def event_counting_pipeline(sentence: str) -> dict[str, Any] | None:
     try:
         event_semantics = sentence_to_event_semantics(sentence)
@@ -10907,15 +10917,17 @@ def event_counting_pipeline(sentence: str) -> dict[str, Any] | None:
     except ValueError:
         return None
     ast = translation.get("ast", {})
-    if not isinstance(ast, dict) or ast.get("kind") != "repeat":
+    repeat_term = event_counting_repeat_term(ast)
+    if repeat_term is None:
         return None
-    body = ast.get("body", {})
+    body = repeat_term.get("body", {})
     predicate = (
         str(body.get("function", "predicate"))
         if isinstance(body, dict)
         else "predicate"
     )
-    count = str(ast.get("count", ""))
+    count = str(repeat_term.get("count", ""))
+    time_wrapped = isinstance(ast, dict) and ast.get("kind") == "time"
     coq_code = export_module([translation], "coq")
     return {
         "kind": "event_counting",
@@ -10927,6 +10939,7 @@ def event_counting_pipeline(sentence: str) -> dict[str, Any] | None:
                 "count": count,
                 "counted_predicate": predicate,
                 "representation": "repeat over a proposition",
+                "time_wrapped": time_wrapped,
             },
         },
         "dependent_type_translation": translation["translation"],
@@ -10937,6 +10950,11 @@ def event_counting_pipeline(sentence: str) -> dict[str, Any] | None:
             f"Counted occurrence: {count} occurrence(s) of {predicate} are "
             "represented by repeat over a typed proposition, not by a universal "
             "event argument."
+            + (
+                " Temporal operators scope over the counted proposition."
+                if time_wrapped
+                else ""
+            )
         ),
         "coq_code": coq_code,
     }

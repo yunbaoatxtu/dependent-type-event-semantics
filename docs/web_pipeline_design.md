@@ -458,7 +458,9 @@ attachment summary rather than bypassing the semantic-reading audit.
 The project-level web smoke check should exercise both the promoted
 event-counting route and the ordinary fallback route directly before it walks
 the diagnostic fixtures. `John knocked twice` must surface as the registered
-`event_counting` construction with `event_counting_single_reading`, while
+`event_counting` construction with `event_counting_single_reading`; the timed
+variant `John knocked twice yesterday` must keep the same registered rule while
+rendering `at_T(yesterday, repeat(2, knock(0)(john)))`. Meanwhile,
 `a cat sits on a mat` must remain a fallback success with
 `fallback_single_reading` and a downloadable construction-rule draft. This keeps
 the promoted count construction and the remaining fallback success contract from

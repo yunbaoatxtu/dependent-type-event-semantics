@@ -1497,6 +1497,92 @@ def validate_analyze_event_counting_success(payload: dict, page: str, sentence: 
     require_text_fragments(page, expected_page_fragments, "event counting HTML")
 
 
+def validate_analyze_temporal_event_counting_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_temporal_event_counting_success"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "event_counting",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "event_counting",
+        "registered_construction",
+        "construction_rule",
+        "event_counting",
+    )
+    expected_translation = "at_T(yesterday, repeat(2, knock(0)(john)))"
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit(
+            "web route smoke check failed: temporal event counting translation drift"
+        )
+    event_counting = payload.get("event_semantics", {}).get("event_counting")
+    if (
+        not isinstance(event_counting, dict)
+        or event_counting.get("count") != "2"
+        or event_counting.get("counted_predicate") != "knock"
+        or event_counting.get("time_wrapped") is not True
+    ):
+        raise SystemExit(
+            "web route smoke check failed: temporal event counting audit drift"
+        )
+    ast = payload.get("ast")
+    if (
+        not isinstance(ast, dict)
+        or ast.get("kind") != "time"
+        or ast.get("operator") != "at"
+        or ast.get("arguments") != ["yesterday"]
+        or not isinstance(ast.get("body"), dict)
+        or ast["body"].get("kind") != "repeat"
+        or ast["body"].get("count") != "2"
+    ):
+        raise SystemExit("web route smoke check failed: temporal event counting AST drift")
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit(
+            "web route smoke check failed: temporal counting still exposes fallback draft"
+        )
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit(
+            "web route smoke check failed: temporal event counting reading count drift"
+        )
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "event_counting_single_reading",
+            "scope": "registered_single_reading",
+            "source": "event_counting",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Definition example_1" not in coq_code
+        or "Parameter Event : Type." in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: temporal event counting Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>event_counting</dd>",
+        'data-reading-name="event_counting_single_reading"',
+        "Temporal operators scope over the counted proposition.",
+        expected_translation,
+    ]
+    require_text_fragments(page, expected_page_fragments, "temporal event counting HTML")
+
+
 def validate_analyze_quantifier_scope_success(
     payload: dict,
     page: str,
@@ -2822,6 +2908,25 @@ def run_web_route_smoke_check() -> None:
             event_counting_payload,
             event_counting_page,
             event_counting_sentence,
+        )
+        temporal_event_counting_sentence = "John knocked twice yesterday"
+        temporal_event_counting_query = urlencode(
+            {"sentence": temporal_event_counting_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{temporal_event_counting_query}",
+            timeout=5,
+        ) as response:
+            temporal_event_counting_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{temporal_event_counting_query}",
+            timeout=5,
+        ) as response:
+            temporal_event_counting_page = response.read().decode("utf-8")
+        validate_analyze_temporal_event_counting_success(
+            temporal_event_counting_payload,
+            temporal_event_counting_page,
+            temporal_event_counting_sentence,
         )
         fallback_sentence = "a cat sits on a mat"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})

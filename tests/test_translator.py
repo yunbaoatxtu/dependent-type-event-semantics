@@ -9726,6 +9726,38 @@ class TranslatorTests(unittest.TestCase):
             transitive["dependent_type_translation"],
             "repeat(3, visit(0)(mary, paris))",
         )
+        timed = analyze_sentence("John knocked twice yesterday", require_coq=True)
+        self.assertTrue(timed["ok"])
+        self.assertEqual(timed["kind"], "event_counting")
+        self.assertEqual(timed["verification_scope"]["kind"], "registered_construction")
+        self.assertEqual(timed["verification_scope"]["rule_id"], "event_counting")
+        self.assertEqual(
+            timed["dependent_type_translation"],
+            "at_T(yesterday, repeat(2, knock(0)(john)))",
+        )
+        self.assertEqual(timed["ast"]["kind"], "time")
+        self.assertEqual(timed["ast"]["body"]["kind"], "repeat")
+        self.assertEqual(timed["ast"]["body"]["count"], "2")
+        self.assertTrue(timed["event_semantics"]["event_counting"]["time_wrapped"])
+        self.assertIn("Temporal operators scope", timed["construction_summary"])
+        self.assertNotIn("certification_upgrade_plan", timed)
+        self.assertNotIn("construction_rule_draft", timed)
+        self.assertEqual(
+            timed["semantic_readings"][0]["name"],
+            "event_counting_single_reading",
+        )
+        self.assertTrue(timed["semantic_readings_check"]["ok"])
+        self.assertIn("Definition example_1", timed["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", timed["coq_code"])
+        timed_transitive = analyze_sentence(
+            "Mary visited Paris three times yesterday",
+            require_coq=True,
+        )
+        self.assertEqual(timed_transitive["verification_scope"]["rule_id"], "event_counting")
+        self.assertEqual(
+            timed_transitive["dependent_type_translation"],
+            "at_T(yesterday, repeat(3, visit(0)(mary, paris)))",
+        )
 
     def test_api_construction_rule_draft_endpoint_exports_fallback_draft(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -12359,6 +12391,11 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn(
+            "/api/analyze?sentence=John+knocked+twice+yesterday&require_coq=1",
+            readme,
+        )
+        self.assertIn("at_T(yesterday, repeat(2, knock(0)(john)))", readme)
+        self.assertIn(
             "/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1",
             readme,
         )
@@ -12696,6 +12733,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("promoted\nevent-counting route and the ordinary fallback route directly", web_design)
         self.assertIn("John knocked twice", web_design)
         self.assertIn("event_counting_single_reading", web_design)
+        self.assertIn("John knocked twice yesterday", web_design)
+        self.assertIn("at_T(yesterday, repeat(2, knock(0)(john)))", web_design)
         self.assertIn("a cat sits on a mat", web_design)
         self.assertIn("multi-reading quantifier-scope success path", web_design)
         self.assertIn("some boy loves some girl", web_design)
@@ -12730,6 +12769,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("event_counting construction", manuscript)
         self.assertIn("event_counting_single_reading", manuscript)
         self.assertIn("John knocked twice", manuscript)
+        self.assertIn("John knocked twice yesterday", manuscript)
+        self.assertIn("at_T(yesterday, repeat(2, knock(0)(john)))", manuscript)
         self.assertIn("Mary visited Paris three times", manuscript)
         self.assertIn("a cat sits on a mat", manuscript)
         self.assertIn("some boy loves some girl", manuscript)
@@ -14127,17 +14168,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def require_text_fragments(", verifier)
         self.assertIn("def forbid_text_fragments(", verifier)
         self.assertIn("def validate_analyze_fallback_success(", verifier)
+        self.assertIn("def validate_analyze_temporal_event_counting_success(", verifier)
         self.assertIn("def validate_analyze_quantifier_scope_success(", verifier)
         self.assertIn("def validate_analyze_perception_success(", verifier)
         self.assertIn("def validate_analyze_timed_after_success(", verifier)
         self.assertIn("def validate_analyze_universal_timed_burning_success(", verifier)
         self.assertIn("analyze_fallback_success", verifier)
+        self.assertIn("analyze_temporal_event_counting_success", verifier)
         self.assertIn("analyze_quantifier_scope_success", verifier)
         self.assertIn("analyze_perception_success", verifier)
         self.assertIn("analyze_timed_after_success", verifier)
         self.assertIn("analyze_universal_timed_burning_success", verifier)
         self.assertIn("/api/analyze?", verifier)
         self.assertIn("John knocked twice", verifier)
+        self.assertIn("John knocked twice yesterday", verifier)
         self.assertIn("some boy loves some girl", verifier)
         self.assertIn("Mary saw John leave", verifier)
         self.assertIn("after the singing of the Marseillaise, John saluted the flag", verifier)
