@@ -65,8 +65,11 @@ PROPERTY_DEGREES = {"very"}
 QUANTIFIER_SUBJECT_DETERMINERS = {"some", "every", "each", "all", "no"}
 EXISTENTIAL_SCOPE_DETERMINERS = {"some", "a", "an"}
 UNIVERSAL_SCOPE_DETERMINERS = {"every", "each", "all"}
+NEGATIVE_SCOPE_DETERMINERS = {"no"}
 SUPPORTED_SCOPE_DETERMINERS = (
-    EXISTENTIAL_SCOPE_DETERMINERS | UNIVERSAL_SCOPE_DETERMINERS
+    EXISTENTIAL_SCOPE_DETERMINERS
+    | UNIVERSAL_SCOPE_DETERMINERS
+    | NEGATIVE_SCOPE_DETERMINERS
 )
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
@@ -255,6 +258,8 @@ def render_quantifier_binder(
             return f"exists {var} : Entity, {predicate_application} /\\ {body}"
         if quantifier in UNIVERSAL_SCOPE_DETERMINERS:
             return f"forall {var} : Entity, {predicate_application} -> {body}"
+        if quantifier in NEGATIVE_SCOPE_DETERMINERS:
+            return f"forall {var} : Entity, {predicate_application} -> ~ ({body})"
     else:
         predicate_application = f"{predicate}({var})"
         if quantifier in EXISTENTIAL_SCOPE_DETERMINERS:
@@ -263,6 +268,8 @@ def render_quantifier_binder(
             return f"exists {var} : Entity. {predicate_application} and {body}"
         if quantifier in UNIVERSAL_SCOPE_DETERMINERS:
             return f"forall {var} : Entity. {predicate_application} -> {body}"
+        if quantifier in NEGATIVE_SCOPE_DETERMINERS:
+            return f"forall {var} : Entity. {predicate_application} -> not ({body})"
     raise ValueError(f"unsupported quantifier: {quantifier!r}")
 
 
@@ -294,6 +301,16 @@ def quantifier_scope_family(subject_quantifier: str, object_quantifier: str) -> 
         and object_quantifier in UNIVERSAL_SCOPE_DETERMINERS
     ):
         return "universal"
+    if (
+        subject_quantifier in NEGATIVE_SCOPE_DETERMINERS
+        and object_quantifier in NEGATIVE_SCOPE_DETERMINERS
+    ):
+        return "negative"
+    if (
+        subject_quantifier in NEGATIVE_SCOPE_DETERMINERS
+        or object_quantifier in NEGATIVE_SCOPE_DETERMINERS
+    ):
+        return "mixed_negative"
     return "mixed"
 
 
@@ -7635,6 +7652,7 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter a : Entity.",
                 "Parameter an : Entity.",
                 "Parameter every : Entity.",
+                "Parameter no : Entity.",
                 "Parameter boy : nat ->",
             ),
         ),

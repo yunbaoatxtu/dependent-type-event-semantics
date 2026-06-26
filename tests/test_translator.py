@@ -6240,6 +6240,96 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(modified["coq_check"]["status"], "passed")
 
+    def test_quantifier_scope_ambiguity_accepts_negative_existential_mix(self) -> None:
+        subject_negative = run_pipeline("no boy loves a girl", require_coq=True)
+        self.assertTrue(subject_negative["ok"])
+        self.assertEqual(subject_negative["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(subject_negative["ast"]["quantifier"], "mixed_negative")
+        self.assertEqual(
+            subject_negative["ast"]["quantifiers"],
+            {"subject": "no", "object": "a"},
+        )
+        self.assertEqual(
+            [reading["name"] for reading in subject_negative["semantic_readings"]],
+            ["no_boy_wide_scope", "a_girl_wide_scope"],
+        )
+        self.assertEqual(
+            subject_negative["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "forall x_boy : Entity. boy(x_boy) -> not "
+                "(exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl))"
+            ),
+        )
+        self.assertEqual(
+            subject_negative["semantic_readings"][1]["dependent_type_translation"],
+            (
+                "exists x_girl : Entity. girl(x_girl) and "
+                "(forall x_boy : Entity. boy(x_boy) -> not (love(x_boy, x_girl)))"
+            ),
+        )
+        self.assertIn(
+            "Definition no_boy_wide_scope : Prop := "
+            "forall x_boy : Entity, boy x_boy -> "
+            "~ (exists x_girl : Entity, girl x_girl /\\ love x_boy x_girl).",
+            subject_negative["coq_code"],
+        )
+        self.assertIn(
+            "Definition a_girl_wide_scope : Prop := "
+            "exists x_girl : Entity, girl x_girl /\\ "
+            "(forall x_boy : Entity, boy x_boy -> ~ (love x_boy x_girl)).",
+            subject_negative["coq_code"],
+        )
+        self.assertNotIn("Parameter no : Entity.", subject_negative["coq_code"])
+        self.assertNotIn("Parameter a : Entity.", subject_negative["coq_code"])
+        self.assertEqual(
+            [binder["quantifier"] for binder in subject_negative["ast"]["readings"][0]["scope_order"]],
+            ["no", "a"],
+        )
+        self.assertEqual(subject_negative["coq_check"]["status"], "passed")
+
+        object_negative = run_pipeline("a boy loves no girl", require_coq=True)
+        self.assertTrue(object_negative["ok"])
+        self.assertEqual(object_negative["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(
+            [reading["name"] for reading in object_negative["semantic_readings"]],
+            ["a_boy_wide_scope", "no_girl_wide_scope"],
+        )
+        self.assertEqual(
+            object_negative["semantic_readings"][0]["dependent_type_translation"],
+            (
+                "exists x_boy : Entity. boy(x_boy) and "
+                "(forall x_girl : Entity. girl(x_girl) -> not (love(x_boy, x_girl)))"
+            ),
+        )
+        self.assertEqual(
+            object_negative["semantic_readings"][1]["dependent_type_translation"],
+            (
+                "forall x_girl : Entity. girl(x_girl) -> not "
+                "(exists x_boy : Entity. boy(x_boy) and love(x_boy, x_girl))"
+            ),
+        )
+        self.assertEqual(object_negative["coq_check"]["status"], "passed")
+
+        modified = run_pipeline(
+            "In the bathroom no boy loved a girl yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(modified["ok"])
+        self.assertEqual(modified["kind"], "quantifier_scope_ambiguity")
+        self.assertEqual(modified["ast"]["modifiers"][0]["name"], "in_bathroom")
+        self.assertEqual(
+            modified["ast"]["readings"][0]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn(
+            "at_T(yesterday, forall x_boy : Entity. boy(x_boy) -> not "
+            "(exists x_girl : Entity. girl(x_girl) and "
+            "love(1)(in(bathroom), x_boy, x_girl)))",
+            modified["semantic_readings"][0]["dependent_type_translation"],
+        )
+        self.assertNotIn("in_bathroom_no", modified["dependent_type_translation"])
+        self.assertEqual(modified["coq_check"]["status"], "passed")
+
     def test_quantifier_scope_ambiguity_preserves_time_modifiers(self) -> None:
         trailing = run_pipeline("some boy loves some girl yesterday", require_coq=True)
         self.assertTrue(trailing["ok"])
@@ -6634,6 +6724,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter a : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter an : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter every : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
+        self.assertIn("Parameter no : Entity.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["copular_property"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["copular_property"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["do_support_negation"].forbidden_coq_fragments)
@@ -9443,6 +9534,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("every boy loves a girl", readme)
         self.assertIn("every_boy_wide_scope", readme)
         self.assertIn("a boy loves every", readme)
+        self.assertIn("no boy loves a girl", readme)
+        self.assertIn("no_boy_wide_scope", readme)
+        self.assertIn("a boy loves no girl", readme)
         self.assertIn("love(1)(in(bathroom), x_boy, x_girl)", readme)
         self.assertIn("in_bathroom_some", readme)
         self.assertIn("the toast was buttered by John", readme)
@@ -9670,10 +9764,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Every boy loves a girl", manuscript)
         self.assertIn("every_boy_wide_scope", manuscript)
         self.assertIn("a boy loves every girl", manuscript)
+        self.assertIn("no boy loves a girl", manuscript)
+        self.assertIn("no_boy_wide_scope", manuscript)
+        self.assertIn("a boy loves no girl", manuscript)
         self.assertIn("In the bathroom some boy loved some girl", manuscript)
         self.assertIn("In the bathroom every boy loved a girl yesterday", manuscript)
+        self.assertIn("In the bathroom no boy loved a girl yesterday", manuscript)
         self.assertIn("in_bathroom_some", manuscript)
         self.assertIn("in_bathroom_every", manuscript)
+        self.assertIn("in_bathroom_no", manuscript)
         self.assertIn("quantifier-scope time modifier whose operator is not licensed", manuscript)
         self.assertIn("quantifier-scope Adv modifier whose audit type is not Adv", manuscript)
         self.assertIn("passive clause-level time modifiers", manuscript)
@@ -9690,6 +9789,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("every boy loves a girl", ast_docs)
         self.assertIn("every_boy_wide_scope", ast_docs)
         self.assertIn("a boy loves every girl", ast_docs)
+        self.assertIn("no boy loves a girl", ast_docs)
+        self.assertIn("no_boy_wide_scope", ast_docs)
+        self.assertIn("a boy loves no girl", ast_docs)
         self.assertIn("some boy loved some girl in the bathroom", ast_docs)
         self.assertIn("In the bathroom some boy loved some girl", ast_docs)
         self.assertIn("in_bathroom : Adv", ast_docs)

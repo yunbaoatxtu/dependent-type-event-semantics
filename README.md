@@ -337,6 +337,14 @@ love(x_boy, x_girl)`, and `a_girl_wide_scope`, rendered with the existential
 girl taking wider scope. The object-universal counterpart `a boy loves every
 girl` is handled analogously. In each case `every` is a quantifier binder, not
 an `Entity`, and the two readings remain available to the Coq/Rocq scaffold.
+Negative quantifiers use the same scope interface but render as restricted
+universal negation: `no boy loves a girl` yields `no_boy_wide_scope`, rendered
+as `forall x_boy : Entity. boy(x_boy) -> not (exists x_girl : Entity.
+girl(x_girl) and love(x_boy, x_girl))`, and `a_girl_wide_scope`, where one girl
+takes wider scope over the negative subject binder. `a boy loves no girl` is
+handled symmetrically. In both cases `no` is a binder, not an exported
+`Entity`, and Adv/time modifiers still attach to the checked quantified
+proposition.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:

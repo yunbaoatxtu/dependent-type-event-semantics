@@ -841,6 +841,16 @@ existential-wide reading and a universal-wide reading. In these mixed cases the
 top-level `quantifier` field is `mixed`, and no constant such as `every :
 Entity` or `a : Entity` is exported. The canonical shared-Adv example is
 `some boy loved some girl in the bathroom`.
+Negative determiners also use `scope_order` rather than event roles:
+`no boy loves a girl` has `quantifiers: {"subject": "no", "object": "a"}` and
+sets the top-level `quantifier` field to `mixed_negative`. Its subject-wide
+reading `no_boy_wide_scope` renders as `forall x_boy : Entity. boy(x_boy) ->
+not (exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl))`, while the
+object-wide `a_girl_wide_scope` keeps the existential girl outside the negative
+subject binder. Conversely, `a boy loves no girl` emits `a_boy_wide_scope` and
+`no_girl_wide_scope`. No constant such as `no : Entity` is exported, and
+fronted examples such as `In the bathroom no boy loved a girl yesterday` still
+record `in_bathroom : Adv` rather than a malformed `in_bathroom_no` name.
 Each reading carries the same `modifiers` list and the relation
 type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
 the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
