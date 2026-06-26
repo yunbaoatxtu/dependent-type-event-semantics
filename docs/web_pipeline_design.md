@@ -409,6 +409,11 @@ It should also exercise a registered perception-complement success path with
 `Mary saw John leave`, requiring `mary_saw_john_leave`,
 `perception_nominalization`, and the `E : Prop -> Entity` nominalizer scaffold
 to remain visible at the HTTP boundary.
+It should also exercise a registered timed-after success path with
+`after the singing of the Marseillaise, John saluted the flag`, requiring
+`after_singing_salute`, `timed_after_singing_salute`, and
+`before : Time -> Time -> Prop` to remain visible instead of an event-ordering
+parameter.
 It should also exercise a registered universal timed burning success path with
 `In every burning, oxygen is consumed`, requiring
 `every_burning_consumes_oxygen`, `universal_timed_burning`, and the

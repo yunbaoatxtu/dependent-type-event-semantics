@@ -949,6 +949,11 @@ It also requests
 registered perception-complement analysis to export `mary_saw_john_leave`,
 render the `perception_nominalization` reading, and keep the Coq/Rocq scaffold
 at `E : Prop -> Entity` rather than reintroducing event-role declarations.
+It also requests
+`/api/analyze?sentence=after+the+singing+of+the+Marseillaise%2C+John+saluted+the+flag&require_coq=1`,
+requiring the registered timed-after analysis to export `after_singing_salute`,
+render the `timed_after_singing_salute` reading, and keep the order relation at
+`before : Time -> Time -> Prop` rather than an event-ordering parameter.
 It now also requests
 `/api/analyze?sentence=In+every+burning%2C+oxygen+is+consumed&require_coq=1`,
 requiring the registered universal timed burning analysis to export
@@ -1387,8 +1392,8 @@ build dependencies. It also runs a smoke check for the lexicon patch exporter,
 verifying that it can write both the JSON bundle and review-only patch text,
 and a web route smoke check that requests ordinary `/api/analyze` fallback and
 quantifier-scope successes plus a registered perception-complement success
-and a registered universal timed burning success before the diagnostic fixture
-manifest through the local HTTP handler.
+plus registered timed-after and universal timed burning successes before the
+diagnostic fixture manifest through the local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the

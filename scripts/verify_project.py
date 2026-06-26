@@ -1436,6 +1436,182 @@ def validate_analyze_perception_success(payload: dict, page: str, sentence: str)
         raise SystemExit("web route smoke check failed: perception page input drift")
 
 
+def validate_analyze_timed_after_success(payload: dict, page: str, sentence: str) -> None:
+    case = "analyze_timed_after_success"
+    expected_translation = (
+        "exists t_sing t_salute : Time. sing(Marseillaise, t_sing) and "
+        "salute(John, flag, t_salute) and before(t_sing, t_salute)"
+    )
+    if payload.get("schema_version") != "analyze.v1":
+        raise SystemExit("web route smoke check failed: timed-after analyze schema drift")
+    if payload.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: timed-after analyze did not verify")
+    if payload.get("input_sentence") != sentence:
+        raise SystemExit("web route smoke check failed: timed-after analyze input drift")
+    if payload.get("kind") != "timed_after":
+        raise SystemExit("web route smoke check failed: timed-after kind drift")
+    construction_rule = payload.get("construction_rule")
+    if not isinstance(construction_rule, dict):
+        raise SystemExit("web route smoke check failed: timed-after construction rule missing")
+    if construction_rule.get("id") != "timed_after":
+        raise SystemExit("web route smoke check failed: timed-after construction rule drift")
+    forbidden = construction_rule.get("forbidden_coq_fragments")
+    if (
+        not isinstance(forbidden, list)
+        or "Parameter Event : Type." not in forbidden
+        or "exists e : Event" not in forbidden
+    ):
+        raise SystemExit("web route smoke check failed: timed-after hygiene policy drift")
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit("web route smoke check failed: timed-after diagnostics missing")
+    if diagnostics.get("summary") != "translation verified":
+        raise SystemExit("web route smoke check failed: timed-after diagnostics summary drift")
+    if diagnostics.get("failure_stage") is not None:
+        raise SystemExit("web route smoke check failed: timed-after diagnostics stage drift")
+    if diagnostics.get("recovery_actions") != []:
+        raise SystemExit("web route smoke check failed: timed-after recovery action drift")
+    stages = diagnostics.get("stages")
+    if not isinstance(stages, dict):
+        raise SystemExit("web route smoke check failed: timed-after stage map missing")
+    for stage in ["type_check", "semantic_readings_check", "construction_hygiene", "coq_check"]:
+        if stages.get(stage) != "passed":
+            raise SystemExit("web route smoke check failed: timed-after stage drift")
+    event_semantics = payload.get("event_semantics")
+    if not isinstance(event_semantics, dict):
+        raise SystemExit("web route smoke check failed: timed-after event semantics missing")
+    if event_semantics.get("analysis") != "parsons-after-event-talk":
+        raise SystemExit("web route smoke check failed: timed-after analysis drift")
+    if event_semantics.get("typed_replacement") != expected_translation:
+        raise SystemExit("web route smoke check failed: timed-after typed replacement drift")
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit("web route smoke check failed: timed-after translation drift")
+    ast = payload.get("ast")
+    if not isinstance(ast, dict) or ast.get("kind") != "timed_after":
+        raise SystemExit("web route smoke check failed: timed-after AST kind drift")
+    if ast.get("binders") != [
+        {"variable": "t_sing", "type": "Time"},
+        {"variable": "t_salute", "type": "Time"},
+    ]:
+        raise SystemExit("web route smoke check failed: timed-after binder drift")
+    if ast.get("relation") != {
+        "predicate": "before",
+        "predicate_type": "Time -> Time -> Prop",
+        "arguments": ["t_sing", "t_salute"],
+    }:
+        raise SystemExit("web route smoke check failed: timed-after relation drift")
+    if ast.get("first") != {
+        "predicate": "sing",
+        "predicate_type": "Entity -> Time -> Prop",
+        "theme": {"name": "Marseillaise", "type": "Entity"},
+        "time": "t_sing",
+    }:
+        raise SystemExit("web route smoke check failed: timed-after first clause drift")
+    if ast.get("second") != {
+        "predicate": "salute",
+        "predicate_type": "Entity -> Entity -> Time -> Prop",
+        "agent": {"name": "John", "type": "Entity"},
+        "theme": {"name": "flag", "type": "Entity"},
+        "time": "t_salute",
+    }:
+        raise SystemExit("web route smoke check failed: timed-after second clause drift")
+    type_check = payload.get("type_check")
+    if (
+        not isinstance(type_check, dict)
+        or type_check.get("ok") is not True
+        or type_check.get("type") != "Prop"
+    ):
+        raise SystemExit("web route smoke check failed: timed-after type-check drift")
+    check = payload.get("semantic_readings_check")
+    if (
+        not isinstance(check, dict)
+        or check.get("ok") is not True
+        or check.get("reading_count") != 1
+    ):
+        raise SystemExit("web route smoke check failed: timed-after reading-count drift")
+    repair = check.get("repair_details")
+    if (
+        not isinstance(repair, dict)
+        or repair.get("expected_coq_definitions") != ["after_singing_salute"]
+        or repair.get("exported_definitions") != ["after_singing_salute"]
+        or repair.get("observed_export_count") != 1
+    ):
+        raise SystemExit("web route smoke check failed: timed-after repair-detail drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: timed-after semantic reading drift")
+    reading = readings[0]
+    if not isinstance(reading, dict):
+        raise SystemExit("web route smoke check failed: timed-after semantic reading malformed")
+    expected_fields = {
+        "name": "timed_after_singing_salute",
+        "scope": "time_before_salute",
+        "source": "timed_after",
+        "dependent_type_translation": expected_translation,
+        "coq_definition": "after_singing_salute",
+    }
+    for field, expected in expected_fields.items():
+        if reading.get(field) != expected:
+            raise SystemExit("web route smoke check failed: timed-after semantic reading drift")
+    attachment = reading.get("attachment_summary")
+    if not isinstance(attachment, dict) or attachment.get("kind") != "none":
+        raise SystemExit("web route smoke check failed: timed-after attachment drift")
+    local_type = reading.get("type_check")
+    if (
+        not isinstance(local_type, dict)
+        or local_type.get("ok") is not True
+        or local_type.get("type") != "Prop"
+    ):
+        raise SystemExit("web route smoke check failed: timed-after reading type drift")
+    coq_code = payload.get("coq_code")
+    if not isinstance(coq_code, str):
+        raise SystemExit("web route smoke check failed: timed-after Coq export missing")
+    expected_coq_fragments = [
+        "Parameter Time : Type.",
+        "Parameter Marseillaise : Entity.",
+        "Parameter John : Entity.",
+        "Parameter flag : Entity.",
+        "Parameter sing : Entity -> Time -> Prop.",
+        "Parameter salute : Entity -> Entity -> Time -> Prop.",
+        "Parameter before : Time -> Time -> Prop.",
+        "Definition after_singing_salute : Prop :=",
+        "exists t_sing : Time,",
+        "exists t_salute : Time,",
+        "sing Marseillaise t_sing /\\",
+        "salute John flag t_salute /\\",
+        "before t_sing t_salute.",
+        "Check after_singing_salute.",
+    ]
+    for fragment in expected_coq_fragments:
+        if fragment not in coq_code:
+            raise SystemExit("web route smoke check failed: timed-after Coq export drift")
+    for forbidden_fragment in [
+        "Parameter Event : Type.",
+        "exists e : Event",
+        "Agent",
+        "Theme",
+    ]:
+        if forbidden_fragment in coq_code:
+            raise SystemExit("web route smoke check failed: timed-after event export drift")
+    expected_page_fragments = [
+        "timed_after",
+        "parsons-after-event-talk",
+        html.escape(expected_translation, quote=True),
+        'data-reading-name="timed_after_singing_salute"',
+        'data-coq-definition="after_singing_salute"',
+        "<dt>scope</dt><dd>time_before_salute</dd>",
+        "<dt>source</dt><dd>timed_after</dd>",
+        "<dt>attachment</dt><dd>none</dd>",
+        "<dt>coq</dt><dd>after_singing_salute</dd>",
+    ]
+    for fragment in expected_page_fragments:
+        if fragment not in page:
+            raise SystemExit("web route smoke check failed: timed-after HTML drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: timed-after page input drift")
+
+
 def validate_analyze_universal_timed_burning_success(
     payload: dict,
     page: str,
@@ -2197,6 +2373,17 @@ def run_web_route_smoke_check() -> None:
             perception_payload,
             perception_page,
             perception_sentence,
+        )
+        timed_after_sentence = "after the singing of the Marseillaise, John saluted the flag"
+        timed_after_query = urlencode({"sentence": timed_after_sentence, "require_coq": "1"})
+        with opener.open(f"{base_url}/api/analyze?{timed_after_query}", timeout=5) as response:
+            timed_after_payload = json.load(response)
+        with opener.open(f"{base_url}/?{timed_after_query}", timeout=5) as response:
+            timed_after_page = response.read().decode("utf-8")
+        validate_analyze_timed_after_success(
+            timed_after_payload,
+            timed_after_page,
+            timed_after_sentence,
         )
         burning_sentence = "In every burning, oxygen is consumed"
         burning_query = urlencode({"sentence": burning_sentence, "require_coq": "1"})

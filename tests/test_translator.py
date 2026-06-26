@@ -11802,6 +11802,10 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn(
+            "/api/analyze?sentence=after+the+singing+of+the+Marseillaise%2C+John+saluted+the+flag&require_coq=1",
+            readme,
+        )
+        self.assertIn(
             "/api/analyze?sentence=In+every+burning%2C+oxygen+is+consumed&require_coq=1",
             readme,
         )
@@ -11809,6 +11813,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some_boy_wide_scope", readme)
         self.assertIn("some_girl_wide_scope", readme)
         self.assertIn("mary_saw_john_leave", readme)
+        self.assertIn("after_singing_salute", readme)
         self.assertIn("every_burning_consumes_oxygen", readme)
         self.assertIn("schema drift", readme)
         self.assertIn("required-fixture-stage", readme)
@@ -12129,6 +12134,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy loves some girl", web_design)
         self.assertIn("registered perception-complement success path", web_design)
         self.assertIn("Mary saw John leave", web_design)
+        self.assertIn("registered timed-after success path", web_design)
+        self.assertIn("after the singing of the Marseillaise", web_design)
         self.assertIn("registered universal timed burning success path", web_design)
         self.assertIn("In every burning, oxygen is consumed", web_design)
         self.assertIn(
@@ -12160,6 +12167,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary saw John leave", manuscript)
         self.assertIn("E : Prop -> Entity", manuscript)
         self.assertIn("mary_saw_john_leave", manuscript)
+        self.assertIn("after the singing of the Marseillaise", manuscript)
+        self.assertIn("after_singing_salute", manuscript)
+        self.assertIn("before(t_sing, t_salute)", manuscript)
         self.assertIn("In every burning, oxygen is consumed", manuscript)
         self.assertIn("every_burning_consumes_oxygen", manuscript)
         self.assertIn("forall x : Entity. forall t : Time", manuscript)
@@ -13446,15 +13456,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_analyze_fallback_success(", verifier)
         self.assertIn("def validate_analyze_quantifier_scope_success(", verifier)
         self.assertIn("def validate_analyze_perception_success(", verifier)
+        self.assertIn("def validate_analyze_timed_after_success(", verifier)
         self.assertIn("def validate_analyze_universal_timed_burning_success(", verifier)
         self.assertIn("analyze_fallback_success", verifier)
         self.assertIn("analyze_quantifier_scope_success", verifier)
         self.assertIn("analyze_perception_success", verifier)
+        self.assertIn("analyze_timed_after_success", verifier)
         self.assertIn("analyze_universal_timed_burning_success", verifier)
         self.assertIn("/api/analyze?", verifier)
         self.assertIn("John knocked twice", verifier)
         self.assertIn("some boy loves some girl", verifier)
         self.assertIn("Mary saw John leave", verifier)
+        self.assertIn("after the singing of the Marseillaise, John saluted the flag", verifier)
         self.assertIn("In every burning, oxygen is consumed", verifier)
         self.assertIn("fallback_single_reading", verifier)
         self.assertIn("fallback_event_semantics", verifier)
@@ -13466,6 +13479,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("mary_saw_john_leave", verifier)
         self.assertIn("Parameter E : Prop -> Entity.", verifier)
         self.assertIn("perception event export drift", verifier)
+        self.assertIn("timed_after_singing_salute", verifier)
+        self.assertIn("after_singing_salute", verifier)
+        self.assertIn("Parameter before : Time -> Time -> Prop.", verifier)
+        self.assertIn("timed-after event export drift", verifier)
         self.assertIn("universal_timed_burning", verifier)
         self.assertIn("every_burning_consumes_oxygen", verifier)
         self.assertIn("Parameter burn : Entity -> Time -> Prop.", verifier)
