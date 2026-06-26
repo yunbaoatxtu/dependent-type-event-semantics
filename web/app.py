@@ -2247,13 +2247,16 @@ def certified_fragment_panel() -> str:
             if isinstance(item, dict)
         )
     semantic_snapshot_items = "".join(
+        (
         '<li '
         f'data-semantic-snapshot-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
         f'data-semantic-snapshot-analysis="{html.escape(str(item.get("expected_event_analysis", "")), quote=True)}" '
+        f'data-semantic-snapshot-ast-kind="{html.escape(str((item.get("expected_ast_summary") or {}).get("kind", "")), quote=True)}" '
         f'data-semantic-snapshot-reading-count="{len(item.get("expected_reading_names", [])) if isinstance(item.get("expected_reading_names"), list) else 0}">'
         f'<code>{html.escape(str(item.get("rule_id", "")))}</code>'
         f'<span>{html.escape(str(item.get("expected_event_analysis", "")))}</span>'
         "</li>"
+        )
         for item in semantic_snapshots
     )
     return (

@@ -53,6 +53,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     ConstructionRule,
+    ast_structure_summary,
     check_copular_property_ast,
     check_lexical_state_change_ast,
     check_negated_coordination_readings,
@@ -153,7 +154,12 @@ def load_example(name: str) -> dict:
 
 @contextmanager
 def pipeline_server():
-    server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    except PermissionError as exc:
+        raise unittest.SkipTest(
+            f"local HTTP server unavailable in this environment: {exc}"
+        ) from exc
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -8990,6 +8996,10 @@ class TranslatorTests(unittest.TestCase):
                     result["type_check"]["type"],
                     snapshot["expected_type_check_type"],
                 )
+                self.assertEqual(
+                    ast_structure_summary(result["ast"]),
+                    snapshot["expected_ast_summary"],
+                )
                 exported = exported_prop_definition_names(result["coq_code"])
                 self.assertTrue(
                     set(snapshot["expected_coq_definitions"]).issubset(exported),
@@ -9026,6 +9036,12 @@ class TranslatorTests(unittest.TestCase):
         manifest = deepcopy(construction_fragment_manifest())
         manifest["semantic_snapshots"][0]["expected_event_analysis"] = "wrong-analysis"
         with self.assertRaisesRegex(SystemExit, "semantic snapshot analysis drift"):
+            validate_certified_fragment_manifest(manifest)
+
+    def test_verification_rejects_certified_fragment_ast_snapshot_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["semantic_snapshots"][0]["expected_ast_summary"]["kind"] = "wrong-kind"
+        with self.assertRaisesRegex(SystemExit, "semantic snapshot AST drift"):
             validate_certified_fragment_manifest(manifest)
 
     def test_web_api_and_page_expose_certified_fragment_manifest(self) -> None:
@@ -9089,6 +9105,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn('data-semantic-snapshot-analysis="quantifier-scope"', page)
+        self.assertIn('data-semantic-snapshot-ast-kind="scope_ambiguity"', page)
         self.assertIn('data-coverage-kind="fallback_success"', page)
         self.assertIn('data-coverage-kind="rejected_unsupported"', page)
         self.assertIn('data-coverage-marker="because"', page)
@@ -12487,6 +12504,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("rejected_unsupported_cases", manuscript)
         self.assertIn("semantic_snapshots", manuscript)
         self.assertIn("semantic_snapshot_count", manuscript)
+        self.assertIn("expected_ast_summary", manuscript)
+        self.assertIn("parser-level drift", manuscript)
         self.assertIn("semantic drift", manuscript)
         self.assertIn("Certified Fragment panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
@@ -12994,6 +13013,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`rejected_unsupported_cases`", readme)
         self.assertIn("`semantic_snapshots`", readme)
         self.assertIn("`semantic_snapshot_count`", readme)
+        self.assertIn("`expected_ast_summary`", readme)
+        self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -13021,6 +13042,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_snapshots`", web_design)
         self.assertIn("`semantic_snapshot_count`", web_design)
         self.assertIn("`data-semantic-snapshot-*`", web_design)
+        self.assertIn("`expected_ast_summary`", web_design)
+        self.assertIn("`data-semantic-snapshot-ast-kind`", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)
@@ -13783,7 +13806,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("semantic_snapshots", verifier)
         self.assertIn("semantic_snapshot_count", verifier)
         self.assertIn("data-semantic-snapshot-rule-id", verifier)
+        self.assertIn("data-semantic-snapshot-ast-kind", verifier)
+        self.assertIn("ast_structure_summary", verifier)
         self.assertIn("semantic snapshot analysis drift", verifier)
+        self.assertIn("semantic snapshot AST drift", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)

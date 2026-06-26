@@ -121,9 +121,12 @@ The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,
 Coq/Rocq definition names, and type-check result for that rule's primary
-example. The `Certified Fragment` panel mirrors the snapshot count and exposes
-per-rule `data-semantic-snapshot-*` hooks, while the verifier runs the live
-pipeline against the static snapshots to catch semantic drift.
+example. It also stores `expected_ast_summary`, a compact structural digest of
+AST kind, predicate symbols/types, entity and state symbols, binder and
+quantifier signatures, and core list counts. The `Certified Fragment` panel
+mirrors the snapshot count and exposes per-rule `data-semantic-snapshot-*`
+hooks, including `data-semantic-snapshot-ast-kind`, while the verifier runs the
+live pipeline against the static snapshots to catch semantic and AST drift.
 For ordinary fallback successes, the API response and HTML panel must agree on
 the same normalized reading row: `fallback_single_reading` from
 `fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
@@ -467,7 +470,10 @@ the JSON manifest.
 It should likewise validate `semantic_snapshot_count`, the page's
 `data-semantic-snapshot-*` hooks, and the live pipeline output for every
 snapshot so analysis labels, reading names, Coq/Rocq definitions, and
-dependent-type fragments cannot drift silently.
+dependent-type fragments cannot drift silently. It should compare
+`expected_ast_summary` with a freshly computed AST structure summary for the
+same sentence, so parser-level drift is caught before it is hidden by a similar
+surface rendering.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

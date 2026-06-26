@@ -10,7 +10,7 @@ import re
 import shutil
 import subprocess
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -364,6 +364,360 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_type_check_type": "Prop",
     },
 )
+
+
+CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
+    "simple_conditional": {
+        "kind": "conditional_implication",
+        "predicate_symbols": ["cry", "leave"],
+        "predicate_types": ["Entity -> Prop"],
+        "entity_symbols": ["john", "mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "perception_nominalization": {
+        "kind": "perception_nominalization",
+        "predicate_symbols": ["leave", "see"],
+        "predicate_types": ["Entity -> Entity -> Prop", "Entity -> Prop"],
+        "entity_symbols": ["John", "Mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "universal_timed_burning": {
+        "kind": "forall_time",
+        "predicate_symbols": ["burn", "consume"],
+        "predicate_types": ["Entity -> Time -> Prop"],
+        "entity_symbols": ["oxygen", "x"],
+        "state_symbols": [],
+        "binder_signatures": ["x:Entity", "t:Time"],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "timed_after": {
+        "kind": "timed_after",
+        "predicate_symbols": ["before", "salute", "sing"],
+        "predicate_types": [
+            "Entity -> Entity -> Time -> Prop",
+            "Entity -> Time -> Prop",
+            "Time -> Time -> Prop",
+        ],
+        "entity_symbols": ["John", "Marseillaise", "flag"],
+        "state_symbols": [],
+        "binder_signatures": ["t_sing:Time", "t_salute:Time"],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "quantifier_scope_ambiguity": {
+        "kind": "scope_ambiguity",
+        "predicate_symbols": ["boy", "girl", "love"],
+        "predicate_types": ["Entity -> Entity -> Prop", "Entity -> Prop"],
+        "entity_symbols": [],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": ["object:some", "subject:some"],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 2,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "lexical_state_change": {
+        "kind": "lexical_state_change",
+        "predicate_symbols": [],
+        "predicate_types": [],
+        "entity_symbols": ["door"],
+        "state_symbols": ["access_scale", "closed", "open"],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "stative_result_state": {
+        "kind": "stative_result_state",
+        "predicate_symbols": ["holds_state"],
+        "predicate_types": ["Entity -> StateScale -> State -> Prop"],
+        "entity_symbols": ["vase"],
+        "state_symbols": ["broken", "integrity_scale"],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 1,
+        "object_count": 0,
+    },
+    "passive_argument_omission": {
+        "kind": "passive_argument_omission",
+        "predicate_symbols": ["butter"],
+        "predicate_types": ["Entity -> Entity -> Prop"],
+        "entity_symbols": ["toast", "x_agent"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "copular_property": {
+        "kind": "copular_property",
+        "predicate_symbols": ["holds_property"],
+        "predicate_types": ["Entity -> Property -> Prop"],
+        "entity_symbols": ["mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 1,
+        "object_count": 0,
+    },
+    "do_support_negation": {
+        "kind": "not",
+        "predicate_symbols": ["walk"],
+        "predicate_types": [],
+        "entity_symbols": ["john"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "predicate_coordination": {
+        "kind": "predicate_coordination",
+        "predicate_symbols": ["and_T", "talk", "walk"],
+        "predicate_types": ["Entity -> Prop"],
+        "entity_symbols": ["john"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 1,
+        "object_count": 0,
+    },
+    "subject_coordination": {
+        "kind": "subject_coordination",
+        "predicate_symbols": ["and_T", "walk"],
+        "predicate_types": ["Entity -> Prop"],
+        "entity_symbols": ["john", "mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 2,
+        "object_count": 0,
+    },
+    "transitive_subject_coordination": {
+        "kind": "transitive_subject_coordination",
+        "predicate_symbols": ["and_T", "eat"],
+        "predicate_types": ["Entity -> Food -> Prop"],
+        "entity_symbols": ["john", "mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 2,
+        "object_count": 1,
+    },
+    "object_coordination": {
+        "kind": "object_coordination",
+        "predicate_symbols": ["and_T", "visit"],
+        "predicate_types": ["Entity -> Entity -> Prop"],
+        "entity_symbols": ["london", "mary", "paris"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 1,
+        "object_count": 2,
+    },
+    "transitive_predicate_coordination": {
+        "kind": "transitive_predicate_coordination",
+        "predicate_symbols": ["and_T", "drink", "eat"],
+        "predicate_types": [
+            "Entity -> Drinkable -> Prop",
+            "Entity -> Food -> Prop",
+        ],
+        "entity_symbols": ["john"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 2,
+        "subject_count": 1,
+        "object_count": 0,
+    },
+}
+
+
+def _unique_strings(values: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for value in values:
+        if value not in seen:
+            seen.add(value)
+            unique.append(value)
+    return unique
+
+
+def _walk_json_tree(value: Any) -> Iterable[Any]:
+    yield value
+    if isinstance(value, dict):
+        for child in value.values():
+            yield from _walk_json_tree(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _walk_json_tree(child)
+
+
+def ast_structure_summary(ast: dict[str, Any]) -> dict[str, Any]:
+    """Return a stable, non-exhaustive summary for certified-fragment drift checks."""
+    predicate_symbols: list[str] = []
+    predicate_types: list[str] = []
+    entity_symbols: list[str] = []
+    state_symbols: list[str] = []
+    binder_signatures: list[str] = []
+
+    for node in _walk_json_tree(ast):
+        if not isinstance(node, dict):
+            continue
+        for key in ("predicate", "function", "connective"):
+            value = node.get(key)
+            if isinstance(value, str):
+                predicate_symbols.append(value)
+        if isinstance(node.get("name"), str) and isinstance(
+            node.get("predicate_type"),
+            str,
+        ):
+            predicate_symbols.append(node["name"])
+        if isinstance(node.get("predicate_type"), str):
+            predicate_types.append(node["predicate_type"])
+        if node.get("type") == "Entity":
+            for key in ("name", "variable", "value"):
+                value = node.get(key)
+                if isinstance(value, str):
+                    entity_symbols.append(value)
+        if node.get("type") == "State" and isinstance(node.get("name"), str):
+            state_symbols.append(node["name"])
+        for key in ("source_state", "state_scale"):
+            value = node.get(key)
+            if isinstance(value, str):
+                state_symbols.append(value)
+        if (
+            set(node) == {"variable", "type"}
+            and isinstance(node.get("variable"), str)
+            and isinstance(node.get("type"), str)
+        ):
+            binder_signatures.append(f"{node['variable']}:{node['type']}")
+
+    quantifier_signatures: list[str] = []
+    quantifiers = ast.get("quantifiers") if isinstance(ast, dict) else None
+    if isinstance(quantifiers, dict):
+        quantifier_signatures = [
+            f"{key}:{value}"
+            for key, value in sorted(quantifiers.items())
+            if isinstance(value, str)
+        ]
+
+    return {
+        "kind": ast.get("kind") if isinstance(ast, dict) else None,
+        "predicate_symbols": sorted(_unique_strings(predicate_symbols)),
+        "predicate_types": sorted(_unique_strings(predicate_types)),
+        "entity_symbols": sorted(_unique_strings(entity_symbols)),
+        "state_symbols": sorted(_unique_strings(state_symbols)),
+        "binder_signatures": binder_signatures,
+        "quantifier_signatures": quantifier_signatures,
+        "top_level_modifier_count": (
+            len(ast.get("modifiers", []))
+            if isinstance(ast, dict) and isinstance(ast.get("modifiers"), list)
+            else 0
+        ),
+        "top_level_time_modifier_count": (
+            len(ast.get("time_modifiers", []))
+            if isinstance(ast, dict) and isinstance(ast.get("time_modifiers"), list)
+            else 0
+        ),
+        "reading_count": (
+            len(ast.get("readings", []))
+            if isinstance(ast, dict) and isinstance(ast.get("readings"), list)
+            else 0
+        ),
+        "clause_count": (
+            len(ast.get("clauses", []))
+            if isinstance(ast, dict) and isinstance(ast.get("clauses"), list)
+            else 0
+        ),
+        "subject_count": (
+            len(ast.get("subjects", []))
+            if isinstance(ast, dict) and isinstance(ast.get("subjects"), list)
+            else (
+                1
+                if isinstance(ast, dict) and isinstance(ast.get("subject"), dict)
+                else 0
+            )
+        ),
+        "object_count": (
+            len(ast.get("objects", []))
+            if isinstance(ast, dict) and isinstance(ast.get("objects"), list)
+            else (
+                1
+                if isinstance(ast, dict) and isinstance(ast.get("object"), dict)
+                else 0
+            )
+        ),
+    }
 
 
 def atom(pred: str, *args: str) -> dict[str, Any]:
@@ -10549,10 +10903,15 @@ def construction_fragment_manifest() -> dict[str, Any]:
     rejected_unsupported_cases = [
         dict(example) for example in UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES
     ]
-    semantic_snapshots = [
-        copy.deepcopy(snapshot)
-        for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
-    ]
+    semantic_snapshots = []
+    for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS:
+        snapshot_copy = copy.deepcopy(snapshot)
+        ast_summary = CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS.get(
+            snapshot_copy["rule_id"],
+        )
+        if ast_summary is not None:
+            snapshot_copy["expected_ast_summary"] = copy.deepcopy(ast_summary)
+        semantic_snapshots.append(snapshot_copy)
     return {
         "schema_version": "certified_fragment.v1",
         "full_natural_language_certification": False,

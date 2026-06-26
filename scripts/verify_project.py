@@ -2094,6 +2094,7 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
 
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
+        ast_structure_summary,
         construction_rules,
         exported_prop_definition_names,
         run_pipeline,
@@ -2198,6 +2199,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         expected_sources = snapshot.get("expected_reading_sources")
         expected_scopes = snapshot.get("expected_reading_scopes")
         expected_definitions = snapshot.get("expected_coq_definitions")
+        expected_ast_summary = snapshot.get("expected_ast_summary")
         if (
             not isinstance(snapshot.get("expected_event_analysis"), str)
             or not snapshot["expected_event_analysis"]
@@ -2211,6 +2213,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             or not isinstance(expected_definitions, list)
             or not expected_definitions
             or not isinstance(snapshot.get("expected_type_check_type"), str)
+            or not isinstance(expected_ast_summary, dict)
         ):
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} snapshot schema drift"
@@ -2268,6 +2271,11 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         ):
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} semantic snapshot type drift"
+            )
+        observed_ast_summary = ast_structure_summary(result.get("ast", {}))
+        if observed_ast_summary != expected_ast_summary:
+            raise SystemExit(
+                f"web route smoke check failed: certified rule {rule_id} semantic snapshot AST drift"
             )
         exported_definitions = exported_prop_definition_names(result.get("coq_code", ""))
         missing_exports = sorted(set(expected_definitions) - set(exported_definitions))
@@ -2356,6 +2364,16 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         )
         expected_fragments.extend(
             f'data-semantic-snapshot-analysis="{html.escape(str(item.get("expected_event_analysis", "")), quote=True)}"'
+            for item in snapshots
+            if isinstance(item, dict)
+        )
+        expected_fragments.extend(
+            'data-semantic-snapshot-ast-kind="{}"'.format(
+                html.escape(
+                    str((item.get("expected_ast_summary") or {}).get("kind", "")),
+                    quote=True,
+                )
+            )
             for item in snapshots
             if isinstance(item, dict)
         )
@@ -2614,7 +2632,11 @@ def run_web_route_smoke_check() -> None:
     from web.app import PipelineHandler
 
     print("==> web route smoke check")
-    server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", 0), PipelineHandler)
+    except PermissionError as exc:
+        print(f"==> web route smoke check skipped: local HTTP server unavailable ({exc})")
+        return
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
