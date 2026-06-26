@@ -183,22 +183,22 @@ def strip_surface_coordination_marker(tokens: list[str]) -> list[str]:
     return tokens
 
 
-def parse_relative_restrictor(
+def parse_relative_restrictor_variants(
     tokens: list[str],
-) -> tuple[list[str], list[dict[str, Any]]] | None:
+) -> list[tuple[list[str], list[dict[str, Any]]]] | None:
     marker_indices = [
         index
         for index, token in enumerate(tokens)
         if token in RELATIVE_RESTRICTOR_MARKERS
     ]
     if not marker_indices:
-        return tokens, []
+        return [(tokens, [])]
     if len(marker_indices) != 1:
         return None
     marker_index = marker_indices[0]
     if marker_index == 0:
         return None
-    relative_tokens = tokens[marker_index + 1 :]
+    relative_tokens = list(tokens[marker_index + 1 :])
     if not relative_tokens:
         return None
     leading_modifiers: list[dict[str, Any]] = []
@@ -235,30 +235,39 @@ def parse_relative_restrictor(
             restrictor["modifiers"] = modifiers
         if time_modifiers:
             restrictor["time_modifiers"] = time_modifiers
-        return (tokens[:marker_index], [restrictor])
+        return [(tokens[:marker_index], [restrictor])]
     if len(relative_tokens) >= 2 and is_likely_transitive_verb(relative_surface):
-        relative_object_np = parse_relative_object_np(relative_tokens[1:])
-        if relative_object_np is not None:
-            object_np, adv_modifiers, time_modifiers, _consumed = relative_object_np
-            modifiers = [*leading_modifiers, *adv_modifiers]
-            restrictor = {
-                "predicate": predicate,
-                "predicate_type": (
-                    MODIFIER_INDEXED_BINARY_RELATION
-                    if modifiers
-                    else "Entity -> Entity -> Prop"
-                ),
-                "surface": " ".join(tokens[marker_index:]),
-                "marker": tokens[marker_index],
-                "relative_verb": relative_surface,
-                "object_np": object_np,
-                "kind": "relative_clause_restrictor",
-            }
-            if modifiers:
-                restrictor["modifiers"] = modifiers
-            if time_modifiers:
-                restrictor["time_modifiers"] = time_modifiers
-            return (tokens[:marker_index], [restrictor])
+        relative_object_np_variants = parse_relative_object_np_variants(
+            relative_tokens[1:]
+        )
+        if relative_object_np_variants:
+            variants: list[tuple[list[str], list[dict[str, Any]]]] = []
+            for (
+                object_np,
+                adv_modifiers,
+                time_modifiers,
+                _consumed,
+            ) in relative_object_np_variants:
+                modifiers = [*leading_modifiers, *adv_modifiers]
+                restrictor = {
+                    "predicate": predicate,
+                    "predicate_type": (
+                        MODIFIER_INDEXED_BINARY_RELATION
+                        if modifiers
+                        else "Entity -> Entity -> Prop"
+                    ),
+                    "surface": " ".join(tokens[marker_index:]),
+                    "marker": tokens[marker_index],
+                    "relative_verb": relative_surface,
+                    "object_np": object_np,
+                    "kind": "relative_clause_restrictor",
+                }
+                if modifiers:
+                    restrictor["modifiers"] = modifiers
+                if time_modifiers:
+                    restrictor["time_modifiers"] = time_modifiers
+                variants.append((tokens[:marker_index], [restrictor]))
+            return variants
         trailing_modifiers = split_common_adv_and_time_modifiers(relative_tokens[2:])
         if trailing_modifiers is None:
             return None
@@ -286,15 +295,94 @@ def parse_relative_restrictor(
             restrictor["modifiers"] = modifiers
         if time_modifiers:
             restrictor["time_modifiers"] = time_modifiers
-        return (tokens[:marker_index], [restrictor])
+        return [(tokens[:marker_index], [restrictor])]
     return None
 
 
-def parse_relative_object_np(
+def parse_relative_restrictor(
     tokens: list[str],
-) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, str]], int] | None:
-    if len(tokens) < 2 or tokens[0] not in RELATIVE_OBJECT_NP_DETERMINERS:
+) -> tuple[list[str], list[dict[str, Any]]] | None:
+    variants = parse_relative_restrictor_variants(tokens)
+    if not variants:
         return None
+    return variants[0]
+
+
+def relative_object_np_base(
+    determiner: str,
+    nominal_tokens: list[str],
+    surface_tokens: list[str],
+) -> dict[str, Any]:
+    predicates = [lemma_verb(token) for token in nominal_tokens]
+    head = predicates[-1]
+    variable = f"x_rel_{head}"
+    restrictors = [
+        {"predicate": predicate, "predicate_type": "Entity -> Prop"}
+        for predicate in predicates
+    ]
+    return {
+        "surface": " ".join(surface_tokens),
+        "quantifier": determiner,
+        "variable": variable,
+        "type": "Entity",
+        "head": head,
+        "adjectives": predicates[:-1],
+        "restrictors": restrictors,
+    }
+
+
+def pp_restrictor_record(preposition: str, phrase: list[str]) -> dict[str, Any]:
+    expression = modifier_expression(preposition, phrase)
+    return {
+        "predicate": f"{normalize_surface_name(expression)}_np",
+        "predicate_type": "Entity -> Prop",
+        "expression": expression,
+        "semantic_role": modifier_semantic_role(expression),
+        "argument": clean_phrase(phrase),
+        "kind": "pp_restrictor",
+    }
+
+
+def split_non_temporal_pp(
+    tokens: list[str],
+    start: int,
+    forbidden_pp_tokens: set[str],
+) -> tuple[str, list[str], int] | None:
+    if start >= len(tokens):
+        return None
+    preposition = tokens[start]
+    if preposition not in PREPOSITIONS:
+        return None
+    if temporal_prepositional_phrase_value(tokens, start) is not None:
+        return None
+    idx = start + 1
+    phrase: list[str] = []
+    while idx < len(tokens):
+        if any(token not in ARTICLES for token in phrase):
+            if tokens[idx] in PREPOSITIONS:
+                break
+            if tokens[idx] in COMMON_ADVERBS:
+                break
+            if tokens[idx] in TEMPORAL_ADVERBS:
+                break
+            if temporal_phrase_value(tokens, idx) is not None:
+                break
+            if temporal_prepositional_phrase_value(tokens, idx) is not None:
+                break
+        if tokens[idx] in forbidden_pp_tokens:
+            return None
+        phrase.append(tokens[idx])
+        idx += 1
+    if not any(token not in ARTICLES for token in phrase):
+        return None
+    return preposition, phrase, idx
+
+
+def parse_relative_object_np_variants(
+    tokens: list[str],
+) -> list[tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, str]], int]]:
+    if len(tokens) < 2 or tokens[0] not in RELATIVE_OBJECT_NP_DETERMINERS:
+        return []
     forbidden_nominal_tokens = (
         COMMON_ADVERBS
         | TEMPORAL_ADVERBS
@@ -305,6 +393,19 @@ def parse_relative_object_np(
         | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
         | PREPOSITIONS
     )
+    forbidden_pp_tokens = (
+        (SUPPORTED_SCOPE_DETERMINERS - ARTICLES)
+        | COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+    )
+    variants: list[
+        tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, str]], int]
+    ] = []
     for end in range(2, len(tokens) + 1):
         nominal_tokens = tokens[1:end]
         if (
@@ -313,28 +414,58 @@ def parse_relative_object_np(
             or any(token in RELATIVE_OBJECT_NP_DETERMINERS for token in nominal_tokens)
         ):
             continue
+        base_np = relative_object_np_base(tokens[0], nominal_tokens, tokens[:end])
         trailing_modifiers = split_common_adv_and_time_modifiers(tokens[end:])
-        if trailing_modifiers is None:
+        if trailing_modifiers is not None:
+            adv_modifiers, time_modifiers = trailing_modifiers
+            variants.append((base_np, adv_modifiers, time_modifiers, end))
+
+        pp = split_non_temporal_pp(tokens, end, forbidden_pp_tokens)
+        if pp is None:
             continue
-        adv_modifiers, time_modifiers = trailing_modifiers
-        predicates = [lemma_verb(token) for token in nominal_tokens]
-        head = predicates[-1]
-        variable = f"x_rel_{head}"
-        restrictors = [
-            {"predicate": predicate, "predicate_type": "Entity -> Prop"}
-            for predicate in predicates
+        preposition, phrase, pp_end = pp
+        trailing_after_pp = split_common_adv_and_time_modifiers(tokens[pp_end:])
+        if trailing_after_pp is None:
+            continue
+        trailing_adv_modifiers, trailing_time_modifiers = trailing_after_pp
+        expression = modifier_expression(preposition, phrase)
+
+        object_restrictor_np = copy.deepcopy(base_np)
+        object_restrictor_np["surface"] = " ".join(tokens[:pp_end])
+        pp_restrictor = pp_restrictor_record(preposition, phrase)
+        object_restrictor_np["restrictors"].append(pp_restrictor)
+        object_restrictor_np["postnominal_restrictors"] = [pp_restrictor]
+        variants.append(
+            (
+                object_restrictor_np,
+                trailing_adv_modifiers,
+                trailing_time_modifiers,
+                pp_end,
+            )
+        )
+
+        relative_adv_modifiers = [
+            modifier_record(expression),
+            *trailing_adv_modifiers,
         ]
-        object_np = {
-            "surface": " ".join(tokens[:end]),
-            "quantifier": tokens[0],
-            "variable": variable,
-            "type": "Entity",
-            "head": head,
-            "adjectives": predicates[:-1],
-            "restrictors": restrictors,
-        }
-        return object_np, adv_modifiers, time_modifiers, end
-    return None
+        variants.append(
+            (
+                base_np,
+                relative_adv_modifiers,
+                trailing_time_modifiers,
+                pp_end,
+            )
+        )
+    return variants
+
+
+def parse_relative_object_np(
+    tokens: list[str],
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, str]], int] | None:
+    variants = parse_relative_object_np_variants(tokens)
+    if not variants:
+        return None
+    return variants[0]
 
 
 def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
@@ -401,15 +532,7 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
             idx += 1
         if not any(token not in ARTICLES for token in phrase):
             return None
-        expression = modifier_expression(preposition, phrase)
-        pp_restrictor = {
-            "predicate": f"{normalize_surface_name(expression)}_np",
-            "predicate_type": "Entity -> Prop",
-            "expression": expression,
-            "semantic_role": modifier_semantic_role(expression),
-            "argument": clean_phrase(phrase),
-            "kind": "pp_restrictor",
-        }
+        pp_restrictor = pp_restrictor_record(preposition, phrase)
         restrictors.append(pp_restrictor)
         postnominal_restrictors.append(pp_restrictor)
     np = {
@@ -423,6 +546,93 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
     if relative_restrictors:
         np["relative_clause_restrictors"] = relative_restrictors
     return np
+
+
+def quantifier_np_variants(tokens: list[str]) -> list[dict[str, Any]]:
+    if not tokens:
+        return []
+    if not any(token in RELATIVE_RESTRICTOR_MARKERS for token in tokens):
+        np = quantifier_np(tokens)
+        return [np] if np is not None else []
+
+    forbidden_nominal_tokens = (
+        SUPPORTED_SCOPE_DETERMINERS
+        | COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | ARTICLES
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | (UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS - RELATIVE_RESTRICTOR_MARKERS)
+    )
+    relative_variants = parse_relative_restrictor_variants(tokens)
+    if relative_variants is None:
+        return []
+    variants: list[dict[str, Any]] = []
+    for nominal_tokens, relative_restrictors in relative_variants:
+        if not relative_restrictors:
+            continue
+        if not nominal_tokens or any(token in PREPOSITIONS for token in nominal_tokens):
+            continue
+        if any(token in forbidden_nominal_tokens for token in nominal_tokens):
+            continue
+        predicates = [lemma_verb(token) for token in nominal_tokens]
+        head = predicates[-1]
+        restrictors = [
+            {"predicate": predicate, "predicate_type": "Entity -> Prop"}
+            for predicate in predicates
+        ]
+        restrictors.extend(relative_restrictors)
+        variants.append(
+            {
+                "surface": " ".join(tokens),
+                "head": head,
+                "adjectives": predicates[:-1],
+                "restrictors": restrictors,
+                "relative_clause_restrictors": relative_restrictors,
+            }
+        )
+    return variants
+
+
+def relative_object_np_has_postnominal_restrictor(
+    restrictor: dict[str, Any],
+) -> bool:
+    object_np = restrictor.get("object_np")
+    return isinstance(object_np, dict) and bool(object_np.get("postnominal_restrictors"))
+
+
+def quantifier_np_relative_attachment_kind(
+    np: dict[str, Any],
+    role: str,
+) -> str | None:
+    relative_restrictors = np.get("relative_clause_restrictors", [])
+    if not isinstance(relative_restrictors, list):
+        return None
+    has_adv = any(
+        isinstance(restrictor, dict) and bool(restrictor.get("modifiers"))
+        for restrictor in relative_restrictors
+    )
+    has_time = any(
+        isinstance(restrictor, dict) and bool(restrictor.get("time_modifiers"))
+        for restrictor in relative_restrictors
+    )
+    has_object_np_restrictor = any(
+        isinstance(restrictor, dict)
+        and relative_object_np_has_postnominal_restrictor(restrictor)
+        for restrictor in relative_restrictors
+    )
+    parts: list[str] = []
+    if has_adv:
+        parts.append("adv")
+    if has_time:
+        parts.append("time")
+    if has_object_np_restrictor:
+        parts.append("object_np_restrictor")
+    if not parts:
+        return None
+    return f"{role}_relative_{'_'.join(parts)}"
 
 
 def split_preverbal_adv_modifiers(
@@ -1538,59 +1748,72 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         subject_np_tokens, preverbal_adv_modifiers = split_preverbal_adv_modifiers(
             tokens[1:predicate_index]
         )
-        subject_np = quantifier_np(subject_np_tokens)
-        if subject_np is None:
+        subject_np_variants = quantifier_np_variants(subject_np_tokens)
+        if not subject_np_variants:
             continue
         verb = lemma_verb(tokens[predicate_index])
         candidate_variants: list[dict[str, Any]] = []
-        for object_np_end in range(object_quantifier_index + 2, len(tokens) + 1):
-            object_np = quantifier_np(tokens[object_quantifier_index + 1 : object_np_end])
-            if object_np is None:
-                continue
-            trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[object_np_end:])
-            if trailing_modifiers is None:
-                continue
-            trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
-            object_has_relative_adv = any(
-                bool(restrictor.get("modifiers"))
-                for restrictor in object_np.get("relative_clause_restrictors", [])
-            )
-            object_has_relative_time = any(
-                bool(restrictor.get("time_modifiers"))
-                for restrictor in object_np.get("relative_clause_restrictors", [])
-            )
-            if object_np.get("postnominal_restrictors"):
-                attachment_kind = "object_np_restrictor"
-            elif object_has_relative_adv and object_has_relative_time:
-                attachment_kind = "object_relative_adv_time"
-            elif object_has_relative_adv:
-                attachment_kind = "object_relative_adv"
-            elif object_has_relative_time:
-                attachment_kind = "object_relative_time"
-            elif fronted_adv_modifiers or preverbal_adv_modifiers or trailing_adv_modifiers:
-                attachment_kind = "clause_adv"
-            else:
-                attachment_kind = "plain"
-            candidate_variants.append(
-                {
-                    "subject_np": subject_np,
-                    "preverbal_adv_modifiers": preverbal_adv_modifiers,
-                    "verb": verb,
-                    "object_quantifier": object_quantifier,
-                    "object_np": object_np,
-                    "trailing_adv_modifiers": trailing_adv_modifiers,
-                    "trailing_time_modifiers": trailing_time_modifiers,
-                    "attachment": {
-                        "kind": attachment_kind,
-                        "object_np_has_postnominal_restrictor": bool(
-                            object_np.get("postnominal_restrictors")
-                        ),
-                        "clause_adv_modifiers": [
-                            modifier["name"] for modifier in trailing_adv_modifiers
-                        ],
-                    },
-                }
-            )
+        for subject_np in subject_np_variants:
+            for object_np_end in range(object_quantifier_index + 2, len(tokens) + 1):
+                object_np_variants = quantifier_np_variants(
+                    tokens[object_quantifier_index + 1 : object_np_end]
+                )
+                if not object_np_variants:
+                    continue
+                trailing_modifiers = split_shared_adv_and_time_modifiers(
+                    tokens[object_np_end:]
+                )
+                if trailing_modifiers is None:
+                    continue
+                trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
+                for object_np in object_np_variants:
+                    subject_relative_attachment_kind = (
+                        quantifier_np_relative_attachment_kind(subject_np, "subject")
+                    )
+                    object_relative_attachment_kind = (
+                        quantifier_np_relative_attachment_kind(object_np, "object")
+                    )
+                    if object_np.get("postnominal_restrictors"):
+                        attachment_kind = "object_np_restrictor"
+                    elif object_relative_attachment_kind:
+                        attachment_kind = object_relative_attachment_kind
+                    elif subject_relative_attachment_kind:
+                        attachment_kind = subject_relative_attachment_kind
+                    elif (
+                        fronted_adv_modifiers
+                        or preverbal_adv_modifiers
+                        or trailing_adv_modifiers
+                    ):
+                        attachment_kind = "clause_adv"
+                    else:
+                        attachment_kind = "plain"
+                    candidate_variants.append(
+                        {
+                            "subject_np": subject_np,
+                            "preverbal_adv_modifiers": preverbal_adv_modifiers,
+                            "verb": verb,
+                            "object_quantifier": object_quantifier,
+                            "object_np": object_np,
+                            "trailing_adv_modifiers": trailing_adv_modifiers,
+                            "trailing_time_modifiers": trailing_time_modifiers,
+                            "attachment": {
+                                "kind": attachment_kind,
+                                "object_np_has_postnominal_restrictor": bool(
+                                    object_np.get("postnominal_restrictors")
+                                ),
+                                "subject_relative_attachment_kind": (
+                                    subject_relative_attachment_kind
+                                ),
+                                "object_relative_attachment_kind": (
+                                    object_relative_attachment_kind
+                                ),
+                                "clause_adv_modifiers": [
+                                    modifier["name"]
+                                    for modifier in trailing_adv_modifiers
+                                ],
+                            },
+                        }
+                    )
         if candidate_variants:
             parsed_variants = candidate_variants
             break

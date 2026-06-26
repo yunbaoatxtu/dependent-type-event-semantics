@@ -918,9 +918,20 @@ time branch and an `object_relative_time` branch. With an internal Adv,
 `some boy loved a girl that saw Mary quickly` produces a `clause_adv` branch and
 an `object_relative_adv` branch; the former renders the relative as
 `see(0)(x_girl, mary)` with `mods_nil`, while the latter renders
-`see(1)(quickly, x_girl, mary)`. The relative marker itself is not exported as a
-constant; relatives with PP Adv or multi-word object structure stay outside the
-certified fragment.
+`see(1)(quickly, x_girl, mary)`. A single non-temporal PP inside a relative
+object NP is represented by two typed attachment variants:
+`some boy who saw a girl in the park loved a cat` yields
+`subject_relative_object_np_restrictor`, where the nested object binder contains
+`in_park_np : Entity -> Prop`, and `subject_relative_adv`, where the relative
+predicate is lifted to `see(1)(in(park), x_boy, x_rel_girl)`. The timed and
+manner-marked variant
+`some boy who quickly saw a girl in the park yesterday loved a cat` keeps the
+same split while wrapping the relative proposition with `at_T(yesterday, ...)`.
+On the object side, `some boy loved a girl that saw a cat in the park` yields a
+main-clause `clause_adv` branch plus `object_relative_object_np_restrictor` and
+`object_relative_adv` branches. The relative marker itself is not exported as a
+constant; stacked relative-object PP material remains outside the certified
+fragment.
 The API result also
 exposes the two formulas through top-level
 `semantic_readings`, using the same `name`, `scope`, rendered dependent-type
@@ -1484,9 +1495,9 @@ or a one-object transitive predicate, optionally with a controlled determiner
 phrase object, certified temporal modifiers, and ordinary Adv modifiers, is
 stored as `relative_clause_restrictors`.
 This is deliberately conservative:
-an unimplemented conditional, a relative-object PP such as `a girl in the park`,
-or another complex relative clause must not become an entity name that later
-passes the Coq/Rocq scaffold check.
+an unimplemented conditional, stacked relative-object PP material such as
+`a girl in the park with a telescope`, or another complex relative clause must
+not become an entity name that later passes the Coq/Rocq scaffold check.
 
 Modifier entries are not entity-denoting arguments. The AST records this twice:
 `modifier_vector` preserves the dependent length index, while `modifier_roles`

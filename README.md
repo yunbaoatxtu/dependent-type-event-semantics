@@ -127,11 +127,21 @@ a constant named `the_young_girl`. Likewise,
 `some boy loved a girl that saw Mary` renders
 `girl(x_girl) and see(x_girl, mary)`, while
 `some boy loved a girl that saw Mary quickly` exposes both the main-clause Adv
-reading and the object-relative-Adv reading. More complex relation-clause subjects,
-such as `the tall boy who Mary saw yesterday quickly opened the old door with a key`
-or `some boy who quickly saw Mary in the park loved a girl`, are still rejected;
-so are relative-object NPs with PP material, such as
-`some boy who saw a girl in the park loved a cat`. This prevents the misleading formula
+reading and the object-relative-Adv reading. A single non-temporal PP inside a
+relative object NP is now split into explicit typed readings:
+`some boy who saw a girl in the park loved a cat` exposes a
+`subject_relative_object_np_restrictor` reading where
+`in_park_np : Entity -> Prop` restricts the internal girl, and a
+`subject_relative_adv` reading where `in_park : Adv` modifies the relative
+`see` predicate. The timed/manner variant
+`some boy who quickly saw a girl in the park yesterday loved a cat` composes the
+same two attachments with `quickly` and `at_T(yesterday, ...)`. More complex
+relation-clause subjects, such as
+`the tall boy who Mary saw yesterday quickly opened the old door with a key` or
+`some boy who quickly saw Mary in the park loved a girl`, and stacked relative
+object PP cases such as
+`some boy who saw a girl in the park with a telescope loved a cat`, are still
+rejected. This prevents the misleading formula
 `leave(0)(if_john, mary_cried)` and keeps unsupported relatives from being
 accepted by the lexical state-change rule as single causer constants.
 
@@ -438,9 +448,17 @@ declares `quickly : Adv`, and renders
 attach either to the main clause or to the object relative, as in
 `some boy loved a girl that saw Mary quickly`, the AST exposes both a
 `clause_adv` branch and an `object_relative_adv` branch; the unmodified
-relative branch uses `see(0)(x_girl, mary)` with `mods_nil`. The marker `who`
-or `that` is not exported as an entity, and relative-object NPs with PP
-material such as `a girl in the park` remain outside the certified fragment.
+relative branch uses `see(0)(x_girl, mary)` with `mods_nil`. A relative-object
+NP with one non-temporal PP now receives the same typed attachment split:
+`some boy who saw a girl in the park loved a cat` has a
+`subject_relative_object_np_restrictor` branch with
+`girl(x_rel_girl) and in_park_np(x_rel_girl)` and a `subject_relative_adv`
+branch with `see(1)(in(park), x_boy, x_rel_girl)`. On the object side,
+`some boy loved a girl that saw a cat in the park` exposes `clause_adv`,
+`object_relative_object_np_restrictor`, and `object_relative_adv` branches. The
+marker `who` or `that` is not exported as an entity, and stacked relative-object
+PP material such as `a girl in the park with a telescope` remains outside the
+certified fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.
