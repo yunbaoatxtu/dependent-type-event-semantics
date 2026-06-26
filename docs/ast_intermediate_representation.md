@@ -831,9 +831,17 @@ scope. The same existence-scope representation covers indefinite articles:
 `a boy loves a girl` emits `a_boy_wide_scope` and `a_girl_wide_scope`, while
 `an artist loves a critic` keeps `an` and `a` in `quantifiers` and in each
 scope binder. These determiners therefore license typed existential binders
-rather than entity constants named `boy` or `girl`. For example,
-`some boy loved some girl in the bathroom` has a shared
-Adv modifier. Each reading carries the same `modifiers` list and the relation
+rather than entity constants named `boy` or `girl`. Universal determiners use
+the same `scope_order` interface but change the binder renderer: `every boy loves a girl`
+has `quantifiers: {"subject": "every", "object": "a"}` and emits
+`every_boy_wide_scope` as `forall x_boy : Entity. boy(x_boy) -> exists
+x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)`, plus the object-wide
+`a_girl_wide_scope`. Conversely, `a boy loves every girl` emits an
+existential-wide reading and a universal-wide reading. In these mixed cases the
+top-level `quantifier` field is `mixed`, and no constant such as `every :
+Entity` or `a : Entity` is exported. The canonical shared-Adv example is
+`some boy loved some girl in the bathroom`.
+Each reading carries the same `modifiers` list and the relation
 type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
 the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
 proof-assistant scaffold declares `in_bathroom : Adv`. Fronted variants such as

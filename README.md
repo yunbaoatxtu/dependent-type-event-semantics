@@ -330,6 +330,13 @@ The same existential-scope rule covers indefinite articles: `a boy loves a
 girl` yields `a_boy_wide_scope` and `a_girl_wide_scope`, while mixed forms such
 as `a boy loves some girl` preserve both surface quantifiers in the AST instead
 of treating `boy` or `girl` as entity constants.
+The same structured layer now covers universal/existential interactions:
+`every boy loves a girl` yields `every_boy_wide_scope`, rendered as `forall
+x_boy : Entity. boy(x_boy) -> exists x_girl : Entity. girl(x_girl) and
+love(x_boy, x_girl)`, and `a_girl_wide_scope`, rendered with the existential
+girl taking wider scope. The object-universal counterpart `a boy loves every
+girl` is handled analogously. In each case `every` is a quantifier binder, not
+an `Entity`, and the two readings remain available to the Coq/Rocq scaffold.
 
 Modifier typing follows the Luo-Shi variable-polyadicity analysis. Adverbial
 and prepositional modifiers are exported as `Adv`, not `Entity`:

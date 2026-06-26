@@ -64,6 +64,10 @@ FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
 QUANTIFIER_SUBJECT_DETERMINERS = {"some", "every", "each", "all", "no"}
 EXISTENTIAL_SCOPE_DETERMINERS = {"some", "a", "an"}
+UNIVERSAL_SCOPE_DETERMINERS = {"every", "each", "all"}
+SUPPORTED_SCOPE_DETERMINERS = (
+    EXISTENTIAL_SCOPE_DETERMINERS | UNIVERSAL_SCOPE_DETERMINERS
+)
 DO_SUPPORT_AUXILIARIES = {"do", "does", "did"}
 CONTRASTIVE_COORDINATORS = {"but"}
 BOOLEAN_COORDINATORS = {"and": "and_T", "or": "or_T"}
@@ -234,30 +238,38 @@ def render_quantifier_time_wrapped_reading(
     return body
 
 
-def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str:
+def render_quantifier_binder(
+    binder: dict[str, Any],
+    body: str,
+    *,
+    coq: bool,
+) -> str:
+    var = binder["variable"]
+    predicate = binder["predicate"]
+    quantifier = binder.get("quantifier")
     if coq:
-        body = render_quantifier_relation(reading, coq=True)
-        connective = "/\\"
-        separator = ", "
+        predicate_application = f"{predicate} {var}"
+        if quantifier in EXISTENTIAL_SCOPE_DETERMINERS:
+            if body.startswith("forall "):
+                body = f"({body})"
+            return f"exists {var} : Entity, {predicate_application} /\\ {body}"
+        if quantifier in UNIVERSAL_SCOPE_DETERMINERS:
+            return f"forall {var} : Entity, {predicate_application} -> {body}"
     else:
-        body = render_quantifier_relation(reading, coq=False)
-        connective = "and"
-        separator = ". "
+        predicate_application = f"{predicate}({var})"
+        if quantifier in EXISTENTIAL_SCOPE_DETERMINERS:
+            if body.startswith("forall "):
+                body = f"({body})"
+            return f"exists {var} : Entity. {predicate_application} and {body}"
+        if quantifier in UNIVERSAL_SCOPE_DETERMINERS:
+            return f"forall {var} : Entity. {predicate_application} -> {body}"
+    raise ValueError(f"unsupported quantifier: {quantifier!r}")
+
+
+def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str:
+    body = render_quantifier_relation(reading, coq=coq)
     for binder in reversed(reading["scope_order"]):
-        var = binder["variable"]
-        predicate = binder["predicate"]
-        if coq:
-            predicate_application = f"{predicate} {var}"
-            body = (
-                f"exists {var} : Entity{separator}"
-                f"{predicate_application} {connective} {body}"
-            )
-        else:
-            predicate_application = f"{predicate}({var})"
-            body = (
-                f"exists {var} : Entity{separator}"
-                f"{predicate_application} {connective} {body}"
-            )
+        body = render_quantifier_binder(binder, body, coq=coq)
     return render_quantifier_time_wrapped_reading(
         body,
         reading.get("time_modifiers", []),
@@ -267,6 +279,22 @@ def render_quantifier_reading(reading: dict[str, Any], coq: bool = False) -> str
 
 def quantifier_scope_coq(reading: dict[str, Any]) -> str:
     return f"Definition {reading['name']} : Prop := {render_quantifier_reading(reading, coq=True)}."
+
+
+def quantifier_scope_family(subject_quantifier: str, object_quantifier: str) -> str:
+    if subject_quantifier == object_quantifier:
+        return subject_quantifier
+    if (
+        subject_quantifier in EXISTENTIAL_SCOPE_DETERMINERS
+        and object_quantifier in EXISTENTIAL_SCOPE_DETERMINERS
+    ):
+        return "existential"
+    if (
+        subject_quantifier in UNIVERSAL_SCOPE_DETERMINERS
+        and object_quantifier in UNIVERSAL_SCOPE_DETERMINERS
+    ):
+        return "universal"
+    return "mixed"
 
 
 def semantic_reading(
@@ -653,10 +681,10 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
             if not isinstance(binder, dict):
                 errors.append(f"readings[{index}].scope_order[{binder_index}] must be an object")
                 continue
-            if binder.get("quantifier") not in EXISTENTIAL_SCOPE_DETERMINERS:
+            if binder.get("quantifier") not in SUPPORTED_SCOPE_DETERMINERS:
                 errors.append(
                     f"readings[{index}].scope_order[{binder_index}] "
-                    "must use an existential quantifier"
+                    "must use a supported scope quantifier"
                 )
             if binder.get("predicate_type") != "Entity -> Prop":
                 errors.append(
@@ -690,8 +718,8 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     ]
     if (
         len(tokens) < 5
-        or tokens[0] not in EXISTENTIAL_SCOPE_DETERMINERS
-        or tokens[3] not in EXISTENTIAL_SCOPE_DETERMINERS
+        or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS
+        or tokens[3] not in SUPPORTED_SCOPE_DETERMINERS
     ):
         return None
     trailing_modifiers = split_shared_adv_and_time_modifiers(tokens[5:])
@@ -808,11 +836,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         "semantic_readings_check": semantic_readings_check,
         "ast": {
             "kind": "scope_ambiguity",
-            "quantifier": (
-                subject_quantifier
-                if subject_quantifier == object_quantifier
-                else "existential"
-            ),
+            "quantifier": quantifier_scope_family(subject_quantifier, object_quantifier),
             "quantifiers": {
                 "subject": subject_quantifier,
                 "object": object_quantifier,
@@ -7608,6 +7632,9 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Agent :",
                 "Parameter Theme :",
                 "Parameter some : Entity.",
+                "Parameter a : Entity.",
+                "Parameter an : Entity.",
+                "Parameter every : Entity.",
                 "Parameter boy : nat ->",
             ),
         ),
