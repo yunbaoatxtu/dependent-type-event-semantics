@@ -355,10 +355,22 @@ inside the same ambiguity analysis instead of triggering the fallback parser:
 `at_T(yesterday, exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity.
 girl(x_girl) and love(x_boy, x_girl))` and its object-wide counterpart, while
 `some boy loves some girl in the morning` uses `during_T(morning, ...)`.
-Shared Adv modifiers are kept in the same two scope readings as dependent
-modifier sequences: `some boy loved some girl in the bathroom` renders
-`love(1)(in(bathroom), x_boy, x_girl)`, declares `in_bathroom : Adv`, and gives
-`love` the type `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`.
+Shared Adv modifiers are kept as dependent modifier sequences. The sentence
+`some boy loved some girl in the bathroom` now exposes the PP attachment
+ambiguity explicitly: the `clause_adv` readings render
+`love(1)(in(bathroom), x_boy, x_girl)` and declare `in_bathroom : Adv`, while
+the `object_np_restrictor` readings render
+`girl(x_girl) and in_bathroom_np(x_girl)` and declare
+`in_bathroom_np : Entity -> Prop`. Because the readings share one verb symbol,
+`love` is lifted to the common type
+`forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`; the unmodified
+object-restrictor branch uses `love(0)(x_boy, x_girl)`.
+With multiple final PPs, intermediate attachments are enumerated with stable
+reading names: `some boy loved some girl in the park with a telescope` includes
+a clause-Adv branch, a branch where only `in_park_np` restricts the object, and
+a branch where both `in_park_np` and `with_telescope_np` restrict the object.
+The article inside `with a telescope` is treated as part of the PP phrase, not
+as a new outer scope quantifier.
 Predicate-preverbal manner adverbs use the same route: `some boy quickly loved some girl`
 renders `love(1)(quickly, x_boy, x_girl)`, declares `quickly : Adv`, and does
 not produce the pseudo-entity `some_boy_quickly`.
@@ -374,8 +386,8 @@ renders `boy(x_boy) and in_park_np(x_boy)`, declares
 `in_park_np : Entity -> Prop`, and does not collide with the clause-level
 modifier declaration `in_park : Adv`.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
-same readings: the modifier parser stops before the quantified subject and does
-not collapse the phrase into a malformed `in_bathroom_some` constant.
+clause-Adv branch only: the modifier parser stops before the quantified subject
+and does not collapse the phrase into a malformed `in_bathroom_some` constant.
 The same existential-scope rule covers indefinite articles: `a boy loves a
 girl` yields `a_boy_wide_scope` and `a_girl_wide_scope`, while mixed forms such
 as `a boy loves some girl` preserve both surface quantifiers in the AST instead

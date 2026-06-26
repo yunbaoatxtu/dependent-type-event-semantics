@@ -7157,6 +7157,19 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(location["ast"]["readings"][0]["modifiers"], location["ast"]["modifiers"])
         self.assertEqual(
+            [variant["kind"] for variant in location["ast"]["attachment_variants"]],
+            ["clause_adv", "object_np_restrictor"],
+        )
+        self.assertEqual(
+            [reading["name"] for reading in location["semantic_readings"]],
+            [
+                "some_boy_wide_scope_clause_adv",
+                "some_girl_wide_scope_clause_adv",
+                "some_boy_wide_scope_object_np_restrictor",
+                "some_girl_wide_scope_object_np_restrictor",
+            ],
+        )
+        self.assertEqual(
             location["ast"]["readings"][0]["relation"]["predicate_type"],
             "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
         )
@@ -7174,8 +7187,24 @@ class TranslatorTests(unittest.TestCase):
                 "boy(x_boy) and love(1)(in(bathroom), x_boy, x_girl)"
             ),
         )
+        self.assertEqual(
+            location["semantic_readings"][2]["dependent_type_translation"],
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and in_bathroom_np(x_girl)) and "
+                "love(0)(x_boy, x_girl)"
+            ),
+        )
+        self.assertEqual(
+            location["semantic_readings"][3]["dependent_type_translation"],
+            (
+                "exists x_girl : Entity. (girl(x_girl) and in_bathroom_np(x_girl)) "
+                "and exists x_boy : Entity. boy(x_boy) and love(0)(x_boy, x_girl)"
+            ),
+        )
         self.assertIn("Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.", location["coq_code"])
         self.assertIn("Parameter in_bathroom : Adv.", location["coq_code"])
+        self.assertIn("Parameter in_bathroom_np : Entity -> Prop.", location["coq_code"])
         self.assertIn(
             "Parameter love : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.",
             location["coq_code"],
@@ -7184,11 +7213,45 @@ class TranslatorTests(unittest.TestCase):
             "love 1 (mods_cons 0 in_bathroom mods_nil) x_boy x_girl",
             location["coq_code"],
         )
+        self.assertIn(
+            "love 0 mods_nil x_boy x_girl",
+            location["coq_code"],
+        )
         self.assertNotIn("Parameter some_boy : Entity.", location["coq_code"])
         self.assertNotIn("Parameter some_girl : Entity.", location["coq_code"])
         self.assertNotIn("Parameter Event : Type.", location["coq_code"])
         self.assertTrue(location["semantic_readings_check"]["ok"])
         self.assertEqual(location["coq_check"]["status"], "passed")
+
+        multi_pp = run_pipeline(
+            "some boy loved some girl in the park with a telescope",
+            require_coq=True,
+        )
+        self.assertTrue(multi_pp["ok"])
+        self.assertEqual(
+            [variant["kind"] for variant in multi_pp["ast"]["attachment_variants"]],
+            ["clause_adv", "object_np_restrictor", "object_np_restrictor"],
+        )
+        self.assertEqual(
+            [reading["name"] for reading in multi_pp["semantic_readings"]],
+            [
+                "some_boy_wide_scope_clause_adv",
+                "some_girl_wide_scope_clause_adv",
+                "some_boy_wide_scope_object_np_restrictor_1",
+                "some_girl_wide_scope_object_np_restrictor_1",
+                "some_boy_wide_scope_object_np_restrictor_2",
+                "some_girl_wide_scope_object_np_restrictor_2",
+            ],
+        )
+        self.assertIn(
+            "girl(x_girl) and in_park_np(x_girl) and with_telescope_np(x_girl)",
+            multi_pp["semantic_readings"][4]["dependent_type_translation"],
+        )
+        self.assertIn("Parameter in_park_np : Entity -> Prop.", multi_pp["coq_code"])
+        self.assertIn("Parameter with_telescope_np : Entity -> Prop.", multi_pp["coq_code"])
+        self.assertIn("Parameter with_telescope : Adv.", multi_pp["coq_code"])
+        self.assertEqual(multi_pp["semantic_readings_check"]["reading_count"], 6)
+        self.assertEqual(multi_pp["coq_check"]["status"], "passed")
 
         preverbal_manner = run_pipeline(
             "some boy quickly loved some girl",
@@ -7266,7 +7329,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(fronted_location["ast"]["modifiers"], location["ast"]["modifiers"])
         self.assertEqual(
             fronted_location["semantic_readings"],
-            location["semantic_readings"],
+            [
+                {
+                    **reading,
+                    "name": reading["name"].replace("_clause_adv", ""),
+                    "coq_definition": reading["coq_definition"].replace("_clause_adv", ""),
+                }
+                for reading in location["semantic_readings"][:2]
+            ],
+        )
+        self.assertEqual(
+            [variant["kind"] for variant in fronted_location["ast"]["attachment_variants"]],
+            ["clause_adv"],
         )
         self.assertNotIn("in_bathroom_some", fronted_location["dependent_type_translation"])
         self.assertNotIn("Parameter some_boy : Entity.", fronted_location["coq_code"])
@@ -7280,7 +7354,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(comma_fronted_location["kind"], "quantifier_scope_ambiguity")
         self.assertEqual(
             comma_fronted_location["semantic_readings"],
-            location["semantic_readings"],
+            fronted_location["semantic_readings"],
         )
 
         fronted_time_location = run_pipeline(
@@ -10477,6 +10551,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Clause-level time modifiers now remain", readme)
         self.assertIn("some boy loves some girl yesterday", readme)
         self.assertIn("some boy loved some girl in the bathroom", readme)
+        self.assertIn("object_np_restrictor", readme)
+        self.assertIn("in_bathroom_np : Entity -> Prop", readme)
+        self.assertIn("love(0)(x_boy, x_girl)", readme)
+        self.assertIn("some boy loved some girl in the park with a telescope", readme)
+        self.assertIn("with_telescope_np", readme)
         self.assertIn("some boy quickly loved some girl", readme)
         self.assertIn("some_boy_quickly", readme)
         self.assertIn("some young boy quickly loved some happy girl", readme)
@@ -10724,6 +10803,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("no_boy_wide_scope", manuscript)
         self.assertIn("a boy loves no girl", manuscript)
         self.assertIn("In the bathroom some boy loved some girl", manuscript)
+        self.assertIn("object-NP-restrictor pair", manuscript)
+        self.assertIn("in_bathroom_np : Entity -> Prop", manuscript)
+        self.assertIn("love(0)(x_boy, x_girl)", manuscript)
+        self.assertIn("some boy loved some girl in the park with a telescope", manuscript)
+        self.assertIn("with_telescope_np", manuscript)
         self.assertIn("some boy quickly loved some girl", manuscript)
         self.assertIn("some young boy quickly loved some happy girl", manuscript)
         self.assertIn("some_happy_girl", manuscript)
@@ -10754,6 +10838,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("no_boy_wide_scope", ast_docs)
         self.assertIn("a boy loves no girl", ast_docs)
         self.assertIn("some boy loved some girl in the bathroom", ast_docs)
+        self.assertIn("attachment_variants", ast_docs)
+        self.assertIn("object_np_restrictor", ast_docs)
+        self.assertIn("in_bathroom_np : Entity -> Prop", ast_docs)
+        self.assertIn("some boy loved some girl in the park with a telescope", ast_docs)
+        self.assertIn("with_telescope_np", ast_docs)
         self.assertIn("some boy quickly loved some girl", ast_docs)
         self.assertIn("some young boy quickly loved some happy girl", ast_docs)
         self.assertIn("`restrictors`", ast_docs)

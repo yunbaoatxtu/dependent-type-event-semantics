@@ -190,7 +190,7 @@ def quantifier_np(tokens: list[str]) -> dict[str, Any] | None:
         | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
     )
     forbidden_pp_tokens = (
-        SUPPORTED_SCOPE_DETERMINERS
+        (SUPPORTED_SCOPE_DETERMINERS - ARTICLES)
         | COMMON_ADVERBS
         | TEMPORAL_ADVERBS
         | COUNT_WORDS
@@ -291,6 +291,8 @@ def quantifier_scope_reading(
     subject_first: bool,
     modifiers: list[dict[str, Any]] | None = None,
     time_modifiers: list[dict[str, str]] | None = None,
+    name_suffix: str | None = None,
+    attachment: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     modifiers = list(modifiers or [])
     subject_noun = subject_np["head"]
@@ -329,7 +331,9 @@ def quantifier_scope_reading(
     else:
         name = f"{object_quantifier}_{object_noun}_wide_scope"
         quantifier = object_quantifier
-    return {
+    if name_suffix:
+        name = f"{name}_{name_suffix}"
+    reading = {
         "name": name,
         "quantifier": quantifier,
         "scope_order": scope_order,
@@ -337,21 +341,53 @@ def quantifier_scope_reading(
         "modifiers": modifiers,
         "time_modifiers": list(time_modifiers or []),
     }
+    if attachment is not None:
+        reading["attachment"] = attachment
+    return reading
+
+
+MODIFIER_INDEXED_BINARY_RELATION = (
+    "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+)
+
+
+def quantifier_readings_use_modifier_family(readings: list[dict[str, Any]]) -> bool:
+    return any(
+        bool(reading.get("modifiers"))
+        or reading.get("relation", {}).get("predicate_type")
+        == MODIFIER_INDEXED_BINARY_RELATION
+        for reading in readings
+    )
+
+
+def lift_quantifier_readings_to_modifier_family(
+    readings: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not any(bool(reading.get("modifiers")) for reading in readings):
+        return readings
+    for reading in readings:
+        reading["relation"]["predicate_type"] = MODIFIER_INDEXED_BINARY_RELATION
+    return readings
 
 
 def render_quantifier_relation(reading: dict[str, Any], *, coq: bool) -> str:
     relation = reading["relation"]
     args = relation["arguments"]
     modifiers = reading.get("modifiers", [])
-    if modifiers:
+    if relation.get("predicate_type") == MODIFIER_INDEXED_BINARY_RELATION:
         if coq:
             return (
                 f"{relation['predicate']} {len(modifiers)} "
                 f"{coq_modifier_sequence(modifiers)} {' '.join(args)}"
             )
+        if modifiers:
+            return (
+                f"{relation['predicate']}({len(modifiers)})"
+                f"({readable_modifier_arguments(modifiers)}, {', '.join(args)})"
+            )
         return (
-            f"{relation['predicate']}({len(modifiers)})"
-            f"({readable_modifier_arguments(modifiers)}, {', '.join(args)})"
+            f"{relation['predicate']}(0)"
+            f"({', '.join(args)})"
         )
     if coq:
         return f"{relation['predicate']} {' '.join(args)}"
@@ -860,8 +896,8 @@ def check_quantifier_scope_binder_restrictors(
 
 def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str, Any]:
     errors: list[str] = []
-    if len(readings) != 2:
-        errors.append(f"expected two scope readings, got {len(readings)}")
+    if len(readings) < 2 or len(readings) % 2 != 0:
+        errors.append(f"expected paired scope readings, got {len(readings)}")
 
     observed_orders: list[tuple[str, ...]] = []
     for index, reading in enumerate(readings):
@@ -879,14 +915,17 @@ def check_quantifier_scope_readings(readings: list[dict[str, Any]]) -> dict[str,
         has_modifiers = isinstance(modifiers, list) and bool(modifiers)
         observed_orders.append(tuple(str(binder.get("role")) for binder in order))
         relation_args = relation.get("arguments")
-        expected_relation_type = (
-            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+        expected_relation_types = (
+            {MODIFIER_INDEXED_BINARY_RELATION}
             if has_modifiers
-            else "Entity -> Entity -> Prop"
+            else {"Entity -> Entity -> Prop", MODIFIER_INDEXED_BINARY_RELATION}
         )
-        if relation.get("predicate_type") != expected_relation_type:
+        if relation.get("predicate_type") not in expected_relation_types:
             errors.append(
-                f"readings[{index}].relation must have type {expected_relation_type}"
+                "readings[{}].relation must have type {}".format(
+                    index,
+                    " or ".join(sorted(expected_relation_types)),
+                )
             )
         if not isinstance(relation_args, list) or len(relation_args) != 2:
             errors.append(f"readings[{index}].relation.arguments must contain two entities")
@@ -939,15 +978,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
     if len(tokens) < 5 or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS:
         return None
     subject_quantifier = tokens[0]
-    parsed_scope: tuple[
-        dict[str, Any],
-        list[dict[str, Any]],
-        str,
-        str,
-        dict[str, Any],
-        list[dict[str, Any]],
-        list[dict[str, str]],
-    ] | None = None
+    parsed_variants: list[dict[str, Any]] = []
     for object_quantifier_index in range(3, len(tokens) - 1):
         object_quantifier = tokens[object_quantifier_index]
         if object_quantifier not in SUPPORTED_SCOPE_DETERMINERS:
@@ -962,6 +993,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         if subject_np is None:
             continue
         verb = lemma_verb(tokens[predicate_index])
+        candidate_variants: list[dict[str, Any]] = []
         for object_np_end in range(object_quantifier_index + 2, len(tokens) + 1):
             object_np = quantifier_np(tokens[object_quantifier_index + 1 : object_np_end])
             if object_np is None:
@@ -970,59 +1002,128 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             if trailing_modifiers is None:
                 continue
             trailing_adv_modifiers, trailing_time_modifiers = trailing_modifiers
-            parsed_scope = (
-                subject_np,
-                preverbal_adv_modifiers,
-                verb,
-                object_quantifier,
-                object_np,
-                trailing_adv_modifiers,
-                trailing_time_modifiers,
+            if object_np.get("postnominal_restrictors"):
+                attachment_kind = "object_np_restrictor"
+            elif fronted_adv_modifiers or preverbal_adv_modifiers or trailing_adv_modifiers:
+                attachment_kind = "clause_adv"
+            else:
+                attachment_kind = "plain"
+            candidate_variants.append(
+                {
+                    "subject_np": subject_np,
+                    "preverbal_adv_modifiers": preverbal_adv_modifiers,
+                    "verb": verb,
+                    "object_quantifier": object_quantifier,
+                    "object_np": object_np,
+                    "trailing_adv_modifiers": trailing_adv_modifiers,
+                    "trailing_time_modifiers": trailing_time_modifiers,
+                    "attachment": {
+                        "kind": attachment_kind,
+                        "object_np_has_postnominal_restrictor": bool(
+                            object_np.get("postnominal_restrictors")
+                        ),
+                        "clause_adv_modifiers": [
+                            modifier["name"] for modifier in trailing_adv_modifiers
+                        ],
+                    },
+                }
             )
+        if candidate_variants:
+            parsed_variants = candidate_variants
             break
-        if parsed_scope is not None:
-            break
-    if parsed_scope is None:
+    if not parsed_variants:
         return None
-    (
-        subject_np,
-        preverbal_adv_modifiers,
-        verb,
-        object_quantifier,
-        object_np,
-        trailing_adv_modifiers,
-        trailing_time_modifiers,
-    ) = parsed_scope
+    primary_variant = parsed_variants[0]
+    subject_np = primary_variant["subject_np"]
+    preverbal_adv_modifiers = primary_variant["preverbal_adv_modifiers"]
+    verb = primary_variant["verb"]
+    object_quantifier = primary_variant["object_quantifier"]
+    object_np = primary_variant["object_np"]
+    trailing_adv_modifiers = primary_variant["trailing_adv_modifiers"]
+    trailing_time_modifiers = primary_variant["trailing_time_modifiers"]
     adv_modifiers = [
         *fronted_adv_modifiers,
         *preverbal_adv_modifiers,
         *trailing_adv_modifiers,
     ]
     time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
-    readings = [
-        quantifier_scope_reading(
-            subject_np,
-            subject_quantifier,
-            verb,
-            object_np,
-            object_quantifier,
-            subject_first=True,
-            modifiers=adv_modifiers,
-            time_modifiers=time_modifiers,
-        ),
-        quantifier_scope_reading(
-            subject_np,
-            subject_quantifier,
-            verb,
-            object_np,
-            object_quantifier,
-            subject_first=False,
-            modifiers=adv_modifiers,
-            time_modifiers=time_modifiers,
-        ),
-    ]
+    attachment_is_ambiguous = len(parsed_variants) > 1
+    attachment_kind_counts: dict[str, int] = {}
+    for variant in parsed_variants:
+        kind = variant["attachment"]["kind"]
+        attachment_kind_counts[kind] = attachment_kind_counts.get(kind, 0) + 1
+    attachment_kind_seen: dict[str, int] = {}
+    attachment_variants: list[dict[str, Any]] = []
+    readings: list[dict[str, Any]] = []
+    for variant in parsed_variants:
+        variant_adv_modifiers = [
+            *fronted_adv_modifiers,
+            *variant["preverbal_adv_modifiers"],
+            *variant["trailing_adv_modifiers"],
+        ]
+        variant_time_modifiers = [
+            *fronted_time_modifiers,
+            *variant["trailing_time_modifiers"],
+        ]
+        attachment = {
+            **variant["attachment"],
+            "modifiers": variant_adv_modifiers,
+            "time_modifiers": variant_time_modifiers,
+            "noun_phrases": {
+                "subject": variant["subject_np"],
+                "object": variant["object_np"],
+            },
+        }
+        attachment_variants.append(attachment)
+        kind = variant["attachment"]["kind"]
+        name_suffix = None
+        if attachment_is_ambiguous and kind != "plain":
+            name_suffix = kind
+            if attachment_kind_counts[kind] > 1:
+                attachment_kind_seen[kind] = attachment_kind_seen.get(kind, 0) + 1
+                name_suffix = f"{kind}_{attachment_kind_seen[kind]}"
+        readings.extend(
+            [
+                quantifier_scope_reading(
+                    variant["subject_np"],
+                    subject_quantifier,
+                    verb,
+                    variant["object_np"],
+                    object_quantifier,
+                    subject_first=True,
+                    modifiers=variant_adv_modifiers,
+                    time_modifiers=variant_time_modifiers,
+                    name_suffix=name_suffix,
+                    attachment=attachment,
+                ),
+                quantifier_scope_reading(
+                    variant["subject_np"],
+                    subject_quantifier,
+                    verb,
+                    variant["object_np"],
+                    object_quantifier,
+                    subject_first=False,
+                    modifiers=variant_adv_modifiers,
+                    time_modifiers=variant_time_modifiers,
+                    name_suffix=name_suffix,
+                    attachment=attachment,
+                ),
+            ]
+        )
+    readings = lift_quantifier_readings_to_modifier_family(readings)
     type_check = check_quantifier_scope_readings(readings)
     semantic_readings = quantifier_semantic_readings(readings)
+    all_adv_modifiers = [
+        modifier
+        for reading in readings
+        for modifier in reading.get("modifiers", [])
+    ]
+    all_time_modifiers = [
+        modifier
+        for reading in readings
+        for modifier in reading.get("time_modifiers", [])
+    ]
+    uses_modifier_family = quantifier_readings_use_modifier_family(readings)
     event_semantics = {
         "analysis": "quantifier-scope",
         "source": sentence,
@@ -1036,6 +1137,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
         },
         "modifiers": adv_modifiers,
         "time_modifiers": time_modifiers,
+        "attachment_variants": attachment_variants,
         "readings": [
             {**reading, "formula": render_quantifier_reading(reading)}
             for reading in readings
@@ -1054,7 +1156,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                     "Parameter mods_nil : ModifierSeq 0.",
                     "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
                 ]
-                if adv_modifiers
+                if uses_modifier_family
                 else []
             ),
             *[
@@ -1064,18 +1166,18 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             *[
                 f"Parameter {modifier_name} : Adv."
                 for modifier_name in unique_names(
-                    [modifier["name"] for modifier in adv_modifiers]
+                    [modifier["name"] for modifier in all_adv_modifiers]
                 )
             ],
             (
                 f"Parameter {verb} : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT."
-                if adv_modifiers
+                if uses_modifier_family
                 else f"Parameter {verb} : Entity -> Entity -> Prop."
             ),
             *[
                 f"Parameter {time_argument} : Entity."
                 for time_argument in unique_names(
-                    [modifier["argument"] for modifier in time_modifiers]
+                    [modifier["argument"] for modifier in all_time_modifiers]
                 )
             ],
             *(
@@ -1083,15 +1185,13 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
                     "Parameter at_T : Entity -> Prop -> Prop.",
                     "Parameter during_T : Entity -> Prop -> Prop.",
                 ]
-                if time_modifiers
+                if all_time_modifiers
                 else []
             ),
             "",
-            quantifier_scope_coq(readings[0]),
-            quantifier_scope_coq(readings[1]),
+            *[quantifier_scope_coq(reading) for reading in readings],
             "",
-            f"Check {readings[0]['name']}.",
-            f"Check {readings[1]['name']}.",
+            *[f"Check {reading['name']}." for reading in readings],
             "",
         ]
     )
@@ -1119,6 +1219,7 @@ def quantifier_scope_pipeline(sentence: str) -> dict[str, Any] | None:
             },
             "modifiers": adv_modifiers,
             "time_modifiers": time_modifiers,
+            "attachment_variants": attachment_variants,
             "readings": readings,
         },
         "type_check": {

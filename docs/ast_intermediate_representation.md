@@ -851,10 +851,21 @@ subject binder. Conversely, `a boy loves no girl` emits `a_boy_wide_scope` and
 `no_girl_wide_scope`. No constant such as `no : Entity` is exported, and
 fronted examples such as `In the bathroom no boy loved a girl yesterday` still
 record `in_bathroom : Adv` rather than a malformed `in_bathroom_no` name.
-Each reading carries the same `modifiers` list and the relation
-type changes to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
-the rendered relation is `love(1)(in(bathroom), x_boy, x_girl)` and the
-proof-assistant scaffold declares `in_bathroom : Adv`. Predicate-preverbal
+Each reading may now be split again by PP attachment. For
+`some boy loved some girl in the bathroom`, the AST records two
+`attachment_variants`: a `clause_adv` branch whose relation is
+`love(1)(in(bathroom), x_boy, x_girl)` and whose scaffold declares
+`in_bathroom : Adv`, and an `object_np_restrictor` branch whose object binder
+contains `girl : Entity -> Prop` and `in_bathroom_np : Entity -> Prop` and
+renders `girl(x_girl) and in_bathroom_np(x_girl)`. Because both branches share
+the same verb symbol, the relation
+type is lifted to `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`;
+the branch without a clause modifier uses `love(0)(x_boy, x_girl)` with
+`mods_nil` in Coq/Rocq. Multiple final PPs enumerate intermediate attachments:
+`some boy loved some girl in the park with a telescope` has a clause-Adv
+branch, a branch with `in_park_np` as the object restrictor and
+`with_telescope : Adv` as the remaining clause modifier, and a branch with both
+`in_park_np` and `with_telescope_np` inside the object binder. Predicate-preverbal
 manner adverbs use the same field: `some boy quickly loved some girl` records
 `quickly : Adv`, renders `love(1)(quickly, x_boy, x_girl)`, and does not build
 a subject constant such as `some_boy_quickly`. Intersective adjective NPs use
@@ -867,8 +878,8 @@ also a restrictor, not an event modifier: `some boy in the park loved some happy
 records `in_park_np : Entity -> Prop` in the subject binder and renders
 `boy(x_boy) and in_park_np(x_boy)`, leaving the clause-level `in_park : Adv`
 name available for genuine predicate modification. Fronted variants such as
-`In the bathroom some boy loved some girl` use the same representation: the
-fronted modifier stops before the quantified subject, so the AST records
+`In the bathroom some boy loved some girl` use the clause-Adv representation:
+the fronted modifier stops before the quantified subject, so the AST records
 `in_bathroom : Adv` rather than a malformed `in_bathroom_some` name. This makes
 the ambiguity auditable before the Coq formula is rendered and prevents the
 timed or modified sentence from falling back to pseudo-entities such as `some_boy`.
