@@ -404,8 +404,8 @@ renders one row per reading with stable `data-reading-name`,
 `data-coq-definition`, `data-coq-exported`, and
 `data-reading-attachment-kind` hooks. Each row shows the reading name, scope,
 source, Coq/Rocq definition, exported status, reading-local type-check status,
-attachment kind, typed Adv modifiers, typed NP restrictors, typed time
-modifiers, and relative objects. If the audit fails, the same panel displays
+human-readable interpretation, attachment kind, typed Adv modifiers, typed NP
+restrictors, typed time modifiers, and relative objects. If the audit fails, the same panel displays
 failure-kind chips with stable `data-semantic-reading-kind` hooks and the
 semantic-readings repair details and error list before the raw JSON details.
 Warnings are rendered separately in a `Semantic Warnings` panel. Each rendered
@@ -527,8 +527,9 @@ When PP or relative-clause attachment is ambiguous, each quantifier
 `subject_relative_adv` exposes `subject_relative: in_park : Adv` and
 `subject_relative: mary : Entity`, whereas an object-NP restrictor exposes
 `object_np: in_park_np : Entity -> Prop`. The page renders the same summary in
-the `Semantic Readings Check` rows, so users can distinguish Adv modification
-from binder restriction without opening the raw AST.
+the `Semantic Readings Check` rows and adds the `reading_explanation` text as an
+`interpretation` field, so users can distinguish Adv modification from binder
+restriction without opening the raw AST.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the

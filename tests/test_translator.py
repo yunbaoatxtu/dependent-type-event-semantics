@@ -7251,6 +7251,29 @@ class TranslatorTests(unittest.TestCase):
             subject_named_summary["relative_objects"],
             [{"site": "subject_relative", "name": "mary", "type": "Entity"}],
         )
+        subject_named_explanation = subject_named_object_pp_relative[
+            "semantic_readings"
+        ][0]["reading_explanation"]
+        self.assertIn(
+            "Attachment reading subject_relative_adv.",
+            subject_named_explanation,
+        )
+        self.assertIn(
+            "subject_relative: quickly : Adv; subject_relative: in_park : Adv",
+            subject_named_explanation,
+        )
+        self.assertIn(
+            "modify predicates, not Entity constants",
+            subject_named_explanation,
+        )
+        self.assertIn(
+            "subject_relative: mary : Entity",
+            subject_named_explanation,
+        )
+        self.assertIn(
+            "remain Entity arguments of the relative predicate",
+            subject_named_explanation,
+        )
         self.assertIn("Parameter mary : Entity.", subject_named_object_pp_relative["coq_code"])
         self.assertIn("Parameter in_park : Adv.", subject_named_object_pp_relative["coq_code"])
         self.assertNotIn("Parameter in_park_np : Entity -> Prop.", subject_named_object_pp_relative["coq_code"])
@@ -7465,6 +7488,10 @@ class TranslatorTests(unittest.TestCase):
             reading["attachment_summary"]
             for reading in object_named_relative_pp["semantic_readings"]
         ]
+        object_named_explanations = [
+            reading["reading_explanation"]
+            for reading in object_named_relative_pp["semantic_readings"]
+        ]
         self.assertIn(
             {
                 "kind": "clause_adv",
@@ -7510,6 +7537,15 @@ class TranslatorTests(unittest.TestCase):
                 ],
             },
             object_named_summaries,
+        )
+        self.assertTrue(
+            any(
+                "Attachment reading object_relative_adv." in explanation
+                and "object_relative: in_park : Adv" in explanation
+                and "object_relative: mary : Entity" in explanation
+                and "modify predicates, not Entity constants" in explanation
+                for explanation in object_named_explanations
+            )
         )
         self.assertIn(
             (
@@ -8049,6 +8085,14 @@ class TranslatorTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertIn(
+            "clause: in_bathroom : Adv",
+            location["semantic_readings"][0]["reading_explanation"],
+        )
+        self.assertIn(
+            "modify predicates, not Entity constants",
+            location["semantic_readings"][0]["reading_explanation"],
+        )
         self.assertEqual(
             location["semantic_readings"][2]["attachment_summary"]["typed_np_restrictors"],
             [
@@ -8060,6 +8104,14 @@ class TranslatorTests(unittest.TestCase):
                     "semantic_role": "Location",
                 }
             ],
+        )
+        self.assertIn(
+            "object_np: in_bathroom_np : Entity -> Prop",
+            location["semantic_readings"][2]["reading_explanation"],
+        )
+        self.assertIn(
+            "constrain entity binders, not predicate-level Adv slots",
+            location["semantic_readings"][2]["reading_explanation"],
         )
         self.assertEqual(
             location["semantic_readings"][3]["dependent_type_translation"],
@@ -8135,6 +8187,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             multi_pp["semantic_readings"][4]["attachment_summary"]["typed_modifiers"],
             [],
+        )
+        self.assertIn(
+            "object_np: in_park_np : Entity -> Prop; "
+            "object_np: with_telescope_np : Entity -> Prop",
+            multi_pp["semantic_readings"][4]["reading_explanation"],
         )
         self.assertIn("Parameter in_park_np : Entity -> Prop.", multi_pp["coq_code"])
         self.assertIn("Parameter with_telescope_np : Entity -> Prop.", multi_pp["coq_code"])
@@ -8534,6 +8591,24 @@ class TranslatorTests(unittest.TestCase):
             check["repair_details"]["duplicate_reading_names"],
             ["reading"],
         )
+        malformed_explanation = check_semantic_readings(
+            [
+                {
+                    "name": "reading",
+                    "dependent_type_translation": "p",
+                    "coq_definition": "reading",
+                    "reading_explanation": "",
+                    "type_check": {"ok": True},
+                }
+            ],
+            "Definition reading : Prop := True.",
+        )
+        self.assertFalse(malformed_explanation["ok"])
+        self.assertIn(
+            "semantic_readings[0].reading_explanation must be a non-empty string",
+            malformed_explanation["errors"],
+        )
+        self.assertEqual(malformed_explanation["failure_kinds"], ["malformed_readings"])
         diagnostics = build_diagnostics(
             {
                 "ok": False,
@@ -10141,9 +10216,16 @@ class TranslatorTests(unittest.TestCase):
             subject_relative_page,
         )
         self.assertIn("<dt>attachment</dt><dd>subject_relative_adv</dd>", subject_relative_page)
+        self.assertIn("<dt>interpretation</dt>", subject_relative_page)
+        self.assertIn("Attachment reading subject_relative_adv.", subject_relative_page)
         self.assertIn("subject_relative: quickly : Adv", subject_relative_page)
         self.assertIn("subject_relative: in_park : Adv", subject_relative_page)
         self.assertIn("subject_relative: mary : Entity", subject_relative_page)
+        self.assertIn("modify predicates, not Entity constants", subject_relative_page)
+        self.assertIn(
+            "remain Entity arguments of the relative predicate",
+            subject_relative_page,
+        )
         self.assertIn("<dt>typed NP restrictors</dt><dd>none</dd>", subject_relative_page)
 
         object_relative_page = render_page(
@@ -10161,6 +10243,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("clause: in_park : Adv", object_relative_page)
         self.assertIn("object_relative: in_park : Adv", object_relative_page)
         self.assertIn("object_relative: mary : Entity", object_relative_page)
+        self.assertIn("Attachment reading object_relative_adv.", object_relative_page)
 
         object_np_page = render_page(
             "some boy loved some girl in the park with a telescope",
@@ -10173,6 +10256,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("object_np: in_park_np : Entity -&gt; Prop", object_np_page)
         self.assertIn("object_np: with_telescope_np : Entity -&gt; Prop", object_np_page)
         self.assertIn("clause: with_telescope : Adv", object_np_page)
+        self.assertIn(
+            "constrain entity binders, not predicate-level Adv slots",
+            object_np_page,
+        )
 
     def test_semantic_readings_check_panel_shows_missing_export_errors(self) -> None:
         panel_html = semantic_readings_check_panel(
@@ -11635,6 +11722,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("some boy who quickly saw Mary in the park loved a girl", readme)
         self.assertIn("mary_in_park", readme)
         self.assertIn("`attachment_summary`", readme)
+        self.assertIn("`reading_explanation`", readme)
         self.assertIn("subject_relative: mary : Entity", readme)
         self.assertIn("subject_relative: in_park : Adv", readme)
         self.assertIn("subject_relative_object_np_restrictor", readme)
@@ -11702,6 +11790,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("without requiring a running server", manuscript)
         self.assertIn("browser-download artifact", manuscript)
         self.assertIn("attachment_summary", manuscript)
+        self.assertIn("reading_explanation", manuscript)
+        self.assertIn("human-readable interpretation", manuscript)
         self.assertIn("subject_relative: mary : Entity", manuscript)
         self.assertIn("object_np: in_park_np : Entity -> Prop", manuscript)
         self.assertIn("data-reading-attachment-kind", manuscript)
@@ -11733,6 +11823,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"name": "in_park"', ast_docs)
         self.assertIn('"predicate": "in_park_np"', ast_docs)
         self.assertIn("`data-reading-attachment-kind`", ast_docs)
+        self.assertIn("`reading_explanation`", ast_docs)
         self.assertIn('"participle": "buttered"', ast_docs)
         self.assertIn('"lemma": "butter"', ast_docs)
         self.assertIn('"frame": "inchoative"', ast_docs)
@@ -11754,6 +11845,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-coq-exported`", web_design)
         self.assertIn("`data-reading-attachment-kind`", web_design)
         self.assertIn("`attachment_summary`", web_design)
+        self.assertIn("`reading_explanation`", web_design)
+        self.assertIn("`interpretation` field", web_design)
         self.assertIn("object_np: in_park_np : Entity -> Prop", web_design)
         self.assertIn("`semantic_readings_failure_kinds`", web_design)
         self.assertIn("`semantic_readings_repair_details`", web_design)

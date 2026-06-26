@@ -1297,6 +1297,7 @@ def semantic_reading_error_kind(error: str) -> str:
         or ".name must be a non-empty string" in error
         or ".dependent_type_translation must be a non-empty string" in error
         or ".coq_definition must be a non-empty string" in error
+        or ".reading_explanation must be a non-empty string" in error
         or ".scope_policy must map strings to strings" in error
     ):
         return "malformed_readings"
@@ -1446,6 +1447,14 @@ def check_semantic_readings(
             )
         ):
             errors.append(f"semantic_readings[{index}].scope_policy must map strings to strings")
+            malformed = True
+        reading_explanation = reading.get("reading_explanation")
+        if reading_explanation is not None and (
+            not isinstance(reading_explanation, str) or not reading_explanation.strip()
+        ):
+            errors.append(
+                f"semantic_readings[{index}].reading_explanation must be a non-empty string"
+            )
             malformed = True
         type_check = reading.get("type_check")
         if type_check is not None:
@@ -1740,6 +1749,118 @@ def quantifier_attachment_summary(reading: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _summary_prefix(record: dict[str, str]) -> str:
+    site = str(record.get("site", ""))
+    return f"{site}: " if site else ""
+
+
+def _typed_modifier_explanation_items(records: Any) -> list[str]:
+    if not isinstance(records, list):
+        return []
+    items: list[str] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        name = str(record.get("name", ""))
+        if not name:
+            continue
+        modifier_type = str(record.get("type", "Adv"))
+        items.append(f"{_summary_prefix(record)}{name} : {modifier_type}")
+    return items
+
+
+def _typed_time_modifier_explanation_items(records: Any) -> list[str]:
+    if not isinstance(records, list):
+        return []
+    items: list[str] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        operator = str(record.get("operator", ""))
+        argument = str(record.get("argument", ""))
+        if not operator or not argument:
+            continue
+        modifier_type = str(record.get("type", "Time"))
+        items.append(
+            f"{_summary_prefix(record)}{operator}_T({argument}) : {modifier_type}"
+        )
+    return items
+
+
+def _typed_np_restrictor_explanation_items(records: Any) -> list[str]:
+    if not isinstance(records, list):
+        return []
+    items: list[str] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        predicate = str(record.get("predicate", ""))
+        if not predicate:
+            continue
+        predicate_type = str(record.get("predicate_type", "Entity -> Prop"))
+        items.append(f"{_summary_prefix(record)}{predicate} : {predicate_type}")
+    return items
+
+
+def _relative_object_explanation_items(records: Any) -> list[str]:
+    if not isinstance(records, list):
+        return []
+    items: list[str] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        name = str(record.get("name", ""))
+        if not name:
+            continue
+        object_type = str(record.get("type", "Entity"))
+        items.append(f"{_summary_prefix(record)}{name} : {object_type}")
+    return items
+
+
+def quantifier_attachment_explanation(summary: dict[str, Any]) -> str:
+    kind = str(summary.get("kind", "plain"))
+    clauses = [f"Attachment reading {kind}."]
+    modifier_items = _typed_modifier_explanation_items(summary.get("typed_modifiers"))
+    np_restrictor_items = _typed_np_restrictor_explanation_items(
+        summary.get("typed_np_restrictors")
+    )
+    time_items = _typed_time_modifier_explanation_items(
+        summary.get("typed_time_modifiers")
+    )
+    relative_object_items = _relative_object_explanation_items(
+        summary.get("relative_objects")
+    )
+    if modifier_items:
+        clauses.append(
+            "Adv modifier(s) "
+            + "; ".join(modifier_items)
+            + " fill ModifierSeq slots and modify predicates, not Entity constants."
+        )
+    if np_restrictor_items:
+        clauses.append(
+            "NP restrictor(s) "
+            + "; ".join(np_restrictor_items)
+            + " constrain entity binders, not predicate-level Adv slots."
+        )
+    if time_items:
+        clauses.append(
+            "Time modifier(s) "
+            + "; ".join(time_items)
+            + " wrap Prop/PropT readings with temporal operators."
+        )
+    if relative_object_items:
+        clauses.append(
+            "Relative object(s) "
+            + "; ".join(relative_object_items)
+            + " remain Entity arguments of the relative predicate."
+        )
+    if len(clauses) == 1:
+        clauses.append(
+            "No extra PP or relative-clause attachment is active beyond the scope order."
+        )
+    return " ".join(clauses)
+
+
 def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[str, Any]]:
     semantic_readings: list[dict[str, Any]] = []
     for reading in readings:
@@ -1754,6 +1875,9 @@ def quantifier_semantic_readings(readings: list[dict[str, Any]]) -> list[dict[st
         attachment_summary = quantifier_attachment_summary(reading)
         if attachment_summary:
             semantic["attachment_summary"] = attachment_summary
+            semantic["reading_explanation"] = quantifier_attachment_explanation(
+                attachment_summary
+            )
         semantic_readings.append(semantic)
     return semantic_readings
 

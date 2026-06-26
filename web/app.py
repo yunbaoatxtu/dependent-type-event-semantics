@@ -1828,6 +1828,9 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
             if not isinstance(attachment_summary, dict):
                 attachment_summary = {}
             attachment_kind = str(attachment_summary.get("kind", "none"))
+            reading_explanation = str(
+                reading.get("reading_explanation") or "No reading explanation emitted."
+            )
             typed_modifiers = semantic_reading_typed_modifier_text(
                 attachment_summary.get("typed_modifiers"),
             )
@@ -1860,6 +1863,7 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
                 '<dl>'
                 f'<dt>scope</dt><dd>{html.escape(scope or "none")}</dd>'
                 f'<dt>source</dt><dd>{html.escape(source or "none")}</dd>'
+                f'<dt>interpretation</dt><dd>{html.escape(reading_explanation)}</dd>'
                 f'<dt>attachment</dt><dd>{html.escape(attachment_kind)}</dd>'
                 f'<dt>typed Adv modifiers</dt><dd>{html.escape(typed_modifiers)}</dd>'
                 f'<dt>typed NP restrictors</dt><dd>{html.escape(typed_np_restrictors)}</dd>'

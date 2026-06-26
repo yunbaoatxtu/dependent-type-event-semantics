@@ -968,7 +968,11 @@ case records:
 By contrast, an object-NP PP attachment records entries such as
 `{"site": "object_np", "predicate": "in_park_np", "predicate_type": "Entity -> Prop"}`
 under `typed_np_restrictors`. The web panel renders these same summaries with a
-stable `data-reading-attachment-kind` attribute on each reading row.
+stable `data-reading-attachment-kind` attribute on each reading row. The same
+normalized reading also carries `reading_explanation`, a short human-readable
+sentence that spells out whether the listed item fills a predicate-level
+`ModifierSeq` slot, restricts an entity binder, wraps a proposition-level time
+operator, or remains an Entity argument of a relative predicate.
 At the registered-rule boundary, successful single-reading constructions that
 do not provide a specialized reading list are normalized in the same format:
 the executor extracts the unique exported `Definition ... : Prop/PropT`, emits
