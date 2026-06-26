@@ -4729,6 +4729,7 @@ class TranslatorTests(unittest.TestCase):
                     "source": "translator/surface_lexicon.py",
                 },
                 "argument_order": ["Agent", "Patient"],
+                "time_modifiers": [],
                 "patient": {"name": "toast", "type": "Entity", "surface_role": "subject"},
                 "agent": {"name": "john", "type": "Entity", "source": "by_phrase"},
             },
@@ -4835,6 +4836,65 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter write : Entity -> Entity -> Prop.", omitted_irregular["coq_code"])
         self.assertEqual(omitted_irregular["coq_check"]["status"], "passed")
 
+    def test_passive_argument_omission_preserves_time_modifiers(self) -> None:
+        explicit = run_pipeline("the toast was buttered by John yesterday", require_coq=True)
+        self.assertTrue(explicit["ok"])
+        self.assertEqual(explicit["kind"], "passive_argument_omission")
+        self.assertEqual(explicit["ast"]["agent"]["name"], "john")
+        self.assertEqual(
+            explicit["ast"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertEqual(
+            explicit["dependent_type_translation"],
+            "at_T(yesterday, butter(john, toast))",
+        )
+        self.assertEqual(
+            explicit["semantic_readings"][0]["dependent_type_translation"],
+            "at_T(yesterday, butter(john, toast))",
+        )
+        self.assertEqual(
+            explicit["event_semantics"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn("Parameter yesterday : Entity.", explicit["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", explicit["coq_code"])
+        self.assertIn("at_T yesterday (butter john toast).", explicit["coq_code"])
+        self.assertNotIn("john_yesterday", explicit["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", explicit["coq_code"])
+        self.assertNotIn("Parameter Agent :", explicit["coq_code"])
+        self.assertNotIn("Parameter Theme :", explicit["coq_code"])
+        self.assertEqual(explicit["coq_check"]["status"], "passed")
+
+        omitted = run_pipeline("the toast was buttered in the morning", require_coq=True)
+        self.assertTrue(omitted["ok"])
+        self.assertEqual(omitted["kind"], "passive_argument_omission")
+        self.assertEqual(omitted["ast"]["agent"]["source"], "omitted_existential")
+        self.assertEqual(
+            omitted["ast"]["time_modifiers"],
+            [{"operator": "during", "argument": "morning"}],
+        )
+        self.assertEqual(
+            omitted["dependent_type_translation"],
+            "during_T(morning, exists x_agent : Entity. butter(x_agent, toast))",
+        )
+        self.assertIn("Parameter morning : Entity.", omitted["coq_code"])
+        self.assertIn("Parameter during_T : Entity -> Prop -> Prop.", omitted["coq_code"])
+        self.assertIn(
+            "during_T morning (exists x_agent : Entity, butter x_agent toast).",
+            omitted["coq_code"],
+        )
+        self.assertEqual(omitted["coq_check"]["status"], "passed")
+
+        fronted = run_pipeline("yesterday the toast was buttered by John", require_coq=True)
+        self.assertTrue(fronted["ok"])
+        self.assertEqual(fronted["kind"], "passive_argument_omission")
+        self.assertEqual(
+            fronted["dependent_type_translation"],
+            "at_T(yesterday, butter(john, toast))",
+        )
+        self.assertEqual(fronted["coq_check"]["status"], "passed")
+
     def test_passive_argument_omission_rejects_bad_agent_source(self) -> None:
         result = run_pipeline("the toast was buttered", require_coq=False)
         ast = result["ast"]
@@ -4854,6 +4914,17 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(type_check["ok"])
         self.assertIn(
             "passive auxiliary must be is, was, are, or were",
+            type_check["errors"],
+        )
+
+    def test_passive_argument_omission_rejects_bad_time_modifier(self) -> None:
+        result = run_pipeline("the toast was buttered yesterday", require_coq=False)
+        ast = result["ast"]
+        ast["time_modifiers"][0]["operator"] = "inside"
+        type_check = check_passive_argument_omission_ast(ast)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "passive time_modifiers[0].operator must be at or during",
             type_check["errors"],
         )
 
@@ -8966,6 +9037,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`to_school : Adv`", readme)
         self.assertIn("paths like `ast.body`", readme)
         self.assertIn("the toast was buttered by John", readme)
+        self.assertIn("time modifiers at the clause boundary", readme)
+        self.assertIn("during_T(morning, exists x_agent : Entity.", readme)
         self.assertIn("the doors were opened by John", readme)
         self.assertIn("John was seen by Mary", readme)
         self.assertIn("the vase is broken", readme)
@@ -9181,9 +9254,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("invalid action target lists or counts", manuscript)
         self.assertIn("recovery-action drift between the payload and manifest", manuscript)
         self.assertIn("stale Next Steps action hooks", manuscript)
+        self.assertIn("passive clause-level time modifiers", manuscript)
+        self.assertIn("passive time_modifiers have at_T/during_T shape", manuscript)
         self.assertIn("`data-semantic-reading-kind`", web_design)
         self.assertIn("passive_argument_omission", ast_docs)
         self.assertIn('"auxiliary": "was"', ast_docs)
+        self.assertIn('"time_modifiers"', ast_docs)
+        self.assertIn("at_T(yesterday, butter(john, toast))", ast_docs)
         self.assertIn('"source": "omitted_existential"', ast_docs)
         self.assertIn("predicate_coordination", ast_docs)
         self.assertIn("### `not`", ast_docs)

@@ -7140,6 +7140,7 @@ def passive_argument_omission_ast(
     agent: str | None,
     auxiliary: str,
     participle: str,
+    time_modifiers: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     agent_record = (
         {"name": agent, "type": "Entity", "source": "by_phrase"}
@@ -7153,6 +7154,7 @@ def passive_argument_omission_ast(
         "auxiliary": auxiliary,
         "surface_lexicon": passive_participle_audit(participle),
         "argument_order": ["Agent", "Patient"],
+        "time_modifiers": list(time_modifiers or []),
         "patient": {
             "name": patient,
             "type": "Entity",
@@ -7189,6 +7191,7 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
             errors.append("passive surface_lexicon.source must identify the surface lexicon")
     if ast.get("argument_order") != ["Agent", "Patient"]:
         errors.append("passive argument_order must be Agent before Patient")
+    check_time_modifiers(errors, ast.get("time_modifiers"), "passive")
 
     patient = ast.get("patient")
     if not isinstance(patient, dict):
@@ -7226,8 +7229,39 @@ def check_passive_argument_omission_ast(ast: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def split_passive_agent_and_time_modifiers(
+    tokens: list[str],
+) -> tuple[str, list[dict[str, str]]] | None:
+    for split_index in range(1, len(tokens) + 1):
+        time_modifiers = copular_property_time_modifiers(tokens[split_index:])
+        if time_modifiers is None:
+            continue
+        agent = clean_phrase(tokens[:split_index])
+        if agent != "entity":
+            return agent, time_modifiers
+    return None
+
+
+def render_passive_time_wrapped_translation(
+    proposition: str,
+    time_modifiers: list[dict[str, str]],
+) -> str:
+    for modifier in time_modifiers:
+        proposition = f"{modifier['operator']}_T({modifier['argument']}, {proposition})"
+    return proposition
+
+
+def render_passive_time_wrapped_coq(
+    proposition: str,
+    time_modifiers: list[dict[str, str]],
+) -> str:
+    for modifier in time_modifiers:
+        proposition = f"{modifier['operator']}_T {modifier['argument']} ({proposition})"
+    return proposition
+
+
 def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
-    tokens = tokenize(sentence)
+    tokens, fronted_time_modifiers = split_fronted_time_modifiers(tokenize(sentence))
     auxiliary_indices = [
         index for index, token in enumerate(tokens) if token in PASSIVE_AUXILIARIES
     ]
@@ -7245,20 +7279,43 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     predicate = lemma_verb(participle)
     rest = tokens[auxiliary_index + 2:]
     agent = None
+    trailing_time_modifiers: list[dict[str, str]] = []
     if rest:
-        if rest[0] != "by" or len(rest) == 1:
-            return None
-        agent = clean_phrase(rest[1:])
+        if rest[0] == "by":
+            if len(rest) == 1:
+                return None
+            agent_parse = split_passive_agent_and_time_modifiers(rest[1:])
+            if agent_parse is None:
+                return None
+            agent, trailing_time_modifiers = agent_parse
+        else:
+            parsed_time_modifiers = copular_property_time_modifiers(rest)
+            if parsed_time_modifiers is None:
+                return None
+            trailing_time_modifiers = parsed_time_modifiers
 
-    ast = passive_argument_omission_ast(predicate, patient, agent, auxiliary, participle)
+    time_modifiers = [*fronted_time_modifiers, *trailing_time_modifiers]
+    ast = passive_argument_omission_ast(
+        predicate,
+        patient,
+        agent,
+        auxiliary,
+        participle,
+        time_modifiers,
+    )
     type_check = check_passive_argument_omission_ast(ast)
     if agent is None:
-        typed_replacement = f"exists x_agent : Entity. {predicate}(x_agent, {patient})"
+        core_translation = f"exists x_agent : Entity. {predicate}(x_agent, {patient})"
+        typed_replacement = render_passive_time_wrapped_translation(
+            core_translation,
+            time_modifiers,
+        )
         definition_name = f"passive_{predicate}_omitted_agent"
+        core_coq = f"exists x_agent : Entity, {predicate} x_agent {patient}"
+        body_coq = render_passive_time_wrapped_coq(core_coq, time_modifiers)
         body_lines = [
             f"Definition {definition_name} : Prop :=",
-            "  exists x_agent : Entity,",
-            f"    {predicate} x_agent {patient}.",
+            f"  {body_coq}.",
         ]
         agent_parameters: list[str] = []
         event_reference = (
@@ -7266,16 +7323,39 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
             "exists x. Agent(e, x)"
         )
     else:
-        typed_replacement = f"{predicate}({agent}, {patient})"
+        core_translation = f"{predicate}({agent}, {patient})"
+        typed_replacement = render_passive_time_wrapped_translation(
+            core_translation,
+            time_modifiers,
+        )
         definition_name = f"passive_{predicate}_by_agent"
+        body_coq = render_passive_time_wrapped_coq(
+            f"{predicate} {agent} {patient}",
+            time_modifiers,
+        )
         body_lines = [
             f"Definition {definition_name} : Prop :=",
-            f"  {predicate} {agent} {patient}.",
+            f"  {body_coq}.",
         ]
         agent_parameters = [f"Parameter {agent} : Entity."]
         event_reference = (
             f"exists e. {predicate}ing(e) and Theme(e, {patient}) and Agent(e, {agent})"
         )
+    time_parameters = [
+        f"Parameter {time_argument} : Entity."
+        for time_argument in unique_names(
+            [modifier["argument"] for modifier in time_modifiers]
+        )
+    ]
+    time_operator_parameters = (
+        [
+            "",
+            "Parameter at_T : Entity -> Prop -> Prop.",
+            "Parameter during_T : Entity -> Prop -> Prop.",
+        ]
+        if time_modifiers
+        else []
+    )
 
     coq_code = "\n".join(
         [
@@ -7284,8 +7364,10 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
             f"Parameter {patient} : Entity.",
             *agent_parameters,
+            *time_parameters,
             "",
             f"Parameter {predicate} : Entity -> Entity -> Prop.",
+            *time_operator_parameters,
             "",
             *body_lines,
             "",
@@ -7302,14 +7384,27 @@ def passive_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
                 "source": sentence,
                 "event_style_reference": event_reference,
                 "typed_replacement": typed_replacement,
+                "time_modifiers": time_modifiers,
             },
             "dependent_type_translation": typed_replacement,
             "ast": ast,
             "type_check": {
                 **type_check,
                 "note": (
-                    "A passive without by-phrase introduces an existential Entity "
-                    "agent; no Event, Agent(e, ...), or Theme(e, ...) declaration is exported."
+                    (
+                        "A passive without by-phrase introduces an existential Entity "
+                        "agent"
+                    )
+                    if agent is None
+                    else "A passive by-phrase supplies an ordinary Entity agent"
+                )
+                + (
+                    "; time modifiers scope over the resulting proposition"
+                    if time_modifiers
+                    else ""
+                )
+                + (
+                    "; no Event, Agent(e, ...), or Theme(e, ...) declaration is exported."
                 ),
             },
             "coq_code": coq_code,

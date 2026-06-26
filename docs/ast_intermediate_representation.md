@@ -724,6 +724,9 @@ named entity from the by-phrase or an existentially bound entity:
     "source": "translator/surface_lexicon.py"
   },
   "argument_order": ["Agent", "Patient"],
+  "time_modifiers": [
+    {"operator": "at", "argument": "yesterday"}
+  ],
   "patient": {
     "name": "toast",
     "type": "Entity",
@@ -739,16 +742,19 @@ named entity from the by-phrase or an existentially bound entity:
 
 The structural check requires the predicate to keep the order
 `Entity -> Entity -> Prop`, with the Agent before the Patient, and it requires
-the auxiliary to be one of `is`, `was`, `are`, or `were`. It also checks the
-`surface_lexicon` audit object: the participle must be a licensed passive
-participle, `lemma` must match both the predicate and the lemmatized
-participle, and `source` must identify `translator/surface_lexicon.py`. If the
-by-phrase is
-present, `agent.source` is `by_phrase` and `agent.name` stores the overt
-individual; otherwise `agent.source` is `omitted_existential` and the exported
-Coq scaffold binds `x_agent : Entity`. Both branches are normalized as
-single-reading outputs: `by_phrase_agent` for the overt agent and
-`omitted_existential_agent` for the existentially bound agent.
+the auxiliary to be one of `is`, `was`, `are`, or `were`. It also checks
+`time_modifiers`, when present, as proposition-level `at_T` or `during_T`
+operators. Thus `the toast was buttered by John yesterday` renders as
+`at_T(yesterday, butter(john, toast))`, and the time expression is not folded
+into the by-phrase agent name. The checker also validates the `surface_lexicon`
+audit object: the participle must be a licensed passive participle, `lemma`
+must match both the predicate and the lemmatized participle, and `source` must
+identify `translator/surface_lexicon.py`. If the by-phrase is present,
+`agent.source` is `by_phrase` and `agent.name` stores the overt individual;
+otherwise `agent.source` is `omitted_existential` and the exported Coq scaffold
+binds `x_agent : Entity`. Both branches are normalized as single-reading
+outputs: `by_phrase_agent` for the overt agent and `omitted_existential_agent`
+for the existentially bound agent.
 
 ### `scope_ambiguity`
 

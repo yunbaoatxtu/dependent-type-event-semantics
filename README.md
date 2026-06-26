@@ -533,7 +533,12 @@ lemma, and the lexicon module that supplied the mapping. Passive by-phrase and
 omitted-agent outputs are normalized into single `semantic_readings` entries
 with `by_phrase_agent` or `omitted_existential_agent` scope labels, so clients
 can consume them through the same checked interface as quantifier, negation,
-and Parsons/Luo-Shi time examples.
+and Parsons/Luo-Shi time examples. This passive slice now also accepts typed
+time modifiers at the clause boundary: `the toast was buttered by John
+yesterday` becomes `at_T(yesterday, butter(john, toast))`, while `the toast was
+buttered in the morning` becomes `during_T(morning, exists x_agent : Entity.
+butter(x_agent, toast))`. The time operator scopes over the completed passive
+proposition, not over a hidden event variable or a misparsed by-phrase agent.
 
 Specialized constructions are tracked by a small construction registry. Each
 registered rule declares its phenomenon, analysis function, and Coq fragments
