@@ -1251,6 +1251,93 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         raise SystemExit("web route smoke check failed: fallback page input drift")
 
 
+def validate_analyze_quantifier_scope_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_quantifier_scope_success"
+    if payload.get("schema_version") != "analyze.v1":
+        raise SystemExit("web route smoke check failed: quantifier analyze schema drift")
+    if payload.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: quantifier analyze did not verify")
+    if payload.get("input_sentence") != sentence:
+        raise SystemExit("web route smoke check failed: quantifier analyze input drift")
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit("web route smoke check failed: quantifier diagnostics missing")
+    if diagnostics.get("summary") != "translation verified":
+        raise SystemExit("web route smoke check failed: quantifier diagnostics summary drift")
+    if diagnostics.get("failure_stage") is not None:
+        raise SystemExit("web route smoke check failed: quantifier diagnostics stage drift")
+    if diagnostics.get("recovery_actions") != []:
+        raise SystemExit("web route smoke check failed: quantifier recovery action drift")
+    stages = diagnostics.get("stages")
+    if not isinstance(stages, dict):
+        raise SystemExit("web route smoke check failed: quantifier stage map missing")
+    for stage in ["semantic_readings_check", "construction_hygiene", "coq_check"]:
+        if stages.get(stage) != "passed":
+            raise SystemExit("web route smoke check failed: quantifier stage drift")
+    check = payload.get("semantic_readings_check")
+    if (
+        not isinstance(check, dict)
+        or check.get("ok") is not True
+        or check.get("reading_count") != 2
+    ):
+        raise SystemExit("web route smoke check failed: quantifier reading-count drift")
+    expected_readings = [
+        ("some_boy_wide_scope", "subject_then_object"),
+        ("some_girl_wide_scope", "object_then_subject"),
+    ]
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != len(expected_readings):
+        raise SystemExit("web route smoke check failed: quantifier semantic reading drift")
+    coq_code = payload.get("coq_code")
+    if not isinstance(coq_code, str):
+        raise SystemExit("web route smoke check failed: quantifier Coq export missing")
+    for reading, (name, scope) in zip(readings, expected_readings):
+        if not isinstance(reading, dict):
+            raise SystemExit("web route smoke check failed: quantifier semantic reading malformed")
+        expected_fields = {
+            "name": name,
+            "scope": scope,
+            "source": "quantifier_scope",
+            "coq_definition": name,
+        }
+        for field, expected in expected_fields.items():
+            if reading.get(field) != expected:
+                raise SystemExit(
+                    "web route smoke check failed: quantifier semantic reading drift"
+                )
+        attachment = reading.get("attachment_summary")
+        if not isinstance(attachment, dict) or attachment.get("kind") != "plain":
+            raise SystemExit("web route smoke check failed: quantifier attachment drift")
+        local_type = reading.get("type_check")
+        if (
+            not isinstance(local_type, dict)
+            or local_type.get("ok") is not True
+            or local_type.get("type") != "Prop"
+        ):
+            raise SystemExit("web route smoke check failed: quantifier reading type drift")
+        for fragment in [f"Definition {name} : Prop :=", f"Check {name}."]:
+            if fragment not in coq_code:
+                raise SystemExit("web route smoke check failed: quantifier Coq export drift")
+        expected_page_fragments = [
+            f'data-reading-name="{name}"',
+            f'data-coq-definition="{name}"',
+            f"<dt>scope</dt><dd>{scope}</dd>",
+            "<dt>source</dt><dd>quantifier_scope</dd>",
+            "<dt>attachment</dt><dd>plain</dd>",
+            f"<dt>coq</dt><dd>{name}</dd>",
+        ]
+        for fragment in expected_page_fragments:
+            if fragment not in page:
+                raise SystemExit("web route smoke check failed: quantifier HTML drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: quantifier page input drift")
+
+
 def validate_diagnostic_fixture_routes(
     manifest: dict,
     fixture_payloads: dict[str, dict],
@@ -1833,6 +1920,17 @@ def run_web_route_smoke_check() -> None:
             fallback_payload,
             fallback_page,
             fallback_sentence,
+        )
+        quantifier_sentence = "some boy loves some girl"
+        quantifier_query = urlencode({"sentence": quantifier_sentence, "require_coq": "1"})
+        with opener.open(f"{base_url}/api/analyze?{quantifier_query}", timeout=5) as response:
+            quantifier_payload = json.load(response)
+        with opener.open(f"{base_url}/?{quantifier_query}", timeout=5) as response:
+            quantifier_page = response.read().decode("utf-8")
+        validate_analyze_quantifier_scope_success(
+            quantifier_payload,
+            quantifier_page,
+            quantifier_sentence,
         )
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))

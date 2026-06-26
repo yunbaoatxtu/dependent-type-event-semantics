@@ -401,6 +401,10 @@ The project-level web smoke check should exercise that ordinary `/api/analyze`
 success path directly, using `John knocked twice` and the matching HTML page
 before it walks the diagnostic fixtures, so fallback success cannot drift from
 the normalized semantic-reading interface.
+It should also exercise a multi-reading quantifier-scope success path with
+`some boy loves some girl`, requiring `some_boy_wide_scope` and
+`some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
+and HTML reading rows.
 The helper should reject any fixture whose `failure_stage` is outside the
 controlled diagnostics set: `input`, `parsing`, `type_check`,
 `semantic_readings_check`, `construction_hygiene`, and `coq_check`. The fixture

@@ -939,6 +939,11 @@ It also requests the ordinary success route
 `/api/analyze?sentence=John+knocked+twice&require_coq=1` and the matching HTML
 page, requiring both surfaces to expose the same `fallback_single_reading`
 contract before the diagnostic fixture sweep begins.
+The same live boundary now requests
+`/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
+two quantifier-scope readings, `some_boy_wide_scope` and
+`some_girl_wide_scope`, against their JSON records, Coq/Rocq definitions, and
+HTML reading rows.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.
@@ -1369,9 +1374,9 @@ This includes a package-build smoke check that runs
 environment's local build tooling rather than requiring a network fetch for
 build dependencies. It also runs a smoke check for the lexicon patch exporter,
 verifying that it can write both the JSON bundle and review-only patch text,
-and a web route smoke check that requests both an ordinary `/api/analyze`
-fallback success and the diagnostic fixture manifest through the local HTTP
-handler.
+and a web route smoke check that requests ordinary `/api/analyze` fallback and
+quantifier-scope successes before the diagnostic fixture manifest through the
+local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the
