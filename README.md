@@ -78,7 +78,9 @@ predicate name.
 The same entry point now has a certified-fragment safety guard around
 registered construction rules and fallback sentence analysis. A small
 allowlisted construction handles simple conditionals first, so `if John left,
-Mary cried` is checked as `leave(john) -> cry(mary)` with no event, Agent, or
+Mary cried` is checked as `leave(john) -> cry(mary)`, and `if John ate bread,
+Mary drank water` is checked as `eat(john, bread) -> drink(mary, water)` with
+`bread : Food` and `water : Drinkable`. These exports use no event, Agent, or
 Theme declarations. Clause-level markers outside that certified path, such as
 `who`, `which`, `that`, `whether`, or overextended conditional strings such as
 `if John left, Mary cried loudly`, produce a parsing-stage diagnostic instead
@@ -935,7 +937,9 @@ The current prototype has small, testable rules for:
 - event counting with `once`/`twice`/`thrice`, word or digit `time(s)`
   phrases, or explicit `count`;
 - causal-resultative translation into a typed state transition;
-- simple conditionals represented as implication between typed propositions;
+- simple conditionals represented as implication between typed propositions,
+  including typed transitive objects such as `bread : Food` and
+  `water : Drinkable`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation.

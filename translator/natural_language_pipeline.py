@@ -2519,16 +2519,27 @@ def simple_conditional_clause_ast(
     subject: str,
     *,
     surface_predicate: str,
+    obj: str | None = None,
+    object_type: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    predicate_type = "Entity -> Prop"
+    clause = {
         "predicate": predicate,
-        "predicate_type": "Entity -> Prop",
+        "predicate_type": predicate_type,
         "surface_predicate": surface_predicate,
         "subject": {
             "name": subject,
             "type": "Entity",
         },
     }
+    if obj is not None and object_type is not None:
+        predicate_type = f"Entity -> {object_type} -> Prop"
+        clause["predicate_type"] = predicate_type
+        clause["object"] = {
+            "name": obj,
+            "type": object_type,
+        }
+    return clause
 
 
 def simple_conditional_ast(
@@ -2551,15 +2562,29 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
     if ast.get("kind") != "conditional_implication":
         errors.append("conditional.kind must be conditional_implication")
 
+    declarations: dict[str, str] = {}
+    predicate_types: dict[str, str] = {}
+
     for field in ("antecedent", "consequent"):
         clause = ast.get(field)
         if not isinstance(clause, dict):
             errors.append(f"conditional.{field} must be a clause object")
             continue
-        if clause.get("predicate_type") != "Entity -> Prop":
-            errors.append(f"conditional.{field}.predicate_type must be Entity -> Prop")
-        if not isinstance(clause.get("predicate"), str) or not clause.get("predicate"):
+        predicate = clause.get("predicate")
+        predicate_type = clause.get("predicate_type")
+        if not isinstance(predicate, str) or not predicate:
             errors.append(f"conditional.{field}.predicate must be a non-empty string")
+        elif isinstance(predicate_type, str) and predicate_type:
+            previous_predicate_type = predicate_types.setdefault(predicate, predicate_type)
+            if previous_predicate_type != predicate_type:
+                errors.append(
+                    f"conditional predicate {predicate} has conflicting types: "
+                    f"{previous_predicate_type} vs {predicate_type}"
+                )
+        if not isinstance(predicate_type, str) or not predicate_type:
+            errors.append(
+                f"conditional.{field}.predicate_type must be a non-empty string"
+            )
         if not isinstance(clause.get("surface_predicate"), str) or not clause.get("surface_predicate"):
             errors.append(
                 f"conditional.{field}.surface_predicate must be a non-empty string"
@@ -2567,8 +2592,53 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
         subject = clause.get("subject")
         if not isinstance(subject, dict):
             errors.append(f"conditional.{field}.subject must be an object")
-        elif subject.get("type") != "Entity":
-            errors.append(f"conditional.{field}.subject must have type Entity")
+        else:
+            subject_name = subject.get("name")
+            if not isinstance(subject_name, str) or not subject_name:
+                errors.append(f"conditional.{field}.subject.name must be non-empty")
+            if subject.get("type") != "Entity":
+                errors.append(f"conditional.{field}.subject must have type Entity")
+            elif isinstance(subject_name, str) and subject_name:
+                previous_type = declarations.setdefault(subject_name, "Entity")
+                if previous_type != "Entity":
+                    errors.append(
+                        f"conditional declaration {subject_name} has conflicting "
+                        f"types: {previous_type} vs Entity"
+                    )
+
+        obj = clause.get("object")
+        if obj is None:
+            if predicate_type != "Entity -> Prop":
+                errors.append(
+                    f"conditional.{field}.predicate_type must be Entity -> Prop "
+                    "when no object is present"
+                )
+        elif not isinstance(obj, dict):
+            errors.append(f"conditional.{field}.object must be an object")
+        else:
+            object_name = obj.get("name")
+            object_type = obj.get("type")
+            if not isinstance(object_name, str) or not object_name:
+                errors.append(f"conditional.{field}.object.name must be non-empty")
+            if not isinstance(object_type, str) or not object_type:
+                errors.append(f"conditional.{field}.object.type must be non-empty")
+            elif predicate_type != f"Entity -> {object_type} -> Prop":
+                errors.append(
+                    f"conditional.{field}.predicate_type must be "
+                    f"Entity -> {object_type} -> Prop"
+                )
+            if (
+                isinstance(object_name, str)
+                and object_name
+                and isinstance(object_type, str)
+                and object_type
+            ):
+                previous_type = declarations.setdefault(object_name, object_type)
+                if previous_type != object_type:
+                    errors.append(
+                        f"conditional declaration {object_name} has conflicting "
+                        f"types: {previous_type} vs {object_type}"
+                    )
 
     connective = ast.get("connective")
     if not isinstance(connective, dict):
@@ -2586,10 +2656,31 @@ def check_simple_conditional_ast(ast: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, str] | None:
-    if len(tokens) != 2:
+def parse_simple_conditional_object_tokens(tokens: list[str]) -> str | None:
+    if len(tokens) == 1:
+        object_tokens = tokens
+    elif len(tokens) == 2 and tokens[0] in ARTICLES:
+        object_tokens = tokens
+    else:
         return None
-    subject, surface_predicate = tokens
+    if any(
+        token in PREPOSITIONS
+        or token in UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        or token in COMMON_ADVERBS
+        or token in TEMPORAL_ADVERBS
+        for token in object_tokens
+    ):
+        return None
+    obj = clean_phrase(object_tokens)
+    if not obj or obj == "entity":
+        return None
+    return obj
+
+
+def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, Any] | None:
+    if len(tokens) < 2:
+        return None
+    subject, surface_predicate = tokens[:2]
     if (
         subject in ARTICLES
         or subject in PREPOSITIONS
@@ -2598,10 +2689,26 @@ def parse_simple_conditional_clause(tokens: list[str]) -> dict[str, str] | None:
         or not is_likely_surface_verb(surface_predicate)
     ):
         return None
+    predicate = lemma_verb(surface_predicate)
+    if len(tokens) == 2:
+        if is_likely_transitive_verb(surface_predicate):
+            return None
+        return {
+            "subject": clean_phrase([subject]),
+            "predicate": predicate,
+            "surface_predicate": surface_predicate,
+        }
+    if not is_likely_transitive_verb(surface_predicate):
+        return None
+    obj = parse_simple_conditional_object_tokens(tokens[2:])
+    if obj is None:
+        return None
     return {
         "subject": clean_phrase([subject]),
-        "predicate": lemma_verb(surface_predicate),
+        "predicate": predicate,
         "surface_predicate": surface_predicate,
+        "obj": obj,
+        "object_type": object_type_for_transitive_predicate(predicate),
     }
 
 
@@ -2613,9 +2720,57 @@ def split_simple_conditional_tokens(tokens: list[str]) -> tuple[list[str], list[
         antecedent_tokens = tokens[1:then_index]
         consequent_tokens = tokens[then_index + 1 :]
         return antecedent_tokens, consequent_tokens
-    if len(tokens) == 5:
-        return tokens[1:3], tokens[3:5]
+    body = tokens[1:]
+    candidates: list[tuple[list[str], list[str]]] = []
+    for split_index in range(2, len(body) - 1):
+        antecedent_tokens = body[:split_index]
+        consequent_tokens = body[split_index:]
+        if (
+            parse_simple_conditional_clause(antecedent_tokens) is not None
+            and parse_simple_conditional_clause(consequent_tokens) is not None
+        ):
+            candidates.append((antecedent_tokens, consequent_tokens))
+    if len(candidates) == 1:
+        return candidates[0]
     return None
+
+
+def simple_conditional_clause_formula(clause: dict[str, Any], *, coq: bool) -> str:
+    predicate = clause["predicate"]
+    subject = clause["subject"]["name"]
+    obj = clause.get("object")
+    if obj is None:
+        return f"{predicate} {subject}" if coq else f"{predicate}({subject})"
+    object_name = obj["name"]
+    if coq:
+        return f"{predicate} {subject} {object_name}"
+    return f"{predicate}({subject}, {object_name})"
+
+
+def simple_conditional_event_reference(clause: dict[str, Any], event_name: str) -> str:
+    parts = [
+        f"{clause['predicate']}({event_name})",
+        f"Agent({event_name}, {clause['subject']['name']})",
+    ]
+    obj = clause.get("object")
+    if isinstance(obj, dict):
+        parts.append(f"Theme({event_name}, {obj['name']})")
+    return " and ".join(parts)
+
+
+def simple_conditional_declarations(
+    antecedent: dict[str, Any],
+    consequent: dict[str, Any],
+) -> tuple[dict[str, str], dict[str, str]]:
+    value_declarations: dict[str, str] = {}
+    predicate_declarations: dict[str, str] = {}
+    for clause in (antecedent, consequent):
+        value_declarations[clause["subject"]["name"]] = "Entity"
+        obj = clause.get("object")
+        if isinstance(obj, dict):
+            value_declarations[obj["name"]] = obj["type"]
+        predicate_declarations[clause["predicate"]] = clause["predicate_type"]
+    return value_declarations, predicate_declarations
 
 
 def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
@@ -2633,45 +2788,53 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
     consequent = simple_conditional_clause_ast(**consequent_clause)
     ast = simple_conditional_ast(antecedent, consequent)
     type_check = check_simple_conditional_ast(ast)
-    antecedent_formula = f"{antecedent['predicate']}({antecedent['subject']['name']})"
-    consequent_formula = f"{consequent['predicate']}({consequent['subject']['name']})"
+    antecedent_formula = simple_conditional_clause_formula(antecedent, coq=False)
+    consequent_formula = simple_conditional_clause_formula(consequent, coq=False)
     typed_replacement = f"{antecedent_formula} -> {consequent_formula}"
     coq_definition = "simple_conditional_implication"
-    entity_names = list(
+    value_declarations, predicate_declarations = simple_conditional_declarations(
+        antecedent,
+        consequent,
+    )
+    object_type_declarations = list(
         dict.fromkeys(
-            [antecedent["subject"]["name"], consequent["subject"]["name"]]
+            value_type
+            for value_type in value_declarations.values()
+            if value_type != "Entity"
         )
     )
-    predicate_names = list(
-        dict.fromkeys([antecedent["predicate"], consequent["predicate"]])
-    )
+    coq_antecedent = simple_conditional_clause_formula(antecedent, coq=True)
+    coq_consequent = simple_conditional_clause_formula(consequent, coq=True)
     coq_code = "\n".join(
         [
             "(* Simple conditional replacement without an event variable. *)",
             "Parameter Entity : Type.",
+            *[f"Parameter {type_name} : Type." for type_name in object_type_declarations],
             "",
-            *[f"Parameter {name} : Entity." for name in entity_names],
+            *[
+                f"Parameter {name} : {value_type}."
+                for name, value_type in value_declarations.items()
+            ],
             "",
-            *[f"Parameter {name} : Entity -> Prop." for name in predicate_names],
+            *[
+                f"Parameter {name} : {predicate_type}."
+                for name, predicate_type in predicate_declarations.items()
+            ],
             "",
             f"Definition {coq_definition} : Prop :=",
-            (
-                f"  {antecedent['predicate']} {antecedent['subject']['name']} -> "
-                f"{consequent['predicate']} {consequent['subject']['name']}."
-            ),
+            f"  {coq_antecedent} -> {coq_consequent}.",
             "",
             f"Check {coq_definition}.",
             "",
         ]
     )
+    consequent_event_name = "e'"
     event_semantics = {
         "analysis": "simple-conditional",
         "source": sentence,
         "event_style_reference": (
-            f"(exists e. {antecedent['predicate']}(e) and "
-            f"Agent(e, {antecedent['subject']['name']})) -> "
-            f"(exists e'. {consequent['predicate']}(e') and "
-            f"Agent(e', {consequent['subject']['name']}))"
+            f"(exists e. {simple_conditional_event_reference(antecedent, 'e')}) -> "
+            f"(exists e'. {simple_conditional_event_reference(consequent, consequent_event_name)})"
         ),
         "typed_replacement": typed_replacement,
     }

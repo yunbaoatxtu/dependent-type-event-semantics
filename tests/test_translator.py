@@ -1329,6 +1329,61 @@ class TranslatorTests(unittest.TestCase):
             ["simple_conditional_implication"],
         )
 
+    def test_simple_conditional_implication_preserves_typed_objects(self) -> None:
+        conditional = run_pipeline(
+            "if John ate bread, Mary drank water",
+            require_coq=True,
+        )
+        self.assertTrue(conditional["ok"])
+        self.assertEqual(conditional["kind"], "simple_conditional")
+        self.assertEqual(
+            conditional["dependent_type_translation"],
+            "eat(john, bread) -> drink(mary, water)",
+        )
+        self.assertEqual(
+            conditional["ast"]["antecedent"],
+            {
+                "predicate": "eat",
+                "predicate_type": "Entity -> Food -> Prop",
+                "surface_predicate": "ate",
+                "subject": {"name": "john", "type": "Entity"},
+                "object": {"name": "bread", "type": "Food"},
+            },
+        )
+        self.assertEqual(
+            conditional["ast"]["consequent"],
+            {
+                "predicate": "drink",
+                "predicate_type": "Entity -> Drinkable -> Prop",
+                "surface_predicate": "drank",
+                "subject": {"name": "mary", "type": "Entity"},
+                "object": {"name": "water", "type": "Drinkable"},
+            },
+        )
+        self.assertIn("Parameter Food : Type.", conditional["coq_code"])
+        self.assertIn("Parameter Drinkable : Type.", conditional["coq_code"])
+        self.assertIn("Parameter bread : Food.", conditional["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", conditional["coq_code"])
+        self.assertIn("Parameter eat : Entity -> Food -> Prop.", conditional["coq_code"])
+        self.assertIn(
+            "Parameter drink : Entity -> Drinkable -> Prop.",
+            conditional["coq_code"],
+        )
+        self.assertIn("eat john bread -> drink mary water", conditional["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", conditional["coq_code"])
+        self.assertNotIn("Parameter Theme :", conditional["coq_code"])
+        self.assertEqual(conditional["coq_check"]["status"], "passed")
+
+        article_then = run_pipeline(
+            "if John ate the bread then Mary drank water",
+            require_coq=True,
+        )
+        self.assertTrue(article_then["ok"])
+        self.assertEqual(
+            article_then["dependent_type_translation"],
+            "eat(john, bread) -> drink(mary, water)",
+        )
+
     def test_pipeline_rejects_uncertified_clause_markers_before_fallback(self) -> None:
         overextended_conditional = run_pipeline(
             "if John left, Mary cried loudly",
@@ -1339,6 +1394,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("'if'", overextended_conditional["error"])
         self.assertNotIn("coq_check", overextended_conditional)
         self.assertNotIn("dependent_type_translation", overextended_conditional)
+
+        adverbial_conditional = run_pipeline(
+            "if John ate bread quickly, Mary cried",
+            require_coq=True,
+        )
+        self.assertFalse(adverbial_conditional["ok"])
+        self.assertIn("Unsupported clause-level marker", adverbial_conditional["error"])
+        self.assertIn("'if'", adverbial_conditional["error"])
+        self.assertNotIn("coq_check", adverbial_conditional)
+        self.assertNotIn("dependent_type_translation", adverbial_conditional)
 
         relative_subject = run_pipeline(
             "the tall boy who Mary saw yesterday quickly opened the old door with a key",
@@ -7111,6 +7176,23 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("simple_conditional_implication", page)
         self.assertNotIn("leave(0)(if_john, mary_cried)", page)
 
+        transitive = analyze_sentence(
+            "if John ate bread, Mary drank water",
+            require_coq=True,
+        )
+        self.assertTrue(transitive["ok"])
+        self.assertEqual(
+            transitive["dependent_type_translation"],
+            "eat(john, bread) -> drink(mary, water)",
+        )
+        transitive_page = render_page(
+            "if John ate bread, Mary drank water",
+            require_coq=True,
+        )
+        self.assertIn("eat(john, bread) -&gt; drink(mary, water)", transitive_page)
+        self.assertIn("Parameter bread : Food.", transitive_page)
+        self.assertIn("Parameter water : Drinkable.", transitive_page)
+
     def test_web_analyze_sentence_rejects_uncertified_clause_markers(self) -> None:
         result = analyze_sentence("if John left, Mary cried loudly", require_coq=True)
         self.assertFalse(result["ok"])
@@ -10020,20 +10102,27 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`if John left,", readme)
         self.assertIn("Mary cried` is checked as", readme)
         self.assertIn("`leave(john) -> cry(mary)`", readme)
+        self.assertIn("`if John ate bread,", readme)
+        self.assertIn("`eat(john, bread) -> drink(mary, water)`", readme)
+        self.assertIn("`water : Drinkable`", readme)
         self.assertIn("`if John left, Mary cried loudly`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
         self.assertIn("relation-clause subject", readme)
         self.assertIn("certified-fragment guard", manuscript)
         self.assertIn("simple-conditional rule", manuscript)
         self.assertIn("leave(john) -> cry(mary)", manuscript)
+        self.assertIn("eat(john, bread) -> drink(mary, water)", manuscript)
+        self.assertIn("water : Drinkable", manuscript)
         self.assertIn("leave(if_john, mary_cried)", manuscript)
         self.assertIn("negative capability", manuscript)
         self.assertIn("Clause-level markers outside the", web_design)
         self.assertIn("current certified fragment", web_design)
         self.assertIn("`leave(john) -> cry(mary)`", web_design)
+        self.assertIn("`eat(john, bread) -> drink(mary, water)`", web_design)
         self.assertIn("`leave(0)(if_john, mary_cried)`", web_design)
         self.assertIn("Unsupported clause-level markers", ast_docs)
         self.assertIn("`conditional_implication` AST", ast_docs)
+        self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`--require-docx`", readme)
         self.assertIn('python3 -m pip install ".[docx]"', readme)
         self.assertIn("python3 scripts/verify_project.py --require-coq --require-docx", readme)
