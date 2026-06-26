@@ -147,6 +147,43 @@ FALLBACK_COVERAGE_EXAMPLES = (
 )
 
 
+FALLBACK_CERTIFICATION_GAPS = (
+    {
+        "id": "no_registered_construction_rule",
+        "label": "Register a construction rule",
+        "detail": (
+            "Fallback did not run a construction-specific analyzer, so the "
+            "surface sentence is not yet covered by a typed certified fragment."
+        ),
+        "required_artifact": "ConstructionRule analyzer with accepted examples",
+    },
+    {
+        "id": "no_fragment_specific_readings",
+        "label": "Normalize fragment-specific readings",
+        "detail": (
+            "Fallback emits one generic semantic-reading row; certification "
+            "requires explicit readings tied to the construction's ambiguity, "
+            "scope, attachment, or role behavior."
+        ),
+        "required_artifact": "semantic_readings contract with checked reading names",
+    },
+    {
+        "id": "no_construction_hygiene_policy",
+        "label": "Add Coq/Rocq hygiene guards",
+        "detail": (
+            "Fallback checks the generated scaffold but has no rule-specific "
+            "forbidden-fragment policy preventing event arguments or mistyped "
+            "roles from re-entering that construction."
+        ),
+        "required_artifact": "forbidden_coq_fragments policy and verifier fixture",
+    },
+)
+
+
+def fallback_certification_gap_payload() -> list[dict[str, str]]:
+    return [dict(gap) for gap in FALLBACK_CERTIFICATION_GAPS]
+
+
 UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES = (
     {
         "sentence": "John left because Mary cried",
@@ -10931,6 +10968,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
                 "does not certify full natural-language semantics",
                 "does not resolve unregistered scope, attachment, or discourse ambiguities",
             ],
+            "certification_gaps": fallback_certification_gap_payload(),
         },
         "coverage_matrix": {
             "registered_success_cases": registered_success_cases,
@@ -11028,6 +11066,7 @@ def fallback_verification_scope() -> dict[str, Any]:
             "does not certify full natural-language semantics",
             "does not resolve unregistered scope, attachment, or discourse ambiguities",
         ],
+        "certification_gaps": fallback_certification_gap_payload(),
     }
 
 

@@ -1986,6 +1986,7 @@ def verification_scope_panel(result: dict[str, Any]) -> str:
     ]
     guarantees = scope.get("guarantees", [])
     limitations = scope.get("limitations", [])
+    certification_gaps = scope.get("certification_gaps", [])
     guarantee_items = (
         "".join(f"<li>{html.escape(str(item))}</li>" for item in guarantees)
         if isinstance(guarantees, list) and guarantees
@@ -1996,6 +1997,24 @@ def verification_scope_panel(result: dict[str, Any]) -> str:
         if isinstance(limitations, list) and limitations
         else "<li>none</li>"
     )
+    if isinstance(certification_gaps, (list, tuple)) and certification_gaps:
+        gap_items = "".join(
+            (
+                '<li '
+                f'data-certification-gap-id="{html.escape(str(gap.get("id", "")), quote=True)}" '
+                f'data-certification-gap-artifact="{html.escape(str(gap.get("required_artifact", "")), quote=True)}">'
+                f'<strong>{html.escape(str(gap.get("label", "")))}</strong>'
+                '<dl>'
+                f'<dt>detail</dt><dd>{html.escape(str(gap.get("detail", "")))}</dd>'
+                f'<dt>artifact</dt><dd>{html.escape(str(gap.get("required_artifact", "")))}</dd>'
+                '</dl>'
+                '</li>'
+            )
+            for gap in certification_gaps
+            if isinstance(gap, dict)
+        )
+    else:
+        gap_items = "<li>none</li>"
     body = (
         '<dl class="verification-scope-details">'
         + "".join(
@@ -2007,6 +2026,9 @@ def verification_scope_panel(result: dict[str, Any]) -> str:
         f"<ul>{guarantee_items}</ul></div>"
         '<div class="verification-scope-list"><strong>limitations</strong>'
         f"<ul>{limitation_items}</ul></div>"
+        '<div class="verification-scope-list verification-scope-gaps">'
+        "<strong>certification gaps</strong>"
+        f"<ul>{gap_items}</ul></div>"
     )
     return (
         '<section class="panel verification-scope" '
@@ -2224,6 +2246,7 @@ def certified_fragment_panel() -> str:
         if isinstance(marker, str)
     )
     fallback_items = ""
+    fallback_gap_items = ""
     rejected_items = ""
     if isinstance(coverage, dict):
         fallback_items = "".join(
@@ -2244,6 +2267,18 @@ def certified_fragment_panel() -> str:
             f"{html.escape(str(item.get('sentence', '')))}"
             "</li>"
             for item in coverage.get("rejected_unsupported_cases", [])
+            if isinstance(item, dict)
+        )
+    if isinstance(fallback, dict):
+        fallback_gap_items = "".join(
+            (
+                '<li '
+                f'data-fallback-gap-id="{html.escape(str(item.get("id", "")), quote=True)}" '
+                f'data-fallback-gap-artifact="{html.escape(str(item.get("required_artifact", "")), quote=True)}">'
+                f'{html.escape(str(item.get("label", "")))}'
+                "</li>"
+            )
+            for item in fallback.get("certification_gaps", [])
             if isinstance(item, dict)
         )
     semantic_snapshot_items = "".join(
@@ -2288,6 +2323,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{rule_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>fallback coverage</strong>'
         f"<ul>{fallback_items}</ul></div>"
+        '<div class="certified-fragment-coverage"><strong>fallback certification gaps</strong>'
+        f"<ul>{fallback_gap_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'
         f"<ul>{rejected_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'

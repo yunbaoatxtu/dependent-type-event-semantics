@@ -792,7 +792,12 @@ registered rules report `kind: registered_construction` and
 report `kind: fallback_shallow` and `certification_level: shallow_scaffold`.
 Failure and unsupported-fragment paths report `certification_level: none`, so a
 client cannot mistake a rejected or shallow parse for a fully certified
-natural-language interpretation.
+natural-language interpretation. Fallback scopes also carry
+`certification_gaps`: a machine-readable upgrade checklist whose current ids are
+`no_registered_construction_rule`, `no_fragment_specific_readings`, and
+`no_construction_hygiene_policy`. These gaps record the missing artifacts needed
+to promote a shallow fallback result into a registered, construction-level
+analysis.
 The project-level coverage boundary is available separately at
 `/api/certified-fragment` with `schema_version: "certified_fragment.v1"`.
 That manifest is generated from the live registered construction table rather
@@ -800,7 +805,10 @@ than from a hand-written README list. It reports
 `full_natural_language_certification: false`, one row per registered
 construction rule with `certification_level: construction_rule`, the fallback
 row with `certification_level: shallow_scaffold`, and the unsupported
-clause-marker guard set. The page renders the same data in a `Certified Fragment`
+clause-marker guard set. The fallback row also repeats the same
+`certification_gaps`, so the certified-fragment manifest describes not only what
+is accepted but what remains to be supplied before a fallback sentence can be
+claimed as certified. The page renders the same data in a `Certified Fragment`
 panel, so users can distinguish the current certified fragment from the
 stronger, still-open goal of arbitrary natural-language certification.
 The same manifest now includes a `coverage_matrix` with three audited slices:

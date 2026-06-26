@@ -1312,6 +1312,18 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         "shallow_scaffold",
         None,
     )
+    certification_gaps = payload.get("verification_scope", {}).get("certification_gaps")
+    expected_gap_ids = [
+        "no_registered_construction_rule",
+        "no_fragment_specific_readings",
+        "no_construction_hygiene_policy",
+    ]
+    if (
+        not isinstance(certification_gaps, list)
+        or [gap.get("id") for gap in certification_gaps if isinstance(gap, dict)]
+        != expected_gap_ids
+    ):
+        raise SystemExit("web route smoke check failed: fallback certification gap drift")
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: fallback semantic reading count drift")
@@ -1338,6 +1350,10 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         "<dt>source</dt><dd>fallback_event_semantics</dd>",
         "<dt>coq</dt><dd>example_1</dd>",
         "<dt>attachment</dt><dd>none</dd>",
+        "certification gaps",
+        'data-certification-gap-id="no_registered_construction_rule"',
+        'data-certification-gap-id="no_fragment_specific_readings"',
+        'data-certification-gap-id="no_construction_hygiene_policy"',
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -2291,6 +2307,17 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or fallback.get("certification_level") != "shallow_scaffold"
     ):
         raise SystemExit("web route smoke check failed: certified fallback drift")
+    fallback_gaps = fallback.get("certification_gaps")
+    if (
+        not isinstance(fallback_gaps, list)
+        or [gap.get("id") for gap in fallback_gaps if isinstance(gap, dict)]
+        != [
+            "no_registered_construction_rule",
+            "no_fragment_specific_readings",
+            "no_construction_hygiene_policy",
+        ]
+    ):
+        raise SystemExit("web route smoke check failed: certified fallback gap drift")
     for case in fallback_cases:
         if (
             not isinstance(case, dict)
@@ -2324,6 +2351,9 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-certified-fragment-api="/api/certified-fragment"',
         'data-full-natural-language-certification="false"',
         'data-fallback-certification-level="shallow_scaffold"',
+        'data-fallback-gap-id="no_registered_construction_rule"',
+        'data-fallback-gap-id="no_fragment_specific_readings"',
+        'data-fallback-gap-id="no_construction_hygiene_policy"',
         f'data-registered-construction-count="{len(registered)}"',
         f'data-semantic-snapshot-count="{manifest.get("semantic_snapshot_count")}"',
         (

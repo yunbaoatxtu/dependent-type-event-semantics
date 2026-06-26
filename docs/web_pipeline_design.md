@@ -101,16 +101,24 @@ construction successes must expose `kind: registered_construction`,
 successes must expose `kind: fallback_shallow` and
 `certification_level: shallow_scaffold`, together with limitations explaining
 that the result is a structurally checked scaffold rather than full
-natural-language certification. Rejected or failed paths use
+natural-language certification. They also expose `certification_gaps`, currently
+`no_registered_construction_rule`, `no_fragment_specific_readings`, and
+`no_construction_hygiene_policy`, so clients can distinguish a successful
+fallback parse from a construction that is ready for rule-level certification.
+Rejected or failed paths use
 `certification_level: none`.
 The page also exposes a project-level certified-fragment contract. The
 `/api/certified-fragment` endpoint returns `schema_version:
 "certified_fragment.v1"`, `full_natural_language_certification: false`, all
 registered construction rules generated from the live analyzer registry, the
-fallback certification level, and the rejected clause-marker set. The
+fallback certification level, the fallback `certification_gaps`, and the
+rejected clause-marker set. The
 `Certified Fragment` panel mirrors the same metadata with stable data
 attributes for the schema, API path, registered rule count, fallback level, and
-each registered rule id through `data-certified-rule-id`.
+each registered rule id through `data-certified-rule-id`. It also exposes each
+fallback gap through `data-fallback-gap-id`, which gives smoke tests a stable
+hook for checking that shallow fallback success is not presented as a completed
+certification result.
 The manifest also carries a `coverage_matrix` with
 `registered_success_cases`, `fallback_success_cases`, and
 `rejected_unsupported_cases`, plus matching `coverage_matrix_counts`. The page

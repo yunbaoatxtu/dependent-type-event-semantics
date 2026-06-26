@@ -70,6 +70,7 @@ from translator.natural_language_pipeline import (
     construction_fragment_manifest,
     construction_rules,
     exported_prop_definition_names,
+    fallback_certification_gap_payload,
     run_registered_rule,
     run_pipeline,
     sentence_to_event_semantics,
@@ -8927,9 +8928,21 @@ class TranslatorTests(unittest.TestCase):
             manifest["fallback"]["certification_level"],
             "shallow_scaffold",
         )
+        self.assertEqual(
+            [gap["id"] for gap in manifest["fallback"]["certification_gaps"]],
+            [gap["id"] for gap in fallback_certification_gap_payload()],
+        )
         self.assertIn(
             "does not certify full natural-language semantics",
             manifest["fallback"]["limitations"],
+        )
+        self.assertEqual(
+            [gap["id"] for gap in manifest["fallback"]["certification_gaps"]],
+            [gap["id"] for gap in fallback_certification_gap_payload()],
+        )
+        self.assertEqual(
+            manifest["fallback"]["certification_gaps"][0]["required_artifact"],
+            "ConstructionRule analyzer with accepted examples",
         )
         self.assertIn("who", manifest["rejected_fragment_markers"])
         self.assertIn("because", manifest["rejected_fragment_markers"])
@@ -9017,6 +9030,10 @@ class TranslatorTests(unittest.TestCase):
                     result["verification_scope"]["certification_level"],
                     case["expected_certification_level"],
                 )
+                self.assertEqual(
+                    [gap["id"] for gap in result["verification_scope"]["certification_gaps"]],
+                    [gap["id"] for gap in fallback_certification_gap_payload()],
+                )
 
         for case in coverage["rejected_unsupported_cases"]:
             with self.subTest(sentence=case["sentence"]):
@@ -9042,6 +9059,12 @@ class TranslatorTests(unittest.TestCase):
         manifest = deepcopy(construction_fragment_manifest())
         manifest["semantic_snapshots"][0]["expected_ast_summary"]["kind"] = "wrong-kind"
         with self.assertRaisesRegex(SystemExit, "semantic snapshot AST drift"):
+            validate_certified_fragment_manifest(manifest)
+
+    def test_verification_rejects_certified_fragment_fallback_gap_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["fallback"]["certification_gaps"] = []
+        with self.assertRaisesRegex(SystemExit, "certified fallback gap drift"):
             validate_certified_fragment_manifest(manifest)
 
     def test_web_api_and_page_expose_certified_fragment_manifest(self) -> None:
@@ -9087,6 +9110,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-certified-fragment-api="/api/certified-fragment"', page)
         self.assertIn('data-full-natural-language-certification="false"', page)
         self.assertIn('data-fallback-certification-level="shallow_scaffold"', page)
+        self.assertIn('data-fallback-gap-id="no_registered_construction_rule"', page)
+        self.assertIn('data-fallback-gap-id="no_fragment_specific_readings"', page)
+        self.assertIn('data-fallback-gap-id="no_construction_hygiene_policy"', page)
         self.assertIn(
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
@@ -10506,6 +10532,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Verification Scope", page)
         self.assertIn('data-verification-scope-kind="fallback_shallow"', page)
         self.assertIn('data-verification-level="shallow_scaffold"', page)
+        self.assertIn("certification gaps", page)
+        self.assertIn('data-certification-gap-id="no_registered_construction_rule"', page)
+        self.assertIn('data-certification-gap-id="no_fragment_specific_readings"', page)
+        self.assertIn('data-certification-gap-id="no_construction_hygiene_policy"', page)
         self.assertIn("<dt>rule</dt><dd>none</dd>", page)
         self.assertIn("does not certify full natural-language semantics", page)
         self.assertIn("Conclusion", page)
@@ -10775,6 +10805,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("No registered construction rule matched", page)
         self.assertIn("Verification Scope", page)
         self.assertIn('data-verification-scope-kind="fallback_shallow"', page)
+        self.assertIn('data-certification-gap-id="no_registered_construction_rule"', page)
+        self.assertIn("Register a construction rule", page)
         self.assertIn("No registered construction rule matched", page)
 
     def test_web_page_status_shows_parser_failure_stage(self) -> None:
@@ -12101,6 +12133,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`verification_scope`", readme)
         self.assertIn("`kind: registered_construction`", readme)
         self.assertIn("`kind: fallback_shallow`", readme)
+        self.assertIn("`certification_gaps`", readme)
+        self.assertIn("`no_registered_construction_rule`", readme)
+        self.assertIn("`no_fragment_specific_readings`", readme)
+        self.assertIn("`no_construction_hygiene_policy`", readme)
         self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
@@ -12492,6 +12528,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("registered_construction", manuscript)
         self.assertIn("certification_level construction_rule", manuscript)
         self.assertIn("fallback_shallow", manuscript)
+        self.assertIn("certification_gaps", manuscript)
+        self.assertIn("no_registered_construction_rule", manuscript)
+        self.assertIn("no_fragment_specific_readings", manuscript)
+        self.assertIn("no_construction_hygiene_policy", manuscript)
         self.assertIn("certification_level shallow_scaffold", manuscript)
         self.assertIn("certification_level none", manuscript.lower())
         self.assertIn("Verification Scope panel", manuscript)
@@ -13011,6 +13051,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`registered_success_cases`", readme)
         self.assertIn("`fallback_success_cases`", readme)
         self.assertIn("`rejected_unsupported_cases`", readme)
+        self.assertIn("`certification_gaps`", readme)
         self.assertIn("`semantic_snapshots`", readme)
         self.assertIn("`semantic_snapshot_count`", readme)
         self.assertIn("`expected_ast_summary`", readme)
@@ -13030,6 +13071,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`verification_scope`", web_design)
         self.assertIn("`kind: registered_construction`", web_design)
         self.assertIn("`kind: fallback_shallow`", web_design)
+        self.assertIn("`certification_gaps`", web_design)
+        self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
         self.assertIn('"certified_fragment.v1"', web_design)
@@ -13043,6 +13086,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_snapshot_count`", web_design)
         self.assertIn("`data-semantic-snapshot-*`", web_design)
         self.assertIn("`expected_ast_summary`", web_design)
+        self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`data-semantic-snapshot-ast-kind`", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
