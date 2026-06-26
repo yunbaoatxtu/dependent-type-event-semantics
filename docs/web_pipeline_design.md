@@ -111,7 +111,17 @@ Fallback responses also expose `certification_upgrade_plan` with
 human-review upgrade step per gap. The page renders this as a dedicated
 `Certification Upgrade Plan` panel with stable hooks such as
 `data-upgrade-plan-schema`, `data-upgrade-candidate-rule-id`, and
-`data-upgrade-action-kind`.
+`data-upgrade-action-kind`. They also expose `construction_rule_draft` with
+`schema_version: "construction_rule_draft.v1"`, a generated
+`candidate_analyzer`, accepted examples, semantic-reading drafts, a hygiene
+policy draft, a test draft, and a patch-text preview. The draft is explicitly
+marked `automation_mode: "human_review_required"` and `can_auto_apply: false`.
+The page renders it as `Construction Rule Draft` with stable hooks such as
+`data-rule-draft-schema`, `data-rule-draft-id`,
+`data-rule-draft-reading`, and `data-rule-draft-forbidden-fragment`. The
+parallel `/api/construction-rule-draft` route returns
+`schema_version: "construction_rule_draft_response.v1"` and can serve the same
+payload as a downloadable JSON artifact through `download=1`.
 Rejected or failed paths use
 `certification_level: none`.
 The page also exposes a project-level certified-fragment contract. The

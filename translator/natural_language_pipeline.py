@@ -181,6 +181,7 @@ FALLBACK_CERTIFICATION_GAPS = (
 
 
 CERTIFICATION_UPGRADE_PLAN_SCHEMA = "certification_upgrade_plan.v1"
+CONSTRUCTION_RULE_DRAFT_SCHEMA = "construction_rule_draft.v1"
 
 
 def fallback_certification_gap_payload() -> list[dict[str, str]]:
@@ -830,6 +831,70 @@ def fallback_certification_upgrade_plan(
         "automation_mode": "human_review_required",
         "can_auto_apply": False,
         "steps": steps,
+        "verification_commands": [
+            "python3 scripts/verify_project.py --require-coq --require-docx",
+        ],
+    }
+
+
+def fallback_construction_rule_draft(
+    sentence: str,
+    ast: dict[str, Any],
+    dependent_type_translation: str,
+) -> dict[str, Any]:
+    candidate_rule_id = fallback_candidate_rule_id(ast)
+    reading_name = f"{candidate_rule_id}_single_reading"
+    analyzer_name = f"{candidate_rule_id}_pipeline"
+    forbidden_coq_fragments = [
+        "Parameter Event : Type.",
+        "exists e : Event",
+        "Parameter Agent :",
+        "Parameter Theme :",
+    ]
+    return {
+        "schema_version": CONSTRUCTION_RULE_DRAFT_SCHEMA,
+        "source_verification_scope": "fallback_shallow",
+        "candidate_rule_id": candidate_rule_id,
+        "candidate_analyzer": analyzer_name,
+        "label": f"Promote fallback candidate {candidate_rule_id}",
+        "phenomenon": "Human-reviewed promotion of a shallow fallback analysis",
+        "accepted_examples": [sentence],
+        "semantic_reading_drafts": [
+            {
+                "name": reading_name,
+                "source": candidate_rule_id,
+                "scope": "single_reading",
+                "dependent_type_translation": dependent_type_translation,
+                "coq_definition": reading_name,
+                "attachment_summary_kind": "none",
+            }
+        ],
+        "hygiene_policy_draft": {
+            "forbidden_coq_fragments": forbidden_coq_fragments,
+            "reason": (
+                "The promoted construction should not reintroduce event variables "
+                "or untyped neo-Davidsonian role predicates."
+            ),
+        },
+        "test_draft": {
+            "positive_sentence": sentence,
+            "expected_verification_scope_kind": "registered_construction",
+            "expected_certification_level": "construction_rule",
+            "expected_forbidden_fragment_count": len(forbidden_coq_fragments),
+        },
+        "ast_summary": ast_structure_summary(ast if isinstance(ast, dict) else {}),
+        "automation_mode": "human_review_required",
+        "can_auto_apply": False,
+        "patch_text_preview": "\n".join(
+            [
+                "# Candidate ConstructionRule draft",
+                f"rule_id = {candidate_rule_id!r}",
+                f"analyzer = {analyzer_name!r}",
+                f"accepted_examples = {[sentence]!r}",
+                f"semantic_reading = {reading_name!r}",
+                f"forbidden_coq_fragments = {forbidden_coq_fragments!r}",
+            ]
+        ),
         "verification_commands": [
             "python3 scripts/verify_project.py --require-coq --require-docx",
         ],
@@ -11634,6 +11699,11 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
             "coq_code": coq_code,
             "verification_scope": fallback_verification_scope(),
             "certification_upgrade_plan": fallback_certification_upgrade_plan(
+                sentence,
+                translation["ast"],
+                translation["translation"],
+            ),
+            "construction_rule_draft": fallback_construction_rule_draft(
                 sentence,
                 translation["ast"],
                 translation["translation"],

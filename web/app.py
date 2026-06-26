@@ -14,6 +14,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 from translator.dependent_type_event_translator import STATE_LEXICON
 from translator.natural_language_pipeline import (
+    CONSTRUCTION_RULE_DRAFT_SCHEMA,
     check_semantic_readings,
     construction_fragment_manifest,
     exported_prop_definition_names,
@@ -40,6 +41,7 @@ from web.diagnostic_contract import (
 DEFAULT_SENTENCE = "John knocked twice"
 ANALYZE_RESPONSE_SCHEMA = "analyze.v1"
 LEXICON_PATCH_DRAFTS_SCHEMA = "lexicon_patch_drafts.v1"
+CONSTRUCTION_RULE_DRAFT_RESPONSE_SCHEMA = "construction_rule_draft_response.v1"
 CERTIFIED_FRAGMENT_SCHEMA = "certified_fragment.v1"
 DIAGNOSTIC_CONTRACT_SCHEMA = "diagnostic_contract.v1"
 DIAGNOSTIC_FIXTURES_SCHEMA = "diagnostic_fixtures.v1"
@@ -399,6 +401,11 @@ def recovery_action_run_artifact_filename(case: str, action_index: int) -> str:
     return f"diagnostic_inspection_run__{stable_token(case)}__{action_index}.json"
 
 
+def construction_rule_draft_artifact_filename(candidate_rule_id: str) -> str:
+    token = stable_token(candidate_rule_id or "fallback_candidate")
+    return f"construction_rule_draft__{token}.json"
+
+
 def recovery_action_api_path(
     case: str,
     action_index: int,
@@ -421,6 +428,20 @@ def recovery_action_run_api_path(
     if download:
         params["download"] = "1"
     return f"/api/recovery-action-run?{urlencode(params)}"
+
+
+def construction_rule_draft_api_path(
+    sentence: str,
+    require_coq: bool,
+    *,
+    download: bool = False,
+) -> str:
+    params = {"sentence": sentence}
+    if require_coq:
+        params["require_coq"] = "1"
+    if download:
+        params["download"] = "1"
+    return f"/api/construction-rule-draft?{urlencode(params)}"
 
 
 def request_wants_download(query: str) -> bool:
@@ -2115,6 +2136,112 @@ def certification_upgrade_plan_panel(result: dict[str, Any]) -> str:
     )
 
 
+def construction_rule_draft_panel(
+    result: dict[str, Any],
+    sentence: str,
+    require_coq: bool,
+) -> str:
+    draft = result.get("construction_rule_draft")
+    if not isinstance(draft, dict):
+        return ""
+    schema = str(draft.get("schema_version", ""))
+    source_scope = str(draft.get("source_verification_scope", ""))
+    candidate_rule_id = str(draft.get("candidate_rule_id", ""))
+    analyzer = str(draft.get("candidate_analyzer", ""))
+    automation_mode = str(draft.get("automation_mode", ""))
+    can_auto_apply = draft.get("can_auto_apply") is True
+    readings = draft.get("semantic_reading_drafts", [])
+    hygiene = draft.get("hygiene_policy_draft", {})
+    forbidden_fragments = []
+    if isinstance(hygiene, dict):
+        forbidden_fragments = [
+            str(fragment)
+            for fragment in hygiene.get("forbidden_coq_fragments", [])
+        ]
+    reading_items = []
+    reading_source = readings if isinstance(readings, list) else []
+    for reading in reading_source:
+        if not isinstance(reading, dict):
+            continue
+        reading_items.append(
+            '<li '
+            f'data-rule-draft-reading="{html.escape(str(reading.get("name", "")), quote=True)}" '
+            f'data-rule-draft-reading-source="{html.escape(str(reading.get("source", "")), quote=True)}">'
+            f'<strong>{html.escape(str(reading.get("name", "")))}</strong>'
+            '<dl>'
+            f'<dt>source</dt><dd>{html.escape(str(reading.get("source", "")))}</dd>'
+            f'<dt>scope</dt><dd>{html.escape(str(reading.get("scope", "")))}</dd>'
+            f'<dt>coq</dt><dd>{html.escape(str(reading.get("coq_definition", "")))}</dd>'
+            f'<dt>translation</dt><dd><code>{html.escape(str(reading.get("dependent_type_translation", "")))}</code></dd>'
+            '</dl>'
+            '</li>'
+        )
+    reading_html = (
+        '<ul class="construction-rule-draft-readings">' + "".join(reading_items) + "</ul>"
+        if reading_items
+        else '<p class="construction-rule-draft-empty">No reading drafts emitted.</p>'
+    )
+    forbidden_html = (
+        "".join(
+            f'<li data-rule-draft-forbidden-fragment="{html.escape(fragment, quote=True)}">'
+            f"<code>{html.escape(fragment)}</code></li>"
+            for fragment in forbidden_fragments
+        )
+        if forbidden_fragments
+        else "<li>none</li>"
+    )
+    commands = draft.get("verification_commands", [])
+    commands_html = (
+        "".join(f"<li><code>{html.escape(str(command))}</code></li>" for command in commands)
+        if isinstance(commands, list) and commands
+        else "<li>none</li>"
+    )
+    download_href = construction_rule_draft_api_path(sentence, require_coq, download=True)
+    raw_json = html.escape(compact_json(draft))
+    rows = [
+        ("schema", schema),
+        ("source", source_scope),
+        ("candidate rule", candidate_rule_id),
+        ("candidate analyzer", analyzer),
+        ("automation", automation_mode),
+        ("auto apply", "yes" if can_auto_apply else "no"),
+    ]
+    body = (
+        '<dl class="construction-rule-draft-details">'
+        + "".join(
+            f"<dt>{html.escape(label)}</dt><dd>{html.escape(value)}</dd>"
+            for label, value in rows
+        )
+        + "</dl>"
+        '<div class="panel-action">'
+        f'<a class="construction-rule-draft-link" href="{html.escape(download_href, quote=True)}" '
+        'data-rule-draft-format="json" download="construction_rule_draft.json">'
+        "Download draft JSON"
+        "</a>"
+        "</div>"
+        '<div class="construction-rule-draft-section"><strong>reading drafts</strong>'
+        f"{reading_html}</div>"
+        '<div class="construction-rule-draft-section"><strong>forbidden Coq/Rocq fragments</strong>'
+        f"<ul>{forbidden_html}</ul></div>"
+        '<div class="construction-rule-draft-section"><strong>verification commands</strong>'
+        f"<ul>{commands_html}</ul></div>"
+        '<details class="construction-rule-draft-raw"><summary>Raw draft JSON</summary>'
+        f"<pre>{raw_json}</pre>"
+        "</details>"
+    )
+    return (
+        '<section class="panel construction-rule-draft-panel" '
+        f'data-rule-draft-schema="{html.escape(schema, quote=True)}" '
+        f'data-rule-draft-source-scope="{html.escape(source_scope, quote=True)}" '
+        f'data-rule-draft-id="{html.escape(candidate_rule_id, quote=True)}" '
+        f'data-rule-draft-analyzer="{html.escape(analyzer, quote=True)}" '
+        f'data-rule-draft-can-auto-apply="{str(can_auto_apply).lower()}">'
+        "<h2>Construction Rule Draft</h2>"
+        f'<div class="construction-rule-draft">{body}</div>'
+        "</section>"
+    )
+
+
 def result_state_lexicon_panel(result: dict[str, Any]) -> str:
     entries = result.get("result_state_lexicon", [])
     if not entries:
@@ -3332,6 +3459,7 @@ def render_page(
       {panel("API Contract", api_contract)}
       {verification_scope_panel(result)}
       {certification_upgrade_plan_panel(result)}
+      {construction_rule_draft_panel(result, sentence, require_coq)}
       {certified_fragment_panel()}
       {diagnostic_contract_panel()}
       {panel("Conclusion", conclusion)}
@@ -3362,6 +3490,24 @@ class PipelineHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/api/analyze":
             self.write_json_response(self.handle_api(parsed.query))
+            return
+        if parsed.path == "/api/construction-rule-draft":
+            payload, status = self.handle_construction_rule_draft_api(parsed.query)
+            download_filename = None
+            draft = payload.get("construction_rule_draft")
+            if (
+                status == HTTPStatus.OK
+                and request_wants_download(parsed.query)
+                and isinstance(draft, dict)
+            ):
+                download_filename = construction_rule_draft_artifact_filename(
+                    str(draft.get("candidate_rule_id", ""))
+                )
+            self.write_json_response(
+                payload,
+                status=status,
+                download_filename=download_filename,
+            )
             return
         if parsed.path == "/api/diagnostic-fixture":
             self.write_json_response(self.handle_diagnostic_fixture_api(parsed.query))
@@ -3450,6 +3596,40 @@ class PipelineHandler(BaseHTTPRequestHandler):
         sentence = params.get("sentence", [""])[0]
         require_coq = params.get("require_coq", ["0"])[0] == "1"
         return analyze_sentence(sentence, require_coq=require_coq)
+
+    def handle_construction_rule_draft_api(
+        self,
+        query: str,
+    ) -> tuple[dict[str, Any], HTTPStatus]:
+        params = parse_qs(query)
+        sentence = params.get("sentence", [""])[0]
+        require_coq = params.get("require_coq", ["0"])[0] == "1"
+        result = analyze_sentence(sentence, require_coq=require_coq)
+        draft = result.get("construction_rule_draft")
+        if not isinstance(draft, dict):
+            return (
+                {
+                    "schema_version": CONSTRUCTION_RULE_DRAFT_RESPONSE_SCHEMA,
+                    "ok": False,
+                    "input_sentence": sentence,
+                    "error": "No construction rule draft is available for this analysis.",
+                    "verification_scope": result.get("verification_scope", {}),
+                    "diagnostics": result.get("diagnostics", {}),
+                },
+                HTTPStatus.BAD_REQUEST,
+            )
+        return (
+            {
+                "schema_version": CONSTRUCTION_RULE_DRAFT_RESPONSE_SCHEMA,
+                "ok": True,
+                "input_sentence": sentence,
+                "draft_schema_version": CONSTRUCTION_RULE_DRAFT_SCHEMA,
+                "construction_rule_draft": draft,
+                "verification_scope": result.get("verification_scope", {}),
+                "diagnostics": result.get("diagnostics", {}),
+            },
+            HTTPStatus.OK,
+        )
 
     def handle_diagnostic_fixture_api(self, query: str) -> dict[str, Any]:
         params = parse_qs(query)

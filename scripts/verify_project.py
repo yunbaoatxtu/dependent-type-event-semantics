@@ -1343,6 +1343,36 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         != expected_gap_ids
     ):
         raise SystemExit("web route smoke check failed: fallback upgrade step drift")
+    rule_draft = payload.get("construction_rule_draft")
+    if not isinstance(rule_draft, dict):
+        raise SystemExit("web route smoke check failed: fallback rule draft missing")
+    if (
+        rule_draft.get("schema_version") != "construction_rule_draft.v1"
+        or rule_draft.get("source_verification_scope") != "fallback_shallow"
+        or rule_draft.get("candidate_rule_id") != "fallback_knock_repeat_candidate"
+        or rule_draft.get("candidate_analyzer") != "fallback_knock_repeat_candidate_pipeline"
+        or rule_draft.get("automation_mode") != "human_review_required"
+        or rule_draft.get("can_auto_apply") is not False
+    ):
+        raise SystemExit("web route smoke check failed: fallback rule draft drift")
+    draft_readings = rule_draft.get("semantic_reading_drafts")
+    if (
+        not isinstance(draft_readings, list)
+        or len(draft_readings) != 1
+        or draft_readings[0].get("name") != "fallback_knock_repeat_candidate_single_reading"
+        or draft_readings[0].get("source") != "fallback_knock_repeat_candidate"
+    ):
+        raise SystemExit("web route smoke check failed: fallback rule draft reading drift")
+    hygiene = rule_draft.get("hygiene_policy_draft")
+    forbidden_fragments = hygiene.get("forbidden_coq_fragments") if isinstance(hygiene, dict) else None
+    expected_forbidden_fragments = [
+        "Parameter Event : Type.",
+        "exists e : Event",
+        "Parameter Agent :",
+        "Parameter Theme :",
+    ]
+    if forbidden_fragments != expected_forbidden_fragments:
+        raise SystemExit("web route smoke check failed: fallback rule draft hygiene drift")
     readings = payload.get("semantic_readings")
     if not isinstance(readings, list) or len(readings) != 1:
         raise SystemExit("web route smoke check failed: fallback semantic reading count drift")
@@ -1380,6 +1410,15 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-upgrade-candidate-rule-id="fallback_knock_repeat_candidate"',
         'data-upgrade-gap-id="no_registered_construction_rule"',
         'data-upgrade-action-kind="draft_construction_rule"',
+        "Construction Rule Draft",
+        'data-rule-draft-schema="construction_rule_draft.v1"',
+        'data-rule-draft-source-scope="fallback_shallow"',
+        'data-rule-draft-id="fallback_knock_repeat_candidate"',
+        'data-rule-draft-analyzer="fallback_knock_repeat_candidate_pipeline"',
+        'data-rule-draft-can-auto-apply="false"',
+        'data-rule-draft-reading="fallback_knock_repeat_candidate_single_reading"',
+        'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
+        "/api/construction-rule-draft?sentence=John+knocked+twice&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -2710,6 +2749,37 @@ def run_web_route_smoke_check() -> None:
             fallback_page,
             fallback_sentence,
         )
+        with opener.open(
+            f"{base_url}/api/construction-rule-draft?{fallback_query}",
+            timeout=5,
+        ) as response:
+            draft_payload = json.load(response)
+        draft = draft_payload.get("construction_rule_draft")
+        if (
+            draft_payload.get("schema_version") != "construction_rule_draft_response.v1"
+            or draft_payload.get("ok") is not True
+            or draft_payload.get("draft_schema_version") != "construction_rule_draft.v1"
+            or not isinstance(draft, dict)
+            or draft.get("candidate_rule_id") != "fallback_knock_repeat_candidate"
+        ):
+            raise SystemExit("web route smoke check failed: rule draft API drift")
+        draft_download_query = urlencode(
+            {
+                "sentence": fallback_sentence,
+                "require_coq": "1",
+                "download": "1",
+            }
+        )
+        with opener.open(
+            f"{base_url}/api/construction-rule-draft?{draft_download_query}",
+            timeout=5,
+        ) as response:
+            disposition = response.headers.get("Content-Disposition", "")
+            if "construction_rule_draft__fallback_knock_repeat_candidate.json" not in disposition:
+                raise SystemExit("web route smoke check failed: rule draft download drift")
+            draft_download_payload = json.load(response)
+        if draft_download_payload != draft_payload:
+            raise SystemExit("web route smoke check failed: rule draft download payload drift")
         quantifier_sentence = "some boy loves some girl"
         quantifier_query = urlencode({"sentence": quantifier_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{quantifier_query}", timeout=5) as response:

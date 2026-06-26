@@ -53,6 +53,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     CERTIFICATION_UPGRADE_PLAN_SCHEMA,
+    CONSTRUCTION_RULE_DRAFT_SCHEMA,
     ConstructionRule,
     ast_structure_summary,
     check_copular_property_ast,
@@ -111,6 +112,7 @@ from translator.surface_lexicon import (
 from web.app import (
     ANALYZE_RESPONSE_SCHEMA,
     CERTIFIED_FRAGMENT_SCHEMA,
+    CONSTRUCTION_RULE_DRAFT_RESPONSE_SCHEMA,
     DIAGNOSTIC_CONTRACT_SCHEMA,
     DEFAULT_DIAGNOSTIC_FIXTURE_CASE,
     DIAGNOSTIC_FAILURE_STAGES,
@@ -125,6 +127,8 @@ from web.app import (
     analyze_sentence,
     build_diagnostics,
     compact_json,
+    construction_rule_draft_api_path,
+    construction_rule_draft_artifact_filename,
     diagnostic_contract_manifest,
     diagnostic_fixture_manifest,
     diagnostic_fixture_result,
@@ -9611,6 +9615,34 @@ class TranslatorTests(unittest.TestCase):
             upgrade_plan["verification_commands"],
             ["python3 scripts/verify_project.py --require-coq --require-docx"],
         )
+        rule_draft = result["construction_rule_draft"]
+        self.assertEqual(rule_draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
+        self.assertEqual(rule_draft["source_verification_scope"], "fallback_shallow")
+        self.assertEqual(rule_draft["candidate_rule_id"], "fallback_knock_repeat_candidate")
+        self.assertEqual(rule_draft["candidate_analyzer"], "fallback_knock_repeat_candidate_pipeline")
+        self.assertEqual(rule_draft["accepted_examples"], ["John knocked twice"])
+        self.assertEqual(rule_draft["automation_mode"], "human_review_required")
+        self.assertFalse(rule_draft["can_auto_apply"])
+        self.assertEqual(
+            rule_draft["semantic_reading_drafts"][0]["name"],
+            "fallback_knock_repeat_candidate_single_reading",
+        )
+        self.assertEqual(
+            rule_draft["semantic_reading_drafts"][0]["source"],
+            "fallback_knock_repeat_candidate",
+        )
+        self.assertIn(
+            "Parameter Event : Type.",
+            rule_draft["hygiene_policy_draft"]["forbidden_coq_fragments"],
+        )
+        self.assertEqual(
+            rule_draft["test_draft"]["expected_certification_level"],
+            "construction_rule",
+        )
+        self.assertIn(
+            "rule_id = 'fallback_knock_repeat_candidate'",
+            rule_draft["patch_text_preview"],
+        )
         readings = result["semantic_readings"]
         self.assertEqual(len(readings), 1)
         reading = readings[0]
@@ -9643,6 +9675,73 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(plan["dependent_type_translation"], "sit(1)(on(mat), cat)")
         self.assertEqual(plan["ast_summary"]["kind"], "application")
         self.assertEqual(fallback_candidate_rule_id(result["ast"]), plan["candidate_rule_id"])
+        draft = result["construction_rule_draft"]
+        self.assertEqual(draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
+        self.assertEqual(draft["candidate_rule_id"], "fallback_sit_application_candidate")
+        self.assertEqual(draft["candidate_analyzer"], "fallback_sit_application_candidate_pipeline")
+        self.assertEqual(draft["accepted_examples"], ["a cat sits on a mat"])
+        self.assertEqual(
+            draft["semantic_reading_drafts"][0]["name"],
+            "fallback_sit_application_candidate_single_reading",
+        )
+        self.assertEqual(
+            draft["semantic_reading_drafts"][0]["dependent_type_translation"],
+            "sit(1)(on(mat), cat)",
+        )
+        self.assertEqual(draft["ast_summary"]["kind"], "application")
+
+    def test_api_construction_rule_draft_endpoint_exports_fallback_draft(self) -> None:
+        handler = object.__new__(PipelineHandler)
+        payload, status = PipelineHandler.handle_construction_rule_draft_api(
+            handler,
+            "sentence=John+knocked+twice&require_coq=1",
+        )
+        self.assertEqual(status.name, "OK")
+        self.assertEqual(
+            payload["schema_version"],
+            CONSTRUCTION_RULE_DRAFT_RESPONSE_SCHEMA,
+        )
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["draft_schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
+        self.assertEqual(payload["verification_scope"]["kind"], "fallback_shallow")
+        draft = payload["construction_rule_draft"]
+        self.assertEqual(draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
+        self.assertEqual(draft["candidate_rule_id"], "fallback_knock_repeat_candidate")
+        self.assertEqual(
+            draft["semantic_reading_drafts"][0]["coq_definition"],
+            "fallback_knock_repeat_candidate_single_reading",
+        )
+        self.assertIn(
+            "Parameter Agent :",
+            draft["hygiene_policy_draft"]["forbidden_coq_fragments"],
+        )
+        self.assertEqual(
+            construction_rule_draft_api_path(
+                "John knocked twice",
+                True,
+                download=True,
+            ),
+            "/api/construction-rule-draft?sentence=John+knocked+twice&require_coq=1&download=1",
+        )
+        self.assertEqual(
+            construction_rule_draft_artifact_filename("fallback_knock_repeat_candidate"),
+            "construction_rule_draft__fallback_knock_repeat_candidate.json",
+        )
+
+        rejected_payload, rejected_status = PipelineHandler.handle_construction_rule_draft_api(
+            handler,
+            "sentence=some+boy+loves+some+girl&require_coq=1",
+        )
+        self.assertEqual(rejected_status.name, "BAD_REQUEST")
+        self.assertFalse(rejected_payload["ok"])
+        self.assertEqual(
+            rejected_payload["schema_version"],
+            CONSTRUCTION_RULE_DRAFT_RESPONSE_SCHEMA,
+        )
+        self.assertEqual(
+            rejected_payload["verification_scope"]["kind"],
+            "registered_construction",
+        )
 
     def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -10850,6 +10949,27 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-upgrade-gap-id="no_registered_construction_rule"', page)
         self.assertIn('data-upgrade-action-kind="draft_construction_rule"', page)
+        self.assertIn("Construction Rule Draft", page)
+        self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', page)
+        self.assertIn('data-rule-draft-source-scope="fallback_shallow"', page)
+        self.assertIn(
+            'data-rule-draft-id="fallback_sit_application_candidate"',
+            page,
+        )
+        self.assertIn(
+            'data-rule-draft-analyzer="fallback_sit_application_candidate_pipeline"',
+            page,
+        )
+        self.assertIn('data-rule-draft-can-auto-apply="false"', page)
+        self.assertIn(
+            'data-rule-draft-reading="fallback_sit_application_candidate_single_reading"',
+            page,
+        )
+        self.assertIn(
+            "/api/construction-rule-draft?sentence=a+cat+sits+on+a+mat&amp;require_coq=1&amp;download=1",
+            page,
+        )
+        self.assertIn("Parameter Event : Type.", page)
         self.assertIn("No registered construction rule matched", page)
 
     def test_web_page_status_shows_parser_failure_stage(self) -> None:
@@ -12183,6 +12303,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`certification_upgrade_plan`", readme)
         self.assertIn('`schema_version: "certification_upgrade_plan.v1"`', readme)
         self.assertIn("`candidate_rule_id`", readme)
+        self.assertIn("`construction_rule_draft`", readme)
+        self.assertIn('`schema_version: "construction_rule_draft.v1"`', readme)
+        self.assertIn("`automation_mode: \"human_review_required\"`", readme)
+        self.assertIn("`can_auto_apply: false`", readme)
+        self.assertIn("/api/construction-rule-draft", readme)
         self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
@@ -12577,6 +12702,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("certification_gaps", manuscript)
         self.assertIn("certification_upgrade_plan", manuscript)
         self.assertIn("candidate_rule_id", manuscript)
+        self.assertIn("construction_rule_draft", manuscript)
+        self.assertIn("candidate analyzer", manuscript)
+        self.assertIn("semantic-reading draft", manuscript)
+        self.assertIn("human_review_required", manuscript)
+        self.assertIn("can_auto_apply false", manuscript)
         self.assertIn("no_registered_construction_rule", manuscript)
         self.assertIn("no_fragment_specific_readings", manuscript)
         self.assertIn("no_construction_hygiene_policy", manuscript)
@@ -13090,6 +13220,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`construction_rule`", readme)
         self.assertIn("`verification_scope`", readme)
         self.assertIn("`certification_upgrade_plan`", readme)
+        self.assertIn("`construction_rule_draft`", readme)
         self.assertIn("`certification_level: construction_rule`", readme)
         self.assertIn("`certification_level: shallow_scaffold`", readme)
         self.assertIn("/api/certified-fragment", readme)
@@ -13126,6 +13257,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`candidate_rule_id`", web_design)
         self.assertIn("`Certification Upgrade Plan` panel", web_design)
         self.assertIn("`data-upgrade-action-kind`", web_design)
+        self.assertIn("`construction_rule_draft`", web_design)
+        self.assertIn('`schema_version: "construction_rule_draft.v1"`', web_design)
+        self.assertIn("`Construction Rule Draft`", web_design)
+        self.assertIn("`data-rule-draft-schema`", web_design)
+        self.assertIn("`data-rule-draft-forbidden-fragment`", web_design)
+        self.assertIn("/api/construction-rule-draft", web_design)
+        self.assertIn('`schema_version: "construction_rule_draft_response.v1"`', web_design)
         self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
@@ -13980,6 +14118,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter burn : Entity -> Time -> Prop.", verifier)
         self.assertIn('"burning event export"', verifier)
         self.assertIn('data-reading-name="fallback_single_reading"', verifier)
+        self.assertIn("/api/construction-rule-draft?", verifier)
+        self.assertIn("construction_rule_draft_response.v1", verifier)
+        self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', verifier)
         self.assertIn('data-coq-definition="example_1"', verifier)
         self.assertIn('"fallback"', verifier)
         self.assertIn("reading_explanation HTML drift", verifier)
