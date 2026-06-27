@@ -188,6 +188,48 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "boundary_status": "registered_variant_example",
     },
     {
+        "rule_id": "causal_because",
+        "variant_id": "mixed_state_change_cause_because",
+        "sentence": "Mary cried because the door opened",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            "because_T(Change(Transition(door, access_scale, closed, open)), cry(mary))",
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "causal_because",
+        "variant_id": "mixed_state_change_effect_because",
+        "sentence": "the door opened because Mary cried",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            "because_T(cry(mary), Change(Transition(door, access_scale, closed, open)))",
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "causal_because",
+        "variant_id": "instrumental_state_change_cause_because",
+        "sentence": "Mary cried because John opened the door with a key",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            (
+                "because_T(CauseWithInstrument(john, key, "
+                "Transition(door, access_scale, closed, open)), cry(mary))"
+            ),
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
         "rule_id": "event_counting",
         "variant_id": "temporal_event_counting",
         "sentence": "John knocked twice yesterday",

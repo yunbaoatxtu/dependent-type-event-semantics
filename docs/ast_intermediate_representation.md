@@ -1532,7 +1532,17 @@ same `cause` and `effect` slots can now contain checked `lexical_state_change`
 ASTs: `John opened the door because Mary cleaned the room` becomes
 `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
 where `clean : State` and `open : State` remain typed transition targets rather
-than binary predicate names. The
+than binary predicate names. Mixed simple/state-change cases are also accepted
+in either direction: `Mary cried because the door opened` stores the state
+change in `cause` and renders
+`because_T(Change(Transition(door, access_scale, closed, open)), cry(mary))`,
+while `the door opened because Mary cried` stores the state change in `effect`
+and renders
+`because_T(cry(mary), Change(Transition(door, access_scale, closed, open)))`.
+Instrumental state changes keep their `instrument` object, so
+`Mary cried because John opened the door with a key` renders
+`because_T(CauseWithInstrument(john, key, Transition(door, access_scale, closed, open)), cry(mary))`.
+The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`
 list on the cause and the `modifiers` list on the effect. Unsupported

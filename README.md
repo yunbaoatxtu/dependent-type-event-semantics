@@ -129,7 +129,15 @@ registered lexical state-change layer: `John opened the door because Mary cleane
 becomes
 `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
 where `clean` and `open` remain `State` targets inside typed transitions rather
-than ordinary binary predicates. The modifier/time case
+than ordinary binary predicates. Mixed simple/state-change cases are now
+covered in both directions: `Mary cried because the door opened` becomes
+`because_T(Change(Transition(door, access_scale, closed, open)), cry(mary))`,
+and `the door opened because Mary cried` becomes
+`because_T(cry(mary), Change(Transition(door, access_scale, closed, open)))`.
+Instrumental state changes are preserved as well:
+`Mary cried because John opened the door with a key` becomes
+`because_T(CauseWithInstrument(john, key, Transition(door, access_scale, closed, open)), cry(mary))`.
+The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
 `because_T : Prop -> Prop -> Prop`. Clause-level markers outside certified
@@ -1427,7 +1435,9 @@ The current prototype has small, testable rules for:
   `because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`, with
   `because_T : Prop -> Prop -> Prop`; the same rule composes with lexical
   state changes, for example `John opened the door because Mary cleaned the room`
-  as `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`;
+  as `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
+  and mixed simple/state-change cases such as `Mary cried because the door opened`
+  as `because_T(Change(Transition(door, access_scale, closed, open)), cry(mary))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as

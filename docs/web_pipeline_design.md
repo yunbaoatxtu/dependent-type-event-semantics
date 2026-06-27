@@ -863,6 +863,13 @@ proposition-level causal connective: `John left because Mary cried` appears as
 `John opened the door because Mary cleaned the room` appears as
 `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
 with `clean` and `open` displayed as `State` targets in the result-state audit,
+mixed simple/state-change variants such as `Mary cried because the door opened`
+and `the door opened because Mary cried` appear as
+`because_T(Change(Transition(door, access_scale, closed, open)), cry(mary))`
+and `because_T(cry(mary), Change(Transition(door, access_scale, closed, open)))`,
+and the instrumental variant `Mary cried because John opened the door with a key`
+appears as
+`because_T(CauseWithInstrument(john, key, Transition(door, access_scale, closed, open)), cry(mary))`,
 and the timed/modifier case
 `John left quickly because Mary cried today` appears as
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
