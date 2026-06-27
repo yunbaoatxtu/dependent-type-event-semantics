@@ -849,7 +849,9 @@ point back to each rule's primary example, registered variants capture
 composition examples such as `John knocked twice yesterday` under
 `temporal_event_counting`, plus modifier-sequence variants such as
 `multi_adv_modified_transitive_predication` and
-`temporal_multi_adv_modified_transitive_predication`; fallback cases remain
+`temporal_multi_adv_modified_transitive_predication`,
+`triple_adv_modified_transitive_predication`, and
+`temporal_triple_adv_modified_transitive_predication`; fallback cases remain
 explicitly shallow, and rejected cases record the marker that must stop the
 pipeline before fallback.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
@@ -1045,14 +1047,20 @@ as `admire(2)(in(gallery), with(telescope), mary, painting)`, requiring both
 variant renders
 `at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))` with
 the `explicit_agent_theme_with_adv_sequence_at_time` scope and no fallback
-draft. It then
+draft. It also checks the three-Adv sequence
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window&require_coq=1`
+as `admire(3)(in(gallery), with(telescope), near(window), mary, painting)`,
+requiring `Parameter near_window : Adv.` together with the earlier Adv
+declarations. Its timed variant renders
+`at_T(yesterday, admire(3)(in(gallery), with(telescope), near(window), mary, painting))`
+with the same sequence scope under `at_T`. It then
 requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window+beside+a+shelf+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row and
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests

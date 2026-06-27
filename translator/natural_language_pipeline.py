@@ -144,7 +144,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary admired the painting in the gallery with a telescope near a window yesterday",
+        "sentence": "Mary admired the painting in the gallery with a telescope near a window beside a shelf yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -212,6 +212,32 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "modified_transitive_predication",
+        "variant_id": "triple_adv_modified_transitive_predication",
+        "sentence": "Mary admired the painting in the gallery with a telescope near a window",
+        "expected_event_analysis": "modified-transitive-predication",
+        "expected_dependent_type_fragments": [
+            "admire(3)(in(gallery), with(telescope), near(window), mary, painting)",
+        ],
+        "expected_ast_kind": "application",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "modified_transitive_predication",
+        "variant_id": "temporal_triple_adv_modified_transitive_predication",
+        "sentence": "Mary admired the painting in the gallery with a telescope near a window yesterday",
+        "expected_event_analysis": "modified-transitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, admire(3)(in(gallery), with(telescope), near(window), mary, painting))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -11047,7 +11073,7 @@ def modified_transitive_application_details(ast: dict[str, Any]) -> dict[str, An
     modifier_roles = ast.get("modifier_roles", {}).get("roles")
     if (
         not isinstance(modifiers, list)
-        or len(modifiers) not in {1, 2}
+        or len(modifiers) not in {1, 2, 3}
         or ast.get("adverb_count") != len(modifiers)
         or not isinstance(modifier_vector, dict)
         or modifier_vector.get("length") != len(modifiers)
@@ -11837,7 +11863,7 @@ def construction_rules() -> list[ConstructionRule]:
             rule_id="modified_transitive_predication",
             label="Modified transitive predication",
             phenomenon=(
-                "Transitive predicate with one or two typed Adv modifiers and optional "
+                "Transitive predicate with one, two, or three typed Adv modifiers and optional "
                 "time wrapper without event variables"
             ),
             analyzer=modified_transitive_predication_pipeline,
@@ -11848,6 +11874,7 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Theme :",
                 "Parameter in_gallery : Entity.",
                 "Parameter with_telescope : Entity.",
+                "Parameter near_window : Entity.",
             ),
         ),
     ]
