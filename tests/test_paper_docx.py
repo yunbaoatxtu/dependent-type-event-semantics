@@ -110,6 +110,11 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("machine-readable failure_stage field", manuscript)
         self.assertIn("structured recovery_actions", manuscript)
         self.assertIn("repair detail record as a fixed schema", manuscript)
+        self.assertIn("reading-local type-check diagnostic", manuscript)
+        self.assertIn(
+            "reading_type_check_failure_count and the diagnostic list length",
+            manuscript,
+        )
         self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("action/detail drift", manuscript)

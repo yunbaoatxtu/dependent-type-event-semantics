@@ -1051,8 +1051,14 @@ nested state-opposition diagnostics; the page renders the same data in a
 The verifier treats this as a fixed schema: the definition-name fields must be
 string lists, the index fields must be integer lists, `expected_export_count`
 must be either an integer or `null`, and `observed_export_count` must be an
-integer. It also checks that repair details agree with the specialized
-recovery action payloads derived from them.
+integer. It now also validates `reading_type_check_diagnostics` itself:
+`reading_type_check_failure_count` must match the list length, each record's
+`error_count` and `state_opposition_count` must match its nested lists, the
+path must stay at `semantic_readings[i].type_check`, and the HTML panel must
+carry matching `data-reading-type-check-index`, name, source, scope,
+Coq-definition, path, error, and state-opposition-count hooks. It also checks
+that repair details agree with the specialized recovery action payloads derived
+from them.
 For the same boundary, `diagnostics.recovery_actions` is specialized from
 those repair details: missing exports produce `add_missing_coq_definitions`
 with `target_definitions`, duplicate names produce `rename_duplicate_readings`,

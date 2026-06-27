@@ -780,6 +780,142 @@ def validate_semantic_readings_repair_details(case: str, details: object) -> Non
         )
 
 
+def validate_state_opposition_diagnostic(
+    case: str,
+    diagnostic: object,
+    *,
+    context: str,
+) -> None:
+    if not isinstance(diagnostic, dict):
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} malformed state opposition diagnostic"
+        )
+    required_fields = [
+        "state_scale",
+        "left_state",
+        "right_state",
+        "states",
+        "relation",
+        "source",
+    ]
+    missing_fields = [field for field in required_fields if field not in diagnostic]
+    if missing_fields:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} incomplete state opposition diagnostic"
+        )
+    for field in required_fields:
+        if not nonempty_string(diagnostic.get(field)):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid state opposition diagnostic {context}.{field}"
+            )
+    for field in ["clause", "path"]:
+        if field in diagnostic and not nonempty_string(diagnostic.get(field)):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid state opposition diagnostic {context}.{field}"
+            )
+
+
+def validate_reading_type_check_diagnostics(
+    case: str,
+    diagnostics: object,
+    *,
+    expected_count: object | None = None,
+) -> None:
+    if not isinstance(diagnostics, list):
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} malformed reading type-check diagnostics"
+        )
+    if expected_count is not None:
+        if type(expected_count) is not int:
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid reading type-check diagnostic count"
+            )
+        if expected_count != len(diagnostics):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} reading type-check diagnostic count drift"
+            )
+    required_fields = [
+        "reading_index",
+        "reading_name",
+        "source",
+        "scope",
+        "coq_definition",
+        "path",
+        "error_count",
+        "errors",
+        "state_opposition_count",
+        "state_opposition_diagnostics",
+    ]
+    for index, diagnostic in enumerate(diagnostics):
+        if not isinstance(diagnostic, dict):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} malformed reading type-check diagnostic"
+            )
+        missing_fields = [
+            field for field in required_fields if field not in diagnostic
+        ]
+        if missing_fields:
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} incomplete reading type-check diagnostic"
+            )
+        reading_index = diagnostic.get("reading_index")
+        if type(reading_index) is not int or reading_index < 0:
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid reading type-check diagnostic reading_index"
+            )
+        for field in ["reading_name", "source", "scope", "coq_definition", "path"]:
+            if not nonempty_string(diagnostic.get(field)):
+                raise SystemExit(
+                    "web route smoke check failed: "
+                    f"{case} invalid reading type-check diagnostic {field}"
+                )
+        expected_path = f"semantic_readings[{reading_index}].type_check"
+        if diagnostic.get("path") != expected_path:
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} reading type-check diagnostic path drift"
+            )
+        errors = diagnostic.get("errors")
+        if not nonempty_string_list(errors):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid reading type-check diagnostic errors"
+            )
+        if diagnostic.get("error_count") != len(errors):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} reading type-check diagnostic error count drift"
+            )
+        state_diagnostics = diagnostic.get("state_opposition_diagnostics")
+        if not isinstance(state_diagnostics, list):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} invalid reading type-check diagnostic state oppositions"
+            )
+        if diagnostic.get("state_opposition_count") != len(state_diagnostics):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} reading type-check diagnostic state opposition count drift"
+            )
+        for state_index, state_diagnostic in enumerate(state_diagnostics):
+            validate_state_opposition_diagnostic(
+                case,
+                state_diagnostic,
+                context=f"reading_type_check_diagnostics[{index}]"
+                f".state_opposition_diagnostics[{state_index}]",
+            )
+
+
 def validate_diagnostic_recovery_action(case: str, action: object) -> None:
     if not isinstance(action, dict):
         raise SystemExit(f"web route smoke check failed: {case} malformed recovery action")
@@ -1373,6 +1509,78 @@ def require_html_fragments(block: str, fragments: list[str], context: str) -> No
             raise SystemExit(f"web route smoke check failed: {context} missing {fragment}")
 
 
+def validate_reading_type_check_diagnostics_html(
+    case: str,
+    diagnostics: object,
+    page: str,
+) -> None:
+    if not isinstance(diagnostics, list):
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} malformed reading type-check diagnostics"
+        )
+    if not diagnostics:
+        if (
+            "Reading Type Check Diagnostics" in page
+            or 'data-reading-type-check-failure-count="' in page
+        ):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} unexpected reading type-check diagnostics HTML"
+            )
+        return
+    fragments = [
+        "Reading Type Check Diagnostics",
+        f'data-reading-type-check-failure-count="{len(diagnostics)}"',
+        "Raw reading type-check JSON",
+    ]
+    for diagnostic in diagnostics:
+        if not isinstance(diagnostic, dict):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{case} malformed reading type-check diagnostic"
+            )
+        state_count = str(diagnostic.get("state_opposition_count", ""))
+        fragments.extend(
+            [
+                'data-reading-type-check-index="'
+                + html.escape(str(diagnostic.get("reading_index", "")), quote=True)
+                + '"',
+                'data-reading-type-check-name="'
+                + html.escape(str(diagnostic.get("reading_name", "")), quote=True)
+                + '"',
+                'data-reading-type-check-source="'
+                + html.escape(str(diagnostic.get("source", "")), quote=True)
+                + '"',
+                'data-reading-type-check-scope="'
+                + html.escape(str(diagnostic.get("scope", "")), quote=True)
+                + '"',
+                'data-reading-type-check-coq-definition="'
+                + html.escape(str(diagnostic.get("coq_definition", "")), quote=True)
+                + '"',
+                'data-reading-type-check-path="'
+                + html.escape(str(diagnostic.get("path", "")), quote=True)
+                + '"',
+                'data-reading-type-check-state-opposition-count="'
+                + html.escape(state_count, quote=True)
+                + '"',
+            ]
+        )
+        errors = diagnostic.get("errors")
+        if isinstance(errors, list):
+            fragments.extend(
+                'data-reading-type-check-error="'
+                + html.escape(str(error), quote=True)
+                + '"'
+                for error in errors
+            )
+    require_html_fragments(
+        page,
+        fragments,
+        f"{case} reading type-check diagnostics HTML",
+    )
+
+
 def validate_successful_semantic_reading_contract(
     case: str,
     payload: dict,
@@ -1468,6 +1676,16 @@ def validate_analyze_failure_surface_type_contract(
         raise SystemExit(f"web route smoke check failed: {label} diagnostics missing")
     if diagnostics.get("failure_stage") != expected_stage:
         raise SystemExit(f"web route smoke check failed: {label} diagnostics stage drift")
+    validate_reading_type_check_diagnostics(
+        label,
+        diagnostics.get("reading_type_check_diagnostics"),
+        expected_count=diagnostics.get("reading_type_check_failure_count"),
+    )
+    validate_reading_type_check_diagnostics_html(
+        label,
+        diagnostics.get("reading_type_check_diagnostics"),
+        page,
+    )
     validate_surface_type_contract_diagnostics_context(
         label,
         payload.get("surface_type_contract_diagnostics"),
@@ -3235,6 +3453,16 @@ def validate_diagnostic_fixture_routes(
             payload.get("surface_type_contract_diagnostics"),
         )
         fixture_page = fixture_pages.get(case, "")
+        validate_reading_type_check_diagnostics(
+            case,
+            diagnostics.get("reading_type_check_diagnostics"),
+            expected_count=diagnostics.get("reading_type_check_failure_count"),
+        )
+        validate_reading_type_check_diagnostics_html(
+            case,
+            diagnostics.get("reading_type_check_diagnostics"),
+            fixture_page,
+        )
         validate_successful_semantic_reading_contract(case, payload, fixture_page)
         recovery_action_text = ", ".join(
             str(action) for action in expected_actions if isinstance(action, str)
@@ -5425,6 +5653,16 @@ def run_web_route_smoke_check() -> None:
                 "rejected_unsupported_fragment",
                 "none",
                 None,
+            ),
+            (
+                "ordinary semantic-reading type-check failure",
+                "Mary admired the door because it was closed and open",
+                "semantic_readings_check",
+                "fix_reading_type_checks",
+                False,
+                "registered_construction",
+                "construction_rule",
+                "causal_because",
             ),
             (
                 "ordinary type-check failure",

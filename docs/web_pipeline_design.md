@@ -406,8 +406,14 @@ in a `Reading Type Check Diagnostics` panel with hooks including
 This object should be checked as a fixed schema: definition-name fields are
 string lists, reading-index fields are integer lists, `expected_export_count`
 is an integer or `null`, and `observed_export_count` is an integer. The same
-verifier should compare these details with the payload fields of the specialized
-recovery actions derived from them.
+verifier should validate the reading-local diagnostics directly:
+`reading_type_check_failure_count` agrees with the diagnostic list length,
+record-level `error_count` and `state_opposition_count` agree with their nested
+lists, each path remains `semantic_readings[i].type_check`, and the HTML panel
+keeps the corresponding `data-reading-type-check-index`, name, source, scope,
+Coq-definition, path, error, and state-opposition-count hooks. It should also
+compare the repair details with the payload fields of the specialized recovery
+actions derived from them.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not
