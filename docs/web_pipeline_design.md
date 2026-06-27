@@ -216,7 +216,9 @@ entry schema, entry count, source module, and registry id through
 `data-surface-slot-probe-matrix-type-contract-*`, making the UI boundary check
 the same source used by the verifier. The current registry exposes six
 `surface_type_contract_entry.v1` rows for the controlled Agent, predicate, and
-Theme axes.
+Theme axes, and `validate_surface_type_contract_registry` rejects bad registry
+schemas, duplicate entry keys, stale entry counts, role/type mismatches, and
+axes that cannot be reconstructed from the entry rows.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

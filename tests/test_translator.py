@@ -9444,6 +9444,11 @@ class TranslatorTests(unittest.TestCase):
         )
         registry = surface_type_contracts.modified_transitive_surface_type_contract_registry()
         self.assertEqual(
+            surface_type_contracts.surface_type_contract_registry_errors(registry),
+            [],
+        )
+        surface_type_contracts.validate_surface_type_contract_registry(registry)
+        self.assertEqual(
             registry["entry_schema"],
             surface_type_contracts.SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
         )
@@ -9912,6 +9917,52 @@ class TranslatorTests(unittest.TestCase):
                 ):
                     validate_certified_fragment_manifest(stale_manifest)
 
+    def test_surface_type_contract_registry_validation_rejects_drift(self) -> None:
+        registry = surface_type_contracts.modified_transitive_surface_type_contract_registry()
+
+        def assert_invalid(mutator, expected: str) -> None:
+            stale_registry = deepcopy(registry)
+            mutator(stale_registry)
+            with self.assertRaisesRegex(ValueError, expected):
+                surface_type_contracts.validate_surface_type_contract_registry(
+                    stale_registry,
+                )
+
+        assert_invalid(
+            lambda stale: stale.__setitem__("schema_version", "stale_schema"),
+            "schema_version",
+        )
+        assert_invalid(
+            lambda stale: stale.__setitem__("entry_count", stale["entry_count"] + 1),
+            "entry_count does not match entries length",
+        )
+        assert_invalid(
+            lambda stale: stale["entries"][0].__setitem__(
+                "schema_version",
+                "stale_entry_schema",
+            ),
+            "schema_version is invalid",
+        )
+        assert_invalid(
+            lambda stale: stale["entries"].append(deepcopy(stale["entries"][0])),
+            "duplicate entry semantic agents:mary",
+        )
+        assert_invalid(
+            lambda stale: stale["entries"][0].__setitem__("dependent_type", "Event"),
+            "dependent_type does not match axis contract",
+        )
+        assert_invalid(
+            lambda stale: stale["entries"][0].__setitem__("slot", "events"),
+            "slot is invalid",
+        )
+        assert_invalid(
+            lambda stale: stale["axes"]["agents"][0].__setitem__(
+                "dependent_type",
+                "Event",
+            ),
+            "axes do not match entries",
+        )
+
     def test_verification_rejects_surface_parser_slot_probe_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         stale_manifest = deepcopy(manifest)
@@ -9945,7 +9996,7 @@ class TranslatorTests(unittest.TestCase):
         ]["slot_probe_examples"]["matrix_generation_spec"][
             "type_contract_registry"
         ]["source"] = "stale_type_registry"
-        with self.assertRaisesRegex(SystemExit, "slot probe matrix generation spec drift"):
+        with self.assertRaisesRegex(SystemExit, "type contract registry invalid"):
             validate_certified_fragment_manifest(stale_manifest)
 
         stale_manifest = deepcopy(manifest)
@@ -9954,7 +10005,7 @@ class TranslatorTests(unittest.TestCase):
         ]["slot_probe_examples"]["matrix_generation_spec"][
             "type_contract_registry"
         ]["entries"][0]["dependent_type"] = "Event"
-        with self.assertRaisesRegex(SystemExit, "slot probe matrix generation spec drift"):
+        with self.assertRaisesRegex(SystemExit, "type contract registry invalid"):
             validate_certified_fragment_manifest(stale_manifest)
 
         stale_manifest = deepcopy(manifest)
@@ -15634,11 +15685,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe schema drift", verifier)
         self.assertIn("surface parser slot probe generation spec drift", verifier)
         self.assertIn("surface parser slot probe matrix generation spec drift", verifier)
+        self.assertIn("type contract registry invalid", verifier)
         self.assertIn("surface parser slot probe matrix type drift", verifier)
         self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
         self.assertIn("surface_type_contract_registry.v1", verifier)
         self.assertIn("surface_type_contract_entry.v1", verifier)
+        self.assertIn("validate_surface_type_contract_registry", verifier)
         self.assertIn("from translator.surface_type_contracts import", verifier)
         self.assertIn("data-surface-slot-probe-matrix-type-contract-registry-id", verifier)
         self.assertIn("surface_slot_probe_matrix_generation.v1", verifier)

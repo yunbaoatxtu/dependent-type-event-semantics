@@ -3180,6 +3180,7 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
 ) -> tuple[list[str], dict[str, tuple[str, str, str, str, int, bool, str, list[str], dict]]]:
     from translator.surface_type_contracts import (
         modified_transitive_surface_type_contract_registry,
+        validate_surface_type_contract_registry,
     )
 
     def spec_drift() -> None:
@@ -3190,6 +3191,13 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
     expected_type_contract_registry = (
         modified_transitive_surface_type_contract_registry()
     )
+    try:
+        validate_surface_type_contract_registry(spec.get("type_contract_registry"))
+    except ValueError as exc:
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe matrix "
+            f"type contract registry invalid: {exc}"
+        ) from exc
     expected_axis_type_contract = expected_type_contract_registry[
         "axis_type_contract"
     ]
