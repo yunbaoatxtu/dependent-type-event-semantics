@@ -124,10 +124,14 @@ from web.app import (
     DIAGNOSTIC_FIXTURE_LABELS,
     DIAGNOSTIC_FIXTURE_SPECS,
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
+    RECOVERY_ACTION_SCHEMA,
     RECOVERY_INSPECTION_RUN_SCHEMA,
     RECOVERY_REPAIR_PLAN_SCHEMA,
     DiagnosticFixtureSpec,
     PipelineHandler,
+    analyze_action_api_path,
+    analyze_action_artifact_filename,
+    analyze_action_export_bundle,
     analyze_action_inspection_run_bundle,
     analyze_action_run_api_path,
     analyze_action_run_artifact_filename,
@@ -12493,6 +12497,69 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(rejection["can_auto_run"])
         self.assertIn("requires human review", rejection["error"])
 
+    def test_analyze_action_exports_ordinary_failure_action_json(self) -> None:
+        sentence = "the plant killed"
+        analysis = analyze_sentence(sentence, require_coq=True)
+        action = analysis["diagnostics"]["recovery_actions"][0]
+        self.assertEqual(
+            action["api_path"],
+            "/api/analyze-action?sentence=the+plant+killed&index=0&require_coq=1",
+        )
+        self.assertEqual(
+            action["download_api_path"],
+            "/api/analyze-action?sentence=the+plant+killed&index=0&require_coq=1&download=1",
+        )
+        self.assertEqual(
+            action["download_filename"],
+            "analyze_recovery_action__the-plant-killed__0.json",
+        )
+        self.assertEqual(
+            analyze_action_api_path(sentence, True, 0),
+            action["api_path"],
+        )
+        self.assertEqual(
+            analyze_action_artifact_filename(sentence, 0),
+            action["download_filename"],
+        )
+
+        bundle, status = analyze_action_export_bundle(sentence, True, 0)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(bundle["schema_version"], RECOVERY_ACTION_SCHEMA)
+        self.assertEqual(bundle["source"], "analyze")
+        self.assertEqual(bundle["input_sentence"], sentence)
+        self.assertTrue(bundle["require_coq"])
+        self.assertEqual(bundle["action_index"], 0)
+        self.assertEqual(bundle["failure_stage"], "type_check")
+        self.assertEqual(bundle["action"], action)
+        self.assertEqual(bundle["repair_plan"]["source"], "analyze")
+        self.assertEqual(bundle["repair_plan"]["input_sentence"], sentence)
+        self.assertEqual(bundle["diagnostics"], analysis["diagnostics"])
+        self.assertEqual(bundle["contract"]["schema_version"], DIAGNOSTIC_CONTRACT_SCHEMA)
+        self.assertEqual(
+            bundle["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
+
+        empty_bundle, empty_status = analyze_action_export_bundle("  ", True, 0)
+        self.assertEqual(empty_status, HTTPStatus.OK)
+        self.assertEqual(empty_bundle["schema_version"], RECOVERY_ACTION_SCHEMA)
+        self.assertEqual(empty_bundle["source"], "analyze")
+        self.assertEqual(empty_bundle["input_sentence"], "")
+        self.assertEqual(empty_bundle["action"]["kind"], "edit_input")
+        self.assertEqual(
+            empty_bundle["repair_plan"]["automation_mode"],
+            "human_review_required",
+        )
+        self.assertFalse(empty_bundle["repair_plan"]["can_auto_run"])
+        self.assertIsNone(empty_bundle["action"]["inspection_run_api_path"])
+
+        rejection, rejection_status = analyze_action_export_bundle(sentence, True, 99)
+        self.assertEqual(rejection_status, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(rejection["schema_version"], RECOVERY_ACTION_SCHEMA)
+        self.assertFalse(rejection["ok"])
+        self.assertEqual(rejection["source"], "analyze")
+        self.assertEqual(rejection["available_action_count"], 1)
+
     def test_analyze_action_run_api_and_page_link_ordinary_failure(self) -> None:
         sentence = "the plant killed"
         expected_path = analyze_action_run_api_path(sentence, True, 0)
@@ -12500,7 +12567,14 @@ class TranslatorTests(unittest.TestCase):
             expected_path,
             "/api/analyze-action-run?sentence=the+plant+killed&index=0&require_coq=1",
         )
+        expected_action_path = analyze_action_api_path(sentence, True, 0)
         page = render_page(sentence, require_coq=True)
+        self.assertIn('class="next-step-action-link"', page)
+        self.assertIn('href="/api/analyze-action?sentence=the+plant+killed', page)
+        self.assertIn(
+            'download="analyze_recovery_action__the-plant-killed__0.json"',
+            page,
+        )
         self.assertIn('class="next-step-action-run-link"', page)
         self.assertIn('href="/api/analyze-action-run?sentence=the+plant+killed', page)
         self.assertIn("require_coq=1", page)
@@ -12514,19 +12588,44 @@ class TranslatorTests(unittest.TestCase):
 
         empty_page = render_page("  ", require_coq=True)
         self.assertIn('data-action-kind="edit_input"', empty_page)
+        self.assertIn('href="/api/analyze-action?sentence=', empty_page)
+        self.assertIn('download="analyze_recovery_action__empty-input__0.json"', empty_page)
         self.assertNotIn("/api/analyze-action-run?sentence=", empty_page)
 
         with pipeline_server() as (base_url, opener):
+            with opener.open(f"{base_url}{expected_action_path}", timeout=5) as response:
+                action_payload = json.loads(response.read().decode("utf-8"))
+            with opener.open(
+                f"{base_url}{expected_action_path}&download=1",
+                timeout=5,
+            ) as response:
+                action_download_payload = json.loads(response.read().decode("utf-8"))
+                action_disposition = response.headers.get("Content-Disposition")
             with opener.open(f"{base_url}{expected_path}", timeout=5) as response:
                 run_payload = json.loads(response.read().decode("utf-8"))
             with opener.open(f"{base_url}{expected_path}&download=1", timeout=5) as response:
                 run_download_payload = json.loads(response.read().decode("utf-8"))
                 run_disposition = response.headers.get("Content-Disposition")
+            with opener.open(
+                f"{base_url}/api/analyze-action?sentence=%20%20&index=0&require_coq=1",
+                timeout=5,
+            ) as response:
+                empty_action_payload = json.loads(response.read().decode("utf-8"))
             with self.assertRaises(HTTPError) as human_review_action:
                 opener.open(
                     f"{base_url}/api/analyze-action-run?sentence=%20%20&index=0&require_coq=1",
                     timeout=5,
                 )
+        self.assertEqual(action_payload["schema_version"], RECOVERY_ACTION_SCHEMA)
+        self.assertEqual(action_download_payload, action_payload)
+        self.assertEqual(
+            action_disposition,
+            'attachment; filename="analyze_recovery_action__the-plant-killed__0.json"',
+        )
+        self.assertEqual(action_payload["source"], "analyze")
+        self.assertEqual(action_payload["action"]["kind"], "inspect_ast")
+        self.assertEqual(empty_action_payload["action"]["kind"], "edit_input")
+        self.assertFalse(empty_action_payload["repair_plan"]["can_auto_run"])
         self.assertEqual(run_payload["schema_version"], RECOVERY_INSPECTION_RUN_SCHEMA)
         self.assertEqual(run_download_payload, run_payload)
         self.assertEqual(
@@ -14419,9 +14518,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`inspection_run_api_path`", readme)
         self.assertIn("`inspection_run_download_api_path`", readme)
         self.assertIn("`inspection_run_download_filename`", readme)
-        self.assertIn("those inspection-run paths set\nto `null`", readme)
+        self.assertIn("with those inspection-run paths set to `null`", readme)
+        self.assertIn("/api/analyze-action?sentence=<sentence>&index=<n>", readme)
+        self.assertIn("`diagnostic_recovery_action.v1`", readme)
+        self.assertIn("analyze_recovery_action__the-plant-killed__0.json", readme)
+        self.assertIn("`api_path`", readme)
+        self.assertIn("`download_api_path`", readme)
+        self.assertIn("`download_filename`", readme)
         self.assertIn("/api/analyze-action-run?sentence=<sentence>&index=<n>", readme)
-        self.assertIn("`source: \"analyze\"`", readme)
+        self.assertIn('`source: "analyze"`', readme)
         self.assertIn("analyze_inspection_run__the-plant-killed__0.json", readme)
         self.assertIn("`data-inspection-run-count`", readme)
         self.assertIn("expandable `Inspection Run JSON`", readme)
@@ -14691,6 +14796,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic_inspection_run.v1`", web_design)
         self.assertIn("target-field snapshot", web_design)
         self.assertIn("400 response", web_design)
+        self.assertIn("/api/analyze-action?sentence=<sentence>&index=<n>", web_design)
+        self.assertIn("`diagnostic_recovery_action.v1` bundle", web_design)
+        self.assertIn("the export is read-only", web_design)
+        self.assertIn("`api_path`", web_design)
+        self.assertIn("`download_api_path`", web_design)
+        self.assertIn("`download_filename`", web_design)
         self.assertIn("/api/analyze-action-run?sentence=<sentence>&index=<n>", web_design)
         self.assertIn('`source: "analyze"`', web_design)
         self.assertIn("snapshot only the repair-plan target", web_design)
@@ -14848,10 +14959,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("inspection_only_recovery_action_kinds", manuscript)
         self.assertIn("diagnostic_inspection_run.v1", manuscript)
         self.assertIn("targeted diagnostic field snapshot", manuscript)
+        self.assertIn("/api/analyze-action endpoint", manuscript)
+        self.assertIn("diagnostic_recovery_action.v1 bundles", manuscript)
         self.assertIn("/api/analyze-action-run endpoint", manuscript)
         self.assertIn("source analyze", manuscript)
         self.assertIn("the plant killed", manuscript)
         self.assertIn("inspection-run snapshot", manuscript)
+        self.assertIn("api_path", manuscript)
+        self.assertIn("download_api_path", manuscript)
+        self.assertIn("download_filename", manuscript)
         self.assertIn("nullable inspection_run_api_path", manuscript)
         self.assertIn("nullable inspection_run_download_api_path", manuscript)
         self.assertIn("nullable inspection_run_download_filename", manuscript)
@@ -16198,7 +16314,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_recovery_action_export_bundle(", verifier)
         self.assertIn("def validate_recovery_action_inspection_run_bundle(", verifier)
         self.assertIn("def validate_recovery_action_inspection_run_rejection(", verifier)
+        self.assertIn("def validate_analyze_action_export_bundle(", verifier)
         self.assertIn("def validate_analyze_action_inspection_run_bundle(", verifier)
+        self.assertIn("def analyze_action_api_path(", verifier)
+        self.assertIn("def analyze_action_artifact_filename(", verifier)
         self.assertIn("def validate_analyze_recovery_action_run_metadata(", verifier)
         self.assertIn("def analyze_action_run_api_path(", verifier)
         self.assertIn("def analyze_action_run_artifact_filename(", verifier)
@@ -16254,9 +16373,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)
+        self.assertIn("/api/analyze-action", verifier)
         self.assertIn("/api/analyze-action-run", verifier)
         self.assertIn("ordinary type-check failure", verifier)
         self.assertIn("ordinary analyze action metadata", verifier)
+        self.assertIn("analyze recovery action", verifier)
         self.assertIn("analyze inspection run", verifier)
         self.assertIn('"/api/diagnostic-fixture"', verifier)
         self.assertIn('"/diagnostic-fixture"', verifier)
