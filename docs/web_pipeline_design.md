@@ -894,6 +894,11 @@ and concrete color-state cases such as
 `because_T(holds_state(door, color_scale, red), admire(mary, door))` while
 place-like inputs such as `Mary visited Paris because it was red` remain
 type-check failures,
+and conjoined state cases such as
+`Mary admired the door because it was red and open` should resolve to
+`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`;
+the page should still reject partial state-scale matches such as
+`John opened the door because it was red and open`,
 and the timed/modifier case
 `John left quickly because Mary cried today` appears as
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with

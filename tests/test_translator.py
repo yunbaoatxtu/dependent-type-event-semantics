@@ -2056,6 +2056,33 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter not_T : Prop -> Prop.", negated_color_reason["coq_code"])
         self.assertEqual(negated_color_reason["coq_check"]["status"], "passed")
 
+        conjoined_color_reason = run_pipeline(
+            "Mary admired the door because it was red and open",
+            require_coq=True,
+        )
+        self.assertTrue(conjoined_color_reason["ok"])
+        self.assertEqual(
+            conjoined_color_reason["dependent_type_translation"],
+            (
+                "because_T(and_T(holds_state(door, color_scale, red), "
+                "holds_state(door, access_scale, open)), admire(mary, door))"
+            ),
+        )
+        self.assertEqual(
+            conjoined_color_reason["ast"]["cause"]["states"],
+            [
+                {"name": "red", "type": "State", "state_scale": "color_scale"},
+                {"name": "open", "type": "State", "state_scale": "access_scale"},
+            ],
+        )
+        self.assertIn("Parameter and_T : Prop -> Prop -> Prop.", conjoined_color_reason["coq_code"])
+        self.assertIn(
+            "because_T (and_T (holds_state door color_scale red) "
+            "(holds_state door access_scale open)) (admire mary door)",
+            conjoined_color_reason["coq_code"],
+        )
+        self.assertEqual(conjoined_color_reason["coq_check"]["status"], "passed")
+
         place_reason = run_pipeline(
             "Mary visited Paris because it was red",
             require_coq=True,
@@ -2066,6 +2093,17 @@ class TranslatorTests(unittest.TestCase):
             place_reason["type_check"]["errors"],
         )
         self.assertEqual(place_reason["coq_check"]["status"], "skipped")
+
+        partial_scale_match = run_pipeline(
+            "John opened the door because it was red and open",
+            require_coq=True,
+        )
+        self.assertFalse(partial_scale_match["ok"])
+        self.assertIn(
+            "causal_because.cause.subject pronoun it has no unique compatible antecedent",
+            partial_scale_match["type_check"]["errors"],
+        )
+        self.assertEqual(partial_scale_match["coq_check"]["status"], "skipped")
 
     def test_simple_conditional_implication_preserves_clause_times(self) -> None:
         conditional = run_pipeline(
@@ -9891,7 +9929,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 20)
+        self.assertEqual(counts["registered_variant_success_cases"], 21)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -10425,6 +10463,10 @@ class TranslatorTests(unittest.TestCase):
                 registered["causal_because"]["accepted_examples"],
             )
             self.assertIn(
+                "Mary admired the door because it was red and open",
+                registered["causal_because"]["accepted_examples"],
+            )
+            self.assertIn(
                 "Mary admired the painting in the gallery yesterday",
                 registered["modified_transitive_predication"]["accepted_examples"],
             )
@@ -10900,7 +10942,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            20,
+            21,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -10975,7 +11017,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="20"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="21"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -16065,6 +16107,12 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn("`Mary visited Paris because it was red`", readme)
+        self.assertIn("`Mary admired the door because it was red and open`", readme)
+        self.assertIn(
+            "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
+            readme,
+        )
+        self.assertIn("`John opened the door because it was red and open`", readme)
         self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
         self.assertIn("`John left because Mary cried because Sue left`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
@@ -16143,7 +16191,12 @@ class TranslatorTests(unittest.TestCase):
             "because_T(holds_state(door, color_scale, red), admire(mary, door))",
             manuscript,
         )
+        self.assertIn(
+            "because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))",
+            manuscript,
+        )
         self.assertIn("Mary visited Paris because it was red", manuscript)
+        self.assertIn("John opened the door because it was red and open", manuscript)
         self.assertIn("John opened the door because it was red", manuscript)
         self.assertIn("hidden event-inclusion relation", manuscript)
         self.assertIn("because_T(at_T(today, cry(mary)), leave(1)(quickly, john))", manuscript)
@@ -16222,6 +16275,12 @@ class TranslatorTests(unittest.TestCase):
             web_design,
         )
         self.assertIn("`Mary visited Paris because it was red`", web_design)
+        self.assertIn("`Mary admired the door because it was red and open`", web_design)
+        self.assertIn(
+            "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
+            web_design,
+        )
+        self.assertIn("`John opened the door because it was red and open`", web_design)
         self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
         self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
         self.assertIn("`John left because Mary cried because Sue left`", web_design)
@@ -16260,6 +16319,12 @@ class TranslatorTests(unittest.TestCase):
             ast_docs,
         )
         self.assertIn("`Mary visited Paris because it was red`", ast_docs)
+        self.assertIn("`Mary admired the door because it was red and open`", ast_docs)
+        self.assertIn(
+            "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
+            ast_docs,
+        )
+        self.assertIn("transition theme only supplies `access_scale`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)
         self.assertIn("`not_T : Prop -> Prop`", ast_docs)

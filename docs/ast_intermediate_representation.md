@@ -1577,6 +1577,13 @@ For color states, the compatibility table admits concrete object antecedents:
 `because_T(holds_state(door, color_scale, red), admire(mary, door))`, but
 `Mary visited Paris because it was red` still fails because `Paris` is not
 licensed as a color-state antecedent.
+Conjoined stative reasons remain a `states` list rather than a fused state
+name: `Mary admired the door because it was red and open` stores `red` on
+`color_scale` and `open` on `access_scale`, then renders
+`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`.
+If the antecedent candidate already carries a state-scale annotation, the
+candidate must cover every stative scale; `John opened the door because it was
+red and open` fails because the transition theme only supplies `access_scale`.
 The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`

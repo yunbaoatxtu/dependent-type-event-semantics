@@ -313,6 +313,22 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "boundary_status": "registered_variant_example",
     },
     {
+        "rule_id": "causal_because",
+        "variant_id": "conjoined_stative_reason_because",
+        "sentence": "Mary admired the door because it was red and open",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            (
+                "because_T(and_T(holds_state(door, color_scale, red), "
+                "holds_state(door, access_scale, open)), admire(mary, door))"
+            ),
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
         "rule_id": "event_counting",
         "variant_id": "temporal_event_counting",
         "sentence": "John knocked twice yesterday",
@@ -6926,10 +6942,8 @@ def causal_because_candidate_compatible_with_stative_state(
         if scale
     )
     state_scales = set(causal_because_stative_state_scales(clause))
-    if state_scales & candidate_scales:
-        return True
     if candidate_scales:
-        return False
+        return bool(state_scales) and state_scales <= candidate_scales
     state_names = causal_because_stative_state_names(clause)
     candidate_name = candidate.get("name")
     return all(

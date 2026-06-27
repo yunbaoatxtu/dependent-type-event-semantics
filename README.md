@@ -162,6 +162,13 @@ Color states are also allowed for concrete compatible objects:
 `because_T(holds_state(door, color_scale, red), admire(mary, door))`, while
 place-like antecedents such as `Mary visited Paris because it was red` still
 fail before Coq/Rocq export.
+Conjoined stative reasons are preserved structurally:
+`Mary admired the door because it was red and open` becomes
+`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`.
+If the available antecedent already carries a state scale, all conjoined
+states must be covered; `John opened the door because it was red and open`
+therefore fails rather than resolving a color-state clause to an access-scale
+transition theme.
 The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
@@ -1474,7 +1481,10 @@ The current prototype has small, testable rules for:
   `because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`;
   concrete color-state reasons such as `Mary admired the door because it was red`
   render as `because_T(holds_state(door, color_scale, red), admire(mary, door))`,
-  while place-like color antecedents remain rejected;
+  and conjoined color/access-state reasons such as
+  `Mary admired the door because it was red and open` render as
+  `because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`,
+  while place-like color antecedents and partial state-scale matches remain rejected;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as
