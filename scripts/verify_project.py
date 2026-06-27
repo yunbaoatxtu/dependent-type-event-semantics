@@ -4034,6 +4034,15 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-slot-probe-matrix-type-contract-entry-schema="surface_type_contract_entry.v1"',
         'data-surface-slot-probe-matrix-type-contract-entry-count="6"',
         (
+            'data-surface-slot-probe-matrix-type-contract-diagnostic-schema="'
+            'surface_type_contract_diagnostic.v1"'
+        ),
+        'data-surface-slot-probe-matrix-type-contract-diagnostic-count="5"',
+        (
+            'data-surface-slot-probe-matrix-type-contract-diagnostic-categories="'
+            'registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"'
+        ),
+        (
             'data-surface-slot-probe-matrix-type-contract-source="'
             'translator/surface_type_contracts.py"'
         ),

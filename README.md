@@ -919,8 +919,13 @@ match the entry records. It now also audits the modifier and time contracts
 field by field, so modifier material must remain `Adv` with constructor type
 `Entity -> Adv`, modifier objects cannot be reintroduced as events, and
 temporal material must remain `Time` with a proposition-level
-`Time -> PropT -> PropT` operator. The verifier checks that the copied axis,
-modifier, time, and lexical-frame fields remain synchronized with that source.
+`Time -> PropT -> PropT` operator. The registry carries a
+`surface_type_contract_diagnostic.v1` category table for those checks, covering
+registry schema, entry/axis synchronization, role frames, modifier typing, and
+time typing; the API and page mirror these categories so a failed boundary can
+be identified without reading raw Python exceptions. The verifier checks that
+the copied axis, modifier, time, and lexical-frame fields remain synchronized
+with that source.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

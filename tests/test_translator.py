@@ -9452,6 +9452,41 @@ class TranslatorTests(unittest.TestCase):
             registry["entry_schema"],
             surface_type_contracts.SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
         )
+        self.assertEqual(
+            registry["diagnostic_schema"],
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
+        )
+        self.assertEqual(
+            [item["category"] for item in registry["diagnostic_categories"]],
+            [
+                "registry_schema",
+                "entry_axis_sync",
+                "role_frame",
+                "modifier_type",
+                "time_type",
+            ],
+        )
+        self.assertEqual(
+            surface_type_contracts.surface_type_contract_diagnostic_report(
+                registry,
+            ),
+            {
+                "schema_version": (
+                    surface_type_contracts.SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA
+                ),
+                "ok": True,
+                "error_count": 0,
+                "categories": [
+                    {
+                        **category,
+                        "status": "ok",
+                        "error_count": 0,
+                        "errors": [],
+                    }
+                    for category in registry["diagnostic_categories"]
+                ],
+            },
+        )
         self.assertEqual(registry["entry_count"], 6)
         entries_by_slot = surface_type_contracts.surface_type_contract_entries_by_slot(
             registry,
@@ -9497,6 +9532,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"]["entry_schema"],
             surface_type_contracts.SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
+        )
+        self.assertEqual(
+            matrix_generation_spec["type_contract_registry"]["diagnostic_schema"],
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
         )
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"]["source"],
@@ -9934,9 +9973,29 @@ class TranslatorTests(unittest.TestCase):
     def test_surface_type_contract_registry_validation_rejects_drift(self) -> None:
         registry = surface_type_contracts.modified_transitive_surface_type_contract_registry()
 
-        def assert_invalid(mutator, expected: str) -> None:
+        def assert_invalid(
+            mutator,
+            expected: str,
+            expected_category: str,
+        ) -> None:
             stale_registry = deepcopy(registry)
             mutator(stale_registry)
+            report = surface_type_contracts.surface_type_contract_diagnostic_report(
+                stale_registry,
+            )
+            self.assertFalse(report["ok"])
+            category_status = {
+                item["category"]: item
+                for item in report["categories"]
+            }
+            self.assertEqual(
+                category_status[expected_category]["status"],
+                "error",
+            )
+            self.assertGreater(
+                category_status[expected_category]["error_count"],
+                0,
+            )
             with self.assertRaisesRegex(ValueError, expected):
                 surface_type_contracts.validate_surface_type_contract_registry(
                     stale_registry,
@@ -9945,10 +10004,20 @@ class TranslatorTests(unittest.TestCase):
         assert_invalid(
             lambda stale: stale.__setitem__("schema_version", "stale_schema"),
             "schema_version",
+            "registry_schema",
         )
         assert_invalid(
             lambda stale: stale.__setitem__("entry_count", stale["entry_count"] + 1),
             "entry_count does not match entries length",
+            "entry_axis_sync",
+        )
+        assert_invalid(
+            lambda stale: stale["diagnostic_categories"][0].__setitem__(
+                "category",
+                "stale_category",
+            ),
+            "diagnostic_categories do not match expected categories",
+            "registry_schema",
         )
         assert_invalid(
             lambda stale: stale["entries"][0].__setitem__(
@@ -9956,18 +10025,22 @@ class TranslatorTests(unittest.TestCase):
                 "stale_entry_schema",
             ),
             "schema_version is invalid",
+            "entry_axis_sync",
         )
         assert_invalid(
             lambda stale: stale["entries"].append(deepcopy(stale["entries"][0])),
             "duplicate entry semantic agents:mary",
+            "entry_axis_sync",
         )
         assert_invalid(
             lambda stale: stale["entries"][0].__setitem__("dependent_type", "Event"),
             "dependent_type does not match axis contract",
+            "entry_axis_sync",
         )
         assert_invalid(
             lambda stale: stale["entries"][0].__setitem__("slot", "events"),
             "slot is invalid",
+            "entry_axis_sync",
         )
         assert_invalid(
             lambda stale: stale["axes"]["agents"][0].__setitem__(
@@ -9975,6 +10048,7 @@ class TranslatorTests(unittest.TestCase):
                 "Event",
             ),
             "axes do not match entries",
+            "entry_axis_sync",
         )
         assert_invalid(
             lambda stale: stale["modifier_type_contract"].__setitem__(
@@ -9982,6 +10056,7 @@ class TranslatorTests(unittest.TestCase):
                 "Entity",
             ),
             "modifier_type_contract.dependent_type",
+            "modifier_type",
         )
         assert_invalid(
             lambda stale: stale["modifier_type_contract"].__setitem__(
@@ -9989,6 +10064,7 @@ class TranslatorTests(unittest.TestCase):
                 "Entity",
             ),
             "modifier_type_contract.constructor_type",
+            "modifier_type",
         )
         assert_invalid(
             lambda stale: stale["modifier_type_contract"].__setitem__(
@@ -9996,6 +10072,7 @@ class TranslatorTests(unittest.TestCase):
                 ["Location", "Instrument", "Manner"],
             ),
             "modifier_type_contract.accepted_semantic_roles",
+            "modifier_type",
         )
         assert_invalid(
             lambda stale: stale["modifier_type_contract"].__setitem__(
@@ -10003,6 +10080,7 @@ class TranslatorTests(unittest.TestCase):
                 True,
             ),
             "modifier_type_contract.treat_modifier_objects_as_events",
+            "modifier_type",
         )
         assert_invalid(
             lambda stale: stale["modifier_type_contract"].__setitem__(
@@ -10010,6 +10088,7 @@ class TranslatorTests(unittest.TestCase):
                 "stale",
             ),
             "modifier_type_contract.extra_modifier_field is not declared",
+            "modifier_type",
         )
         assert_invalid(
             lambda stale: stale["time_type_contract"].__setitem__(
@@ -10017,6 +10096,7 @@ class TranslatorTests(unittest.TestCase):
                 "Entity",
             ),
             "time_type_contract.time_argument_type",
+            "time_type",
         )
         assert_invalid(
             lambda stale: stale["time_type_contract"].__setitem__(
@@ -10024,6 +10104,7 @@ class TranslatorTests(unittest.TestCase):
                 "Entity -> PropT -> PropT",
             ),
             "time_type_contract.time_operator_type",
+            "time_type",
         )
         assert_invalid(
             lambda stale: stale["time_type_contract"].__setitem__(
@@ -10031,6 +10112,7 @@ class TranslatorTests(unittest.TestCase):
                 False,
             ),
             "time_type_contract.proposition_scope",
+            "time_type",
         )
         assert_invalid(
             lambda stale: stale["time_type_contract"].__setitem__(
@@ -10038,6 +10120,7 @@ class TranslatorTests(unittest.TestCase):
                 "stale",
             ),
             "time_type_contract.extra_time_field is not declared",
+            "time_type",
         )
 
     def test_verification_rejects_surface_parser_slot_probe_drift(self) -> None:
@@ -10221,6 +10304,26 @@ class TranslatorTests(unittest.TestCase):
         surface_parser_coverage = manifest["surface_parser_coverage"][
             "modified_transitive_adv_sequence"
         ]
+        type_contract_registry = surface_parser_coverage["slot_probe_examples"][
+            "matrix_generation_spec"
+        ]["type_contract_registry"]
+        self.assertEqual(
+            type_contract_registry["diagnostic_schema"],
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
+        )
+        self.assertEqual(
+            [
+                item["category"]
+                for item in type_contract_registry["diagnostic_categories"]
+            ],
+            [
+                "registry_schema",
+                "entry_axis_sync",
+                "role_frame",
+                "modifier_type",
+                "time_type",
+            ],
+        )
         self.assertEqual(
             surface_parser_coverage["surface_parser_claim"],
             "registered_examples_only",
@@ -10316,6 +10419,18 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-surface-slot-probe-matrix-type-contract-entry-count="6"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-diagnostic-schema="surface_type_contract_diagnostic.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-diagnostic-count="5"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-diagnostic-categories="registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"',
             page,
         )
         self.assertIn(
@@ -15786,6 +15901,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe live translation drift", verifier)
         self.assertIn("surface_type_contract_registry.v1", verifier)
         self.assertIn("surface_type_contract_entry.v1", verifier)
+        self.assertIn("surface_type_contract_diagnostic.v1", verifier)
+        self.assertIn("data-surface-slot-probe-matrix-type-contract-diagnostic-categories", verifier)
         self.assertIn("validate_surface_type_contract_registry", verifier)
         self.assertIn("from translator.surface_type_contracts import", verifier)
         self.assertIn("data-surface-slot-probe-matrix-type-contract-registry-id", verifier)

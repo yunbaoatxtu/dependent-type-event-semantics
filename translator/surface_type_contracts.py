@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 SURFACE_TYPE_CONTRACT_REGISTRY_SCHEMA = "surface_type_contract_registry.v1"
 SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA = "surface_type_contract_entry.v1"
+SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA = "surface_type_contract_diagnostic.v1"
 SURFACE_TYPE_CONTRACT_SOURCE_MODULE = "translator/surface_type_contracts.py"
 MODIFIED_TRANSITIVE_SURFACE_REGISTRY_ID = (
     "modified_transitive_adv_sequence.surface_slot_matrix"
@@ -27,10 +28,120 @@ TIME_TYPE_CONTRACT = {
     "time_operator_type": "Time -> PropT -> PropT",
     "proposition_scope": True,
 }
+SURFACE_TYPE_CONTRACT_DIAGNOSTIC_CATEGORIES = [
+    {
+        "category": "registry_schema",
+        "label": "Registry schema boundary",
+        "guarded_fields": [
+            "schema_version",
+            "entry_schema",
+            "source",
+            "registry_id",
+            "base_family",
+        ],
+        "expected_boundary": "The registry must name the audited modified-transitive surface contract.",
+    },
+    {
+        "category": "entry_axis_sync",
+        "label": "Entry and axis synchronization",
+        "guarded_fields": ["entry_count", "entries", "axes"],
+        "expected_boundary": "The copied matrix axes must reconstruct from entry-level rows.",
+    },
+    {
+        "category": "role_frame",
+        "label": "Thematic role and frame boundary",
+        "guarded_fields": [
+            "axis_type_contract",
+            "role_label",
+            "role_frame",
+            "output_type",
+        ],
+        "expected_boundary": "Agent and Theme stay Entity role bearers; predicates stay Agent-Theme PropT families.",
+    },
+    {
+        "category": "modifier_type",
+        "label": "Modifier type boundary",
+        "guarded_fields": [
+            "modifier_type_contract.dependent_type",
+            "modifier_type_contract.constructor_type",
+            "modifier_type_contract.accepted_semantic_roles",
+            "modifier_type_contract.treat_modifier_objects_as_events",
+        ],
+        "expected_boundary": "Modifier material stays Adv, built by Entity -> Adv, without event witnesses.",
+    },
+    {
+        "category": "time_type",
+        "label": "Temporal type boundary",
+        "guarded_fields": [
+            "time_type_contract.time_argument_type",
+            "time_type_contract.time_operator_type",
+            "time_type_contract.proposition_scope",
+        ],
+        "expected_boundary": "Temporal material stays Time with a proposition-level Time -> PropT -> PropT operator.",
+    },
+]
 
 
 def _copy_contract(contract: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(contract)
+
+
+def surface_type_contract_diagnostic_categories() -> list[dict[str, Any]]:
+    return copy.deepcopy(SURFACE_TYPE_CONTRACT_DIAGNOSTIC_CATEGORIES)
+
+
+def _surface_type_contract_error_category(error: str) -> str:
+    if error.startswith("modifier_type_contract."):
+        return "modifier_type"
+    if error.startswith("time_type_contract."):
+        return "time_type"
+    if (
+        "role_label" in error
+        or "role_frame" in error
+        or "output_type" in error
+        or "role" in error
+    ):
+        return "role_frame"
+    if (
+        error.startswith("entry")
+        or error.startswith("duplicate entry")
+        or error.startswith("axes")
+        or "entry_count" in error
+        or "entries" in error
+        or "axis contract" in error
+        or "reconstructed from entries" in error
+    ):
+        return "entry_axis_sync"
+    return "registry_schema"
+
+
+def surface_type_contract_diagnostic_report(registry: Any) -> dict[str, Any]:
+    errors = surface_type_contract_registry_errors(registry)
+    errors_by_category: dict[str, list[str]] = {
+        item["category"]: []
+        for item in SURFACE_TYPE_CONTRACT_DIAGNOSTIC_CATEGORIES
+    }
+    for error in errors:
+        category = _surface_type_contract_error_category(error)
+        errors_by_category.setdefault(category, []).append(error)
+    categories = []
+    for item in SURFACE_TYPE_CONTRACT_DIAGNOSTIC_CATEGORIES:
+        category = item["category"]
+        category_errors = errors_by_category.get(category, [])
+        categories.append(
+            {
+                **copy.deepcopy(item),
+                "status": "error" if category_errors else "ok",
+                "error_count": len(category_errors),
+                "errors": list(category_errors),
+            },
+        )
+    return {
+        "schema_version": SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
+        "ok": not errors,
+        "error_count": len(errors),
+        "categories": categories,
+    }
 
 
 def _modified_transitive_axis_type_contract() -> dict[str, Any]:
@@ -165,6 +276,7 @@ def surface_type_contract_registry_errors(registry: Any) -> list[str]:
     expected_scalars = {
         "schema_version": SURFACE_TYPE_CONTRACT_REGISTRY_SCHEMA,
         "entry_schema": SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
+        "diagnostic_schema": SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
         "source": SURFACE_TYPE_CONTRACT_SOURCE_MODULE,
         "registry_id": MODIFIED_TRANSITIVE_SURFACE_REGISTRY_ID,
         "base_family": "modified_transitive_adv_sequence",
@@ -200,6 +312,11 @@ def surface_type_contract_registry_errors(registry: Any) -> list[str]:
 
     if registry.get("entry_count") != len(entries):
         errors.append("entry_count does not match entries length")
+    if (
+        registry.get("diagnostic_categories")
+        != SURFACE_TYPE_CONTRACT_DIAGNOSTIC_CATEGORIES
+    ):
+        errors.append("diagnostic_categories do not match expected categories")
 
     seen_semantics: set[tuple[str, str]] = set()
     seen_surfaces: set[tuple[str, str]] = set()
@@ -369,10 +486,12 @@ def modified_transitive_surface_type_contract_registry() -> dict[str, Any]:
     registry = {
         "schema_version": SURFACE_TYPE_CONTRACT_REGISTRY_SCHEMA,
         "entry_schema": SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
+        "diagnostic_schema": SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
         "entry_count": len(entries),
         "source": SURFACE_TYPE_CONTRACT_SOURCE_MODULE,
         "registry_id": MODIFIED_TRANSITIVE_SURFACE_REGISTRY_ID,
         "base_family": "modified_transitive_adv_sequence",
+        "diagnostic_categories": surface_type_contract_diagnostic_categories(),
         "axis_type_contract": axis_type_contract,
         "modifier_type_contract": _copy_contract(MODIFIER_TYPE_CONTRACT),
         "time_type_contract": _copy_contract(TIME_TYPE_CONTRACT),

@@ -2517,6 +2517,27 @@ def certified_fragment_panel() -> str:
     surface_slot_probe_matrix_type_contract_entry_count = str(
         surface_slot_probe_matrix_type_contract_registry.get("entry_count", ""),
     )
+    surface_slot_probe_matrix_type_contract_diagnostic_schema = str(
+        surface_slot_probe_matrix_type_contract_registry.get("diagnostic_schema", ""),
+    )
+    diagnostic_categories = (
+        surface_slot_probe_matrix_type_contract_registry.get("diagnostic_categories")
+    )
+    if not isinstance(diagnostic_categories, list):
+        diagnostic_categories = []
+    diagnostic_category_items = [
+        item
+        for item in diagnostic_categories
+        if isinstance(item, dict)
+    ]
+    surface_slot_probe_matrix_type_contract_diagnostic_count = str(
+        len(diagnostic_category_items),
+    )
+    surface_slot_probe_matrix_type_contract_diagnostic_categories = ",".join(
+        str(item.get("category", ""))
+        for item in diagnostic_category_items
+        if item.get("category")
+    )
     surface_slot_probe_matrix_type_contract_source = str(
         surface_slot_probe_matrix_type_contract_registry.get("source", ""),
     )
@@ -2742,6 +2763,9 @@ def certified_fragment_panel() -> str:
         f'data-surface-slot-probe-matrix-type-contract-schema="{html.escape(surface_slot_probe_matrix_type_contract_schema, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-entry-schema="{html.escape(surface_slot_probe_matrix_type_contract_entry_schema, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-entry-count="{html.escape(surface_slot_probe_matrix_type_contract_entry_count, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-diagnostic-schema="{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_schema, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-diagnostic-count="{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_count, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-diagnostic-categories="{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_categories, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-source="{html.escape(surface_slot_probe_matrix_type_contract_source, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-registry-id="{html.escape(surface_slot_probe_matrix_type_contract_registry_id, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
@@ -2764,6 +2788,7 @@ def certified_fragment_panel() -> str:
         f"<dt>slot probes</dt><dd><code>{html.escape(surface_slot_probe_count)}</code></dd>"
         f"<dt>slot probe generator</dt><dd><code>{html.escape(surface_slot_probe_generator_kind)}</code></dd>"
         f"<dt>slot matrix</dt><dd><code>{html.escape(surface_slot_probe_matrix_count)}</code></dd>"
+        f"<dt>type diagnostics</dt><dd><code>{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_categories)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
