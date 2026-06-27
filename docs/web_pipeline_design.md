@@ -218,7 +218,11 @@ the same source used by the verifier. The current registry exposes six
 `surface_type_contract_entry.v1` rows for the controlled Agent, predicate, and
 Theme axes, and `validate_surface_type_contract_registry` rejects bad registry
 schemas, duplicate entry keys, stale entry counts, role/type mismatches, and
-axes that cannot be reconstructed from the entry rows.
+axes that cannot be reconstructed from the entry rows. The same validator now
+checks the modifier and time contracts as fixed field-level objects: modifiers
+must stay `Adv` values built by `Entity -> Adv`, modifier objects must not be
+treated as events, and time rows must expose `Time` plus the proposition-level
+`Time -> PropT -> PropT` operator rather than an `Entity` surrogate.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

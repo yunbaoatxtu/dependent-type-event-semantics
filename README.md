@@ -915,8 +915,12 @@ agent, predicate, and theme entries rather than by trusting only a copied
 axes block. The registry is also checked by
 `validate_surface_type_contract_registry`, which rejects schema drift,
 duplicate slot entries, entry-count drift, and copied axes that no longer
-match the entry records. The verifier checks that the copied axis, modifier,
-time, and lexical-frame fields remain synchronized with that source.
+match the entry records. It now also audits the modifier and time contracts
+field by field, so modifier material must remain `Adv` with constructor type
+`Entity -> Adv`, modifier objects cannot be reintroduced as events, and
+temporal material must remain `Time` with a proposition-level
+`Time -> PropT -> PropT` operator. The verifier checks that the copied axis,
+modifier, time, and lexical-frame fields remain synchronized with that source.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

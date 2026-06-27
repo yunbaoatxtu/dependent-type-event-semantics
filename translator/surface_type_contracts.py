@@ -16,6 +16,21 @@ TRANSITIVE_ADV_PREDICATE_TYPE = (
     "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
 )
 SURFACE_TYPE_CONTRACT_SLOTS = ("agents", "predicates", "themes")
+MODIFIER_TYPE_CONTRACT = {
+    "dependent_type": "Adv",
+    "constructor_type": "Entity -> Adv",
+    "accepted_semantic_roles": ["Location", "Instrument"],
+    "treat_modifier_objects_as_events": False,
+}
+TIME_TYPE_CONTRACT = {
+    "time_argument_type": "Time",
+    "time_operator_type": "Time -> PropT -> PropT",
+    "proposition_scope": True,
+}
+
+
+def _copy_contract(contract: dict[str, Any]) -> dict[str, Any]:
+    return copy.deepcopy(contract)
 
 
 def _modified_transitive_axis_type_contract() -> dict[str, Any]:
@@ -125,6 +140,23 @@ def _surface_type_entries_from_axes(
     return entries
 
 
+def _validate_exact_contract_fields(
+    errors: list[str],
+    name: str,
+    observed: Any,
+    expected: dict[str, Any],
+) -> dict[str, Any]:
+    if not isinstance(observed, dict):
+        errors.append(f"{name} is not an object")
+        return {}
+    for field, expected_value in expected.items():
+        if observed.get(field) != expected_value:
+            errors.append(f"{name}.{field} must be {expected_value!r}")
+    for field in sorted(set(observed) - set(expected)):
+        errors.append(f"{name}.{field} is not declared")
+    return observed
+
+
 def surface_type_contract_registry_errors(registry: Any) -> list[str]:
     errors: list[str] = []
     if not isinstance(registry, dict):
@@ -145,12 +177,18 @@ def surface_type_contract_registry_errors(registry: Any) -> list[str]:
     if not isinstance(axis_type_contract, dict):
         errors.append("axis_type_contract is not an object")
         axis_type_contract = {}
-    modifier_type_contract = registry.get("modifier_type_contract")
-    if not isinstance(modifier_type_contract, dict):
-        errors.append("modifier_type_contract is not an object")
-    time_type_contract = registry.get("time_type_contract")
-    if not isinstance(time_type_contract, dict):
-        errors.append("time_type_contract is not an object")
+    _validate_exact_contract_fields(
+        errors,
+        "modifier_type_contract",
+        registry.get("modifier_type_contract"),
+        MODIFIER_TYPE_CONTRACT,
+    )
+    _validate_exact_contract_fields(
+        errors,
+        "time_type_contract",
+        registry.get("time_type_contract"),
+        TIME_TYPE_CONTRACT,
+    )
     entries = registry.get("entries")
     if not isinstance(entries, list):
         errors.append("entries is not a list")
@@ -336,17 +374,8 @@ def modified_transitive_surface_type_contract_registry() -> dict[str, Any]:
         "registry_id": MODIFIED_TRANSITIVE_SURFACE_REGISTRY_ID,
         "base_family": "modified_transitive_adv_sequence",
         "axis_type_contract": axis_type_contract,
-        "modifier_type_contract": {
-            "dependent_type": "Adv",
-            "constructor_type": "Entity -> Adv",
-            "accepted_semantic_roles": ["Location", "Instrument"],
-            "treat_modifier_objects_as_events": False,
-        },
-        "time_type_contract": {
-            "time_argument_type": "Time",
-            "time_operator_type": "Time -> PropT -> PropT",
-            "proposition_scope": True,
-        },
+        "modifier_type_contract": _copy_contract(MODIFIER_TYPE_CONTRACT),
+        "time_type_contract": _copy_contract(TIME_TYPE_CONTRACT),
         "entries": entries,
         "axes": axes,
     }

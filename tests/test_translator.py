@@ -9529,9 +9529,23 @@ class TranslatorTests(unittest.TestCase):
             "Adv",
         )
         self.assertEqual(
+            matrix_generation_spec["modifier_type_contract"]["constructor_type"],
+            "Entity -> Adv",
+        )
+        self.assertFalse(
+            matrix_generation_spec["modifier_type_contract"][
+                "treat_modifier_objects_as_events"
+            ],
+        )
+        self.assertEqual(
             matrix_generation_spec["time_type_contract"]["time_operator_type"],
             "Time -> PropT -> PropT",
         )
+        self.assertEqual(
+            matrix_generation_spec["time_type_contract"]["time_argument_type"],
+            "Time",
+        )
+        self.assertTrue(matrix_generation_spec["time_type_contract"]["proposition_scope"])
         self.assertEqual(
             [agent["semantic"] for agent in matrix_generation_spec["axes"]["agents"]],
             ["mary", "john"],
@@ -9962,6 +9976,69 @@ class TranslatorTests(unittest.TestCase):
             ),
             "axes do not match entries",
         )
+        assert_invalid(
+            lambda stale: stale["modifier_type_contract"].__setitem__(
+                "dependent_type",
+                "Entity",
+            ),
+            "modifier_type_contract.dependent_type",
+        )
+        assert_invalid(
+            lambda stale: stale["modifier_type_contract"].__setitem__(
+                "constructor_type",
+                "Entity",
+            ),
+            "modifier_type_contract.constructor_type",
+        )
+        assert_invalid(
+            lambda stale: stale["modifier_type_contract"].__setitem__(
+                "accepted_semantic_roles",
+                ["Location", "Instrument", "Manner"],
+            ),
+            "modifier_type_contract.accepted_semantic_roles",
+        )
+        assert_invalid(
+            lambda stale: stale["modifier_type_contract"].__setitem__(
+                "treat_modifier_objects_as_events",
+                True,
+            ),
+            "modifier_type_contract.treat_modifier_objects_as_events",
+        )
+        assert_invalid(
+            lambda stale: stale["modifier_type_contract"].__setitem__(
+                "extra_modifier_field",
+                "stale",
+            ),
+            "modifier_type_contract.extra_modifier_field is not declared",
+        )
+        assert_invalid(
+            lambda stale: stale["time_type_contract"].__setitem__(
+                "time_argument_type",
+                "Entity",
+            ),
+            "time_type_contract.time_argument_type",
+        )
+        assert_invalid(
+            lambda stale: stale["time_type_contract"].__setitem__(
+                "time_operator_type",
+                "Entity -> PropT -> PropT",
+            ),
+            "time_type_contract.time_operator_type",
+        )
+        assert_invalid(
+            lambda stale: stale["time_type_contract"].__setitem__(
+                "proposition_scope",
+                False,
+            ),
+            "time_type_contract.proposition_scope",
+        )
+        assert_invalid(
+            lambda stale: stale["time_type_contract"].__setitem__(
+                "extra_time_field",
+                "stale",
+            ),
+            "time_type_contract.extra_time_field is not declared",
+        )
 
     def test_verification_rejects_surface_parser_slot_probe_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
@@ -10005,6 +10082,24 @@ class TranslatorTests(unittest.TestCase):
         ]["slot_probe_examples"]["matrix_generation_spec"][
             "type_contract_registry"
         ]["entries"][0]["dependent_type"] = "Event"
+        with self.assertRaisesRegex(SystemExit, "type contract registry invalid"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_generation_spec"][
+            "type_contract_registry"
+        ]["modifier_type_contract"]["dependent_type"] = "Entity"
+        with self.assertRaisesRegex(SystemExit, "type contract registry invalid"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_generation_spec"][
+            "type_contract_registry"
+        ]["time_type_contract"]["time_argument_type"] = "Entity"
         with self.assertRaisesRegex(SystemExit, "type contract registry invalid"):
             validate_certified_fragment_manifest(stale_manifest)
 
