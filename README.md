@@ -1026,13 +1026,22 @@ variant
 `/api/analyze?sentence=Mary+admired+the+painting+yesterday&require_coq=1`,
 requiring `at_T(yesterday, admire(0)(mary, painting))`, the
 `explicit_agent_theme_at_time` scope, and no construction-rule draft. It then
+requests the registered modified-transitive route
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery&require_coq=1`,
+requiring `modified_transitive_predication_single_reading`,
+`explicit_agent_theme_with_adv`, and `Parameter in_gallery : Adv.` rather than
+`Parameter in_gallery : Entity.`. The timed modified-transitive variant
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+yesterday&require_coq=1`
+must keep the same rule while rendering
+`at_T(yesterday, admire(1)(in(gallery), mary, painting))` and
+`explicit_agent_theme_with_adv_at_time`. It then
 requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row and
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests

@@ -475,14 +475,22 @@ without exposing a fallback draft. The timed variant `Mary admired the painting
 yesterday` must keep the same registered rule while rendering
 `at_T(yesterday, admire(0)(mary, painting))` and the
 `explicit_agent_theme_at_time` scope, also without exposing a fallback draft.
+`Mary admired the painting in the gallery` must surface as the registered
+`modified_transitive_predication` construction with
+`modified_transitive_predication_single_reading`,
+`explicit_agent_theme_with_adv`, and `in_gallery : Adv` rather than
+`in_gallery : Entity`. The timed variant `Mary admired the painting in the
+gallery yesterday` must keep the same registered rule while rendering
+`at_T(yesterday, admire(1)(in(gallery), mary, painting))` and
+`explicit_agent_theme_with_adv_at_time`, again without exposing a fallback draft.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. `Mary admired the painting
-in the gallery yesterday` remains the ordinary fallback success with
-`fallback_single_reading` and a downloadable construction-rule draft. This
-keeps promoted constructions and the remaining fallback success contract from
-drifting apart.
+in the gallery with a telescope yesterday` remains the ordinary fallback
+success with `fallback_single_reading` and a downloadable construction-rule
+draft. This keeps promoted constructions and the remaining fallback success
+contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
@@ -625,6 +633,15 @@ predicate arguments; construction hygiene rejects exported `Event`, `Agent`, or
 `at_T(yesterday, admire(0)(mary, painting))` with
 `explicit_agent_theme_at_time`, rather than being exported as a fallback draft.
 
+The modified transitive slice now covers one predicate-level Adv modifier on
+the same explicit Agent/Theme frame. For example, `Mary admired the painting in
+the gallery` translates to `admire(1)(in(gallery), mary, painting)` under the
+registered `modified_transitive_predication` rule. The modifier is checked
+through the `ModifierSeq` family and exported as `in_gallery : Adv`, not as an
+entity. Its timed variant `Mary admired the painting in the gallery yesterday`
+is checked as `at_T(yesterday, admire(1)(in(gallery), mary, painting))` with
+`explicit_agent_theme_with_adv_at_time`.
+
 The locative intransitive slice has also been promoted out of ordinary fallback.
 For example, `a cat sits on a mat` becomes an event-semantics formula with
 `sit(e)`, `Agent(e, cat)`, and `on(e, mat)`, then translates to
@@ -634,10 +651,10 @@ an `Adv` item, not as an entity, and construction hygiene rejects an
 `on_mat : Entity` declaration.
 
 Other simple English sentences are still handled by the fallback parser. For
-example, `Mary admired the painting in the gallery yesterday` remains a shallow
-timed ordinary predication scaffold,
-`at_T(yesterday, admire(1)(in(gallery), mary, painting))`, with a
-construction-rule draft rather than construction-level certification.
+example, `Mary admired the painting in the gallery with a telescope yesterday`
+remains a shallow timed ordinary predication scaffold,
+`at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))`, with
+a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as

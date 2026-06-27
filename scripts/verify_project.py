@@ -1418,7 +1418,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-can-auto-apply="false"',
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        "/api/construction-rule-draft?sentence=Mary+admired+the+painting+in+the+gallery+yesterday&amp;require_coq=1&amp;download=1",
+        "/api/construction-rule-draft?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -1660,6 +1660,157 @@ def validate_analyze_plain_transitive_success(
     require_text_fragments(page, expected_page_fragments, "plain transitive HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: plain transitive page input drift")
+
+
+def validate_analyze_modified_transitive_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_modified_transitive_success"
+    is_timed = sentence == "Mary admired the painting in the gallery yesterday"
+    expected_translation = (
+        "at_T(yesterday, admire(1)(in(gallery), mary, painting))"
+        if is_timed
+        else "admire(1)(in(gallery), mary, painting)"
+    )
+    expected_scope = (
+        "explicit_agent_theme_with_adv_at_time"
+        if is_timed
+        else "explicit_agent_theme_with_adv"
+    )
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "modified_transitive_predication",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "modified_transitive_predication",
+        "registered_construction",
+        "construction_rule",
+        "modified_transitive_predication",
+    )
+    if payload.get("kind") != "modified_transitive_predication":
+        raise SystemExit("web route smoke check failed: modified transitive kind drift")
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit("web route smoke check failed: modified transitive translation drift")
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit("web route smoke check failed: modified transitive exposes fallback draft")
+    ast = payload.get("ast")
+    application_ast = ast
+    if is_timed and isinstance(ast, dict):
+        if (
+            ast.get("kind") != "time"
+            or ast.get("operator") != "at"
+            or ast.get("arguments") != ["yesterday"]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit("web route smoke check failed: timed modified transitive AST drift")
+        application_ast = ast["body"]
+    role_frame = (
+        application_ast.get("role_frame", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_roles = (
+        application_ast.get("modifier_roles", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    if (
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "admire"
+        or application_ast.get("arguments") != ["mary", "painting"]
+        or application_ast.get("modifiers") != ["in(gallery)"]
+        or application_ast.get("adverb_count") != 1
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 2
+        or role_frame[0].get("role") != "Agent"
+        or role_frame[0].get("type") != "Entity"
+        or role_frame[0].get("source") != "explicit"
+        or role_frame[1].get("role") != "Theme"
+        or role_frame[1].get("type") != "Entity"
+        or role_frame[1].get("source") != "explicit"
+        or not isinstance(modifier_roles, list)
+        or len(modifier_roles) != 1
+        or modifier_roles[0].get("modifier") != "in(gallery)"
+        or modifier_roles[0].get("type") != "Adv"
+        or modifier_roles[0].get("semantic_role") != "Location"
+    ):
+        raise SystemExit("web route smoke check failed: modified transitive AST drift")
+    event_semantics = payload.get("event_semantics")
+    modified = (
+        event_semantics.get("modified_transitive_predication")
+        if isinstance(event_semantics, dict)
+        else None
+    )
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis") != "modified-transitive-predication"
+        or not isinstance(modified, dict)
+        or modified.get("predicate") != "admire"
+        or modified.get("agent") != "mary"
+        or modified.get("theme") != "painting"
+        or modified.get("theme_type") != "Entity"
+        or modified.get("modifiers") != ["in(gallery)"]
+        or not isinstance(modified.get("modifier_roles"), list)
+        or modified["modifier_roles"][0].get("type") != "Adv"
+    ):
+        raise SystemExit("web route smoke check failed: modified transitive analysis drift")
+    if is_timed:
+        if modified.get("time_modifier") != {"operator": "at", "argument": "yesterday"}:
+            raise SystemExit("web route smoke check failed: timed modified transitive time drift")
+    elif "time_modifier" in modified:
+        raise SystemExit("web route smoke check failed: untimed modified transitive time drift")
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: modified transitive hygiene drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: modified transitive reading count drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "modified_transitive_predication_single_reading",
+            "scope": expected_scope,
+            "source": "modified_transitive_predication",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Parameter admire : forall n : nat" not in coq_code
+        or "Parameter in_gallery : Adv." not in coq_code
+        or "Parameter in_gallery : Entity." in coq_code
+        or "Definition example_1" not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: modified transitive Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>modified_transitive_predication</dd>",
+        'data-reading-name="modified_transitive_predication_single_reading"',
+        "<dt>source</dt><dd>modified_transitive_predication</dd>",
+        f"<dt>scope</dt><dd>{expected_scope}</dd>",
+        expected_translation,
+        "Parameter in_gallery : Adv.",
+        "Translation succeeded via construction rule modified_transitive_predication.",
+    ]
+    require_text_fragments(page, expected_page_fragments, "modified transitive HTML")
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: modified transitive page input drift")
 
 
 def validate_analyze_locative_intransitive_success(
@@ -3392,7 +3543,45 @@ def run_web_route_smoke_check() -> None:
             timed_plain_transitive_page,
             timed_plain_transitive_sentence,
         )
-        fallback_sentence = "Mary admired the painting in the gallery yesterday"
+        modified_transitive_sentence = "Mary admired the painting in the gallery"
+        modified_transitive_query = urlencode(
+            {"sentence": modified_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            modified_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            modified_transitive_page = response.read().decode("utf-8")
+        validate_analyze_modified_transitive_success(
+            modified_transitive_payload,
+            modified_transitive_page,
+            modified_transitive_sentence,
+        )
+        timed_modified_transitive_sentence = "Mary admired the painting in the gallery yesterday"
+        timed_modified_transitive_query = urlencode(
+            {"sentence": timed_modified_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_modified_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_modified_transitive_page = response.read().decode("utf-8")
+        validate_analyze_modified_transitive_success(
+            timed_modified_transitive_payload,
+            timed_modified_transitive_page,
+            timed_modified_transitive_sentence,
+        )
+        fallback_sentence = "Mary admired the painting in the gallery with a telescope yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
