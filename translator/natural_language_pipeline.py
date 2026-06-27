@@ -143,7 +143,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary admired the painting yesterday",
+        "sentence": "Mary admired the painting in the gallery yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -159,6 +159,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "event-counting",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, repeat(2, knock(0)(john)))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "plain_transitive_predication",
+        "variant_id": "temporal_plain_transitive_predication",
+        "sentence": "Mary admired the painting yesterday",
+        "expected_event_analysis": "plain-transitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, admire(0)(mary, painting))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -10826,22 +10839,14 @@ def active_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
 
-def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | None:
-    try:
-        event_semantics = sentence_to_event_semantics(sentence)
-        translation = translate(event_semantics)
-    except ValueError:
-        return None
-    ast = translation.get("ast", {})
-    if not isinstance(ast, dict) or ast.get("kind") != "application":
+def plain_transitive_application_details(ast: dict[str, Any]) -> dict[str, Any] | None:
+    if ast.get("kind") != "application":
         return None
     if ast.get("adverb_count") != 0 or ast.get("modifiers") != []:
         return None
     if ast.get("modifier_vector", {}).get("length") != 0:
         return None
     if ast.get("modifier_roles", {}).get("roles") != []:
-        return None
-    if translation.get("omitted_arguments"):
         return None
     arguments = ast.get("arguments")
     role_frame = ast.get("role_frame", {}).get("roles")
@@ -10868,9 +10873,75 @@ def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | Non
         or theme_role.get("source") != "explicit"
     ):
         return None
+    return {
+        "predicate": str(ast.get("function", "predicate")),
+        "arguments": arguments,
+        "agent": arguments[0],
+        "theme": arguments[1],
+        "theme_type": str(theme_role["type"]),
+    }
 
-    predicate = str(ast.get("function", "predicate"))
-    theme_type = str(theme_role["type"])
+
+def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict):
+        return None
+    if translation.get("omitted_arguments"):
+        return None
+
+    time_modifier = None
+    application_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        application_ast = body
+    elif ast.get("kind") != "application":
+        return None
+
+    details = plain_transitive_application_details(application_ast)
+    if details is None:
+        return None
+
+    predicate = str(details["predicate"])
+    arguments = list(details["arguments"])
+    theme_type = str(details["theme_type"])
+    scope = "explicit_agent_theme_at_time" if time_modifier else "explicit_agent_theme"
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
+    predication_record = {
+        "predicate": predicate,
+        "agent": arguments[0],
+        "agent_type": "Entity",
+        "theme": arguments[1],
+        "theme_type": theme_type,
+        "representation": (
+            "typed binary predicate over explicit Agent and Theme "
+            "arguments"
+        ),
+    }
+    if time_modifier is not None:
+        predication_record["time_modifier"] = time_modifier
     coq_code = export_module([translation], "coq")
     return attach_single_semantic_reading(
         {
@@ -10879,17 +10950,7 @@ def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | Non
             "event_semantics": {
                 **event_semantics,
                 "analysis": "plain-transitive-predication",
-                "plain_transitive_predication": {
-                    "predicate": predicate,
-                    "agent": arguments[0],
-                    "agent_type": "Entity",
-                    "theme": arguments[1],
-                    "theme_type": theme_type,
-                    "representation": (
-                        "typed binary predicate over explicit Agent and Theme "
-                        "arguments"
-                    ),
-                },
+                "plain_transitive_predication": predication_record,
             },
             "dependent_type_translation": translation["translation"],
             "result_state_lexicon": translation["result_state_lexicon"],
@@ -10898,7 +10959,7 @@ def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | Non
             "construction_summary": (
                 f"Plain transitive predication: {predicate} is applied to an "
                 f"explicit Entity Agent and explicit {theme_type} Theme as a "
-                "typed binary predicate, without exporting Event, Agent, or "
+                f"typed binary predicate{time_summary}, without exporting Event, Agent, or "
                 "Theme predicates."
             ),
             "coq_code": coq_code,
@@ -10906,7 +10967,7 @@ def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | Non
         name="plain_transitive_predication_single_reading",
         coq_definition="example_1",
         source="plain_transitive_predication",
-        scope="explicit_agent_theme",
+        scope=scope,
     )
 
 
@@ -11610,7 +11671,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
         "fallback": {
             "verification_scope_kind": "fallback_shallow",
             "certification_level": "shallow_scaffold",
-            "example": "Mary admired the painting yesterday",
+            "example": "Mary admired the painting in the gallery yesterday",
             "guarantees": [
                 "fallback AST/type_check and semantic_readings contract are checked",
                 "generated Coq/Rocq scaffold is checked when requested and available",

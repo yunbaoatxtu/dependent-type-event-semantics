@@ -1418,7 +1418,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-can-auto-apply="false"',
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        "/api/construction-rule-draft?sentence=Mary+admired+the+painting+yesterday&amp;require_coq=1&amp;download=1",
+        "/api/construction-rule-draft?sentence=Mary+admired+the+painting+in+the+gallery+yesterday&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -1535,6 +1535,13 @@ def validate_analyze_plain_transitive_success(
     sentence: str,
 ) -> None:
     case = "analyze_plain_transitive_success"
+    is_timed = sentence == "Mary admired the painting yesterday"
+    expected_translation = (
+        "at_T(yesterday, admire(0)(mary, painting))"
+        if is_timed
+        else "admire(0)(mary, painting)"
+    )
+    expected_scope = "explicit_agent_theme_at_time" if is_timed else "explicit_agent_theme"
     validate_analyze_success_envelope(
         payload,
         sentence,
@@ -1551,18 +1558,32 @@ def validate_analyze_plain_transitive_success(
     )
     if payload.get("kind") != "plain_transitive_predication":
         raise SystemExit("web route smoke check failed: plain transitive kind drift")
-    if payload.get("dependent_type_translation") != "admire(0)(mary, painting)":
+    if payload.get("dependent_type_translation") != expected_translation:
         raise SystemExit("web route smoke check failed: plain transitive translation drift")
     if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
         raise SystemExit("web route smoke check failed: plain transitive exposes fallback draft")
     ast = payload.get("ast")
-    role_frame = ast.get("role_frame", {}).get("roles") if isinstance(ast, dict) else None
+    application_ast = ast
+    if is_timed and isinstance(ast, dict):
+        if (
+            ast.get("kind") != "time"
+            or ast.get("operator") != "at"
+            or ast.get("arguments") != ["yesterday"]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit("web route smoke check failed: timed plain transitive AST drift")
+        application_ast = ast["body"]
+    role_frame = (
+        application_ast.get("role_frame", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
     if (
-        not isinstance(ast, dict)
-        or ast.get("kind") != "application"
-        or ast.get("function") != "admire"
-        or ast.get("arguments") != ["mary", "painting"]
-        or ast.get("modifiers") != []
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "admire"
+        or application_ast.get("arguments") != ["mary", "painting"]
+        or application_ast.get("modifiers") != []
         or not isinstance(role_frame, list)
         or len(role_frame) != 2
         or role_frame[0].get("role") != "Agent"
@@ -1589,6 +1610,14 @@ def validate_analyze_plain_transitive_success(
         or typed_predication.get("theme_type") != "Entity"
     ):
         raise SystemExit("web route smoke check failed: plain transitive analysis drift")
+    if is_timed:
+        if typed_predication.get("time_modifier") != {
+            "operator": "at",
+            "argument": "yesterday",
+        }:
+            raise SystemExit("web route smoke check failed: timed plain transitive time drift")
+    elif "time_modifier" in typed_predication:
+        raise SystemExit("web route smoke check failed: untimed plain transitive time drift")
     hygiene = payload.get("construction_hygiene")
     if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
         raise SystemExit("web route smoke check failed: plain transitive hygiene drift")
@@ -1599,7 +1628,7 @@ def validate_analyze_plain_transitive_success(
         readings[0],
         {
             "name": "plain_transitive_predication_single_reading",
-            "scope": "explicit_agent_theme",
+            "scope": expected_scope,
             "source": "plain_transitive_predication",
             "coq_definition": "example_1",
         },
@@ -1624,8 +1653,8 @@ def validate_analyze_plain_transitive_success(
         "<dt>rule</dt><dd>plain_transitive_predication</dd>",
         'data-reading-name="plain_transitive_predication_single_reading"',
         "<dt>source</dt><dd>plain_transitive_predication</dd>",
-        "<dt>scope</dt><dd>explicit_agent_theme</dd>",
-        "admire(0)(mary, painting)",
+        f"<dt>scope</dt><dd>{expected_scope}</dd>",
+        expected_translation,
         "Translation succeeded via construction rule plain_transitive_predication.",
     ]
     require_text_fragments(page, expected_page_fragments, "plain transitive HTML")
@@ -3344,7 +3373,26 @@ def run_web_route_smoke_check() -> None:
             plain_transitive_page,
             plain_transitive_sentence,
         )
-        fallback_sentence = "Mary admired the painting yesterday"
+        timed_plain_transitive_sentence = "Mary admired the painting yesterday"
+        timed_plain_transitive_query = urlencode(
+            {"sentence": timed_plain_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_plain_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_plain_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_plain_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_plain_transitive_page = response.read().decode("utf-8")
+        validate_analyze_plain_transitive_success(
+            timed_plain_transitive_payload,
+            timed_plain_transitive_page,
+            timed_plain_transitive_sentence,
+        )
+        fallback_sentence = "Mary admired the painting in the gallery yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

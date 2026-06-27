@@ -172,7 +172,10 @@ accepted by the lexical state-change rule as single causer constants.
 Temporal adverbs such as `yesterday` are emitted as `at(e, yesterday)` before
 translation, so `Mary admired the painting yesterday` becomes
 `at_T(yesterday, admire(0)(mary, painting))` rather than treating
-`painting_yesterday` as one entity.
+`painting_yesterday` as one entity. The registered
+`plain_transitive_predication` construction now accepts this temporal wrapper
+as a certified variant, while still rejecting additional Adv modifiers that
+need a separate attachment policy.
 Count phrases behave similarly: `Mary visited Paris three times` becomes
 `repeat(3, visit(0)(mary, paris))`, not `visit(0)(mary, paris_three_times)`.
 The digit form `Mary visited Paris 3 times` follows the same path.
@@ -1018,13 +1021,18 @@ same smoke check now also requests the registered active argument-omission route
 and no construction-rule draft. It then requests the registered plain-transitive
 route `/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring
 `plain_transitive_predication_single_reading`, the `explicit_agent_theme` scope,
-and no construction-rule draft. It then requests the registered locative route
+and no construction-rule draft. It also requests the timed plain-transitive
+variant
+`/api/analyze?sentence=Mary+admired+the+painting+yesterday&require_coq=1`,
+requiring `at_T(yesterday, admire(0)(mary, painting))`, the
+`explicit_agent_theme_at_time` scope, and no construction-rule draft. It then
+requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row and
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
