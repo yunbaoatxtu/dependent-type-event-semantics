@@ -2192,6 +2192,63 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter in_gallery : Adv.", timed_result["coq_code"])
         self.assertEqual(timed_result["coq_check"]["status"], "passed")
 
+        multi_result = run_pipeline(
+            "Mary admired the painting in the gallery with a telescope",
+            require_coq=True,
+        )
+        self.assertTrue(multi_result["ok"])
+        self.assertEqual(multi_result["kind"], "modified_transitive_predication")
+        self.assertEqual(
+            multi_result["verification_scope"]["rule_id"],
+            "modified_transitive_predication",
+        )
+        self.assertEqual(
+            multi_result["dependent_type_translation"],
+            "admire(2)(in(gallery), with(telescope), mary, painting)",
+        )
+        self.assertEqual(
+            multi_result["semantic_readings"][0]["scope"],
+            "explicit_agent_theme_with_adv_sequence",
+        )
+        multi_modified = multi_result["event_semantics"]["modified_transitive_predication"]
+        self.assertEqual(
+            multi_modified["modifiers"],
+            ["in(gallery)", "with(telescope)"],
+        )
+        self.assertEqual(
+            [role["semantic_role"] for role in multi_modified["modifier_roles"]],
+            ["Location", "Instrument"],
+        )
+        self.assertNotIn("construction_rule_draft", multi_result)
+        self.assertIn("Parameter in_gallery : Adv.", multi_result["coq_code"])
+        self.assertIn("Parameter with_telescope : Adv.", multi_result["coq_code"])
+        self.assertNotIn("Parameter with_telescope : Entity.", multi_result["coq_code"])
+        self.assertEqual(multi_result["coq_check"]["status"], "passed")
+
+        timed_multi_result = run_pipeline(
+            "Mary admired the painting in the gallery with a telescope yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(timed_multi_result["ok"])
+        self.assertEqual(timed_multi_result["kind"], "modified_transitive_predication")
+        self.assertEqual(
+            timed_multi_result["dependent_type_translation"],
+            "at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))",
+        )
+        self.assertEqual(
+            timed_multi_result["semantic_readings"][0]["scope"],
+            "explicit_agent_theme_with_adv_sequence_at_time",
+        )
+        self.assertEqual(
+            timed_multi_result["event_semantics"]["modified_transitive_predication"][
+                "time_modifier"
+            ],
+            {"operator": "at", "argument": "yesterday"},
+        )
+        self.assertNotIn("construction_rule_draft", timed_multi_result)
+        self.assertIn("Parameter with_telescope : Adv.", timed_multi_result["coq_code"])
+        self.assertEqual(timed_multi_result["coq_check"]["status"], "passed")
+
     def test_fallback_temporal_adverb_stops_prepositional_phrase(self) -> None:
         result = run_pipeline("a cat sits on a mat yesterday", require_coq=True)
         self.assertTrue(result["ok"])
@@ -9078,7 +9135,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 3)
+        self.assertEqual(counts["registered_variant_success_cases"], 5)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         self.assertEqual(
@@ -9287,7 +9344,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            3,
+            5,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -9316,7 +9373,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="3"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="5"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -9352,6 +9409,25 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-coverage-sentence="Mary admired the painting in the gallery yesterday"',
+            page,
+        )
+        self.assertIn(
+            'data-coverage-variant-id="multi_adv_modified_transitive_predication"',
+            page,
+        )
+        self.assertIn(
+            'data-coverage-sentence="Mary admired the painting in the gallery with a telescope"',
+            page,
+        )
+        self.assertIn(
+            'data-coverage-variant-id="temporal_multi_adv_modified_transitive_predication"',
+            page,
+        )
+        self.assertIn(
+            (
+                'data-coverage-sentence="Mary admired the painting in the gallery '
+                'with a telescope yesterday"'
+            ),
             page,
         )
         self.assertIn('data-coverage-kind="fallback_success"', page)
@@ -9805,7 +9881,10 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
             handler,
-            "sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&require_coq=1",
+            (
+                "sentence=Mary+admired+the+painting+in+the+gallery+with+a+"
+                "telescope+near+a+window+yesterday&require_coq=1"
+            ),
         )
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
@@ -9848,7 +9927,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(rule_draft["candidate_analyzer"], "fallback_time_time_candidate_pipeline")
         self.assertEqual(
             rule_draft["accepted_examples"],
-            ["Mary admired the painting in the gallery with a telescope yesterday"],
+            [
+                (
+                    "Mary admired the painting in the gallery with a telescope "
+                    "near a window yesterday"
+                )
+            ],
         )
         self.assertEqual(rule_draft["automation_mode"], "human_review_required")
         self.assertFalse(rule_draft["can_auto_apply"])
@@ -9895,7 +9979,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_fallback_upgrade_plan_generalizes_to_unregistered_simple_sentences(self) -> None:
         result = analyze_sentence(
-            "Mary admired the painting in the gallery with a telescope yesterday",
+            "Mary admired the painting in the gallery with a telescope near a window yesterday",
             require_coq=True,
         )
         self.assertTrue(result["ok"])
@@ -9905,11 +9989,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(plan["candidate_rule_id"], "fallback_time_time_candidate")
         self.assertEqual(
             plan["source_sentence"],
-            "Mary admired the painting in the gallery with a telescope yesterday",
+            "Mary admired the painting in the gallery with a telescope near a window yesterday",
         )
         self.assertEqual(
             plan["dependent_type_translation"],
-            "at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))",
+            (
+                "at_T(yesterday, admire(3)(in(gallery), with(telescope), "
+                "near(window), mary, painting))"
+            ),
         )
         self.assertEqual(plan["ast_summary"]["kind"], "time")
         self.assertEqual(fallback_candidate_rule_id(result["ast"]), plan["candidate_rule_id"])
@@ -9919,7 +10006,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(draft["candidate_analyzer"], "fallback_time_time_candidate_pipeline")
         self.assertEqual(
             draft["accepted_examples"],
-            ["Mary admired the painting in the gallery with a telescope yesterday"],
+            [
+                (
+                    "Mary admired the painting in the gallery with a telescope "
+                    "near a window yesterday"
+                )
+            ],
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["name"],
@@ -9927,7 +10019,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["dependent_type_translation"],
-            "at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))",
+            (
+                "at_T(yesterday, admire(3)(in(gallery), with(telescope), "
+                "near(window), mary, painting))"
+            ),
         )
         self.assertEqual(draft["ast_summary"]["kind"], "time")
 
@@ -10095,7 +10190,10 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         payload, status = PipelineHandler.handle_construction_rule_draft_api(
             handler,
-            "sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&require_coq=1",
+            (
+                "sentence=Mary+admired+the+painting+in+the+gallery+with+a+"
+                "telescope+near+a+window+yesterday&require_coq=1"
+            ),
         )
         self.assertEqual(status.name, "OK")
         self.assertEqual(
@@ -10126,11 +10224,18 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             construction_rule_draft_api_path(
-                "Mary admired the painting in the gallery with a telescope yesterday",
+                (
+                    "Mary admired the painting in the gallery with a telescope "
+                    "near a window yesterday"
+                ),
                 True,
                 download=True,
             ),
-            "/api/construction-rule-draft?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&require_coq=1&download=1",
+            (
+                "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
+                "in+the+gallery+with+a+telescope+near+a+window+yesterday&"
+                "require_coq=1&download=1"
+            ),
         )
         self.assertEqual(
             construction_rule_draft_artifact_filename("fallback_time_time_candidate"),
@@ -10193,6 +10298,22 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(modified_payload["ok"])
         self.assertEqual(
             modified_payload["verification_scope"]["rule_id"],
+            "modified_transitive_predication",
+        )
+
+        multi_modified_payload, multi_modified_status = (
+            PipelineHandler.handle_construction_rule_draft_api(
+                handler,
+                (
+                    "sentence=Mary+admired+the+painting+in+the+gallery+with+a+"
+                    "telescope+yesterday&require_coq=1"
+                ),
+            )
+        )
+        self.assertEqual(multi_modified_status.name, "BAD_REQUEST")
+        self.assertFalse(multi_modified_payload["ok"])
+        self.assertEqual(
+            multi_modified_payload["verification_scope"]["rule_id"],
             "modified_transitive_predication",
         )
 
@@ -11388,7 +11509,10 @@ class TranslatorTests(unittest.TestCase):
 
     def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
         page = render_page(
-            "Mary admired the painting in the gallery with a telescope yesterday",
+            (
+                "Mary admired the painting in the gallery with a telescope "
+                "near a window yesterday"
+            ),
             require_coq=True,
         )
         self.assertIn("Construction Rule", page)
@@ -11424,11 +11548,26 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            "/api/construction-rule-draft?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&amp;require_coq=1&amp;download=1",
+            (
+                "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
+                "in+the+gallery+with+a+telescope+near+a+window+yesterday&amp;"
+                "require_coq=1&amp;download=1"
+            ),
             page,
         )
         self.assertIn("Parameter Event : Type.", page)
         self.assertIn("No registered construction rule matched", page)
+
+        promoted_page = render_page(
+            "Mary admired the painting in the gallery with a telescope yesterday",
+            require_coq=True,
+        )
+        self.assertIn("Translation succeeded via construction rule", promoted_page)
+        self.assertIn('data-verification-scope-kind="registered_construction"', promoted_page)
+        self.assertIn("<dd>modified_transitive_predication</dd>", promoted_page)
+        self.assertIn("Parameter with_telescope : Adv.", promoted_page)
+        self.assertNotIn("Certification Upgrade Plan", promoted_page)
+        self.assertNotIn("Construction Rule Draft", promoted_page)
 
     def test_web_page_status_shows_parser_failure_stage(self) -> None:
         page = render_page("John")
@@ -13131,13 +13270,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("modified_transitive_predication_single_reading", web_design)
         self.assertIn("explicit_agent_theme_with_adv", web_design)
         self.assertIn("explicit_agent_theme_with_adv_at_time", web_design)
+        self.assertIn("explicit_agent_theme_with_adv_sequence", web_design)
+        self.assertIn("with_telescope : Adv", web_design)
         self.assertIn("a cat sits on a mat", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)
         self.assertIn("`on_mat : Entity`", web_design)
         self.assertIn("Mary admired the painting", web_design)
-        self.assertIn("in the gallery with a telescope yesterday` remains", web_design)
+        self.assertIn("in the gallery with a telescope near a", web_design)
+        self.assertIn("window yesterday` remains", web_design)
         self.assertIn("multi-reading quantifier-scope success path", web_design)
         self.assertIn("some boy loves some girl", web_design)
         self.assertIn("registered perception-complement success path", web_design)
@@ -13793,8 +13935,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("modified_transitive_predication", web_design)
         self.assertIn("explicit_agent_theme_at_time", web_design)
         self.assertIn("explicit_agent_theme_with_adv_at_time", web_design)
+        self.assertIn("explicit_agent_theme_with_adv_sequence_at_time", web_design)
+        self.assertIn("multi_adv_modified_transitive_predication", web_design)
         self.assertIn("Mary admired the painting", web_design)
-        self.assertIn("in the gallery with a telescope yesterday` remains", web_design)
+        self.assertIn("in the gallery with a telescope near a", web_design)
+        self.assertIn("window yesterday` remains", web_design)
         self.assertIn("`semantic_snapshots`", web_design)
         self.assertIn("`semantic_snapshot_count`", web_design)
         self.assertIn("`data-semantic-snapshot-*`", web_design)
@@ -14625,6 +14770,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary admired the painting in the gallery yesterday", verifier)
         self.assertIn(
             "Mary admired the painting in the gallery with a telescope yesterday",
+            verifier,
+        )
+        self.assertIn(
+            "Mary admired the painting in the gallery with a telescope near a window yesterday",
             verifier,
         )
         self.assertIn("some boy loves some girl", verifier)

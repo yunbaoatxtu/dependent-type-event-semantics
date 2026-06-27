@@ -1418,7 +1418,11 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-can-auto-apply="false"',
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        "/api/construction-rule-draft?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&amp;require_coq=1&amp;download=1",
+        (
+            "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
+            "in+the+gallery+with+a+telescope+near+a+window+yesterday&amp;"
+            "require_coq=1&amp;download=1"
+        ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -1668,16 +1672,33 @@ def validate_analyze_modified_transitive_success(
     sentence: str,
 ) -> None:
     case = "analyze_modified_transitive_success"
-    is_timed = sentence == "Mary admired the painting in the gallery yesterday"
+    is_timed = sentence.endswith(" yesterday")
+    expected_modifiers = ["in(gallery)"]
+    expected_modifier_roles = ["Location"]
+    if "with a telescope" in sentence:
+        expected_modifiers.append("with(telescope)")
+        expected_modifier_roles.append("Instrument")
+    expected_inner_translation = (
+        f"admire({len(expected_modifiers)})"
+        f"({', '.join(expected_modifiers)}, mary, painting)"
+    )
     expected_translation = (
-        "at_T(yesterday, admire(1)(in(gallery), mary, painting))"
+        f"at_T(yesterday, {expected_inner_translation})"
         if is_timed
-        else "admire(1)(in(gallery), mary, painting)"
+        else expected_inner_translation
     )
     expected_scope = (
-        "explicit_agent_theme_with_adv_at_time"
+        (
+            "explicit_agent_theme_with_adv_at_time"
+            if len(expected_modifiers) == 1
+            else "explicit_agent_theme_with_adv_sequence_at_time"
+        )
         if is_timed
-        else "explicit_agent_theme_with_adv"
+        else (
+            "explicit_agent_theme_with_adv"
+            if len(expected_modifiers) == 1
+            else "explicit_agent_theme_with_adv_sequence"
+        )
     )
     validate_analyze_success_envelope(
         payload,
@@ -1725,8 +1746,8 @@ def validate_analyze_modified_transitive_success(
         or application_ast.get("kind") != "application"
         or application_ast.get("function") != "admire"
         or application_ast.get("arguments") != ["mary", "painting"]
-        or application_ast.get("modifiers") != ["in(gallery)"]
-        or application_ast.get("adverb_count") != 1
+        or application_ast.get("modifiers") != expected_modifiers
+        or application_ast.get("adverb_count") != len(expected_modifiers)
         or not isinstance(role_frame, list)
         or len(role_frame) != 2
         or role_frame[0].get("role") != "Agent"
@@ -1736,12 +1757,16 @@ def validate_analyze_modified_transitive_success(
         or role_frame[1].get("type") != "Entity"
         or role_frame[1].get("source") != "explicit"
         or not isinstance(modifier_roles, list)
-        or len(modifier_roles) != 1
-        or modifier_roles[0].get("modifier") != "in(gallery)"
-        or modifier_roles[0].get("type") != "Adv"
-        or modifier_roles[0].get("semantic_role") != "Location"
+        or len(modifier_roles) != len(expected_modifiers)
     ):
         raise SystemExit("web route smoke check failed: modified transitive AST drift")
+    for index, modifier in enumerate(expected_modifiers):
+        if (
+            modifier_roles[index].get("modifier") != modifier
+            or modifier_roles[index].get("type") != "Adv"
+            or modifier_roles[index].get("semantic_role") != expected_modifier_roles[index]
+        ):
+            raise SystemExit("web route smoke check failed: modified transitive modifier drift")
     event_semantics = payload.get("event_semantics")
     modified = (
         event_semantics.get("modified_transitive_predication")
@@ -1756,7 +1781,7 @@ def validate_analyze_modified_transitive_success(
         or modified.get("agent") != "mary"
         or modified.get("theme") != "painting"
         or modified.get("theme_type") != "Entity"
-        or modified.get("modifiers") != ["in(gallery)"]
+        or modified.get("modifiers") != expected_modifiers
         or not isinstance(modified.get("modifier_roles"), list)
         or modified["modifier_roles"][0].get("type") != "Adv"
     ):
@@ -1790,6 +1815,11 @@ def validate_analyze_modified_transitive_success(
         or "Parameter admire : forall n : nat" not in coq_code
         or "Parameter in_gallery : Adv." not in coq_code
         or "Parameter in_gallery : Entity." in coq_code
+        or (
+            "with(telescope)" in expected_modifiers
+            and "Parameter with_telescope : Adv." not in coq_code
+        )
+        or "Parameter with_telescope : Entity." in coq_code
         or "Definition example_1" not in coq_code
         or "Parameter Event : Type." in coq_code
         or "Parameter Agent :" in coq_code
@@ -1806,6 +1836,7 @@ def validate_analyze_modified_transitive_success(
         f"<dt>scope</dt><dd>{expected_scope}</dd>",
         expected_translation,
         "Parameter in_gallery : Adv.",
+        *(["Parameter with_telescope : Adv."] if "with(telescope)" in expected_modifiers else []),
         "Translation succeeded via construction rule modified_transitive_predication.",
     ]
     require_text_fragments(page, expected_page_fragments, "modified transitive HTML")
@@ -3581,7 +3612,51 @@ def run_web_route_smoke_check() -> None:
             timed_modified_transitive_page,
             timed_modified_transitive_sentence,
         )
-        fallback_sentence = "Mary admired the painting in the gallery with a telescope yesterday"
+        multi_modified_transitive_sentence = (
+            "Mary admired the painting in the gallery with a telescope"
+        )
+        multi_modified_transitive_query = urlencode(
+            {"sentence": multi_modified_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{multi_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            multi_modified_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{multi_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            multi_modified_transitive_page = response.read().decode("utf-8")
+        validate_analyze_modified_transitive_success(
+            multi_modified_transitive_payload,
+            multi_modified_transitive_page,
+            multi_modified_transitive_sentence,
+        )
+        timed_multi_modified_transitive_sentence = (
+            "Mary admired the painting in the gallery with a telescope yesterday"
+        )
+        timed_multi_modified_transitive_query = urlencode(
+            {"sentence": timed_multi_modified_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_multi_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_multi_modified_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_multi_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_multi_modified_transitive_page = response.read().decode("utf-8")
+        validate_analyze_modified_transitive_success(
+            timed_multi_modified_transitive_payload,
+            timed_multi_modified_transitive_page,
+            timed_multi_modified_transitive_sentence,
+        )
+        fallback_sentence = (
+            "Mary admired the painting in the gallery with a telescope near a window yesterday"
+        )
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

@@ -847,8 +847,11 @@ The same manifest now includes a `coverage_matrix` with four audited slices:
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases
 point back to each rule's primary example, registered variants capture
 composition examples such as `John knocked twice yesterday` under
-`temporal_event_counting`, fallback cases remain explicitly shallow, and
-rejected cases record the marker that must stop the pipeline before fallback.
+`temporal_event_counting`, plus modifier-sequence variants such as
+`multi_adv_modified_transitive_predication` and
+`temporal_multi_adv_modified_transitive_predication`; fallback cases remain
+explicitly shallow, and rejected cases record the marker that must stop the
+pipeline before fallback.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and
@@ -1034,14 +1037,22 @@ requiring `modified_transitive_predication_single_reading`,
 `/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+yesterday&require_coq=1`
 must keep the same rule while rendering
 `at_T(yesterday, admire(1)(in(gallery), mary, painting))` and
-`explicit_agent_theme_with_adv_at_time`. It then
+`explicit_agent_theme_with_adv_at_time`. The same rule now also checks the
+two-Adv sequence
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope&require_coq=1`
+as `admire(2)(in(gallery), with(telescope), mary, painting)`, requiring both
+`Parameter in_gallery : Adv.` and `Parameter with_telescope : Adv.`. Its timed
+variant renders
+`at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))` with
+the `explicit_agent_theme_with_adv_sequence_at_time` scope and no fallback
+draft. It then
 requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row and
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
