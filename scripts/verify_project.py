@@ -1331,7 +1331,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         upgrade_plan.get("schema_version") != "certification_upgrade_plan.v1"
         or upgrade_plan.get("source_verification_scope") != "fallback_shallow"
         or upgrade_plan.get("target_certification_level") != "construction_rule"
-        or upgrade_plan.get("candidate_rule_id") != "fallback_admire_application_candidate"
+        or upgrade_plan.get("candidate_rule_id") != "fallback_time_time_candidate"
         or upgrade_plan.get("automation_mode") != "human_review_required"
         or upgrade_plan.get("can_auto_apply") is not False
     ):
@@ -1349,8 +1349,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         rule_draft.get("schema_version") != "construction_rule_draft.v1"
         or rule_draft.get("source_verification_scope") != "fallback_shallow"
-        or rule_draft.get("candidate_rule_id") != "fallback_admire_application_candidate"
-        or rule_draft.get("candidate_analyzer") != "fallback_admire_application_candidate_pipeline"
+        or rule_draft.get("candidate_rule_id") != "fallback_time_time_candidate"
+        or rule_draft.get("candidate_analyzer") != "fallback_time_time_candidate_pipeline"
         or rule_draft.get("automation_mode") != "human_review_required"
         or rule_draft.get("can_auto_apply") is not False
     ):
@@ -1359,8 +1359,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         not isinstance(draft_readings, list)
         or len(draft_readings) != 1
-        or draft_readings[0].get("name") != "fallback_admire_application_candidate_single_reading"
-        or draft_readings[0].get("source") != "fallback_admire_application_candidate"
+        or draft_readings[0].get("name") != "fallback_time_time_candidate_single_reading"
+        or draft_readings[0].get("source") != "fallback_time_time_candidate"
     ):
         raise SystemExit("web route smoke check failed: fallback rule draft reading drift")
     hygiene = rule_draft.get("hygiene_policy_draft")
@@ -1407,18 +1407,18 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-upgrade-plan-schema="certification_upgrade_plan.v1"',
         'data-upgrade-source-scope="fallback_shallow"',
         'data-upgrade-target-level="construction_rule"',
-        'data-upgrade-candidate-rule-id="fallback_admire_application_candidate"',
+        'data-upgrade-candidate-rule-id="fallback_time_time_candidate"',
         'data-upgrade-gap-id="no_registered_construction_rule"',
         'data-upgrade-action-kind="draft_construction_rule"',
         "Construction Rule Draft",
         'data-rule-draft-schema="construction_rule_draft.v1"',
         'data-rule-draft-source-scope="fallback_shallow"',
-        'data-rule-draft-id="fallback_admire_application_candidate"',
-        'data-rule-draft-analyzer="fallback_admire_application_candidate_pipeline"',
+        'data-rule-draft-id="fallback_time_time_candidate"',
+        'data-rule-draft-analyzer="fallback_time_time_candidate_pipeline"',
         'data-rule-draft-can-auto-apply="false"',
-        'data-rule-draft-reading="fallback_admire_application_candidate_single_reading"',
+        'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        "/api/construction-rule-draft?sentence=Mary+admired+the+painting&amp;require_coq=1&amp;download=1",
+        "/api/construction-rule-draft?sentence=Mary+admired+the+painting+yesterday&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -1527,6 +1527,110 @@ def validate_analyze_active_argument_omission_success(
     require_text_fragments(page, expected_page_fragments, "active omission HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: active omission page input drift")
+
+
+def validate_analyze_plain_transitive_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_plain_transitive_success"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "plain_transitive_predication",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "plain_transitive_predication",
+        "registered_construction",
+        "construction_rule",
+        "plain_transitive_predication",
+    )
+    if payload.get("kind") != "plain_transitive_predication":
+        raise SystemExit("web route smoke check failed: plain transitive kind drift")
+    if payload.get("dependent_type_translation") != "admire(0)(mary, painting)":
+        raise SystemExit("web route smoke check failed: plain transitive translation drift")
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit("web route smoke check failed: plain transitive exposes fallback draft")
+    ast = payload.get("ast")
+    role_frame = ast.get("role_frame", {}).get("roles") if isinstance(ast, dict) else None
+    if (
+        not isinstance(ast, dict)
+        or ast.get("kind") != "application"
+        or ast.get("function") != "admire"
+        or ast.get("arguments") != ["mary", "painting"]
+        or ast.get("modifiers") != []
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 2
+        or role_frame[0].get("role") != "Agent"
+        or role_frame[0].get("type") != "Entity"
+        or role_frame[0].get("source") != "explicit"
+        or role_frame[1].get("role") != "Theme"
+        or role_frame[1].get("type") != "Entity"
+        or role_frame[1].get("source") != "explicit"
+    ):
+        raise SystemExit("web route smoke check failed: plain transitive AST drift")
+    event_semantics = payload.get("event_semantics")
+    typed_predication = (
+        event_semantics.get("plain_transitive_predication")
+        if isinstance(event_semantics, dict)
+        else None
+    )
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis") != "plain-transitive-predication"
+        or not isinstance(typed_predication, dict)
+        or typed_predication.get("predicate") != "admire"
+        or typed_predication.get("agent") != "mary"
+        or typed_predication.get("theme") != "painting"
+        or typed_predication.get("theme_type") != "Entity"
+    ):
+        raise SystemExit("web route smoke check failed: plain transitive analysis drift")
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: plain transitive hygiene drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: plain transitive reading count drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "plain_transitive_predication_single_reading",
+            "scope": "explicit_agent_theme",
+            "source": "plain_transitive_predication",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Parameter admire : forall n : nat" not in coq_code
+        or "Definition example_1" not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: plain transitive Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>plain_transitive_predication</dd>",
+        'data-reading-name="plain_transitive_predication_single_reading"',
+        "<dt>source</dt><dd>plain_transitive_predication</dd>",
+        "<dt>scope</dt><dd>explicit_agent_theme</dd>",
+        "admire(0)(mary, painting)",
+        "Translation succeeded via construction rule plain_transitive_predication.",
+    ]
+    require_text_fragments(page, expected_page_fragments, "plain transitive HTML")
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: plain transitive page input drift")
 
 
 def validate_analyze_locative_intransitive_success(
@@ -3227,7 +3331,20 @@ def run_web_route_smoke_check() -> None:
             locative_page,
             locative_sentence,
         )
-        fallback_sentence = "Mary admired the painting"
+        plain_transitive_sentence = "Mary admired the painting"
+        plain_transitive_query = urlencode(
+            {"sentence": plain_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(f"{base_url}/api/analyze?{plain_transitive_query}", timeout=5) as response:
+            plain_transitive_payload = json.load(response)
+        with opener.open(f"{base_url}/?{plain_transitive_query}", timeout=5) as response:
+            plain_transitive_page = response.read().decode("utf-8")
+        validate_analyze_plain_transitive_success(
+            plain_transitive_payload,
+            plain_transitive_page,
+            plain_transitive_sentence,
+        )
+        fallback_sentence = "Mary admired the painting yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
@@ -3249,7 +3366,7 @@ def run_web_route_smoke_check() -> None:
             or draft_payload.get("ok") is not True
             or draft_payload.get("draft_schema_version") != "construction_rule_draft.v1"
             or not isinstance(draft, dict)
-            or draft.get("candidate_rule_id") != "fallback_admire_application_candidate"
+            or draft.get("candidate_rule_id") != "fallback_time_time_candidate"
         ):
             raise SystemExit("web route smoke check failed: rule draft API drift")
         draft_download_query = urlencode(
@@ -3264,7 +3381,7 @@ def run_web_route_smoke_check() -> None:
             timeout=5,
         ) as response:
             disposition = response.headers.get("Content-Disposition", "")
-            if "construction_rule_draft__fallback_admire_application_candidate.json" not in disposition:
+            if "construction_rule_draft__fallback_time_time_candidate.json" not in disposition:
                 raise SystemExit("web route smoke check failed: rule draft download drift")
             draft_download_payload = json.load(response)
         if draft_download_payload != draft_payload:

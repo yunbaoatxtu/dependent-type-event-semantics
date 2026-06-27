@@ -68,6 +68,9 @@ generated Coq code with an optional Coq/Rocq boundary check. A registered
 active argument-omission construction now covers `John ate` as
 `Sigma x_theme : Food. eat(0)(John, x_theme)`, with the omitted Theme represented
 as a typed Sigma witness rather than an event role predicate. A registered
+plain-transitive construction covers `Mary admired the painting` as
+`admire(0)(mary, painting)`, with explicit Agent and Theme arguments kept in a
+typed binary predicate rather than exported as role predicates. A registered
 locative-intransitive construction also covers `a cat sits on a mat` as
 `sit(1)(on(mat), cat)`, with `on(mat)` exported as an `Adv` value rather than an
 entity. For still-unregistered sentences, the fallback analysis is
@@ -1012,15 +1015,18 @@ requiring the same construction to expose
 same smoke check now also requests the registered active argument-omission route
 `/api/analyze?sentence=John+ate&require_coq=1`, requiring both surfaces to expose
 `active_argument_omission_single_reading`, the `omitted_existential_theme` scope,
+and no construction-rule draft. It then requests the registered plain-transitive
+route `/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring
+`plain_transitive_predication_single_reading`, the `explicit_agent_theme` scope,
 and no construction-rule draft. It then requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring both
-surfaces to expose the same `fallback_single_reading` row and construction-rule
-draft before the diagnostic fixture sweep begins.
+`/api/analyze?sentence=Mary+admired+the+painting+yesterday&require_coq=1`,
+requiring both surfaces to expose the same `fallback_single_reading` row and
+construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
 two quantifier-scope readings, `some_boy_wide_scope` and

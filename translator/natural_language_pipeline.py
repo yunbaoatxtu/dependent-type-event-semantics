@@ -127,6 +127,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "lexical_state_change": "the door opened",
     "stative_result_state": "the vase is broken",
     "active_argument_omission": "John ate",
+    "plain_transitive_predication": "Mary admired the painting",
     "passive_argument_omission": "the toast was buttered",
     "copular_property": "Mary is happy",
     "do_support_negation": "John did not walk",
@@ -142,7 +143,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary admired the painting",
+        "sentence": "Mary admired the painting yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -332,6 +333,19 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_reading_names": ["active_argument_omission_single_reading"],
         "expected_reading_sources": ["active_argument_omission"],
         "expected_reading_scopes": ["omitted_existential_theme"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
+        "rule_id": "plain_transitive_predication",
+        "sentence": "Mary admired the painting",
+        "expected_event_analysis": "plain-transitive-predication",
+        "expected_dependent_type_fragments": [
+            "admire(0)(mary, painting)",
+        ],
+        "expected_reading_names": ["plain_transitive_predication_single_reading"],
+        "expected_reading_sources": ["plain_transitive_predication"],
+        "expected_reading_scopes": ["explicit_agent_theme"],
         "expected_coq_definitions": ["example_1"],
         "expected_type_check_type": "t",
     },
@@ -581,6 +595,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "entity_symbols": ["John"],
         "state_symbols": [],
         "binder_signatures": ["x_theme:Food"],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "plain_transitive_predication": {
+        "kind": "application",
+        "predicate_symbols": ["admire"],
+        "predicate_types": [],
+        "entity_symbols": ["mary", "painting"],
+        "state_symbols": [],
+        "binder_signatures": [],
         "quantifier_signatures": [],
         "top_level_modifier_count": 0,
         "top_level_time_modifier_count": 0,
@@ -10797,6 +10826,90 @@ def active_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
 
+def plain_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or ast.get("kind") != "application":
+        return None
+    if ast.get("adverb_count") != 0 or ast.get("modifiers") != []:
+        return None
+    if ast.get("modifier_vector", {}).get("length") != 0:
+        return None
+    if ast.get("modifier_roles", {}).get("roles") != []:
+        return None
+    if translation.get("omitted_arguments"):
+        return None
+    arguments = ast.get("arguments")
+    role_frame = ast.get("role_frame", {}).get("roles")
+    if (
+        not isinstance(arguments, list)
+        or len(arguments) != 2
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 2
+    ):
+        return None
+    agent_role = role_frame[0]
+    theme_role = role_frame[1]
+    if (
+        not isinstance(agent_role, dict)
+        or agent_role.get("role") != "Agent"
+        or agent_role.get("value") != arguments[0]
+        or agent_role.get("type") != "Entity"
+        or agent_role.get("source") != "explicit"
+        or not isinstance(theme_role, dict)
+        or theme_role.get("role") != "Theme"
+        or theme_role.get("value") != arguments[1]
+        or not isinstance(theme_role.get("type"), str)
+        or not theme_role.get("type")
+        or theme_role.get("source") != "explicit"
+    ):
+        return None
+
+    predicate = str(ast.get("function", "predicate"))
+    theme_type = str(theme_role["type"])
+    coq_code = export_module([translation], "coq")
+    return attach_single_semantic_reading(
+        {
+            "kind": "plain_transitive_predication",
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": "plain-transitive-predication",
+                "plain_transitive_predication": {
+                    "predicate": predicate,
+                    "agent": arguments[0],
+                    "agent_type": "Entity",
+                    "theme": arguments[1],
+                    "theme_type": theme_type,
+                    "representation": (
+                        "typed binary predicate over explicit Agent and Theme "
+                        "arguments"
+                    ),
+                },
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Plain transitive predication: {predicate} is applied to an "
+                f"explicit Entity Agent and explicit {theme_type} Theme as a "
+                "typed binary predicate, without exporting Event, Agent, or "
+                "Theme predicates."
+            ),
+            "coq_code": coq_code,
+        },
+        name="plain_transitive_predication_single_reading",
+        coq_definition="example_1",
+        source="plain_transitive_predication",
+        scope="explicit_agent_theme",
+    )
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -11417,6 +11530,18 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Theme :",
             ),
         ),
+        ConstructionRule(
+            rule_id="plain_transitive_predication",
+            label="Plain transitive predication",
+            phenomenon="Explicit Agent/Theme predication as a typed binary predicate",
+            analyzer=plain_transitive_predication_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
     ]
 
 
@@ -11485,7 +11610,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
         "fallback": {
             "verification_scope_kind": "fallback_shallow",
             "certification_level": "shallow_scaffold",
-            "example": "Mary admired the painting",
+            "example": "Mary admired the painting yesterday",
             "guarantees": [
                 "fallback AST/type_check and semantic_readings contract are checked",
                 "generated Coq/Rocq scaffold is checked when requested and available",
