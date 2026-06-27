@@ -175,7 +175,10 @@ inputs. Each witness also includes `expected_event_analysis`,
 `expected_ast_kind`, and `expected_dependent_type_fragments`, while the page
 mirrors the analysis, AST kind, and fragment count through stable attributes.
 Thus a witness is not merely an example sentence: it is a compact semantic
-contract for what that surface sentence must produce.
+contract for what that surface sentence must produce. During the project smoke
+check, every surface witness is rerun through the live analyzer and compared
+against that contract, so parser-boundary drift is caught at the same level as
+ordinary registered-construction drift.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

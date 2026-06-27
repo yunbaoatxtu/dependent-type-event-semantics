@@ -3090,6 +3090,45 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             or not isinstance(item.get("boundary_status"), str)
         ):
             raise SystemExit("web route smoke check failed: certified surface parser witness drift")
+        expected_fragments = item.get("expected_dependent_type_fragments")
+        if (
+            not isinstance(expected_fragments, list)
+            or not expected_fragments
+            or not all(
+                isinstance(fragment, str) and fragment
+                for fragment in expected_fragments
+            )
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser witness fragment schema drift"
+            )
+        witness_result = run_pipeline(str(item.get("sentence", "")), require_coq=False)
+        if not witness_result.get("ok"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser witness no longer runs"
+            )
+        if witness_result.get("construction_rule", {}).get("id") != item.get("rule_id"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser witness rule drift"
+            )
+        if witness_result.get("event_semantics", {}).get("analysis") != item.get(
+            "expected_event_analysis",
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser witness live analysis drift"
+            )
+        if witness_result.get("ast", {}).get("kind") != item.get("expected_ast_kind"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser witness live AST drift"
+            )
+        witness_translation = str(
+            witness_result.get("dependent_type_translation", ""),
+        )
+        for fragment in expected_fragments:
+            if fragment not in witness_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified surface parser witness live translation drift"
+                )
     registered_case_by_id = {
         item.get("rule_id"): item
         for item in registered_cases

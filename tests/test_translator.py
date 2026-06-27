@@ -9400,6 +9400,18 @@ class TranslatorTests(unittest.TestCase):
                 "near(window), beside(shelf), under(lamp), mary, painting))",
             ],
         )
+        for witness in surface_parser_coverage["verified_examples"]:
+            with self.subTest(surface_witness=witness["variant_id"]):
+                result = run_pipeline(witness["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["construction_rule"]["id"], witness["rule_id"])
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    witness["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], witness["expected_ast_kind"])
+                for fragment in witness["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
             "fallback_shallow",
@@ -15091,6 +15103,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("ast_structure_summary", verifier)
         self.assertIn("semantic snapshot analysis drift", verifier)
         self.assertIn("semantic snapshot AST drift", verifier)
+        self.assertIn("surface parser witness no longer runs", verifier)
+        self.assertIn("surface parser witness live analysis drift", verifier)
+        self.assertIn("surface parser witness live AST drift", verifier)
+        self.assertIn("surface parser witness live translation drift", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)
