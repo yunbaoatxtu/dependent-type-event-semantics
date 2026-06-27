@@ -853,7 +853,9 @@ composition examples such as `John knocked twice yesterday` under
 `triple_adv_modified_transitive_predication`, and
 `temporal_triple_adv_modified_transitive_predication`,
 `quad_adv_modified_transitive_predication`, and
-`temporal_quad_adv_modified_transitive_predication`; fallback cases remain
+`temporal_quad_adv_modified_transitive_predication`,
+`quint_adv_modified_transitive_predication`, and
+`temporal_quint_adv_modified_transitive_predication`; fallback cases remain
 explicitly shallow, and rejected cases record the marker that must stop the
 pipeline before fallback.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
@@ -1059,14 +1061,19 @@ with the same sequence scope under `at_T`. It also checks the four-Adv sequence
 `/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window+beside+a+shelf&require_coq=1`
 as `admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary, painting)`,
 requiring `Parameter beside_shelf : Adv.` together with the earlier Adv
-declarations. Its timed variant remains registered under `at_T`. It then
+declarations. Its timed variant remains registered under `at_T`. It also checks
+the five-Adv sequence
+`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window+beside+a+shelf+under+a+lamp&require_coq=1`
+as `admire(5)(in(gallery), with(telescope), near(window), beside(shelf), under(lamp), mary, painting)`,
+requiring `Parameter under_lamp : Adv.` and no `Parameter under_lamp : Entity.`;
+the timed five-Adv variant remains registered under `at_T`. It then
 requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting+in+the+gallery+with+a+telescope+near+a+window+beside+a+shelf+under+a+lamp+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+admired+the+painting+red+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row and
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests

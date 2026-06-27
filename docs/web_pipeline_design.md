@@ -149,9 +149,12 @@ uses `data-coverage-marker`. Current registered variants include
 `triple_adv_modified_transitive_predication`, and
 `temporal_triple_adv_modified_transitive_predication`,
 `quad_adv_modified_transitive_predication`, and
-`temporal_quad_adv_modified_transitive_predication`, so the manifest records
-the two-, three-, and four-Adv Luo-Shi modifier routes separately from the
-residual fallback path.
+`temporal_quad_adv_modified_transitive_predication`,
+`quint_adv_modified_transitive_predication`, and
+`temporal_quint_adv_modified_transitive_predication`, so the manifest records
+two-, three-, four-, and five-Adv Luo-Shi modifier routes as witnesses of the
+non-empty `ModifierSeq` rule rather than treating modifier count as a fallback
+boundary.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,
@@ -504,16 +507,19 @@ The four-Adv sequence `Mary admired the painting in the gallery with a telescope
 near a window beside a shelf` is also checked as registered, with
 `beside_shelf : Adv` and
 `admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary,
-painting)`.
+painting)`. The former five-Adv fallback boundary is now checked as the same
+registered construction: `Mary admired the painting in the gallery with a
+telescope near a window beside a shelf under a lamp yesterday` renders
+`at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window),
+beside(shelf), under(lamp), mary, painting))` with `under_lamp : Adv`.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
-must declare `on_mat : Adv`, not `on_mat : Entity`. `Mary admired the painting
-in the gallery with a telescope near a window beside a shelf under a lamp
-yesterday` remains
-the ordinary fallback success with `fallback_single_reading` and a downloadable
-construction-rule draft. This keeps promoted constructions and the remaining fallback success
-contract from drifting apart.
+must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
+success contract is instead exercised with `Mary admired the painting red
+yesterday`, a shallow timed resultative scaffold with `fallback_single_reading`
+and a downloadable construction-rule draft. This keeps promoted constructions
+and the remaining fallback success contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
@@ -656,8 +662,8 @@ predicate arguments; construction hygiene rejects exported `Event`, `Agent`, or
 `at_T(yesterday, admire(0)(mary, painting))` with
 `explicit_agent_theme_at_time`, rather than being exported as a fallback draft.
 
-The modified transitive slice now covers one, two, three, or four predicate-level Adv modifiers
-on the same explicit Agent/Theme frame. For example, `Mary admired the painting in
+The modified transitive slice now covers non-empty predicate-level `ModifierSeq`
+values on the same explicit Agent/Theme frame. For example, `Mary admired the painting in
 the gallery` translates to `admire(1)(in(gallery), mary, painting)` under the
 registered `modified_transitive_predication` rule. The modifier is checked
 through the `ModifierSeq` family and exported as `in_gallery : Adv`, not as an
@@ -667,16 +673,20 @@ is checked as `at_T(yesterday, admire(1)(in(gallery), mary, painting))` with
 ordered sequence `in(gallery), with(telescope)` and renders `Mary admired the
 painting in the gallery with a telescope` as
 `admire(2)(in(gallery), with(telescope), mary, painting)`, with the two modifier
-roles audited as Location and Instrument and exported as Adv constants. In the
-same bounded registered slice, `Mary admired the painting in the gallery with a
+roles audited as Location and Instrument and exported as Adv constants. The
+same non-empty `ModifierSeq` rule covers longer sequences: `Mary admired the painting in the gallery with a
 telescope near a window` is checked as
 `admire(3)(in(gallery), with(telescope), near(window), mary, painting)`, with
-`near_window : Adv` and a Location audit for the third modifier. The next
-bounded increment covers `Mary admired the painting in the gallery with a
+`near_window : Adv` and a Location audit for the third modifier. It also covers
+`Mary admired the painting in the gallery with a
 telescope near a window beside a shelf` as
 `admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary,
 painting)`, with `beside_shelf : Adv` and a Location audit for the fourth
-modifier.
+modifier, and the five-Adv timed sequence
+`Mary admired the painting in the gallery with a telescope near a window beside
+a shelf under a lamp yesterday` is checked as
+`at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window),
+beside(shelf), under(lamp), mary, painting))`, with `under_lamp : Adv`.
 
 The locative intransitive slice has also been promoted out of ordinary fallback.
 For example, `a cat sits on a mat` becomes an event-semantics formula with
@@ -687,12 +697,10 @@ an `Adv` item, not as an entity, and construction hygiene rejects an
 `on_mat : Entity` declaration.
 
 Other simple English sentences are still handled by the fallback parser. For
-example, `Mary admired the painting in the gallery with a telescope near a
-window beside a shelf under a lamp yesterday` remains a shallow timed ordinary
-predication scaffold,
-`at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window),
-beside(shelf), under(lamp), mary, painting))`, with a construction-rule draft
-rather than construction-level certification.
+example, `Mary admired the painting red yesterday` remains a shallow timed
+resultative scaffold,
+`at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))`, with
+a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as
