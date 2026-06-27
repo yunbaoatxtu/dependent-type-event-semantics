@@ -1421,7 +1421,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         (
             "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
             "in+the+gallery+with+a+telescope+near+a+window+beside+a+shelf+"
-            "yesterday&amp;"
+            "under+a+lamp+yesterday&amp;"
             "require_coq=1&amp;download=1"
         ),
     ]
@@ -1682,6 +1682,9 @@ def validate_analyze_modified_transitive_success(
     if "near a window" in sentence:
         expected_modifiers.append("near(window)")
         expected_modifier_roles.append("Location")
+    if "beside a shelf" in sentence:
+        expected_modifiers.append("beside(shelf)")
+        expected_modifier_roles.append("Location")
     expected_inner_translation = (
         f"admire({len(expected_modifiers)})"
         f"({', '.join(expected_modifiers)}, mary, painting)"
@@ -1829,6 +1832,11 @@ def validate_analyze_modified_transitive_success(
             and "Parameter near_window : Adv." not in coq_code
         )
         or "Parameter near_window : Entity." in coq_code
+        or (
+            "beside(shelf)" in expected_modifiers
+            and "Parameter beside_shelf : Adv." not in coq_code
+        )
+        or "Parameter beside_shelf : Entity." in coq_code
         or "Definition example_1" not in coq_code
         or "Parameter Event : Type." in coq_code
         or "Parameter Agent :" in coq_code
@@ -1847,6 +1855,7 @@ def validate_analyze_modified_transitive_success(
         "Parameter in_gallery : Adv.",
         *(["Parameter with_telescope : Adv."] if "with(telescope)" in expected_modifiers else []),
         *(["Parameter near_window : Adv."] if "near(window)" in expected_modifiers else []),
+        *(["Parameter beside_shelf : Adv."] if "beside(shelf)" in expected_modifiers else []),
         "Translation succeeded via construction rule modified_transitive_predication.",
     ]
     require_text_fragments(page, expected_page_fragments, "modified transitive HTML")
@@ -3706,8 +3715,50 @@ def run_web_route_smoke_check() -> None:
             timed_triple_modified_transitive_page,
             timed_triple_modified_transitive_sentence,
         )
-        fallback_sentence = (
+        quad_modified_transitive_sentence = (
+            "Mary admired the painting in the gallery with a telescope near a window beside a shelf"
+        )
+        quad_modified_transitive_query = urlencode(
+            {"sentence": quad_modified_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{quad_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            quad_modified_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{quad_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            quad_modified_transitive_page = response.read().decode("utf-8")
+        validate_analyze_modified_transitive_success(
+            quad_modified_transitive_payload,
+            quad_modified_transitive_page,
+            quad_modified_transitive_sentence,
+        )
+        timed_quad_modified_transitive_sentence = (
             "Mary admired the painting in the gallery with a telescope near a window beside a shelf yesterday"
+        )
+        timed_quad_modified_transitive_query = urlencode(
+            {"sentence": timed_quad_modified_transitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_quad_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_quad_modified_transitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_quad_modified_transitive_query}",
+            timeout=5,
+        ) as response:
+            timed_quad_modified_transitive_page = response.read().decode("utf-8")
+        validate_analyze_modified_transitive_success(
+            timed_quad_modified_transitive_payload,
+            timed_quad_modified_transitive_page,
+            timed_quad_modified_transitive_sentence,
+        )
+        fallback_sentence = (
+            "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp yesterday"
         )
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:

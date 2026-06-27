@@ -147,9 +147,11 @@ uses `data-coverage-marker`. Current registered variants include
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
 `triple_adv_modified_transitive_predication`, and
-`temporal_triple_adv_modified_transitive_predication`, so the manifest records
-the two- and three-Adv Luo-Shi modifier routes separately from the residual
-fallback path.
+`temporal_triple_adv_modified_transitive_predication`,
+`quad_adv_modified_transitive_predication`, and
+`temporal_quad_adv_modified_transitive_predication`, so the manifest records
+the two-, three-, and four-Adv Luo-Shi modifier routes separately from the
+residual fallback path.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,
@@ -498,11 +500,17 @@ variant stays registered as
 `Mary admired the painting in the gallery with a telescope near a window` is
 checked with `near_window : Adv` alongside the earlier Adv declarations, and
 renders `admire(3)(in(gallery), with(telescope), near(window), mary, painting)`.
+The four-Adv sequence `Mary admired the painting in the gallery with a telescope
+near a window beside a shelf` is also checked as registered, with
+`beside_shelf : Adv` and
+`admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary,
+painting)`.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. `Mary admired the painting
-in the gallery with a telescope near a window beside a shelf yesterday` remains
+in the gallery with a telescope near a window beside a shelf under a lamp
+yesterday` remains
 the ordinary fallback success with `fallback_single_reading` and a downloadable
 construction-rule draft. This keeps promoted constructions and the remaining fallback success
 contract from drifting apart.
@@ -648,7 +656,7 @@ predicate arguments; construction hygiene rejects exported `Event`, `Agent`, or
 `at_T(yesterday, admire(0)(mary, painting))` with
 `explicit_agent_theme_at_time`, rather than being exported as a fallback draft.
 
-The modified transitive slice now covers one, two, or three predicate-level Adv modifiers
+The modified transitive slice now covers one, two, three, or four predicate-level Adv modifiers
 on the same explicit Agent/Theme frame. For example, `Mary admired the painting in
 the gallery` translates to `admire(1)(in(gallery), mary, painting)` under the
 registered `modified_transitive_predication` rule. The modifier is checked
@@ -663,7 +671,12 @@ roles audited as Location and Instrument and exported as Adv constants. In the
 same bounded registered slice, `Mary admired the painting in the gallery with a
 telescope near a window` is checked as
 `admire(3)(in(gallery), with(telescope), near(window), mary, painting)`, with
-`near_window : Adv` and a Location audit for the third modifier.
+`near_window : Adv` and a Location audit for the third modifier. The next
+bounded increment covers `Mary admired the painting in the gallery with a
+telescope near a window beside a shelf` as
+`admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary,
+painting)`, with `beside_shelf : Adv` and a Location audit for the fourth
+modifier.
 
 The locative intransitive slice has also been promoted out of ordinary fallback.
 For example, `a cat sits on a mat` becomes an event-semantics formula with
@@ -675,11 +688,11 @@ an `Adv` item, not as an entity, and construction hygiene rejects an
 
 Other simple English sentences are still handled by the fallback parser. For
 example, `Mary admired the painting in the gallery with a telescope near a
-window beside a shelf yesterday` remains a shallow timed ordinary predication
-scaffold,
-`at_T(yesterday, admire(4)(in(gallery), with(telescope), near(window),
-beside(shelf), mary, painting))`, with a construction-rule draft rather than
-construction-level certification.
+window beside a shelf under a lamp yesterday` remains a shallow timed ordinary
+predication scaffold,
+`at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window),
+beside(shelf), under(lamp), mary, painting))`, with a construction-rule draft
+rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as
