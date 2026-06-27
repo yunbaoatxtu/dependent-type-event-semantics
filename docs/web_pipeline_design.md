@@ -428,6 +428,10 @@ Each rendered action must expose `data-action-kind`, `data-action-index`,
 pointer, and a `next-step--<kind>` CSS class so later UI controls and browser
 tests have stable hooks. When an action carries target metadata, the panel
 should display it in a compact `next-step-details` table. Diagnostic fixture
+pages are not the only typed failure surface: ordinary failed `/api/analyze`
+responses should also carry `surface_type_contract_diagnostics`, and the HTML
+page should render a `Surface Type Contract Diagnostics` panel with stable
+`data-surface-type-contract-*` hooks. Diagnostic fixture
 pages should also expose each action through
 `/api/recovery-action?case=<case>&index=<n>`, returning a
 `diagnostic_recovery_action.v1` object with the case, action index, failure

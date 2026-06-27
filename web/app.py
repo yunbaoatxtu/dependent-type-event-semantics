@@ -1311,6 +1311,10 @@ def add_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     enriched = {**result}
     enriched.setdefault("schema_version", ANALYZE_RESPONSE_SCHEMA)
     enriched.setdefault("result_state_lexicon", [])
+    if not enriched.get("ok") and "surface_type_contract_diagnostics" not in enriched:
+        enriched["surface_type_contract_diagnostics"] = (
+            surface_type_contract_diagnostics_context()
+        )
     enriched["modifier_role_audit"] = modifier_role_audit(enriched.get("ast", {}))
     enriched["diagnostics"] = build_diagnostics(enriched)
     enriched["lexicon_patch_drafts"] = lexicon_patch_drafts(enriched)
@@ -1390,6 +1394,36 @@ def status_detail(result: dict[str, Any]) -> str:
     if conclusion:
         return f"{conclusion} Failure stage: {label}.{suffix}"
     return f"Failure stage: {label}.{suffix}"
+
+
+def surface_type_contract_diagnostics_panel(result: dict[str, Any]) -> str:
+    context = result.get("surface_type_contract_diagnostics")
+    if not isinstance(context, dict):
+        return ""
+    categories = surface_type_contract_diagnostic_category_text(context)
+    schema = str(context.get("schema_version", ""))
+    registry_id = str(context.get("registry_id", ""))
+    source = str(context.get("source", ""))
+    ok = str(context.get("ok", "")).lower()
+    error_count = str(context.get("error_count", ""))
+    category_count = str(context.get("category_count", ""))
+    return (
+        '<section class="panel surface-type-contract-diagnostics-panel" '
+        f'data-surface-type-contract-diagnostic-schema="{html.escape(schema, quote=True)}" '
+        f'data-surface-type-contract-diagnostic-count="{html.escape(category_count, quote=True)}" '
+        f'data-surface-type-contract-diagnostic-categories="{html.escape(categories, quote=True)}" '
+        f'data-surface-type-contract-registry-id="{html.escape(registry_id, quote=True)}">'
+        "<h2>Surface Type Contract Diagnostics</h2>"
+        '<dl class="surface-type-contract-diagnostics">'
+        f"<dt>schema</dt><dd><code>{html.escape(schema)}</code></dd>"
+        f"<dt>registry</dt><dd><code>{html.escape(registry_id)}</code></dd>"
+        f"<dt>source</dt><dd><code>{html.escape(source)}</code></dd>"
+        f"<dt>ok</dt><dd><code>{html.escape(ok)}</code></dd>"
+        f"<dt>errors</dt><dd><code>{html.escape(error_count)}</code></dd>"
+        f"<dt>categories</dt><dd><code>{html.escape(categories)}</code></dd>"
+        "</dl>"
+        "</section>"
+    )
 
 
 def construction_rule_summary(result: dict[str, Any]) -> str:
@@ -3798,6 +3832,7 @@ def render_page(
       {panel("Dependent-Type Translation", dependent)}
       {result_state_lexicon_panel(result)}
       {panel("Diagnostics", diagnostics)}
+      {surface_type_contract_diagnostics_panel(result)}
       {panel("API Contract", api_contract)}
       {verification_scope_panel(result)}
       {certification_upgrade_plan_panel(result)}

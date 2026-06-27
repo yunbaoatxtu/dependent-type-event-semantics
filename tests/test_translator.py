@@ -31,6 +31,7 @@ from scripts.verify_project import (
     validate_diagnostic_fixture_routes,
     validate_json_download_http_response,
     validate_recovery_action_export_bundle,
+    validate_analyze_failure_surface_type_contract,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
 )
@@ -10904,6 +10905,10 @@ class TranslatorTests(unittest.TestCase):
         result = analyze_sentence("  ")
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
+        self.assertEqual(
+            result["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
         self.assertEqual(result["diagnostics"]["failure_stage"], "input")
         self.assertEqual(result["diagnostics"]["recovery_hint"], "Enter a non-empty sentence.")
@@ -10917,6 +10922,10 @@ class TranslatorTests(unittest.TestCase):
         result = analyze_sentence("John")
         self.assertFalse(result["ok"])
         self.assertIn("at least a subject and a predicate", result["error"])
+        self.assertEqual(
+            result["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
         self.assertEqual(result["verification_scope"]["kind"], "unverified_failure")
         self.assertEqual(result["verification_scope"]["certification_level"], "none")
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
@@ -11066,6 +11075,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["diagnostics"]["manual_repair_required"])
         self.assertEqual(result["diagnostics"]["lexicon_patch_draft_count"], 0)
         self.assertEqual(result["lexicon_patch_drafts"], [])
+        self.assertNotIn("surface_type_contract_diagnostics", result)
 
     def test_api_analyze_response_exposes_fallback_semantic_reading_contract(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -12382,6 +12392,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertFalse(result["ok"])
         self.assertIn("Please enter a sentence", result["error"])
+        self.assertEqual(
+            result["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
         self.assertEqual(result["verification_scope"]["kind"], "unverified_failure")
         self.assertEqual(result["verification_scope"]["certification_level"], "none")
         self.assertEqual(result["diagnostics"]["summary"], "translation failed")
@@ -13881,11 +13895,28 @@ class TranslatorTests(unittest.TestCase):
             result["type_check"]["errors"],
         )
         self.assertEqual(result["diagnostics"]["failure_stage"], "type_check")
+        self.assertEqual(
+            result["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
         self.assertEqual(result["coq_check"]["status"], "skipped")
 
         page = render_page("the plant killed", require_coq=True)
         self.assertIn("Needs attention", page)
         self.assertIn("Failure stage: dependent-type checking.", page)
+        self.assertIn("Surface Type Contract Diagnostics", page)
+        self.assertIn(
+            'data-surface-type-contract-diagnostic-schema="surface_type_contract_diagnostic.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-type-contract-diagnostic-categories="registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
+            page,
+        )
         self.assertIn("Type Check", page)
         self.assertIn("state-change verb does not license the inchoative frame", page)
         self.assertNotIn("No registered construction rule matched", page)
@@ -14213,6 +14244,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("direct counterexample tests", readme)
         self.assertIn("`diagnostic_recovery_action.v1`", readme)
         self.assertIn("`Recovery Action Exports` panel", readme)
+        self.assertIn("Ordinary failed `/api/analyze` responses", readme)
+        self.assertIn("`surface_type_contract_diagnostics` object", readme)
+        self.assertIn("`Surface Type Contract Diagnostics` panel", readme)
+        self.assertIn("`data-surface-type-contract-*` hooks", readme)
         self.assertIn("schema, case, index, action kind, and", readme)
         self.assertIn("expandable `Action JSON`", readme)
         self.assertIn("API bundle exactly", readme)
@@ -14467,6 +14502,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/recovery-action?case=<case>&index=<n>", web_design)
         self.assertIn("`diagnostic_recovery_action.v1`", web_design)
         self.assertIn("`Recovery Action Exports` panel", web_design)
+        self.assertIn(
+            "ordinary failed `/api/analyze`\nresponses should also carry",
+            web_design,
+        )
+        self.assertIn("`surface_type_contract_diagnostics`", web_design)
+        self.assertIn("`Surface Type Contract Diagnostics` panel", web_design)
+        self.assertIn("`data-surface-type-contract-*` hooks", web_design)
         self.assertIn("`data-export-action-kind`", web_design)
         self.assertIn("`Action JSON` preview", web_design)
         self.assertIn("match that JSON", web_design)
@@ -14617,6 +14659,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Certified Fragment panel", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 payload", manuscript)
         self.assertIn("Recovery Action Exports panel", manuscript)
+        self.assertIn(
+            "Ordinary failed /api/analyze responses now also carry "
+            "surface_type_contract_diagnostics",
+            manuscript,
+        )
+        self.assertIn("Surface Type Contract Diagnostics panel", manuscript)
         self.assertIn("stale action-export panels", manuscript)
         self.assertIn("expandable Action JSON preview", manuscript)
         self.assertIn("stale action JSON previews", manuscript)
@@ -15305,6 +15353,32 @@ class TranslatorTests(unittest.TestCase):
             "type_check_failure surface type contract diagnostic drift",
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_analyze_failure_surface_type_contract_drift(
+        self,
+    ) -> None:
+        result = analyze_sentence("the plant killed", require_coq=True)
+        page = render_page("the plant killed", result=result)
+        validate_analyze_failure_surface_type_contract(
+            result,
+            page,
+            "the plant killed",
+            "ordinary type-check failure",
+            "type_check",
+        )
+        stale_result = deepcopy(result)
+        stale_result.pop("surface_type_contract_diagnostics")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary type-check failure surface type contract diagnostic drift",
+        ):
+            validate_analyze_failure_surface_type_contract(
+                stale_result,
+                page,
+                "the plant killed",
+                "ordinary type-check failure",
+                "type_check",
+            )
 
     def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()

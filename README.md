@@ -986,6 +986,13 @@ with `target_definitions`, duplicate names produce `rename_duplicate_readings`,
 malformed records and local type-check failures identify `reading_indices`, and
 registered-rule export-count mismatches produce `normalize_reading_exports`
 with expected and observed counts.
+Ordinary failed `/api/analyze` responses also expose a top-level
+`surface_type_contract_diagnostics` object. This keeps real input failures,
+such as parser failures or dependent-type failures, tied to the same
+`surface_type_contract_diagnostic.v1` category table used by the certified
+surface matrix. The HTML page renders the same context in a
+`Surface Type Contract Diagnostics` panel with stable
+`data-surface-type-contract-*` hooks.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute, a
 `data-action-index` attribute, a `data-action-contract-kind` attribute, a

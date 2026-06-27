@@ -1281,6 +1281,61 @@ def validate_analyze_success_envelope(
     return diagnostics
 
 
+def validate_analyze_failure_surface_type_contract(
+    payload: dict,
+    page: str,
+    sentence: str,
+    label: str,
+    expected_stage: str,
+) -> None:
+    if payload.get("schema_version") != "analyze.v1":
+        raise SystemExit(f"web route smoke check failed: {label} analyze schema drift")
+    if payload.get("ok") is not False:
+        raise SystemExit(f"web route smoke check failed: {label} analyze did not fail")
+    if payload.get("input_sentence") != sentence:
+        raise SystemExit(f"web route smoke check failed: {label} analyze input drift")
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit(f"web route smoke check failed: {label} diagnostics missing")
+    if diagnostics.get("failure_stage") != expected_stage:
+        raise SystemExit(f"web route smoke check failed: {label} diagnostics stage drift")
+    validate_surface_type_contract_diagnostics_context(
+        label,
+        payload.get("surface_type_contract_diagnostics"),
+    )
+    type_contract_context = surface_type_contract_diagnostics_context_preview()
+    type_contract_categories = surface_type_contract_diagnostic_category_text(
+        type_contract_context
+    )
+    require_text_fragments(
+        page,
+        [
+            "Surface Type Contract Diagnostics",
+            (
+                'data-surface-type-contract-diagnostic-schema="'
+                + str(type_contract_context.get("schema_version", ""))
+                + '"'
+            ),
+            (
+                'data-surface-type-contract-diagnostic-count="'
+                + str(type_contract_context.get("category_count", ""))
+                + '"'
+            ),
+            (
+                'data-surface-type-contract-diagnostic-categories="'
+                + html.escape(type_contract_categories, quote=True)
+                + '"'
+            ),
+            (
+                'data-surface-type-contract-registry-id="'
+                + str(type_contract_context.get("registry_id", ""))
+                + '"'
+            ),
+        ],
+        f"{label} surface type contract diagnostics HTML",
+    )
+
+
 def validate_verification_scope(
     payload: dict,
     page: str,
@@ -4896,6 +4951,27 @@ def run_web_route_smoke_check() -> None:
             burning_payload,
             burning_page,
             burning_sentence,
+        )
+        type_failure_sentence = "the plant killed"
+        type_failure_query = urlencode(
+            {"sentence": type_failure_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{type_failure_query}",
+            timeout=5,
+        ) as response:
+            type_failure_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{type_failure_query}",
+            timeout=5,
+        ) as response:
+            type_failure_page = response.read().decode("utf-8")
+        validate_analyze_failure_surface_type_contract(
+            type_failure_payload,
+            type_failure_page,
+            type_failure_sentence,
+            "ordinary type-check failure",
+            "type_check",
         )
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))
