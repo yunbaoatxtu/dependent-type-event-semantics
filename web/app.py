@@ -2462,6 +2462,17 @@ def certified_fragment_panel() -> str:
     surface_verified_example_count = str(
         modified_surface.get("verified_example_count", ""),
     )
+    surface_generation_spec = modified_surface.get("witness_generation_spec")
+    if not isinstance(surface_generation_spec, dict):
+        surface_generation_spec = {}
+    surface_generator_schema = str(surface_generation_spec.get("schema_version", ""))
+    surface_generator_kind = str(surface_generation_spec.get("generator", ""))
+    surface_generator_time_suffix = str(surface_generation_spec.get("time_suffix", ""))
+    surface_generator_modifier_count = str(
+        len(surface_generation_spec.get("modifiers", []))
+        if isinstance(surface_generation_spec.get("modifiers"), list)
+        else "",
+    )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
         examples = item.get("verified_examples")
@@ -2575,7 +2586,9 @@ def certified_fragment_panel() -> str:
             f'data-surface-timed-counts="{html.escape(count_list_attribute(item.get("verified_timed_modifier_counts")), quote=True)}" '
             f'data-surface-untimed-counts="{html.escape(count_list_attribute(item.get("verified_untimed_modifier_counts")), quote=True)}" '
             f'data-surface-max-verified-count="{html.escape(str(item.get("max_verified_modifier_count", "")), quote=True)}" '
-            f'data-surface-verified-example-count="{html.escape(str(item.get("verified_example_count", "")), quote=True)}">'
+            f'data-surface-verified-example-count="{html.escape(str(item.get("verified_example_count", "")), quote=True)}" '
+            f'data-surface-generator-schema="{html.escape(str((item.get("witness_generation_spec") or {}).get("schema_version", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}" '
+            f'data-surface-generator-kind="{html.escape(str((item.get("witness_generation_spec") or {}).get("generator", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}">'
             f'<code>{html.escape(str(family))}</code>'
             f'<span>{html.escape(str(item.get("boundary_note", "")))}</span>'
             f"<ul>{surface_parser_example_items(item)}</ul>"
@@ -2607,6 +2620,10 @@ def certified_fragment_panel() -> str:
         f'data-surface-untimed-counts="{html.escape(surface_untimed_counts, quote=True)}" '
         f'data-surface-max-verified-count="{html.escape(str(modified_surface.get("max_verified_modifier_count", "")), quote=True)}" '
         f'data-surface-verified-example-count="{html.escape(surface_verified_example_count, quote=True)}" '
+        f'data-surface-generator-schema="{html.escape(surface_generator_schema, quote=True)}" '
+        f'data-surface-generator-kind="{html.escape(surface_generator_kind, quote=True)}" '
+        f'data-surface-generator-modifier-count="{html.escape(surface_generator_modifier_count, quote=True)}" '
+        f'data-surface-generator-time-suffix="{html.escape(surface_generator_time_suffix, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -2623,6 +2640,7 @@ def certified_fragment_panel() -> str:
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
         f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
         f"<dt>verified Adv counts</dt><dd><code>{html.escape(surface_verified_counts)}</code></dd>"
+        f"<dt>surface generator</dt><dd><code>{html.escape(surface_generator_kind)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"

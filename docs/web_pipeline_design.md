@@ -181,6 +181,14 @@ against that contract, so parser-boundary drift is caught at the same level as
 ordinary registered-construction drift. Dedicated regression tests patch the
 live analyzer response to simulate no-run, rule, analysis, AST, and translation
 drift for a witness and require the verifier to reject each case explicitly.
+The same surface object now carries `witness_generation_spec`, a compact
+generator contract for the audited prefix of the Adv-sequence family. It names
+the base sentence, ordered modifier surfaces, dependent-type fragments,
+`yesterday` time suffix, variant ids, sources, and translation templates. The
+verifier derives the expected witness list from this spec before checking the
+manifest and the live analyzer, while the HTML panel mirrors the generator
+schema, generator kind, modifier count, and time suffix through stable
+`data-surface-generator-*` attributes.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

@@ -9351,6 +9351,38 @@ class TranslatorTests(unittest.TestCase):
             surface_parser_coverage["verified_untimed_modifier_counts"],
             [1, 2, 3, 4, 5],
         )
+        generation_spec = surface_parser_coverage["witness_generation_spec"]
+        self.assertEqual(
+            generation_spec["schema_version"],
+            "surface_witness_generation.v1",
+        )
+        self.assertEqual(
+            generation_spec["generator"],
+            "modifier_prefix_with_optional_time_suffix",
+        )
+        self.assertEqual(generation_spec["base_surface_sentence"], "Mary admired the painting")
+        self.assertEqual(generation_spec["time_suffix"], "yesterday")
+        self.assertEqual(
+            [
+                modifier["dependent_type_fragment"]
+                for modifier in generation_spec["modifiers"]
+            ],
+            [
+                "in(gallery)",
+                "with(telescope)",
+                "near(window)",
+                "beside(shelf)",
+                "under(lamp)",
+            ],
+        )
+        self.assertEqual(
+            generation_spec["variant_id_by_prefix"]["untimed"]["5"],
+            "quint_adv_modified_transitive_predication",
+        )
+        self.assertEqual(
+            generation_spec["variant_id_by_prefix"]["timed"]["5"],
+            "temporal_quint_adv_modified_transitive_predication",
+        )
         self.assertEqual(surface_parser_coverage["max_verified_modifier_count"], 5)
         self.assertEqual(surface_parser_coverage["verified_example_count"], 10)
         self.assertEqual(len(surface_parser_coverage["verified_examples"]), 10)
@@ -9594,6 +9626,37 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "certified fallback gap drift"):
             validate_certified_fragment_manifest(manifest)
 
+    def test_verification_rejects_surface_parser_generation_spec_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        generation_spec = manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["witness_generation_spec"]
+        drift_cases = [
+            ("time_suffix", "today"),
+            ("modifiers", [*generation_spec["modifiers"][:-1]]),
+            (
+                "variant_id_by_prefix",
+                {
+                    **generation_spec["variant_id_by_prefix"],
+                    "timed": {
+                        **generation_spec["variant_id_by_prefix"]["timed"],
+                        "5": "stale_temporal_variant",
+                    },
+                },
+            ),
+        ]
+        for key, stale_value in drift_cases:
+            with self.subTest(generation_spec_key=key):
+                stale_manifest = deepcopy(manifest)
+                stale_manifest["surface_parser_coverage"][
+                    "modified_transitive_adv_sequence"
+                ]["witness_generation_spec"][key] = stale_value
+                with self.assertRaisesRegex(
+                    SystemExit,
+                    "surface parser generation spec drift",
+                ):
+                    validate_certified_fragment_manifest(stale_manifest)
+
     def test_verification_rejects_surface_parser_witness_live_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         witness = manifest["surface_parser_coverage"][
@@ -9741,6 +9804,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-surface-untimed-counts="1,2,3,4,5"', page)
         self.assertIn('data-surface-max-verified-count="5"', page)
         self.assertIn('data-surface-verified-example-count="10"', page)
+        self.assertIn(
+            'data-surface-generator-schema="surface_witness_generation.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-generator-kind="modifier_prefix_with_optional_time_suffix"',
+            page,
+        )
+        self.assertIn('data-surface-generator-modifier-count="5"', page)
+        self.assertIn('data-surface-generator-time-suffix="yesterday"', page)
         self.assertIn(
             'data-surface-example-variant-id="primary_modified_transitive_predication"',
             page,
@@ -15156,6 +15229,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser witness live analysis drift", verifier)
         self.assertIn("surface parser witness live AST drift", verifier)
         self.assertIn("surface parser witness live translation drift", verifier)
+        self.assertIn("expected_modified_surface_witness_meta_from_spec", verifier)
+        self.assertIn("surface parser generation spec drift", verifier)
+        self.assertIn("surface_witness_generation.v1", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)

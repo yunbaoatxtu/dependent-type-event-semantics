@@ -880,6 +880,13 @@ project verifier reruns every witness sentence and rejects any drift in the
 matched construction rule, analysis label, AST kind, or translation fragments.
 Regression tests also simulate each of those live-witness drift modes directly,
 so the check is guarded by counterexamples rather than by a text-only assertion.
+The coverage object also carries a `witness_generation_spec` for this finite
+front-end prefix: it records the base clause, ordered modifier prefix, optional
+`yesterday` time suffix, variant-id mapping, and translation templates. The
+verifier rebuilds the advertised witness sentences and expected translation
+fragments from that spec before running the live analyzer, which turns the
+finite coverage claim into a generated contract rather than a hand-maintained
+list alone.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

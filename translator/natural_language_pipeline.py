@@ -327,6 +327,104 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
 
 MODIFIED_TRANSITIVE_PRIMARY_MODIFIER_COUNT = 1
 
+MODIFIED_TRANSITIVE_SURFACE_MODIFIER_SEQUENCE = (
+    {
+        "index": 1,
+        "surface": "in the gallery",
+        "dependent_type_fragment": "in(gallery)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 2,
+        "surface": "with a telescope",
+        "dependent_type_fragment": "with(telescope)",
+        "semantic_role": "Instrument",
+    },
+    {
+        "index": 3,
+        "surface": "near a window",
+        "dependent_type_fragment": "near(window)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 4,
+        "surface": "beside a shelf",
+        "dependent_type_fragment": "beside(shelf)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 5,
+        "surface": "under a lamp",
+        "dependent_type_fragment": "under(lamp)",
+        "semantic_role": "Location",
+    },
+)
+
+MODIFIED_TRANSITIVE_SURFACE_WITNESS_VARIANT_IDS = {
+    "untimed": {
+        "1": "primary_modified_transitive_predication",
+        "2": "multi_adv_modified_transitive_predication",
+        "3": "triple_adv_modified_transitive_predication",
+        "4": "quad_adv_modified_transitive_predication",
+        "5": "quint_adv_modified_transitive_predication",
+    },
+    "timed": {
+        "1": "temporal_modified_transitive_predication",
+        "2": "temporal_multi_adv_modified_transitive_predication",
+        "3": "temporal_triple_adv_modified_transitive_predication",
+        "4": "temporal_quad_adv_modified_transitive_predication",
+        "5": "temporal_quint_adv_modified_transitive_predication",
+    },
+}
+
+
+def modified_transitive_surface_witness_generation_spec() -> dict[str, Any]:
+    source_by_prefix = {
+        "untimed": {
+            "1": "registered_primary_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+        },
+        "timed": {
+            "1": "registered_variant_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+        },
+    }
+    return {
+        "schema_version": "surface_witness_generation.v1",
+        "generator": "modifier_prefix_with_optional_time_suffix",
+        "base_surface_sentence": "Mary admired the painting",
+        "predicate": "admire",
+        "agent": "mary",
+        "theme": "painting",
+        "modifiers": [
+            dict(modifier)
+            for modifier in MODIFIED_TRANSITIVE_SURFACE_MODIFIER_SEQUENCE
+        ],
+        "time_suffix": "yesterday",
+        "time_operator": "at_T",
+        "time_argument": "yesterday",
+        "verified_prefix_lengths": [1, 2, 3, 4, 5],
+        "variant_id_by_prefix": copy.deepcopy(
+            MODIFIED_TRANSITIVE_SURFACE_WITNESS_VARIANT_IDS
+        ),
+        "source_by_prefix": source_by_prefix,
+        "expected_event_analysis": "modified-transitive-predication",
+        "expected_ast_kind_by_time_wrapped": {
+            "false": "application",
+            "true": "time",
+        },
+        "translation_template": (
+            "{predicate}({n})({modifier_fragments}, {agent}, {theme})"
+        ),
+        "timed_translation_template": "{time_operator}({time_argument}, {body})",
+    }
+
 
 FALLBACK_CERTIFICATION_GAPS = (
     {
@@ -11964,6 +12062,7 @@ def construction_rules() -> list[ConstructionRule]:
 
 
 def surface_parser_coverage_payload() -> dict[str, Any]:
+    witness_generation_spec = modified_transitive_surface_witness_generation_spec()
     snapshot_by_rule = {
         str(snapshot.get("rule_id", "")): snapshot
         for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
@@ -12060,6 +12159,7 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
             "max_verified_modifier_count": max(verified_counts) if verified_counts else 0,
             "verified_example_count": len(verified_examples),
             "verified_examples": verified_examples,
+            "witness_generation_spec": witness_generation_spec,
             "boundary_note": (
                 "The dependent type family is open-ended in n, but the current "
                 "surface parser advertises only the registered and smoke-tested "

@@ -2869,6 +2869,150 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
             )
 
 
+def expected_modified_surface_witness_meta_from_spec(
+    spec: dict,
+) -> tuple[list[str], dict[str, tuple[str, int, bool, str, str, list[str]]]]:
+    def spec_drift() -> None:
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser generation spec drift"
+        )
+
+    if (
+        spec.get("schema_version") != "surface_witness_generation.v1"
+        or spec.get("generator") != "modifier_prefix_with_optional_time_suffix"
+        or spec.get("base_surface_sentence") != "Mary admired the painting"
+        or spec.get("predicate") != "admire"
+        or spec.get("agent") != "mary"
+        or spec.get("theme") != "painting"
+        or spec.get("time_suffix") != "yesterday"
+        or spec.get("time_operator") != "at_T"
+        or spec.get("time_argument") != "yesterday"
+        or spec.get("expected_event_analysis") != "modified-transitive-predication"
+        or spec.get("expected_ast_kind_by_time_wrapped")
+        != {"false": "application", "true": "time"}
+        or spec.get("translation_template")
+        != "{predicate}({n})({modifier_fragments}, {agent}, {theme})"
+        or spec.get("timed_translation_template")
+        != "{time_operator}({time_argument}, {body})"
+    ):
+        spec_drift()
+
+    modifiers = spec.get("modifiers")
+    if not isinstance(modifiers, list) or len(modifiers) != 5:
+        spec_drift()
+    expected_modifiers = [
+        (1, "in the gallery", "in(gallery)", "Location"),
+        (2, "with a telescope", "with(telescope)", "Instrument"),
+        (3, "near a window", "near(window)", "Location"),
+        (4, "beside a shelf", "beside(shelf)", "Location"),
+        (5, "under a lamp", "under(lamp)", "Location"),
+    ]
+    for modifier, expected in zip(modifiers, expected_modifiers, strict=True):
+        if not isinstance(modifier, dict):
+            spec_drift()
+        index, surface, fragment, role = expected
+        if (
+            modifier.get("index") != index
+            or modifier.get("surface") != surface
+            or modifier.get("dependent_type_fragment") != fragment
+            or modifier.get("semantic_role") != role
+        ):
+            spec_drift()
+
+    prefix_lengths = spec.get("verified_prefix_lengths")
+    if prefix_lengths != [1, 2, 3, 4, 5]:
+        spec_drift()
+    variant_id_by_prefix = spec.get("variant_id_by_prefix")
+    source_by_prefix = spec.get("source_by_prefix")
+    if not isinstance(variant_id_by_prefix, dict) or not isinstance(source_by_prefix, dict):
+        spec_drift()
+
+    expected_variant_ids = {
+        "untimed": {
+            "1": "primary_modified_transitive_predication",
+            "2": "multi_adv_modified_transitive_predication",
+            "3": "triple_adv_modified_transitive_predication",
+            "4": "quad_adv_modified_transitive_predication",
+            "5": "quint_adv_modified_transitive_predication",
+        },
+        "timed": {
+            "1": "temporal_modified_transitive_predication",
+            "2": "temporal_multi_adv_modified_transitive_predication",
+            "3": "temporal_triple_adv_modified_transitive_predication",
+            "4": "temporal_quad_adv_modified_transitive_predication",
+            "5": "temporal_quint_adv_modified_transitive_predication",
+        },
+    }
+    expected_sources = {
+        "untimed": {
+            "1": "registered_primary_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+        },
+        "timed": {
+            "1": "registered_variant_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+        },
+    }
+    if variant_id_by_prefix != expected_variant_ids or source_by_prefix != expected_sources:
+        spec_drift()
+
+    ordered_ids: list[str] = []
+    expected_meta: dict[str, tuple[str, int, bool, str, str, list[str]]] = {}
+    for prefix_length in prefix_lengths:
+        modifier_prefix = modifiers[:prefix_length]
+        modifier_surfaces = " ".join(
+            str(modifier["surface"]) for modifier in modifier_prefix
+        )
+        modifier_fragments = ", ".join(
+            str(modifier["dependent_type_fragment"]) for modifier in modifier_prefix
+        )
+        sentence_base = f"{spec['base_surface_sentence']} {modifier_surfaces}"
+        body = str(spec["translation_template"]).format(
+            predicate=spec["predicate"],
+            n=prefix_length,
+            modifier_fragments=modifier_fragments,
+            agent=spec["agent"],
+            theme=spec["theme"],
+        )
+        for bucket, timed in (("untimed", False), ("timed", True)):
+            key = str(prefix_length)
+            variant_id = variant_id_by_prefix[bucket][key]
+            source = source_by_prefix[bucket][key]
+            sentence = (
+                f"{sentence_base} {spec['time_suffix']}"
+                if timed
+                else sentence_base
+            )
+            fragment = (
+                str(spec["timed_translation_template"]).format(
+                    time_operator=spec["time_operator"],
+                    time_argument=spec["time_argument"],
+                    body=body,
+                )
+                if timed
+                else body
+            )
+            ast_kind = spec["expected_ast_kind_by_time_wrapped"][
+                "true" if timed else "false"
+            ]
+            ordered_ids.append(variant_id)
+            expected_meta[variant_id] = (
+                sentence,
+                prefix_length,
+                timed,
+                source,
+                ast_kind,
+                [fragment],
+            )
+    return ordered_ids, expected_meta
+
+
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
         ast_structure_summary,
@@ -2940,18 +3084,15 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     if not isinstance(modified_surface, dict):
         raise SystemExit("web route smoke check failed: certified modified-transitive surface coverage missing")
     expected_surface_counts = [1, 2, 3, 4, 5]
-    expected_surface_example_ids = [
-        "primary_modified_transitive_predication",
-        "temporal_modified_transitive_predication",
-        "multi_adv_modified_transitive_predication",
-        "temporal_multi_adv_modified_transitive_predication",
-        "triple_adv_modified_transitive_predication",
-        "temporal_triple_adv_modified_transitive_predication",
-        "quad_adv_modified_transitive_predication",
-        "temporal_quad_adv_modified_transitive_predication",
-        "quint_adv_modified_transitive_predication",
-        "temporal_quint_adv_modified_transitive_predication",
-    ]
+    generation_spec = modified_surface.get("witness_generation_spec")
+    if not isinstance(generation_spec, dict):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser generation spec missing"
+        )
+    (
+        expected_surface_example_ids,
+        expected_surface_example_meta,
+    ) = expected_modified_surface_witness_meta_from_spec(generation_spec)
     if (
         modified_surface.get("rule_id") != "modified_transitive_predication"
         or modified_surface.get("type_principle") != "non_empty_modifier_sequence"
@@ -2979,100 +3120,6 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     ]
     if observed_surface_ids != expected_surface_example_ids:
         raise SystemExit("web route smoke check failed: certified surface parser witness id drift")
-    expected_surface_example_meta = {
-        "primary_modified_transitive_predication": (
-            "Mary admired the painting in the gallery",
-            1,
-            False,
-            "registered_primary_example",
-            "application",
-            ["admire(1)(in(gallery), mary, painting)"],
-        ),
-        "temporal_modified_transitive_predication": (
-            "Mary admired the painting in the gallery yesterday",
-            1,
-            True,
-            "registered_variant_example",
-            "time",
-            ["at_T(yesterday, admire(1)(in(gallery), mary, painting))"],
-        ),
-        "multi_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope",
-            2,
-            False,
-            "registered_variant_example",
-            "application",
-            ["admire(2)(in(gallery), with(telescope), mary, painting)"],
-        ),
-        "temporal_multi_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope yesterday",
-            2,
-            True,
-            "registered_variant_example",
-            "time",
-            [
-                "at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))",
-            ],
-        ),
-        "triple_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope near a window",
-            3,
-            False,
-            "registered_variant_example",
-            "application",
-            ["admire(3)(in(gallery), with(telescope), near(window), mary, painting)"],
-        ),
-        "temporal_triple_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope near a window yesterday",
-            3,
-            True,
-            "registered_variant_example",
-            "time",
-            [
-                "at_T(yesterday, admire(3)(in(gallery), with(telescope), near(window), mary, painting))",
-            ],
-        ),
-        "quad_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope near a window beside a shelf",
-            4,
-            False,
-            "registered_variant_example",
-            "application",
-            [
-                "admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary, painting)",
-            ],
-        ),
-        "temporal_quad_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope near a window beside a shelf yesterday",
-            4,
-            True,
-            "registered_variant_example",
-            "time",
-            [
-                "at_T(yesterday, admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary, painting))",
-            ],
-        ),
-        "quint_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp",
-            5,
-            False,
-            "registered_variant_example",
-            "application",
-            [
-                "admire(5)(in(gallery), with(telescope), near(window), beside(shelf), under(lamp), mary, painting)",
-            ],
-        ),
-        "temporal_quint_adv_modified_transitive_predication": (
-            "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp yesterday",
-            5,
-            True,
-            "registered_variant_example",
-            "time",
-            [
-                "at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window), beside(shelf), under(lamp), mary, painting))",
-            ],
-        ),
-    }
     for item in surface_examples:
         if not isinstance(item, dict):
             raise SystemExit("web route smoke check failed: certified surface parser witness shape drift")
@@ -3412,6 +3459,10 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-untimed-counts="1,2,3,4,5"',
         'data-surface-max-verified-count="5"',
         'data-surface-verified-example-count="10"',
+        'data-surface-generator-schema="surface_witness_generation.v1"',
+        'data-surface-generator-kind="modifier_prefix_with_optional_time_suffix"',
+        'data-surface-generator-modifier-count="5"',
+        'data-surface-generator-time-suffix="yesterday"',
         'data-surface-example-variant-id="primary_modified_transitive_predication"',
         'data-surface-example-sentence="Mary admired the painting in the gallery"',
         'data-surface-example-source="registered_primary_example"',
