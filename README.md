@@ -1030,6 +1030,15 @@ and the `Recovery Action Exports` panel, and that preview must match the same
 `diagnostic_inspection_run.v1` bundle served by the API. The verifier checks
 the preview inside the corresponding action row, so a stale preview elsewhere
 on the page cannot satisfy the diagnostic contract by accident.
+Ordinary failed analyses use the same inspection schema through
+`/api/analyze-action-run?sentence=<sentence>&index=<n>`. For example, the
+ordinary type-check failure `the plant killed` exposes an `inspect_ast` action
+whose run bundle snapshots `ast` and `type_check`, carries
+`source: "analyze"`, preserves `surface_type_contract_diagnostics`, and can be
+downloaded as `analyze_inspection_run__the-plant-killed__0.json`. Human-review
+actions such as `edit_input` and `revise_sentence` are rejected there with the
+same `diagnostic_inspection_run.v1` error shape instead of being treated as
+automatic repairs.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, and it mirrors the surface type diagnostic schema, category

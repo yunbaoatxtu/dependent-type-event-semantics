@@ -243,6 +243,11 @@ def recovery_action_run_artifact_filename(case: str, action_index: int) -> str:
     return f"diagnostic_inspection_run__{artifact_token(case)}__{action_index}.json"
 
 
+def analyze_action_run_artifact_filename(sentence: str, action_index: int) -> str:
+    token = artifact_token(sentence.strip() or "empty-input")
+    return f"analyze_inspection_run__{token}__{action_index}.json"
+
+
 def recovery_action_api_path(
     case: str,
     action_index: int,
@@ -265,6 +270,21 @@ def recovery_action_run_api_path(
     if download:
         params["download"] = "1"
     return f"/api/recovery-action-run?{urlencode(params)}"
+
+
+def analyze_action_run_api_path(
+    sentence: str,
+    action_index: int,
+    *,
+    require_coq: bool = False,
+    download: bool = False,
+) -> str:
+    params = {"sentence": sentence, "index": str(action_index)}
+    if require_coq:
+        params["require_coq"] = "1"
+    if download:
+        params["download"] = "1"
+    return f"/api/analyze-action-run?{urlencode(params)}"
 
 
 def validate_action_route_path(
@@ -945,6 +965,75 @@ def validate_recovery_action_inspection_run_rejection(
         raise SystemExit(f"web route smoke check failed: {case} inspection rejection run drift")
     if "requires human review" not in str(run_bundle.get("error", "")):
         raise SystemExit(f"web route smoke check failed: {case} inspection rejection error drift")
+
+
+def validate_analyze_action_inspection_run_bundle(
+    label: str,
+    sentence: str,
+    action_index: int,
+    analyze_payload: dict,
+    run_bundle: dict,
+) -> None:
+    diagnostics = analyze_payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit(f"web route smoke check failed: {label} analyze diagnostics drift")
+    actions = diagnostics.get("recovery_actions")
+    if not isinstance(actions, list) or action_index >= len(actions):
+        raise SystemExit(f"web route smoke check failed: {label} analyze action drift")
+    expected_action = actions[action_index]
+    if not isinstance(expected_action, dict):
+        raise SystemExit(f"web route smoke check failed: {label} analyze action shape drift")
+    expected_repair_plan = recovery_action_repair_plan_preview(
+        "ordinary_analyze_failure",
+        action_index,
+        str(diagnostics.get("failure_stage") or ""),
+        expected_action,
+    )
+    expected_repair_plan["source"] = "analyze"
+    expected_repair_plan["input_sentence"] = sentence
+    if run_bundle.get("schema_version") != "diagnostic_inspection_run.v1":
+        raise SystemExit(f"web route smoke check failed: {label} analyze run schema drift")
+    if run_bundle.get("ok") is not True:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run ok drift")
+    if run_bundle.get("source") != "analyze":
+        raise SystemExit(f"web route smoke check failed: {label} analyze run source drift")
+    if run_bundle.get("input_sentence") != sentence:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run input drift")
+    if run_bundle.get("action_index") != action_index:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run index drift")
+    if run_bundle.get("action_kind") != expected_action.get("kind"):
+        raise SystemExit(f"web route smoke check failed: {label} analyze run kind drift")
+    if run_bundle.get("failure_stage") != diagnostics.get("failure_stage"):
+        raise SystemExit(f"web route smoke check failed: {label} analyze run stage drift")
+    if run_bundle.get("automation_mode") != expected_repair_plan.get("automation_mode"):
+        raise SystemExit(f"web route smoke check failed: {label} analyze run mode drift")
+    if run_bundle.get("can_auto_run") is not True:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run auto-run drift")
+    if run_bundle.get("can_auto_apply") is not False:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run apply drift")
+    if run_bundle.get("target_fields") != expected_repair_plan.get("target_fields"):
+        raise SystemExit(f"web route smoke check failed: {label} analyze run field drift")
+    inspection_results = run_bundle.get("inspection_results")
+    if not isinstance(inspection_results, dict):
+        raise SystemExit(f"web route smoke check failed: {label} analyze run result drift")
+    for field in expected_repair_plan.get("target_fields", []):
+        if inspection_results.get(field) != nested_field_value(analyze_payload, field):
+            raise SystemExit(
+                "web route smoke check failed: "
+                f"{label} analyze run {field} value drift"
+            )
+    if run_bundle.get("repair_plan") != expected_repair_plan:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run plan drift")
+    if run_bundle.get("diagnostics") != diagnostics:
+        raise SystemExit(f"web route smoke check failed: {label} analyze run diagnostics drift")
+    contract = run_bundle.get("contract")
+    if not isinstance(contract, dict):
+        raise SystemExit(f"web route smoke check failed: {label} analyze run contract drift")
+    validate_diagnostic_contract_manifest(contract)
+    validate_surface_type_contract_diagnostics_context(
+        label,
+        run_bundle.get("surface_type_contract_diagnostics"),
+    )
 
 
 def diagnostic_contract_bundle_for_recovery_action() -> dict:
@@ -4993,6 +5082,28 @@ def run_web_route_smoke_check() -> None:
             "ordinary type-check failure",
             "type_check",
         )
+        analyze_run_path = analyze_action_run_api_path(
+            type_failure_sentence,
+            0,
+            require_coq=True,
+        )
+        with opener.open(f"{base_url}{analyze_run_path}", timeout=5) as response:
+            analyze_run_payload = json.load(response)
+        validate_analyze_action_inspection_run_bundle(
+            "ordinary type-check failure",
+            type_failure_sentence,
+            0,
+            type_failure_payload,
+            analyze_run_payload,
+        )
+        with opener.open(f"{base_url}{analyze_run_path}&download=1", timeout=5) as response:
+            validate_json_download_http_response(
+                "ordinary type-check failure",
+                "analyze inspection run",
+                response,
+                analyze_run_payload,
+                analyze_action_run_artifact_filename(type_failure_sentence, 0),
+            )
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             validate_diagnostic_contract_manifest(json.load(response))
         with opener.open(f"{base_url}/api/certified-fragment", timeout=5) as response:

@@ -443,6 +443,11 @@ def recovery_action_run_artifact_filename(case: str, action_index: int) -> str:
     return f"diagnostic_inspection_run__{stable_token(case)}__{action_index}.json"
 
 
+def analyze_action_run_artifact_filename(sentence: str, action_index: int) -> str:
+    token = stable_token(sentence.strip() or "empty-input")
+    return f"analyze_inspection_run__{token}__{action_index}.json"
+
+
 def construction_rule_draft_artifact_filename(candidate_rule_id: str) -> str:
     token = stable_token(candidate_rule_id or "fallback_candidate")
     return f"construction_rule_draft__{token}.json"
@@ -470,6 +475,21 @@ def recovery_action_run_api_path(
     if download:
         params["download"] = "1"
     return f"/api/recovery-action-run?{urlencode(params)}"
+
+
+def analyze_action_run_api_path(
+    sentence: str,
+    require_coq: bool,
+    action_index: int,
+    *,
+    download: bool = False,
+) -> str:
+    params = {"sentence": sentence, "index": str(action_index)}
+    if require_coq:
+        params["require_coq"] = "1"
+    if download:
+        params["download"] = "1"
+    return f"/api/analyze-action-run?{urlencode(params)}"
 
 
 def construction_rule_draft_api_path(
@@ -654,6 +674,124 @@ def recovery_action_inspection_run_bundle(case: str, action_index: int) -> dict[
         "repair_plan": repair_plan,
         "contract": diagnostic_contract_manifest(),
     }
+
+
+def analyze_action_repair_plan(
+    sentence: str,
+    action_index: int,
+    failure_stage: str,
+    action: dict[str, Any],
+) -> dict[str, Any]:
+    return recovery_action_repair_plan(
+        "ordinary_analyze_failure",
+        action_index,
+        failure_stage,
+        action,
+    ) | {
+        "source": "analyze",
+        "input_sentence": sentence,
+    }
+
+
+def analyze_action_inspection_run_bundle(
+    sentence: str,
+    require_coq: bool,
+    action_index: int,
+) -> tuple[dict[str, Any], HTTPStatus]:
+    result = analyze_sentence(sentence, require_coq=require_coq)
+    diagnostics = result.get("diagnostics", {})
+    actions = diagnostics.get("recovery_actions", [])
+    if not isinstance(actions, list):
+        actions = []
+    if action_index < 0 or action_index >= len(actions):
+        return (
+            {
+                "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+                "ok": False,
+                "source": "analyze",
+                "input_sentence": result.get("input_sentence", sentence),
+                "action_index": action_index,
+                "error": f"Recovery action index {action_index} is out of range.",
+                "available_action_count": len(actions),
+                "diagnostics": diagnostics,
+            },
+            HTTPStatus.BAD_REQUEST,
+        )
+    action = actions[action_index]
+    if not isinstance(action, dict):
+        return (
+            {
+                "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+                "ok": False,
+                "source": "analyze",
+                "input_sentence": result.get("input_sentence", sentence),
+                "action_index": action_index,
+                "error": "Recovery action is malformed.",
+                "diagnostics": diagnostics,
+            },
+            HTTPStatus.BAD_REQUEST,
+        )
+    failure_stage = str(diagnostics.get("failure_stage") or "")
+    repair_plan = analyze_action_repair_plan(
+        str(result.get("input_sentence", sentence)),
+        action_index,
+        failure_stage,
+        action,
+    )
+    if repair_plan.get("can_auto_run") is not True:
+        return (
+            {
+                "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+                "ok": False,
+                "source": "analyze",
+                "input_sentence": result.get("input_sentence", sentence),
+                "action_index": action_index,
+                "action_kind": action.get("kind"),
+                "failure_stage": failure_stage,
+                "automation_mode": repair_plan.get("automation_mode"),
+                "can_auto_run": False,
+                "can_auto_apply": False,
+                "error": "Recovery action requires human review and cannot be auto-run.",
+                "repair_plan": repair_plan,
+                "diagnostics": diagnostics,
+                "contract": diagnostic_contract_manifest(),
+                "surface_type_contract_diagnostics": result.get(
+                    "surface_type_contract_diagnostics",
+                    surface_type_contract_diagnostics_context(),
+                ),
+            },
+            HTTPStatus.BAD_REQUEST,
+        )
+    target_fields = string_list(repair_plan.get("target_fields"))
+    inspection_results = {
+        field: nested_field_value(result, field)
+        for field in target_fields
+    }
+    return (
+        {
+            "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+            "ok": True,
+            "source": "analyze",
+            "input_sentence": result.get("input_sentence", sentence),
+            "require_coq": require_coq,
+            "action_index": action_index,
+            "action_kind": action.get("kind"),
+            "failure_stage": failure_stage,
+            "automation_mode": repair_plan.get("automation_mode"),
+            "can_auto_run": True,
+            "can_auto_apply": False,
+            "target_fields": target_fields,
+            "inspection_results": inspection_results,
+            "repair_plan": repair_plan,
+            "diagnostics": diagnostics,
+            "contract": diagnostic_contract_manifest(),
+            "surface_type_contract_diagnostics": result.get(
+                "surface_type_contract_diagnostics",
+                surface_type_contract_diagnostics_context(),
+            ),
+        },
+        HTTPStatus.OK,
+    )
 
 
 def recovery_action_patch_preview(action: dict[str, Any]) -> str:
@@ -1517,7 +1655,7 @@ def surface_type_contract_action_attrs(result: dict[str, Any]) -> str:
     )
 
 
-def next_steps_panel(result: dict[str, Any]) -> str:
+def next_steps_panel(result: dict[str, Any], *, require_coq: bool = False) -> str:
     actions = result.get("diagnostics", {}).get("recovery_actions", [])
     if not actions:
         body = '<p class="next-step-empty">No recovery actions needed.</p>'
@@ -1525,6 +1663,8 @@ def next_steps_panel(result: dict[str, Any]) -> str:
         items = []
         fixture_case = diagnostic_fixture_case_for_result(result)
         type_contract_attrs = surface_type_contract_action_attrs(result)
+        ordinary_sentence = str(result.get("input_sentence", ""))
+        ordinary_require_coq = require_coq
         for index, action in enumerate(actions):
             kind = action.get("kind", "")
             label = action.get("label", "")
@@ -1586,6 +1726,49 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                             recovery_action_inspection_run_bundle(fixture_case, index)
                         )
                     )
+                    run_link = (
+                        '<a class="next-step-action-run-link" '
+                        f'href="{html.escape(run_href, quote=True)}" '
+                        'data-action-run="inspection">Run inspection</a>'
+                    )
+                    run_link += (
+                        '<a class="next-step-inspection-download-link" '
+                        f'href="{html.escape(run_download_href, quote=True)}" '
+                        f'download="{html.escape(run_download_filename, quote=True)}" '
+                        'data-inspection-download="json">Download inspection JSON</a>'
+                    )
+                    inspection_preview = (
+                        '<details class="next-step-inspection-run-json" '
+                        f'data-inspection-json-schema="{RECOVERY_INSPECTION_RUN_SCHEMA}">'
+                        "<summary>Inspection Run JSON</summary>"
+                        f"<pre>{run_json}</pre>"
+                        "</details>"
+                    )
+            elif recovery_action_can_auto_run(str(kind)):
+                run_href = analyze_action_run_api_path(
+                    ordinary_sentence,
+                    ordinary_require_coq,
+                    index,
+                )
+                run_download_href = analyze_action_run_api_path(
+                    ordinary_sentence,
+                    ordinary_require_coq,
+                    index,
+                    download=True,
+                )
+                run_download_filename = analyze_action_run_artifact_filename(
+                    ordinary_sentence,
+                    index,
+                )
+                run_bundle, run_status = analyze_action_inspection_run_bundle(
+                    ordinary_sentence,
+                    ordinary_require_coq,
+                    index,
+                )
+                if run_status == HTTPStatus.OK:
+                    automation_mode = str(run_bundle.get("automation_mode", ""))
+                    can_auto_run = run_bundle.get("can_auto_run") is True
+                    run_json = html.escape(compact_json(run_bundle))
                     run_link = (
                         '<a class="next-step-action-run-link" '
                         f'href="{html.escape(run_href, quote=True)}" '
@@ -3867,7 +4050,7 @@ def render_page(
       {panel("Conclusion", conclusion)}
       {semantic_warnings_panel(result)}
       {lexicon_patch_drafts_panel(result, sentence, require_coq)}
-      {next_steps_panel(result)}
+      {next_steps_panel(result, require_coq=require_coq)}
       {recovery_action_exports_panel(result)}
       {panel("Construction Rule", construction)}
       {panel("Modifier Role Audit", modifier_roles)}
@@ -3943,6 +4126,20 @@ class PipelineHandler(BaseHTTPRequestHandler):
             if status == HTTPStatus.OK and request_wants_download(parsed.query):
                 download_filename = recovery_action_run_artifact_filename(
                     str(payload.get("case", "")),
+                    int(payload.get("action_index", 0)),
+                )
+            self.write_json_response(
+                payload,
+                status=status,
+                download_filename=download_filename,
+            )
+            return
+        if parsed.path == "/api/analyze-action-run":
+            payload, status = self.handle_analyze_action_run_api(parsed.query)
+            download_filename = None
+            if status == HTTPStatus.OK and request_wants_download(parsed.query):
+                download_filename = analyze_action_run_artifact_filename(
+                    str(payload.get("input_sentence", "")),
                     int(payload.get("action_index", 0)),
                 )
             self.write_json_response(
@@ -4119,6 +4316,30 @@ class PipelineHandler(BaseHTTPRequestHandler):
                 int(payload["action_index"]),
             ),
             HTTPStatus.OK,
+        )
+
+    def handle_analyze_action_run_api(self, query: str) -> tuple[dict[str, Any], HTTPStatus]:
+        params = parse_qs(query)
+        sentence = params.get("sentence", [""])[0]
+        require_coq = params.get("require_coq", ["0"])[0] == "1"
+        index_text = params.get("index", ["0"])[0].strip()
+        try:
+            action_index = int(index_text)
+        except ValueError:
+            return (
+                {
+                    "schema_version": RECOVERY_INSPECTION_RUN_SCHEMA,
+                    "ok": False,
+                    "source": "analyze",
+                    "input_sentence": sentence,
+                    "error": f"Invalid recovery action index {index_text!r}.",
+                },
+                HTTPStatus.BAD_REQUEST,
+            )
+        return analyze_action_inspection_run_bundle(
+            sentence,
+            require_coq,
+            action_index,
         )
 
     def handle_patch_api(self, query: str) -> dict[str, Any]:

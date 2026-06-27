@@ -454,6 +454,13 @@ be applied silently. The companion
 `/api/recovery-action-run?case=<case>&index=<n>` endpoint should return a
 `diagnostic_inspection_run.v1` target-field snapshot only for inspection-only
 actions and should reject human-review-required actions with a 400 response.
+The ordinary analysis route should expose the same read-only shape through
+`/api/analyze-action-run?sentence=<sentence>&index=<n>` for failed
+`/api/analyze` results. This endpoint should set `source: "analyze"`, preserve
+the input sentence, diagnostics, diagnostic contract, and
+`surface_type_contract_diagnostics`, and snapshot only the repair-plan target
+fields. It should reject human-review actions such as `edit_input` or
+`revise_sentence` with the same `diagnostic_inspection_run.v1` error envelope.
 For fixture pages, the same bundle should be rendered as an expandable
 `Inspection Run JSON` preview in both the `Next Steps` list and the
 `Recovery Action Exports` panel, so browser checks can compare the visible
