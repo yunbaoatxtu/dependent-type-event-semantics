@@ -20,6 +20,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES  # noqa: E402
+from translator.surface_type_contracts import (  # noqa: E402
+    modified_transitive_surface_type_contract_registry,
+    surface_type_contract_diagnostic_report,
+)
 from web.diagnostic_contract import (  # noqa: E402
     DIAGNOSTIC_FAILURE_STAGES,
     DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
@@ -853,6 +857,10 @@ def validate_recovery_action_export_bundle(
     if not isinstance(contract, dict):
         raise SystemExit(f"web route smoke check failed: {case} recovery action contract drift")
     validate_diagnostic_contract_manifest(contract)
+    validate_surface_type_contract_diagnostics_context(
+        case,
+        bundle.get("surface_type_contract_diagnostics"),
+    )
 
 
 def nested_field_value(payload: dict, path: str) -> object:
@@ -953,6 +961,54 @@ def diagnostic_contract_bundle_for_recovery_action() -> dict:
         ),
         "semantic_reading_fields": sorted(SEMANTIC_READING_CONTRACT_FIELDS),
     }
+
+
+def surface_type_contract_diagnostics_context_preview() -> dict:
+    registry = modified_transitive_surface_type_contract_registry()
+    report = surface_type_contract_diagnostic_report(registry)
+    categories = [
+        item
+        for item in report.get("categories", [])
+        if isinstance(item, dict)
+    ]
+    category_ids = [
+        str(item.get("category", ""))
+        for item in categories
+        if isinstance(item.get("category"), str)
+    ]
+    return {
+        "schema_version": report.get("schema_version"),
+        "registry_schema": registry.get("schema_version"),
+        "registry_id": registry.get("registry_id"),
+        "source": registry.get("source"),
+        "ok": report.get("ok"),
+        "error_count": report.get("error_count"),
+        "category_count": len(categories),
+        "category_ids": category_ids,
+        "categories": categories,
+    }
+
+
+def surface_type_contract_diagnostic_category_text(context: dict) -> str:
+    category_ids = context.get("category_ids")
+    if not isinstance(category_ids, list):
+        return ""
+    return ",".join(
+        str(category_id)
+        for category_id in category_ids
+        if isinstance(category_id, str)
+    )
+
+
+def validate_surface_type_contract_diagnostics_context(
+    case: str,
+    context: object,
+) -> None:
+    if context != surface_type_contract_diagnostics_context_preview():
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} surface type contract diagnostic drift"
+        )
 
 
 def recovery_action_string_list(value: object) -> list[str]:
@@ -1081,6 +1137,9 @@ def recovery_action_export_preview_json(
                 expected_action,
             ),
             "contract": diagnostic_contract_bundle_for_recovery_action(),
+            "surface_type_contract_diagnostics": (
+                surface_type_contract_diagnostics_context_preview()
+            ),
         },
         ensure_ascii=False,
         indent=2,
@@ -2655,6 +2714,10 @@ def validate_diagnostic_fixture_routes(
         payload_fixture = payload.get("diagnostic_fixture", {}) if isinstance(payload, dict) else {}
         if not isinstance(payload_fixture, dict) or payload_fixture.get("case") != case:
             raise SystemExit(f"web route smoke check failed: {case} payload case drift")
+        validate_surface_type_contract_diagnostics_context(
+            case,
+            payload.get("surface_type_contract_diagnostics"),
+        )
         fixture_page = fixture_pages.get(case, "")
         validate_successful_semantic_reading_contract(case, payload, fixture_page)
         recovery_action_text = ", ".join(
@@ -4162,6 +4225,10 @@ def validate_recovery_action_exports_html_panel(
     expected_action_exports: list[dict],
     fixture_payload: dict,
 ) -> None:
+    type_contract_context = surface_type_contract_diagnostics_context_preview()
+    type_contract_categories = surface_type_contract_diagnostic_category_text(
+        type_contract_context
+    )
     require_html_fragments(
         page,
         [
@@ -4169,6 +4236,35 @@ def validate_recovery_action_exports_html_panel(
             'data-export-schema="diagnostic_recovery_action.v1"',
             f'data-export-case="{html.escape(case, quote=True)}"',
             f'data-export-count="{len(expected_actions)}"',
+            (
+                'data-surface-type-contract-diagnostic-schema="'
+                + html.escape(
+                    str(type_contract_context.get("schema_version", "")),
+                    quote=True,
+                )
+                + '"'
+            ),
+            (
+                'data-surface-type-contract-diagnostic-count="'
+                + html.escape(
+                    str(type_contract_context.get("category_count", "")),
+                    quote=True,
+                )
+                + '"'
+            ),
+            (
+                'data-surface-type-contract-diagnostic-categories="'
+                + html.escape(type_contract_categories, quote=True)
+                + '"'
+            ),
+            (
+                'data-surface-type-contract-registry-id="'
+                + html.escape(
+                    str(type_contract_context.get("registry_id", "")),
+                    quote=True,
+                )
+                + '"'
+            ),
             "<h2>Recovery Action Exports</h2>",
         ],
         f"{case} recovery action exports panel",
@@ -4228,6 +4324,16 @@ def validate_recovery_action_exports_html_panel(
             f'data-export-failure-stage="{html.escape(expected_stage, quote=True)}"',
             f'data-export-json-schema="diagnostic_recovery_action.v1"',
             "<summary>Action JSON</summary>",
+            (
+                "<dt>type contract</dt><dd><code>"
+                + html.escape(str(type_contract_context.get("schema_version", "")))
+                + "</code></dd>"
+            ),
+            (
+                "<dt>type contract categories</dt><dd><code>"
+                + html.escape(type_contract_categories)
+                + "</code></dd>"
+            ),
             (
                 'href="'
                 + html.escape(str(export_path), quote=True)

@@ -25,6 +25,10 @@ from translator.natural_language_pipeline import (
     semantic_readings_check_payload,
     semantic_readings_repair_details,
 )
+from translator.surface_type_contracts import (
+    modified_transitive_surface_type_contract_registry,
+    surface_type_contract_diagnostic_report,
+)
 from web.diagnostic_contract import (
     DIAGNOSTIC_FAILURE_STAGES,
     DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
@@ -180,6 +184,43 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
         }
         return add_diagnostics(result)
     return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
+
+
+def surface_type_contract_diagnostics_context() -> dict[str, Any]:
+    registry = modified_transitive_surface_type_contract_registry()
+    report = surface_type_contract_diagnostic_report(registry)
+    categories = [
+        item
+        for item in report.get("categories", [])
+        if isinstance(item, dict)
+    ]
+    category_ids = [
+        str(item.get("category", ""))
+        for item in categories
+        if isinstance(item.get("category"), str)
+    ]
+    return {
+        "schema_version": report.get("schema_version"),
+        "registry_schema": registry.get("schema_version"),
+        "registry_id": registry.get("registry_id"),
+        "source": registry.get("source"),
+        "ok": report.get("ok"),
+        "error_count": report.get("error_count"),
+        "category_count": len(categories),
+        "category_ids": category_ids,
+        "categories": categories,
+    }
+
+
+def surface_type_contract_diagnostic_category_text(context: dict[str, Any]) -> str:
+    category_ids = context.get("category_ids")
+    if not isinstance(category_ids, list):
+        return ""
+    return ",".join(
+        str(category_id)
+        for category_id in category_ids
+        if isinstance(category_id, str)
+    )
 
 
 def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> dict[str, Any]:
@@ -387,6 +428,7 @@ def diagnostic_fixture_result(case: str = DEFAULT_DIAGNOSTIC_FIXTURE_CASE) -> di
         "construction_hygiene": construction_hygiene,
         "coq_code": coq_code,
         "coq_check": coq_check,
+        "surface_type_contract_diagnostics": surface_type_contract_diagnostics_context(),
         "diagnostic_fixture": {"case": case, "available_cases": sorted(DIAGNOSTIC_FIXTURE_CASES)},
         "conclusion": conclusion,
     }
@@ -572,6 +614,10 @@ def recovery_action_export_bundle(case: str, action_index: int) -> dict[str, Any
             action,
         ),
         "contract": diagnostic_contract_manifest(),
+        "surface_type_contract_diagnostics": result.get(
+            "surface_type_contract_diagnostics",
+            surface_type_contract_diagnostics_context(),
+        ),
     }
 
 
@@ -1537,6 +1583,21 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
     if not isinstance(actions, list):
         actions = []
     failure_stage = str(diagnostics.get("failure_stage", ""))
+    type_contract_diagnostics = result.get("surface_type_contract_diagnostics")
+    if not isinstance(type_contract_diagnostics, dict):
+        type_contract_diagnostics = surface_type_contract_diagnostics_context()
+    type_contract_categories = surface_type_contract_diagnostic_category_text(
+        type_contract_diagnostics
+    )
+    type_contract_schema = str(
+        type_contract_diagnostics.get("schema_version", "")
+    )
+    type_contract_registry_id = str(
+        type_contract_diagnostics.get("registry_id", "")
+    )
+    type_contract_category_count = str(
+        type_contract_diagnostics.get("category_count", "")
+    )
     items = []
     for index, action in enumerate(actions):
         if not isinstance(action, dict):
@@ -1617,6 +1678,8 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
             f"<dt>automation</dt><dd><code>{html.escape(automation_mode)}</code></dd>"
             f"<dt>can auto-run</dt><dd><code>{str(can_auto_run).lower()}</code></dd>"
             f"<dt>stage</dt><dd><code>{html.escape(failure_stage)}</code></dd>"
+            f"<dt>type contract</dt><dd><code>{html.escape(type_contract_schema)}</code></dd>"
+            f"<dt>type contract categories</dt><dd><code>{html.escape(type_contract_categories)}</code></dd>"
             "</dl>"
             '<details class="recovery-action-export-json" '
             f'data-export-json-schema="{RECOVERY_ACTION_SCHEMA}">'
@@ -1635,7 +1698,11 @@ def recovery_action_exports_panel(result: dict[str, Any]) -> str:
         '<section class="panel recovery-action-exports-panel" '
         f'data-export-schema="{RECOVERY_ACTION_SCHEMA}" '
         f'data-export-case="{html.escape(fixture_case, quote=True)}" '
-        f'data-export-count="{len(items)}">'
+        f'data-export-count="{len(items)}" '
+        f'data-surface-type-contract-diagnostic-schema="{html.escape(type_contract_schema, quote=True)}" '
+        f'data-surface-type-contract-diagnostic-count="{html.escape(type_contract_category_count, quote=True)}" '
+        f'data-surface-type-contract-diagnostic-categories="{html.escape(type_contract_categories, quote=True)}" '
+        f'data-surface-type-contract-registry-id="{html.escape(type_contract_registry_id, quote=True)}">'
         "<h2>Recovery Action Exports</h2>"
         f'<div class="recovery-action-exports">{body}</div>'
         "</section>"

@@ -150,6 +150,7 @@ from web.app import (
     result_state_warning_for_entry,
     result_state_warnings,
     semantic_readings_check_panel,
+    surface_type_contract_diagnostics_context,
 )
 
 
@@ -13001,6 +13002,24 @@ class TranslatorTests(unittest.TestCase):
             missing["diagnostics"]["recovery_actions"][0]["target_definitions"],
             ["missing_reading"],
         )
+        self.assertEqual(
+            missing["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
+        self.assertEqual(
+            missing["surface_type_contract_diagnostics"]["schema_version"],
+            "surface_type_contract_diagnostic.v1",
+        )
+        self.assertEqual(
+            missing["surface_type_contract_diagnostics"]["category_ids"],
+            [
+                "registry_schema",
+                "entry_axis_sync",
+                "role_frame",
+                "modifier_type",
+                "time_type",
+            ],
+        )
 
         mismatch = PipelineHandler.handle_diagnostic_fixture_api(
             handler, "case=semantic_readings_export_count_mismatch"
@@ -13424,6 +13443,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-export-schema="diagnostic_recovery_action.v1"', page)
         self.assertIn('data-export-case="semantic_readings_export_count_mismatch"', page)
         self.assertIn('data-export-count="2"', page)
+        self.assertIn(
+            'data-surface-type-contract-diagnostic-schema="surface_type_contract_diagnostic.v1"',
+            page,
+        )
+        self.assertIn('data-surface-type-contract-diagnostic-count="5"', page)
+        self.assertIn(
+            'data-surface-type-contract-diagnostic-categories="registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
+            page,
+        )
         self.assertIn("<h2>Recovery Action Exports</h2>", page)
         self.assertIn('class="recovery-action-export"', page)
         self.assertIn('data-export-action-index="0"', page)
@@ -13451,6 +13483,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("<dt>automation</dt><dd><code>inspection_only</code></dd>", page)
         self.assertIn("<dt>can auto-run</dt><dd><code>true</code></dd>", page)
         self.assertIn("<dt>kind</dt><dd><code>inspect_readings</code></dd>", page)
+        self.assertIn(
+            "<dt>type contract</dt><dd><code>surface_type_contract_diagnostic.v1</code></dd>",
+            page,
+        )
+        self.assertIn(
+            "<dt>type contract categories</dt><dd><code>registry_schema,entry_axis_sync,role_frame,modifier_type,time_type</code></dd>",
+            page,
+        )
         self.assertIn(
             'href="/api/recovery-action-run?case=semantic_readings_export_count_mismatch'
             '&amp;index=1"',
@@ -13540,6 +13580,10 @@ class TranslatorTests(unittest.TestCase):
             ["python3 scripts/verify_project.py --require-coq --require-docx"],
         )
         self.assertEqual(payload["contract"], diagnostic_contract_manifest())
+        self.assertEqual(
+            payload["surface_type_contract_diagnostics"],
+            surface_type_contract_diagnostics_context(),
+        )
 
     def test_recovery_action_repair_plan_marks_inspection_only_actions(self) -> None:
         bundle = recovery_action_export_bundle("type_check_failure", 0)
@@ -13640,6 +13684,36 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "recovery action repair-plan drift"):
             validate_recovery_action_export_bundle(
                 "semantic_readings_missing_export",
+                0,
+                expected_action,
+                stale_bundle,
+            )
+
+    def test_verification_rejects_recovery_action_surface_type_contract_drift(
+        self,
+    ) -> None:
+        expected = diagnostic_fixture_result("type_check_failure")
+        expected_action = expected["diagnostics"]["recovery_actions"][0]
+        bundle = recovery_action_export_bundle("type_check_failure", 0)
+        validate_recovery_action_export_bundle(
+            "type_check_failure",
+            0,
+            expected_action,
+            bundle,
+        )
+        stale_bundle = deepcopy(bundle)
+        stale_bundle["surface_type_contract_diagnostics"] = deepcopy(
+            stale_bundle["surface_type_contract_diagnostics"]
+        )
+        stale_bundle["surface_type_contract_diagnostics"][
+            "schema_version"
+        ] = "surface_type_contract_diagnostic.v0"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "surface type contract diagnostic drift",
+        ):
+            validate_recovery_action_export_bundle(
+                "type_check_failure",
                 0,
                 expected_action,
                 stale_bundle,
@@ -15219,6 +15293,16 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(
             SystemExit,
             "type_check_failure semantic reading 0 reading_explanation HTML drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_fixture_surface_type_contract_drift(self) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        payloads["type_check_failure"].pop("surface_type_contract_diagnostics")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "type_check_failure surface type contract diagnostic drift",
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 

@@ -996,7 +996,11 @@ JSON link such as
 `/api/recovery-action?case=semantic_readings_missing_export&index=0`, whose
 `diagnostic_recovery_action.v1` payload contains the fixture case, action
 index, failure stage, exact action object, a `diagnostic_repair_plan.v1`
-repair plan, and the shared diagnostic contract. The repair plan records
+repair plan, the shared diagnostic contract, and a
+`surface_type_contract_diagnostics` object. That surface context points back to
+the `surface_type_contract_diagnostic.v1` category table, so a downloaded
+failure-local repair bundle still records the registry, role-frame,
+modifier-type, and time-type boundaries that are being protected. The repair plan records
 its `automation_mode`, whether the action can be run automatically as a
 read-only inspection, whether it can be applied automatically as a mutation,
 which target fields it touches, ordered repair steps, any review-only patch
@@ -1017,8 +1021,9 @@ the preview inside the corresponding action row, so a stale preview elsewhere
 on the page cannot satisfy the diagnostic contract by accident.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
-failure stage, so browser checks can verify the export contract without opening
-each link manually. Each export row also includes an expandable `Action JSON`
+failure stage, and it mirrors the surface type diagnostic schema, category
+count, category ids, and registry id in stable data attributes, so browser
+checks can verify the export contract without opening each link manually. Each export row also includes an expandable `Action JSON`
 preview whose content must match the corresponding
 `diagnostic_recovery_action.v1` API bundle exactly. The ordinary API path stays
 separate from a `download=1` path with a stable `.json` filename, and the same

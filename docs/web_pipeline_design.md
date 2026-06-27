@@ -432,8 +432,12 @@ pages should also expose each action through
 `/api/recovery-action?case=<case>&index=<n>`, returning a
 `diagnostic_recovery_action.v1` object with the case, action index, failure
 stage, exact action payload, a `diagnostic_repair_plan.v1` object, and shared
-diagnostic contract. The repair plan should record `can_auto_apply`, target
-fields, ordered repair steps, a review-only patch preview when one can be
+diagnostic contract. It should also carry a
+`surface_type_contract_diagnostics` object from the
+`surface_type_contract_diagnostic.v1` category table, so downloaded
+failure-local repair bundles retain the registry, role-frame, modifier-type,
+and time-type boundary context. The repair plan should record
+`can_auto_apply`, target fields, ordered repair steps, a review-only patch preview when one can be
 constructed, and verification commands; the verifier should reject repair-plan drift
 rather than trusting prose. It should also distinguish `automation_mode` values:
 `inspection_only` actions expose `can_auto_run` for read-only checks, while
@@ -465,12 +469,14 @@ without scraping the full analysis response. The fixture HTML should also render
 `Recovery Action Exports` panel that summarizes every such route with
 `data-export-schema`, `data-export-case`, `data-export-count`,
 `data-export-action-index`, `data-export-action-kind`, and
-`data-export-failure-stage` hooks, making the export inventory visible before a
-developer opens a JSON link. Each export row should include an expandable
+`data-export-failure-stage` hooks, plus
+`data-surface-type-contract-diagnostic-*` hooks for the type-boundary schema,
+category count, category ids, and registry id, making the export inventory
+visible before a developer opens a JSON link. Each export row should include an expandable
 `Action JSON` preview; the verifier should reconstruct the expected
 `diagnostic_recovery_action.v1` bundle from the fixture payload and shared
-diagnostic contract, then require the rendered preview to match that JSON
-exactly.
+diagnostic contract, then require the rendered preview and surface type
+diagnostic context to match that JSON exactly.
 The service should keep these hooks browser-testable through controlled
 diagnostics fixtures. `/api/diagnostic-fixture?case=semantic_readings_missing_export`
 returns the JSON version of a semantic-reading export failure, while
