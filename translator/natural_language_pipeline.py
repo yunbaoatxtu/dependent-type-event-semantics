@@ -158,6 +158,19 @@ FALLBACK_COVERAGE_EXAMPLES = (
 
 REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
+        "rule_id": "causal_because",
+        "variant_id": "transitive_causal_because",
+        "sentence": "John ate bread because Mary drank water yesterday",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            "because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))",
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
         "rule_id": "event_counting",
         "variant_id": "temporal_event_counting",
         "sentence": "John knocked twice yesterday",

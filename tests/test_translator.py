@@ -1601,6 +1601,53 @@ class TranslatorTests(unittest.TestCase):
             type_check["errors"],
         )
 
+    def test_causal_because_preserves_typed_transitive_arguments(self) -> None:
+        causal = run_pipeline(
+            "John ate bread because Mary drank water yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(causal["ok"])
+        self.assertEqual(causal["kind"], "causal_because")
+        self.assertEqual(causal["construction_rule"]["id"], "causal_because")
+        self.assertEqual(
+            causal["dependent_type_translation"],
+            "because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))",
+        )
+        self.assertEqual(
+            causal["ast"]["cause"]["predicate_type"],
+            "Entity -> Drinkable -> Prop",
+        )
+        self.assertEqual(
+            causal["ast"]["cause"]["object"],
+            {"name": "water", "type": "Drinkable"},
+        )
+        self.assertEqual(
+            causal["ast"]["effect"]["predicate_type"],
+            "Entity -> Food -> Prop",
+        )
+        self.assertEqual(
+            causal["ast"]["effect"]["object"],
+            {"name": "bread", "type": "Food"},
+        )
+        self.assertEqual(
+            causal["ast"]["cause"]["time_modifiers"],
+            [{"operator": "at", "argument": "yesterday"}],
+        )
+        self.assertIn("Parameter Drinkable : Type.", causal["coq_code"])
+        self.assertIn("Parameter Food : Type.", causal["coq_code"])
+        self.assertIn("Parameter water : Drinkable.", causal["coq_code"])
+        self.assertIn("Parameter bread : Food.", causal["coq_code"])
+        self.assertIn("Parameter drink : Entity -> Drinkable -> Prop.", causal["coq_code"])
+        self.assertIn("Parameter eat : Entity -> Food -> Prop.", causal["coq_code"])
+        self.assertIn(
+            "because_T (at_T yesterday (drink mary water)) (eat john bread)",
+            causal["coq_code"],
+        )
+        self.assertNotIn("Parameter Event : Type.", causal["coq_code"])
+        self.assertNotIn("Parameter Agent :", causal["coq_code"])
+        self.assertNotIn("Parameter Theme :", causal["coq_code"])
+        self.assertEqual(causal["coq_check"]["status"], "passed")
+
     def test_simple_conditional_implication_preserves_clause_times(self) -> None:
         conditional = run_pipeline(
             "if John left yesterday, Mary cried today",
@@ -9425,7 +9472,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 11)
+        self.assertEqual(counts["registered_variant_success_cases"], 12)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -9923,6 +9970,10 @@ class TranslatorTests(unittest.TestCase):
                 registered["plain_transitive_predication"]["accepted_examples"],
             )
             self.assertIn(
+                "John ate bread because Mary drank water yesterday",
+                registered["causal_because"]["accepted_examples"],
+            )
+            self.assertIn(
                 "Mary admired the painting in the gallery yesterday",
                 registered["modified_transitive_predication"]["accepted_examples"],
             )
@@ -10398,7 +10449,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            11,
+            12,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -10473,7 +10524,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="11"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="12"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -15512,6 +15563,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`and_T : PropT -> PropT -> PropT`", readme)
         self.assertIn("`John left because Mary cried`", readme)
         self.assertIn("`because_T(cry(mary), leave(john))`", readme)
+        self.assertIn("`John ate bread because Mary drank water yesterday`", readme)
+        self.assertIn(
+            "`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`",
+            readme,
+        )
         self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
         self.assertIn("`John left because Mary cried because Sue left`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
@@ -15545,6 +15601,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("PropT -> PropT -> PropT", manuscript)
         self.assertIn("because_T(cry(mary), leave(john))", manuscript)
+        self.assertIn(
+            "because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))",
+            manuscript,
+        )
+        self.assertIn("water : Drinkable and bread : Food", manuscript)
         self.assertIn("because_T(at_T(today, cry(mary)), leave(1)(quickly, john))", manuscript)
         self.assertIn("because_T declared at type Prop -> Prop -> Prop", manuscript)
         self.assertIn("John left because Mary cried because Sue left", manuscript)
@@ -15575,6 +15636,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("`and_T`", web_design)
         self.assertIn("`because_T(cry(mary), leave(john))`", web_design)
+        self.assertIn(
+            "`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`",
+            web_design,
+        )
         self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
         self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
         self.assertIn("`John left because Mary cried because Sue left`", web_design)
@@ -15584,6 +15649,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`causal_because` AST", ast_docs)
         self.assertIn("`because_T : Prop -> Prop -> Prop`", ast_docs)
         self.assertIn("`because_T(cry(mary), leave(john))`", ast_docs)
+        self.assertIn("`water : Drinkable`", ast_docs)
+        self.assertIn("`bread : Food`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)
         self.assertIn("`not_T : Prop -> Prop`", ast_docs)

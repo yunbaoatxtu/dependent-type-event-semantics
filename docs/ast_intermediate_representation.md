@@ -1525,6 +1525,10 @@ because-clause construction uses a separate `causal_because` AST with `cause`
 and `effect` clause objects plus a `because_T : Prop -> Prop -> Prop`
 connective: `John left because Mary cried` becomes
 `because_T(cry(mary), leave(john))`, while
+`John ate bread because Mary drank water yesterday` becomes
+`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))` and keeps
+the transitive objects typed as `water : Drinkable` and `bread : Food`. The
+modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`
 list on the cause and the `modifiers` list on the effect. Unsupported
 clause-level markers such as `which`, `whether`, nested because strings such as

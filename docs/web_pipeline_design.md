@@ -856,7 +856,10 @@ Sue cried today` is displayed as
 with `and_T` declared at type `PropT -> PropT -> PropT`.
 The same page should expose the narrow because-clause route as a certified
 proposition-level causal connective: `John left because Mary cried` appears as
-`because_T(cry(mary), leave(john))`, and the timed/modifier case
+`because_T(cry(mary), leave(john))`, the typed transitive variant
+`John ate bread because Mary drank water yesterday` appears as
+`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))` with
+`water : Drinkable` and `bread : Food`, and the timed/modifier case
 `John left quickly because Mary cried today` appears as
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
 `because_T` declared at type `Prop -> Prop -> Prop`.

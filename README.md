@@ -121,6 +121,10 @@ with `and_T : PropT -> PropT -> PropT`. These exports use no event, Agent, or Th
 declarations. A separate narrow because-clause route now treats simple causal
 subordination as a proposition-level connective: `John left because Mary cried`
 becomes `because_T(cry(mary), leave(john))`, and
+`John ate bread because Mary drank water yesterday` becomes
+`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`, preserving
+the typed transitive objects `water : Drinkable` and `bread : Food` instead of
+collapsing them to generic event roles. The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
 `because_T : Prop -> Prop -> Prop`. Clause-level markers outside certified
@@ -1413,7 +1417,10 @@ The current prototype has small, testable rules for:
   plain `Entity -> Prop` declaration;
 - simple because-clauses represented as proposition-level causal connection,
   for example `John left because Mary cried` as
-  `because_T(cry(mary), leave(john))`, with `because_T : Prop -> Prop -> Prop`;
+  `because_T(cry(mary), leave(john))`, and the typed transitive variant
+  `John ate bread because Mary drank water yesterday` as
+  `because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`, with
+  `because_T : Prop -> Prop -> Prop`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as
