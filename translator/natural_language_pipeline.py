@@ -286,6 +286,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "boundary_status": "registered_variant_example",
     },
     {
+        "rule_id": "causal_because",
+        "variant_id": "negated_stative_reason_because",
+        "sentence": "Mary admired the vase because it was not broken",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            "because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))",
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
         "rule_id": "event_counting",
         "variant_id": "temporal_event_counting",
         "sentence": "John knocked twice yesterday",

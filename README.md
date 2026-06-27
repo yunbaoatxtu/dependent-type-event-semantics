@@ -153,6 +153,10 @@ The pronoun in `it was closed` is resolved to the state-change theme `door`,
 and the generated scaffold declares `holds_state : Entity -> StateScale -> State -> Prop`
 without exporting `it : Entity`. Scale-incompatible cases such as
 `John opened the door because it was red` fail before Coq/Rocq validation.
+Negated stative reasons remain proposition-level wrappers rather than new
+atomic states: `Mary admired the vase because it was not broken` becomes
+`because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`,
+with `it` resolved to the admired object and `not_T : Prop -> Prop`.
 The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
@@ -1459,7 +1463,10 @@ The current prototype has small, testable rules for:
   `because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))`,
   while unresolved `it` cases fail before Coq/Rocq export; stative
   preconditions such as `John opened the door because it was closed` render as
-  `because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`;
+  `because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`,
+  and negated stative reasons such as
+  `Mary admired the vase because it was not broken` render as
+  `because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as

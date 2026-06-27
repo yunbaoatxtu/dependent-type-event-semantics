@@ -1567,6 +1567,11 @@ reverse direction, `the door was closed because John closed it` stores the
 anaphora object on `cause.transition.theme` with `source_role: "subject"`.
 Scale-incompatible cases such as `John opened the door because it was red`
 fail before proof-assistant export.
+The same slot accepts negative stative reasons without inventing a `not_broken`
+state: `Mary admired the vase because it was not broken` stores the stative
+clause with `polarity: "negative"`, resolves the stative subject's original
+`it` to the effect object `vase`, and renders
+`because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`.
 The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`
