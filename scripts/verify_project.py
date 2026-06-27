@@ -2985,60 +2985,92 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             1,
             False,
             "registered_primary_example",
+            "application",
+            ["admire(1)(in(gallery), mary, painting)"],
         ),
         "temporal_modified_transitive_predication": (
             "Mary admired the painting in the gallery yesterday",
             1,
             True,
             "registered_variant_example",
+            "time",
+            ["at_T(yesterday, admire(1)(in(gallery), mary, painting))"],
         ),
         "multi_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope",
             2,
             False,
             "registered_variant_example",
+            "application",
+            ["admire(2)(in(gallery), with(telescope), mary, painting)"],
         ),
         "temporal_multi_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope yesterday",
             2,
             True,
             "registered_variant_example",
+            "time",
+            [
+                "at_T(yesterday, admire(2)(in(gallery), with(telescope), mary, painting))",
+            ],
         ),
         "triple_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope near a window",
             3,
             False,
             "registered_variant_example",
+            "application",
+            ["admire(3)(in(gallery), with(telescope), near(window), mary, painting)"],
         ),
         "temporal_triple_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope near a window yesterday",
             3,
             True,
             "registered_variant_example",
+            "time",
+            [
+                "at_T(yesterday, admire(3)(in(gallery), with(telescope), near(window), mary, painting))",
+            ],
         ),
         "quad_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope near a window beside a shelf",
             4,
             False,
             "registered_variant_example",
+            "application",
+            [
+                "admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary, painting)",
+            ],
         ),
         "temporal_quad_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope near a window beside a shelf yesterday",
             4,
             True,
             "registered_variant_example",
+            "time",
+            [
+                "at_T(yesterday, admire(4)(in(gallery), with(telescope), near(window), beside(shelf), mary, painting))",
+            ],
         ),
         "quint_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp",
             5,
             False,
             "registered_variant_example",
+            "application",
+            [
+                "admire(5)(in(gallery), with(telescope), near(window), beside(shelf), under(lamp), mary, painting)",
+            ],
         ),
         "temporal_quint_adv_modified_transitive_predication": (
             "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp yesterday",
             5,
             True,
             "registered_variant_example",
+            "time",
+            [
+                "at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window), beside(shelf), under(lamp), mary, painting))",
+            ],
         ),
     }
     for item in surface_examples:
@@ -3052,6 +3084,9 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             or item.get("modifier_count") != expected_meta[1]
             or item.get("time_wrapped") is not expected_meta[2]
             or item.get("source") != expected_meta[3]
+            or item.get("expected_event_analysis") != "modified-transitive-predication"
+            or item.get("expected_ast_kind") != expected_meta[4]
+            or item.get("expected_dependent_type_fragments") != expected_meta[5]
             or not isinstance(item.get("boundary_status"), str)
         ):
             raise SystemExit("web route smoke check failed: certified surface parser witness drift")
@@ -3349,6 +3384,10 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-example-modifier-count="5"',
         'data-surface-example-time-wrapped="true"',
         'data-surface-example-source="registered_variant_example"',
+        'data-surface-example-analysis="modified-transitive-predication"',
+        'data-surface-example-ast-kind="application"',
+        'data-surface-example-ast-kind="time"',
+        'data-surface-example-fragment-count="1"',
         "surface parser coverage",
         "<h2>Certified Fragment</h2>",
     ]

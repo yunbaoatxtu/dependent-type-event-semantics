@@ -9363,6 +9363,11 @@ class TranslatorTests(unittest.TestCase):
                 "time_wrapped": False,
                 "source": "registered_primary_example",
                 "boundary_status": "registered_construction_example",
+                "expected_event_analysis": "modified-transitive-predication",
+                "expected_ast_kind": "application",
+                "expected_dependent_type_fragments": [
+                    "admire(1)(in(gallery), mary, painting)",
+                ],
             },
         )
         self.assertEqual(
@@ -9375,6 +9380,25 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertTrue(
             surface_parser_coverage["verified_examples"][-1]["time_wrapped"],
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_examples"][-1][
+                "expected_event_analysis"
+            ],
+            "modified-transitive-predication",
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_examples"][-1]["expected_ast_kind"],
+            "time",
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_examples"][-1][
+                "expected_dependent_type_fragments"
+            ],
+            [
+                "at_T(yesterday, admire(5)(in(gallery), with(telescope), "
+                "near(window), beside(shelf), under(lamp), mary, painting))",
+            ],
         )
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
@@ -9670,6 +9694,12 @@ class TranslatorTests(unittest.TestCase):
             'data-surface-example-source="registered_variant_example"',
             page,
         )
+        self.assertIn(
+            'data-surface-example-analysis="modified-transitive-predication"',
+            page,
+        )
+        self.assertIn('data-surface-example-ast-kind="time"', page)
+        self.assertIn('data-surface-example-fragment-count="1"', page)
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)

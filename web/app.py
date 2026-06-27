@@ -2474,7 +2474,10 @@ def certified_fragment_panel() -> str:
                 f'data-surface-example-sentence="{html.escape(str(example.get("sentence", "")), quote=True)}" '
                 f'data-surface-example-modifier-count="{html.escape(str(example.get("modifier_count", "")), quote=True)}" '
                 f'data-surface-example-time-wrapped="{str(example.get("time_wrapped") is True).lower()}" '
-                f'data-surface-example-source="{html.escape(str(example.get("source", "")), quote=True)}">'
+                f'data-surface-example-source="{html.escape(str(example.get("source", "")), quote=True)}" '
+                f'data-surface-example-analysis="{html.escape(str(example.get("expected_event_analysis", "")), quote=True)}" '
+                f'data-surface-example-ast-kind="{html.escape(str(example.get("expected_ast_kind", "")), quote=True)}" '
+                f'data-surface-example-fragment-count="{len(example.get("expected_dependent_type_fragments", [])) if isinstance(example.get("expected_dependent_type_fragments"), list) else 0}">'
                 f"{html.escape(str(example.get('sentence', '')))}"
                 "</li>"
             )

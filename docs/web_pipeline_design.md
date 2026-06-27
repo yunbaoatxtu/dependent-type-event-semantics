@@ -171,7 +171,11 @@ variant up through five Adv modifiers. The HTML panel renders each witness with
 `data-surface-example-source`, and exposes the total through
 `data-surface-verified-example-count`. The verifier checks those hooks against
 the manifest so the advertised parser boundary remains tied to actual smoke
-inputs.
+inputs. Each witness also includes `expected_event_analysis`,
+`expected_ast_kind`, and `expected_dependent_type_fragments`, while the page
+mirrors the analysis, AST kind, and fragment count through stable attributes.
+Thus a witness is not merely an example sentence: it is a compact semantic
+contract for what that surface sentence must produce.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

@@ -11964,6 +11964,16 @@ def construction_rules() -> list[ConstructionRule]:
 
 
 def surface_parser_coverage_payload() -> dict[str, Any]:
+    snapshot_by_rule = {
+        str(snapshot.get("rule_id", "")): snapshot
+        for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
+        if isinstance(snapshot, dict)
+    }
+    primary_snapshot = snapshot_by_rule.get("modified_transitive_predication", {})
+    primary_ast_summary = CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS.get(
+        "modified_transitive_predication",
+        {},
+    )
     modified_transitive_variants = [
         variant
         for variant in REGISTERED_VARIANT_COVERAGE_EXAMPLES
@@ -11979,6 +11989,17 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
             "time_wrapped": False,
             "source": "registered_primary_example",
             "boundary_status": "registered_construction_example",
+            "expected_event_analysis": str(
+                primary_snapshot.get("expected_event_analysis", ""),
+            ),
+            "expected_ast_kind": str(primary_ast_summary.get("kind", "")),
+            "expected_dependent_type_fragments": [
+                str(fragment)
+                for fragment in primary_snapshot.get(
+                    "expected_dependent_type_fragments",
+                    [],
+                )
+            ],
         },
     ]
     verified_examples.extend(
@@ -11990,6 +12011,17 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
             "time_wrapped": variant.get("time_wrapped") is True,
             "source": "registered_variant_example",
             "boundary_status": str(variant.get("boundary_status", "")),
+            "expected_event_analysis": str(
+                variant.get("expected_event_analysis", ""),
+            ),
+            "expected_ast_kind": str(variant.get("expected_ast_kind", "")),
+            "expected_dependent_type_fragments": [
+                str(fragment)
+                for fragment in variant.get(
+                    "expected_dependent_type_fragments",
+                    [],
+                )
+            ],
         }
         for variant in modified_transitive_variants
     )
