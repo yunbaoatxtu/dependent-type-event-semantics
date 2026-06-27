@@ -897,7 +897,11 @@ verifier rebuilds the probe sentences and expected dependent-type fragments
 from that spec before running the live analyzer. These probes make sure the
 current front end does not accidentally bake the surface contract into only the
 Mary / painting / admire example, without claiming arbitrary lexical
-replacement.
+replacement. A companion `matrix_examples` contract now enumerates a small
+2-by-2-by-2 lexical-frame matrix over Mary/John, admire/photograph, and
+painting/sculpture under both a one-Adv untimed profile and a timed five-Adv
+profile. This gives the certified fragment a broader, generated stability
+check while still marking `full_lexical_matrix_certification: false`.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

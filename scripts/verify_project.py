@@ -3175,6 +3175,151 @@ def expected_modified_surface_slot_probe_meta_from_spec(
     return ordered_ids, expected_meta
 
 
+def expected_modified_surface_slot_probe_matrix_meta_from_spec(
+    spec: dict,
+) -> tuple[list[str], dict[str, tuple[str, str, str, str, int, bool, str, list[str]]]]:
+    def spec_drift() -> None:
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe matrix generation spec drift"
+        )
+
+    expected_axes = {
+        "agents": [
+            {"surface": "Mary", "semantic": "mary"},
+            {"surface": "John", "semantic": "john"},
+        ],
+        "predicates": [
+            {"surface": "admired", "semantic": "admire"},
+            {"surface": "photographed", "semantic": "photograph"},
+        ],
+        "themes": [
+            {"surface": "painting", "semantic": "painting"},
+            {"surface": "sculpture", "semantic": "sculpture"},
+        ],
+    }
+    expected_profiles = [
+        {
+            "profile_id": "one_adv_untimed",
+            "modifier_prefix_length": 1,
+            "time_wrapped": False,
+        },
+        {
+            "profile_id": "max_prefix_timed",
+            "modifier_prefix_length": 5,
+            "time_wrapped": True,
+        },
+    ]
+    if (
+        not isinstance(spec, dict)
+        or spec.get("schema_version") != "surface_slot_probe_matrix_generation.v1"
+        or spec.get("generator") != "cartesian_lexical_frame_with_modifier_profiles"
+        or spec.get("base_family") != "modified_transitive_adv_sequence"
+        or spec.get("axes") != expected_axes
+        or spec.get("surface_template")
+        != "{agent_surface} {predicate_surface} the {theme_surface} {modifier_surfaces}"
+        or spec.get("timed_surface_template") != "{body} {time_suffix}"
+        or spec.get("modifier_profiles") != expected_profiles
+        or spec.get("time_suffix") != "yesterday"
+        or spec.get("time_operator") != "at_T"
+        or spec.get("time_argument") != "yesterday"
+        or spec.get("expected_ast_kind_by_time_wrapped")
+        != {"false": "application", "true": "time"}
+        or spec.get("translation_template")
+        != "{predicate}({n})({modifier_fragments}, {agent}, {theme})"
+        or spec.get("timed_translation_template")
+        != "{time_operator}({time_argument}, {body})"
+    ):
+        spec_drift()
+
+    modifiers = spec.get("modifiers")
+    if not isinstance(modifiers, list) or len(modifiers) != 5:
+        spec_drift()
+    expected_modifiers = [
+        (1, "in the gallery", "in(gallery)", "Location"),
+        (2, "with a telescope", "with(telescope)", "Instrument"),
+        (3, "near a window", "near(window)", "Location"),
+        (4, "beside a shelf", "beside(shelf)", "Location"),
+        (5, "under a lamp", "under(lamp)", "Location"),
+    ]
+    for modifier, expected in zip(modifiers, expected_modifiers):
+        if not isinstance(modifier, dict):
+            spec_drift()
+        index, surface, fragment, role = expected
+        if (
+            modifier.get("index") != index
+            or modifier.get("surface") != surface
+            or modifier.get("dependent_type_fragment") != fragment
+            or modifier.get("semantic_role") != role
+        ):
+            spec_drift()
+
+    ordered_ids: list[str] = []
+    expected_meta: dict[str, tuple[str, str, str, str, int, bool, str, list[str]]] = {}
+    for agent in expected_axes["agents"]:
+        for predicate in expected_axes["predicates"]:
+            for theme in expected_axes["themes"]:
+                for profile in expected_profiles:
+                    modifier_count = int(profile["modifier_prefix_length"])
+                    modifier_prefix = modifiers[:modifier_count]
+                    modifier_surfaces = " ".join(
+                        str(modifier["surface"]) for modifier in modifier_prefix
+                    )
+                    modifier_fragments = ", ".join(
+                        str(modifier["dependent_type_fragment"])
+                        for modifier in modifier_prefix
+                    )
+                    sentence_body = str(spec["surface_template"]).format(
+                        agent_surface=agent["surface"],
+                        predicate_surface=predicate["surface"],
+                        theme_surface=theme["surface"],
+                        modifier_surfaces=modifier_surfaces,
+                    )
+                    body = str(spec["translation_template"]).format(
+                        predicate=predicate["semantic"],
+                        n=modifier_count,
+                        modifier_fragments=modifier_fragments,
+                        agent=agent["semantic"],
+                        theme=theme["semantic"],
+                    )
+                    time_wrapped = profile.get("time_wrapped") is True
+                    sentence = (
+                        str(spec["timed_surface_template"]).format(
+                            body=sentence_body,
+                            time_suffix=spec["time_suffix"],
+                        )
+                        if time_wrapped
+                        else sentence_body
+                    )
+                    fragment = (
+                        str(spec["timed_translation_template"]).format(
+                            time_operator=spec["time_operator"],
+                            time_argument=spec["time_argument"],
+                            body=body,
+                        )
+                        if time_wrapped
+                        else body
+                    )
+                    ast_kind = spec["expected_ast_kind_by_time_wrapped"][
+                        "true" if time_wrapped else "false"
+                    ]
+                    matrix_id = (
+                        f"agent_{agent['semantic']}__predicate_{predicate['semantic']}"
+                        f"__theme_{theme['semantic']}__profile_{profile['profile_id']}"
+                    )
+                    ordered_ids.append(matrix_id)
+                    expected_meta[matrix_id] = (
+                        str(profile["profile_id"]),
+                        str(agent["semantic"]),
+                        str(predicate["semantic"]),
+                        str(theme["semantic"]),
+                        modifier_count,
+                        time_wrapped,
+                        ast_kind,
+                        [fragment],
+                    )
+    return ordered_ids, expected_meta
+
+
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
         ast_structure_summary,
@@ -3435,6 +3580,104 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             if fragment not in probe_translation:
                 raise SystemExit(
                     "web route smoke check failed: certified surface parser slot probe live translation drift"
+                )
+    if (
+        slot_probe_examples.get("matrix_claim")
+        != "controlled_cartesian_slot_substitutions"
+        or slot_probe_examples.get("full_lexical_matrix_certification") is not False
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe matrix schema drift"
+        )
+    (
+        expected_matrix_ids,
+        expected_matrix_meta,
+    ) = expected_modified_surface_slot_probe_matrix_meta_from_spec(
+        slot_probe_examples.get("matrix_generation_spec"),
+    )
+    if slot_probe_examples.get("matrix_example_count") != len(expected_matrix_ids):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe matrix schema drift"
+        )
+    matrix_examples = slot_probe_examples.get("matrix_examples")
+    if not isinstance(matrix_examples, list) or len(matrix_examples) != len(expected_matrix_ids):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe matrix count drift"
+        )
+    observed_matrix_ids = [
+        example.get("matrix_id")
+        for example in matrix_examples
+        if isinstance(example, dict)
+    ]
+    if observed_matrix_ids != expected_matrix_ids:
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe matrix id drift"
+        )
+    for example in matrix_examples:
+        if not isinstance(example, dict):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix shape drift"
+            )
+        expected_matrix = expected_matrix_meta.get(str(example.get("matrix_id", "")))
+        agent = example.get("agent")
+        predicate = example.get("predicate")
+        theme = example.get("theme")
+        if (
+            expected_matrix is None
+            or not isinstance(agent, dict)
+            or not isinstance(predicate, dict)
+            or not isinstance(theme, dict)
+            or example.get("profile_id") != expected_matrix[0]
+            or agent.get("semantic") != expected_matrix[1]
+            or predicate.get("semantic") != expected_matrix[2]
+            or theme.get("semantic") != expected_matrix[3]
+            or example.get("modifier_count") != expected_matrix[4]
+            or example.get("time_wrapped") is not expected_matrix[5]
+            or example.get("expected_ast_kind") != expected_matrix[6]
+            or example.get("expected_dependent_type_fragments") != expected_matrix[7]
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix drift"
+            )
+        matrix_fragments = example.get("expected_dependent_type_fragments")
+        if (
+            not isinstance(matrix_fragments, list)
+            or not matrix_fragments
+            or not all(
+                isinstance(fragment, str) and fragment
+                for fragment in matrix_fragments
+            )
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix fragment schema drift"
+            )
+        matrix_result = run_pipeline(str(example.get("sentence", "")), require_coq=False)
+        if not matrix_result.get("ok"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix no longer runs"
+            )
+        if (
+            matrix_result.get("construction_rule", {}).get("id")
+            != slot_probe_examples.get("expected_rule_id")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix rule drift"
+            )
+        if matrix_result.get("event_semantics", {}).get("analysis") != slot_probe_examples.get(
+            "expected_event_analysis",
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix live analysis drift"
+            )
+        if matrix_result.get("ast", {}).get("kind") != example.get("expected_ast_kind"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix live AST drift"
+            )
+        matrix_translation = str(matrix_result.get("dependent_type_translation", ""))
+        for fragment in matrix_fragments:
+            if fragment not in matrix_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified surface parser slot probe matrix live translation drift"
                 )
     registered_case_by_id = {
         item.get("rule_id"): item
@@ -3727,6 +3970,9 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-slot-probe-count="4"',
         'data-surface-slot-probe-generation-schema="surface_slot_probe_generation.v1"',
         'data-surface-slot-probe-generation-kind="lexical_slot_substitution_with_modifier_prefix"',
+        'data-surface-slot-probe-matrix-count="16"',
+        'data-surface-slot-probe-matrix-generation-schema="surface_slot_probe_matrix_generation.v1"',
+        'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',
@@ -3739,6 +3985,16 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-slot-probe-slot="agent_predicate_theme"',
         'data-surface-slot-probe-modifier-count="5"',
         'data-surface-slot-probe-time-wrapped="true"',
+        (
+            'data-surface-slot-matrix-id="'
+            'agent_mary__predicate_admire__theme_painting__profile_one_adv_untimed"'
+        ),
+        'data-surface-slot-matrix-profile="max_prefix_timed"',
+        'data-surface-slot-matrix-agent="john"',
+        'data-surface-slot-matrix-predicate="photograph"',
+        'data-surface-slot-matrix-theme="sculpture"',
+        'data-surface-slot-matrix-modifier-count="5"',
+        'data-surface-slot-matrix-time-wrapped="true"',
         'data-surface-example-variant-id="primary_modified_transitive_predication"',
         'data-surface-example-sentence="Mary admired the painting in the gallery"',
         'data-surface-example-source="registered_primary_example"',

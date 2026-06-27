@@ -9428,6 +9428,59 @@ class TranslatorTests(unittest.TestCase):
             ),
             slot_probe_examples["probes"],
         )
+        matrix_generation_spec = slot_probe_examples["matrix_generation_spec"]
+        self.assertEqual(
+            matrix_generation_spec["schema_version"],
+            "surface_slot_probe_matrix_generation.v1",
+        )
+        self.assertEqual(
+            matrix_generation_spec["generator"],
+            "cartesian_lexical_frame_with_modifier_profiles",
+        )
+        self.assertEqual(
+            [agent["semantic"] for agent in matrix_generation_spec["axes"]["agents"]],
+            ["mary", "john"],
+        )
+        self.assertEqual(
+            [
+                predicate["semantic"]
+                for predicate in matrix_generation_spec["axes"]["predicates"]
+            ],
+            ["admire", "photograph"],
+        )
+        self.assertEqual(
+            [theme["semantic"] for theme in matrix_generation_spec["axes"]["themes"]],
+            ["painting", "sculpture"],
+        )
+        self.assertEqual(
+            [profile["profile_id"] for profile in matrix_generation_spec["modifier_profiles"]],
+            ["one_adv_untimed", "max_prefix_timed"],
+        )
+        self.assertEqual(
+            slot_probe_examples["matrix_claim"],
+            "controlled_cartesian_slot_substitutions",
+        )
+        self.assertFalse(slot_probe_examples["full_lexical_matrix_certification"])
+        self.assertEqual(slot_probe_examples["matrix_example_count"], 16)
+        self.assertEqual(
+            natural_language_pipeline.modified_transitive_surface_slot_probe_matrix_from_spec(
+                matrix_generation_spec,
+            ),
+            slot_probe_examples["matrix_examples"],
+        )
+        self.assertEqual(
+            slot_probe_examples["matrix_examples"][0]["matrix_id"],
+            "agent_mary__predicate_admire__theme_painting__profile_one_adv_untimed",
+        )
+        self.assertEqual(
+            slot_probe_examples["matrix_examples"][-1][
+                "expected_dependent_type_fragments"
+            ],
+            [
+                "at_T(yesterday, photograph(5)(in(gallery), with(telescope), "
+                "near(window), beside(shelf), under(lamp), john, sculpture))",
+            ],
+        )
         self.assertEqual(slot_probe_examples["probe_count"], 4)
         self.assertEqual(
             [probe["probe_id"] for probe in slot_probe_examples["probes"]],
@@ -9522,6 +9575,22 @@ class TranslatorTests(unittest.TestCase):
                 self.assertEqual(result["ast"]["kind"], probe["expected_ast_kind"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
                 for fragment in probe["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
+        for example in slot_probe_examples["matrix_examples"]:
+            with self.subTest(surface_slot_matrix=example["matrix_id"]):
+                result = run_pipeline(example["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(
+                    result["construction_rule"]["id"],
+                    slot_probe_examples["expected_rule_id"],
+                )
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    slot_probe_examples["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], example["expected_ast_kind"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+                for fragment in example["expected_dependent_type_fragments"]:
                     self.assertIn(fragment, result["dependent_type_translation"])
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
@@ -9756,10 +9825,28 @@ class TranslatorTests(unittest.TestCase):
         stale_manifest = deepcopy(manifest)
         stale_manifest["surface_parser_coverage"][
             "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_generation_spec"][
+            "generator"
+        ] = "stale_matrix_generator"
+        with self.assertRaisesRegex(SystemExit, "slot probe matrix generation spec drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
         ]["slot_probe_examples"]["probes"][0][
             "expected_dependent_type_fragments"
         ] = ["stale_translation"]
         with self.assertRaisesRegex(SystemExit, "slot probe drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_examples"][0][
+            "expected_dependent_type_fragments"
+        ] = ["stale_matrix_translation"]
+        with self.assertRaisesRegex(SystemExit, "slot probe matrix drift"):
             validate_certified_fragment_manifest(stale_manifest)
 
     def test_verification_rejects_surface_parser_witness_live_drift(self) -> None:
@@ -9929,6 +10016,15 @@ class TranslatorTests(unittest.TestCase):
             'data-surface-slot-probe-generation-kind="lexical_slot_substitution_with_modifier_prefix"',
             page,
         )
+        self.assertIn('data-surface-slot-probe-matrix-count="16"', page)
+        self.assertIn(
+            'data-surface-slot-probe-matrix-generation-schema="surface_slot_probe_matrix_generation.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
+            page,
+        )
         self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
         self.assertIn('data-surface-slot-probe-slot="agent"', page)
         self.assertIn(
@@ -9944,6 +10040,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-surface-slot-probe-id="combined_slots_timed_max_prefix"', page)
         self.assertIn('data-surface-slot-probe-slot="agent_predicate_theme"', page)
         self.assertIn('data-surface-slot-probe-time-wrapped="true"', page)
+        self.assertIn(
+            'data-surface-slot-matrix-id="agent_mary__predicate_admire__theme_painting__profile_one_adv_untimed"',
+            page,
+        )
+        self.assertIn('data-surface-slot-matrix-profile="max_prefix_timed"', page)
+        self.assertIn('data-surface-slot-matrix-agent="john"', page)
+        self.assertIn('data-surface-slot-matrix-predicate="photograph"', page)
+        self.assertIn('data-surface-slot-matrix-theme="sculpture"', page)
+        self.assertIn('data-surface-slot-matrix-modifier-count="5"', page)
+        self.assertIn('data-surface-slot-matrix-time-wrapped="true"', page)
         self.assertIn(
             'data-surface-example-variant-id="primary_modified_transitive_predication"',
             page,
@@ -15364,7 +15470,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface_witness_generation.v1", verifier)
         self.assertIn("surface parser slot probe schema drift", verifier)
         self.assertIn("surface parser slot probe generation spec drift", verifier)
+        self.assertIn("surface parser slot probe matrix generation spec drift", verifier)
+        self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
+        self.assertIn("surface_slot_probe_matrix_generation.v1", verifier)
         self.assertIn("surface_slot_probe_generation.v1", verifier)
         self.assertIn("surface_slot_probes.v1", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)

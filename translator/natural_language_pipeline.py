@@ -571,9 +571,142 @@ def modified_transitive_surface_slot_probes_from_spec(
     return probes
 
 
+def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str, Any]:
+    return {
+        "schema_version": "surface_slot_probe_matrix_generation.v1",
+        "generator": "cartesian_lexical_frame_with_modifier_profiles",
+        "base_family": "modified_transitive_adv_sequence",
+        "axes": {
+            "agents": [
+                {"surface": "Mary", "semantic": "mary"},
+                {"surface": "John", "semantic": "john"},
+            ],
+            "predicates": [
+                {"surface": "admired", "semantic": "admire"},
+                {"surface": "photographed", "semantic": "photograph"},
+            ],
+            "themes": [
+                {"surface": "painting", "semantic": "painting"},
+                {"surface": "sculpture", "semantic": "sculpture"},
+            ],
+        },
+        "surface_template": (
+            "{agent_surface} {predicate_surface} the {theme_surface} "
+            "{modifier_surfaces}"
+        ),
+        "timed_surface_template": "{body} {time_suffix}",
+        "modifiers": [
+            dict(modifier)
+            for modifier in MODIFIED_TRANSITIVE_SURFACE_MODIFIER_SEQUENCE
+        ],
+        "modifier_profiles": [
+            {
+                "profile_id": "one_adv_untimed",
+                "modifier_prefix_length": 1,
+                "time_wrapped": False,
+            },
+            {
+                "profile_id": "max_prefix_timed",
+                "modifier_prefix_length": 5,
+                "time_wrapped": True,
+            },
+        ],
+        "time_suffix": "yesterday",
+        "time_operator": "at_T",
+        "time_argument": "yesterday",
+        "expected_ast_kind_by_time_wrapped": {
+            "false": "application",
+            "true": "time",
+        },
+        "translation_template": (
+            "{predicate}({n})({modifier_fragments}, {agent}, {theme})"
+        ),
+        "timed_translation_template": "{time_operator}({time_argument}, {body})",
+    }
+
+
+def modified_transitive_surface_slot_probe_matrix_from_spec(
+    spec: dict[str, Any],
+) -> list[dict[str, Any]]:
+    axes = spec["axes"]
+    modifiers = spec["modifiers"]
+    matrix_examples = []
+    for agent in axes["agents"]:
+        for predicate in axes["predicates"]:
+            for theme in axes["themes"]:
+                for profile in spec["modifier_profiles"]:
+                    modifier_count = int(profile["modifier_prefix_length"])
+                    modifier_prefix = modifiers[:modifier_count]
+                    modifier_surfaces = " ".join(
+                        str(modifier["surface"]) for modifier in modifier_prefix
+                    )
+                    modifier_fragments = ", ".join(
+                        str(modifier["dependent_type_fragment"])
+                        for modifier in modifier_prefix
+                    )
+                    sentence_body = str(spec["surface_template"]).format(
+                        agent_surface=agent["surface"],
+                        predicate_surface=predicate["surface"],
+                        theme_surface=theme["surface"],
+                        modifier_surfaces=modifier_surfaces,
+                    )
+                    body = str(spec["translation_template"]).format(
+                        predicate=predicate["semantic"],
+                        n=modifier_count,
+                        modifier_fragments=modifier_fragments,
+                        agent=agent["semantic"],
+                        theme=theme["semantic"],
+                    )
+                    time_wrapped = profile.get("time_wrapped") is True
+                    sentence = (
+                        str(spec["timed_surface_template"]).format(
+                            body=sentence_body,
+                            time_suffix=spec["time_suffix"],
+                        )
+                        if time_wrapped
+                        else sentence_body
+                    )
+                    fragment = (
+                        str(spec["timed_translation_template"]).format(
+                            time_operator=spec["time_operator"],
+                            time_argument=spec["time_argument"],
+                            body=body,
+                        )
+                        if time_wrapped
+                        else body
+                    )
+                    matrix_id = (
+                        f"agent_{agent['semantic']}__predicate_{predicate['semantic']}"
+                        f"__theme_{theme['semantic']}__profile_{profile['profile_id']}"
+                    )
+                    matrix_examples.append(
+                        {
+                            "matrix_id": matrix_id,
+                            "profile_id": str(profile["profile_id"]),
+                            "agent": dict(agent),
+                            "predicate": dict(predicate),
+                            "theme": dict(theme),
+                            "sentence": sentence,
+                            "modifier_count": modifier_count,
+                            "time_wrapped": time_wrapped,
+                            "expected_ast_kind": spec[
+                                "expected_ast_kind_by_time_wrapped"
+                            ]["true" if time_wrapped else "false"],
+                            "expected_dependent_type_fragments": [fragment],
+                        },
+                    )
+    return matrix_examples
+
+
 def modified_transitive_surface_slot_probe_payload() -> dict[str, Any]:
     generation_spec = modified_transitive_surface_slot_probe_generation_spec()
     probes = modified_transitive_surface_slot_probes_from_spec(generation_spec)
+    matrix_generation_spec = (
+        modified_transitive_surface_slot_probe_matrix_generation_spec()
+    )
+    matrix_examples = modified_transitive_surface_slot_probe_matrix_from_spec(
+        matrix_generation_spec,
+    )
     return {
         "schema_version": "surface_slot_probes.v1",
         "probe_claim": "controlled_single_slot_and_combined_substitutions",
@@ -584,6 +717,11 @@ def modified_transitive_surface_slot_probe_payload() -> dict[str, Any]:
         "probe_count": len(probes),
         "probe_generation_spec": generation_spec,
         "probes": probes,
+        "matrix_claim": "controlled_cartesian_slot_substitutions",
+        "full_lexical_matrix_certification": False,
+        "matrix_example_count": len(matrix_examples),
+        "matrix_generation_spec": matrix_generation_spec,
+        "matrix_examples": matrix_examples,
     }
 
 

@@ -199,6 +199,13 @@ from that spec before running the live analyzer. They are intentionally marked
 as probes rather than full lexical-slot certification, and the panel mirrors
 both the probe rows and generator metadata through `data-surface-slot-probe-*`
 attributes.
+The same object now includes `matrix_examples`, a generated 2-by-2-by-2
+lexical-frame matrix for Mary/John, admire/photograph, and
+painting/sculpture, evaluated under one untimed one-Adv profile and one timed
+five-Adv profile. The matrix is exposed with
+`full_lexical_matrix_certification: false` and mirrored through
+`data-surface-slot-matrix-*` attributes, so the UI can show broader finite
+coverage without implying arbitrary lexical replacement.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

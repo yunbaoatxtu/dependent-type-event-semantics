@@ -2489,6 +2489,20 @@ def certified_fragment_panel() -> str:
     surface_slot_probe_generator_kind = str(
         surface_slot_probe_generation_spec.get("generator", ""),
     )
+    surface_slot_probe_matrix_count = str(
+        surface_slot_probes.get("matrix_example_count", ""),
+    )
+    surface_slot_probe_matrix_generation_spec = surface_slot_probes.get(
+        "matrix_generation_spec",
+    )
+    if not isinstance(surface_slot_probe_matrix_generation_spec, dict):
+        surface_slot_probe_matrix_generation_spec = {}
+    surface_slot_probe_matrix_generator_schema = str(
+        surface_slot_probe_matrix_generation_spec.get("schema_version", ""),
+    )
+    surface_slot_probe_matrix_generator_kind = str(
+        surface_slot_probe_matrix_generation_spec.get("generator", ""),
+    )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
         examples = item.get("verified_examples")
@@ -2532,6 +2546,30 @@ def certified_fragment_panel() -> str:
             )
             for probe in probes
             if isinstance(probe, dict)
+        )
+
+    def surface_slot_probe_matrix_items(item: dict[str, object]) -> str:
+        slot_probes = item.get("slot_probe_examples")
+        if not isinstance(slot_probes, dict):
+            return ""
+        examples = slot_probes.get("matrix_examples")
+        if not isinstance(examples, list):
+            return ""
+        return "".join(
+            (
+                '<li '
+                f'data-surface-slot-matrix-id="{html.escape(str(example.get("matrix_id", "")), quote=True)}" '
+                f'data-surface-slot-matrix-profile="{html.escape(str(example.get("profile_id", "")), quote=True)}" '
+                f'data-surface-slot-matrix-agent="{html.escape(str((example.get("agent") or {}).get("semantic", "")) if isinstance(example.get("agent"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-predicate="{html.escape(str((example.get("predicate") or {}).get("semantic", "")) if isinstance(example.get("predicate"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-theme="{html.escape(str((example.get("theme") or {}).get("semantic", "")) if isinstance(example.get("theme"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-modifier-count="{html.escape(str(example.get("modifier_count", "")), quote=True)}" '
+                f'data-surface-slot-matrix-time-wrapped="{str(example.get("time_wrapped") is True).lower()}">'
+                f"{html.escape(str(example.get('sentence', '')))}"
+                "</li>"
+            )
+            for example in examples
+            if isinstance(example, dict)
         )
     rule_items = "".join(
         '<li '
@@ -2628,11 +2666,15 @@ def certified_fragment_panel() -> str:
             f'data-surface-generator-schema="{html.escape(str((item.get("witness_generation_spec") or {}).get("schema_version", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}" '
             f'data-surface-generator-kind="{html.escape(str((item.get("witness_generation_spec") or {}).get("generator", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}" '
             f'data-surface-slot-probe-generation-schema="{html.escape(str(((item.get("slot_probe_examples") or {}).get("probe_generation_spec") or {}).get("schema_version", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("probe_generation_spec"), dict) else "", quote=True)}" '
-            f'data-surface-slot-probe-generation-kind="{html.escape(str(((item.get("slot_probe_examples") or {}).get("probe_generation_spec") or {}).get("generator", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("probe_generation_spec"), dict) else "", quote=True)}">'
+            f'data-surface-slot-probe-generation-kind="{html.escape(str(((item.get("slot_probe_examples") or {}).get("probe_generation_spec") or {}).get("generator", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("probe_generation_spec"), dict) else "", quote=True)}" '
+            f'data-surface-slot-probe-matrix-count="{html.escape(str((item.get("slot_probe_examples") or {}).get("matrix_example_count", "")) if isinstance(item.get("slot_probe_examples"), dict) else "", quote=True)}" '
+            f'data-surface-slot-probe-matrix-generation-schema="{html.escape(str(((item.get("slot_probe_examples") or {}).get("matrix_generation_spec") or {}).get("schema_version", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("matrix_generation_spec"), dict) else "", quote=True)}" '
+            f'data-surface-slot-probe-matrix-generation-kind="{html.escape(str(((item.get("slot_probe_examples") or {}).get("matrix_generation_spec") or {}).get("generator", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("matrix_generation_spec"), dict) else "", quote=True)}">'
             f'<code>{html.escape(str(family))}</code>'
             f'<span>{html.escape(str(item.get("boundary_note", "")))}</span>'
             f"<ul>{surface_parser_example_items(item)}</ul>"
             f"<ul>{surface_slot_probe_items(item)}</ul>"
+            f"<ul>{surface_slot_probe_matrix_items(item)}</ul>"
             "</li>"
         )
         for family, item in (
@@ -2669,6 +2711,9 @@ def certified_fragment_panel() -> str:
         f'data-surface-slot-probe-count="{html.escape(surface_slot_probe_count, quote=True)}" '
         f'data-surface-slot-probe-generation-schema="{html.escape(surface_slot_probe_generator_schema, quote=True)}" '
         f'data-surface-slot-probe-generation-kind="{html.escape(surface_slot_probe_generator_kind, quote=True)}" '
+        f'data-surface-slot-probe-matrix-count="{html.escape(surface_slot_probe_matrix_count, quote=True)}" '
+        f'data-surface-slot-probe-matrix-generation-schema="{html.escape(surface_slot_probe_matrix_generator_schema, quote=True)}" '
+        f'data-surface-slot-probe-matrix-generation-kind="{html.escape(surface_slot_probe_matrix_generator_kind, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -2688,6 +2733,7 @@ def certified_fragment_panel() -> str:
         f"<dt>surface generator</dt><dd><code>{html.escape(surface_generator_kind)}</code></dd>"
         f"<dt>slot probes</dt><dd><code>{html.escape(surface_slot_probe_count)}</code></dd>"
         f"<dt>slot probe generator</dt><dd><code>{html.escape(surface_slot_probe_generator_kind)}</code></dd>"
+        f"<dt>slot matrix</dt><dd><code>{html.escape(surface_slot_probe_matrix_count)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
