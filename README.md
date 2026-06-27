@@ -165,6 +165,11 @@ fail before Coq/Rocq export.
 Conjoined stative reasons are preserved structurally:
 `Mary admired the door because it was red and open` becomes
 `because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`.
+The same type boundary rejects conjoined states that try to occupy one scale
+with two different values: `the door is closed and open` and
+`Mary admired the door because it was closed and open` now fail before
+Coq/Rocq export with the diagnostic that `access_scale` has both `closed` and
+`open`.
 If the available antecedent already carries a state scale, all conjoined
 states must be covered; `John opened the door because it was red and open`
 therefore fails rather than resolving a color-state clause to an access-scale

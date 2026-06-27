@@ -2083,6 +2083,19 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(conjoined_color_reason["coq_check"]["status"], "passed")
 
+        same_scale_conflict = run_pipeline(
+            "Mary admired the door because it was closed and open",
+            require_coq=True,
+        )
+        self.assertFalse(same_scale_conflict["ok"])
+        self.assertEqual(same_scale_conflict["kind"], "causal_because")
+        self.assertIn(
+            "causal_because.cause: stative states cannot contain multiple states on "
+            "the same scale: access_scale has closed and open",
+            same_scale_conflict["type_check"]["errors"],
+        )
+        self.assertEqual(same_scale_conflict["coq_check"]["status"], "skipped")
+
         place_reason = run_pipeline(
             "Mary visited Paris because it was red",
             require_coq=True,
@@ -6390,6 +6403,17 @@ class TranslatorTests(unittest.TestCase):
         type_check = check_stative_result_state_ast(ast)
         self.assertFalse(type_check["ok"])
         self.assertIn("stative state_scale must match the state lexicon", type_check["errors"])
+
+    def test_stative_result_state_rejects_same_scale_conjunction(self) -> None:
+        result = run_pipeline("the door is closed and open", require_coq=True)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["kind"], "stative_result_state")
+        self.assertIn(
+            "stative states cannot contain multiple states on the same scale: "
+            "access_scale has closed and open",
+            result["type_check"]["errors"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "skipped")
 
     def test_passive_argument_omission_uses_existential_agent_not_event(self) -> None:
         explicit = run_pipeline("the toast was buttered by John", require_coq=True)
@@ -16112,6 +16136,9 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
             readme,
         )
+        self.assertIn("`the door is closed and open`", readme)
+        self.assertIn("`Mary admired the door because it was closed and open`", readme)
+        self.assertIn("`access_scale` has both `closed` and", readme)
         self.assertIn("`John opened the door because it was red and open`", readme)
         self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
         self.assertIn("`John left because Mary cried because Sue left`", readme)
@@ -16195,6 +16222,9 @@ class TranslatorTests(unittest.TestCase):
             "because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))",
             manuscript,
         )
+        self.assertIn("the door is closed and open", manuscript)
+        self.assertIn("Mary admired the door because it was closed and open", manuscript)
+        self.assertIn("both closed and open on access_scale", manuscript)
         self.assertIn("Mary visited Paris because it was red", manuscript)
         self.assertIn("John opened the door because it was red and open", manuscript)
         self.assertIn("John opened the door because it was red", manuscript)
@@ -16280,6 +16310,9 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
             web_design,
         )
+        self.assertIn("`the door is closed and open`", web_design)
+        self.assertIn("`Mary admired the door because it was closed and open`", web_design)
+        self.assertIn("`access_scale` has both `closed`", web_design)
         self.assertIn("`John opened the door because it was red and open`", web_design)
         self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
         self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
@@ -16324,6 +16357,9 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
             ast_docs,
         )
+        self.assertIn("`the door is closed and open`", ast_docs)
+        self.assertIn("`Mary admired the door because it was closed and open`", ast_docs)
+        self.assertIn("`access_scale has closed and open`", ast_docs)
         self.assertIn("transition theme only supplies `access_scale`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)

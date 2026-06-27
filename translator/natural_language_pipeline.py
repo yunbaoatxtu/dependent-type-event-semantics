@@ -6795,7 +6795,11 @@ def causal_because_clause_is_simple_predication(clause: Any) -> bool:
     )
 
 
-def parse_causal_because_clause(tokens: list[str]) -> dict[str, Any] | None:
+def parse_causal_because_clause(
+    tokens: list[str],
+    *,
+    include_invalid_stative: bool = False,
+) -> dict[str, Any] | None:
     sentence = " ".join(tokens)
     state_change = lexical_state_change_pipeline(sentence)
     if (
@@ -6805,9 +6809,9 @@ def parse_causal_because_clause(tokens: list[str]) -> dict[str, Any] | None:
         return copy.deepcopy(state_change["ast"])
 
     stative_state = stative_result_state_pipeline(sentence)
-    if (
-        stative_state is not None
-        and stative_state.get("type_check", {}).get("ok") is True
+    if stative_state is not None and (
+        stative_state.get("type_check", {}).get("ok") is True
+        or include_invalid_stative
     ):
         return copy.deepcopy(stative_state["ast"])
 
@@ -7291,8 +7295,14 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     if split is None:
         return None
     effect_tokens, cause_tokens = split
-    effect = parse_causal_because_clause(effect_tokens)
-    cause = parse_causal_because_clause(cause_tokens)
+    effect = parse_causal_because_clause(
+        effect_tokens,
+        include_invalid_stative=True,
+    )
+    cause = parse_causal_because_clause(
+        cause_tokens,
+        include_invalid_stative=True,
+    )
     if effect is None or cause is None:
         return None
 
@@ -9470,6 +9480,7 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(states, list) or not states:
             errors.append("stative states must be a non-empty list")
         else:
+            states_by_scale: dict[str, set[str]] = {}
             for index, state_item in enumerate(states):
                 if not isinstance(state_item, dict):
                     errors.append(f"stative states[{index}] must be an object")
@@ -9487,6 +9498,16 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
                     and state_item.get("state_scale") != STATE_SCALE_BY_STATE[item_name]
                 ):
                     errors.append(f"stative states[{index}].state_scale must match the state lexicon")
+                item_scale = state_item.get("state_scale")
+                if isinstance(item_name, str) and isinstance(item_scale, str):
+                    states_by_scale.setdefault(item_scale, set()).add(item_name)
+            for item_scale, item_names in sorted(states_by_scale.items()):
+                if len(item_names) > 1:
+                    joined_names = " and ".join(sorted(item_names))
+                    errors.append(
+                        "stative states cannot contain multiple states on the same "
+                        f"scale: {item_scale} has {joined_names}"
+                    )
 
     if ast.get("predicate") != "holds_state":
         errors.append("stative predicate must be holds_state")

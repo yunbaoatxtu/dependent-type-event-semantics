@@ -897,6 +897,10 @@ type-check failures,
 and conjoined state cases such as
 `Mary admired the door because it was red and open` should resolve to
 `because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`;
+same-scale state conflicts such as `the door is closed and open` and
+`Mary admired the door because it was closed and open` should remain visible as
+`type_check` failures with the message that `access_scale` has both `closed`
+and `open`;
 the page should still reject partial state-scale matches such as
 `John opened the door because it was red and open`,
 and the timed/modifier case
