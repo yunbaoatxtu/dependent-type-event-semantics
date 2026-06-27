@@ -901,7 +901,11 @@ replacement. A companion `matrix_examples` contract now enumerates a small
 2-by-2-by-2 lexical-frame matrix over Mary/John, admire/photograph, and
 painting/sculpture under both a one-Adv untimed profile and a timed five-Adv
 profile. This gives the certified fragment a broader, generated stability
-check while still marking `full_lexical_matrix_certification: false`.
+check while still marking `full_lexical_matrix_certification: false`. The
+matrix also carries an axis-level type contract: agents and themes are
+`Entity`-typed role bearers, predicates are dependent transitive Adv families
+of type `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`,
+modifiers are `Adv`, and timed rows use a `Time -> PropT -> PropT` operator.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

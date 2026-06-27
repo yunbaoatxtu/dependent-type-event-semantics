@@ -3177,24 +3177,99 @@ def expected_modified_surface_slot_probe_meta_from_spec(
 
 def expected_modified_surface_slot_probe_matrix_meta_from_spec(
     spec: dict,
-) -> tuple[list[str], dict[str, tuple[str, str, str, str, int, bool, str, list[str]]]]:
+) -> tuple[list[str], dict[str, tuple[str, str, str, str, int, bool, str, list[str], dict]]]:
     def spec_drift() -> None:
         raise SystemExit(
             "web route smoke check failed: certified surface parser slot probe matrix generation spec drift"
         )
 
+    expected_axis_type_contract = {
+        "agents": {
+            "surface_slot": "subject",
+            "role_label": "Agent",
+            "dependent_type": "Entity",
+            "semantic_class": "Person",
+        },
+        "predicates": {
+            "surface_slot": "verb",
+            "dependent_type": (
+                "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+            ),
+            "semantic_class": "TransitiveAdvPredicateFamily",
+            "role_frame": ["Agent", "Theme"],
+            "output_type": "PropT",
+        },
+        "themes": {
+            "surface_slot": "direct_object",
+            "role_label": "Theme",
+            "dependent_type": "Entity",
+            "semantic_class": "VisualObject",
+        },
+    }
+    expected_modifier_type_contract = {
+        "dependent_type": "Adv",
+        "constructor_type": "Entity -> Adv",
+        "accepted_semantic_roles": ["Location", "Instrument"],
+        "treat_modifier_objects_as_events": False,
+    }
+    expected_time_type_contract = {
+        "time_argument_type": "Time",
+        "time_operator_type": "Time -> PropT -> PropT",
+        "proposition_scope": True,
+    }
+    transitive_adv_type = (
+        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+    )
     expected_axes = {
         "agents": [
-            {"surface": "Mary", "semantic": "mary"},
-            {"surface": "John", "semantic": "john"},
+            {
+                "surface": "Mary",
+                "semantic": "mary",
+                "dependent_type": "Entity",
+                "semantic_class": "Person",
+                "role_label": "Agent",
+            },
+            {
+                "surface": "John",
+                "semantic": "john",
+                "dependent_type": "Entity",
+                "semantic_class": "Person",
+                "role_label": "Agent",
+            },
         ],
         "predicates": [
-            {"surface": "admired", "semantic": "admire"},
-            {"surface": "photographed", "semantic": "photograph"},
+            {
+                "surface": "admired",
+                "semantic": "admire",
+                "dependent_type": transitive_adv_type,
+                "semantic_class": "TransitiveAdvPredicateFamily",
+                "role_frame": ["Agent", "Theme"],
+                "output_type": "PropT",
+            },
+            {
+                "surface": "photographed",
+                "semantic": "photograph",
+                "dependent_type": transitive_adv_type,
+                "semantic_class": "TransitiveAdvPredicateFamily",
+                "role_frame": ["Agent", "Theme"],
+                "output_type": "PropT",
+            },
         ],
         "themes": [
-            {"surface": "painting", "semantic": "painting"},
-            {"surface": "sculpture", "semantic": "sculpture"},
+            {
+                "surface": "painting",
+                "semantic": "painting",
+                "dependent_type": "Entity",
+                "semantic_class": "VisualObject",
+                "role_label": "Theme",
+            },
+            {
+                "surface": "sculpture",
+                "semantic": "sculpture",
+                "dependent_type": "Entity",
+                "semantic_class": "VisualObject",
+                "role_label": "Theme",
+            },
         ],
     }
     expected_profiles = [
@@ -3214,6 +3289,9 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
         or spec.get("schema_version") != "surface_slot_probe_matrix_generation.v1"
         or spec.get("generator") != "cartesian_lexical_frame_with_modifier_profiles"
         or spec.get("base_family") != "modified_transitive_adv_sequence"
+        or spec.get("axis_type_contract") != expected_axis_type_contract
+        or spec.get("modifier_type_contract") != expected_modifier_type_contract
+        or spec.get("time_type_contract") != expected_time_type_contract
         or spec.get("axes") != expected_axes
         or spec.get("surface_template")
         != "{agent_surface} {predicate_surface} the {theme_surface} {modifier_surfaces}"
@@ -3254,7 +3332,7 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
             spec_drift()
 
     ordered_ids: list[str] = []
-    expected_meta: dict[str, tuple[str, str, str, str, int, bool, str, list[str]]] = {}
+    expected_meta: dict[str, tuple[str, str, str, str, int, bool, str, list[str], dict]] = {}
     for agent in expected_axes["agents"]:
         for predicate in expected_axes["predicates"]:
             for theme in expected_axes["themes"]:
@@ -3307,6 +3385,31 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
                         f"__theme_{theme['semantic']}__profile_{profile['profile_id']}"
                     )
                     ordered_ids.append(matrix_id)
+                    type_contract = {
+                        "agent_dependent_type": agent["dependent_type"],
+                        "agent_role_label": agent["role_label"],
+                        "predicate_dependent_type": predicate["dependent_type"],
+                        "predicate_role_frame": list(predicate["role_frame"]),
+                        "predicate_output_type": predicate["output_type"],
+                        "theme_dependent_type": theme["dependent_type"],
+                        "theme_role_label": theme["role_label"],
+                        "modifier_dependent_type": expected_modifier_type_contract[
+                            "dependent_type"
+                        ],
+                        "modifier_constructor_type": expected_modifier_type_contract[
+                            "constructor_type"
+                        ],
+                        "time_argument_type": (
+                            expected_time_type_contract["time_argument_type"]
+                            if time_wrapped
+                            else None
+                        ),
+                        "time_operator_type": (
+                            expected_time_type_contract["time_operator_type"]
+                            if time_wrapped
+                            else None
+                        ),
+                    }
                     expected_meta[matrix_id] = (
                         str(profile["profile_id"]),
                         str(agent["semantic"]),
@@ -3316,6 +3419,7 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
                         time_wrapped,
                         ast_kind,
                         [fragment],
+                        type_contract,
                     )
     return ordered_ids, expected_meta
 
@@ -3622,11 +3726,13 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         agent = example.get("agent")
         predicate = example.get("predicate")
         theme = example.get("theme")
+        type_contract = example.get("type_contract")
         if (
             expected_matrix is None
             or not isinstance(agent, dict)
             or not isinstance(predicate, dict)
             or not isinstance(theme, dict)
+            or not isinstance(type_contract, dict)
             or example.get("profile_id") != expected_matrix[0]
             or agent.get("semantic") != expected_matrix[1]
             or predicate.get("semantic") != expected_matrix[2]
@@ -3638,6 +3744,20 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         ):
             raise SystemExit(
                 "web route smoke check failed: certified surface parser slot probe matrix drift"
+            )
+        if (
+            agent.get("dependent_type") != "Entity"
+            or agent.get("role_label") != "Agent"
+            or predicate.get("dependent_type")
+            != "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+            or predicate.get("role_frame") != ["Agent", "Theme"]
+            or predicate.get("output_type") != "PropT"
+            or theme.get("dependent_type") != "Entity"
+            or theme.get("role_label") != "Theme"
+            or type_contract != expected_matrix[8]
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe matrix type drift"
             )
         matrix_fragments = example.get("expected_dependent_type_fragments")
         if (
@@ -3991,8 +4111,16 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         ),
         'data-surface-slot-matrix-profile="max_prefix_timed"',
         'data-surface-slot-matrix-agent="john"',
+        'data-surface-slot-matrix-agent-type="Entity"',
         'data-surface-slot-matrix-predicate="photograph"',
+        (
+            'data-surface-slot-matrix-predicate-type="forall n : nat, '
+            'ModifierSeq n -&gt; Entity -&gt; Entity -&gt; PropT"'
+        ),
         'data-surface-slot-matrix-theme="sculpture"',
+        'data-surface-slot-matrix-theme-type="Entity"',
+        'data-surface-slot-matrix-modifier-type="Adv"',
+        'data-surface-slot-matrix-time-type="Time"',
         'data-surface-slot-matrix-modifier-count="5"',
         'data-surface-slot-matrix-time-wrapped="true"',
         'data-surface-example-variant-id="primary_modified_transitive_predication"',

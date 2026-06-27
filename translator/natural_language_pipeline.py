@@ -576,18 +576,94 @@ def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str,
         "schema_version": "surface_slot_probe_matrix_generation.v1",
         "generator": "cartesian_lexical_frame_with_modifier_profiles",
         "base_family": "modified_transitive_adv_sequence",
+        "axis_type_contract": {
+            "agents": {
+                "surface_slot": "subject",
+                "role_label": "Agent",
+                "dependent_type": "Entity",
+                "semantic_class": "Person",
+            },
+            "predicates": {
+                "surface_slot": "verb",
+                "dependent_type": (
+                    "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+                ),
+                "semantic_class": "TransitiveAdvPredicateFamily",
+                "role_frame": ["Agent", "Theme"],
+                "output_type": "PropT",
+            },
+            "themes": {
+                "surface_slot": "direct_object",
+                "role_label": "Theme",
+                "dependent_type": "Entity",
+                "semantic_class": "VisualObject",
+            },
+        },
+        "modifier_type_contract": {
+            "dependent_type": "Adv",
+            "constructor_type": "Entity -> Adv",
+            "accepted_semantic_roles": ["Location", "Instrument"],
+            "treat_modifier_objects_as_events": False,
+        },
+        "time_type_contract": {
+            "time_argument_type": "Time",
+            "time_operator_type": "Time -> PropT -> PropT",
+            "proposition_scope": True,
+        },
         "axes": {
             "agents": [
-                {"surface": "Mary", "semantic": "mary"},
-                {"surface": "John", "semantic": "john"},
+                {
+                    "surface": "Mary",
+                    "semantic": "mary",
+                    "dependent_type": "Entity",
+                    "semantic_class": "Person",
+                    "role_label": "Agent",
+                },
+                {
+                    "surface": "John",
+                    "semantic": "john",
+                    "dependent_type": "Entity",
+                    "semantic_class": "Person",
+                    "role_label": "Agent",
+                },
             ],
             "predicates": [
-                {"surface": "admired", "semantic": "admire"},
-                {"surface": "photographed", "semantic": "photograph"},
+                {
+                    "surface": "admired",
+                    "semantic": "admire",
+                    "dependent_type": (
+                        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+                    ),
+                    "semantic_class": "TransitiveAdvPredicateFamily",
+                    "role_frame": ["Agent", "Theme"],
+                    "output_type": "PropT",
+                },
+                {
+                    "surface": "photographed",
+                    "semantic": "photograph",
+                    "dependent_type": (
+                        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+                    ),
+                    "semantic_class": "TransitiveAdvPredicateFamily",
+                    "role_frame": ["Agent", "Theme"],
+                    "output_type": "PropT",
+                },
             ],
             "themes": [
-                {"surface": "painting", "semantic": "painting"},
-                {"surface": "sculpture", "semantic": "sculpture"},
+                {
+                    "surface": "painting",
+                    "semantic": "painting",
+                    "dependent_type": "Entity",
+                    "semantic_class": "VisualObject",
+                    "role_label": "Theme",
+                },
+                {
+                    "surface": "sculpture",
+                    "semantic": "sculpture",
+                    "dependent_type": "Entity",
+                    "semantic_class": "VisualObject",
+                    "role_label": "Theme",
+                },
             ],
         },
         "surface_template": (
@@ -686,6 +762,35 @@ def modified_transitive_surface_slot_probe_matrix_from_spec(
                             "agent": dict(agent),
                             "predicate": dict(predicate),
                             "theme": dict(theme),
+                            "type_contract": {
+                                "agent_dependent_type": agent["dependent_type"],
+                                "agent_role_label": agent["role_label"],
+                                "predicate_dependent_type": predicate[
+                                    "dependent_type"
+                                ],
+                                "predicate_role_frame": list(
+                                    predicate["role_frame"],
+                                ),
+                                "predicate_output_type": predicate["output_type"],
+                                "theme_dependent_type": theme["dependent_type"],
+                                "theme_role_label": theme["role_label"],
+                                "modifier_dependent_type": spec[
+                                    "modifier_type_contract"
+                                ]["dependent_type"],
+                                "modifier_constructor_type": spec[
+                                    "modifier_type_contract"
+                                ]["constructor_type"],
+                                "time_argument_type": (
+                                    spec["time_type_contract"]["time_argument_type"]
+                                    if time_wrapped
+                                    else None
+                                ),
+                                "time_operator_type": (
+                                    spec["time_type_contract"]["time_operator_type"]
+                                    if time_wrapped
+                                    else None
+                                ),
+                            },
                             "sentence": sentence,
                             "modifier_count": modifier_count,
                             "time_wrapped": time_wrapped,

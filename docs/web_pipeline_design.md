@@ -205,7 +205,11 @@ painting/sculpture, evaluated under one untimed one-Adv profile and one timed
 five-Adv profile. The matrix is exposed with
 `full_lexical_matrix_certification: false` and mirrored through
 `data-surface-slot-matrix-*` attributes, so the UI can show broader finite
-coverage without implying arbitrary lexical replacement.
+coverage without implying arbitrary lexical replacement. Those attributes now
+include the type boundary for the matrix: Agent and Theme slots are
+`Entity`-typed role bearers, predicate slots are dependent transitive Adv
+families, modifier slots are `Adv`, and timed rows expose the `Time` argument
+used by the proposition-level temporal operator.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

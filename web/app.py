@@ -2561,8 +2561,13 @@ def certified_fragment_panel() -> str:
                 f'data-surface-slot-matrix-id="{html.escape(str(example.get("matrix_id", "")), quote=True)}" '
                 f'data-surface-slot-matrix-profile="{html.escape(str(example.get("profile_id", "")), quote=True)}" '
                 f'data-surface-slot-matrix-agent="{html.escape(str((example.get("agent") or {}).get("semantic", "")) if isinstance(example.get("agent"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-agent-type="{html.escape(str((example.get("type_contract") or {}).get("agent_dependent_type", "")) if isinstance(example.get("type_contract"), dict) else "", quote=True)}" '
                 f'data-surface-slot-matrix-predicate="{html.escape(str((example.get("predicate") or {}).get("semantic", "")) if isinstance(example.get("predicate"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-predicate-type="{html.escape(str((example.get("type_contract") or {}).get("predicate_dependent_type", "")) if isinstance(example.get("type_contract"), dict) else "", quote=True)}" '
                 f'data-surface-slot-matrix-theme="{html.escape(str((example.get("theme") or {}).get("semantic", "")) if isinstance(example.get("theme"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-theme-type="{html.escape(str((example.get("type_contract") or {}).get("theme_dependent_type", "")) if isinstance(example.get("type_contract"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-modifier-type="{html.escape(str((example.get("type_contract") or {}).get("modifier_dependent_type", "")) if isinstance(example.get("type_contract"), dict) else "", quote=True)}" '
+                f'data-surface-slot-matrix-time-type="{html.escape(str((example.get("type_contract") or {}).get("time_argument_type", "")) if isinstance(example.get("type_contract"), dict) else "", quote=True)}" '
                 f'data-surface-slot-matrix-modifier-count="{html.escape(str(example.get("modifier_count", "")), quote=True)}" '
                 f'data-surface-slot-matrix-time-wrapped="{str(example.get("time_wrapped") is True).lower()}">'
                 f"{html.escape(str(example.get('sentence', '')))}"

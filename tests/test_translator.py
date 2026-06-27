@@ -9438,6 +9438,28 @@ class TranslatorTests(unittest.TestCase):
             "cartesian_lexical_frame_with_modifier_profiles",
         )
         self.assertEqual(
+            matrix_generation_spec["axis_type_contract"]["agents"]["dependent_type"],
+            "Entity",
+        )
+        self.assertEqual(
+            matrix_generation_spec["axis_type_contract"]["predicates"][
+                "dependent_type"
+            ],
+            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
+        )
+        self.assertEqual(
+            matrix_generation_spec["axis_type_contract"]["themes"]["role_label"],
+            "Theme",
+        )
+        self.assertEqual(
+            matrix_generation_spec["modifier_type_contract"]["dependent_type"],
+            "Adv",
+        )
+        self.assertEqual(
+            matrix_generation_spec["time_type_contract"]["time_operator_type"],
+            "Time -> PropT -> PropT",
+        )
+        self.assertEqual(
             [agent["semantic"] for agent in matrix_generation_spec["axes"]["agents"]],
             ["mary", "john"],
         )
@@ -9471,6 +9493,24 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             slot_probe_examples["matrix_examples"][0]["matrix_id"],
             "agent_mary__predicate_admire__theme_painting__profile_one_adv_untimed",
+        )
+        self.assertEqual(
+            slot_probe_examples["matrix_examples"][0]["type_contract"],
+            {
+                "agent_dependent_type": "Entity",
+                "agent_role_label": "Agent",
+                "predicate_dependent_type": (
+                    "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+                ),
+                "predicate_role_frame": ["Agent", "Theme"],
+                "predicate_output_type": "PropT",
+                "theme_dependent_type": "Entity",
+                "theme_role_label": "Theme",
+                "modifier_dependent_type": "Adv",
+                "modifier_constructor_type": "Entity -> Adv",
+                "time_argument_type": None,
+                "time_operator_type": None,
+            },
         )
         self.assertEqual(
             slot_probe_examples["matrix_examples"][-1][
@@ -9849,6 +9889,15 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "slot probe matrix drift"):
             validate_certified_fragment_manifest(stale_manifest)
 
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_examples"][0]["type_contract"][
+            "predicate_dependent_type"
+        ] = "Entity"
+        with self.assertRaisesRegex(SystemExit, "slot probe matrix type drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
     def test_verification_rejects_surface_parser_witness_live_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         witness = manifest["surface_parser_coverage"][
@@ -10046,8 +10095,16 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-surface-slot-matrix-profile="max_prefix_timed"', page)
         self.assertIn('data-surface-slot-matrix-agent="john"', page)
+        self.assertIn('data-surface-slot-matrix-agent-type="Entity"', page)
         self.assertIn('data-surface-slot-matrix-predicate="photograph"', page)
+        self.assertIn(
+            "data-surface-slot-matrix-predicate-type=\"forall n : nat, ModifierSeq n -&gt; Entity -&gt; Entity -&gt; PropT\"",
+            page,
+        )
         self.assertIn('data-surface-slot-matrix-theme="sculpture"', page)
+        self.assertIn('data-surface-slot-matrix-theme-type="Entity"', page)
+        self.assertIn('data-surface-slot-matrix-modifier-type="Adv"', page)
+        self.assertIn('data-surface-slot-matrix-time-type="Time"', page)
         self.assertIn('data-surface-slot-matrix-modifier-count="5"', page)
         self.assertIn('data-surface-slot-matrix-time-wrapped="true"', page)
         self.assertIn(
@@ -15471,6 +15528,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe schema drift", verifier)
         self.assertIn("surface parser slot probe generation spec drift", verifier)
         self.assertIn("surface parser slot probe matrix generation spec drift", verifier)
+        self.assertIn("surface parser slot probe matrix type drift", verifier)
         self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
         self.assertIn("surface_slot_probe_matrix_generation.v1", verifier)
