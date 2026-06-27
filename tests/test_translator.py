@@ -33,7 +33,10 @@ from scripts.verify_project import (
     validate_json_download_http_response,
     validate_recovery_action_export_bundle,
     validate_analyze_failure_surface_type_contract,
+    validate_analyze_action_export_bundle,
     validate_analyze_action_export_preview,
+    validate_analyze_action_inspection_run_rejection,
+    validate_ordinary_analyze_action_export_surface,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
 )
@@ -12561,6 +12564,51 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(rejection["source"], "analyze")
         self.assertEqual(rejection["available_action_count"], 1)
 
+    def test_ordinary_failure_action_export_surface_covers_failure_matrix(self) -> None:
+        cases = [
+            ("ordinary input failure", "  ", "input", "edit_input", False),
+            ("ordinary parsing failure", "John", "parsing", "revise_sentence", False),
+            ("ordinary type-check failure", "the plant killed", "type_check", "inspect_ast", True),
+        ]
+        for label, sentence, stage, action_kind, can_auto_run in cases:
+            with self.subTest(label=label):
+                result = analyze_sentence(sentence, require_coq=True)
+                page = render_page(sentence, result=result, require_coq=True)
+                action_bundle, status = analyze_action_export_bundle(sentence, True, 0)
+                self.assertEqual(status, HTTPStatus.OK)
+                self.assertEqual(result["diagnostics"]["failure_stage"], stage)
+                self.assertEqual(action_bundle["failure_stage"], stage)
+                self.assertEqual(action_bundle["action"]["kind"], action_kind)
+                self.assertEqual(action_bundle["repair_plan"]["can_auto_run"], can_auto_run)
+
+                normalized_sentence = validate_ordinary_analyze_action_export_surface(
+                    label,
+                    sentence,
+                    True,
+                    0,
+                    result,
+                    page,
+                    action_bundle,
+                    expected_failure_stage=stage,
+                )
+                self.assertEqual(normalized_sentence, result["input_sentence"])
+
+                if can_auto_run:
+                    continue
+                rejection, rejection_status = analyze_action_inspection_run_bundle(
+                    sentence,
+                    True,
+                    0,
+                )
+                self.assertEqual(rejection_status, HTTPStatus.BAD_REQUEST)
+                validate_analyze_action_inspection_run_rejection(
+                    label,
+                    normalized_sentence,
+                    0,
+                    result,
+                    rejection,
+                )
+
     def test_analyze_action_run_api_and_page_link_ordinary_failure(self) -> None:
         sentence = "the plant killed"
         expected_path = analyze_action_run_api_path(sentence, True, 0)
@@ -14541,6 +14589,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("analyze_recovery_action__the-plant-killed__0.json", readme)
         self.assertIn("ordinary\n`Next Steps` row renders an expandable `Action JSON` preview", readme)
         self.assertIn("match that `/api/analyze-action` bundle", readme)
+        self.assertIn("small ordinary-failure matrix", readme)
+        self.assertIn("empty input is normalized", readme)
+        self.assertIn("`John` is treated as a `parsing`", readme)
+        self.assertIn("first two human-review\nactions", readme)
         self.assertIn("`api_path`", readme)
         self.assertIn("`download_api_path`", readme)
         self.assertIn("`download_filename`", readme)
@@ -14820,6 +14872,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the export is read-only", web_design)
         self.assertIn("ordinary failure `Next Steps` row", web_design)
         self.assertIn("stale page-wide\nJSON snippet", web_design)
+        self.assertIn("ordinary-failure route check", web_design)
+        self.assertIn("normalized empty input with `edit_input`", web_design)
+        self.assertIn("short parsing failure such as `John`", web_design)
+        self.assertIn("structured\n`diagnostic_inspection_run.v1` rejection", web_design)
         self.assertIn("`api_path`", web_design)
         self.assertIn("`download_api_path`", web_design)
         self.assertIn("`download_filename`", web_design)
@@ -14983,9 +15039,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/analyze-action endpoint", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 bundles", manuscript)
         self.assertIn("row-local Action JSON preview", manuscript)
-        self.assertIn("compares with the /api/analyze-action payload", manuscript)
+        self.assertIn("compared with its /api/analyze-action payload", manuscript)
         self.assertIn("/api/analyze-action-run endpoint", manuscript)
-        self.assertIn("source analyze", manuscript)
+        self.assertIn("small stage-local matrix", manuscript)
+        self.assertIn("normalized empty input", manuscript)
+        self.assertIn("parsing-stage revise_sentence", manuscript)
+        self.assertIn("type_check-stage inspect_ast", manuscript)
+        self.assertIn("diagnostic_inspection_run.v1 rejection", manuscript)
+        self.assertIn("using the sentence and action index", manuscript)
         self.assertIn("the plant killed", manuscript)
         self.assertIn("inspection-run snapshot", manuscript)
         self.assertIn("api_path", manuscript)
@@ -15729,6 +15790,32 @@ class TranslatorTests(unittest.TestCase):
                 action_bundle,
             )
 
+    def test_verification_rejects_analyze_action_inspection_rejection_drift(self) -> None:
+        sentence = "John"
+        result = analyze_sentence(sentence, require_coq=True)
+        rejection, status = analyze_action_inspection_run_bundle(sentence, True, 0)
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+        validate_analyze_action_inspection_run_rejection(
+            "ordinary parsing failure",
+            sentence,
+            0,
+            result,
+            rejection,
+        )
+        stale_rejection = deepcopy(rejection)
+        stale_rejection["can_auto_run"] = True
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary parsing failure analyze run rejection run drift",
+        ):
+            validate_analyze_action_inspection_run_rejection(
+                "ordinary parsing failure",
+                sentence,
+                0,
+                result,
+                stale_rejection,
+            )
+
     def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         manifest = deepcopy(manifest)
@@ -16369,7 +16456,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_recovery_action_inspection_run_rejection(", verifier)
         self.assertIn("def validate_analyze_action_export_bundle(", verifier)
         self.assertIn("def validate_analyze_action_export_preview(", verifier)
+        self.assertIn("def validate_ordinary_analyze_action_export_surface(", verifier)
         self.assertIn("def validate_analyze_action_inspection_run_bundle(", verifier)
+        self.assertIn("def validate_analyze_action_inspection_run_rejection(", verifier)
+        self.assertIn('"ordinary input failure"', verifier)
+        self.assertIn('"ordinary parsing failure"', verifier)
         self.assertIn("def analyze_action_api_path(", verifier)
         self.assertIn("def analyze_action_artifact_filename(", verifier)
         self.assertIn("def validate_analyze_recovery_action_run_metadata(", verifier)

@@ -1041,7 +1041,14 @@ with `source: "analyze"` and downloads as
 match that `/api/analyze-action` bundle before the verifier accepts the page;
 its run bundle snapshots `ast` and `type_check`, preserves
 `surface_type_contract_diagnostics`, and downloads as
-`analyze_inspection_run__the-plant-killed__0.json`. The ordinary
+`analyze_inspection_run__the-plant-killed__0.json`. The same project-level
+check now walks a small ordinary-failure matrix: empty input is normalized to
+the `input` stage with an `edit_input` action, `John` is treated as a `parsing`
+failure with a `revise_sentence` action, and `the plant killed` remains the
+`type_check` example with an `inspect_ast` action. The first two human-review
+actions must still export row-local action JSON, but their inspection-run route
+must return a `diagnostic_inspection_run.v1` rejection rather than an executable
+snapshot. The ordinary
 `diagnostics.recovery_actions` entry now carries the same machine-readable
 `api_path`, `download_api_path`, `download_filename`, `automation_mode`,
 `can_auto_run`, `can_auto_apply`, `target_fields`, `inspection_run_api_path`,

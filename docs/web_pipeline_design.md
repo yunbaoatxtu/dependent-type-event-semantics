@@ -469,7 +469,13 @@ the inspection-run endpoint, it may export human-review-required actions because
 the export is read-only. The ordinary failure `Next Steps` row should render an
 expandable `Action JSON` preview for this bundle, and the verifier should compare
 that row-local preview with the `/api/analyze-action` payload so a stale page-wide
-JSON snippet cannot satisfy the contract.
+JSON snippet cannot satisfy the contract. The ordinary-failure route check should
+cover at least three stage-local cases: normalized empty input with `edit_input`,
+short parsing failure such as `John` with `revise_sentence`, and type-check
+failure such as `the plant killed` with `inspect_ast`. Human-review actions in
+that matrix should still have downloadable action JSON, but their
+`/api/analyze-action-run` route should return a structured
+`diagnostic_inspection_run.v1` rejection rather than an auto-runnable snapshot.
 The ordinary `diagnostics.recovery_actions` list should make these routes
 discoverable without HTML scraping: each action should carry `automation_mode`,
 `can_auto_run`, `can_auto_apply`, `target_fields`, `api_path`,
@@ -675,7 +681,10 @@ controlled diagnostics set: `input`, `parsing`, `type_check`,
 manifest should also cover the four internal/proof-boundary stages
 `type_check`, `semantic_readings_check`, `construction_hygiene`, and
 `coq_check`; input and parsing failures remain covered by ordinary
-`/api/analyze` failure tests rather than by controlled fixture pages.
+`/api/analyze` failure tests rather than by controlled fixture pages. Those
+ordinary tests should compare the page-local Action JSON preview, the
+`/api/analyze-action` payload, the download response, and the
+human-review inspection rejection where no automatic run is allowed.
 The expected selector count should be derived from the manifest rather than
 from a second hard-coded case total.
 The same consistency rules should be factored into a pure verifier helper so
