@@ -1035,10 +1035,15 @@ Ordinary failed analyses use the same inspection schema through
 ordinary type-check failure `the plant killed` exposes an `inspect_ast` action
 whose run bundle snapshots `ast` and `type_check`, carries
 `source: "analyze"`, preserves `surface_type_contract_diagnostics`, and can be
-downloaded as `analyze_inspection_run__the-plant-killed__0.json`. Human-review
-actions such as `edit_input` and `revise_sentence` are rejected there with the
-same `diagnostic_inspection_run.v1` error shape instead of being treated as
-automatic repairs.
+downloaded as `analyze_inspection_run__the-plant-killed__0.json`. The ordinary
+`diagnostics.recovery_actions` entry now carries the same machine-readable
+`automation_mode`, `can_auto_run`, `can_auto_apply`, `target_fields`,
+`inspection_run_api_path`, `inspection_run_download_api_path`, and
+`inspection_run_download_filename` metadata, with those inspection-run paths set
+to `null` for human-review actions. Human-review actions such as `edit_input`
+and `revise_sentence` are rejected there with the same
+`diagnostic_inspection_run.v1` error shape instead of being treated as automatic
+repairs.
 The same fixture pages render a `Recovery Action Exports` panel that lists
 those action JSON routes with their schema, case, index, action kind, and
 failure stage, and it mirrors the surface type diagnostic schema, category

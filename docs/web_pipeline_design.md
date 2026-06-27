@@ -461,6 +461,12 @@ the input sentence, diagnostics, diagnostic contract, and
 `surface_type_contract_diagnostics`, and snapshot only the repair-plan target
 fields. It should reject human-review actions such as `edit_input` or
 `revise_sentence` with the same `diagnostic_inspection_run.v1` error envelope.
+The ordinary `diagnostics.recovery_actions` list should make these routes
+discoverable without HTML scraping: each action should carry `automation_mode`,
+`can_auto_run`, `can_auto_apply`, `target_fields`, nullable
+`inspection_run_api_path`, nullable `inspection_run_download_api_path`, and a
+nullable `inspection_run_download_filename` that matches the downloadable JSON
+artifact for inspection-only actions.
 For fixture pages, the same bundle should be rendered as an expandable
 `Inspection Run JSON` preview in both the `Next Steps` list and the
 `Recovery Action Exports` panel, so browser checks can compare the visible

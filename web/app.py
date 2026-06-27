@@ -178,12 +178,15 @@ def analyze_sentence(sentence: str, require_coq: bool = False) -> dict[str, Any]
         result = {
             "ok": False,
             "input_sentence": sentence,
+            "require_coq": require_coq,
             "error": "Please enter a sentence.",
             "verification_scope": failure_verification_scope("empty input"),
             "conclusion": "Translation failed before parsing.",
         }
         return add_diagnostics(result)
-    return add_diagnostics(run_pipeline(sentence, require_coq=require_coq))
+    result = run_pipeline(sentence, require_coq=require_coq)
+    result["require_coq"] = require_coq
+    return add_diagnostics(result)
 
 
 def surface_type_contract_diagnostics_context() -> dict[str, Any]:
@@ -792,6 +795,54 @@ def analyze_action_inspection_run_bundle(
         },
         HTTPStatus.OK,
     )
+
+
+def enrich_analyze_recovery_actions(
+    result: dict[str, Any],
+    failure_stage: str | None,
+    actions: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if result.get("diagnostic_fixture"):
+        return actions
+    sentence = str(result.get("input_sentence", ""))
+    require_coq = bool(result.get("require_coq"))
+    enriched: list[dict[str, Any]] = []
+    for index, action in enumerate(actions):
+        if not isinstance(action, dict):
+            continue
+        item = dict(action)
+        repair_plan = analyze_action_repair_plan(
+            sentence,
+            index,
+            str(failure_stage or ""),
+            item,
+        )
+        can_auto_run = repair_plan.get("can_auto_run") is True
+        item["automation_mode"] = repair_plan.get("automation_mode")
+        item["can_auto_run"] = can_auto_run
+        item["can_auto_apply"] = False
+        item["target_fields"] = string_list(repair_plan.get("target_fields"))
+        if can_auto_run:
+            item["inspection_run_api_path"] = analyze_action_run_api_path(
+                sentence,
+                require_coq,
+                index,
+            )
+            item["inspection_run_download_api_path"] = analyze_action_run_api_path(
+                sentence,
+                require_coq,
+                index,
+                download=True,
+            )
+            item["inspection_run_download_filename"] = (
+                analyze_action_run_artifact_filename(sentence, index)
+            )
+        else:
+            item["inspection_run_api_path"] = None
+            item["inspection_run_download_api_path"] = None
+            item["inspection_run_download_filename"] = None
+        enriched.append(item)
+    return enriched
 
 
 def recovery_action_patch_preview(action: dict[str, Any]) -> str:
@@ -1428,6 +1479,11 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         recovery_actions = semantic_readings_recovery_actions(semantic_readings_check)
     else:
         recovery_actions = recovery_actions_for(failure_stage)
+    recovery_actions = enrich_analyze_recovery_actions(
+        result,
+        failure_stage,
+        recovery_actions,
+    )
     return {
         "summary": summary,
         "failure_stage": failure_stage,

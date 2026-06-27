@@ -1445,6 +1445,87 @@ def validate_analyze_failure_surface_type_contract(
     )
 
 
+def validate_analyze_recovery_action_run_metadata(
+    label: str,
+    sentence: str,
+    require_coq: bool,
+    action_index: int,
+    payload: dict,
+) -> None:
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise SystemExit(f"web route smoke check failed: {label} diagnostics missing")
+    actions = diagnostics.get("recovery_actions")
+    if not isinstance(actions, list) or action_index >= len(actions):
+        raise SystemExit(
+            f"web route smoke check failed: {label} ordinary analyze action metadata missing"
+        )
+    action = actions[action_index]
+    if not isinstance(action, dict):
+        raise SystemExit(
+            f"web route smoke check failed: {label} ordinary analyze action metadata malformed"
+        )
+    expected_plan = recovery_action_repair_plan_preview(
+        "ordinary_analyze_failure",
+        action_index,
+        str(diagnostics.get("failure_stage") or ""),
+        action,
+    )
+    expected_can_run = expected_plan.get("can_auto_run") is True
+    if action.get("automation_mode") != expected_plan.get("automation_mode"):
+        raise SystemExit(
+            f"web route smoke check failed: {label} ordinary analyze action automation drift"
+        )
+    if action.get("can_auto_run") is not expected_can_run:
+        raise SystemExit(
+            f"web route smoke check failed: {label} ordinary analyze action run drift"
+        )
+    if action.get("can_auto_apply") is not False:
+        raise SystemExit(
+            f"web route smoke check failed: {label} ordinary analyze action apply drift"
+        )
+    if action.get("target_fields") != expected_plan.get("target_fields"):
+        raise SystemExit(
+            f"web route smoke check failed: {label} ordinary analyze action target drift"
+        )
+    if expected_can_run:
+        expected_path = analyze_action_run_api_path(
+            sentence,
+            action_index,
+            require_coq=require_coq,
+        )
+        expected_download_path = analyze_action_run_api_path(
+            sentence,
+            action_index,
+            require_coq=require_coq,
+            download=True,
+        )
+        expected_filename = analyze_action_run_artifact_filename(sentence, action_index)
+        if action.get("inspection_run_api_path") != expected_path:
+            raise SystemExit(
+                f"web route smoke check failed: {label} ordinary analyze action path drift"
+            )
+        if action.get("inspection_run_download_api_path") != expected_download_path:
+            raise SystemExit(
+                f"web route smoke check failed: {label} ordinary analyze action download drift"
+            )
+        if action.get("inspection_run_download_filename") != expected_filename:
+            raise SystemExit(
+                f"web route smoke check failed: {label} ordinary analyze action filename drift"
+            )
+    else:
+        for field in [
+            "inspection_run_api_path",
+            "inspection_run_download_api_path",
+            "inspection_run_download_filename",
+        ]:
+            if action.get(field) is not None:
+                raise SystemExit(
+                    "web route smoke check failed: "
+                    f"{label} unsafe ordinary analyze action {field}"
+                )
+
+
 def validate_verification_scope(
     payload: dict,
     page: str,
@@ -5081,6 +5162,13 @@ def run_web_route_smoke_check() -> None:
             type_failure_sentence,
             "ordinary type-check failure",
             "type_check",
+        )
+        validate_analyze_recovery_action_run_metadata(
+            "ordinary type-check failure",
+            type_failure_sentence,
+            True,
+            0,
+            type_failure_payload,
         )
         analyze_run_path = analyze_action_run_api_path(
             type_failure_sentence,
