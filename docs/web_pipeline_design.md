@@ -431,7 +431,11 @@ should display it in a compact `next-step-details` table. Diagnostic fixture
 pages are not the only typed failure surface: ordinary failed `/api/analyze`
 responses should also carry `surface_type_contract_diagnostics`, and the HTML
 page should render a `Surface Type Contract Diagnostics` panel with stable
-`data-surface-type-contract-*` hooks. Diagnostic fixture
+`data-surface-type-contract-*` hooks. The same context should be mirrored on
+each ordinary failure `Next Steps` action row via
+`data-action-surface-type-contract-*` hooks, so action buttons and browser
+tests can bind a suggested repair to the protected surface-type boundary.
+Diagnostic fixture
 pages should also expose each action through
 `/api/recovery-action?case=<case>&index=<n>`, returning a
 `diagnostic_recovery_action.v1` object with the case, action index, failure

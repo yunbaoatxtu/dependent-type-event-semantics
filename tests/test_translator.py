@@ -10917,6 +10917,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["stages"]["type_check"], "not_applicable")
         self.assertEqual(result["verification_scope"]["kind"], "unverified_failure")
         self.assertEqual(result["verification_scope"]["certification_level"], "none")
+        page = render_page("  ", require_coq=True)
+        self.assertIn('data-action-kind="edit_input"', page)
+        self.assertIn(
+            'data-action-surface-type-contract-schema="surface_type_contract_diagnostic.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-action-surface-type-contract-categories="registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"',
+            page,
+        )
+        self.assertIn(
+            'data-action-surface-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
+            page,
+        )
 
     def test_web_analyze_sentence_reports_parser_failure_stage(self) -> None:
         result = analyze_sentence("John")
@@ -13917,6 +13931,19 @@ class TranslatorTests(unittest.TestCase):
             'data-surface-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
             page,
         )
+        self.assertIn('data-action-kind="inspect_ast"', page)
+        self.assertIn(
+            'data-action-surface-type-contract-schema="surface_type_contract_diagnostic.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-action-surface-type-contract-categories="registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"',
+            page,
+        )
+        self.assertIn(
+            'data-action-surface-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
+            page,
+        )
         self.assertIn("Type Check", page)
         self.assertIn("state-change verb does not license the inchoative frame", page)
         self.assertNotIn("No registered construction rule matched", page)
@@ -14248,6 +14275,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`surface_type_contract_diagnostics` object", readme)
         self.assertIn("`Surface Type Contract Diagnostics` panel", readme)
         self.assertIn("`data-surface-type-contract-*` hooks", readme)
+        self.assertIn("`data-action-surface-type-contract-*` hooks", readme)
+        self.assertIn("ordinary failure `Next Steps` action row", readme)
         self.assertIn("schema, case, index, action kind, and", readme)
         self.assertIn("expandable `Action JSON`", readme)
         self.assertIn("API bundle exactly", readme)
@@ -14509,6 +14538,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`surface_type_contract_diagnostics`", web_design)
         self.assertIn("`Surface Type Contract Diagnostics` panel", web_design)
         self.assertIn("`data-surface-type-contract-*` hooks", web_design)
+        self.assertIn("`data-action-surface-type-contract-*` hooks", web_design)
+        self.assertIn("protected surface-type boundary", web_design)
         self.assertIn("`data-export-action-kind`", web_design)
         self.assertIn("`Action JSON` preview", web_design)
         self.assertIn("match that JSON", web_design)
@@ -14665,6 +14696,8 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("Surface Type Contract Diagnostics panel", manuscript)
+        self.assertIn("data-action-surface-type-contract-* hooks", manuscript)
+        self.assertIn("repair controls can remain bound", manuscript)
         self.assertIn("stale action-export panels", manuscript)
         self.assertIn("expandable Action JSON preview", manuscript)
         self.assertIn("stale action JSON previews", manuscript)

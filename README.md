@@ -992,7 +992,11 @@ such as parser failures or dependent-type failures, tied to the same
 `surface_type_contract_diagnostic.v1` category table used by the certified
 surface matrix. The HTML page renders the same context in a
 `Surface Type Contract Diagnostics` panel with stable
-`data-surface-type-contract-*` hooks.
+`data-surface-type-contract-*` hooks. The same context is mirrored on every
+ordinary failure `Next Steps` action row through
+`data-action-surface-type-contract-*` hooks, so repair buttons can remain tied
+to the registry, role-frame, modifier-type, and time-type boundary they are
+meant to protect.
 The local web page renders those structured actions in a separate `Next Steps`
 panel. Each rendered action carries a stable `data-action-kind` attribute, a
 `data-action-index` attribute, a `data-action-contract-kind` attribute, a

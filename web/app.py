@@ -1494,6 +1494,29 @@ def diagnostic_fixture_case_for_result(result: dict[str, Any]) -> str | None:
     return None
 
 
+def surface_type_contract_action_attrs(result: dict[str, Any]) -> str:
+    context = result.get("surface_type_contract_diagnostics")
+    if not isinstance(context, dict):
+        return ""
+    categories = surface_type_contract_diagnostic_category_text(context)
+    attrs = {
+        "data-action-surface-type-contract-schema": str(
+            context.get("schema_version", "")
+        ),
+        "data-action-surface-type-contract-count": str(
+            context.get("category_count", "")
+        ),
+        "data-action-surface-type-contract-categories": categories,
+        "data-action-surface-type-contract-registry-id": str(
+            context.get("registry_id", "")
+        ),
+    }
+    return "".join(
+        f' {name}="{html.escape(value, quote=True)}"'
+        for name, value in attrs.items()
+    )
+
+
 def next_steps_panel(result: dict[str, Any]) -> str:
     actions = result.get("diagnostics", {}).get("recovery_actions", [])
     if not actions:
@@ -1501,6 +1524,7 @@ def next_steps_panel(result: dict[str, Any]) -> str:
     else:
         items = []
         fixture_case = diagnostic_fixture_case_for_result(result)
+        type_contract_attrs = surface_type_contract_action_attrs(result)
         for index, action in enumerate(actions):
             kind = action.get("kind", "")
             label = action.get("label", "")
@@ -1589,7 +1613,8 @@ def next_steps_panel(result: dict[str, Any]) -> str:
                 f'data-action-automation-mode="{html.escape(automation_mode, quote=True)}" '
                 f'data-action-can-auto-run="{str(can_auto_run).lower()}" '
                 'data-action-contract-api="/api/diagnostic-contract" '
-                f'data-action-contract-kind="{html.escape(kind)}">'
+                f'data-action-contract-kind="{html.escape(kind)}"'
+                f"{type_contract_attrs}>"
                 f'<strong>{html.escape(label)}</strong>'
                 f'<code>{html.escape(kind)}</code>'
                 f'<p>{html.escape(detail)}</p>'

@@ -1331,6 +1331,26 @@ def validate_analyze_failure_surface_type_contract(
                 + str(type_contract_context.get("registry_id", ""))
                 + '"'
             ),
+            (
+                'data-action-surface-type-contract-schema="'
+                + str(type_contract_context.get("schema_version", ""))
+                + '"'
+            ),
+            (
+                'data-action-surface-type-contract-count="'
+                + str(type_contract_context.get("category_count", ""))
+                + '"'
+            ),
+            (
+                'data-action-surface-type-contract-categories="'
+                + html.escape(type_contract_categories, quote=True)
+                + '"'
+            ),
+            (
+                'data-action-surface-type-contract-registry-id="'
+                + str(type_contract_context.get("registry_id", ""))
+                + '"'
+            ),
         ],
         f"{label} surface type contract diagnostics HTML",
     )
