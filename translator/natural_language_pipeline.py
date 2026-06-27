@@ -571,10 +571,13 @@ def modified_transitive_surface_slot_probes_from_spec(
     return probes
 
 
-def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str, Any]:
+def modified_transitive_surface_type_contract_registry() -> dict[str, Any]:
+    transitive_adv_type = (
+        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+    )
     return {
-        "schema_version": "surface_slot_probe_matrix_generation.v1",
-        "generator": "cartesian_lexical_frame_with_modifier_profiles",
+        "schema_version": "surface_type_contract_registry.v1",
+        "source": "modified_transitive_adv_sequence.surface_slot_matrix",
         "base_family": "modified_transitive_adv_sequence",
         "axis_type_contract": {
             "agents": {
@@ -585,9 +588,7 @@ def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str,
             },
             "predicates": {
                 "surface_slot": "verb",
-                "dependent_type": (
-                    "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-                ),
+                "dependent_type": transitive_adv_type,
                 "semantic_class": "TransitiveAdvPredicateFamily",
                 "role_frame": ["Agent", "Theme"],
                 "output_type": "PropT",
@@ -631,9 +632,7 @@ def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str,
                 {
                     "surface": "admired",
                     "semantic": "admire",
-                    "dependent_type": (
-                        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-                    ),
+                    "dependent_type": transitive_adv_type,
                     "semantic_class": "TransitiveAdvPredicateFamily",
                     "role_frame": ["Agent", "Theme"],
                     "output_type": "PropT",
@@ -641,9 +640,7 @@ def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str,
                 {
                     "surface": "photographed",
                     "semantic": "photograph",
-                    "dependent_type": (
-                        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-                    ),
+                    "dependent_type": transitive_adv_type,
                     "semantic_class": "TransitiveAdvPredicateFamily",
                     "role_frame": ["Agent", "Theme"],
                     "output_type": "PropT",
@@ -666,6 +663,26 @@ def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str,
                 },
             ],
         },
+    }
+
+
+def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str, Any]:
+    type_contract_registry = modified_transitive_surface_type_contract_registry()
+    return {
+        "schema_version": "surface_slot_probe_matrix_generation.v1",
+        "generator": "cartesian_lexical_frame_with_modifier_profiles",
+        "base_family": "modified_transitive_adv_sequence",
+        "type_contract_registry": copy.deepcopy(type_contract_registry),
+        "axis_type_contract": copy.deepcopy(
+            type_contract_registry["axis_type_contract"],
+        ),
+        "modifier_type_contract": copy.deepcopy(
+            type_contract_registry["modifier_type_contract"],
+        ),
+        "time_type_contract": copy.deepcopy(
+            type_contract_registry["time_type_contract"],
+        ),
+        "axes": copy.deepcopy(type_contract_registry["axes"]),
         "surface_template": (
             "{agent_surface} {predicate_surface} the {theme_surface} "
             "{modifier_surfaces}"

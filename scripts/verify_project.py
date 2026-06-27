@@ -3178,100 +3178,28 @@ def expected_modified_surface_slot_probe_meta_from_spec(
 def expected_modified_surface_slot_probe_matrix_meta_from_spec(
     spec: dict,
 ) -> tuple[list[str], dict[str, tuple[str, str, str, str, int, bool, str, list[str], dict]]]:
+    from translator.natural_language_pipeline import (
+        modified_transitive_surface_type_contract_registry,
+    )
+
     def spec_drift() -> None:
         raise SystemExit(
             "web route smoke check failed: certified surface parser slot probe matrix generation spec drift"
         )
 
-    expected_axis_type_contract = {
-        "agents": {
-            "surface_slot": "subject",
-            "role_label": "Agent",
-            "dependent_type": "Entity",
-            "semantic_class": "Person",
-        },
-        "predicates": {
-            "surface_slot": "verb",
-            "dependent_type": (
-                "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-            ),
-            "semantic_class": "TransitiveAdvPredicateFamily",
-            "role_frame": ["Agent", "Theme"],
-            "output_type": "PropT",
-        },
-        "themes": {
-            "surface_slot": "direct_object",
-            "role_label": "Theme",
-            "dependent_type": "Entity",
-            "semantic_class": "VisualObject",
-        },
-    }
-    expected_modifier_type_contract = {
-        "dependent_type": "Adv",
-        "constructor_type": "Entity -> Adv",
-        "accepted_semantic_roles": ["Location", "Instrument"],
-        "treat_modifier_objects_as_events": False,
-    }
-    expected_time_type_contract = {
-        "time_argument_type": "Time",
-        "time_operator_type": "Time -> PropT -> PropT",
-        "proposition_scope": True,
-    }
-    transitive_adv_type = (
-        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+    expected_type_contract_registry = (
+        modified_transitive_surface_type_contract_registry()
     )
-    expected_axes = {
-        "agents": [
-            {
-                "surface": "Mary",
-                "semantic": "mary",
-                "dependent_type": "Entity",
-                "semantic_class": "Person",
-                "role_label": "Agent",
-            },
-            {
-                "surface": "John",
-                "semantic": "john",
-                "dependent_type": "Entity",
-                "semantic_class": "Person",
-                "role_label": "Agent",
-            },
-        ],
-        "predicates": [
-            {
-                "surface": "admired",
-                "semantic": "admire",
-                "dependent_type": transitive_adv_type,
-                "semantic_class": "TransitiveAdvPredicateFamily",
-                "role_frame": ["Agent", "Theme"],
-                "output_type": "PropT",
-            },
-            {
-                "surface": "photographed",
-                "semantic": "photograph",
-                "dependent_type": transitive_adv_type,
-                "semantic_class": "TransitiveAdvPredicateFamily",
-                "role_frame": ["Agent", "Theme"],
-                "output_type": "PropT",
-            },
-        ],
-        "themes": [
-            {
-                "surface": "painting",
-                "semantic": "painting",
-                "dependent_type": "Entity",
-                "semantic_class": "VisualObject",
-                "role_label": "Theme",
-            },
-            {
-                "surface": "sculpture",
-                "semantic": "sculpture",
-                "dependent_type": "Entity",
-                "semantic_class": "VisualObject",
-                "role_label": "Theme",
-            },
-        ],
-    }
+    expected_axis_type_contract = expected_type_contract_registry[
+        "axis_type_contract"
+    ]
+    expected_modifier_type_contract = expected_type_contract_registry[
+        "modifier_type_contract"
+    ]
+    expected_time_type_contract = expected_type_contract_registry[
+        "time_type_contract"
+    ]
+    expected_axes = expected_type_contract_registry["axes"]
     expected_profiles = [
         {
             "profile_id": "one_adv_untimed",
@@ -3289,6 +3217,7 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
         or spec.get("schema_version") != "surface_slot_probe_matrix_generation.v1"
         or spec.get("generator") != "cartesian_lexical_frame_with_modifier_profiles"
         or spec.get("base_family") != "modified_transitive_adv_sequence"
+        or spec.get("type_contract_registry") != expected_type_contract_registry
         or spec.get("axis_type_contract") != expected_axis_type_contract
         or spec.get("modifier_type_contract") != expected_modifier_type_contract
         or spec.get("time_type_contract") != expected_time_type_contract
@@ -4093,6 +4022,11 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-slot-probe-matrix-count="16"',
         'data-surface-slot-probe-matrix-generation-schema="surface_slot_probe_matrix_generation.v1"',
         'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
+        'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
+        (
+            'data-surface-slot-probe-matrix-type-contract-source="'
+            'modified_transitive_adv_sequence.surface_slot_matrix"'
+        ),
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',

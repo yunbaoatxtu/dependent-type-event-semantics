@@ -9438,6 +9438,22 @@ class TranslatorTests(unittest.TestCase):
             "cartesian_lexical_frame_with_modifier_profiles",
         )
         self.assertEqual(
+            matrix_generation_spec["type_contract_registry"],
+            natural_language_pipeline.modified_transitive_surface_type_contract_registry(),
+        )
+        self.assertEqual(
+            matrix_generation_spec["type_contract_registry"]["schema_version"],
+            "surface_type_contract_registry.v1",
+        )
+        self.assertEqual(
+            matrix_generation_spec["type_contract_registry"]["source"],
+            "modified_transitive_adv_sequence.surface_slot_matrix",
+        )
+        self.assertEqual(
+            matrix_generation_spec["axis_type_contract"],
+            matrix_generation_spec["type_contract_registry"]["axis_type_contract"],
+        )
+        self.assertEqual(
             matrix_generation_spec["axis_type_contract"]["agents"]["dependent_type"],
             "Entity",
         )
@@ -9874,6 +9890,15 @@ class TranslatorTests(unittest.TestCase):
         stale_manifest = deepcopy(manifest)
         stale_manifest["surface_parser_coverage"][
             "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_generation_spec"][
+            "type_contract_registry"
+        ]["source"] = "stale_type_registry"
+        with self.assertRaisesRegex(SystemExit, "slot probe matrix generation spec drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
         ]["slot_probe_examples"]["probes"][0][
             "expected_dependent_type_fragments"
         ] = ["stale_translation"]
@@ -10072,6 +10097,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-source="modified_transitive_adv_sequence.surface_slot_matrix"',
             page,
         )
         self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
@@ -15531,6 +15564,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe matrix type drift", verifier)
         self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
+        self.assertIn("surface_type_contract_registry.v1", verifier)
         self.assertIn("surface_slot_probe_matrix_generation.v1", verifier)
         self.assertIn("surface_slot_probe_generation.v1", verifier)
         self.assertIn("surface_slot_probes.v1", verifier)

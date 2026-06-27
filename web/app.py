@@ -2503,6 +2503,17 @@ def certified_fragment_panel() -> str:
     surface_slot_probe_matrix_generator_kind = str(
         surface_slot_probe_matrix_generation_spec.get("generator", ""),
     )
+    surface_slot_probe_matrix_type_contract_registry = (
+        surface_slot_probe_matrix_generation_spec.get("type_contract_registry")
+    )
+    if not isinstance(surface_slot_probe_matrix_type_contract_registry, dict):
+        surface_slot_probe_matrix_type_contract_registry = {}
+    surface_slot_probe_matrix_type_contract_schema = str(
+        surface_slot_probe_matrix_type_contract_registry.get("schema_version", ""),
+    )
+    surface_slot_probe_matrix_type_contract_source = str(
+        surface_slot_probe_matrix_type_contract_registry.get("source", ""),
+    )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
         examples = item.get("verified_examples")
@@ -2719,6 +2730,8 @@ def certified_fragment_panel() -> str:
         f'data-surface-slot-probe-matrix-count="{html.escape(surface_slot_probe_matrix_count, quote=True)}" '
         f'data-surface-slot-probe-matrix-generation-schema="{html.escape(surface_slot_probe_matrix_generator_schema, quote=True)}" '
         f'data-surface-slot-probe-matrix-generation-kind="{html.escape(surface_slot_probe_matrix_generator_kind, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-schema="{html.escape(surface_slot_probe_matrix_type_contract_schema, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-source="{html.escape(surface_slot_probe_matrix_type_contract_source, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
