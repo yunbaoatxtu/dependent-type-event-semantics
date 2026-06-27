@@ -157,6 +157,11 @@ Negated stative reasons remain proposition-level wrappers rather than new
 atomic states: `Mary admired the vase because it was not broken` becomes
 `because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`,
 with `it` resolved to the admired object and `not_T : Prop -> Prop`.
+Color states are also allowed for concrete compatible objects:
+`Mary admired the door because it was red` becomes
+`because_T(holds_state(door, color_scale, red), admire(mary, door))`, while
+place-like antecedents such as `Mary visited Paris because it was red` still
+fail before Coq/Rocq export.
 The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
@@ -1467,6 +1472,9 @@ The current prototype has small, testable rules for:
   and negated stative reasons such as
   `Mary admired the vase because it was not broken` render as
   `because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`;
+  concrete color-state reasons such as `Mary admired the door because it was red`
+  render as `because_T(holds_state(door, color_scale, red), admire(mary, door))`,
+  while place-like color antecedents remain rejected;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as

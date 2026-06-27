@@ -1572,6 +1572,11 @@ state: `Mary admired the vase because it was not broken` stores the stative
 clause with `polarity: "negative"`, resolves the stative subject's original
 `it` to the effect object `vase`, and renders
 `because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`.
+For color states, the compatibility table admits concrete object antecedents:
+`Mary admired the door because it was red` resolves `it` to `door` and renders
+`because_T(holds_state(door, color_scale, red), admire(mary, door))`, but
+`Mary visited Paris because it was red` still fails because `Paris` is not
+licensed as a color-state antecedent.
 The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`

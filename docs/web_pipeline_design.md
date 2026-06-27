@@ -889,6 +889,11 @@ while a negated stative reason such as
 `Mary admired the vase because it was not broken` should appear as
 `because_T(not_T(holds_state(vase, integrity_scale, broken)), admire(mary, vase))`
 with `not_T : Prop -> Prop` and the same controlled `it` resolution,
+and concrete color-state cases such as
+`Mary admired the door because it was red` should resolve to
+`because_T(holds_state(door, color_scale, red), admire(mary, door))` while
+place-like inputs such as `Mary visited Paris because it was red` remain
+type-check failures,
 and the timed/modifier case
 `John left quickly because Mary cried today` appears as
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
