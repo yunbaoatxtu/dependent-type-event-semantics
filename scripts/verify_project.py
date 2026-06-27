@@ -3176,6 +3176,136 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                 raise SystemExit(
                     "web route smoke check failed: certified surface parser witness live translation drift"
                 )
+    slot_probe_examples = modified_surface.get("slot_probe_examples")
+    expected_probe_meta = {
+        "subject_slot_john": (
+            "agent",
+            "John admired the painting in the gallery",
+            1,
+            False,
+            "application",
+            ["admire(1)(in(gallery), john, painting)"],
+        ),
+        "theme_slot_sculpture": (
+            "theme",
+            "Mary admired the sculpture in the gallery",
+            1,
+            False,
+            "application",
+            ["admire(1)(in(gallery), mary, sculpture)"],
+        ),
+        "predicate_slot_photograph": (
+            "predicate",
+            "Mary photographed the painting in the gallery",
+            1,
+            False,
+            "application",
+            ["photograph(1)(in(gallery), mary, painting)"],
+        ),
+        "combined_slots_timed_max_prefix": (
+            "agent_predicate_theme",
+            (
+                "John photographed the sculpture in the gallery with a telescope "
+                "near a window beside a shelf under a lamp yesterday"
+            ),
+            5,
+            True,
+            "time",
+            [
+                "at_T(yesterday, photograph(5)(in(gallery), with(telescope), "
+                "near(window), beside(shelf), under(lamp), john, sculpture))",
+            ],
+        ),
+    }
+    expected_probe_ids = list(expected_probe_meta)
+    if (
+        not isinstance(slot_probe_examples, dict)
+        or slot_probe_examples.get("schema_version") != "surface_slot_probes.v1"
+        or slot_probe_examples.get("probe_claim")
+        != "controlled_single_slot_and_combined_substitutions"
+        or slot_probe_examples.get("full_lexical_slot_certification") is not False
+        or slot_probe_examples.get("base_family") != "modified_transitive_adv_sequence"
+        or slot_probe_examples.get("expected_rule_id")
+        != "modified_transitive_predication"
+        or slot_probe_examples.get("expected_event_analysis")
+        != "modified-transitive-predication"
+        or slot_probe_examples.get("probe_count") != len(expected_probe_ids)
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe schema drift"
+        )
+    slot_probes = slot_probe_examples.get("probes")
+    if not isinstance(slot_probes, list) or len(slot_probes) != len(expected_probe_ids):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe count drift"
+        )
+    observed_probe_ids = [
+        probe.get("probe_id")
+        for probe in slot_probes
+        if isinstance(probe, dict)
+    ]
+    if observed_probe_ids != expected_probe_ids:
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe id drift"
+        )
+    for probe in slot_probes:
+        if not isinstance(probe, dict):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe shape drift"
+            )
+        expected_probe = expected_probe_meta.get(str(probe.get("probe_id", "")))
+        if (
+            expected_probe is None
+            or probe.get("slot") != expected_probe[0]
+            or probe.get("sentence") != expected_probe[1]
+            or probe.get("modifier_count") != expected_probe[2]
+            or probe.get("time_wrapped") is not expected_probe[3]
+            or probe.get("expected_ast_kind") != expected_probe[4]
+            or probe.get("expected_dependent_type_fragments") != expected_probe[5]
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe drift"
+            )
+        probe_fragments = probe.get("expected_dependent_type_fragments")
+        if (
+            not isinstance(probe_fragments, list)
+            or not probe_fragments
+            or not all(
+                isinstance(fragment, str) and fragment
+                for fragment in probe_fragments
+            )
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe fragment schema drift"
+            )
+        probe_result = run_pipeline(str(probe.get("sentence", "")), require_coq=False)
+        if not probe_result.get("ok"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe no longer runs"
+            )
+        if (
+            probe_result.get("construction_rule", {}).get("id")
+            != slot_probe_examples.get("expected_rule_id")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe rule drift"
+            )
+        if probe_result.get("event_semantics", {}).get("analysis") != slot_probe_examples.get(
+            "expected_event_analysis",
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe live analysis drift"
+            )
+        if probe_result.get("ast", {}).get("kind") != probe.get("expected_ast_kind"):
+            raise SystemExit(
+                "web route smoke check failed: certified surface parser slot probe live AST drift"
+            )
+        probe_translation = str(probe_result.get("dependent_type_translation", ""))
+        for fragment in probe_fragments:
+            if fragment not in probe_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified surface parser slot probe live translation drift"
+                )
     registered_case_by_id = {
         item.get("rule_id"): item
         for item in registered_cases
@@ -3463,6 +3593,20 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-generator-kind="modifier_prefix_with_optional_time_suffix"',
         'data-surface-generator-modifier-count="5"',
         'data-surface-generator-time-suffix="yesterday"',
+        'data-surface-slot-probe-schema="surface_slot_probes.v1"',
+        'data-surface-slot-probe-count="4"',
+        'data-surface-slot-probe-id="subject_slot_john"',
+        'data-surface-slot-probe-slot="agent"',
+        'data-surface-slot-probe-sentence="John admired the painting in the gallery"',
+        'data-surface-slot-probe-id="theme_slot_sculpture"',
+        'data-surface-slot-probe-slot="theme"',
+        'data-surface-slot-probe-sentence="Mary admired the sculpture in the gallery"',
+        'data-surface-slot-probe-id="predicate_slot_photograph"',
+        'data-surface-slot-probe-slot="predicate"',
+        'data-surface-slot-probe-id="combined_slots_timed_max_prefix"',
+        'data-surface-slot-probe-slot="agent_predicate_theme"',
+        'data-surface-slot-probe-modifier-count="5"',
+        'data-surface-slot-probe-time-wrapped="true"',
         'data-surface-example-variant-id="primary_modified_transitive_predication"',
         'data-surface-example-sentence="Mary admired the painting in the gallery"',
         'data-surface-example-source="registered_primary_example"',

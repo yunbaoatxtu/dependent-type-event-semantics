@@ -2473,6 +2473,11 @@ def certified_fragment_panel() -> str:
         if isinstance(surface_generation_spec.get("modifiers"), list)
         else "",
     )
+    surface_slot_probes = modified_surface.get("slot_probe_examples")
+    if not isinstance(surface_slot_probes, dict):
+        surface_slot_probes = {}
+    surface_slot_probe_schema = str(surface_slot_probes.get("schema_version", ""))
+    surface_slot_probe_count = str(surface_slot_probes.get("probe_count", ""))
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
         examples = item.get("verified_examples")
@@ -2494,6 +2499,28 @@ def certified_fragment_panel() -> str:
             )
             for example in examples
             if isinstance(example, dict)
+        )
+
+    def surface_slot_probe_items(item: dict[str, object]) -> str:
+        slot_probes = item.get("slot_probe_examples")
+        if not isinstance(slot_probes, dict):
+            return ""
+        probes = slot_probes.get("probes")
+        if not isinstance(probes, list):
+            return ""
+        return "".join(
+            (
+                '<li '
+                f'data-surface-slot-probe-id="{html.escape(str(probe.get("probe_id", "")), quote=True)}" '
+                f'data-surface-slot-probe-slot="{html.escape(str(probe.get("slot", "")), quote=True)}" '
+                f'data-surface-slot-probe-sentence="{html.escape(str(probe.get("sentence", "")), quote=True)}" '
+                f'data-surface-slot-probe-modifier-count="{html.escape(str(probe.get("modifier_count", "")), quote=True)}" '
+                f'data-surface-slot-probe-time-wrapped="{str(probe.get("time_wrapped") is True).lower()}">'
+                f"{html.escape(str(probe.get('sentence', '')))}"
+                "</li>"
+            )
+            for probe in probes
+            if isinstance(probe, dict)
         )
     rule_items = "".join(
         '<li '
@@ -2592,6 +2619,7 @@ def certified_fragment_panel() -> str:
             f'<code>{html.escape(str(family))}</code>'
             f'<span>{html.escape(str(item.get("boundary_note", "")))}</span>'
             f"<ul>{surface_parser_example_items(item)}</ul>"
+            f"<ul>{surface_slot_probe_items(item)}</ul>"
             "</li>"
         )
         for family, item in (
@@ -2624,6 +2652,8 @@ def certified_fragment_panel() -> str:
         f'data-surface-generator-kind="{html.escape(surface_generator_kind, quote=True)}" '
         f'data-surface-generator-modifier-count="{html.escape(surface_generator_modifier_count, quote=True)}" '
         f'data-surface-generator-time-suffix="{html.escape(surface_generator_time_suffix, quote=True)}" '
+        f'data-surface-slot-probe-schema="{html.escape(surface_slot_probe_schema, quote=True)}" '
+        f'data-surface-slot-probe-count="{html.escape(surface_slot_probe_count, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -2641,6 +2671,7 @@ def certified_fragment_panel() -> str:
         f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
         f"<dt>verified Adv counts</dt><dd><code>{html.escape(surface_verified_counts)}</code></dd>"
         f"<dt>surface generator</dt><dd><code>{html.escape(surface_generator_kind)}</code></dd>"
+        f"<dt>slot probes</dt><dd><code>{html.escape(surface_slot_probe_count)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"

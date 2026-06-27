@@ -887,6 +887,12 @@ verifier rebuilds the advertised witness sentences and expected translation
 fragments from that spec before running the live analyzer, which turns the
 finite coverage claim into a generated contract rather than a hand-maintained
 list alone.
+Finally, `slot_probe_examples` adds a smaller lexical-slot stability check. It
+reruns controlled substitutions for the Agent, Theme, predicate, and one
+combined timed five-modifier case, while keeping
+`full_lexical_slot_certification: false`. These probes make sure the current
+front end does not accidentally bake the surface contract into only the Mary /
+painting / admire example, without claiming arbitrary lexical replacement.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

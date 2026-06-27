@@ -426,6 +426,69 @@ def modified_transitive_surface_witness_generation_spec() -> dict[str, Any]:
     }
 
 
+def modified_transitive_surface_slot_probe_payload() -> dict[str, Any]:
+    probes = [
+        {
+            "probe_id": "subject_slot_john",
+            "slot": "agent",
+            "sentence": "John admired the painting in the gallery",
+            "modifier_count": 1,
+            "time_wrapped": False,
+            "expected_ast_kind": "application",
+            "expected_dependent_type_fragments": [
+                "admire(1)(in(gallery), john, painting)",
+            ],
+        },
+        {
+            "probe_id": "theme_slot_sculpture",
+            "slot": "theme",
+            "sentence": "Mary admired the sculpture in the gallery",
+            "modifier_count": 1,
+            "time_wrapped": False,
+            "expected_ast_kind": "application",
+            "expected_dependent_type_fragments": [
+                "admire(1)(in(gallery), mary, sculpture)",
+            ],
+        },
+        {
+            "probe_id": "predicate_slot_photograph",
+            "slot": "predicate",
+            "sentence": "Mary photographed the painting in the gallery",
+            "modifier_count": 1,
+            "time_wrapped": False,
+            "expected_ast_kind": "application",
+            "expected_dependent_type_fragments": [
+                "photograph(1)(in(gallery), mary, painting)",
+            ],
+        },
+        {
+            "probe_id": "combined_slots_timed_max_prefix",
+            "slot": "agent_predicate_theme",
+            "sentence": (
+                "John photographed the sculpture in the gallery with a telescope "
+                "near a window beside a shelf under a lamp yesterday"
+            ),
+            "modifier_count": 5,
+            "time_wrapped": True,
+            "expected_ast_kind": "time",
+            "expected_dependent_type_fragments": [
+                "at_T(yesterday, photograph(5)(in(gallery), with(telescope), "
+                "near(window), beside(shelf), under(lamp), john, sculpture))",
+            ],
+        },
+    ]
+    return {
+        "schema_version": "surface_slot_probes.v1",
+        "probe_claim": "controlled_single_slot_and_combined_substitutions",
+        "full_lexical_slot_certification": False,
+        "base_family": "modified_transitive_adv_sequence",
+        "expected_rule_id": "modified_transitive_predication",
+        "expected_event_analysis": "modified-transitive-predication",
+        "probe_count": len(probes),
+        "probes": probes,
+    }
+
+
 FALLBACK_CERTIFICATION_GAPS = (
     {
         "id": "no_registered_construction_rule",
@@ -12063,6 +12126,7 @@ def construction_rules() -> list[ConstructionRule]:
 
 def surface_parser_coverage_payload() -> dict[str, Any]:
     witness_generation_spec = modified_transitive_surface_witness_generation_spec()
+    slot_probe_payload = modified_transitive_surface_slot_probe_payload()
     snapshot_by_rule = {
         str(snapshot.get("rule_id", "")): snapshot
         for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
@@ -12160,6 +12224,7 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
             "verified_example_count": len(verified_examples),
             "verified_examples": verified_examples,
             "witness_generation_spec": witness_generation_spec,
+            "slot_probe_examples": slot_probe_payload,
             "boundary_note": (
                 "The dependent type family is open-ended in n, but the current "
                 "surface parser advertises only the registered and smoke-tested "

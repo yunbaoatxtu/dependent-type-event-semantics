@@ -9383,6 +9383,33 @@ class TranslatorTests(unittest.TestCase):
             generation_spec["variant_id_by_prefix"]["timed"]["5"],
             "temporal_quint_adv_modified_transitive_predication",
         )
+        slot_probe_examples = surface_parser_coverage["slot_probe_examples"]
+        self.assertEqual(
+            slot_probe_examples["schema_version"],
+            "surface_slot_probes.v1",
+        )
+        self.assertEqual(
+            slot_probe_examples["probe_claim"],
+            "controlled_single_slot_and_combined_substitutions",
+        )
+        self.assertFalse(slot_probe_examples["full_lexical_slot_certification"])
+        self.assertEqual(slot_probe_examples["probe_count"], 4)
+        self.assertEqual(
+            [probe["probe_id"] for probe in slot_probe_examples["probes"]],
+            [
+                "subject_slot_john",
+                "theme_slot_sculpture",
+                "predicate_slot_photograph",
+                "combined_slots_timed_max_prefix",
+            ],
+        )
+        self.assertEqual(
+            slot_probe_examples["probes"][-1]["expected_dependent_type_fragments"],
+            [
+                "at_T(yesterday, photograph(5)(in(gallery), with(telescope), "
+                "near(window), beside(shelf), under(lamp), john, sculpture))",
+            ],
+        )
         self.assertEqual(surface_parser_coverage["max_verified_modifier_count"], 5)
         self.assertEqual(surface_parser_coverage["verified_example_count"], 10)
         self.assertEqual(len(surface_parser_coverage["verified_examples"]), 10)
@@ -9444,6 +9471,22 @@ class TranslatorTests(unittest.TestCase):
                 )
                 self.assertEqual(result["ast"]["kind"], witness["expected_ast_kind"])
                 for fragment in witness["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
+        for probe in slot_probe_examples["probes"]:
+            with self.subTest(surface_slot_probe=probe["probe_id"]):
+                result = run_pipeline(probe["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(
+                    result["construction_rule"]["id"],
+                    slot_probe_examples["expected_rule_id"],
+                )
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    slot_probe_examples["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], probe["expected_ast_kind"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+                for fragment in probe["expected_dependent_type_fragments"]:
                     self.assertIn(fragment, result["dependent_type_translation"])
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
@@ -9657,6 +9700,24 @@ class TranslatorTests(unittest.TestCase):
                 ):
                     validate_certified_fragment_manifest(stale_manifest)
 
+    def test_verification_rejects_surface_parser_slot_probe_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["schema_version"] = "surface_slot_probes.v0"
+        with self.assertRaisesRegex(SystemExit, "slot probe schema drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["probes"][0][
+            "expected_dependent_type_fragments"
+        ] = ["stale_translation"]
+        with self.assertRaisesRegex(SystemExit, "slot probe drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
     def test_verification_rejects_surface_parser_witness_live_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         witness = manifest["surface_parser_coverage"][
@@ -9814,6 +9875,23 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-surface-generator-modifier-count="5"', page)
         self.assertIn('data-surface-generator-time-suffix="yesterday"', page)
+        self.assertIn('data-surface-slot-probe-schema="surface_slot_probes.v1"', page)
+        self.assertIn('data-surface-slot-probe-count="4"', page)
+        self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
+        self.assertIn('data-surface-slot-probe-slot="agent"', page)
+        self.assertIn(
+            'data-surface-slot-probe-sentence="John admired the painting in the gallery"',
+            page,
+        )
+        self.assertIn('data-surface-slot-probe-id="theme_slot_sculpture"', page)
+        self.assertIn('data-surface-slot-probe-slot="theme"', page)
+        self.assertIn(
+            'data-surface-slot-probe-sentence="Mary admired the sculpture in the gallery"',
+            page,
+        )
+        self.assertIn('data-surface-slot-probe-id="combined_slots_timed_max_prefix"', page)
+        self.assertIn('data-surface-slot-probe-slot="agent_predicate_theme"', page)
+        self.assertIn('data-surface-slot-probe-time-wrapped="true"', page)
         self.assertIn(
             'data-surface-example-variant-id="primary_modified_transitive_predication"',
             page,
@@ -15232,6 +15310,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("expected_modified_surface_witness_meta_from_spec", verifier)
         self.assertIn("surface parser generation spec drift", verifier)
         self.assertIn("surface_witness_generation.v1", verifier)
+        self.assertIn("surface parser slot probe schema drift", verifier)
+        self.assertIn("surface parser slot probe live translation drift", verifier)
+        self.assertIn("surface_slot_probes.v1", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)
         self.assertIn("/api/recovery-action-run", verifier)
