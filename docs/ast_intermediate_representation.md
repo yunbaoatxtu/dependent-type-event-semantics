@@ -1554,6 +1554,19 @@ If the other clause provides no compatible patient, as in
 `Mary cried because it opened`, or provides an incompatible object, as in
 `Mary visited Paris because it opened`, the `causal_because` analysis fails its
 internal type check and is not sent to Coq/Rocq as `it : Entity`.
+The same `causal_because` slots can now contain a checked
+`stative_result_state` clause. `John opened the door because it was closed`
+stores `holds_state(door, access_scale, closed)` in the `cause` slot and
+`Cause(john, Transition(door, access_scale, closed, open))` in the `effect`
+slot, rendering
+`because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`.
+The stative `subject` object records
+`anaphora: {pronoun: "it", resolved_to: "door", source_clause: "effect",
+source_role: "theme", resolution_policy: "single_compatible_patient"}`. In the
+reverse direction, `the door was closed because John closed it` stores the
+anaphora object on `cause.transition.theme` with `source_role: "subject"`.
+Scale-incompatible cases such as `John opened the door because it was red`
+fail before proof-assistant export.
 The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`

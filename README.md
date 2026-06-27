@@ -146,6 +146,13 @@ object with `pronoun`, `resolved_to`, `source_clause`, `source_role`, and
 `resolution_policy`; unresolved or incompatible cases such as
 `Mary cried because it opened` and `Mary visited Paris because it opened` fail
 the internal type check before Coq/Rocq validation.
+The bridge now also composes with stative result-state clauses used as
+preconditions: `John opened the door because it was closed` becomes
+`because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`.
+The pronoun in `it was closed` is resolved to the state-change theme `door`,
+and the generated scaffold declares `holds_state : Entity -> StateScale -> State -> Prop`
+without exporting `it : Entity`. Scale-incompatible cases such as
+`John opened the door because it was red` fail before Coq/Rocq validation.
 The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
@@ -1450,7 +1457,9 @@ The current prototype has small, testable rules for:
   the same construction has a controlled state-change anaphora bridge, for
   example `Mary admired the door because it opened` as
   `because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))`,
-  while unresolved `it` cases fail before Coq/Rocq export;
+  while unresolved `it` cases fail before Coq/Rocq export; stative
+  preconditions such as `John opened the door because it was closed` render as
+  `because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as

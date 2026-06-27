@@ -116,6 +116,20 @@ STATE_CHANGE_ANAPHORA_COMPATIBLE_THEMES = {
     "open": {"door", "gate", "window"},
     "wet": {"clothes"},
 }
+STATE_ANAPHORA_COMPATIBLE_THEMES = {
+    "broken": {"door", "glass", "vase", "window"},
+    "clean": {"floor", "room", "table"},
+    "closed": {"door", "gate", "window"},
+    "dirty": {"floor", "room", "table"},
+    "dry": {"clothes"},
+    "empty": {"bottle", "glass", "tank"},
+    "flat": {"metal"},
+    "frozen": {"water"},
+    "full": {"bottle", "glass", "tank"},
+    "melted": {"ice"},
+    "open": {"door", "gate", "window"},
+    "wet": {"clothes"},
+}
 RELATIVE_RESTRICTOR_MARKERS = {"that", "who"}
 RELATIVE_OBJECT_NP_DETERMINERS = EXISTENTIAL_SCOPE_DETERMINERS | ARTICLES
 MODIFIER_INDEXED_UNARY_RELATION = (
@@ -249,6 +263,22 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "causal-because",
         "expected_dependent_type_fragments": [
             "because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))",
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "causal_because",
+        "variant_id": "stative_precondition_because",
+        "sentence": "John opened the door because it was closed",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            (
+                "because_T(holds_state(door, access_scale, closed), "
+                "Cause(john, Transition(door, access_scale, closed, open)))"
+            ),
         ],
         "expected_ast_kind": "causal_because",
         "expected_verification_scope_kind": "registered_construction",
@@ -6651,53 +6681,40 @@ def check_causal_because_ast(ast: dict[str, Any]) -> dict[str, Any]:
 
     cause = ast.get("cause")
     effect = ast.get("effect")
-    if causal_because_clause_is_state_change(cause) or causal_because_clause_is_state_change(effect):
-        for field, clause in (("cause", cause), ("effect", effect)):
-            if causal_because_clause_is_state_change(clause):
-                state_check = check_lexical_state_change_ast(clause)
-                errors.extend(
-                    f"causal_because.{field}: {error}"
-                    for error in state_check["errors"]
-                )
-            elif isinstance(clause, dict):
-                simple_check = check_simple_conditional_ast(
-                    {
-                        "kind": "conditional_implication",
-                        "antecedent": clause,
-                        "consequent": copy.deepcopy(clause),
-                        "connective": {
-                            "name": "implies",
-                            "type": "Prop -> Prop -> Prop",
-                        },
-                    }
-                )
-                errors.extend(
-                    error.replace("conditional.antecedent", f"causal_because.{field}")
-                    .replace("conditional.consequent", f"causal_because.{field}")
-                    .replace("conditional predicate", "causal_because predicate")
-                    for error in simple_check["errors"]
-                )
-            else:
-                errors.append(f"causal_because.{field} must be a clause object")
-        errors.extend(causal_because_declaration_conflicts(cause, effect))
-    else:
-        conditional_shape = {
-            "kind": "conditional_implication",
-            "antecedent": cause,
-            "consequent": effect,
-            "connective": {
-                "name": "implies",
-                "type": "Prop -> Prop -> Prop",
-            },
-        }
-        clause_check = check_simple_conditional_ast(conditional_shape)
-        for error in clause_check["errors"]:
-            causal_error = (
-                error.replace("conditional.antecedent", "causal_because.cause")
-                .replace("conditional.consequent", "causal_because.effect")
-                .replace("conditional predicate", "causal_because predicate")
+    for field, clause in (("cause", cause), ("effect", effect)):
+        if causal_because_clause_is_state_change(clause):
+            state_check = check_lexical_state_change_ast(clause)
+            errors.extend(
+                f"causal_because.{field}: {error}"
+                for error in state_check["errors"]
             )
-            errors.append(causal_error)
+        elif causal_because_clause_is_stative_state(clause):
+            stative_check = check_stative_result_state_ast(clause)
+            errors.extend(
+                f"causal_because.{field}: {error}"
+                for error in stative_check["errors"]
+            )
+        elif isinstance(clause, dict):
+            simple_check = check_simple_conditional_ast(
+                {
+                    "kind": "conditional_implication",
+                    "antecedent": clause,
+                    "consequent": copy.deepcopy(clause),
+                    "connective": {
+                        "name": "implies",
+                        "type": "Prop -> Prop -> Prop",
+                    },
+                }
+            )
+            errors.extend(
+                error.replace("conditional.antecedent", f"causal_because.{field}")
+                .replace("conditional.consequent", f"causal_because.{field}")
+                .replace("conditional predicate", "causal_because predicate")
+                for error in simple_check["errors"]
+            )
+        else:
+            errors.append(f"causal_because.{field} must be a clause object")
+    errors.extend(causal_because_declaration_conflicts(cause, effect))
 
     return {
         "ok": not errors,
@@ -6723,6 +6740,18 @@ def causal_because_clause_is_state_change(clause: Any) -> bool:
     return isinstance(clause, dict) and clause.get("kind") == "lexical_state_change"
 
 
+def causal_because_clause_is_stative_state(clause: Any) -> bool:
+    return isinstance(clause, dict) and clause.get("kind") == "stative_result_state"
+
+
+def causal_because_clause_is_simple_predication(clause: Any) -> bool:
+    return (
+        isinstance(clause, dict)
+        and not causal_because_clause_is_state_change(clause)
+        and not causal_because_clause_is_stative_state(clause)
+    )
+
+
 def parse_causal_because_clause(tokens: list[str]) -> dict[str, Any] | None:
     sentence = " ".join(tokens)
     state_change = lexical_state_change_pipeline(sentence)
@@ -6732,10 +6761,48 @@ def parse_causal_because_clause(tokens: list[str]) -> dict[str, Any] | None:
     ):
         return copy.deepcopy(state_change["ast"])
 
+    stative_state = stative_result_state_pipeline(sentence)
+    if (
+        stative_state is not None
+        and stative_state.get("type_check", {}).get("ok") is True
+    ):
+        return copy.deepcopy(stative_state["ast"])
+
     simple_clause = parse_simple_conditional_clause(tokens)
     if simple_clause is None:
         return None
     return simple_conditional_clause_ast(**simple_clause)
+
+
+def causal_because_stative_state_records(clause: dict[str, Any]) -> list[dict[str, Any]]:
+    states = clause.get("states")
+    if isinstance(states, list) and states:
+        return [state for state in states if isinstance(state, dict)]
+    state = clause.get("state")
+    return [state] if isinstance(state, dict) else []
+
+
+def causal_because_stative_state_names(clause: dict[str, Any]) -> list[str]:
+    return [
+        state["name"]
+        for state in causal_because_stative_state_records(clause)
+        if isinstance(state.get("name"), str)
+    ]
+
+
+def causal_because_stative_state_scales(clause: dict[str, Any]) -> list[str]:
+    scales = []
+    for state in causal_because_stative_state_records(clause):
+        scale = state.get("state_scale")
+        if isinstance(scale, str):
+            scales.append(scale)
+            continue
+        state_name = state.get("name")
+        if isinstance(state_name, str) and state_name in STATE_SCALE_BY_STATE:
+            scales.append(STATE_SCALE_BY_STATE[state_name])
+    if not scales and isinstance(clause.get("state_scale"), str):
+        scales.append(clause["state_scale"])
+    return scales
 
 
 def causal_because_patient_candidates(
@@ -6745,6 +6812,7 @@ def causal_because_patient_candidates(
 ) -> list[dict[str, str]]:
     if causal_because_clause_is_state_change(clause):
         theme = clause.get("transition", {}).get("theme", {})
+        state_scale = clause.get("transition", {}).get("state_scale")
         if (
             isinstance(theme, dict)
             and isinstance(theme.get("name"), str)
@@ -6756,6 +6824,29 @@ def causal_because_patient_candidates(
                     "type": "Entity",
                     "source_clause": source_clause,
                     "source_role": "theme",
+                    **(
+                        {"state_scales": state_scale}
+                        if isinstance(state_scale, str)
+                        else {}
+                    ),
+                }
+            ]
+        return []
+
+    if causal_because_clause_is_stative_state(clause):
+        subject = clause.get("subject", {})
+        if (
+            isinstance(subject, dict)
+            and isinstance(subject.get("name"), str)
+            and subject["name"] not in ANAPHORIC_ENTITY_PRONOUNS
+        ):
+            return [
+                {
+                    "name": subject["name"],
+                    "type": "Entity",
+                    "source_clause": source_clause,
+                    "source_role": "subject",
+                    "state_scales": ",".join(causal_because_stative_state_scales(clause)),
                 }
             ]
         return []
@@ -6785,8 +6876,37 @@ def causal_because_candidate_compatible_with_state_change(
     verb = clause.get("verb")
     if not isinstance(verb, str):
         return False
+    transition = clause.get("transition", {})
+    state_scale = transition.get("state_scale") if isinstance(transition, dict) else None
+    candidate_scales = set(
+        scale
+        for scale in candidate.get("state_scales", "").split(",")
+        if scale
+    )
+    if isinstance(state_scale, str) and state_scale in candidate_scales:
+        return True
     compatible_themes = STATE_CHANGE_ANAPHORA_COMPATIBLE_THEMES.get(verb, set())
     return candidate.get("name") in compatible_themes
+
+
+def causal_because_candidate_compatible_with_stative_state(
+    clause: dict[str, Any],
+    candidate: dict[str, str],
+) -> bool:
+    candidate_scales = set(
+        scale
+        for scale in candidate.get("state_scales", "").split(",")
+        if scale
+    )
+    state_scales = set(causal_because_stative_state_scales(clause))
+    if state_scales & candidate_scales:
+        return True
+    state_names = causal_because_stative_state_names(clause)
+    candidate_name = candidate.get("name")
+    return all(
+        candidate_name in STATE_ANAPHORA_COMPATIBLE_THEMES.get(state_name, set())
+        for state_name in state_names
+    )
 
 
 def resolve_causal_because_state_change_anaphora(
@@ -6799,13 +6919,19 @@ def resolve_causal_because_state_change_anaphora(
         ("effect", effect, "cause", cause),
     )
     for label, clause, other_label, other_clause in pairs:
-        if not causal_because_clause_is_state_change(clause):
+        if causal_because_clause_is_state_change(clause):
+            pronoun_holder = clause.get("transition", {}).get("theme")
+            subject_label = "theme"
+            compatibility = causal_because_candidate_compatible_with_state_change
+        elif causal_because_clause_is_stative_state(clause):
+            pronoun_holder = clause.get("subject")
+            subject_label = "subject"
+            compatibility = causal_because_candidate_compatible_with_stative_state
+        else:
             continue
-        transition = clause.get("transition", {})
-        theme = transition.get("theme") if isinstance(transition, dict) else None
-        if not isinstance(theme, dict):
+        if not isinstance(pronoun_holder, dict):
             continue
-        pronoun = theme.get("name")
+        pronoun = pronoun_holder.get("name")
         if pronoun not in ANAPHORIC_ENTITY_PRONOUNS:
             continue
         candidates = [
@@ -6814,24 +6940,24 @@ def resolve_causal_because_state_change_anaphora(
                 other_clause,
                 source_clause=other_label,
             )
-            if causal_because_candidate_compatible_with_state_change(clause, candidate)
+            if compatibility(clause, candidate)
         ]
         if len(candidates) != 1:
             if candidates:
                 candidate_names = ", ".join(candidate["name"] for candidate in candidates)
                 errors.append(
-                    f"causal_because.{label}.theme pronoun {pronoun} is ambiguous "
+                    f"causal_because.{label}.{subject_label} pronoun {pronoun} is ambiguous "
                     f"among compatible antecedents: {candidate_names}"
                 )
             else:
                 errors.append(
-                    f"causal_because.{label}.theme pronoun {pronoun} has no "
+                    f"causal_because.{label}.{subject_label} pronoun {pronoun} has no "
                     "unique compatible antecedent"
                 )
             continue
         antecedent = candidates[0]
-        theme["name"] = antecedent["name"]
-        theme["anaphora"] = {
+        pronoun_holder["name"] = antecedent["name"]
+        pronoun_holder["anaphora"] = {
             "pronoun": pronoun,
             "resolved_to": antecedent["name"],
             "source_clause": antecedent["source_clause"],
@@ -6860,9 +6986,33 @@ def state_change_coq_expression(ast: dict[str, Any]) -> str:
     return f"Change ({transition_coq})"
 
 
+def stative_result_state_expression(ast: dict[str, Any], *, coq: bool) -> str:
+    subject = ast["subject"]["name"]
+    assertions = []
+    for state in causal_because_stative_state_records(ast):
+        state_name = state["name"]
+        state_scale = state.get("state_scale", STATE_SCALE_BY_STATE[state_name])
+        if coq:
+            assertions.append(f"holds_state {subject} {state_scale} {state_name}")
+        else:
+            assertions.append(f"holds_state({subject}, {state_scale}, {state_name})")
+    expression = assertions[0]
+    for next_assertion in assertions[1:]:
+        expression = (
+            f"and_T ({expression}) ({next_assertion})"
+            if coq
+            else f"and_T({expression}, {next_assertion})"
+        )
+    if ast.get("polarity", "positive") == "negative":
+        expression = f"not_T ({expression})" if coq else f"not_T({expression})"
+    return expression
+
+
 def causal_because_clause_formula(clause: dict[str, Any], *, coq: bool) -> str:
     if causal_because_clause_is_state_change(clause):
         return state_change_coq_expression(clause) if coq else render_state_change_translation(clause)
+    if causal_because_clause_is_stative_state(clause):
+        return stative_result_state_expression(clause, coq=coq)
     return simple_conditional_clause_formula(clause, coq=coq)
 
 
@@ -6870,8 +7020,24 @@ def causal_because_clause_event_reference(
     clause: dict[str, Any],
     event_name: str,
 ) -> str:
-    if not causal_because_clause_is_state_change(clause):
+    if (
+        not causal_because_clause_is_state_change(clause)
+        and not causal_because_clause_is_stative_state(clause)
+    ):
         return simple_conditional_event_quantified_reference(clause, event_name)
+    if causal_because_clause_is_stative_state(clause):
+        subject = clause["subject"]["name"]
+        state_parts = [
+            f"ResultState({event_name}, {state_name})"
+            for state_name in causal_because_stative_state_names(clause)
+        ]
+        reference = (
+            f"exists {event_name}. Theme({event_name}, {subject}) and "
+            + " and ".join(state_parts)
+        )
+        if clause.get("polarity", "positive") == "negative":
+            return f"not({reference})"
+        return reference
     transition = clause["transition"]
     parts = [
         f"{clause['verb']}({event_name})",
@@ -6972,6 +7138,34 @@ def causal_because_collect_clause_declarations(
             )
         return
 
+    if causal_because_clause_is_stative_state(clause):
+        subject = clause.get("subject", {})
+        if isinstance(subject, dict) and isinstance(subject.get("name"), str):
+            add_typed_declaration(
+                declarations,
+                errors,
+                subject["name"],
+                "Entity",
+                label=label,
+            )
+        for state_name in causal_because_stative_state_names(clause):
+            add_typed_declaration(
+                declarations,
+                errors,
+                state_name,
+                "State",
+                label=label,
+            )
+        for state_scale in causal_because_stative_state_scales(clause):
+            add_typed_declaration(
+                declarations,
+                errors,
+                state_scale,
+                "StateScale",
+                label=label,
+            )
+        return
+
     if "subjects" in clause:
         for subject in clause["subjects"]:
             if isinstance(subject, dict) and isinstance(subject.get("name"), str):
@@ -7062,8 +7256,8 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     anaphora_errors = resolve_causal_because_state_change_anaphora(cause, effect)
     normalize_simple_conditional_predicate_signatures(
         {
-            "antecedent": cause if not causal_because_clause_is_state_change(cause) else None,
-            "consequent": effect if not causal_because_clause_is_state_change(effect) else None,
+            "antecedent": cause if causal_because_clause_is_simple_predication(cause) else None,
+            "consequent": effect if causal_because_clause_is_simple_predication(effect) else None,
         }
     )
     ast = causal_because_ast(cause, effect)
@@ -7081,7 +7275,7 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     simple_clauses = [
         clause
         for clause in (cause, effect)
-        if not causal_because_clause_is_state_change(clause)
+        if causal_because_clause_is_simple_predication(clause)
     ]
     if len(simple_clauses) == 2:
         value_declarations, predicate_declarations = simple_conditional_declarations(
@@ -7121,28 +7315,32 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     time_modifiers = [
         modifier
         for clause in (cause, effect)
-        if not causal_because_clause_is_state_change(clause)
+        if causal_because_clause_is_simple_predication(clause)
         for modifier in clause.get("time_modifiers", [])
     ]
     adv_modifiers = [
         modifier
         for clause in (cause, effect)
-        if not causal_because_clause_is_state_change(clause)
+        if causal_because_clause_is_simple_predication(clause)
         for modifier in clause.get("modifiers", [])
     ]
     has_modifier_signature = any(
         simple_conditional_clause_uses_modifier_signature(clause)
         for clause in (cause, effect)
-        if not causal_because_clause_is_state_change(clause)
+        if causal_because_clause_is_simple_predication(clause)
     )
     has_negation = any(
         clause.get("negated", False)
         for clause in (cause, effect)
-        if not causal_because_clause_is_state_change(clause)
+        if causal_because_clause_is_simple_predication(clause)
+    ) or any(
+        causal_because_clause_is_stative_state(clause)
+        and clause.get("polarity", "positive") == "negative"
+        for clause in (cause, effect)
     )
     subject_connective_types: dict[str, str] = {}
     for clause in (cause, effect):
-        if causal_because_clause_is_state_change(clause):
+        if not causal_because_clause_is_simple_predication(clause):
             continue
         subject_connective = clause.get("subject_connective")
         if isinstance(subject_connective, dict):
@@ -7155,14 +7353,27 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
             previous_type = subject_connective_types.get(connective_name)
             if previous_type is None or previous_type == "Prop -> Prop -> Prop":
                 subject_connective_types[connective_name] = connective_type
+    requires_stative_and = any(
+        causal_because_clause_is_stative_state(clause)
+        and len(causal_because_stative_state_records(clause)) > 1
+        for clause in (cause, effect)
+    )
+    if requires_stative_and and "and_T" not in subject_connective_types:
+        subject_connective_types["and_T"] = "Prop -> Prop -> Prop"
 
     requires_state_change = any(
         causal_because_clause_is_state_change(clause)
         for clause in (cause, effect)
     )
+    requires_stative_state = any(
+        causal_because_clause_is_stative_state(clause)
+        for clause in (cause, effect)
+    )
+    if requires_state_change or requires_stative_state:
+        object_type_declarations.extend(["State", "StateScale"])
     if requires_state_change:
-        object_type_declarations.extend(["State", "StateScale", "TransitionT"])
-        object_type_declarations = list(dict.fromkeys(object_type_declarations))
+        object_type_declarations.append("TransitionT")
+    object_type_declarations = list(dict.fromkeys(object_type_declarations))
 
     coq_cause = causal_because_clause_formula(cause, coq=True)
     coq_effect = causal_because_clause_formula(effect, coq=True)
@@ -7206,6 +7417,13 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
             ),
             *(
                 [
+                    "Parameter holds_state : Entity -> StateScale -> State -> Prop.",
+                ]
+                if requires_stative_state
+                else []
+            ),
+            *(
+                [
                     "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
                     "Parameter Change : TransitionT -> Prop.",
                     "Parameter Cause : Entity -> TransitionT -> Prop.",
@@ -7243,6 +7461,11 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
         for clause in (cause, effect)
         if causal_because_clause_is_state_change(clause)
     ]
+    stative_state_clauses = [
+        clause
+        for clause in (cause, effect)
+        if causal_because_clause_is_stative_state(clause)
+    ]
     result_state_lexicon = []
     state_change_verb_entries = []
     seen_states: set[str] = set()
@@ -7256,6 +7479,11 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
         if verb not in seen_verbs:
             state_change_verb_entries.append(state_change_verb_metadata(verb))
             seen_verbs.add(verb)
+    for clause in stative_state_clauses:
+        for state_name in causal_because_stative_state_names(clause):
+            if state_name not in seen_states:
+                result_state_lexicon.append(state_lexicon_metadata(state_name))
+                seen_states.add(state_name)
     result = {
         "kind": "causal_because",
         "input_sentence": sentence,
@@ -8859,9 +9087,9 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
                         errors.append(
                             "state-change theme.anaphora.source_clause must be cause or effect"
                         )
-                    if anaphora.get("source_role") not in {"object", "theme"}:
+                    if anaphora.get("source_role") not in {"object", "theme", "subject"}:
                         errors.append(
-                            "state-change theme.anaphora.source_role must be object or theme"
+                            "state-change theme.anaphora.source_role must be object, theme, or subject"
                         )
                     if anaphora.get("resolution_policy") != "single_compatible_patient":
                         errors.append(
@@ -9150,6 +9378,31 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
             errors.append("stative subject.name must be a non-empty string")
         if subject.get("type") != "Entity":
             errors.append("stative subject must have type Entity")
+        anaphora = subject.get("anaphora")
+        if anaphora is not None:
+            if not isinstance(anaphora, dict):
+                errors.append("stative subject.anaphora must be an object")
+            else:
+                if anaphora.get("pronoun") not in ANAPHORIC_ENTITY_PRONOUNS:
+                    errors.append(
+                        "stative subject.anaphora.pronoun must be a registered entity pronoun"
+                    )
+                if anaphora.get("resolved_to") != subject.get("name"):
+                    errors.append(
+                        "stative subject.anaphora.resolved_to must match subject.name"
+                    )
+                if anaphora.get("source_clause") not in {"cause", "effect"}:
+                    errors.append(
+                        "stative subject.anaphora.source_clause must be cause or effect"
+                    )
+                if anaphora.get("source_role") not in {"object", "theme", "subject"}:
+                    errors.append(
+                        "stative subject.anaphora.source_role must be object, theme, or subject"
+                    )
+                if anaphora.get("resolution_policy") != "single_compatible_patient":
+                    errors.append(
+                        "stative subject.anaphora.resolution_policy must be single_compatible_patient"
+                    )
 
     state = ast.get("state")
     if not isinstance(state, dict):

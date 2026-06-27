@@ -1862,6 +1862,102 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(incompatible_antecedent["coq_check"]["status"], "skipped")
 
+    def test_causal_because_composes_stative_preconditions_with_state_changes(self) -> None:
+        explicit_precondition = run_pipeline(
+            "John opened the door because the door was closed",
+            require_coq=True,
+        )
+        self.assertTrue(explicit_precondition["ok"])
+        self.assertEqual(
+            explicit_precondition["dependent_type_translation"],
+            (
+                "because_T(holds_state(door, access_scale, closed), "
+                "Cause(john, Transition(door, access_scale, closed, open)))"
+            ),
+        )
+        self.assertEqual(explicit_precondition["ast"]["cause"]["kind"], "stative_result_state")
+        self.assertEqual(explicit_precondition["ast"]["effect"]["kind"], "lexical_state_change")
+        self.assertIn("Parameter holds_state : Entity -> StateScale -> State -> Prop.", explicit_precondition["coq_code"])
+        self.assertIn(
+            "because_T (holds_state door access_scale closed) "
+            "(Cause john (Transition door access_scale closed open))",
+            explicit_precondition["coq_code"],
+        )
+        self.assertNotIn("Parameter Event : Type.", explicit_precondition["coq_code"])
+        self.assertNotIn("Parameter Agent :", explicit_precondition["coq_code"])
+        self.assertNotIn("Parameter Theme :", explicit_precondition["coq_code"])
+        self.assertEqual(explicit_precondition["coq_check"]["status"], "passed")
+
+        anaphoric_precondition = run_pipeline(
+            "John opened the door because it was closed",
+            require_coq=True,
+        )
+        self.assertTrue(anaphoric_precondition["ok"])
+        self.assertEqual(
+            anaphoric_precondition["dependent_type_translation"],
+            (
+                "because_T(holds_state(door, access_scale, closed), "
+                "Cause(john, Transition(door, access_scale, closed, open)))"
+            ),
+        )
+        self.assertEqual(
+            anaphoric_precondition["ast"]["cause"]["subject"],
+            {
+                "name": "door",
+                "type": "Entity",
+                "anaphora": {
+                    "pronoun": "it",
+                    "resolved_to": "door",
+                    "source_clause": "effect",
+                    "source_role": "theme",
+                    "resolution_policy": "single_compatible_patient",
+                },
+            },
+        )
+        self.assertNotIn("Parameter it : Entity.", anaphoric_precondition["coq_code"])
+        self.assertEqual(anaphoric_precondition["coq_check"]["status"], "passed")
+
+        anaphoric_result = run_pipeline(
+            "the door was closed because John closed it",
+            require_coq=True,
+        )
+        self.assertTrue(anaphoric_result["ok"])
+        self.assertEqual(
+            anaphoric_result["dependent_type_translation"],
+            (
+                "because_T(Cause(john, Transition(door, access_scale, open, closed)), "
+                "holds_state(door, access_scale, closed))"
+            ),
+        )
+        self.assertEqual(
+            anaphoric_result["ast"]["cause"]["transition"]["theme"]["anaphora"],
+            {
+                "pronoun": "it",
+                "resolved_to": "door",
+                "source_clause": "effect",
+                "source_role": "subject",
+                "resolution_policy": "single_compatible_patient",
+            },
+        )
+        self.assertNotIn("Parameter it : Entity.", anaphoric_result["coq_code"])
+        self.assertIn(
+            "because_T (Cause john (Transition door access_scale open closed)) "
+            "(holds_state door access_scale closed)",
+            anaphoric_result["coq_code"],
+        )
+        self.assertEqual(anaphoric_result["coq_check"]["status"], "passed")
+
+        incompatible_scale = run_pipeline(
+            "John opened the door because it was red",
+            require_coq=True,
+        )
+        self.assertFalse(incompatible_scale["ok"])
+        self.assertIn(
+            "causal_because.cause.subject pronoun it has no unique compatible antecedent",
+            incompatible_scale["type_check"]["errors"],
+        )
+        self.assertEqual(incompatible_scale["coq_check"]["status"], "skipped")
+
     def test_simple_conditional_implication_preserves_clause_times(self) -> None:
         conditional = run_pipeline(
             "if John left yesterday, Mary cried today",
@@ -9686,7 +9782,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 17)
+        self.assertEqual(counts["registered_variant_success_cases"], 18)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -10208,6 +10304,10 @@ class TranslatorTests(unittest.TestCase):
                 registered["causal_because"]["accepted_examples"],
             )
             self.assertIn(
+                "John opened the door because it was closed",
+                registered["causal_because"]["accepted_examples"],
+            )
+            self.assertIn(
                 "Mary admired the painting in the gallery yesterday",
                 registered["modified_transitive_predication"]["accepted_examples"],
             )
@@ -10683,7 +10783,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            17,
+            18,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -10758,7 +10858,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="17"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="18"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -15830,6 +15930,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Mary cried because it opened`", readme)
         self.assertIn("`Mary visited Paris because it opened`", readme)
         self.assertIn("`anaphora`", readme)
+        self.assertIn("`John opened the door because it was closed`", readme)
+        self.assertIn(
+            "`because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`",
+            readme,
+        )
+        self.assertIn("`holds_state : Entity -> StateScale -> State -> Prop`", readme)
+        self.assertIn("`John opened the door because it was red`", readme)
         self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
         self.assertIn("`John left because Mary cried because Sue left`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
@@ -15892,6 +15999,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("it : Entity", manuscript)
         self.assertIn("single_compatible_patient", manuscript)
         self.assertIn("Mary visited Paris because it opened", manuscript)
+        self.assertIn(
+            "because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))",
+            manuscript,
+        )
+        self.assertIn(
+            "because_T(Cause(john, Transition(door, access_scale, open, closed)), holds_state(door, access_scale, closed))",
+            manuscript,
+        )
+        self.assertIn("John opened the door because it was red", manuscript)
+        self.assertIn("hidden event-inclusion relation", manuscript)
         self.assertIn("because_T(at_T(today, cry(mary)), leave(1)(quickly, john))", manuscript)
         self.assertIn("because_T declared at type Prop -> Prop -> Prop", manuscript)
         self.assertIn("John left because Mary cried because Sue left", manuscript)
@@ -15950,6 +16067,13 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Mary cried because it opened`", web_design)
         self.assertIn("`Mary visited Paris because it opened`", web_design)
         self.assertIn("`resolution_policy`", web_design)
+        self.assertIn("`John opened the door because it was closed`", web_design)
+        self.assertIn(
+            "`because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`",
+            web_design,
+        )
+        self.assertIn("`holds_state : Entity -> StateScale -> State -> Prop`", web_design)
+        self.assertIn("`John opened the door because it was red`", web_design)
         self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
         self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
         self.assertIn("`John left because Mary cried because Sue left`", web_design)
@@ -15969,6 +16093,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Mary cried because it opened`", ast_docs)
         self.assertIn("`Mary visited Paris because it opened`", ast_docs)
         self.assertIn("`it : Entity`", ast_docs)
+        self.assertIn("`stative_result_state` clause", ast_docs)
+        self.assertIn("`John opened the door because it was closed`", ast_docs)
+        self.assertIn(
+            "`because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`",
+            ast_docs,
+        )
+        self.assertIn("`the door was closed because John closed it`", ast_docs)
+        self.assertIn("`John opened the door because it was red`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)
         self.assertIn("`not_T : Prop -> Prop`", ast_docs)

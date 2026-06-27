@@ -878,6 +878,13 @@ The AST panel should show the transition theme's `anaphora` object with
 `resolution_policy`. Inputs such as `Mary cried because it opened` or
 `Mary visited Paris because it opened` should fail at `type_check`, so the page
 does not present `it : Entity` as a verified proof-assistant declaration,
+and the stative-precondition variant
+`John opened the door because it was closed` appears as
+`because_T(holds_state(door, access_scale, closed), Cause(john, Transition(door, access_scale, closed, open)))`.
+The Coq/Rocq panel should declare
+`holds_state : Entity -> StateScale -> State -> Prop` and should not export
+`it : Entity`; a scale-incompatible case such as
+`John opened the door because it was red` should stop at `type_check`,
 and the timed/modifier case
 `John left quickly because Mary cried today` appears as
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
