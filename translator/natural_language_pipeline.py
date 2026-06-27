@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from translator.dependent_type_event_translator import (
+    INCOMPATIBLE_STATE_PAIRS,
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_SCALE_BY_STATE,
     application_argument_types,
@@ -123,12 +124,13 @@ STATE_ANAPHORA_COMPATIBLE_THEMES = {
     "dirty": {"floor", "room", "table"},
     "dry": {"clothes"},
     "empty": {"bottle", "glass", "tank"},
-    "flat": {"metal"},
+    "flat": {"board", "metal"},
     "frozen": {"water"},
     "full": {"bottle", "glass", "tank"},
     "melted": {"ice"},
     "open": {"door", "gate", "window"},
     "red": {"car", "door", "painting", "table", "vase", "window"},
+    "straight": {"board", "metal", "rod"},
     "wet": {"clothes"},
 }
 RELATIVE_RESTRICTOR_MARKERS = {"that", "who"}
@@ -9480,7 +9482,7 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(states, list) or not states:
             errors.append("stative states must be a non-empty list")
         else:
-            states_by_scale: dict[str, set[str]] = {}
+            state_scale_by_name: dict[str, str] = {}
             for index, state_item in enumerate(states):
                 if not isinstance(state_item, dict):
                     errors.append(f"stative states[{index}] must be an object")
@@ -9500,12 +9502,16 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
                     errors.append(f"stative states[{index}].state_scale must match the state lexicon")
                 item_scale = state_item.get("state_scale")
                 if isinstance(item_name, str) and isinstance(item_scale, str):
-                    states_by_scale.setdefault(item_scale, set()).add(item_name)
-            for item_scale, item_names in sorted(states_by_scale.items()):
-                if len(item_names) > 1:
-                    joined_names = " and ".join(sorted(item_names))
+                    state_scale_by_name[item_name] = item_scale
+            sorted_state_names = sorted(state_scale_by_name)
+            for left_index, left_name in enumerate(sorted_state_names):
+                for right_name in sorted_state_names[left_index + 1 :]:
+                    if frozenset((left_name, right_name)) not in INCOMPATIBLE_STATE_PAIRS:
+                        continue
+                    item_scale = state_scale_by_name[left_name]
+                    joined_names = " and ".join(sorted((left_name, right_name)))
                     errors.append(
-                        "stative states cannot contain multiple states on the same "
+                        "stative states cannot contain incompatible states on the same "
                         f"scale: {item_scale} has {joined_names}"
                     )
 
@@ -9581,9 +9587,15 @@ def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:
         coq_assertion = f"and_T ({coq_assertion}) ({next_assertion})"
     coq_body = f"not_T ({coq_assertion})" if polarity == "negative" else coq_assertion
     state_declarations: list[str] = []
+    seen_state_declarations: set[str] = set()
     for state_name in state_names:
-        state_declarations.append(f"Parameter {state_name} : State.")
-        state_declarations.append(f"Parameter {STATE_SCALE_BY_STATE[state_name]} : StateScale.")
+        for declaration in (
+            f"Parameter {state_name} : State.",
+            f"Parameter {STATE_SCALE_BY_STATE[state_name]} : StateScale.",
+        ):
+            if declaration not in seen_state_declarations:
+                state_declarations.append(declaration)
+                seen_state_declarations.add(declaration)
     coq_code = "\n".join(
         [
             "(* Stative result-state replacement without an event variable. *)",

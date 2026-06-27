@@ -1581,8 +1581,10 @@ Conjoined stative reasons remain a `states` list rather than a fused state
 name: `Mary admired the door because it was red and open` stores `red` on
 `color_scale` and `open` on `access_scale`, then renders
 `because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`.
-The checker rejects a `states` list that assigns multiple distinct states to
-the same scale: `the door is closed and open` and
+The checker treats same-scale compatibility as a lexical relation rather than
+as a pure scale-cardinality rule: `Mary admired the board because it was flat
+and straight` can keep both `flat` and `straight` on `shape_scale`, while
+registered oppositions such as `the door is closed and open` and
 `Mary admired the door because it was closed and open` now report
 `access_scale has closed and open` and skip proof-assistant export.
 If the antecedent candidate already carries a state-scale annotation, the

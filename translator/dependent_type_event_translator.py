@@ -84,6 +84,15 @@ SOURCE_STATE_BY_TARGET_STATE = {
     for state, entry in STATE_LEXICON.items()
     if entry.default_source_state is not None
 }
+INCOMPATIBLE_STATE_PAIRS = frozenset(
+    frozenset((state, source_state))
+    for state, source_state in SOURCE_STATE_BY_TARGET_STATE.items()
+    if (
+        source_state in STATE_LEXICON
+        and STATE_LEXICON[state].scale == STATE_LEXICON[source_state].scale
+        and state != source_state
+    )
+)
 
 
 @dataclass(frozen=True)

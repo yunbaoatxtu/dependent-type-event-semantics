@@ -897,7 +897,10 @@ type-check failures,
 and conjoined state cases such as
 `Mary admired the door because it was red and open` should resolve to
 `because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`;
-same-scale state conflicts such as `the door is closed and open` and
+same-scale compatible cases such as
+`Mary admired the board because it was flat and straight` should pass without
+duplicating the `shape_scale` Coq/Rocq declaration, while registered
+same-scale oppositions such as `the door is closed and open` and
 `Mary admired the door because it was closed and open` should remain visible as
 `type_check` failures with the message that `access_scale` has both `closed`
 and `open`;

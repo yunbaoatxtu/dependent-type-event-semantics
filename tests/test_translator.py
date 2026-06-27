@@ -47,6 +47,7 @@ from web.diagnostic_contract import (
     SEMANTIC_READING_CONTRACT_FIELDS,
 )
 from translator.dependent_type_event_translator import (
+    INCOMPATIBLE_STATE_PAIRS,
     SOURCE_STATE_BY_TARGET_STATE,
     STATE_LEXICON,
     STATE_SCALE_BY_STATE,
@@ -449,6 +450,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(STATE_LEXICON["broken"].default_source_state, "intact")
         self.assertEqual(STATE_SCALE_BY_STATE["flat"], "shape_scale")
         self.assertEqual(SOURCE_STATE_BY_TARGET_STATE["flat"], "not_flat")
+        self.assertIn(frozenset(("closed", "open")), INCOMPATIBLE_STATE_PAIRS)
+        self.assertIn(frozenset(("flat", "not_flat")), INCOMPATIBLE_STATE_PAIRS)
+        self.assertNotIn(frozenset(("flat", "straight")), INCOMPATIBLE_STATE_PAIRS)
         self.assertNotIn("red", SOURCE_STATE_BY_TARGET_STATE)
         self.assertEqual(
             state_lexicon_metadata("red"),
@@ -2083,6 +2087,20 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(conjoined_color_reason["coq_check"]["status"], "passed")
 
+        conjoined_shape_reason = run_pipeline(
+            "Mary admired the board because it was flat and straight",
+            require_coq=True,
+        )
+        self.assertTrue(conjoined_shape_reason["ok"])
+        self.assertEqual(
+            conjoined_shape_reason["dependent_type_translation"],
+            (
+                "because_T(and_T(holds_state(board, shape_scale, flat), "
+                "holds_state(board, shape_scale, straight)), admire(mary, board))"
+            ),
+        )
+        self.assertEqual(conjoined_shape_reason["coq_check"]["status"], "passed")
+
         same_scale_conflict = run_pipeline(
             "Mary admired the door because it was closed and open",
             require_coq=True,
@@ -2090,7 +2108,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(same_scale_conflict["ok"])
         self.assertEqual(same_scale_conflict["kind"], "causal_because")
         self.assertIn(
-            "causal_because.cause: stative states cannot contain multiple states on "
+            "causal_because.cause: stative states cannot contain incompatible states on "
             "the same scale: access_scale has closed and open",
             same_scale_conflict["type_check"]["errors"],
         )
@@ -6409,11 +6427,29 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["kind"], "stative_result_state")
         self.assertIn(
-            "stative states cannot contain multiple states on the same scale: "
+            "stative states cannot contain incompatible states on the same scale: "
             "access_scale has closed and open",
             result["type_check"]["errors"],
         )
         self.assertEqual(result["coq_check"]["status"], "skipped")
+
+        compatible = run_pipeline("the board is flat and straight", require_coq=True)
+        self.assertTrue(compatible["ok"])
+        self.assertEqual(
+            compatible["dependent_type_translation"],
+            "and_T(holds_state(board, shape_scale, flat), holds_state(board, shape_scale, straight))",
+        )
+        self.assertEqual(compatible["coq_code"].count("Parameter shape_scale : StateScale."), 1)
+        self.assertEqual(compatible["coq_check"]["status"], "passed")
+
+        lexical_opposition = run_pipeline("the metal is flat and not_flat", require_coq=True)
+        self.assertFalse(lexical_opposition["ok"])
+        self.assertIn(
+            "stative states cannot contain incompatible states on the same scale: "
+            "shape_scale has flat and not_flat",
+            lexical_opposition["type_check"]["errors"],
+        )
+        self.assertEqual(lexical_opposition["coq_check"]["status"], "skipped")
 
     def test_passive_argument_omission_uses_existential_agent_not_event(self) -> None:
         explicit = run_pipeline("the toast was buttered by John", require_coq=True)
@@ -16136,6 +16172,9 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
             readme,
         )
+        self.assertIn("lexical rather than a blanket same-scale ban", readme)
+        self.assertIn("`Mary admired the board because it was flat and straight`", readme)
+        self.assertIn("`flat` and `straight` are not registered as incompatible", readme)
         self.assertIn("`the door is closed and open`", readme)
         self.assertIn("`Mary admired the door because it was closed and open`", readme)
         self.assertIn("`access_scale` has both `closed` and", readme)
@@ -16222,6 +16261,9 @@ class TranslatorTests(unittest.TestCase):
             "because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))",
             manuscript,
         )
+        self.assertIn("Same-scale compatibility is now lexical", manuscript)
+        self.assertIn("Mary admired the board because it was flat and straight", manuscript)
+        self.assertIn("flat and straight are not registered as incompatible", manuscript)
         self.assertIn("the door is closed and open", manuscript)
         self.assertIn("Mary admired the door because it was closed and open", manuscript)
         self.assertIn("both closed and open on access_scale", manuscript)
@@ -16310,6 +16352,8 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
             web_design,
         )
+        self.assertIn("`Mary admired the board because it was flat and straight`", web_design)
+        self.assertIn("duplicating the `shape_scale`", web_design)
         self.assertIn("`the door is closed and open`", web_design)
         self.assertIn("`Mary admired the door because it was closed and open`", web_design)
         self.assertIn("`access_scale` has both `closed`", web_design)
@@ -16357,6 +16401,9 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(and_T(holds_state(door, color_scale, red), holds_state(door, access_scale, open)), admire(mary, door))`",
             ast_docs,
         )
+        self.assertIn("same-scale compatibility as a lexical relation", ast_docs)
+        self.assertIn("Mary admired the board because it was flat", ast_docs)
+        self.assertIn("keep both `flat` and `straight` on `shape_scale`", ast_docs)
         self.assertIn("`the door is closed and open`", ast_docs)
         self.assertIn("`Mary admired the door because it was closed and open`", ast_docs)
         self.assertIn("`access_scale has closed and open`", ast_docs)
