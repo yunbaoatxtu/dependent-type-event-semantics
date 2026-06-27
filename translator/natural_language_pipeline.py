@@ -103,6 +103,19 @@ UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS = {
     "whose",
     "why",
 }
+ANAPHORIC_ENTITY_PRONOUNS = {"it"}
+STATE_CHANGE_ANAPHORA_COMPATIBLE_THEMES = {
+    "break": {"door", "glass", "vase", "window"},
+    "clean": {"floor", "room", "table"},
+    "close": {"door", "gate", "window"},
+    "dry": {"clothes"},
+    "empty": {"bottle", "glass", "tank"},
+    "fill": {"bottle", "glass", "tank"},
+    "freeze": {"water"},
+    "melt": {"ice"},
+    "open": {"door", "gate", "window"},
+    "wet": {"clothes"},
+}
 RELATIVE_RESTRICTOR_MARKERS = {"that", "who"}
 RELATIVE_OBJECT_NP_DETERMINERS = EXISTENTIAL_SCOPE_DETERMINERS | ARTICLES
 MODIFIER_INDEXED_UNARY_RELATION = (
@@ -223,6 +236,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
                 "because_T(CauseWithInstrument(john, key, "
                 "Transition(door, access_scale, closed, open)), cry(mary))"
             ),
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "causal_because",
+        "variant_id": "anaphoric_state_change_cause_because",
+        "sentence": "Mary admired the door because it opened",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            "because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))",
         ],
         "expected_ast_kind": "causal_because",
         "expected_verification_scope_kind": "registered_construction",
@@ -6712,6 +6738,109 @@ def parse_causal_because_clause(tokens: list[str]) -> dict[str, Any] | None:
     return simple_conditional_clause_ast(**simple_clause)
 
 
+def causal_because_patient_candidates(
+    clause: dict[str, Any],
+    *,
+    source_clause: str,
+) -> list[dict[str, str]]:
+    if causal_because_clause_is_state_change(clause):
+        theme = clause.get("transition", {}).get("theme", {})
+        if (
+            isinstance(theme, dict)
+            and isinstance(theme.get("name"), str)
+            and theme["name"] not in ANAPHORIC_ENTITY_PRONOUNS
+        ):
+            return [
+                {
+                    "name": theme["name"],
+                    "type": "Entity",
+                    "source_clause": source_clause,
+                    "source_role": "theme",
+                }
+            ]
+        return []
+
+    obj = clause.get("object")
+    if (
+        isinstance(obj, dict)
+        and isinstance(obj.get("name"), str)
+        and obj.get("type") == "Entity"
+        and obj["name"] not in ANAPHORIC_ENTITY_PRONOUNS
+    ):
+        return [
+            {
+                "name": obj["name"],
+                "type": "Entity",
+                "source_clause": source_clause,
+                "source_role": "object",
+            }
+        ]
+    return []
+
+
+def causal_because_candidate_compatible_with_state_change(
+    clause: dict[str, Any],
+    candidate: dict[str, str],
+) -> bool:
+    verb = clause.get("verb")
+    if not isinstance(verb, str):
+        return False
+    compatible_themes = STATE_CHANGE_ANAPHORA_COMPATIBLE_THEMES.get(verb, set())
+    return candidate.get("name") in compatible_themes
+
+
+def resolve_causal_because_state_change_anaphora(
+    cause: dict[str, Any],
+    effect: dict[str, Any],
+) -> list[str]:
+    errors: list[str] = []
+    pairs = (
+        ("cause", cause, "effect", effect),
+        ("effect", effect, "cause", cause),
+    )
+    for label, clause, other_label, other_clause in pairs:
+        if not causal_because_clause_is_state_change(clause):
+            continue
+        transition = clause.get("transition", {})
+        theme = transition.get("theme") if isinstance(transition, dict) else None
+        if not isinstance(theme, dict):
+            continue
+        pronoun = theme.get("name")
+        if pronoun not in ANAPHORIC_ENTITY_PRONOUNS:
+            continue
+        candidates = [
+            candidate
+            for candidate in causal_because_patient_candidates(
+                other_clause,
+                source_clause=other_label,
+            )
+            if causal_because_candidate_compatible_with_state_change(clause, candidate)
+        ]
+        if len(candidates) != 1:
+            if candidates:
+                candidate_names = ", ".join(candidate["name"] for candidate in candidates)
+                errors.append(
+                    f"causal_because.{label}.theme pronoun {pronoun} is ambiguous "
+                    f"among compatible antecedents: {candidate_names}"
+                )
+            else:
+                errors.append(
+                    f"causal_because.{label}.theme pronoun {pronoun} has no "
+                    "unique compatible antecedent"
+                )
+            continue
+        antecedent = candidates[0]
+        theme["name"] = antecedent["name"]
+        theme["anaphora"] = {
+            "pronoun": pronoun,
+            "resolved_to": antecedent["name"],
+            "source_clause": antecedent["source_clause"],
+            "source_role": antecedent["source_role"],
+            "resolution_policy": "single_compatible_patient",
+        }
+    return errors
+
+
 def state_change_coq_expression(ast: dict[str, Any]) -> str:
     transition = ast["transition"]
     theme = transition["theme"]["name"]
@@ -6930,6 +7059,7 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     if effect is None or cause is None:
         return None
 
+    anaphora_errors = resolve_causal_because_state_change_anaphora(cause, effect)
     normalize_simple_conditional_predicate_signatures(
         {
             "antecedent": cause if not causal_because_clause_is_state_change(cause) else None,
@@ -6938,6 +7068,12 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     )
     ast = causal_because_ast(cause, effect)
     type_check = check_causal_because_ast(ast)
+    if anaphora_errors and type_check["ok"]:
+        type_check = {
+            "ok": False,
+            "type": None,
+            "errors": anaphora_errors,
+        }
     cause_formula = causal_because_clause_formula(cause, coq=False)
     effect_formula = causal_because_clause_formula(effect, coq=False)
     typed_replacement = f"because_T({cause_formula}, {effect_formula})"
@@ -8706,6 +8842,31 @@ def check_lexical_state_change_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 errors.append("state-change theme.name must be a non-empty string")
             if theme.get("type") != "Entity":
                 errors.append("state-change theme must have type Entity")
+            anaphora = theme.get("anaphora")
+            if anaphora is not None:
+                if not isinstance(anaphora, dict):
+                    errors.append("state-change theme.anaphora must be an object")
+                else:
+                    if anaphora.get("pronoun") not in ANAPHORIC_ENTITY_PRONOUNS:
+                        errors.append(
+                            "state-change theme.anaphora.pronoun must be a registered entity pronoun"
+                        )
+                    if anaphora.get("resolved_to") != theme.get("name"):
+                        errors.append(
+                            "state-change theme.anaphora.resolved_to must match theme.name"
+                        )
+                    if anaphora.get("source_clause") not in {"cause", "effect"}:
+                        errors.append(
+                            "state-change theme.anaphora.source_clause must be cause or effect"
+                        )
+                    if anaphora.get("source_role") not in {"object", "theme"}:
+                        errors.append(
+                            "state-change theme.anaphora.source_role must be object or theme"
+                        )
+                    if anaphora.get("resolution_policy") != "single_compatible_patient":
+                        errors.append(
+                            "state-change theme.anaphora.resolution_policy must be single_compatible_patient"
+                        )
         target = transition.get("target_state")
         if not isinstance(target, dict):
             errors.append("state-change target_state must be an object")

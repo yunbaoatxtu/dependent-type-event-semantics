@@ -870,6 +870,14 @@ and `because_T(cry(mary), Change(Transition(door, access_scale, closed, open)))`
 and the instrumental variant `Mary cried because John opened the door with a key`
 appears as
 `because_T(CauseWithInstrument(john, key, Transition(door, access_scale, closed, open)), cry(mary))`,
+and the controlled anaphoric variant
+`Mary admired the door because it opened` appears as
+`because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))`.
+The AST panel should show the transition theme's `anaphora` object with
+`pronoun`, `resolved_to`, `source_clause`, `source_role`, and
+`resolution_policy`. Inputs such as `Mary cried because it opened` or
+`Mary visited Paris because it opened` should fail at `type_check`, so the page
+does not present `it : Entity` as a verified proof-assistant declaration,
 and the timed/modifier case
 `John left quickly because Mary cried today` appears as
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with

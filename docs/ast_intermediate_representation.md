@@ -1542,6 +1542,18 @@ and renders
 Instrumental state changes keep their `instrument` object, so
 `Mary cried because John opened the door with a key` renders
 `because_T(CauseWithInstrument(john, key, Transition(door, access_scale, closed, open)), cry(mary))`.
+Controlled state-change anaphora is represented inside the transition theme
+rather than by introducing an event discourse referent. For
+`Mary admired the door because it opened`, the `cause.transition.theme.name`
+is resolved to `door`, and the same theme object carries
+`anaphora: {pronoun: "it", resolved_to: "door", source_clause: "effect",
+source_role: "object", resolution_policy: "single_compatible_patient"}`. The
+rendered replacement is
+`because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))`.
+If the other clause provides no compatible patient, as in
+`Mary cried because it opened`, or provides an incompatible object, as in
+`Mary visited Paris because it opened`, the `causal_because` analysis fails its
+internal type check and is not sent to Coq/Rocq as `it : Entity`.
 The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`

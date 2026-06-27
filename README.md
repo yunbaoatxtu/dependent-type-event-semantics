@@ -137,6 +137,15 @@ and `the door opened because Mary cried` becomes
 Instrumental state changes are preserved as well:
 `Mary cried because John opened the door with a key` becomes
 `because_T(CauseWithInstrument(john, key, Transition(door, access_scale, closed, open)), cry(mary))`.
+The same certified route now has a controlled discourse-anaphora bridge for
+state-change themes: `Mary admired the door because it opened` resolves `it`
+to the explicitly mentioned object `door` and becomes
+`because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))`.
+The AST records the resolution under the transition theme as an `anaphora`
+object with `pronoun`, `resolved_to`, `source_clause`, `source_role`, and
+`resolution_policy`; unresolved or incompatible cases such as
+`Mary cried because it opened` and `Mary visited Paris because it opened` fail
+the internal type check before Coq/Rocq validation.
 The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
@@ -1438,6 +1447,10 @@ The current prototype has small, testable rules for:
   as `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
   and mixed simple/state-change cases such as `Mary cried because the door opened`
   as `because_T(Change(Transition(door, access_scale, closed, open)), cry(mary))`;
+  the same construction has a controlled state-change anaphora bridge, for
+  example `Mary admired the door because it opened` as
+  `because_T(Change(Transition(door, access_scale, closed, open)), admire(mary, door))`,
+  while unresolved `it` cases fail before Coq/Rocq export;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as
