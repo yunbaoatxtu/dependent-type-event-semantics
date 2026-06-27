@@ -2478,6 +2478,17 @@ def certified_fragment_panel() -> str:
         surface_slot_probes = {}
     surface_slot_probe_schema = str(surface_slot_probes.get("schema_version", ""))
     surface_slot_probe_count = str(surface_slot_probes.get("probe_count", ""))
+    surface_slot_probe_generation_spec = surface_slot_probes.get(
+        "probe_generation_spec",
+    )
+    if not isinstance(surface_slot_probe_generation_spec, dict):
+        surface_slot_probe_generation_spec = {}
+    surface_slot_probe_generator_schema = str(
+        surface_slot_probe_generation_spec.get("schema_version", ""),
+    )
+    surface_slot_probe_generator_kind = str(
+        surface_slot_probe_generation_spec.get("generator", ""),
+    )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
         examples = item.get("verified_examples")
@@ -2615,7 +2626,9 @@ def certified_fragment_panel() -> str:
             f'data-surface-max-verified-count="{html.escape(str(item.get("max_verified_modifier_count", "")), quote=True)}" '
             f'data-surface-verified-example-count="{html.escape(str(item.get("verified_example_count", "")), quote=True)}" '
             f'data-surface-generator-schema="{html.escape(str((item.get("witness_generation_spec") or {}).get("schema_version", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}" '
-            f'data-surface-generator-kind="{html.escape(str((item.get("witness_generation_spec") or {}).get("generator", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}">'
+            f'data-surface-generator-kind="{html.escape(str((item.get("witness_generation_spec") or {}).get("generator", "")) if isinstance(item.get("witness_generation_spec"), dict) else "", quote=True)}" '
+            f'data-surface-slot-probe-generation-schema="{html.escape(str(((item.get("slot_probe_examples") or {}).get("probe_generation_spec") or {}).get("schema_version", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("probe_generation_spec"), dict) else "", quote=True)}" '
+            f'data-surface-slot-probe-generation-kind="{html.escape(str(((item.get("slot_probe_examples") or {}).get("probe_generation_spec") or {}).get("generator", "")) if isinstance(item.get("slot_probe_examples"), dict) and isinstance((item.get("slot_probe_examples") or {}).get("probe_generation_spec"), dict) else "", quote=True)}">'
             f'<code>{html.escape(str(family))}</code>'
             f'<span>{html.escape(str(item.get("boundary_note", "")))}</span>'
             f"<ul>{surface_parser_example_items(item)}</ul>"
@@ -2654,6 +2667,8 @@ def certified_fragment_panel() -> str:
         f'data-surface-generator-time-suffix="{html.escape(surface_generator_time_suffix, quote=True)}" '
         f'data-surface-slot-probe-schema="{html.escape(surface_slot_probe_schema, quote=True)}" '
         f'data-surface-slot-probe-count="{html.escape(surface_slot_probe_count, quote=True)}" '
+        f'data-surface-slot-probe-generation-schema="{html.escape(surface_slot_probe_generator_schema, quote=True)}" '
+        f'data-surface-slot-probe-generation-kind="{html.escape(surface_slot_probe_generator_kind, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -2672,6 +2687,7 @@ def certified_fragment_panel() -> str:
         f"<dt>verified Adv counts</dt><dd><code>{html.escape(surface_verified_counts)}</code></dd>"
         f"<dt>surface generator</dt><dd><code>{html.escape(surface_generator_kind)}</code></dd>"
         f"<dt>slot probes</dt><dd><code>{html.escape(surface_slot_probe_count)}</code></dd>"
+        f"<dt>slot probe generator</dt><dd><code>{html.escape(surface_slot_probe_generator_kind)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"

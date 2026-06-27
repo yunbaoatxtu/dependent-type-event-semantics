@@ -2907,7 +2907,7 @@ def expected_modified_surface_witness_meta_from_spec(
         (4, "beside a shelf", "beside(shelf)", "Location"),
         (5, "under a lamp", "under(lamp)", "Location"),
     ]
-    for modifier, expected in zip(modifiers, expected_modifiers, strict=True):
+    for modifier, expected in zip(modifiers, expected_modifiers):
         if not isinstance(modifier, dict):
             spec_drift()
         index, surface, fragment, role = expected
@@ -3010,6 +3010,168 @@ def expected_modified_surface_witness_meta_from_spec(
                 ast_kind,
                 [fragment],
             )
+    return ordered_ids, expected_meta
+
+
+def expected_modified_surface_slot_probe_meta_from_spec(
+    spec: dict,
+) -> tuple[list[str], dict[str, tuple[str, str, int, bool, str, list[str]]]]:
+    def spec_drift() -> None:
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe generation spec drift"
+        )
+
+    expected_base_frame = {
+        "agent": {"surface": "Mary", "semantic": "mary"},
+        "predicate": {"surface": "admired", "semantic": "admire"},
+        "theme": {"surface": "painting", "semantic": "painting"},
+    }
+    expected_probe_templates = [
+        {
+            "probe_id": "subject_slot_john",
+            "slot": "agent",
+            "modifier_prefix_length": 1,
+            "time_wrapped": False,
+            "substitutions": {
+                "agent": {"surface": "John", "semantic": "john"},
+            },
+        },
+        {
+            "probe_id": "theme_slot_sculpture",
+            "slot": "theme",
+            "modifier_prefix_length": 1,
+            "time_wrapped": False,
+            "substitutions": {
+                "theme": {"surface": "sculpture", "semantic": "sculpture"},
+            },
+        },
+        {
+            "probe_id": "predicate_slot_photograph",
+            "slot": "predicate",
+            "modifier_prefix_length": 1,
+            "time_wrapped": False,
+            "substitutions": {
+                "predicate": {"surface": "photographed", "semantic": "photograph"},
+            },
+        },
+        {
+            "probe_id": "combined_slots_timed_max_prefix",
+            "slot": "agent_predicate_theme",
+            "modifier_prefix_length": 5,
+            "time_wrapped": True,
+            "substitutions": {
+                "agent": {"surface": "John", "semantic": "john"},
+                "predicate": {"surface": "photographed", "semantic": "photograph"},
+                "theme": {"surface": "sculpture", "semantic": "sculpture"},
+            },
+        },
+    ]
+    if (
+        not isinstance(spec, dict)
+        or spec.get("schema_version") != "surface_slot_probe_generation.v1"
+        or spec.get("generator") != "lexical_slot_substitution_with_modifier_prefix"
+        or spec.get("base_family") != "modified_transitive_adv_sequence"
+        or spec.get("base_frame") != expected_base_frame
+        or spec.get("surface_template")
+        != "{agent_surface} {predicate_surface} the {theme_surface} {modifier_surfaces}"
+        or spec.get("timed_surface_template") != "{body} {time_suffix}"
+        or spec.get("time_suffix") != "yesterday"
+        or spec.get("time_operator") != "at_T"
+        or spec.get("time_argument") != "yesterday"
+        or spec.get("expected_ast_kind_by_time_wrapped")
+        != {"false": "application", "true": "time"}
+        or spec.get("translation_template")
+        != "{predicate}({n})({modifier_fragments}, {agent}, {theme})"
+        or spec.get("timed_translation_template")
+        != "{time_operator}({time_argument}, {body})"
+        or spec.get("probe_templates") != expected_probe_templates
+    ):
+        spec_drift()
+
+    modifiers = spec.get("modifiers")
+    if not isinstance(modifiers, list) or len(modifiers) != 5:
+        spec_drift()
+    expected_modifiers = [
+        (1, "in the gallery", "in(gallery)", "Location"),
+        (2, "with a telescope", "with(telescope)", "Instrument"),
+        (3, "near a window", "near(window)", "Location"),
+        (4, "beside a shelf", "beside(shelf)", "Location"),
+        (5, "under a lamp", "under(lamp)", "Location"),
+    ]
+    for modifier, expected in zip(modifiers, expected_modifiers):
+        if not isinstance(modifier, dict):
+            spec_drift()
+        index, surface, fragment, role = expected
+        if (
+            modifier.get("index") != index
+            or modifier.get("surface") != surface
+            or modifier.get("dependent_type_fragment") != fragment
+            or modifier.get("semantic_role") != role
+        ):
+            spec_drift()
+
+    ordered_ids: list[str] = []
+    expected_meta: dict[str, tuple[str, str, int, bool, str, list[str]]] = {}
+    for template in expected_probe_templates:
+        frame = {
+            slot: dict(values)
+            for slot, values in expected_base_frame.items()
+        }
+        for slot, replacement in template["substitutions"].items():
+            frame[slot] = dict(replacement)
+        modifier_count = int(template["modifier_prefix_length"])
+        modifier_prefix = modifiers[:modifier_count]
+        modifier_surfaces = " ".join(
+            str(modifier["surface"]) for modifier in modifier_prefix
+        )
+        modifier_fragments = ", ".join(
+            str(modifier["dependent_type_fragment"])
+            for modifier in modifier_prefix
+        )
+        sentence_body = str(spec["surface_template"]).format(
+            agent_surface=frame["agent"]["surface"],
+            predicate_surface=frame["predicate"]["surface"],
+            theme_surface=frame["theme"]["surface"],
+            modifier_surfaces=modifier_surfaces,
+        )
+        body = str(spec["translation_template"]).format(
+            predicate=frame["predicate"]["semantic"],
+            n=modifier_count,
+            modifier_fragments=modifier_fragments,
+            agent=frame["agent"]["semantic"],
+            theme=frame["theme"]["semantic"],
+        )
+        time_wrapped = template.get("time_wrapped") is True
+        sentence = (
+            str(spec["timed_surface_template"]).format(
+                body=sentence_body,
+                time_suffix=spec["time_suffix"],
+            )
+            if time_wrapped
+            else sentence_body
+        )
+        fragment = (
+            str(spec["timed_translation_template"]).format(
+                time_operator=spec["time_operator"],
+                time_argument=spec["time_argument"],
+                body=body,
+            )
+            if time_wrapped
+            else body
+        )
+        ast_kind = spec["expected_ast_kind_by_time_wrapped"][
+            "true" if time_wrapped else "false"
+        ]
+        probe_id = str(template["probe_id"])
+        ordered_ids.append(probe_id)
+        expected_meta[probe_id] = (
+            str(template["slot"]),
+            sentence,
+            modifier_count,
+            time_wrapped,
+            ast_kind,
+            [fragment],
+        )
     return ordered_ids, expected_meta
 
 
@@ -3177,47 +3339,6 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                     "web route smoke check failed: certified surface parser witness live translation drift"
                 )
     slot_probe_examples = modified_surface.get("slot_probe_examples")
-    expected_probe_meta = {
-        "subject_slot_john": (
-            "agent",
-            "John admired the painting in the gallery",
-            1,
-            False,
-            "application",
-            ["admire(1)(in(gallery), john, painting)"],
-        ),
-        "theme_slot_sculpture": (
-            "theme",
-            "Mary admired the sculpture in the gallery",
-            1,
-            False,
-            "application",
-            ["admire(1)(in(gallery), mary, sculpture)"],
-        ),
-        "predicate_slot_photograph": (
-            "predicate",
-            "Mary photographed the painting in the gallery",
-            1,
-            False,
-            "application",
-            ["photograph(1)(in(gallery), mary, painting)"],
-        ),
-        "combined_slots_timed_max_prefix": (
-            "agent_predicate_theme",
-            (
-                "John photographed the sculpture in the gallery with a telescope "
-                "near a window beside a shelf under a lamp yesterday"
-            ),
-            5,
-            True,
-            "time",
-            [
-                "at_T(yesterday, photograph(5)(in(gallery), with(telescope), "
-                "near(window), beside(shelf), under(lamp), john, sculpture))",
-            ],
-        ),
-    }
-    expected_probe_ids = list(expected_probe_meta)
     if (
         not isinstance(slot_probe_examples, dict)
         or slot_probe_examples.get("schema_version") != "surface_slot_probes.v1"
@@ -3229,8 +3350,17 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         != "modified_transitive_predication"
         or slot_probe_examples.get("expected_event_analysis")
         != "modified-transitive-predication"
-        or slot_probe_examples.get("probe_count") != len(expected_probe_ids)
     ):
+        raise SystemExit(
+            "web route smoke check failed: certified surface parser slot probe schema drift"
+        )
+    (
+        expected_probe_ids,
+        expected_probe_meta,
+    ) = expected_modified_surface_slot_probe_meta_from_spec(
+        slot_probe_examples.get("probe_generation_spec"),
+    )
+    if slot_probe_examples.get("probe_count") != len(expected_probe_ids):
         raise SystemExit(
             "web route smoke check failed: certified surface parser slot probe schema drift"
         )
@@ -3595,6 +3725,8 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-generator-time-suffix="yesterday"',
         'data-surface-slot-probe-schema="surface_slot_probes.v1"',
         'data-surface-slot-probe-count="4"',
+        'data-surface-slot-probe-generation-schema="surface_slot_probe_generation.v1"',
+        'data-surface-slot-probe-generation-kind="lexical_slot_substitution_with_modifier_prefix"',
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',

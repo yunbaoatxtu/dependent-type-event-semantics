@@ -9393,6 +9393,41 @@ class TranslatorTests(unittest.TestCase):
             "controlled_single_slot_and_combined_substitutions",
         )
         self.assertFalse(slot_probe_examples["full_lexical_slot_certification"])
+        slot_probe_generation_spec = slot_probe_examples["probe_generation_spec"]
+        self.assertEqual(
+            slot_probe_generation_spec["schema_version"],
+            "surface_slot_probe_generation.v1",
+        )
+        self.assertEqual(
+            slot_probe_generation_spec["generator"],
+            "lexical_slot_substitution_with_modifier_prefix",
+        )
+        self.assertEqual(
+            slot_probe_generation_spec["base_frame"],
+            {
+                "agent": {"surface": "Mary", "semantic": "mary"},
+                "predicate": {"surface": "admired", "semantic": "admire"},
+                "theme": {"surface": "painting", "semantic": "painting"},
+            },
+        )
+        self.assertEqual(
+            [
+                template["probe_id"]
+                for template in slot_probe_generation_spec["probe_templates"]
+            ],
+            [
+                "subject_slot_john",
+                "theme_slot_sculpture",
+                "predicate_slot_photograph",
+                "combined_slots_timed_max_prefix",
+            ],
+        )
+        self.assertEqual(
+            natural_language_pipeline.modified_transitive_surface_slot_probes_from_spec(
+                slot_probe_generation_spec,
+            ),
+            slot_probe_examples["probes"],
+        )
         self.assertEqual(slot_probe_examples["probe_count"], 4)
         self.assertEqual(
             [probe["probe_id"] for probe in slot_probe_examples["probes"]],
@@ -9712,6 +9747,15 @@ class TranslatorTests(unittest.TestCase):
         stale_manifest = deepcopy(manifest)
         stale_manifest["surface_parser_coverage"][
             "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["probe_generation_spec"][
+            "generator"
+        ] = "stale_generator"
+        with self.assertRaisesRegex(SystemExit, "slot probe generation spec drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
         ]["slot_probe_examples"]["probes"][0][
             "expected_dependent_type_fragments"
         ] = ["stale_translation"]
@@ -9877,6 +9921,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-surface-generator-time-suffix="yesterday"', page)
         self.assertIn('data-surface-slot-probe-schema="surface_slot_probes.v1"', page)
         self.assertIn('data-surface-slot-probe-count="4"', page)
+        self.assertIn(
+            'data-surface-slot-probe-generation-schema="surface_slot_probe_generation.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-generation-kind="lexical_slot_substitution_with_modifier_prefix"',
+            page,
+        )
         self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
         self.assertIn('data-surface-slot-probe-slot="agent"', page)
         self.assertIn(
@@ -15311,7 +15363,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser generation spec drift", verifier)
         self.assertIn("surface_witness_generation.v1", verifier)
         self.assertIn("surface parser slot probe schema drift", verifier)
+        self.assertIn("surface parser slot probe generation spec drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
+        self.assertIn("surface_slot_probe_generation.v1", verifier)
         self.assertIn("surface_slot_probes.v1", verifier)
         self.assertIn("/api/diagnostic-fixtures", verifier)
         self.assertIn("/api/recovery-action", verifier)

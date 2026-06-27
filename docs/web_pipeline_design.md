@@ -192,9 +192,13 @@ schema, generator kind, modifier count, and time suffix through stable
 The surface object also exposes `slot_probe_examples`. These are controlled
 Agent, Theme, predicate, and combined timed/max-prefix substitutions that must
 still match the modified-transitive rule, analysis label, AST shape, and
-translation fragments. They are intentionally marked as probes rather than full
-lexical-slot certification, and the panel mirrors them through
-`data-surface-slot-probe-*` attributes.
+translation fragments. They are generated from a `probe_generation_spec` that
+records the base lexical frame, slot substitutions, prefix lengths, surface
+templates, and translation templates, and the verifier reconstructs the probes
+from that spec before running the live analyzer. They are intentionally marked
+as probes rather than full lexical-slot certification, and the panel mirrors
+both the probe rows and generator metadata through `data-surface-slot-probe-*`
+attributes.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,
