@@ -178,7 +178,9 @@ Thus a witness is not merely an example sentence: it is a compact semantic
 contract for what that surface sentence must produce. During the project smoke
 check, every surface witness is rerun through the live analyzer and compared
 against that contract, so parser-boundary drift is caught at the same level as
-ordinary registered-construction drift.
+ordinary registered-construction drift. Dedicated regression tests patch the
+live analyzer response to simulate no-run, rule, analysis, AST, and translation
+drift for a witness and require the verifier to reject each case explicitly.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

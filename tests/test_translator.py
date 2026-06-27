@@ -12,6 +12,7 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 
+import translator.natural_language_pipeline as natural_language_pipeline
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES
 from scripts.verify_project import (
@@ -9592,6 +9593,54 @@ class TranslatorTests(unittest.TestCase):
         manifest["fallback"]["certification_gaps"] = []
         with self.assertRaisesRegex(SystemExit, "certified fallback gap drift"):
             validate_certified_fragment_manifest(manifest)
+
+    def test_verification_rejects_surface_parser_witness_live_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        witness = manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]["verified_examples"][0]
+        original_result = run_pipeline(witness["sentence"], require_coq=False)
+        self.assertTrue(original_result["ok"])
+        original_run_pipeline = natural_language_pipeline.run_pipeline
+
+        def expect_live_witness_failure(expected_error: str, patched_result: dict) -> None:
+            def fake_run_pipeline(sentence: str, require_coq: bool = False) -> dict:
+                self.assertEqual(sentence, witness["sentence"])
+                self.assertFalse(require_coq)
+                return deepcopy(patched_result)
+
+            natural_language_pipeline.run_pipeline = fake_run_pipeline
+            try:
+                with self.assertRaisesRegex(SystemExit, expected_error):
+                    validate_certified_fragment_manifest(manifest)
+            finally:
+                natural_language_pipeline.run_pipeline = original_run_pipeline
+
+        no_longer_runs = deepcopy(original_result)
+        no_longer_runs["ok"] = False
+        expect_live_witness_failure("surface parser witness no longer runs", no_longer_runs)
+
+        rule_drift = deepcopy(original_result)
+        rule_drift["construction_rule"]["id"] = "stale_rule"
+        expect_live_witness_failure("surface parser witness rule drift", rule_drift)
+
+        analysis_drift = deepcopy(original_result)
+        analysis_drift["event_semantics"]["analysis"] = "stale-analysis"
+        expect_live_witness_failure(
+            "surface parser witness live analysis drift",
+            analysis_drift,
+        )
+
+        ast_drift = deepcopy(original_result)
+        ast_drift["ast"]["kind"] = "stale-kind"
+        expect_live_witness_failure("surface parser witness live AST drift", ast_drift)
+
+        translation_drift = deepcopy(original_result)
+        translation_drift["dependent_type_translation"] = "stale_translation"
+        expect_live_witness_failure(
+            "surface parser witness live translation drift",
+            translation_drift,
+        )
 
     def test_web_api_and_page_expose_certified_fragment_manifest(self) -> None:
         handler = object.__new__(PipelineHandler)

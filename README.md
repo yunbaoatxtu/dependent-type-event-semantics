@@ -878,6 +878,8 @@ kind, and dependent-type translation fragments, tying the parser boundary to
 the same checked semantic contract used by the live analyzer smoke tests. The
 project verifier reruns every witness sentence and rejects any drift in the
 matched construction rule, analysis label, AST kind, or translation fragments.
+Regression tests also simulate each of those live-witness drift modes directly,
+so the check is guarded by counterexamples rather than by a text-only assertion.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and
