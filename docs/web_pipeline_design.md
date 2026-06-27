@@ -904,6 +904,13 @@ same-scale oppositions such as `the door is closed and open` and
 `Mary admired the door because it was closed and open` should remain visible as
 `type_check` failures with the message that `access_scale` has both `closed`
 and `open`;
+the JSON result carries the same lexical opposition as
+`type_check.incompatible_state_pairs`, and `diagnostics.state_opposition_count`
+with `diagnostics.state_opposition_diagnostics` mirrors that list for clients;
+the HTML renders a `State Opposition Diagnostics` panel with stable hooks such
+as `data-state-opposition-scale`, `data-state-opposition-left`,
+`data-state-opposition-right`, `data-state-opposition-relation`, and
+`data-state-opposition-path`;
 the page should still reject partial state-scale matches such as
 `John opened the door because it was red and open`,
 and the timed/modifier case

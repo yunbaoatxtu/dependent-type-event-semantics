@@ -172,6 +172,10 @@ opposed states such as `the door is closed and open` and
 `Mary admired the door because it was closed and open` now fail before
 Coq/Rocq export with the diagnostic that `access_scale` has both `closed` and
 `open`.
+The structured failure also exposes `type_check.incompatible_state_pairs`, and
+the web/API diagnostics mirror it as `state_opposition_count` and
+`state_opposition_diagnostics`; the page renders those records in a
+`State Opposition Diagnostics` panel.
 If the available antecedent already carries a state scale, all conjoined
 states must be covered; `John opened the door because it was red and open`
 therefore fails rather than resolving a color-state clause to an access-scale

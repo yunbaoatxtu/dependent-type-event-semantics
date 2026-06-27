@@ -6710,6 +6710,7 @@ def causal_because_ast(
 
 def check_causal_because_ast(ast: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
+    incompatible_state_pairs: list[dict[str, str]] = []
     if ast.get("kind") != "causal_because":
         errors.append("causal_because.kind must be causal_because")
 
@@ -6739,6 +6740,15 @@ def check_causal_because_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 f"causal_because.{field}: {error}"
                 for error in stative_check["errors"]
             )
+            incompatible_state_pairs.extend(
+                {
+                    **pair,
+                    "clause": field,
+                    "path": f"causal_because.{field}",
+                }
+                for pair in stative_check.get("incompatible_state_pairs", [])
+                if isinstance(pair, dict)
+            )
         elif isinstance(clause, dict):
             simple_check = check_simple_conditional_ast(
                 {
@@ -6761,11 +6771,14 @@ def check_causal_because_ast(ast: dict[str, Any]) -> dict[str, Any]:
             errors.append(f"causal_because.{field} must be a clause object")
     errors.extend(causal_because_declaration_conflicts(cause, effect))
 
-    return {
+    result = {
         "ok": not errors,
         "type": "Prop" if not errors else None,
         "errors": errors,
     }
+    if incompatible_state_pairs:
+        result["incompatible_state_pairs"] = incompatible_state_pairs
+    return result
 
 
 def split_causal_because_tokens(tokens: list[str]) -> tuple[list[str], list[str]] | None:
@@ -9423,6 +9436,7 @@ def stative_result_state_ast(
 
 def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
+    incompatible_state_pairs: list[dict[str, str]] = []
     if ast.get("kind") != "stative_result_state":
         errors.append("ast.kind must be stative_result_state")
     subject = ast.get("subject")
@@ -9514,6 +9528,16 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
                         "stative states cannot contain incompatible states on the same "
                         f"scale: {item_scale} has {joined_names}"
                     )
+                    incompatible_state_pairs.append(
+                        {
+                            "state_scale": item_scale,
+                            "left_state": left_name,
+                            "right_state": right_name,
+                            "states": joined_names,
+                            "source": "translator/dependent_type_event_translator.py",
+                            "relation": "lexical_opposition",
+                        }
+                    )
 
     if ast.get("predicate") != "holds_state":
         errors.append("stative predicate must be holds_state")
@@ -9524,11 +9548,14 @@ def check_stative_result_state_ast(ast: dict[str, Any]) -> dict[str, Any]:
     if ast.get("polarity", "positive") not in {"positive", "negative"}:
         errors.append("stative polarity must be positive or negative")
 
-    return {
+    result = {
         "ok": not errors,
         "type": "Prop" if not errors else None,
         "errors": errors,
     }
+    if incompatible_state_pairs:
+        result["incompatible_state_pairs"] = incompatible_state_pairs
+    return result
 
 
 def stative_result_state_pipeline(sentence: str) -> dict[str, Any] | None:

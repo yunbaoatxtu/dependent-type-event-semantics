@@ -2112,6 +2112,21 @@ class TranslatorTests(unittest.TestCase):
             "the same scale: access_scale has closed and open",
             same_scale_conflict["type_check"]["errors"],
         )
+        self.assertEqual(
+            same_scale_conflict["type_check"]["incompatible_state_pairs"],
+            [
+                {
+                    "state_scale": "access_scale",
+                    "left_state": "closed",
+                    "right_state": "open",
+                    "states": "closed and open",
+                    "source": "translator/dependent_type_event_translator.py",
+                    "relation": "lexical_opposition",
+                    "clause": "cause",
+                    "path": "causal_because.cause",
+                }
+            ],
+        )
         self.assertEqual(same_scale_conflict["coq_check"]["status"], "skipped")
 
         place_reason = run_pipeline(
@@ -6431,6 +6446,19 @@ class TranslatorTests(unittest.TestCase):
             "access_scale has closed and open",
             result["type_check"]["errors"],
         )
+        self.assertEqual(
+            result["type_check"]["incompatible_state_pairs"],
+            [
+                {
+                    "state_scale": "access_scale",
+                    "left_state": "closed",
+                    "right_state": "open",
+                    "states": "closed and open",
+                    "source": "translator/dependent_type_event_translator.py",
+                    "relation": "lexical_opposition",
+                }
+            ],
+        )
         self.assertEqual(result["coq_check"]["status"], "skipped")
 
         compatible = run_pipeline("the board is flat and straight", require_coq=True)
@@ -6448,6 +6476,19 @@ class TranslatorTests(unittest.TestCase):
             "stative states cannot contain incompatible states on the same scale: "
             "shape_scale has flat and not_flat",
             lexical_opposition["type_check"]["errors"],
+        )
+        self.assertEqual(
+            lexical_opposition["type_check"]["incompatible_state_pairs"],
+            [
+                {
+                    "state_scale": "shape_scale",
+                    "left_state": "flat",
+                    "right_state": "not_flat",
+                    "states": "flat and not_flat",
+                    "source": "translator/dependent_type_event_translator.py",
+                    "relation": "lexical_opposition",
+                }
+            ],
         )
         self.assertEqual(lexical_opposition["coq_check"]["status"], "skipped")
 
@@ -14991,6 +15032,68 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Skipped Coq/Rocq validation because internal type_check failed.", page)
         self.assertIn("Same subject john coordinates eat(bread : Food)", page)
 
+    def test_web_api_and_page_expose_state_opposition_diagnostics(self) -> None:
+        result = analyze_sentence(
+            "Mary admired the door because it was closed and open",
+            require_coq=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["diagnostics"]["failure_stage"], "semantic_readings_check")
+        self.assertEqual(result["diagnostics"]["stages"]["type_check"], "failed")
+        self.assertEqual(
+            result["diagnostics"]["semantic_readings_failure_kinds"],
+            ["reading_type_check_failed"],
+        )
+        expected_pairs = [
+            {
+                "state_scale": "access_scale",
+                "left_state": "closed",
+                "right_state": "open",
+                "states": "closed and open",
+                "source": "translator/dependent_type_event_translator.py",
+                "relation": "lexical_opposition",
+                "clause": "cause",
+                "path": "causal_because.cause",
+            }
+        ]
+        self.assertEqual(result["type_check"]["incompatible_state_pairs"], expected_pairs)
+        self.assertEqual(result["diagnostics"]["state_opposition_count"], 1)
+        self.assertEqual(
+            result["diagnostics"]["state_opposition_diagnostics"],
+            expected_pairs,
+        )
+
+        page = render_page(
+            "Mary admired the door because it was closed and open",
+            require_coq=True,
+        )
+        self.assertIn("State Opposition Diagnostics", page)
+        self.assertIn('data-state-opposition-count="1"', page)
+        self.assertIn('data-state-opposition-scale="access_scale"', page)
+        self.assertIn('data-state-opposition-left="closed"', page)
+        self.assertIn('data-state-opposition-right="open"', page)
+        self.assertIn('data-state-opposition-relation="lexical_opposition"', page)
+        self.assertIn('data-state-opposition-path="causal_because.cause"', page)
+        self.assertIn("<code>closed</code> vs <code>open</code>", page)
+        self.assertIn("Raw state opposition JSON", page)
+        self.assertIn("&quot;state_opposition_count&quot;: 1", page)
+
+        compatible = analyze_sentence(
+            "Mary admired the board because it was flat and straight",
+            require_coq=True,
+        )
+        self.assertTrue(compatible["ok"])
+        self.assertEqual(compatible["diagnostics"]["state_opposition_count"], 0)
+        self.assertEqual(
+            compatible["diagnostics"]["state_opposition_diagnostics"],
+            [],
+        )
+        compatible_page = render_page(
+            "Mary admired the board because it was flat and straight",
+            require_coq=True,
+        )
+        self.assertNotIn("State Opposition Diagnostics", compatible_page)
+
     def test_pipeline_reports_construction_hygiene_separately(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
         self.assertTrue(result["ok"])
@@ -16178,6 +16281,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`the door is closed and open`", readme)
         self.assertIn("`Mary admired the door because it was closed and open`", readme)
         self.assertIn("`access_scale` has both `closed` and", readme)
+        self.assertIn("`type_check.incompatible_state_pairs`", readme)
+        self.assertIn("`state_opposition_count`", readme)
+        self.assertIn("`State Opposition Diagnostics` panel", readme)
         self.assertIn("`John opened the door because it was red and open`", readme)
         self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
         self.assertIn("`John left because Mary cried because Sue left`", readme)
@@ -16267,6 +16373,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("the door is closed and open", manuscript)
         self.assertIn("Mary admired the door because it was closed and open", manuscript)
         self.assertIn("both closed and open on access_scale", manuscript)
+        self.assertIn("incompatible_state_pairs metadata", manuscript)
+        self.assertIn("State Opposition Diagnostics panel", manuscript)
+        self.assertIn("state_scale, left_state, right_state", manuscript)
         self.assertIn("Mary visited Paris because it was red", manuscript)
         self.assertIn("John opened the door because it was red and open", manuscript)
         self.assertIn("John opened the door because it was red", manuscript)
@@ -16357,6 +16466,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`the door is closed and open`", web_design)
         self.assertIn("`Mary admired the door because it was closed and open`", web_design)
         self.assertIn("`access_scale` has both `closed`", web_design)
+        self.assertIn("`type_check.incompatible_state_pairs`", web_design)
+        self.assertIn("`diagnostics.state_opposition_count`", web_design)
+        self.assertIn("`diagnostics.state_opposition_diagnostics`", web_design)
+        self.assertIn("`State Opposition Diagnostics` panel", web_design)
+        self.assertIn("`data-state-opposition-scale`", web_design)
+        self.assertIn("`data-state-opposition-path`", web_design)
         self.assertIn("`John opened the door because it was red and open`", web_design)
         self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
         self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
@@ -16407,6 +16522,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`the door is closed and open`", ast_docs)
         self.assertIn("`Mary admired the door because it was closed and open`", ast_docs)
         self.assertIn("`access_scale has closed and open`", ast_docs)
+        self.assertIn("`incompatible_state_pairs` list", ast_docs)
+        self.assertIn("`state_scale`, `left_state`, `right_state`", ast_docs)
+        self.assertIn("`causal_because.cause`", ast_docs)
         self.assertIn("transition theme only supplies `access_scale`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)

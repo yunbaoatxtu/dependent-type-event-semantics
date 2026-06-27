@@ -1173,6 +1173,51 @@ def check_status(ok: Any) -> str:
     return "failed"
 
 
+def state_opposition_diagnostics_for_type_check(
+    type_check: Any,
+) -> list[dict[str, str]]:
+    if not isinstance(type_check, dict):
+        return []
+    pairs = type_check.get("incompatible_state_pairs")
+    if not isinstance(pairs, list):
+        return []
+    diagnostics: list[dict[str, str]] = []
+    for pair in pairs:
+        if not isinstance(pair, dict):
+            continue
+        state_scale = pair.get("state_scale")
+        left_state = pair.get("left_state")
+        right_state = pair.get("right_state")
+        if not all(
+            isinstance(value, str) and value
+            for value in (state_scale, left_state, right_state)
+        ):
+            continue
+        diagnostics.append(
+            {
+                "state_scale": state_scale,
+                "left_state": left_state,
+                "right_state": right_state,
+                "states": str(pair.get("states") or f"{left_state} and {right_state}"),
+                "relation": str(pair.get("relation") or "lexical_opposition"),
+                "source": str(
+                    pair.get("source") or "translator/dependent_type_event_translator.py"
+                ),
+                **(
+                    {"clause": pair["clause"]}
+                    if isinstance(pair.get("clause"), str)
+                    else {}
+                ),
+                **(
+                    {"path": pair["path"]}
+                    if isinstance(pair.get("path"), str)
+                    else {}
+                ),
+            }
+        )
+    return diagnostics
+
+
 def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
@@ -1509,6 +1554,9 @@ def lexicon_patch_drafts(result: dict[str, Any]) -> list[dict[str, Any]]:
 
 def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     type_check = result.get("type_check", {})
+    state_opposition_diagnostics = state_opposition_diagnostics_for_type_check(
+        type_check,
+    )
     semantic_readings_check = result.get("semantic_readings_check", {})
     semantic_failure_kinds = (
         semantic_readings_failure_kinds_for(semantic_readings_check)
@@ -1589,6 +1637,8 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "semantic_readings_failure_kinds": semantic_failure_kinds,
         "semantic_readings_failure_summary": semantic_failure_summary,
         "semantic_readings_repair_details": semantic_repair_details,
+        "state_opposition_count": len(state_opposition_diagnostics),
+        "state_opposition_diagnostics": state_opposition_diagnostics,
         "warnings": warnings,
         "manual_repair_required": any(
             draft.get("requires_human_choice") for draft in drafts
@@ -1712,6 +1762,61 @@ def surface_type_contract_diagnostics_panel(result: dict[str, Any]) -> str:
         f"<dt>errors</dt><dd><code>{html.escape(error_count)}</code></dd>"
         f"<dt>categories</dt><dd><code>{html.escape(categories)}</code></dd>"
         "</dl>"
+        "</section>"
+    )
+
+
+def state_opposition_diagnostics_panel(result: dict[str, Any]) -> str:
+    diagnostics = result.get("diagnostics", {})
+    pairs = (
+        diagnostics.get("state_opposition_diagnostics")
+        if isinstance(diagnostics, dict)
+        else None
+    )
+    if not isinstance(pairs, list) or not pairs:
+        return ""
+    rows = []
+    for index, pair in enumerate(pairs):
+        if not isinstance(pair, dict):
+            continue
+        state_scale = str(pair.get("state_scale", ""))
+        left_state = str(pair.get("left_state", ""))
+        right_state = str(pair.get("right_state", ""))
+        relation = str(pair.get("relation", "lexical_opposition"))
+        source = str(pair.get("source", ""))
+        path = str(pair.get("path") or pair.get("clause") or "type_check")
+        if not state_scale or not left_state or not right_state:
+            continue
+        rows.append(
+            '<li class="state-opposition-diagnostic" '
+            f'data-state-opposition-index="{index}" '
+            f'data-state-opposition-scale="{html.escape(state_scale, quote=True)}" '
+            f'data-state-opposition-left="{html.escape(left_state, quote=True)}" '
+            f'data-state-opposition-right="{html.escape(right_state, quote=True)}" '
+            f'data-state-opposition-relation="{html.escape(relation, quote=True)}" '
+            f'data-state-opposition-path="{html.escape(path, quote=True)}">'
+            f"<strong>{html.escape(state_scale)}</strong>: "
+            f"<code>{html.escape(left_state)}</code> vs "
+            f"<code>{html.escape(right_state)}</code>"
+            f"<dl><dt>relation</dt><dd><code>{html.escape(relation)}</code></dd>"
+            f"<dt>path</dt><dd><code>{html.escape(path)}</code></dd>"
+            f"<dt>source</dt><dd><code>{html.escape(source)}</code></dd></dl>"
+            "</li>"
+        )
+    if not rows:
+        return ""
+    raw_json = compact_json(pairs)
+    return (
+        '<section class="panel state-opposition-diagnostics-panel" '
+        f'data-state-opposition-count="{len(rows)}">'
+        "<h2>State Opposition Diagnostics</h2>"
+        '<ul class="state-opposition-list">'
+        + "".join(rows)
+        + "</ul>"
+        '<details class="state-opposition-json">'
+        "<summary>Raw state opposition JSON</summary>"
+        f"<pre>{html.escape(raw_json)}</pre>"
+        "</details>"
         "</section>"
     )
 
@@ -4269,6 +4374,7 @@ def render_page(
       {panel("Semantic Readings", semantic_readings)}
       {semantic_readings_check_panel(result)}
       {panel("AST", ast)}
+      {state_opposition_diagnostics_panel(result)}
       {panel("Type Check", type_check)}
       {panel("Result State Lexicon JSON", result_lexicon)}
       {panel("Lexicon Patch Drafts JSON", patch_drafts)}

@@ -1587,6 +1587,10 @@ and straight` can keep both `flat` and `straight` on `shape_scale`, while
 registered oppositions such as `the door is closed and open` and
 `Mary admired the door because it was closed and open` now report
 `access_scale has closed and open` and skip proof-assistant export.
+Those failures also carry a structured `incompatible_state_pairs` list on the
+`type_check` object, recording the `state_scale`, `left_state`, `right_state`,
+lexical `relation`, and nested path such as `causal_because.cause` when the
+opposition comes from an embedded reason clause.
 If the antecedent candidate already carries a state-scale annotation, the
 candidate must cover every stative scale; `John opened the door because it was
 red and open` fails because the transition theme only supplies `access_scale`.
