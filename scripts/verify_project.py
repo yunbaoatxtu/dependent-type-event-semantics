@@ -4023,6 +4023,8 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-slot-probe-matrix-generation-schema="surface_slot_probe_matrix_generation.v1"',
         'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
         'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
+        'data-surface-slot-probe-matrix-type-contract-entry-schema="surface_type_contract_entry.v1"',
+        'data-surface-slot-probe-matrix-type-contract-entry-count="6"',
         (
             'data-surface-slot-probe-matrix-type-contract-source="'
             'translator/surface_type_contracts.py"'

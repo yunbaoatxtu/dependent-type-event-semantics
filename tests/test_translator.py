@@ -9442,6 +9442,45 @@ class TranslatorTests(unittest.TestCase):
             matrix_generation_spec["type_contract_registry"],
             surface_type_contracts.modified_transitive_surface_type_contract_registry(),
         )
+        registry = surface_type_contracts.modified_transitive_surface_type_contract_registry()
+        self.assertEqual(
+            registry["entry_schema"],
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
+        )
+        self.assertEqual(registry["entry_count"], 6)
+        entries_by_slot = surface_type_contracts.surface_type_contract_entries_by_slot(
+            registry,
+        )
+        self.assertEqual(
+            {slot: len(entries) for slot, entries in entries_by_slot.items()},
+            {"agents": 2, "predicates": 2, "themes": 2},
+        )
+        self.assertEqual(
+            surface_type_contracts.surface_type_contract_entry(
+                "agents",
+                "mary",
+                registry,
+            )["role_label"],
+            "Agent",
+        )
+        self.assertEqual(
+            surface_type_contracts.surface_type_contract_entry(
+                "predicates",
+                "admire",
+                registry,
+            )["role_frame"],
+            ["Agent", "Theme"],
+        )
+        with self.assertRaisesRegex(KeyError, "unknown surface type contract entry"):
+            surface_type_contracts.surface_type_contract_entry(
+                "themes",
+                "missing_theme",
+                registry,
+            )
+        self.assertEqual(
+            matrix_generation_spec["axes"],
+            surface_type_contracts.surface_type_contract_axes_from_entries(registry),
+        )
         self.assertEqual(
             natural_language_pipeline.modified_transitive_surface_type_contract_registry(),
             surface_type_contracts.modified_transitive_surface_type_contract_registry(),
@@ -9449,6 +9488,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"]["schema_version"],
             surface_type_contracts.SURFACE_TYPE_CONTRACT_REGISTRY_SCHEMA,
+        )
+        self.assertEqual(
+            matrix_generation_spec["type_contract_registry"]["entry_schema"],
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_ENTRY_SCHEMA,
         )
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"]["source"],
@@ -9908,6 +9951,15 @@ class TranslatorTests(unittest.TestCase):
         stale_manifest = deepcopy(manifest)
         stale_manifest["surface_parser_coverage"][
             "modified_transitive_adv_sequence"
+        ]["slot_probe_examples"]["matrix_generation_spec"][
+            "type_contract_registry"
+        ]["entries"][0]["dependent_type"] = "Event"
+        with self.assertRaisesRegex(SystemExit, "slot probe matrix generation spec drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
+        stale_manifest = deepcopy(manifest)
+        stale_manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
         ]["slot_probe_examples"]["probes"][0][
             "expected_dependent_type_fragments"
         ] = ["stale_translation"]
@@ -10110,6 +10162,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-entry-schema="surface_type_contract_entry.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-entry-count="6"',
             page,
         )
         self.assertIn(
@@ -15578,6 +15638,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
         self.assertIn("surface_type_contract_registry.v1", verifier)
+        self.assertIn("surface_type_contract_entry.v1", verifier)
         self.assertIn("from translator.surface_type_contracts import", verifier)
         self.assertIn("data-surface-slot-probe-matrix-type-contract-registry-id", verifier)
         self.assertIn("surface_slot_probe_matrix_generation.v1", verifier)

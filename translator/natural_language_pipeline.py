@@ -62,6 +62,7 @@ from translator.surface_lexicon import (
 )
 from translator.surface_type_contracts import (
     modified_transitive_surface_type_contract_registry,
+    surface_type_contract_axes_from_entries,
 )
 
 
@@ -590,7 +591,7 @@ def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str,
         "time_type_contract": copy.deepcopy(
             type_contract_registry["time_type_contract"],
         ),
-        "axes": copy.deepcopy(type_contract_registry["axes"]),
+        "axes": surface_type_contract_axes_from_entries(type_contract_registry),
         "surface_template": (
             "{agent_surface} {predicate_surface} the {theme_surface} "
             "{modifier_surfaces}"

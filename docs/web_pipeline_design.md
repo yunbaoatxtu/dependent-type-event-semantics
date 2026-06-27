@@ -212,9 +212,11 @@ families, modifier slots are `Adv`, and timed rows expose the `Time` argument
 used by the proposition-level temporal operator.
 The matrix generation spec also embeds a `surface_type_contract_registry.v1`
 object from `translator/surface_type_contracts.py` and mirrors its schema,
-source module, and registry id through
+entry schema, entry count, source module, and registry id through
 `data-surface-slot-probe-matrix-type-contract-*`, making the UI boundary check
-the same source used by the verifier.
+the same source used by the verifier. The current registry exposes six
+`surface_type_contract_entry.v1` rows for the controlled Agent, predicate, and
+Theme axes.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

@@ -2511,6 +2511,12 @@ def certified_fragment_panel() -> str:
     surface_slot_probe_matrix_type_contract_schema = str(
         surface_slot_probe_matrix_type_contract_registry.get("schema_version", ""),
     )
+    surface_slot_probe_matrix_type_contract_entry_schema = str(
+        surface_slot_probe_matrix_type_contract_registry.get("entry_schema", ""),
+    )
+    surface_slot_probe_matrix_type_contract_entry_count = str(
+        surface_slot_probe_matrix_type_contract_registry.get("entry_count", ""),
+    )
     surface_slot_probe_matrix_type_contract_source = str(
         surface_slot_probe_matrix_type_contract_registry.get("source", ""),
     )
@@ -2734,6 +2740,8 @@ def certified_fragment_panel() -> str:
         f'data-surface-slot-probe-matrix-generation-schema="{html.escape(surface_slot_probe_matrix_generator_schema, quote=True)}" '
         f'data-surface-slot-probe-matrix-generation-kind="{html.escape(surface_slot_probe_matrix_generator_kind, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-schema="{html.escape(surface_slot_probe_matrix_type_contract_schema, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-entry-schema="{html.escape(surface_slot_probe_matrix_type_contract_entry_schema, quote=True)}" '
+        f'data-surface-slot-probe-matrix-type-contract-entry-count="{html.escape(surface_slot_probe_matrix_type_contract_entry_count, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-source="{html.escape(surface_slot_probe_matrix_type_contract_source, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-registry-id="{html.escape(surface_slot_probe_matrix_type_contract_registry_id, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
