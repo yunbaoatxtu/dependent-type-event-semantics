@@ -858,6 +858,15 @@ composition examples such as `John knocked twice yesterday` under
 `temporal_quint_adv_modified_transitive_predication`; fallback cases remain
 explicitly shallow, and rejected cases record the marker that must stop the
 pipeline before fallback.
+The manifest also exposes `surface_parser_coverage` for the modified
+transitive Adv-sequence family. That record states the open-ended type
+principle `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, while
+marking the current surface parser claim as `registered_examples_only` and
+`full_surface_parser_certification: false`. Its audited modifier counts are
+`1,2,3,4,5` for both timed and untimed registered examples. This makes the
+boundary machine-readable: the dependent type family is not capped at five
+modifiers, but the present web parser only certifies the registered examples it
+actually smoke-tests.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

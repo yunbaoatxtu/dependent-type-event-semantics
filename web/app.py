@@ -2436,6 +2436,29 @@ def certified_fragment_panel() -> str:
         if isinstance(counts, dict)
         else ""
     )
+    surface_parser_coverage = manifest.get("surface_parser_coverage", {})
+    modified_surface = (
+        surface_parser_coverage.get("modified_transitive_adv_sequence", {})
+        if isinstance(surface_parser_coverage, dict)
+        else {}
+    )
+    if not isinstance(modified_surface, dict):
+        modified_surface = {}
+
+    def count_list_attribute(value: object) -> str:
+        if not isinstance(value, list):
+            return ""
+        return ",".join(str(item) for item in value if isinstance(item, int))
+
+    surface_verified_counts = count_list_attribute(
+        modified_surface.get("verified_modifier_counts"),
+    )
+    surface_timed_counts = count_list_attribute(
+        modified_surface.get("verified_timed_modifier_counts"),
+    )
+    surface_untimed_counts = count_list_attribute(
+        modified_surface.get("verified_untimed_modifier_counts"),
+    )
     rule_items = "".join(
         '<li '
         f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}" '
@@ -2514,6 +2537,30 @@ def certified_fragment_panel() -> str:
         )
         for item in semantic_snapshots
     )
+    surface_parser_items = "".join(
+        (
+            '<li '
+            f'data-surface-parser-family="{html.escape(str(family), quote=True)}" '
+            f'data-surface-parser-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
+            f'data-surface-type-principle="{html.escape(str(item.get("type_principle", "")), quote=True)}" '
+            f'data-surface-type-level-open-ended="{str(item.get("type_level_open_ended") is True).lower()}" '
+            f'data-surface-parser-claim="{html.escape(str(item.get("surface_parser_claim", "")), quote=True)}" '
+            f'data-surface-full-certification="{str(item.get("full_surface_parser_certification") is True).lower()}" '
+            f'data-surface-verified-counts="{html.escape(count_list_attribute(item.get("verified_modifier_counts")), quote=True)}" '
+            f'data-surface-timed-counts="{html.escape(count_list_attribute(item.get("verified_timed_modifier_counts")), quote=True)}" '
+            f'data-surface-untimed-counts="{html.escape(count_list_attribute(item.get("verified_untimed_modifier_counts")), quote=True)}" '
+            f'data-surface-max-verified-count="{html.escape(str(item.get("max_verified_modifier_count", "")), quote=True)}">'
+            f'<code>{html.escape(str(family))}</code>'
+            f'<span>{html.escape(str(item.get("boundary_note", "")))}</span>'
+            "</li>"
+        )
+        for family, item in (
+            surface_parser_coverage.items()
+            if isinstance(surface_parser_coverage, dict)
+            else []
+        )
+        if isinstance(item, dict)
+    )
     return (
         '<section class="panel certified-fragment-panel" '
         f'data-certified-fragment-schema="{html.escape(schema, quote=True)}" '
@@ -2524,6 +2571,14 @@ def certified_fragment_panel() -> str:
         f'data-coverage-registered-variant-success-count="{html.escape(registered_variant_case_count, quote=True)}" '
         f'data-coverage-fallback-success-count="{html.escape(fallback_case_count, quote=True)}" '
         f'data-coverage-rejected-unsupported-count="{html.escape(rejected_case_count, quote=True)}" '
+        'data-surface-parser-family="modified_transitive_adv_sequence" '
+        f'data-surface-type-level-open-ended="{str(modified_surface.get("type_level_open_ended") is True).lower()}" '
+        f'data-surface-parser-claim="{html.escape(str(modified_surface.get("surface_parser_claim", "")), quote=True)}" '
+        f'data-surface-full-certification="{str(modified_surface.get("full_surface_parser_certification") is True).lower()}" '
+        f'data-surface-verified-counts="{html.escape(surface_verified_counts, quote=True)}" '
+        f'data-surface-timed-counts="{html.escape(surface_timed_counts, quote=True)}" '
+        f'data-surface-untimed-counts="{html.escape(surface_untimed_counts, quote=True)}" '
+        f'data-surface-max-verified-count="{html.escape(str(modified_surface.get("max_verified_modifier_count", "")), quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -2538,6 +2593,8 @@ def certified_fragment_panel() -> str:
         f"<dt>registered variants</dt><dd>{html.escape(registered_variant_case_count)}</dd>"
         f"<dt>fallback cases</dt><dd>{html.escape(fallback_case_count)}</dd>"
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
+        f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
+        f"<dt>verified Adv counts</dt><dd><code>{html.escape(surface_verified_counts)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
@@ -2551,6 +2608,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{fallback_gap_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'
         f"<ul>{rejected_items}</ul></div>"
+        '<div class="certified-fragment-surface-parser"><strong>surface parser coverage</strong>'
+        f"<ul>{surface_parser_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
         f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'

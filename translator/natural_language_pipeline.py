@@ -181,6 +181,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "temporal_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 1,
+        "time_wrapped": True,
         "sentence": "Mary admired the painting in the gallery yesterday",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -194,6 +197,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "multi_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 2,
+        "time_wrapped": False,
         "sentence": "Mary admired the painting in the gallery with a telescope",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -207,6 +213,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "temporal_multi_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 2,
+        "time_wrapped": True,
         "sentence": "Mary admired the painting in the gallery with a telescope yesterday",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -220,6 +229,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "triple_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 3,
+        "time_wrapped": False,
         "sentence": "Mary admired the painting in the gallery with a telescope near a window",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -233,6 +245,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "temporal_triple_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 3,
+        "time_wrapped": True,
         "sentence": "Mary admired the painting in the gallery with a telescope near a window yesterday",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -246,6 +261,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "quad_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 4,
+        "time_wrapped": False,
         "sentence": "Mary admired the painting in the gallery with a telescope near a window beside a shelf",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -259,6 +277,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "temporal_quad_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 4,
+        "time_wrapped": True,
         "sentence": "Mary admired the painting in the gallery with a telescope near a window beside a shelf yesterday",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -272,6 +293,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "quint_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 5,
+        "time_wrapped": False,
         "sentence": "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -285,6 +309,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     {
         "rule_id": "modified_transitive_predication",
         "variant_id": "temporal_quint_adv_modified_transitive_predication",
+        "surface_parser_family": "modified_transitive_adv_sequence",
+        "modifier_count": 5,
+        "time_wrapped": True,
         "sentence": "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp yesterday",
         "expected_event_analysis": "modified-transitive-predication",
         "expected_dependent_type_fragments": [
@@ -296,6 +323,9 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "boundary_status": "registered_variant_example",
     },
 )
+
+
+MODIFIED_TRANSITIVE_PRIMARY_MODIFIER_COUNT = 1
 
 
 FALLBACK_CERTIFICATION_GAPS = (
@@ -11933,6 +11963,55 @@ def construction_rules() -> list[ConstructionRule]:
     ]
 
 
+def surface_parser_coverage_payload() -> dict[str, Any]:
+    modified_transitive_variants = [
+        variant
+        for variant in REGISTERED_VARIANT_COVERAGE_EXAMPLES
+        if variant.get("surface_parser_family") == "modified_transitive_adv_sequence"
+        and isinstance(variant.get("modifier_count"), int)
+    ]
+    timed_counts = sorted(
+        {
+            int(variant["modifier_count"])
+            for variant in modified_transitive_variants
+            if variant.get("time_wrapped") is True
+        },
+    )
+    untimed_counts = sorted(
+        {MODIFIED_TRANSITIVE_PRIMARY_MODIFIER_COUNT}
+        | {
+            int(variant["modifier_count"])
+            for variant in modified_transitive_variants
+            if variant.get("time_wrapped") is False
+        },
+    )
+    verified_counts = sorted(
+        {MODIFIED_TRANSITIVE_PRIMARY_MODIFIER_COUNT}
+        | set(timed_counts)
+        | set(untimed_counts),
+    )
+    return {
+        "modified_transitive_adv_sequence": {
+            "rule_id": "modified_transitive_predication",
+            "type_principle": "non_empty_modifier_sequence",
+            "type_family": "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
+            "type_level_open_ended": True,
+            "surface_parser_claim": "registered_examples_only",
+            "full_surface_parser_certification": False,
+            "primary_modifier_count": MODIFIED_TRANSITIVE_PRIMARY_MODIFIER_COUNT,
+            "verified_modifier_counts": verified_counts,
+            "verified_timed_modifier_counts": timed_counts,
+            "verified_untimed_modifier_counts": untimed_counts,
+            "max_verified_modifier_count": max(verified_counts) if verified_counts else 0,
+            "boundary_note": (
+                "The dependent type family is open-ended in n, but the current "
+                "surface parser advertises only the registered and smoke-tested "
+                "modifier-count examples listed here."
+            ),
+        },
+    }
+
+
 def construction_fragment_manifest() -> dict[str, Any]:
     rules = construction_rules()
     variant_examples_by_rule: dict[str, list[str]] = {}
@@ -11993,6 +12072,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
         "full_natural_language_certification": False,
         "registered_construction_count": len(registered),
         "registered_constructions": registered,
+        "surface_parser_coverage": surface_parser_coverage_payload(),
         "semantic_snapshot_count": len(semantic_snapshots),
         "semantic_snapshots": semantic_snapshots,
         "fallback": {

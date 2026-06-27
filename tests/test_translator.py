@@ -9314,6 +9314,43 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(counts["registered_variant_success_cases"], 11)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
+        surface_parser_coverage = manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]
+        self.assertEqual(
+            surface_parser_coverage["rule_id"],
+            "modified_transitive_predication",
+        )
+        self.assertEqual(
+            surface_parser_coverage["type_principle"],
+            "non_empty_modifier_sequence",
+        )
+        self.assertEqual(
+            surface_parser_coverage["type_family"],
+            "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT",
+        )
+        self.assertTrue(surface_parser_coverage["type_level_open_ended"])
+        self.assertEqual(
+            surface_parser_coverage["surface_parser_claim"],
+            "registered_examples_only",
+        )
+        self.assertFalse(
+            surface_parser_coverage["full_surface_parser_certification"],
+        )
+        self.assertEqual(surface_parser_coverage["primary_modifier_count"], 1)
+        self.assertEqual(
+            surface_parser_coverage["verified_modifier_counts"],
+            [1, 2, 3, 4, 5],
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_timed_modifier_counts"],
+            [1, 2, 3, 4, 5],
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_untimed_modifier_counts"],
+            [1, 2, 3, 4, 5],
+        )
+        self.assertEqual(surface_parser_coverage["max_verified_modifier_count"], 5)
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
             "fallback_shallow",
@@ -9535,6 +9572,20 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertIn("semantic_snapshots", manifest)
+        surface_parser_coverage = manifest["surface_parser_coverage"][
+            "modified_transitive_adv_sequence"
+        ]
+        self.assertEqual(
+            surface_parser_coverage["surface_parser_claim"],
+            "registered_examples_only",
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_modifier_counts"],
+            [1, 2, 3, 4, 5],
+        )
+        self.assertFalse(
+            surface_parser_coverage["full_surface_parser_certification"],
+        )
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -9556,6 +9607,17 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-coverage-fallback-success-count="1"', page)
         self.assertIn('data-coverage-rejected-unsupported-count="2"', page)
+        self.assertIn(
+            'data-surface-parser-family="modified_transitive_adv_sequence"',
+            page,
+        )
+        self.assertIn('data-surface-type-level-open-ended="true"', page)
+        self.assertIn('data-surface-parser-claim="registered_examples_only"', page)
+        self.assertIn('data-surface-full-certification="false"', page)
+        self.assertIn('data-surface-verified-counts="1,2,3,4,5"', page)
+        self.assertIn('data-surface-timed-counts="1,2,3,4,5"', page)
+        self.assertIn('data-surface-untimed-counts="1,2,3,4,5"', page)
+        self.assertIn('data-surface-max-verified-count="5"', page)
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)

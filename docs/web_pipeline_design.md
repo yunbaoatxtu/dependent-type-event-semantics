@@ -155,6 +155,14 @@ uses `data-coverage-marker`. Current registered variants include
 two-, three-, four-, and five-Adv Luo-Shi modifier routes as witnesses of the
 non-empty `ModifierSeq` rule rather than treating modifier count as a fallback
 boundary.
+The same manifest now includes `surface_parser_coverage` for
+`modified_transitive_adv_sequence`. This object records the open-ended type
+family `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, the parser
+claim `registered_examples_only`, `full_surface_parser_certification: false`,
+and the verified timed and untimed modifier counts `1,2,3,4,5`. The
+`Certified Fragment` panel mirrors these values through `data-surface-*`
+attributes, so the page can advertise the current parser boundary without
+confusing it with the stronger type-level Luo-Shi principle.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

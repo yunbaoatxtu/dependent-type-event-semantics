@@ -2933,6 +2933,29 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: certified fallback coverage count drift")
     if counts.get("rejected_unsupported_cases") != len(rejected_cases):
         raise SystemExit("web route smoke check failed: certified rejected coverage count drift")
+    surface_parser_coverage = manifest.get("surface_parser_coverage")
+    if not isinstance(surface_parser_coverage, dict):
+        raise SystemExit("web route smoke check failed: certified surface parser coverage missing")
+    modified_surface = surface_parser_coverage.get("modified_transitive_adv_sequence")
+    if not isinstance(modified_surface, dict):
+        raise SystemExit("web route smoke check failed: certified modified-transitive surface coverage missing")
+    expected_surface_counts = [1, 2, 3, 4, 5]
+    if (
+        modified_surface.get("rule_id") != "modified_transitive_predication"
+        or modified_surface.get("type_principle") != "non_empty_modifier_sequence"
+        or modified_surface.get("type_family")
+        != "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
+        or modified_surface.get("type_level_open_ended") is not True
+        or modified_surface.get("surface_parser_claim") != "registered_examples_only"
+        or modified_surface.get("full_surface_parser_certification") is not False
+        or modified_surface.get("primary_modifier_count") != 1
+        or modified_surface.get("verified_modifier_counts") != expected_surface_counts
+        or modified_surface.get("verified_timed_modifier_counts") != expected_surface_counts
+        or modified_surface.get("verified_untimed_modifier_counts") != expected_surface_counts
+        or modified_surface.get("max_verified_modifier_count") != 5
+        or not isinstance(modified_surface.get("boundary_note"), str)
+    ):
+        raise SystemExit("web route smoke check failed: certified surface parser coverage drift")
     registered_case_by_id = {
         item.get("rule_id"): item
         for item in registered_cases
@@ -3096,6 +3119,15 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit(
                 "web route smoke check failed: certified registered variant schema drift"
             )
+        if variant.get("surface_parser_family") == "modified_transitive_adv_sequence":
+            if (
+                rule_id != "modified_transitive_predication"
+                or variant.get("modifier_count") not in expected_surface_counts
+                or not isinstance(variant.get("time_wrapped"), bool)
+            ):
+                raise SystemExit(
+                    "web route smoke check failed: certified surface parser variant drift"
+                )
         key = (rule_id, variant_id)
         if key in seen_variant_keys:
             raise SystemExit("web route smoke check failed: duplicate certified registered variant")
@@ -3198,6 +3230,15 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             'data-coverage-rejected-unsupported-count="'
             f'{manifest.get("coverage_matrix_counts", {}).get("rejected_unsupported_cases")}"'
         ),
+        'data-surface-parser-family="modified_transitive_adv_sequence"',
+        'data-surface-type-level-open-ended="true"',
+        'data-surface-parser-claim="registered_examples_only"',
+        'data-surface-full-certification="false"',
+        'data-surface-verified-counts="1,2,3,4,5"',
+        'data-surface-timed-counts="1,2,3,4,5"',
+        'data-surface-untimed-counts="1,2,3,4,5"',
+        'data-surface-max-verified-count="5"',
+        "surface parser coverage",
         "<h2>Certified Fragment</h2>",
     ]
     expected_fragments.extend(
