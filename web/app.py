@@ -1834,6 +1834,7 @@ def next_steps_panel(result: dict[str, Any], *, require_coq: bool = False) -> st
                     + "</dl>"
                 )
             action_link = ""
+            action_preview = ""
             run_link = ""
             inspection_preview = ""
             automation_mode = ""
@@ -1938,6 +1939,15 @@ def next_steps_panel(result: dict[str, Any], *, require_coq: bool = False) -> st
                     f'download="{html.escape(download_filename, quote=True)}" '
                     'data-action-download="json">Download action JSON</a>'
                 )
+                if export_status == HTTPStatus.OK:
+                    action_json = html.escape(compact_json(export_bundle))
+                    action_preview = (
+                        '<details class="next-step-action-json" '
+                        f'data-action-json-schema="{RECOVERY_ACTION_SCHEMA}">'
+                        "<summary>Action JSON</summary>"
+                        f"<pre>{action_json}</pre>"
+                        "</details>"
+                    )
                 if export_status == HTTPStatus.OK and can_auto_run:
                     run_href = str(
                         action.get("inspection_run_api_path")
@@ -2004,6 +2014,7 @@ def next_steps_panel(result: dict[str, Any], *, require_coq: bool = False) -> st
                 f'<p>{html.escape(detail)}</p>'
                 f"{details_html}"
                 f"{action_link}"
+                f"{action_preview}"
                 f"{run_link}"
                 f"{inspection_preview}"
                 "</li>"

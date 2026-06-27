@@ -466,7 +466,10 @@ should return a `diagnostic_recovery_action.v1` bundle for the ordinary action
 itself, preserving `source: "analyze"`, the input sentence, the action, repair
 plan, diagnostics, diagnostic contract, and surface type diagnostics. Unlike
 the inspection-run endpoint, it may export human-review-required actions because
-the export is read-only.
+the export is read-only. The ordinary failure `Next Steps` row should render an
+expandable `Action JSON` preview for this bundle, and the verifier should compare
+that row-local preview with the `/api/analyze-action` payload so a stale page-wide
+JSON snippet cannot satisfy the contract.
 The ordinary `diagnostics.recovery_actions` list should make these routes
 discoverable without HTML scraping: each action should carry `automation_mode`,
 `can_auto_run`, `can_auto_apply`, `target_fields`, `api_path`,

@@ -1622,6 +1622,43 @@ def validate_analyze_action_export_bundle(
     )
 
 
+def validate_analyze_action_export_preview(
+    label: str,
+    page: str,
+    action_index: int,
+    action_bundle: dict,
+) -> None:
+    action = action_bundle.get("action")
+    if not isinstance(action, dict):
+        raise SystemExit(f"web route smoke check failed: {label} action preview drift")
+    next_step_block = html_list_item_block(
+        page,
+        f'id="recovery-action-{action_index}"',
+        f"{label} ordinary next-step action {action_index}",
+    )
+    expected_json = html.escape(json.dumps(action_bundle, ensure_ascii=False, indent=2))
+    expected_fragments = [
+        'class="next-step-action-link"',
+        'href="' + html.escape(str(action.get("api_path", "")), quote=True) + '"',
+        'class="next-step-action-download-link"',
+        'href="'
+        + html.escape(str(action.get("download_api_path", "")), quote=True)
+        + '"',
+        'download="'
+        + html.escape(str(action.get("download_filename", "")), quote=True)
+        + '"',
+        'class="next-step-action-json"',
+        'data-action-json-schema="diagnostic_recovery_action.v1"',
+        "<summary>Action JSON</summary>",
+        expected_json,
+    ]
+    require_html_fragments(
+        next_step_block,
+        expected_fragments,
+        f"{label} ordinary action JSON preview",
+    )
+
+
 def validate_verification_scope(
     payload: dict,
     page: str,
@@ -5278,6 +5315,12 @@ def run_web_route_smoke_check() -> None:
             type_failure_sentence,
             0,
             type_failure_payload,
+            analyze_action_payload,
+        )
+        validate_analyze_action_export_preview(
+            "ordinary type-check failure",
+            type_failure_page,
+            0,
             analyze_action_payload,
         )
         with opener.open(f"{base_url}{analyze_action_path}&download=1", timeout=5) as response:

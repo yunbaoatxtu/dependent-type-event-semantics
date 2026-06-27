@@ -1036,9 +1036,12 @@ the action itself through `/api/analyze-action?sentence=<sentence>&index=<n>`.
 For example, the ordinary type-check failure `the plant killed` exposes an
 `inspect_ast` action whose action bundle uses `diagnostic_recovery_action.v1`
 with `source: "analyze"` and downloads as
-`analyze_recovery_action__the-plant-killed__0.json`; its run bundle snapshots
-`ast` and `type_check`, preserves `surface_type_contract_diagnostics`, and
-downloads as `analyze_inspection_run__the-plant-killed__0.json`. The ordinary
+`analyze_recovery_action__the-plant-killed__0.json`. The same ordinary
+`Next Steps` row renders an expandable `Action JSON` preview whose content must
+match that `/api/analyze-action` bundle before the verifier accepts the page;
+its run bundle snapshots `ast` and `type_check`, preserves
+`surface_type_contract_diagnostics`, and downloads as
+`analyze_inspection_run__the-plant-killed__0.json`. The ordinary
 `diagnostics.recovery_actions` entry now carries the same machine-readable
 `api_path`, `download_api_path`, `download_filename`, `automation_mode`,
 `can_auto_run`, `can_auto_apply`, `target_fields`, `inspection_run_api_path`,

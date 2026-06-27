@@ -33,6 +33,7 @@ from scripts.verify_project import (
     validate_json_download_http_response,
     validate_recovery_action_export_bundle,
     validate_analyze_failure_surface_type_contract,
+    validate_analyze_action_export_preview,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
 )
@@ -12568,6 +12569,13 @@ class TranslatorTests(unittest.TestCase):
             "/api/analyze-action-run?sentence=the+plant+killed&index=0&require_coq=1",
         )
         expected_action_path = analyze_action_api_path(sentence, True, 0)
+        expected_action_payload, expected_action_status = analyze_action_export_bundle(
+            sentence,
+            True,
+            0,
+        )
+        self.assertEqual(expected_action_status, HTTPStatus.OK)
+        expected_action_preview = html.escape(compact_json(expected_action_payload))
         page = render_page(sentence, require_coq=True)
         self.assertIn('class="next-step-action-link"', page)
         self.assertIn('href="/api/analyze-action?sentence=the+plant+killed', page)
@@ -12575,6 +12583,13 @@ class TranslatorTests(unittest.TestCase):
             'download="analyze_recovery_action__the-plant-killed__0.json"',
             page,
         )
+        self.assertIn('class="next-step-action-json"', page)
+        self.assertIn(
+            'data-action-json-schema="diagnostic_recovery_action.v1"',
+            page,
+        )
+        self.assertIn("<summary>Action JSON</summary>", page)
+        self.assertIn(expected_action_preview, page)
         self.assertIn('class="next-step-action-run-link"', page)
         self.assertIn('href="/api/analyze-action-run?sentence=the+plant+killed', page)
         self.assertIn("require_coq=1", page)
@@ -12590,6 +12605,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-action-kind="edit_input"', empty_page)
         self.assertIn('href="/api/analyze-action?sentence=', empty_page)
         self.assertIn('download="analyze_recovery_action__empty-input__0.json"', empty_page)
+        self.assertIn('class="next-step-action-json"', empty_page)
+        self.assertIn("&quot;action_kind&quot;: &quot;edit_input&quot;", empty_page)
         self.assertNotIn("/api/analyze-action-run?sentence=", empty_page)
 
         with pipeline_server() as (base_url, opener):
@@ -14522,6 +14539,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/analyze-action?sentence=<sentence>&index=<n>", readme)
         self.assertIn("`diagnostic_recovery_action.v1`", readme)
         self.assertIn("analyze_recovery_action__the-plant-killed__0.json", readme)
+        self.assertIn("ordinary\n`Next Steps` row renders an expandable `Action JSON` preview", readme)
+        self.assertIn("match that `/api/analyze-action` bundle", readme)
         self.assertIn("`api_path`", readme)
         self.assertIn("`download_api_path`", readme)
         self.assertIn("`download_filename`", readme)
@@ -14799,6 +14818,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/analyze-action?sentence=<sentence>&index=<n>", web_design)
         self.assertIn("`diagnostic_recovery_action.v1` bundle", web_design)
         self.assertIn("the export is read-only", web_design)
+        self.assertIn("ordinary failure `Next Steps` row", web_design)
+        self.assertIn("stale page-wide\nJSON snippet", web_design)
         self.assertIn("`api_path`", web_design)
         self.assertIn("`download_api_path`", web_design)
         self.assertIn("`download_filename`", web_design)
@@ -14961,6 +14982,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("targeted diagnostic field snapshot", manuscript)
         self.assertIn("/api/analyze-action endpoint", manuscript)
         self.assertIn("diagnostic_recovery_action.v1 bundles", manuscript)
+        self.assertIn("row-local Action JSON preview", manuscript)
+        self.assertIn("compares with the /api/analyze-action payload", manuscript)
         self.assertIn("/api/analyze-action-run endpoint", manuscript)
         self.assertIn("source analyze", manuscript)
         self.assertIn("the plant killed", manuscript)
@@ -15676,6 +15699,36 @@ class TranslatorTests(unittest.TestCase):
                 "type_check",
             )
 
+    def test_verification_rejects_analyze_action_export_preview_drift(self) -> None:
+        sentence = "the plant killed"
+        result = analyze_sentence(sentence, require_coq=True)
+        page = render_page(sentence, result=result, require_coq=True)
+        action_bundle, status = analyze_action_export_bundle(sentence, True, 0)
+        self.assertEqual(status, HTTPStatus.OK)
+        validate_analyze_action_export_preview(
+            "ordinary type-check failure",
+            page,
+            0,
+            action_bundle,
+        )
+        expected = html.escape(compact_json(action_bundle))
+        stale = expected.replace(
+            "diagnostic_recovery_action.v1",
+            "diagnostic_recovery_action.v0",
+        )
+        self.assertNotEqual(expected, stale)
+        stale_page = page.replace(expected, stale, 1)
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary action JSON preview",
+        ):
+            validate_analyze_action_export_preview(
+                "ordinary type-check failure",
+                stale_page,
+                0,
+                action_bundle,
+            )
+
     def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         manifest = deepcopy(manifest)
@@ -16315,6 +16368,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_recovery_action_inspection_run_bundle(", verifier)
         self.assertIn("def validate_recovery_action_inspection_run_rejection(", verifier)
         self.assertIn("def validate_analyze_action_export_bundle(", verifier)
+        self.assertIn("def validate_analyze_action_export_preview(", verifier)
         self.assertIn("def validate_analyze_action_inspection_run_bundle(", verifier)
         self.assertIn("def analyze_action_api_path(", verifier)
         self.assertIn("def analyze_action_artifact_filename(", verifier)
