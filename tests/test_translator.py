@@ -64,6 +64,7 @@ from translator.natural_language_pipeline import (
     CONSTRUCTION_RULE_DRAFT_SCHEMA,
     ConstructionRule,
     ast_structure_summary,
+    check_causal_because_ast,
     check_copular_property_ast,
     check_lexical_state_change_ast,
     check_negated_coordination_readings,
@@ -1519,6 +1520,87 @@ class TranslatorTests(unittest.TestCase):
             "eat(john, bread) -> drink(mary, water)",
         )
 
+    def test_causal_because_uses_proposition_level_cause(self) -> None:
+        causal = run_pipeline("John left because Mary cried", require_coq=True)
+        self.assertTrue(causal["ok"])
+        self.assertEqual(causal["kind"], "causal_because")
+        self.assertEqual(causal["construction_rule"]["id"], "causal_because")
+        self.assertEqual(
+            causal["dependent_type_translation"],
+            "because_T(cry(mary), leave(john))",
+        )
+        self.assertEqual(causal["ast"]["kind"], "causal_because")
+        self.assertEqual(
+            causal["ast"]["cause"],
+            {
+                "predicate": "cry",
+                "predicate_type": "Entity -> Prop",
+                "surface_predicate": "cried",
+                "subject": {"name": "mary", "type": "Entity"},
+            },
+        )
+        self.assertEqual(
+            causal["ast"]["effect"],
+            {
+                "predicate": "leave",
+                "predicate_type": "Entity -> Prop",
+                "surface_predicate": "left",
+                "subject": {"name": "john", "type": "Entity"},
+            },
+        )
+        self.assertEqual(
+            causal["ast"]["connective"],
+            {"name": "because_T", "type": "Prop -> Prop -> Prop"},
+        )
+        self.assertIn("Parameter because_T : Prop -> Prop -> Prop.", causal["coq_code"])
+        self.assertIn("because_T (cry mary) (leave john)", causal["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", causal["coq_code"])
+        self.assertNotIn("Parameter Agent :", causal["coq_code"])
+        self.assertNotIn("Parameter Theme :", causal["coq_code"])
+        self.assertEqual(causal["coq_check"]["status"], "passed")
+        self.assertTrue(causal["semantic_readings_check"]["ok"])
+        self.assertEqual(
+            [reading["name"] for reading in causal["semantic_readings"]],
+            ["causal_because_single_reading"],
+        )
+        self.assertEqual(
+            causal["verification_scope"]["rule_id"],
+            "causal_because",
+        )
+
+    def test_causal_because_preserves_modifiers_times_and_rejects_drift(self) -> None:
+        causal = run_pipeline(
+            "John left quickly because Mary cried today",
+            require_coq=True,
+        )
+        self.assertTrue(causal["ok"])
+        self.assertEqual(
+            causal["dependent_type_translation"],
+            "because_T(at_T(today, cry(mary)), leave(1)(quickly, john))",
+        )
+        self.assertEqual(causal["ast"]["effect"]["modifiers"][0]["name"], "quickly")
+        self.assertEqual(
+            causal["ast"]["cause"]["time_modifiers"],
+            [{"operator": "at", "argument": "today"}],
+        )
+        self.assertIn("Parameter quickly : Adv.", causal["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", causal["coq_code"])
+        self.assertIn(
+            "because_T (at_T today (cry mary)) "
+            "(leave 1 (mods_cons 0 quickly mods_nil) john)",
+            causal["coq_code"],
+        )
+        self.assertEqual(causal["coq_check"]["status"], "passed")
+
+        bad_connective = deepcopy(causal["ast"])
+        bad_connective["connective"]["name"] = "cause_event"
+        type_check = check_causal_because_ast(bad_connective)
+        self.assertFalse(type_check["ok"])
+        self.assertIn(
+            "causal_because.connective.name must be because_T",
+            type_check["errors"],
+        )
+
     def test_simple_conditional_implication_preserves_clause_times(self) -> None:
         conditional = run_pipeline(
             "if John left yesterday, Mary cried today",
@@ -2018,6 +2100,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Unsupported clause-level marker", malformed_negation["error"])
         self.assertIn("'if'", malformed_negation["error"])
         self.assertNotIn("coq_check", malformed_negation)
+
+        nested_because = run_pipeline(
+            "John left because Mary cried because Sue left",
+            require_coq=True,
+        )
+        self.assertFalse(nested_because["ok"])
+        self.assertIn("Unsupported clause-level marker", nested_because["error"])
+        self.assertIn("'because'", nested_because["error"])
+        self.assertEqual(
+            nested_because["verification_scope"]["kind"],
+            "rejected_unsupported_fragment",
+        )
+        self.assertNotIn("coq_check", nested_because)
 
         relative_subject = run_pipeline(
             "the tall boy who Mary saw yesterday quickly opened the old door with a key",
@@ -9225,6 +9320,7 @@ class TranslatorTests(unittest.TestCase):
             "lexical_state_change",
             "stative_result_state",
             "timed_after",
+            "causal_because",
             "perception_nominalization",
             "universal_timed_burning",
             "quantifier_scope_ambiguity",
@@ -9248,6 +9344,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter Event : Type.", rules["stative_result_state"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["stative_result_state"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["causal_because"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["causal_because"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["perception_nominalization"].forbidden_coq_fragments)
         self.assertIn("IN", rules["universal_timed_burning"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["quantifier_scope_ambiguity"].forbidden_coq_fragments)
@@ -10642,6 +10740,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
             "simple_conditional": "if John left, Mary cried",
+            "causal_because": "John left because Mary cried",
             "active_argument_omission": "John ate",
             "plain_transitive_predication": "Mary admired the painting",
             "modified_transitive_predication": "Mary admired the painting in the gallery",
@@ -10674,6 +10773,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_rule_success_outputs_expose_semantic_readings_check(self) -> None:
         examples = {
             "simple_conditional": "if John left, Mary cried",
+            "causal_because": "John left because Mary cried",
             "active_argument_omission": "John ate",
             "plain_transitive_predication": "Mary admired the painting",
             "modified_transitive_predication": "Mary admired the painting in the gallery",
@@ -15410,6 +15510,10 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn("`and_T : PropT -> PropT -> PropT`", readme)
+        self.assertIn("`John left because Mary cried`", readme)
+        self.assertIn("`because_T(cry(mary), leave(john))`", readme)
+        self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
+        self.assertIn("`John left because Mary cried because Sue left`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
         self.assertIn("relation-clause subject", readme)
         self.assertIn("certified-fragment guard", manuscript)
@@ -15440,6 +15544,10 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("PropT -> PropT -> PropT", manuscript)
+        self.assertIn("because_T(cry(mary), leave(john))", manuscript)
+        self.assertIn("because_T(at_T(today, cry(mary)), leave(1)(quickly, john))", manuscript)
+        self.assertIn("because_T declared at type Prop -> Prop -> Prop", manuscript)
+        self.assertIn("John left because Mary cried because Sue left", manuscript)
         self.assertIn("john_and_mary", manuscript)
         self.assertIn("leave(if_john, mary_cried)", manuscript)
         self.assertIn("negative capability", manuscript)
@@ -15466,9 +15574,16 @@ class TranslatorTests(unittest.TestCase):
             web_design,
         )
         self.assertIn("`and_T`", web_design)
+        self.assertIn("`because_T(cry(mary), leave(john))`", web_design)
+        self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
+        self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
+        self.assertIn("`John left because Mary cried because Sue left`", web_design)
         self.assertIn("`leave(0)(if_john, mary_cried)`", web_design)
-        self.assertIn("Unsupported clause-level markers", ast_docs)
+        self.assertIn("clause-level markers", ast_docs)
         self.assertIn("`conditional_implication` AST", ast_docs)
+        self.assertIn("`causal_because` AST", ast_docs)
+        self.assertIn("`because_T : Prop -> Prop -> Prop`", ast_docs)
+        self.assertIn("`because_T(cry(mary), leave(john))`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)
         self.assertIn("`not_T : Prop -> Prop`", ast_docs)

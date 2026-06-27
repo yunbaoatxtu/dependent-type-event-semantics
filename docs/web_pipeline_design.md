@@ -854,10 +854,18 @@ same panels without a pseudo-subject: `if John and Mary ate bread quickly in the
 Sue cried today` is displayed as
 `at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
 with `and_T` declared at type `PropT -> PropT -> PropT`.
+The same page should expose the narrow because-clause route as a certified
+proposition-level causal connective: `John left because Mary cried` appears as
+`because_T(cry(mary), leave(john))`, and the timed/modifier case
+`John left quickly because Mary cried today` appears as
+`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
+`because_T` declared at type `Prop -> Prop -> Prop`.
 Clause-level markers outside the current certified fragment, including `who`,
-`which`, `that`, `whether`, and overextended conditional strings such as
-`if John left, Mary cried because Sue left`, stop the analysis at the parsing stage before a
-fallback formula or Coq/Rocq scaffold can be generated. This prevents malformed
+`which`, `that`, `whether`, nested because strings such as
+`John left because Mary cried because Sue left`, and overextended conditional
+strings such as `if John left, Mary cried because Sue left`, stop the analysis
+at the parsing stage before a fallback formula or Coq/Rocq scaffold can be
+generated. This prevents malformed
 conditionals from being certified as `leave(0)(if_john, mary_cried)` and
 prevents relation-clause subjects from being swallowed by the lexical
 state-change rule as one entity constant.

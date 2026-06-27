@@ -124,6 +124,7 @@ class ConstructionRule:
 
 CONSTRUCTION_RULE_EXAMPLES = {
     "simple_conditional": "if John left, Mary cried",
+    "causal_because": "John left because Mary cried",
     "perception_nominalization": "Mary saw John leave",
     "universal_timed_burning": "In every burning, oxygen is consumed",
     "timed_after": "after the singing of the Marseillaise, John saluted the flag",
@@ -799,7 +800,7 @@ def fallback_certification_gap_payload() -> list[dict[str, str]]:
 
 UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES = (
     {
-        "sentence": "John left because Mary cried",
+        "sentence": "John left because Mary cried because Sue left",
         "marker": "because",
         "expected_verification_scope_kind": "rejected_unsupported_fragment",
         "expected_certification_level": "none",
@@ -825,6 +826,17 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_reading_sources": ["simple_conditional"],
         "expected_reading_scopes": ["antecedent_implies_consequent"],
         "expected_coq_definitions": ["simple_conditional_implication"],
+        "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "causal_because",
+        "sentence": "John left because Mary cried",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": ["because_T(cry(mary), leave(john))"],
+        "expected_reading_names": ["causal_because_single_reading"],
+        "expected_reading_sources": ["causal_because"],
+        "expected_reading_scopes": ["cause_explains_effect"],
+        "expected_coq_definitions": ["causal_because"],
         "expected_type_check_type": "Prop",
     },
     {
@@ -1082,6 +1094,21 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
 CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
     "simple_conditional": {
         "kind": "conditional_implication",
+        "predicate_symbols": ["cry", "leave"],
+        "predicate_types": ["Entity -> Prop"],
+        "entity_symbols": ["john", "mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "causal_because": {
+        "kind": "causal_because",
         "predicate_symbols": ["cry", "leave"],
         "predicate_types": ["Entity -> Prop"],
         "entity_symbols": ["john", "mary"],
@@ -6490,6 +6517,228 @@ def simple_conditional_pipeline(sentence: str) -> dict[str, Any] | None:
         coq_definition=coq_definition,
         source="simple_conditional",
         scope="antecedent_implies_consequent",
+    )
+
+
+def causal_because_ast(
+    cause: dict[str, Any],
+    effect: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "kind": "causal_because",
+        "cause": cause,
+        "effect": effect,
+        "connective": {
+            "name": "because_T",
+            "type": "Prop -> Prop -> Prop",
+        },
+    }
+
+
+def check_causal_because_ast(ast: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if ast.get("kind") != "causal_because":
+        errors.append("causal_because.kind must be causal_because")
+
+    connective = ast.get("connective")
+    if not isinstance(connective, dict):
+        errors.append("causal_because.connective must be an object")
+    else:
+        if connective.get("name") != "because_T":
+            errors.append("causal_because.connective.name must be because_T")
+        if connective.get("type") != "Prop -> Prop -> Prop":
+            errors.append(
+                "causal_because.connective.type must be Prop -> Prop -> Prop"
+            )
+
+    conditional_shape = {
+        "kind": "conditional_implication",
+        "antecedent": ast.get("cause"),
+        "consequent": ast.get("effect"),
+        "connective": {
+            "name": "implies",
+            "type": "Prop -> Prop -> Prop",
+        },
+    }
+    clause_check = check_simple_conditional_ast(conditional_shape)
+    for error in clause_check["errors"]:
+        causal_error = (
+            error.replace("conditional.antecedent", "causal_because.cause")
+            .replace("conditional.consequent", "causal_because.effect")
+            .replace("conditional predicate", "causal_because predicate")
+        )
+        errors.append(causal_error)
+
+    return {
+        "ok": not errors,
+        "type": "Prop" if not errors else None,
+        "errors": errors,
+    }
+
+
+def split_causal_because_tokens(tokens: list[str]) -> tuple[list[str], list[str]] | None:
+    if tokens.count("because") != 1:
+        return None
+    because_index = tokens.index("because")
+    if because_index == 0 or because_index == len(tokens) - 1:
+        return None
+    effect_tokens = tokens[:because_index]
+    cause_tokens = tokens[because_index + 1 :]
+    if "if" in effect_tokens or "if" in cause_tokens:
+        return None
+    return effect_tokens, cause_tokens
+
+
+def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
+    tokens = tokenize(sentence)
+    split = split_causal_because_tokens(tokens)
+    if split is None:
+        return None
+    effect_tokens, cause_tokens = split
+    effect_clause = parse_simple_conditional_clause(effect_tokens)
+    cause_clause = parse_simple_conditional_clause(cause_tokens)
+    if effect_clause is None or cause_clause is None:
+        return None
+
+    effect = simple_conditional_clause_ast(**effect_clause)
+    cause = simple_conditional_clause_ast(**cause_clause)
+    normalize_simple_conditional_predicate_signatures(
+        {
+            "antecedent": cause,
+            "consequent": effect,
+        }
+    )
+    ast = causal_because_ast(cause, effect)
+    type_check = check_causal_because_ast(ast)
+    cause_formula = simple_conditional_clause_formula(cause, coq=False)
+    effect_formula = simple_conditional_clause_formula(effect, coq=False)
+    typed_replacement = f"because_T({cause_formula}, {effect_formula})"
+    coq_definition = "causal_because"
+    value_declarations, predicate_declarations = simple_conditional_declarations(
+        cause,
+        effect,
+    )
+    object_type_declarations = list(
+        dict.fromkeys(
+            value_type
+            for value_type in value_declarations.values()
+            if value_type != "Entity"
+        )
+    )
+    time_modifiers = [
+        modifier
+        for clause in (cause, effect)
+        for modifier in clause.get("time_modifiers", [])
+    ]
+    adv_modifiers = [
+        modifier
+        for clause in (cause, effect)
+        for modifier in clause.get("modifiers", [])
+    ]
+    has_modifier_signature = any(
+        simple_conditional_clause_uses_modifier_signature(clause)
+        for clause in (cause, effect)
+    )
+    has_negation = any(clause.get("negated", False) for clause in (cause, effect))
+    subject_connective_types: dict[str, str] = {}
+    for clause in (cause, effect):
+        subject_connective = clause.get("subject_connective")
+        if isinstance(subject_connective, dict):
+            connective_name = subject_connective["name"]
+            connective_type = (
+                "PropT -> PropT -> PropT"
+                if has_modifier_signature
+                else subject_connective["type"]
+            )
+            previous_type = subject_connective_types.get(connective_name)
+            if previous_type is None or previous_type == "Prop -> Prop -> Prop":
+                subject_connective_types[connective_name] = connective_type
+
+    coq_cause = simple_conditional_clause_formula(cause, coq=True)
+    coq_effect = simple_conditional_clause_formula(effect, coq=True)
+    coq_code = "\n".join(
+        [
+            "(* Proposition-level causal because replacement without an event variable. *)",
+            "Parameter Entity : Type.",
+            *[f"Parameter {type_name} : Type." for type_name in object_type_declarations],
+            *(
+                [
+                    "Definition PropT : Type := Prop.",
+                    "Definition Adv : Type := (Entity -> PropT) -> Entity -> PropT.",
+                    "Parameter ModifierSeq : nat -> Type.",
+                    "Parameter mods_nil : ModifierSeq 0.",
+                    "Parameter mods_cons : forall n : nat, Adv -> ModifierSeq n -> ModifierSeq (S n).",
+                ]
+                if has_modifier_signature
+                else []
+            ),
+            *[
+                f"Parameter {name} : Adv."
+                for name in unique_names([modifier["name"] for modifier in adv_modifiers])
+            ],
+            "",
+            *[
+                f"Parameter {name} : {value_type}."
+                for name, value_type in value_declarations.items()
+            ],
+            "",
+            *[
+                f"Parameter {name} : {predicate_type}."
+                for name, predicate_type in predicate_declarations.items()
+            ],
+            *(
+                [
+                    "Parameter at_T : Entity -> Prop -> Prop.",
+                    "Parameter during_T : Entity -> Prop -> Prop.",
+                ]
+                if time_modifiers
+                else []
+            ),
+            *[
+                f"Parameter {connective} : {connective_type}."
+                for connective, connective_type in subject_connective_types.items()
+            ],
+            *(["Parameter not_T : Prop -> Prop."] if has_negation else []),
+            "Parameter because_T : Prop -> Prop -> Prop.",
+            "",
+            f"Definition {coq_definition} : Prop :=",
+            f"  because_T ({coq_cause}) ({coq_effect}).",
+            "",
+            f"Check {coq_definition}.",
+            "",
+        ]
+    )
+    event_semantics = {
+        "analysis": "causal-because",
+        "source": sentence,
+        "event_style_reference": (
+            f"({simple_conditional_event_quantified_reference(effect, 'e_effect')}) "
+            "because "
+            f"({simple_conditional_event_quantified_reference(cause, 'e_cause')})"
+        ),
+        "typed_replacement": typed_replacement,
+    }
+    return attach_single_semantic_reading(
+        {
+            "kind": "causal_because",
+            "input_sentence": sentence,
+            "event_semantics": event_semantics,
+            "dependent_type_translation": typed_replacement,
+            "ast": ast,
+            "type_check": {
+                **type_check,
+                "note": (
+                    "The because-clause is represented as a proposition-level "
+                    "causal connective from cause to effect; no Event, Agent, "
+                    "or Theme declaration is exported."
+                ),
+            },
+            "coq_code": coq_code,
+        },
+        name="causal_because_single_reading",
+        coq_definition=coq_definition,
+        source="causal_because",
+        scope="cause_explains_effect",
     )
 
 
@@ -12161,6 +12410,18 @@ def construction_rules() -> list[ConstructionRule]:
             ),
         ),
         ConstructionRule(
+            rule_id="causal_because",
+            label="Causal because",
+            phenomenon="Because-clause causal relation between typed propositions",
+            analyzer=causal_because_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
             rule_id="perception_nominalization",
             label="Perception complement nominalization",
             phenomenon="Parsons/Luo-Shi perception complement",
@@ -13139,6 +13400,7 @@ def run_pipeline(sentence: str, require_coq: bool = False) -> dict[str, Any]:
     try:
         rules = construction_rules()
         certified_clause_marker_rules = {
+            "causal_because",
             "simple_conditional",
             "quantifier_scope_ambiguity",
         }

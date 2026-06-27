@@ -118,9 +118,16 @@ share a clause predicate: `if John and Mary ate bread quickly in the park yester
 becomes
 `at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
 with `and_T : PropT -> PropT -> PropT`. These exports use no event, Agent, or Theme
-declarations. Clause-level markers outside certified paths, such as `which`,
-`whether`, or overextended conditional strings such as
-`if John left, Mary cried because Sue left`, produce a parsing-stage diagnostic instead of being
+declarations. A separate narrow because-clause route now treats simple causal
+subordination as a proposition-level connective: `John left because Mary cried`
+becomes `because_T(cry(mary), leave(john))`, and
+`John left quickly because Mary cried today` becomes
+`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
+`because_T : Prop -> Prop -> Prop`. Clause-level markers outside certified
+paths, such as `which`, `whether`, nested because strings such as
+`John left because Mary cried because Sue left`, or overextended conditional
+strings such as `if John left, Mary cried because Sue left`, produce a
+parsing-stage diagnostic instead of being
 collapsed into entity names and sent to Coq/Rocq. The controlled exception is a
 simple quantifier-NP relative restrictor of the form `who/that` plus either one
 intransitive verb or one transitive verb with either one entity object or a
@@ -1404,6 +1411,9 @@ The current prototype has small, testable rules for:
   `if John left quickly, Mary left`, where the unmodified branch is rendered
   as `leave(0)(mary)` and checked with `mods_nil` rather than a conflicting
   plain `Entity -> Prop` declaration;
+- simple because-clauses represented as proposition-level causal connection,
+  for example `John left because Mary cried` as
+  `because_T(cry(mary), leave(john))`, with `because_T : Prop -> Prop -> Prop`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as

@@ -1520,10 +1520,17 @@ share the same predicate and optional object. Thus
 `if John and Mary ate bread quickly in the park yesterday, Sue cried today` becomes
 `at_T(yesterday, and_T(eat(2)(quickly, in(park), john, bread), eat(2)(quickly, in(park), mary, bread))) -> at_T(today, cry(sue))`,
 with `subject_connective.name` equal to `and_T` and
-`subject_connective.type` equal to `PropT -> PropT -> PropT`. Unsupported clause-level markers
-such as `which`, `whether`, or an overextended conditional
+`subject_connective.type` equal to `PropT -> PropT -> PropT`. The narrow
+because-clause construction uses a separate `causal_because` AST with `cause`
+and `effect` clause objects plus a `because_T : Prop -> Prop -> Prop`
+connective: `John left because Mary cried` becomes
+`because_T(cry(mary), leave(john))`, while
+`John left quickly because Mary cried today` preserves both the `time_modifiers`
+list on the cause and the `modifiers` list on the effect. Unsupported
+clause-level markers such as `which`, `whether`, nested because strings such as
+`John left because Mary cried because Sue left`, or an overextended conditional
 like `if John left, Mary cried because Sue left` produce a parsing failure
-instead of a shallow AST. The exception is the controlled quantifier-NP
+instead of a shallow AST. Another exception is the controlled quantifier-NP
 relative restrictor described above, where `who/that` plus one intransitive verb
 or a one-object transitive predicate, optionally with a controlled determiner
 phrase object, certified temporal modifiers, and ordinary Adv modifiers, is
