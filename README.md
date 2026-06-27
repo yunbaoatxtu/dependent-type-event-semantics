@@ -124,7 +124,12 @@ becomes `because_T(cry(mary), leave(john))`, and
 `John ate bread because Mary drank water yesterday` becomes
 `because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`, preserving
 the typed transitive objects `water : Drinkable` and `bread : Food` instead of
-collapsing them to generic event roles. The modifier/time case
+collapsing them to generic event roles. The same route now composes with the
+registered lexical state-change layer: `John opened the door because Mary cleaned the room`
+becomes
+`because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
+where `clean` and `open` remain `State` targets inside typed transitions rather
+than ordinary binary predicates. The modifier/time case
 `John left quickly because Mary cried today` becomes
 `because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`, with
 `because_T : Prop -> Prop -> Prop`. Clause-level markers outside certified
@@ -1420,7 +1425,9 @@ The current prototype has small, testable rules for:
   `because_T(cry(mary), leave(john))`, and the typed transitive variant
   `John ate bread because Mary drank water yesterday` as
   `because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`, with
-  `because_T : Prop -> Prop -> Prop`;
+  `because_T : Prop -> Prop -> Prop`; the same rule composes with lexical
+  state changes, for example `John opened the door because Mary cleaned the room`
+  as `because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`;
 - a certified-fragment guard that rejects unsupported subordinate,
   complement, interrogative, and relative-clause markers before fallback or
   Coq/Rocq validation, except for controlled quantifier-NP relatives such as

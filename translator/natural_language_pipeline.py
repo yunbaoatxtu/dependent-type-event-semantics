@@ -171,6 +171,23 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "boundary_status": "registered_variant_example",
     },
     {
+        "rule_id": "causal_because",
+        "variant_id": "state_change_causal_because",
+        "sentence": "John opened the door because Mary cleaned the room",
+        "expected_event_analysis": "causal-because",
+        "expected_dependent_type_fragments": [
+            (
+                "because_T(Cause(mary, Transition(room, cleanliness_scale, "
+                "dirty, clean)), Cause(john, Transition(door, access_scale, "
+                "closed, open)))"
+            ),
+        ],
+        "expected_ast_kind": "causal_because",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
         "rule_id": "event_counting",
         "variant_id": "temporal_event_counting",
         "sentence": "John knocked twice yesterday",
@@ -6564,23 +6581,55 @@ def check_causal_because_ast(ast: dict[str, Any]) -> dict[str, Any]:
                 "causal_because.connective.type must be Prop -> Prop -> Prop"
             )
 
-    conditional_shape = {
-        "kind": "conditional_implication",
-        "antecedent": ast.get("cause"),
-        "consequent": ast.get("effect"),
-        "connective": {
-            "name": "implies",
-            "type": "Prop -> Prop -> Prop",
-        },
-    }
-    clause_check = check_simple_conditional_ast(conditional_shape)
-    for error in clause_check["errors"]:
-        causal_error = (
-            error.replace("conditional.antecedent", "causal_because.cause")
-            .replace("conditional.consequent", "causal_because.effect")
-            .replace("conditional predicate", "causal_because predicate")
-        )
-        errors.append(causal_error)
+    cause = ast.get("cause")
+    effect = ast.get("effect")
+    if causal_because_clause_is_state_change(cause) or causal_because_clause_is_state_change(effect):
+        for field, clause in (("cause", cause), ("effect", effect)):
+            if causal_because_clause_is_state_change(clause):
+                state_check = check_lexical_state_change_ast(clause)
+                errors.extend(
+                    f"causal_because.{field}: {error}"
+                    for error in state_check["errors"]
+                )
+            elif isinstance(clause, dict):
+                simple_check = check_simple_conditional_ast(
+                    {
+                        "kind": "conditional_implication",
+                        "antecedent": clause,
+                        "consequent": copy.deepcopy(clause),
+                        "connective": {
+                            "name": "implies",
+                            "type": "Prop -> Prop -> Prop",
+                        },
+                    }
+                )
+                errors.extend(
+                    error.replace("conditional.antecedent", f"causal_because.{field}")
+                    .replace("conditional.consequent", f"causal_because.{field}")
+                    .replace("conditional predicate", "causal_because predicate")
+                    for error in simple_check["errors"]
+                )
+            else:
+                errors.append(f"causal_because.{field} must be a clause object")
+        errors.extend(causal_because_declaration_conflicts(cause, effect))
+    else:
+        conditional_shape = {
+            "kind": "conditional_implication",
+            "antecedent": cause,
+            "consequent": effect,
+            "connective": {
+                "name": "implies",
+                "type": "Prop -> Prop -> Prop",
+            },
+        }
+        clause_check = check_simple_conditional_ast(conditional_shape)
+        for error in clause_check["errors"]:
+            causal_error = (
+                error.replace("conditional.antecedent", "causal_because.cause")
+                .replace("conditional.consequent", "causal_because.effect")
+                .replace("conditional predicate", "causal_because predicate")
+            )
+            errors.append(causal_error)
 
     return {
         "ok": not errors,
@@ -6602,35 +6651,288 @@ def split_causal_because_tokens(tokens: list[str]) -> tuple[list[str], list[str]
     return effect_tokens, cause_tokens
 
 
+def causal_because_clause_is_state_change(clause: Any) -> bool:
+    return isinstance(clause, dict) and clause.get("kind") == "lexical_state_change"
+
+
+def parse_causal_because_clause(tokens: list[str]) -> dict[str, Any] | None:
+    sentence = " ".join(tokens)
+    state_change = lexical_state_change_pipeline(sentence)
+    if (
+        state_change is not None
+        and state_change.get("type_check", {}).get("ok") is True
+    ):
+        return copy.deepcopy(state_change["ast"])
+
+    simple_clause = parse_simple_conditional_clause(tokens)
+    if simple_clause is None:
+        return None
+    return simple_conditional_clause_ast(**simple_clause)
+
+
+def state_change_coq_expression(ast: dict[str, Any]) -> str:
+    transition = ast["transition"]
+    theme = transition["theme"]["name"]
+    state_scale = transition["state_scale"]
+    source_state = transition["source_state"]
+    target_state = transition["target_state"]["name"]
+    transition_coq = f"Transition {theme} {state_scale} {source_state} {target_state}"
+    causer = ast.get("causer")
+    instrument = ast.get("instrument")
+    if instrument is not None and causer is not None:
+        return (
+            f"CauseWithInstrument {causer['name']} {instrument['name']} "
+            f"({transition_coq})"
+        )
+    if causer is not None:
+        return f"Cause {causer['name']} ({transition_coq})"
+    return f"Change ({transition_coq})"
+
+
+def causal_because_clause_formula(clause: dict[str, Any], *, coq: bool) -> str:
+    if causal_because_clause_is_state_change(clause):
+        return state_change_coq_expression(clause) if coq else render_state_change_translation(clause)
+    return simple_conditional_clause_formula(clause, coq=coq)
+
+
+def causal_because_clause_event_reference(
+    clause: dict[str, Any],
+    event_name: str,
+) -> str:
+    if not causal_because_clause_is_state_change(clause):
+        return simple_conditional_event_quantified_reference(clause, event_name)
+    transition = clause["transition"]
+    parts = [
+        f"{clause['verb']}({event_name})",
+        f"Theme({event_name}, {transition['theme']['name']})",
+        f"SourceState({event_name}, {transition['source_state']})",
+        f"ResultState({event_name}, {transition['target_state']['name']})",
+    ]
+    causer = clause.get("causer")
+    if isinstance(causer, dict):
+        parts.append(f"Causer({event_name}, {causer['name']})")
+    instrument = clause.get("instrument")
+    if isinstance(instrument, dict):
+        parts.append(f"Instrument({event_name}, {instrument['name']})")
+    return f"exists {event_name}. " + " and ".join(parts)
+
+
+def add_typed_declaration(
+    declarations: dict[str, str],
+    errors: list[str],
+    name: str,
+    type_name: str,
+    *,
+    label: str,
+) -> None:
+    previous = declarations.setdefault(name, type_name)
+    if previous != type_name:
+        errors.append(
+            f"causal_because declaration {name} has conflicting types in {label}: "
+            f"{previous} vs {type_name}"
+        )
+
+
+def causal_because_collect_clause_declarations(
+    clause: Any,
+    declarations: dict[str, str],
+    errors: list[str],
+    *,
+    label: str,
+) -> None:
+    if not isinstance(clause, dict):
+        return
+    if causal_because_clause_is_state_change(clause):
+        transition = clause.get("transition", {})
+        if isinstance(transition, dict):
+            theme = transition.get("theme", {})
+            target_state = transition.get("target_state", {})
+            if isinstance(theme, dict) and isinstance(theme.get("name"), str):
+                add_typed_declaration(
+                    declarations,
+                    errors,
+                    theme["name"],
+                    "Entity",
+                    label=label,
+                )
+            source_state = transition.get("source_state")
+            if isinstance(source_state, str):
+                add_typed_declaration(
+                    declarations,
+                    errors,
+                    source_state,
+                    "State",
+                    label=label,
+                )
+            if isinstance(target_state, dict) and isinstance(target_state.get("name"), str):
+                add_typed_declaration(
+                    declarations,
+                    errors,
+                    target_state["name"],
+                    "State",
+                    label=label,
+                )
+            state_scale = transition.get("state_scale")
+            if isinstance(state_scale, str):
+                add_typed_declaration(
+                    declarations,
+                    errors,
+                    state_scale,
+                    "StateScale",
+                    label=label,
+                )
+        causer = clause.get("causer")
+        if isinstance(causer, dict) and isinstance(causer.get("name"), str):
+            add_typed_declaration(
+                declarations,
+                errors,
+                causer["name"],
+                "Entity",
+                label=label,
+            )
+        instrument = clause.get("instrument")
+        if isinstance(instrument, dict) and isinstance(instrument.get("name"), str):
+            add_typed_declaration(
+                declarations,
+                errors,
+                instrument["name"],
+                "Entity",
+                label=label,
+            )
+        return
+
+    if "subjects" in clause:
+        for subject in clause["subjects"]:
+            if isinstance(subject, dict) and isinstance(subject.get("name"), str):
+                add_typed_declaration(
+                    declarations,
+                    errors,
+                    subject["name"],
+                    "Entity",
+                    label=label,
+                )
+    else:
+        subject = clause.get("subject")
+        if isinstance(subject, dict) and isinstance(subject.get("name"), str):
+            add_typed_declaration(
+                declarations,
+                errors,
+                subject["name"],
+                "Entity",
+                label=label,
+            )
+    obj = clause.get("object")
+    if isinstance(obj, dict) and isinstance(obj.get("name"), str) and isinstance(obj.get("type"), str):
+        add_typed_declaration(
+            declarations,
+            errors,
+            obj["name"],
+            obj["type"],
+            label=label,
+        )
+    for modifier in clause.get("time_modifiers", []):
+        if isinstance(modifier, dict) and isinstance(modifier.get("argument"), str):
+            add_typed_declaration(
+                declarations,
+                errors,
+                modifier["argument"],
+                "Entity",
+                label=label,
+            )
+
+
+def causal_because_declaration_conflicts(
+    cause: Any,
+    effect: Any,
+) -> list[str]:
+    errors: list[str] = []
+    declarations: dict[str, str] = {}
+    causal_because_collect_clause_declarations(
+        cause,
+        declarations,
+        errors,
+        label="cause",
+    )
+    causal_because_collect_clause_declarations(
+        effect,
+        declarations,
+        errors,
+        label="effect",
+    )
+    return errors
+
+
+def causal_because_state_value_declarations(
+    clauses: tuple[dict[str, Any], dict[str, Any]],
+) -> tuple[dict[str, str], list[str]]:
+    declarations: dict[str, str] = {}
+    errors: list[str] = []
+    for label, clause in zip(("cause", "effect"), clauses):
+        causal_because_collect_clause_declarations(
+            clause,
+            declarations,
+            errors,
+            label=label,
+        )
+    return declarations, errors
+
+
 def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     tokens = tokenize(sentence)
     split = split_causal_because_tokens(tokens)
     if split is None:
         return None
     effect_tokens, cause_tokens = split
-    effect_clause = parse_simple_conditional_clause(effect_tokens)
-    cause_clause = parse_simple_conditional_clause(cause_tokens)
-    if effect_clause is None or cause_clause is None:
+    effect = parse_causal_because_clause(effect_tokens)
+    cause = parse_causal_because_clause(cause_tokens)
+    if effect is None or cause is None:
         return None
 
-    effect = simple_conditional_clause_ast(**effect_clause)
-    cause = simple_conditional_clause_ast(**cause_clause)
     normalize_simple_conditional_predicate_signatures(
         {
-            "antecedent": cause,
-            "consequent": effect,
+            "antecedent": cause if not causal_because_clause_is_state_change(cause) else None,
+            "consequent": effect if not causal_because_clause_is_state_change(effect) else None,
         }
     )
     ast = causal_because_ast(cause, effect)
     type_check = check_causal_because_ast(ast)
-    cause_formula = simple_conditional_clause_formula(cause, coq=False)
-    effect_formula = simple_conditional_clause_formula(effect, coq=False)
+    cause_formula = causal_because_clause_formula(cause, coq=False)
+    effect_formula = causal_because_clause_formula(effect, coq=False)
     typed_replacement = f"because_T({cause_formula}, {effect_formula})"
     coq_definition = "causal_because"
-    value_declarations, predicate_declarations = simple_conditional_declarations(
-        cause,
-        effect,
+    simple_clauses = [
+        clause
+        for clause in (cause, effect)
+        if not causal_because_clause_is_state_change(clause)
+    ]
+    if len(simple_clauses) == 2:
+        value_declarations, predicate_declarations = simple_conditional_declarations(
+            simple_clauses[0],
+            simple_clauses[1],
+        )
+    elif len(simple_clauses) == 1:
+        value_declarations, predicate_declarations = simple_conditional_declarations(
+            simple_clauses[0],
+            copy.deepcopy(simple_clauses[0]),
+        )
+    else:
+        value_declarations, predicate_declarations = {}, {}
+    state_declarations, declaration_errors = causal_because_state_value_declarations(
+        (cause, effect),
     )
+    for name, value_type in state_declarations.items():
+        previous = value_declarations.setdefault(name, value_type)
+        if previous != value_type:
+            declaration_errors.append(
+                f"causal_because declaration {name} has conflicting types: "
+                f"{previous} vs {value_type}"
+            )
+    if declaration_errors and type_check["ok"]:
+        type_check = {
+            "ok": False,
+            "type": None,
+            "errors": declaration_errors,
+        }
     object_type_declarations = list(
         dict.fromkeys(
             value_type
@@ -6641,20 +6943,29 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
     time_modifiers = [
         modifier
         for clause in (cause, effect)
+        if not causal_because_clause_is_state_change(clause)
         for modifier in clause.get("time_modifiers", [])
     ]
     adv_modifiers = [
         modifier
         for clause in (cause, effect)
+        if not causal_because_clause_is_state_change(clause)
         for modifier in clause.get("modifiers", [])
     ]
     has_modifier_signature = any(
         simple_conditional_clause_uses_modifier_signature(clause)
         for clause in (cause, effect)
+        if not causal_because_clause_is_state_change(clause)
     )
-    has_negation = any(clause.get("negated", False) for clause in (cause, effect))
+    has_negation = any(
+        clause.get("negated", False)
+        for clause in (cause, effect)
+        if not causal_because_clause_is_state_change(clause)
+    )
     subject_connective_types: dict[str, str] = {}
     for clause in (cause, effect):
+        if causal_because_clause_is_state_change(clause):
+            continue
         subject_connective = clause.get("subject_connective")
         if isinstance(subject_connective, dict):
             connective_name = subject_connective["name"]
@@ -6667,8 +6978,16 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
             if previous_type is None or previous_type == "Prop -> Prop -> Prop":
                 subject_connective_types[connective_name] = connective_type
 
-    coq_cause = simple_conditional_clause_formula(cause, coq=True)
-    coq_effect = simple_conditional_clause_formula(effect, coq=True)
+    requires_state_change = any(
+        causal_because_clause_is_state_change(clause)
+        for clause in (cause, effect)
+    )
+    if requires_state_change:
+        object_type_declarations.extend(["State", "StateScale", "TransitionT"])
+        object_type_declarations = list(dict.fromkeys(object_type_declarations))
+
+    coq_cause = causal_because_clause_formula(cause, coq=True)
+    coq_effect = causal_because_clause_formula(effect, coq=True)
     coq_code = "\n".join(
         [
             "(* Proposition-level causal because replacement without an event variable. *)",
@@ -6707,6 +7026,16 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
                 if time_modifiers
                 else []
             ),
+            *(
+                [
+                    "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
+                    "Parameter Change : TransitionT -> Prop.",
+                    "Parameter Cause : Entity -> TransitionT -> Prop.",
+                    "Parameter CauseWithInstrument : Entity -> Entity -> TransitionT -> Prop.",
+                ]
+                if requires_state_change
+                else []
+            ),
             *[
                 f"Parameter {connective} : {connective_type}."
                 for connective, connective_type in subject_connective_types.items()
@@ -6725,29 +7054,51 @@ def causal_because_pipeline(sentence: str) -> dict[str, Any] | None:
         "analysis": "causal-because",
         "source": sentence,
         "event_style_reference": (
-            f"({simple_conditional_event_quantified_reference(effect, 'e_effect')}) "
+            f"({causal_because_clause_event_reference(effect, 'e_effect')}) "
             "because "
-            f"({simple_conditional_event_quantified_reference(cause, 'e_cause')})"
+            f"({causal_because_clause_event_reference(cause, 'e_cause')})"
         ),
         "typed_replacement": typed_replacement,
     }
-    return attach_single_semantic_reading(
-        {
-            "kind": "causal_because",
-            "input_sentence": sentence,
-            "event_semantics": event_semantics,
-            "dependent_type_translation": typed_replacement,
-            "ast": ast,
-            "type_check": {
-                **type_check,
-                "note": (
-                    "The because-clause is represented as a proposition-level "
-                    "causal connective from cause to effect; no Event, Agent, "
-                    "or Theme declaration is exported."
-                ),
-            },
-            "coq_code": coq_code,
+    state_change_clauses = [
+        clause
+        for clause in (cause, effect)
+        if causal_because_clause_is_state_change(clause)
+    ]
+    result_state_lexicon = []
+    state_change_verb_entries = []
+    seen_states: set[str] = set()
+    seen_verbs: set[str] = set()
+    for clause in state_change_clauses:
+        target_state = clause["transition"]["target_state"]["name"]
+        if target_state not in seen_states:
+            result_state_lexicon.append(state_lexicon_metadata(target_state))
+            seen_states.add(target_state)
+        verb = clause["verb"]
+        if verb not in seen_verbs:
+            state_change_verb_entries.append(state_change_verb_metadata(verb))
+            seen_verbs.add(verb)
+    result = {
+        "kind": "causal_because",
+        "input_sentence": sentence,
+        "event_semantics": event_semantics,
+        "dependent_type_translation": typed_replacement,
+        "ast": ast,
+        "type_check": {
+            **type_check,
+            "note": (
+                "The because-clause is represented as a proposition-level "
+                "causal connective from cause to effect; no Event, Agent, "
+                "or Theme declaration is exported."
+            ),
         },
+        "coq_code": coq_code,
+    }
+    if result_state_lexicon:
+        result["result_state_lexicon"] = result_state_lexicon
+        result["state_change_verb_entries"] = state_change_verb_entries
+    return attach_single_semantic_reading(
+        result,
         name="causal_because_single_reading",
         coq_definition=coq_definition,
         source="causal_because",

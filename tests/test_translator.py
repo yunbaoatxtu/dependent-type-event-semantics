@@ -1648,6 +1648,75 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter Theme :", causal["coq_code"])
         self.assertEqual(causal["coq_check"]["status"], "passed")
 
+    def test_causal_because_composes_lexical_state_changes(self) -> None:
+        causal = run_pipeline(
+            "John opened the door because Mary cleaned the room",
+            require_coq=True,
+        )
+        self.assertTrue(causal["ok"])
+        self.assertEqual(causal["kind"], "causal_because")
+        self.assertEqual(causal["construction_rule"]["id"], "causal_because")
+        self.assertEqual(
+            causal["dependent_type_translation"],
+            "because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), "
+            "Cause(john, Transition(door, access_scale, closed, open)))",
+        )
+        self.assertEqual(causal["ast"]["cause"]["kind"], "lexical_state_change")
+        self.assertEqual(causal["ast"]["cause"]["verb"], "clean")
+        self.assertEqual(causal["ast"]["cause"]["frame"], "causative")
+        self.assertEqual(
+            causal["ast"]["cause"]["transition"]["target_state"],
+            {"name": "clean", "type": "State"},
+        )
+        self.assertEqual(causal["ast"]["effect"]["kind"], "lexical_state_change")
+        self.assertEqual(causal["ast"]["effect"]["verb"], "open")
+        self.assertEqual(causal["ast"]["effect"]["frame"], "causative")
+        self.assertEqual(
+            causal["ast"]["effect"]["transition"]["target_state"],
+            {"name": "open", "type": "State"},
+        )
+        self.assertEqual(
+            causal["result_state_lexicon"],
+            [
+                {
+                    "state": "clean",
+                    "scale": "cleanliness_scale",
+                    "default_source_state": "dirty",
+                    "source_policy": "lexical_prestate",
+                },
+                {
+                    "state": "open",
+                    "scale": "access_scale",
+                    "default_source_state": "closed",
+                    "source_policy": "lexical_prestate",
+                },
+            ],
+        )
+        self.assertEqual(
+            [entry["verb"] for entry in causal["state_change_verb_entries"]],
+            ["clean", "open"],
+        )
+        self.assertIn("Parameter State : Type.", causal["coq_code"])
+        self.assertIn("Parameter StateScale : Type.", causal["coq_code"])
+        self.assertIn("Parameter TransitionT : Type.", causal["coq_code"])
+        self.assertIn("Parameter room : Entity.", causal["coq_code"])
+        self.assertIn("Parameter door : Entity.", causal["coq_code"])
+        self.assertIn("Parameter dirty : State.", causal["coq_code"])
+        self.assertIn("Parameter clean : State.", causal["coq_code"])
+        self.assertIn("Parameter closed : State.", causal["coq_code"])
+        self.assertIn("Parameter open : State.", causal["coq_code"])
+        self.assertIn(
+            "because_T (Cause mary (Transition room cleanliness_scale dirty clean)) "
+            "(Cause john (Transition door access_scale closed open))",
+            causal["coq_code"],
+        )
+        self.assertNotIn("Parameter open : Entity -> Entity -> Prop.", causal["coq_code"])
+        self.assertNotIn("open john door", causal["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", causal["coq_code"])
+        self.assertNotIn("Parameter Agent :", causal["coq_code"])
+        self.assertNotIn("Parameter Theme :", causal["coq_code"])
+        self.assertEqual(causal["coq_check"]["status"], "passed")
+
     def test_simple_conditional_implication_preserves_clause_times(self) -> None:
         conditional = run_pipeline(
             "if John left yesterday, Mary cried today",
@@ -9472,7 +9541,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 12)
+        self.assertEqual(counts["registered_variant_success_cases"], 13)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -9974,6 +10043,10 @@ class TranslatorTests(unittest.TestCase):
                 registered["causal_because"]["accepted_examples"],
             )
             self.assertIn(
+                "John opened the door because Mary cleaned the room",
+                registered["causal_because"]["accepted_examples"],
+            )
+            self.assertIn(
                 "Mary admired the painting in the gallery yesterday",
                 registered["modified_transitive_predication"]["accepted_examples"],
             )
@@ -10449,7 +10522,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            12,
+            13,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -10524,7 +10597,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="12"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="13"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -15568,6 +15641,11 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`",
             readme,
         )
+        self.assertIn("`John opened the door because Mary cleaned the room`", readme)
+        self.assertIn(
+            "`because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`",
+            readme,
+        )
         self.assertIn("`because_T : Prop -> Prop -> Prop`", readme)
         self.assertIn("`John left because Mary cried because Sue left`", readme)
         self.assertIn("`leave(0)(if_john, mary_cried)`", readme)
@@ -15606,6 +15684,11 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("water : Drinkable and bread : Food", manuscript)
+        self.assertIn(
+            "because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))",
+            manuscript,
+        )
+        self.assertIn("clean and open remain State targets", manuscript)
         self.assertIn("because_T(at_T(today, cry(mary)), leave(1)(quickly, john))", manuscript)
         self.assertIn("because_T declared at type Prop -> Prop -> Prop", manuscript)
         self.assertIn("John left because Mary cried because Sue left", manuscript)
@@ -15640,6 +15723,10 @@ class TranslatorTests(unittest.TestCase):
             "`because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))`",
             web_design,
         )
+        self.assertIn(
+            "`because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`",
+            web_design,
+        )
         self.assertIn("`because_T(at_T(today, cry(mary)), leave(1)(quickly, john))`", web_design)
         self.assertIn("`because_T` declared at type `Prop -> Prop -> Prop`", web_design)
         self.assertIn("`John left because Mary cried because Sue left`", web_design)
@@ -15651,6 +15738,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`because_T(cry(mary), leave(john))`", ast_docs)
         self.assertIn("`water : Drinkable`", ast_docs)
         self.assertIn("`bread : Food`", ast_docs)
+        self.assertIn("`clean : State`", ast_docs)
+        self.assertIn("`open : State`", ast_docs)
         self.assertIn("`Entity -> Food -> Prop`", ast_docs)
         self.assertIn("`negated: true`", ast_docs)
         self.assertIn("`not_T : Prop -> Prop`", ast_docs)

@@ -1528,6 +1528,11 @@ connective: `John left because Mary cried` becomes
 `John ate bread because Mary drank water yesterday` becomes
 `because_T(at_T(yesterday, drink(mary, water)), eat(john, bread))` and keeps
 the transitive objects typed as `water : Drinkable` and `bread : Food`. The
+same `cause` and `effect` slots can now contain checked `lexical_state_change`
+ASTs: `John opened the door because Mary cleaned the room` becomes
+`because_T(Cause(mary, Transition(room, cleanliness_scale, dirty, clean)), Cause(john, Transition(door, access_scale, closed, open)))`,
+where `clean : State` and `open : State` remain typed transition targets rather
+than binary predicate names. The
 modifier/time variant
 `John left quickly because Mary cried today` preserves both the `time_modifiers`
 list on the cause and the `modifiers` list on the effect. Unsupported
