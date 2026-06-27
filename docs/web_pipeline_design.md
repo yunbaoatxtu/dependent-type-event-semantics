@@ -163,6 +163,15 @@ and the verified timed and untimed modifier counts `1,2,3,4,5`. The
 `Certified Fragment` panel mirrors these values through `data-surface-*`
 attributes, so the page can advertise the current parser boundary without
 confusing it with the stronger type-level Luo-Shi principle.
+It also carries `verified_examples`, a concrete witness list containing the
+registered primary one-Adv sentence plus every timed and untimed registered
+variant up through five Adv modifiers. The HTML panel renders each witness with
+`data-surface-example-variant-id`, `data-surface-example-sentence`,
+`data-surface-example-modifier-count`, `data-surface-example-time-wrapped`, and
+`data-surface-example-source`, and exposes the total through
+`data-surface-verified-example-count`. The verifier checks those hooks against
+the manifest so the advertised parser boundary remains tied to actual smoke
+inputs.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.
 Each snapshot is keyed by registered rule id and stores the expected analysis
 label, dependent-type translation fragments, semantic-reading names/sources,

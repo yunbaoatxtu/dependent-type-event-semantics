@@ -2459,6 +2459,28 @@ def certified_fragment_panel() -> str:
     surface_untimed_counts = count_list_attribute(
         modified_surface.get("verified_untimed_modifier_counts"),
     )
+    surface_verified_example_count = str(
+        modified_surface.get("verified_example_count", ""),
+    )
+
+    def surface_parser_example_items(item: dict[str, object]) -> str:
+        examples = item.get("verified_examples")
+        if not isinstance(examples, list):
+            return ""
+        return "".join(
+            (
+                '<li '
+                f'data-surface-example-variant-id="{html.escape(str(example.get("variant_id", "")), quote=True)}" '
+                f'data-surface-example-sentence="{html.escape(str(example.get("sentence", "")), quote=True)}" '
+                f'data-surface-example-modifier-count="{html.escape(str(example.get("modifier_count", "")), quote=True)}" '
+                f'data-surface-example-time-wrapped="{str(example.get("time_wrapped") is True).lower()}" '
+                f'data-surface-example-source="{html.escape(str(example.get("source", "")), quote=True)}">'
+                f"{html.escape(str(example.get('sentence', '')))}"
+                "</li>"
+            )
+            for example in examples
+            if isinstance(example, dict)
+        )
     rule_items = "".join(
         '<li '
         f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}" '
@@ -2549,9 +2571,11 @@ def certified_fragment_panel() -> str:
             f'data-surface-verified-counts="{html.escape(count_list_attribute(item.get("verified_modifier_counts")), quote=True)}" '
             f'data-surface-timed-counts="{html.escape(count_list_attribute(item.get("verified_timed_modifier_counts")), quote=True)}" '
             f'data-surface-untimed-counts="{html.escape(count_list_attribute(item.get("verified_untimed_modifier_counts")), quote=True)}" '
-            f'data-surface-max-verified-count="{html.escape(str(item.get("max_verified_modifier_count", "")), quote=True)}">'
+            f'data-surface-max-verified-count="{html.escape(str(item.get("max_verified_modifier_count", "")), quote=True)}" '
+            f'data-surface-verified-example-count="{html.escape(str(item.get("verified_example_count", "")), quote=True)}">'
             f'<code>{html.escape(str(family))}</code>'
             f'<span>{html.escape(str(item.get("boundary_note", "")))}</span>'
+            f"<ul>{surface_parser_example_items(item)}</ul>"
             "</li>"
         )
         for family, item in (
@@ -2579,6 +2603,7 @@ def certified_fragment_panel() -> str:
         f'data-surface-timed-counts="{html.escape(surface_timed_counts, quote=True)}" '
         f'data-surface-untimed-counts="{html.escape(surface_untimed_counts, quote=True)}" '
         f'data-surface-max-verified-count="{html.escape(str(modified_surface.get("max_verified_modifier_count", "")), quote=True)}" '
+        f'data-surface-verified-example-count="{html.escape(surface_verified_example_count, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"

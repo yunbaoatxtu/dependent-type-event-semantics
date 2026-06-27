@@ -2940,6 +2940,18 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     if not isinstance(modified_surface, dict):
         raise SystemExit("web route smoke check failed: certified modified-transitive surface coverage missing")
     expected_surface_counts = [1, 2, 3, 4, 5]
+    expected_surface_example_ids = [
+        "primary_modified_transitive_predication",
+        "temporal_modified_transitive_predication",
+        "multi_adv_modified_transitive_predication",
+        "temporal_multi_adv_modified_transitive_predication",
+        "triple_adv_modified_transitive_predication",
+        "temporal_triple_adv_modified_transitive_predication",
+        "quad_adv_modified_transitive_predication",
+        "temporal_quad_adv_modified_transitive_predication",
+        "quint_adv_modified_transitive_predication",
+        "temporal_quint_adv_modified_transitive_predication",
+    ]
     if (
         modified_surface.get("rule_id") != "modified_transitive_predication"
         or modified_surface.get("type_principle") != "non_empty_modifier_sequence"
@@ -2953,9 +2965,96 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or modified_surface.get("verified_timed_modifier_counts") != expected_surface_counts
         or modified_surface.get("verified_untimed_modifier_counts") != expected_surface_counts
         or modified_surface.get("max_verified_modifier_count") != 5
+        or modified_surface.get("verified_example_count") != len(expected_surface_example_ids)
         or not isinstance(modified_surface.get("boundary_note"), str)
     ):
         raise SystemExit("web route smoke check failed: certified surface parser coverage drift")
+    surface_examples = modified_surface.get("verified_examples")
+    if not isinstance(surface_examples, list) or len(surface_examples) != len(expected_surface_example_ids):
+        raise SystemExit("web route smoke check failed: certified surface parser witness count drift")
+    observed_surface_ids = [
+        item.get("variant_id")
+        for item in surface_examples
+        if isinstance(item, dict)
+    ]
+    if observed_surface_ids != expected_surface_example_ids:
+        raise SystemExit("web route smoke check failed: certified surface parser witness id drift")
+    expected_surface_example_meta = {
+        "primary_modified_transitive_predication": (
+            "Mary admired the painting in the gallery",
+            1,
+            False,
+            "registered_primary_example",
+        ),
+        "temporal_modified_transitive_predication": (
+            "Mary admired the painting in the gallery yesterday",
+            1,
+            True,
+            "registered_variant_example",
+        ),
+        "multi_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope",
+            2,
+            False,
+            "registered_variant_example",
+        ),
+        "temporal_multi_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope yesterday",
+            2,
+            True,
+            "registered_variant_example",
+        ),
+        "triple_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope near a window",
+            3,
+            False,
+            "registered_variant_example",
+        ),
+        "temporal_triple_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope near a window yesterday",
+            3,
+            True,
+            "registered_variant_example",
+        ),
+        "quad_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope near a window beside a shelf",
+            4,
+            False,
+            "registered_variant_example",
+        ),
+        "temporal_quad_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope near a window beside a shelf yesterday",
+            4,
+            True,
+            "registered_variant_example",
+        ),
+        "quint_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp",
+            5,
+            False,
+            "registered_variant_example",
+        ),
+        "temporal_quint_adv_modified_transitive_predication": (
+            "Mary admired the painting in the gallery with a telescope near a window beside a shelf under a lamp yesterday",
+            5,
+            True,
+            "registered_variant_example",
+        ),
+    }
+    for item in surface_examples:
+        if not isinstance(item, dict):
+            raise SystemExit("web route smoke check failed: certified surface parser witness shape drift")
+        expected_meta = expected_surface_example_meta.get(str(item.get("variant_id", "")))
+        if (
+            expected_meta is None
+            or item.get("rule_id") != "modified_transitive_predication"
+            or item.get("sentence") != expected_meta[0]
+            or item.get("modifier_count") != expected_meta[1]
+            or item.get("time_wrapped") is not expected_meta[2]
+            or item.get("source") != expected_meta[3]
+            or not isinstance(item.get("boundary_status"), str)
+        ):
+            raise SystemExit("web route smoke check failed: certified surface parser witness drift")
     registered_case_by_id = {
         item.get("rule_id"): item
         for item in registered_cases
@@ -3238,6 +3337,18 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-timed-counts="1,2,3,4,5"',
         'data-surface-untimed-counts="1,2,3,4,5"',
         'data-surface-max-verified-count="5"',
+        'data-surface-verified-example-count="10"',
+        'data-surface-example-variant-id="primary_modified_transitive_predication"',
+        'data-surface-example-sentence="Mary admired the painting in the gallery"',
+        'data-surface-example-source="registered_primary_example"',
+        'data-surface-example-variant-id="temporal_quint_adv_modified_transitive_predication"',
+        (
+            'data-surface-example-sentence="Mary admired the painting in the gallery '
+            'with a telescope near a window beside a shelf under a lamp yesterday"'
+        ),
+        'data-surface-example-modifier-count="5"',
+        'data-surface-example-time-wrapped="true"',
+        'data-surface-example-source="registered_variant_example"',
         "surface parser coverage",
         "<h2>Certified Fragment</h2>",
     ]

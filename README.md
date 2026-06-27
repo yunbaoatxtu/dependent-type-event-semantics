@@ -867,6 +867,13 @@ marking the current surface parser claim as `registered_examples_only` and
 boundary machine-readable: the dependent type family is not capped at five
 modifiers, but the present web parser only certifies the registered examples it
 actually smoke-tests.
+The same record now includes a `verified_examples` witness list. Each witness
+stores the variant id, surface sentence, modifier count, whether the clause is
+time-wrapped, and whether the example came from the registered primary example
+or from the registered variant matrix. The page mirrors those witnesses through
+`data-surface-example-*` hooks, so an API client can audit the advertised parser
+boundary against concrete tested sentences rather than trusting only aggregate
+counts.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and

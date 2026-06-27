@@ -11970,6 +11970,29 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
         if variant.get("surface_parser_family") == "modified_transitive_adv_sequence"
         and isinstance(variant.get("modifier_count"), int)
     ]
+    verified_examples = [
+        {
+            "rule_id": "modified_transitive_predication",
+            "variant_id": "primary_modified_transitive_predication",
+            "sentence": CONSTRUCTION_RULE_EXAMPLES["modified_transitive_predication"],
+            "modifier_count": MODIFIED_TRANSITIVE_PRIMARY_MODIFIER_COUNT,
+            "time_wrapped": False,
+            "source": "registered_primary_example",
+            "boundary_status": "registered_construction_example",
+        },
+    ]
+    verified_examples.extend(
+        {
+            "rule_id": str(variant.get("rule_id", "")),
+            "variant_id": str(variant.get("variant_id", "")),
+            "sentence": str(variant.get("sentence", "")),
+            "modifier_count": int(variant["modifier_count"]),
+            "time_wrapped": variant.get("time_wrapped") is True,
+            "source": "registered_variant_example",
+            "boundary_status": str(variant.get("boundary_status", "")),
+        }
+        for variant in modified_transitive_variants
+    )
     timed_counts = sorted(
         {
             int(variant["modifier_count"])
@@ -12003,6 +12026,8 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
             "verified_timed_modifier_counts": timed_counts,
             "verified_untimed_modifier_counts": untimed_counts,
             "max_verified_modifier_count": max(verified_counts) if verified_counts else 0,
+            "verified_example_count": len(verified_examples),
+            "verified_examples": verified_examples,
             "boundary_note": (
                 "The dependent type family is open-ended in n, but the current "
                 "surface parser advertises only the registered and smoke-tested "

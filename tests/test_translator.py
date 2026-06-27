@@ -9351,6 +9351,31 @@ class TranslatorTests(unittest.TestCase):
             [1, 2, 3, 4, 5],
         )
         self.assertEqual(surface_parser_coverage["max_verified_modifier_count"], 5)
+        self.assertEqual(surface_parser_coverage["verified_example_count"], 10)
+        self.assertEqual(len(surface_parser_coverage["verified_examples"]), 10)
+        self.assertEqual(
+            surface_parser_coverage["verified_examples"][0],
+            {
+                "rule_id": "modified_transitive_predication",
+                "variant_id": "primary_modified_transitive_predication",
+                "sentence": "Mary admired the painting in the gallery",
+                "modifier_count": 1,
+                "time_wrapped": False,
+                "source": "registered_primary_example",
+                "boundary_status": "registered_construction_example",
+            },
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_examples"][-1]["variant_id"],
+            "temporal_quint_adv_modified_transitive_predication",
+        )
+        self.assertEqual(
+            surface_parser_coverage["verified_examples"][-1]["modifier_count"],
+            5,
+        )
+        self.assertTrue(
+            surface_parser_coverage["verified_examples"][-1]["time_wrapped"],
+        )
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
             "fallback_shallow",
@@ -9586,6 +9611,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertFalse(
             surface_parser_coverage["full_surface_parser_certification"],
         )
+        self.assertEqual(surface_parser_coverage["verified_example_count"], 10)
+        self.assertEqual(
+            [
+                example["variant_id"]
+                for example in surface_parser_coverage["verified_examples"]
+                if example["modifier_count"] == 5
+            ],
+            [
+                "quint_adv_modified_transitive_predication",
+                "temporal_quint_adv_modified_transitive_predication",
+            ],
+        )
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -9618,6 +9655,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-surface-timed-counts="1,2,3,4,5"', page)
         self.assertIn('data-surface-untimed-counts="1,2,3,4,5"', page)
         self.assertIn('data-surface-max-verified-count="5"', page)
+        self.assertIn('data-surface-verified-example-count="10"', page)
+        self.assertIn(
+            'data-surface-example-variant-id="primary_modified_transitive_predication"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-example-sentence="Mary admired the painting in the gallery"',
+            page,
+        )
+        self.assertIn('data-surface-example-modifier-count="5"', page)
+        self.assertIn('data-surface-example-time-wrapped="true"', page)
+        self.assertIn(
+            'data-surface-example-source="registered_variant_example"',
+            page,
+        )
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)
