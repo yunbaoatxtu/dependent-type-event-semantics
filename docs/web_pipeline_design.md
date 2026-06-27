@@ -394,6 +394,15 @@ with exported Prop/PropT definition names, expected reading definition names,
 missing Coq/Rocq definitions, duplicate reading names, malformed reading
 indices, failed reading-local type-check indices, and expected versus observed
 export counts when a registered rule emits too many or too few propositions.
+For reading-local type-check failures, clients should not have to rewalk the
+whole `semantic_readings` array. The compact diagnostics object also exposes
+`reading_type_check_failure_count` and `reading_type_check_diagnostics`; each
+record names the reading index, reading name, source, scope, Coq/Rocq
+definition, `semantic_readings[i].type_check` path, emitted error strings, and
+any nested state-opposition diagnostics. The HTML should render these records
+in a `Reading Type Check Diagnostics` panel with hooks including
+`data-reading-type-check-name`, `data-reading-type-check-path`, and
+`data-reading-type-check-state-opposition-count`.
 This object should be checked as a fixed schema: definition-name fields are
 string lists, reading-index fields are integer lists, `expected_export_count`
 is an integer or `null`, and `observed_export_count` is an integer. The same

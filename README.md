@@ -1042,6 +1042,12 @@ reading definition names, missing definitions, duplicate reading names,
 malformed reading indices, failed reading-local type-check indices, and
 expected versus observed export counts when a registered rule did not expose a
 unique proposition.
+When those failed indices point to a reading-local type error,
+`diagnostics.reading_type_check_failure_count` and
+`diagnostics.reading_type_check_diagnostics` expand the affected reading name,
+scope, Coq/Rocq definition, local `type_check` path, local error list, and any
+nested state-opposition diagnostics; the page renders the same data in a
+`Reading Type Check Diagnostics` panel with `data-reading-type-check-*` hooks.
 The verifier treats this as a fixed schema: the definition-name fields must be
 string lists, the index fields must be integer lists, `expected_export_count`
 must be either an integer or `null`, and `observed_export_count` must be an

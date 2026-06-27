@@ -15057,16 +15057,59 @@ class TranslatorTests(unittest.TestCase):
             }
         ]
         self.assertEqual(result["type_check"]["incompatible_state_pairs"], expected_pairs)
+        self.assertEqual(
+            result["semantic_readings"][0]["type_check"]["incompatible_state_pairs"],
+            expected_pairs,
+        )
         self.assertEqual(result["diagnostics"]["state_opposition_count"], 1)
         self.assertEqual(
             result["diagnostics"]["state_opposition_diagnostics"],
             expected_pairs,
+        )
+        expected_reading_type_check_diagnostics = [
+            {
+                "reading_index": 0,
+                "reading_name": "causal_because_single_reading",
+                "source": "causal_because",
+                "scope": "cause_explains_effect",
+                "coq_definition": "causal_because",
+                "path": "semantic_readings[0].type_check",
+                "error_count": 1,
+                "errors": [
+                    (
+                        "causal_because.cause: stative states cannot contain "
+                        "incompatible states on the same scale: access_scale has "
+                        "closed and open"
+                    )
+                ],
+                "state_opposition_count": 1,
+                "state_opposition_diagnostics": expected_pairs,
+            }
+        ]
+        self.assertEqual(result["diagnostics"]["reading_type_check_failure_count"], 1)
+        self.assertEqual(
+            result["diagnostics"]["reading_type_check_diagnostics"],
+            expected_reading_type_check_diagnostics,
         )
 
         page = render_page(
             "Mary admired the door because it was closed and open",
             require_coq=True,
         )
+        self.assertIn("Reading Type Check Diagnostics", page)
+        self.assertIn('data-reading-type-check-failure-count="1"', page)
+        self.assertIn(
+            'data-reading-type-check-name="causal_because_single_reading"',
+            page,
+        )
+        self.assertIn('data-reading-type-check-source="causal_because"', page)
+        self.assertIn('data-reading-type-check-scope="cause_explains_effect"', page)
+        self.assertIn(
+            'data-reading-type-check-path="semantic_readings[0].type_check"',
+            page,
+        )
+        self.assertIn('data-reading-type-check-state-opposition-count="1"', page)
+        self.assertIn("Raw reading type-check JSON", page)
         self.assertIn("State Opposition Diagnostics", page)
         self.assertIn('data-state-opposition-count="1"', page)
         self.assertIn('data-state-opposition-scale="access_scale"', page)
@@ -15084,6 +15127,8 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertTrue(compatible["ok"])
         self.assertEqual(compatible["diagnostics"]["state_opposition_count"], 0)
+        self.assertEqual(compatible["diagnostics"]["reading_type_check_failure_count"], 0)
+        self.assertEqual(compatible["diagnostics"]["reading_type_check_diagnostics"], [])
         self.assertEqual(
             compatible["diagnostics"]["state_opposition_diagnostics"],
             [],
@@ -15093,6 +15138,7 @@ class TranslatorTests(unittest.TestCase):
             require_coq=True,
         )
         self.assertNotIn("State Opposition Diagnostics", compatible_page)
+        self.assertNotIn("Reading Type Check Diagnostics", compatible_page)
 
     def test_pipeline_reports_construction_hygiene_separately(self) -> None:
         result = run_pipeline("In every burning, oxygen is consumed", require_coq=True)
@@ -15297,6 +15343,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostics.semantic_readings_failure_kinds`", readme)
         self.assertIn("`diagnostics.semantic_readings_failure_summary`", readme)
         self.assertIn("`diagnostics.semantic_readings_repair_details`", readme)
+        self.assertIn("`diagnostics.reading_type_check_failure_count`", readme)
+        self.assertIn("`diagnostics.reading_type_check_diagnostics`", readme)
+        self.assertIn("`Reading Type Check Diagnostics` panel", readme)
+        self.assertIn("`data-reading-type-check-*` hooks", readme)
         self.assertIn("fixed schema", readme)
         self.assertIn("`add_missing_coq_definitions`", readme)
         self.assertIn("`normalize_reading_exports`", readme)
@@ -15637,6 +15687,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("object_np: in_park_np : Entity -> Prop", web_design)
         self.assertIn("`semantic_readings_failure_kinds`", web_design)
         self.assertIn("`semantic_readings_repair_details`", web_design)
+        self.assertIn("`reading_type_check_failure_count`", web_design)
+        self.assertIn("`reading_type_check_diagnostics`", web_design)
+        self.assertIn("`Reading Type Check Diagnostics` panel", web_design)
+        self.assertIn("`data-reading-type-check-name`", web_design)
+        self.assertIn("`data-reading-type-check-state-opposition-count`", web_design)
         self.assertIn("checked as a fixed schema", web_design)
         self.assertIn("compare these details with the payload fields", web_design)
         self.assertIn("`add_missing_coq_definitions`", web_design)
@@ -15886,6 +15941,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("stale action JSON previews", manuscript)
         self.assertIn("recovery_action_exports inventory", manuscript)
         self.assertIn("per-action export paths", manuscript)
+        self.assertIn("reading_type_check_diagnostics", manuscript)
+        self.assertIn("Reading Type Check Diagnostics panel", manuscript)
+        self.assertIn("data-reading-type-check-* hooks", manuscript)
         self.assertIn("diagnostic_repair_plan.v1", manuscript)
         self.assertIn("repair_plan_automation_modes", manuscript)
         self.assertIn("inspection_only_recovery_action_kinds", manuscript)

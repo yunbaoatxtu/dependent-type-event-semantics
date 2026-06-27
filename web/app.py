@@ -1218,6 +1218,39 @@ def state_opposition_diagnostics_for_type_check(
     return diagnostics
 
 
+def reading_type_check_diagnostics_for_result(
+    result: dict[str, Any],
+) -> list[dict[str, Any]]:
+    readings = result.get("semantic_readings")
+    if not isinstance(readings, list):
+        return []
+    diagnostics: list[dict[str, Any]] = []
+    for index, reading in enumerate(readings):
+        if not isinstance(reading, dict):
+            continue
+        type_check = reading.get("type_check")
+        if not isinstance(type_check, dict) or type_check.get("ok") is not False:
+            continue
+        errors = type_check.get("errors")
+        error_list = [str(error) for error in errors] if isinstance(errors, list) else []
+        state_pairs = state_opposition_diagnostics_for_type_check(type_check)
+        diagnostics.append(
+            {
+                "reading_index": index,
+                "reading_name": str(reading.get("name") or f"reading_{index + 1}"),
+                "source": str(reading.get("source") or ""),
+                "scope": str(reading.get("scope") or ""),
+                "coq_definition": str(reading.get("coq_definition") or ""),
+                "path": f"semantic_readings[{index}].type_check",
+                "error_count": len(error_list),
+                "errors": error_list,
+                "state_opposition_count": len(state_pairs),
+                "state_opposition_diagnostics": state_pairs,
+            }
+        )
+    return diagnostics
+
+
 def recovery_actions_for(failure_stage: str | None) -> list[dict[str, str]]:
     return [dict(action) for action in FAILURE_STAGE_ACTIONS.get(failure_stage, [])]
 
@@ -1557,6 +1590,7 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
     state_opposition_diagnostics = state_opposition_diagnostics_for_type_check(
         type_check,
     )
+    reading_type_check_diagnostics = reading_type_check_diagnostics_for_result(result)
     semantic_readings_check = result.get("semantic_readings_check", {})
     semantic_failure_kinds = (
         semantic_readings_failure_kinds_for(semantic_readings_check)
@@ -1637,6 +1671,8 @@ def build_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "semantic_readings_failure_kinds": semantic_failure_kinds,
         "semantic_readings_failure_summary": semantic_failure_summary,
         "semantic_readings_repair_details": semantic_repair_details,
+        "reading_type_check_failure_count": len(reading_type_check_diagnostics),
+        "reading_type_check_diagnostics": reading_type_check_diagnostics,
         "state_opposition_count": len(state_opposition_diagnostics),
         "state_opposition_diagnostics": state_opposition_diagnostics,
         "warnings": warnings,
@@ -2605,6 +2641,77 @@ def semantic_readings_check_panel(result: dict[str, Any]) -> str:
         '<section class="panel semantic-readings-check-panel">'
         "<h2>Semantic Readings Check</h2>"
         f'<div class="semantic-readings-check">{body}</div>'
+        "</section>"
+    )
+
+
+def reading_type_check_diagnostics_panel(result: dict[str, Any]) -> str:
+    diagnostics = result.get("diagnostics", {})
+    failures = (
+        diagnostics.get("reading_type_check_diagnostics")
+        if isinstance(diagnostics, dict)
+        else None
+    )
+    if not isinstance(failures, list) or not failures:
+        return ""
+    rows = []
+    for failure in failures:
+        if not isinstance(failure, dict):
+            continue
+        index = str(failure.get("reading_index", ""))
+        name = str(failure.get("reading_name", ""))
+        source = str(failure.get("source", ""))
+        scope = str(failure.get("scope", ""))
+        coq_definition = str(failure.get("coq_definition", ""))
+        path = str(failure.get("path", ""))
+        errors = failure.get("errors")
+        error_list = [str(error) for error in errors] if isinstance(errors, list) else []
+        state_count = str(failure.get("state_opposition_count", 0))
+        if not name or not path:
+            continue
+        error_items = (
+            "".join(
+                f'<li data-reading-type-check-error="{html.escape(error, quote=True)}">'
+                f"{html.escape(error)}</li>"
+                for error in error_list
+            )
+            if error_list
+            else "<li>no type-check error text emitted</li>"
+        )
+        rows.append(
+            '<li class="reading-type-check-diagnostic" '
+            f'data-reading-type-check-index="{html.escape(index, quote=True)}" '
+            f'data-reading-type-check-name="{html.escape(name, quote=True)}" '
+            f'data-reading-type-check-source="{html.escape(source, quote=True)}" '
+            f'data-reading-type-check-scope="{html.escape(scope, quote=True)}" '
+            f'data-reading-type-check-coq-definition="{html.escape(coq_definition, quote=True)}" '
+            f'data-reading-type-check-path="{html.escape(path, quote=True)}" '
+            f'data-reading-type-check-state-opposition-count="{html.escape(state_count, quote=True)}">'
+            f"<strong>{html.escape(name)}</strong>"
+            "<dl>"
+            f"<dt>path</dt><dd><code>{html.escape(path)}</code></dd>"
+            f"<dt>source</dt><dd>{html.escape(source or 'none')}</dd>"
+            f"<dt>scope</dt><dd>{html.escape(scope or 'none')}</dd>"
+            f"<dt>coq</dt><dd><code>{html.escape(coq_definition or 'none')}</code></dd>"
+            f"<dt>state oppositions</dt><dd>{html.escape(state_count)}</dd>"
+            "</dl>"
+            f'<ul class="reading-type-check-error-list">{error_items}</ul>'
+            "</li>"
+        )
+    if not rows:
+        return ""
+    raw_json = compact_json(failures)
+    return (
+        '<section class="panel reading-type-check-diagnostics-panel" '
+        f'data-reading-type-check-failure-count="{len(rows)}">'
+        "<h2>Reading Type Check Diagnostics</h2>"
+        '<ul class="reading-type-check-diagnostics-list">'
+        + "".join(rows)
+        + "</ul>"
+        '<details class="reading-type-check-json">'
+        "<summary>Raw reading type-check JSON</summary>"
+        f"<pre>{html.escape(raw_json)}</pre>"
+        "</details>"
         "</section>"
     )
 
@@ -4373,6 +4480,7 @@ def render_page(
       {panel("Modifier Role Audit", modifier_roles)}
       {panel("Semantic Readings", semantic_readings)}
       {semantic_readings_check_panel(result)}
+      {reading_type_check_diagnostics_panel(result)}
       {panel("AST", ast)}
       {state_opposition_diagnostics_panel(result)}
       {panel("Type Check", type_check)}

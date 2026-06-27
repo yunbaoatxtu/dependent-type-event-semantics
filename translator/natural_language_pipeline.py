@@ -3317,6 +3317,9 @@ def single_semantic_reading_payload(
         "type": type_check.get("type"),
         "errors": type_check.get("errors", []),
     }
+    for field in ("incompatible_state_pairs",):
+        if field in type_check:
+            reading_type_check[field] = type_check[field]
     readings = [
         semantic_reading(
             name=name,

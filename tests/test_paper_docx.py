@@ -270,6 +270,11 @@ class PaperDocxTests(unittest.TestCase):
             "Use code and emphasis plus visible link.",
         )
 
+    def test_paper_markdown_keeps_plain_square_brackets(self) -> None:
+        text = "Path semantic_readings[i].type_check is not a Markdown link."
+        self.assertEqual(markdown_inline_segments(text), [InlineSegment(text)])
+        self.assertEqual(normalize_markdown_inline(text), text)
+
     @unittest.skipUnless(python_docx_available(), "python-docx is not available")
     def test_sync_paper_docx_renders_inline_bold_runs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -93,6 +93,9 @@ def _parse_inline(
                     )
                     index = close_paren + 1
                     continue
+            segments.append(InlineSegment("[", bold=bold, italic=italic, code=code))
+            index += 1
+            continue
 
         if text.startswith("**", index):
             end = text.find("**", index + 2)
