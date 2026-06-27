@@ -1331,7 +1331,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         upgrade_plan.get("schema_version") != "certification_upgrade_plan.v1"
         or upgrade_plan.get("source_verification_scope") != "fallback_shallow"
         or upgrade_plan.get("target_certification_level") != "construction_rule"
-        or upgrade_plan.get("candidate_rule_id") != "fallback_sigma_sigma_candidate"
+        or upgrade_plan.get("candidate_rule_id") != "fallback_admire_application_candidate"
         or upgrade_plan.get("automation_mode") != "human_review_required"
         or upgrade_plan.get("can_auto_apply") is not False
     ):
@@ -1349,8 +1349,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         rule_draft.get("schema_version") != "construction_rule_draft.v1"
         or rule_draft.get("source_verification_scope") != "fallback_shallow"
-        or rule_draft.get("candidate_rule_id") != "fallback_sigma_sigma_candidate"
-        or rule_draft.get("candidate_analyzer") != "fallback_sigma_sigma_candidate_pipeline"
+        or rule_draft.get("candidate_rule_id") != "fallback_admire_application_candidate"
+        or rule_draft.get("candidate_analyzer") != "fallback_admire_application_candidate_pipeline"
         or rule_draft.get("automation_mode") != "human_review_required"
         or rule_draft.get("can_auto_apply") is not False
     ):
@@ -1359,8 +1359,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         not isinstance(draft_readings, list)
         or len(draft_readings) != 1
-        or draft_readings[0].get("name") != "fallback_sigma_sigma_candidate_single_reading"
-        or draft_readings[0].get("source") != "fallback_sigma_sigma_candidate"
+        or draft_readings[0].get("name") != "fallback_admire_application_candidate_single_reading"
+        or draft_readings[0].get("source") != "fallback_admire_application_candidate"
     ):
         raise SystemExit("web route smoke check failed: fallback rule draft reading drift")
     hygiene = rule_draft.get("hygiene_policy_draft")
@@ -1407,22 +1407,126 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-upgrade-plan-schema="certification_upgrade_plan.v1"',
         'data-upgrade-source-scope="fallback_shallow"',
         'data-upgrade-target-level="construction_rule"',
-        'data-upgrade-candidate-rule-id="fallback_sigma_sigma_candidate"',
+        'data-upgrade-candidate-rule-id="fallback_admire_application_candidate"',
         'data-upgrade-gap-id="no_registered_construction_rule"',
         'data-upgrade-action-kind="draft_construction_rule"',
         "Construction Rule Draft",
         'data-rule-draft-schema="construction_rule_draft.v1"',
         'data-rule-draft-source-scope="fallback_shallow"',
-        'data-rule-draft-id="fallback_sigma_sigma_candidate"',
-        'data-rule-draft-analyzer="fallback_sigma_sigma_candidate_pipeline"',
+        'data-rule-draft-id="fallback_admire_application_candidate"',
+        'data-rule-draft-analyzer="fallback_admire_application_candidate_pipeline"',
         'data-rule-draft-can-auto-apply="false"',
-        'data-rule-draft-reading="fallback_sigma_sigma_candidate_single_reading"',
+        'data-rule-draft-reading="fallback_admire_application_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        "/api/construction-rule-draft?sentence=John+ate&amp;require_coq=1&amp;download=1",
+        "/api/construction-rule-draft?sentence=Mary+admired+the+painting&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: fallback page input drift")
+
+
+def validate_analyze_active_argument_omission_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_active_argument_omission_success"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "active_argument_omission",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "active_argument_omission",
+        "registered_construction",
+        "construction_rule",
+        "active_argument_omission",
+    )
+    if payload.get("kind") != "active_argument_omission":
+        raise SystemExit("web route smoke check failed: active omission kind drift")
+    if payload.get("dependent_type_translation") != "Sigma x_theme : Food. eat(0)(John, x_theme)":
+        raise SystemExit("web route smoke check failed: active omission translation drift")
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit("web route smoke check failed: active omission exposes fallback draft")
+    ast = payload.get("ast")
+    body = ast.get("body") if isinstance(ast, dict) else None
+    role_frame = body.get("role_frame", {}).get("roles") if isinstance(body, dict) else None
+    if (
+        not isinstance(ast, dict)
+        or ast.get("kind") != "sigma"
+        or ast.get("witness") != "x_theme"
+        or ast.get("type") != "Food"
+        or not isinstance(body, dict)
+        or body.get("kind") != "application"
+        or body.get("function") != "eat"
+        or body.get("arguments") != ["John", "x_theme"]
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 2
+        or role_frame[0].get("role") != "Agent"
+        or role_frame[0].get("source") != "explicit"
+        or role_frame[1].get("role") != "Theme"
+        or role_frame[1].get("type") != "Food"
+        or role_frame[1].get("source") != "omitted"
+    ):
+        raise SystemExit("web route smoke check failed: active omission AST drift")
+    event_semantics = payload.get("event_semantics")
+    omission = event_semantics.get("argument_omission") if isinstance(event_semantics, dict) else None
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis") != "active-argument-omission"
+        or not isinstance(omission, dict)
+        or omission.get("predicate") != "eat"
+        or omission.get("witness") != "x_theme"
+        or omission.get("witness_type") != "Food"
+        or omission.get("omitted_role") != "Theme"
+    ):
+        raise SystemExit("web route smoke check failed: active omission analysis drift")
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: active omission hygiene drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: active omission reading count drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "active_argument_omission_single_reading",
+            "scope": "omitted_existential_theme",
+            "source": "active_argument_omission",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Parameter Food : Type." not in coq_code
+        or "exists x_theme : Food" not in coq_code
+        or "Parameter x_theme" in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: active omission Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>active_argument_omission</dd>",
+        'data-reading-name="active_argument_omission_single_reading"',
+        "<dt>source</dt><dd>active_argument_omission</dd>",
+        "<dt>scope</dt><dd>omitted_existential_theme</dd>",
+        "Sigma x_theme : Food. eat(0)(John, x_theme)",
+        "Translation succeeded via construction rule active_argument_omission.",
+    ]
+    require_text_fragments(page, expected_page_fragments, "active omission HTML")
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit("web route smoke check failed: active omission page input drift")
 
 
 def validate_analyze_locative_intransitive_success(
@@ -3099,6 +3203,19 @@ def run_web_route_smoke_check() -> None:
             temporal_event_counting_page,
             temporal_event_counting_sentence,
         )
+        active_omission_sentence = "John ate"
+        active_omission_query = urlencode(
+            {"sentence": active_omission_sentence, "require_coq": "1"}
+        )
+        with opener.open(f"{base_url}/api/analyze?{active_omission_query}", timeout=5) as response:
+            active_omission_payload = json.load(response)
+        with opener.open(f"{base_url}/?{active_omission_query}", timeout=5) as response:
+            active_omission_page = response.read().decode("utf-8")
+        validate_analyze_active_argument_omission_success(
+            active_omission_payload,
+            active_omission_page,
+            active_omission_sentence,
+        )
         locative_sentence = "a cat sits on a mat"
         locative_query = urlencode({"sentence": locative_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{locative_query}", timeout=5) as response:
@@ -3110,7 +3227,7 @@ def run_web_route_smoke_check() -> None:
             locative_page,
             locative_sentence,
         )
-        fallback_sentence = "John ate"
+        fallback_sentence = "Mary admired the painting"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
@@ -3132,7 +3249,7 @@ def run_web_route_smoke_check() -> None:
             or draft_payload.get("ok") is not True
             or draft_payload.get("draft_schema_version") != "construction_rule_draft.v1"
             or not isinstance(draft, dict)
-            or draft.get("candidate_rule_id") != "fallback_sigma_sigma_candidate"
+            or draft.get("candidate_rule_id") != "fallback_admire_application_candidate"
         ):
             raise SystemExit("web route smoke check failed: rule draft API drift")
         draft_download_query = urlencode(
@@ -3147,7 +3264,7 @@ def run_web_route_smoke_check() -> None:
             timeout=5,
         ) as response:
             disposition = response.headers.get("Content-Disposition", "")
-            if "construction_rule_draft__fallback_sigma_sigma_candidate.json" not in disposition:
+            if "construction_rule_draft__fallback_admire_application_candidate.json" not in disposition:
                 raise SystemExit("web route smoke check failed: rule draft download drift")
             draft_download_payload = json.load(response)
         if draft_download_payload != draft_payload:

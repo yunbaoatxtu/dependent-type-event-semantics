@@ -458,18 +458,22 @@ Successful ordinary fallback analyses should enter the same interface as
 `example_1`, and rendered in the Semantic Readings Check panel with a `none`
 attachment summary rather than bypassing the semantic-reading audit.
 The project-level web smoke check should exercise the promoted event-counting
-route, the promoted locative route, and the ordinary fallback route directly
-before it walks the diagnostic fixtures. `John knocked twice` must surface as
-the registered `event_counting` construction with
+route, the promoted active argument-omission route, the promoted locative route,
+and the ordinary fallback route directly before it walks the diagnostic
+fixtures. `John knocked twice` must surface as the registered `event_counting`
+construction with
 `event_counting_single_reading`; the timed variant `John knocked twice
 yesterday` must keep the same registered rule while rendering
-`at_T(yesterday, repeat(2, knock(0)(john)))`. Meanwhile, `a cat sits on a mat`
-must surface as the registered `locative_intransitive_predication` construction
-with `locative_intransitive_predication_single_reading`, and its Coq/Rocq
-scaffold must declare `on_mat : Adv`, not `on_mat : Entity`. `John ate` remains
-the ordinary fallback success with `fallback_single_reading` and a downloadable
-construction-rule draft. This keeps promoted constructions and the remaining
-fallback success contract from drifting apart.
+`at_T(yesterday, repeat(2, knock(0)(john)))`. `John ate` must surface as the
+registered `active_argument_omission` construction with
+`active_argument_omission_single_reading` and `omitted_existential_theme`,
+without exposing a fallback draft. Meanwhile, `a cat sits on a mat` must surface
+as the registered `locative_intransitive_predication` construction with
+`locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
+must declare `on_mat : Adv`, not `on_mat : Entity`. `Mary admired the painting`
+remains the ordinary fallback success with `fallback_single_reading` and a
+downloadable construction-rule draft. This keeps promoted constructions and the
+remaining fallback success contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
@@ -593,7 +597,15 @@ The prototype has specific analyses for:
 These examples correspond to variable polyadicity with time, argument
 omission, event counting, and causal-resultative translation.
 
-The locative intransitive slice has now been promoted out of ordinary fallback.
+The active argument-omission slice has now been promoted out of ordinary
+fallback. For example, `John ate` becomes an event-semantics formula with
+`eat(e)` and `Agent(e, John)`, then translates to
+`Sigma x_theme : Food. eat(0)(John, x_theme)` under the registered
+`active_argument_omission` rule. The omitted Theme is represented by the typed
+Sigma witness `x_theme : Food`, not by an exported `Event`, `Agent`, or `Theme`
+predicate.
+
+The locative intransitive slice has also been promoted out of ordinary fallback.
 For example, `a cat sits on a mat` becomes an event-semantics formula with
 `sit(e)`, `Agent(e, cat)`, and `on(e, mat)`, then translates to
 `sit(1)(on(mat), cat)` under the registered
@@ -602,9 +614,9 @@ an `Adv` item, not as an entity, and construction hygiene rejects an
 `on_mat : Entity` declaration.
 
 Other simple English sentences are still handled by the fallback parser. For
-example, `John ate` remains a shallow argument-omission scaffold:
-`Sigma x_theme : Food. eat(0)(John, x_theme)`, with a construction-rule draft
-rather than construction-level certification.
+example, `Mary admired the painting` remains a shallow ordinary predication
+scaffold, `admire(0)(mary, painting)`, with a construction-rule draft rather
+than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as

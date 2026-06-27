@@ -126,6 +126,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "quantifier_scope_ambiguity": "some boy loves some girl",
     "lexical_state_change": "the door opened",
     "stative_result_state": "the vase is broken",
+    "active_argument_omission": "John ate",
     "passive_argument_omission": "the toast was buttered",
     "copular_property": "Mary is happy",
     "do_support_negation": "John did not walk",
@@ -141,7 +142,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "John ate",
+        "sentence": "Mary admired the painting",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -320,6 +321,19 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_reading_scopes": ["registered_single_reading"],
         "expected_coq_definitions": ["stative_broken_state"],
         "expected_type_check_type": "Prop",
+    },
+    {
+        "rule_id": "active_argument_omission",
+        "sentence": "John ate",
+        "expected_event_analysis": "active-argument-omission",
+        "expected_dependent_type_fragments": [
+            "Sigma x_theme : Food. eat(0)(John, x_theme)",
+        ],
+        "expected_reading_names": ["active_argument_omission_single_reading"],
+        "expected_reading_sources": ["active_argument_omission"],
+        "expected_reading_scopes": ["omitted_existential_theme"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
     },
     {
         "rule_id": "passive_argument_omission",
@@ -560,6 +574,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "subject_count": 1,
         "object_count": 0,
     },
+    "active_argument_omission": {
+        "kind": "sigma",
+        "predicate_symbols": ["eat"],
+        "predicate_types": [],
+        "entity_symbols": ["John"],
+        "state_symbols": [],
+        "binder_signatures": ["x_theme:Food"],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
     "passive_argument_omission": {
         "kind": "passive_argument_omission",
         "predicate_symbols": ["butter"],
@@ -775,6 +804,12 @@ def ast_structure_summary(ast: dict[str, Any]) -> dict[str, Any]:
             and isinstance(node.get("type"), str)
         ):
             binder_signatures.append(f"{node['variable']}:{node['type']}")
+        if (
+            node.get("kind") == "sigma"
+            and isinstance(node.get("witness"), str)
+            and isinstance(node.get("type"), str)
+        ):
+            binder_signatures.append(f"{node['witness']}:{node['type']}")
 
     quantifier_signatures: list[str] = []
     quantifiers = ast.get("quantifiers") if isinstance(ast, dict) else None
@@ -10664,6 +10699,104 @@ def transitive_predicate_coordination_pipeline(sentence: str) -> dict[str, Any] 
     }
 
 
+def active_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    omitted_arguments = translation.get("omitted_arguments")
+    if (
+        not isinstance(ast, dict)
+        or ast.get("kind") != "sigma"
+        or not isinstance(omitted_arguments, list)
+        or len(omitted_arguments) != 1
+    ):
+        return None
+
+    omitted = omitted_arguments[0]
+    witness = omitted.get("witness") if isinstance(omitted, dict) else None
+    witness_type = omitted.get("type") if isinstance(omitted, dict) else None
+    if (
+        not isinstance(omitted, dict)
+        or omitted.get("role") != "Theme"
+        or not isinstance(witness, str)
+        or not witness
+        or not isinstance(witness_type, str)
+        or not witness_type
+        or ast.get("witness") != witness
+        or ast.get("type") != witness_type
+    ):
+        return None
+
+    body = ast.get("body")
+    if not isinstance(body, dict) or body.get("kind") != "application":
+        return None
+    arguments = body.get("arguments")
+    role_frame = body.get("role_frame", {}).get("roles")
+    if (
+        not isinstance(arguments, list)
+        or len(arguments) != 2
+        or arguments[1] != witness
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 2
+    ):
+        return None
+    explicit_agent = role_frame[0]
+    omitted_theme = role_frame[1]
+    if (
+        not isinstance(explicit_agent, dict)
+        or explicit_agent.get("role") != "Agent"
+        or explicit_agent.get("type") != "Entity"
+        or explicit_agent.get("source") != "explicit"
+        or explicit_agent.get("value") != arguments[0]
+        or not isinstance(omitted_theme, dict)
+        or omitted_theme.get("role") != "Theme"
+        or omitted_theme.get("type") != witness_type
+        or omitted_theme.get("source") != "omitted"
+        or omitted_theme.get("value") != witness
+    ):
+        return None
+
+    predicate = str(body.get("function", "predicate"))
+    coq_code = export_module([translation], "coq")
+    return attach_single_semantic_reading(
+        {
+            "kind": "active_argument_omission",
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": "active-argument-omission",
+                "argument_omission": {
+                    "predicate": predicate,
+                    "explicit_role": "Agent",
+                    "explicit_argument": arguments[0],
+                    "omitted_role": "Theme",
+                    "witness": witness,
+                    "witness_type": witness_type,
+                    "representation": "Sigma witness over a lexically licensed object type",
+                },
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Active argument omission: {predicate} supplies an omitted Theme "
+                f"as Sigma {witness} : {witness_type}, preserving the explicit "
+                "Entity Agent without introducing an Event, Agent, or Theme "
+                "predicate in the Coq/Rocq scaffold."
+            ),
+            "coq_code": coq_code,
+        },
+        name="active_argument_omission_single_reading",
+        coq_definition="example_1",
+        source="active_argument_omission",
+        scope="omitted_existential_theme",
+    )
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -11152,6 +11285,18 @@ def construction_rules() -> list[ConstructionRule]:
             ),
         ),
         ConstructionRule(
+            rule_id="active_argument_omission",
+            label="Active argument omission",
+            phenomenon="Lexically licensed omitted Theme as a typed Sigma witness",
+            analyzer=active_argument_omission_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
             rule_id="passive_argument_omission",
             label="Passive argument omission",
             phenomenon="Argument deletion without hidden event variables",
@@ -11340,7 +11485,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
         "fallback": {
             "verification_scope_kind": "fallback_shallow",
             "certification_level": "shallow_scaffold",
-            "example": "John ate",
+            "example": "Mary admired the painting",
             "guarantees": [
                 "fallback AST/type_check and semantic_readings contract are checked",
                 "generated Coq/Rocq scaffold is checked when requested and available",

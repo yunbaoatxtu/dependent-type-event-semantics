@@ -1170,9 +1170,20 @@ class TranslatorTests(unittest.TestCase):
     def test_natural_language_pipeline_success(self) -> None:
         result = run_pipeline("John ate")
         self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "active_argument_omission")
+        self.assertEqual(result["verification_scope"]["kind"], "registered_construction")
+        self.assertEqual(result["construction_rule"]["id"], "active_argument_omission")
         self.assertEqual(
             result["dependent_type_translation"],
             "Sigma x_theme : Food. eat(0)(John, x_theme)",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["name"],
+            "active_argument_omission_single_reading",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["scope"],
+            "omitted_existential_theme",
         )
         self.assertIn("Definition example_1", result["coq_code"])
         self.assertIn("Check example_1.", result["coq_code"])
@@ -1191,6 +1202,12 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("exists x_theme : Readable", read_result["coq_code"])
         self.assertNotIn("Parameter x_theme", read_result["coq_code"])
+        self.assertEqual(read_result["kind"], "active_argument_omission")
+        self.assertEqual(read_result["construction_rule"]["id"], "active_argument_omission")
+        self.assertEqual(
+            read_result["semantic_readings"][0]["scope"],
+            "omitted_existential_theme",
+        )
         self.assertEqual(read_result["coq_check"]["status"], "passed")
 
         drink_result = run_pipeline("John drank", require_coq=True)
@@ -1205,6 +1222,12 @@ class TranslatorTests(unittest.TestCase):
             drink_result["coq_code"],
         )
         self.assertIn("exists x_theme : Drinkable", drink_result["coq_code"])
+        self.assertEqual(drink_result["kind"], "active_argument_omission")
+        self.assertEqual(drink_result["construction_rule"]["id"], "active_argument_omission")
+        self.assertEqual(
+            drink_result["semantic_readings"][0]["scope"],
+            "omitted_existential_theme",
+        )
         self.assertEqual(drink_result["coq_check"]["status"], "passed")
 
     def test_explicit_lexical_theme_uses_matching_result_annotation(self) -> None:
@@ -8857,6 +8880,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_construction_rules_have_coq_hygiene_guards(self) -> None:
         rules = {rule.rule_id: rule for rule in construction_rules()}
         expected = {
+            "active_argument_omission",
             "passive_argument_omission",
             "lexical_state_change",
             "stative_result_state",
@@ -8875,6 +8899,8 @@ class TranslatorTests(unittest.TestCase):
             "event_counting",
         }
         self.assertTrue(expected.issubset(rules))
+        self.assertIn("Parameter Event : Type.", rules["active_argument_omission"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["active_argument_omission"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["passive_argument_omission"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["passive_argument_omission"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["lexical_state_change"].forbidden_coq_fragments)
@@ -9220,6 +9246,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
         examples = {
             "simple_conditional": "if John left, Mary cried",
+            "active_argument_omission": "John ate",
             "passive_argument_omission": "the toast was buttered",
             "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
@@ -9249,6 +9276,7 @@ class TranslatorTests(unittest.TestCase):
     def test_registered_rule_success_outputs_expose_semantic_readings_check(self) -> None:
         examples = {
             "simple_conditional": "if John left, Mary cried",
+            "active_argument_omission": "John ate",
             "passive_argument_omission": "the toast was buttered",
             "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
@@ -9656,7 +9684,7 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
             handler,
-            "sentence=John+ate&require_coq=1",
+            "sentence=Mary+admired+the+painting&require_coq=1",
         )
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
@@ -9677,7 +9705,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(upgrade_plan["schema_version"], CERTIFICATION_UPGRADE_PLAN_SCHEMA)
         self.assertEqual(upgrade_plan["source_verification_scope"], "fallback_shallow")
         self.assertEqual(upgrade_plan["target_certification_level"], "construction_rule")
-        self.assertEqual(upgrade_plan["candidate_rule_id"], "fallback_sigma_sigma_candidate")
+        self.assertEqual(upgrade_plan["candidate_rule_id"], "fallback_admire_application_candidate")
         self.assertEqual(upgrade_plan["automation_mode"], "human_review_required")
         self.assertFalse(upgrade_plan["can_auto_apply"])
         self.assertEqual(
@@ -9695,18 +9723,18 @@ class TranslatorTests(unittest.TestCase):
         rule_draft = result["construction_rule_draft"]
         self.assertEqual(rule_draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
         self.assertEqual(rule_draft["source_verification_scope"], "fallback_shallow")
-        self.assertEqual(rule_draft["candidate_rule_id"], "fallback_sigma_sigma_candidate")
-        self.assertEqual(rule_draft["candidate_analyzer"], "fallback_sigma_sigma_candidate_pipeline")
-        self.assertEqual(rule_draft["accepted_examples"], ["John ate"])
+        self.assertEqual(rule_draft["candidate_rule_id"], "fallback_admire_application_candidate")
+        self.assertEqual(rule_draft["candidate_analyzer"], "fallback_admire_application_candidate_pipeline")
+        self.assertEqual(rule_draft["accepted_examples"], ["Mary admired the painting"])
         self.assertEqual(rule_draft["automation_mode"], "human_review_required")
         self.assertFalse(rule_draft["can_auto_apply"])
         self.assertEqual(
             rule_draft["semantic_reading_drafts"][0]["name"],
-            "fallback_sigma_sigma_candidate_single_reading",
+            "fallback_admire_application_candidate_single_reading",
         )
         self.assertEqual(
             rule_draft["semantic_reading_drafts"][0]["source"],
-            "fallback_sigma_sigma_candidate",
+            "fallback_admire_application_candidate",
         )
         self.assertIn(
             "Parameter Event : Type.",
@@ -9717,7 +9745,7 @@ class TranslatorTests(unittest.TestCase):
             "construction_rule",
         )
         self.assertIn(
-            "rule_id = 'fallback_sigma_sigma_candidate'",
+            "rule_id = 'fallback_admire_application_candidate'",
             rule_draft["patch_text_preview"],
         )
         readings = result["semantic_readings"]
@@ -9742,33 +9770,85 @@ class TranslatorTests(unittest.TestCase):
         )
 
     def test_fallback_upgrade_plan_generalizes_to_unregistered_simple_sentences(self) -> None:
-        result = analyze_sentence("John ate", require_coq=True)
+        result = analyze_sentence("Mary admired the painting", require_coq=True)
         self.assertTrue(result["ok"])
         self.assertEqual(result["verification_scope"]["kind"], "fallback_shallow")
         plan = result["certification_upgrade_plan"]
         self.assertEqual(plan["schema_version"], CERTIFICATION_UPGRADE_PLAN_SCHEMA)
-        self.assertEqual(plan["candidate_rule_id"], "fallback_sigma_sigma_candidate")
-        self.assertEqual(plan["source_sentence"], "John ate")
+        self.assertEqual(plan["candidate_rule_id"], "fallback_admire_application_candidate")
+        self.assertEqual(plan["source_sentence"], "Mary admired the painting")
         self.assertEqual(
             plan["dependent_type_translation"],
-            "Sigma x_theme : Food. eat(0)(John, x_theme)",
+            "admire(0)(mary, painting)",
         )
-        self.assertEqual(plan["ast_summary"]["kind"], "sigma")
+        self.assertEqual(plan["ast_summary"]["kind"], "application")
         self.assertEqual(fallback_candidate_rule_id(result["ast"]), plan["candidate_rule_id"])
         draft = result["construction_rule_draft"]
         self.assertEqual(draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
-        self.assertEqual(draft["candidate_rule_id"], "fallback_sigma_sigma_candidate")
-        self.assertEqual(draft["candidate_analyzer"], "fallback_sigma_sigma_candidate_pipeline")
-        self.assertEqual(draft["accepted_examples"], ["John ate"])
+        self.assertEqual(draft["candidate_rule_id"], "fallback_admire_application_candidate")
+        self.assertEqual(draft["candidate_analyzer"], "fallback_admire_application_candidate_pipeline")
+        self.assertEqual(draft["accepted_examples"], ["Mary admired the painting"])
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["name"],
-            "fallback_sigma_sigma_candidate_single_reading",
+            "fallback_admire_application_candidate_single_reading",
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["dependent_type_translation"],
+            "admire(0)(mary, painting)",
+        )
+        self.assertEqual(draft["ast_summary"]["kind"], "application")
+
+    def test_active_argument_omission_promotes_john_ate(self) -> None:
+        result = analyze_sentence("John ate", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "active_argument_omission")
+        self.assertEqual(result["verification_scope"]["kind"], "registered_construction")
+        self.assertEqual(result["verification_scope"]["rule_id"], "active_argument_omission")
+        self.assertEqual(result["construction_rule"]["id"], "active_argument_omission")
+        self.assertTrue(result["construction_hygiene"]["ok"])
+        self.assertNotIn("certification_upgrade_plan", result)
+        self.assertNotIn("construction_rule_draft", result)
+        self.assertEqual(
+            result["event_semantics"]["analysis"],
+            "active-argument-omission",
+        )
+        self.assertEqual(
+            result["event_semantics"]["argument_omission"],
+            {
+                "predicate": "eat",
+                "explicit_role": "Agent",
+                "explicit_argument": "John",
+                "omitted_role": "Theme",
+                "witness": "x_theme",
+                "witness_type": "Food",
+                "representation": "Sigma witness over a lexically licensed object type",
+            },
+        )
+        self.assertEqual(
+            result["dependent_type_translation"],
             "Sigma x_theme : Food. eat(0)(John, x_theme)",
         )
-        self.assertEqual(draft["ast_summary"]["kind"], "sigma")
+        self.assertEqual(result["ast"]["kind"], "sigma")
+        self.assertEqual(result["ast"]["witness"], "x_theme")
+        self.assertEqual(result["ast"]["type"], "Food")
+        self.assertEqual(
+            result["ast"]["body"]["role_frame"]["roles"][1],
+            {"role": "Theme", "value": "x_theme", "type": "Food", "source": "omitted"},
+        )
+        reading = result["semantic_readings"][0]
+        self.assertEqual(reading["name"], "active_argument_omission_single_reading")
+        self.assertEqual(reading["source"], "active_argument_omission")
+        self.assertEqual(reading["scope"], "omitted_existential_theme")
+        self.assertEqual(reading["coq_definition"], "example_1")
+        self.assertTrue(reading["type_check"]["ok"])
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 1)
+        self.assertEqual(result["coq_check"]["status"], "passed")
+        self.assertIn("Parameter Food : Type.", result["coq_code"])
+        self.assertIn("exists x_theme : Food", result["coq_code"])
+        self.assertNotIn("Parameter x_theme", result["coq_code"])
+        self.assertNotIn("Parameter Event : Type.", result["coq_code"])
+        self.assertNotIn("Parameter Agent :", result["coq_code"])
+        self.assertNotIn("Parameter Theme :", result["coq_code"])
 
     def test_locative_intransitive_predication_promotes_cat_on_mat(self) -> None:
         result = analyze_sentence("a cat sits on a mat", require_coq=True)
@@ -9882,7 +9962,7 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         payload, status = PipelineHandler.handle_construction_rule_draft_api(
             handler,
-            "sentence=John+ate&require_coq=1",
+            "sentence=Mary+admired+the+painting&require_coq=1",
         )
         self.assertEqual(status.name, "OK")
         self.assertEqual(
@@ -9894,10 +9974,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(payload["verification_scope"]["kind"], "fallback_shallow")
         draft = payload["construction_rule_draft"]
         self.assertEqual(draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
-        self.assertEqual(draft["candidate_rule_id"], "fallback_sigma_sigma_candidate")
+        self.assertEqual(draft["candidate_rule_id"], "fallback_admire_application_candidate")
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["coq_definition"],
-            "fallback_sigma_sigma_candidate_single_reading",
+            "fallback_admire_application_candidate_single_reading",
         )
         self.assertIn(
             "Parameter Agent :",
@@ -9905,15 +9985,15 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             construction_rule_draft_api_path(
-                "John ate",
+                "Mary admired the painting",
                 True,
                 download=True,
             ),
-            "/api/construction-rule-draft?sentence=John+ate&require_coq=1&download=1",
+            "/api/construction-rule-draft?sentence=Mary+admired+the+painting&require_coq=1&download=1",
         )
         self.assertEqual(
-            construction_rule_draft_artifact_filename("fallback_sigma_sigma_candidate"),
-            "construction_rule_draft__fallback_sigma_sigma_candidate.json",
+            construction_rule_draft_artifact_filename("fallback_admire_application_candidate"),
+            "construction_rule_draft__fallback_admire_application_candidate.json",
         )
 
         rejected_payload, rejected_status = PipelineHandler.handle_construction_rule_draft_api(
@@ -11129,7 +11209,7 @@ class TranslatorTests(unittest.TestCase):
         )
 
     def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
-        page = render_page("John ate", require_coq=True)
+        page = render_page("Mary admired the painting", require_coq=True)
         self.assertIn("Construction Rule", page)
         self.assertIn("No registered construction rule matched", page)
         self.assertIn("Verification Scope", page)
@@ -11141,7 +11221,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-upgrade-source-scope="fallback_shallow"', page)
         self.assertIn('data-upgrade-target-level="construction_rule"', page)
         self.assertIn(
-            'data-upgrade-candidate-rule-id="fallback_sigma_sigma_candidate"',
+            'data-upgrade-candidate-rule-id="fallback_admire_application_candidate"',
             page,
         )
         self.assertIn('data-upgrade-gap-id="no_registered_construction_rule"', page)
@@ -11150,20 +11230,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', page)
         self.assertIn('data-rule-draft-source-scope="fallback_shallow"', page)
         self.assertIn(
-            'data-rule-draft-id="fallback_sigma_sigma_candidate"',
+            'data-rule-draft-id="fallback_admire_application_candidate"',
             page,
         )
         self.assertIn(
-            'data-rule-draft-analyzer="fallback_sigma_sigma_candidate_pipeline"',
+            'data-rule-draft-analyzer="fallback_admire_application_candidate_pipeline"',
             page,
         )
         self.assertIn('data-rule-draft-can-auto-apply="false"', page)
         self.assertIn(
-            'data-rule-draft-reading="fallback_sigma_sigma_candidate_single_reading"',
+            'data-rule-draft-reading="fallback_admire_application_candidate_single_reading"',
             page,
         )
         self.assertIn(
-            "/api/construction-rule-draft?sentence=John+ate&amp;require_coq=1&amp;download=1",
+            "/api/construction-rule-draft?sentence=Mary+admired+the+painting&amp;require_coq=1&amp;download=1",
             page,
         )
         self.assertIn("Parameter Event : Type.", page)
@@ -12851,17 +12931,23 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_event_semantics`", web_design)
         self.assertIn("Semantic Readings Check panel", web_design)
         self.assertIn("API response and HTML panel must agree", web_design)
-        self.assertIn("promoted event-counting\nroute, the promoted locative route", web_design)
+        self.assertIn(
+            "promoted event-counting\nroute, the promoted active argument-omission route",
+            web_design,
+        )
         self.assertIn("John knocked twice", web_design)
         self.assertIn("event_counting_single_reading", web_design)
         self.assertIn("John knocked twice\nyesterday", web_design)
         self.assertIn("at_T(yesterday, repeat(2, knock(0)(john)))", web_design)
+        self.assertIn("active_argument_omission", web_design)
+        self.assertIn("active_argument_omission_single_reading", web_design)
+        self.assertIn("omitted_existential_theme", web_design)
         self.assertIn("a cat sits on a mat", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)
         self.assertIn("`on_mat : Entity`", web_design)
-        self.assertIn("`John ate` remains", web_design)
+        self.assertIn("`Mary admired the painting` remains", web_design)
         self.assertIn("multi-reading quantifier-scope success path", web_design)
         self.assertIn("some boy loves some girl", web_design)
         self.assertIn("registered perception-complement success path", web_design)
@@ -12898,6 +12984,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John knocked twice yesterday", manuscript)
         self.assertIn("at_T(yesterday, repeat(2, knock(0)(john)))", manuscript)
         self.assertIn("Mary visited Paris three times", manuscript)
+        self.assertIn("active_argument_omission", manuscript)
+        self.assertIn("active_argument_omission_single_reading", manuscript)
+        self.assertIn("omitted_existential_theme", manuscript)
         self.assertIn("a cat sits on a mat", manuscript)
         self.assertIn("locative_intransitive_predication", manuscript)
         self.assertIn("locative_intransitive_predication_single_reading", manuscript)
@@ -13506,7 +13595,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)
-        self.assertIn("`John ate` remains", web_design)
+        self.assertIn("active_argument_omission", web_design)
+        self.assertIn("`Mary admired the painting` remains", web_design)
         self.assertIn("`semantic_snapshots`", web_design)
         self.assertIn("`semantic_snapshot_count`", web_design)
         self.assertIn("`data-semantic-snapshot-*`", web_design)
@@ -14318,6 +14408,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_analyze_timed_after_success(", verifier)
         self.assertIn("def validate_analyze_universal_timed_burning_success(", verifier)
         self.assertIn("analyze_fallback_success", verifier)
+        self.assertIn("def validate_analyze_active_argument_omission_success(", verifier)
         self.assertIn("analyze_locative_intransitive_success", verifier)
         self.assertIn("analyze_temporal_event_counting_success", verifier)
         self.assertIn("analyze_quantifier_scope_success", verifier)
@@ -14329,6 +14420,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John knocked twice yesterday", verifier)
         self.assertIn("a cat sits on a mat", verifier)
         self.assertIn("John ate", verifier)
+        self.assertIn("Mary admired the painting", verifier)
         self.assertIn("some boy loves some girl", verifier)
         self.assertIn("Mary saw John leave", verifier)
         self.assertIn("after the singing of the Marseillaise, John saluted the flag", verifier)
