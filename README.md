@@ -1057,8 +1057,11 @@ integer. It now also validates `reading_type_check_diagnostics` itself:
 path must stay at `semantic_readings[i].type_check`, and the HTML panel must
 carry matching `data-reading-type-check-index`, name, source, scope,
 Coq-definition, path, error, and state-opposition-count hooks. It also checks
-that repair details agree with the specialized recovery action payloads derived
-from them.
+that the failed reading indices agree across `reading_type_check_diagnostics`,
+`semantic_readings_repair_details.failed_type_check_indices`, and the
+specialized `fix_reading_type_checks.reading_indices` recovery action, so a
+repair/export bundle cannot point at a different reading from the one that
+actually failed.
 For the same boundary, `diagnostics.recovery_actions` is specialized from
 those repair details: missing exports produce `add_missing_coq_definitions`
 with `target_definitions`, duplicate names produce `rename_duplicate_readings`,

@@ -1004,6 +1004,87 @@ def validate_recovery_action_matches_repair_details(
             )
 
 
+def validate_reading_type_check_recovery_alignment(
+    case: str,
+    diagnostics: object,
+) -> None:
+    if not isinstance(diagnostics, dict):
+        raise SystemExit(f"web route smoke check failed: {case} diagnostics missing")
+    reading_diagnostics = diagnostics.get("reading_type_check_diagnostics")
+    validate_reading_type_check_diagnostics(
+        case,
+        reading_diagnostics,
+        expected_count=diagnostics.get("reading_type_check_failure_count"),
+    )
+    assert isinstance(reading_diagnostics, list)
+    diagnostic_indices = [
+        diagnostic.get("reading_index")
+        for diagnostic in reading_diagnostics
+        if isinstance(diagnostic, dict)
+    ]
+    repair_details = diagnostics.get("semantic_readings_repair_details", {})
+    if not isinstance(repair_details, dict):
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} malformed semantic readings repair details"
+        )
+    failed_indices = repair_details.get("failed_type_check_indices", [])
+    if not integer_list(failed_indices):
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} invalid semantic readings repair details failed_type_check_indices"
+        )
+    if failed_indices != diagnostic_indices:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check diagnostic repair-detail drift"
+        )
+    failure_kinds = diagnostics.get("semantic_readings_failure_kinds", [])
+    if not isinstance(failure_kinds, list):
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check diagnostic failure-kind drift"
+        )
+    has_failure_kind = "reading_type_check_failed" in failure_kinds
+    if bool(diagnostic_indices) is not has_failure_kind:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check diagnostic failure-kind drift"
+        )
+    actions = diagnostics.get("recovery_actions")
+    if not isinstance(actions, list):
+        raise SystemExit(f"web route smoke check failed: {case} missing recovery actions")
+    fix_actions = [
+        action
+        for action in actions
+        if isinstance(action, dict) and action.get("kind") == "fix_reading_type_checks"
+    ]
+    if diagnostic_indices and len(fix_actions) != 1:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check recovery action drift"
+        )
+    if not diagnostic_indices and fix_actions:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check recovery action drift"
+        )
+    if not fix_actions:
+        return
+    action = fix_actions[0]
+    if action.get("reading_indices") != diagnostic_indices:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check recovery action index drift"
+        )
+    target_fields = action.get("target_fields")
+    if isinstance(target_fields, list) and "semantic_readings.type_check" not in target_fields:
+        raise SystemExit(
+            "web route smoke check failed: "
+            f"{case} reading type-check recovery action target drift"
+        )
+
+
 def validate_recovery_action_export_bundle(
     case: str,
     action_index: int,
@@ -1182,6 +1263,10 @@ def validate_analyze_action_inspection_run_bundle(
         raise SystemExit(f"web route smoke check failed: {label} analyze run plan drift")
     if run_bundle.get("diagnostics") != diagnostics:
         raise SystemExit(f"web route smoke check failed: {label} analyze run diagnostics drift")
+    validate_reading_type_check_recovery_alignment(
+        label,
+        run_bundle.get("diagnostics"),
+    )
     contract = run_bundle.get("contract")
     if not isinstance(contract, dict):
         raise SystemExit(f"web route smoke check failed: {label} analyze run contract drift")
@@ -1242,6 +1327,10 @@ def validate_analyze_action_inspection_run_rejection(
         raise SystemExit(f"web route smoke check failed: {label} analyze run rejection plan drift")
     if run_bundle.get("diagnostics") != diagnostics:
         raise SystemExit(f"web route smoke check failed: {label} analyze run rejection diagnostics drift")
+    validate_reading_type_check_recovery_alignment(
+        label,
+        run_bundle.get("diagnostics"),
+    )
     contract = run_bundle.get("contract")
     if not isinstance(contract, dict):
         raise SystemExit(f"web route smoke check failed: {label} analyze run rejection contract drift")
@@ -1681,6 +1770,7 @@ def validate_analyze_failure_surface_type_contract(
         diagnostics.get("reading_type_check_diagnostics"),
         expected_count=diagnostics.get("reading_type_check_failure_count"),
     )
+    validate_reading_type_check_recovery_alignment(label, diagnostics)
     validate_reading_type_check_diagnostics_html(
         label,
         diagnostics.get("reading_type_check_diagnostics"),
@@ -1890,6 +1980,10 @@ def validate_analyze_action_export_bundle(
         raise SystemExit(f"web route smoke check failed: {label} analyze action plan drift")
     if action_bundle.get("diagnostics") != diagnostics:
         raise SystemExit(f"web route smoke check failed: {label} analyze action diagnostics drift")
+    validate_reading_type_check_recovery_alignment(
+        label,
+        action_bundle.get("diagnostics"),
+    )
     contract = action_bundle.get("contract")
     if not isinstance(contract, dict):
         raise SystemExit(f"web route smoke check failed: {label} analyze action contract drift")
@@ -3458,6 +3552,7 @@ def validate_diagnostic_fixture_routes(
             diagnostics.get("reading_type_check_diagnostics"),
             expected_count=diagnostics.get("reading_type_check_failure_count"),
         )
+        validate_reading_type_check_recovery_alignment(case, diagnostics)
         validate_reading_type_check_diagnostics_html(
             case,
             diagnostics.get("reading_type_check_diagnostics"),

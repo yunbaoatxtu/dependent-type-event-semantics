@@ -412,8 +412,10 @@ record-level `error_count` and `state_opposition_count` agree with their nested
 lists, each path remains `semantic_readings[i].type_check`, and the HTML panel
 keeps the corresponding `data-reading-type-check-index`, name, source, scope,
 Coq-definition, path, error, and state-opposition-count hooks. It should also
-compare the repair details with the payload fields of the specialized recovery
-actions derived from them.
+compare the failed reading indices across the diagnostics list,
+`semantic_readings_repair_details.failed_type_check_indices`, and the
+specialized `fix_reading_type_checks.reading_indices` action, including the
+ordinary analyze-action export and human-review inspection-rejection bundle.
 The separate `failure_stage` field distinguishes input/parsing failures from
 later semantic and proof-assistant failures.
 The web status line should surface `recovery_hint` directly so users do not

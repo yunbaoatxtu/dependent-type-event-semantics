@@ -115,6 +115,8 @@ class PaperDocxTests(unittest.TestCase):
             "reading_type_check_failure_count and the diagnostic list length",
             manuscript,
         )
+        self.assertIn("fix_reading_type_checks.reading_indices", manuscript)
+        self.assertIn("human-review inspection rejections", manuscript)
         self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("action/detail drift", manuscript)

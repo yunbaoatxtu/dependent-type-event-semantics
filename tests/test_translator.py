@@ -39,6 +39,7 @@ from scripts.verify_project import (
     validate_ordinary_analyze_action_export_surface,
     validate_reading_type_check_diagnostics,
     validate_reading_type_check_diagnostics_html,
+    validate_reading_type_check_recovery_alignment,
     validate_lexicon_patch_bundle,
     validate_lexicon_warning_response,
 )
@@ -141,6 +142,7 @@ from web.app import (
     analyze_action_artifact_filename,
     analyze_action_export_bundle,
     analyze_action_inspection_run_bundle,
+    analyze_action_repair_plan,
     analyze_action_run_api_path,
     analyze_action_run_artifact_filename,
     analyze_sentence,
@@ -15360,6 +15362,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Reading Type Check Diagnostics` panel", readme)
         self.assertIn("`reading_type_check_failure_count` must match", readme)
         self.assertIn("`data-reading-type-check-index`", readme)
+        self.assertIn("`fix_reading_type_checks.reading_indices`", readme)
         self.assertIn("`data-reading-type-check-*` hooks", readme)
         self.assertIn("fixed schema", readme)
         self.assertIn("`add_missing_coq_definitions`", readme)
@@ -15705,11 +15708,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`reading_type_check_diagnostics`", web_design)
         self.assertIn("record-level `error_count`", web_design)
         self.assertIn("`data-reading-type-check-index`", web_design)
+        self.assertIn("ordinary analyze-action export", web_design)
         self.assertIn("`Reading Type Check Diagnostics` panel", web_design)
         self.assertIn("`data-reading-type-check-name`", web_design)
         self.assertIn("`data-reading-type-check-state-opposition-count`", web_design)
         self.assertIn("checked as a fixed schema", web_design)
-        self.assertIn("compare the repair details with the payload fields", web_design)
+        self.assertIn(
+            "`semantic_readings_repair_details.failed_type_check_indices`",
+            web_design,
+        )
+        self.assertIn("`fix_reading_type_checks.reading_indices`", web_design)
         self.assertIn("`add_missing_coq_definitions`", web_design)
         self.assertIn("`next-step-details`", web_design)
         self.assertIn("/diagnostic-fixture?case=semantic_readings_missing_export", web_design)
@@ -15964,6 +15972,8 @@ class TranslatorTests(unittest.TestCase):
             "reading_type_check_failure_count and the diagnostic list length",
             manuscript,
         )
+        self.assertIn("fix_reading_type_checks.reading_indices", manuscript)
+        self.assertIn("human-review inspection rejections", manuscript)
         self.assertIn("Mary admired the door because it was closed and open", manuscript)
         self.assertIn("diagnostic_repair_plan.v1", manuscript)
         self.assertIn("repair_plan_automation_modes", manuscript)
@@ -17472,6 +17482,125 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_diagnostic_fixture_routes(manifest, payloads, pages)
 
+    def test_verification_rejects_reading_type_check_recovery_alignment_drift(
+        self,
+    ) -> None:
+        result = analyze_sentence(
+            "Mary admired the door because it was closed and open",
+            require_coq=True,
+        )
+        diagnostics = result["diagnostics"]
+        validate_reading_type_check_recovery_alignment(
+            "ordinary reading type-check failure",
+            diagnostics,
+        )
+
+        stale = deepcopy(diagnostics)
+        stale["semantic_readings_repair_details"]["failed_type_check_indices"] = [1]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary reading type-check failure reading type-check diagnostic "
+            "repair-detail drift",
+        ):
+            validate_reading_type_check_recovery_alignment(
+                "ordinary reading type-check failure",
+                stale,
+            )
+
+        stale = deepcopy(diagnostics)
+        stale["recovery_actions"][0]["reading_indices"] = [1]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary reading type-check failure reading type-check recovery action "
+            "index drift",
+        ):
+            validate_reading_type_check_recovery_alignment(
+                "ordinary reading type-check failure",
+                stale,
+            )
+
+        stale = deepcopy(diagnostics)
+        stale["recovery_actions"] = [
+            action
+            for action in stale["recovery_actions"]
+            if action.get("kind") != "fix_reading_type_checks"
+        ]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary reading type-check failure reading type-check recovery action "
+            "drift",
+        ):
+            validate_reading_type_check_recovery_alignment(
+                "ordinary reading type-check failure",
+                stale,
+            )
+
+        stale = deepcopy(diagnostics)
+        stale["semantic_readings_failure_kinds"] = []
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary reading type-check failure reading type-check diagnostic "
+            "failure-kind drift",
+        ):
+            validate_reading_type_check_recovery_alignment(
+                "ordinary reading type-check failure",
+                stale,
+            )
+
+    def test_verification_rejects_fixture_reading_type_check_recovery_alignment_drift(
+        self,
+    ) -> None:
+        manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
+        payloads = deepcopy(payloads)
+        diagnostic = payloads["semantic_readings_malformed"]["diagnostics"][
+            "reading_type_check_diagnostics"
+        ][0]
+        diagnostic["reading_index"] = 1
+        diagnostic["path"] = "semantic_readings[1].type_check"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "semantic_readings_malformed reading type-check diagnostic "
+            "repair-detail drift",
+        ):
+            validate_diagnostic_fixture_routes(manifest, payloads, pages)
+
+    def test_verification_rejects_analyze_reading_type_check_rejection_alignment_drift(
+        self,
+    ) -> None:
+        sentence = "Mary admired the door because it was closed and open"
+        result = analyze_sentence(sentence, require_coq=True)
+        rejection, status = analyze_action_inspection_run_bundle(sentence, True, 0)
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+        validate_analyze_action_inspection_run_rejection(
+            "ordinary semantic-reading type-check failure",
+            sentence,
+            0,
+            result,
+            rejection,
+        )
+        stale_result = deepcopy(result)
+        stale_rejection = deepcopy(rejection)
+        stale_result["diagnostics"]["recovery_actions"][0]["reading_indices"] = [1]
+        stale_rejection["diagnostics"]["recovery_actions"][0]["reading_indices"] = [1]
+        stale_rejection["repair_plan"] = analyze_action_repair_plan(
+            sentence,
+            0,
+            str(stale_result["diagnostics"]["failure_stage"]),
+            stale_result["diagnostics"]["recovery_actions"][0],
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary semantic-reading type-check failure reading type-check recovery "
+            "action index drift",
+        ):
+            validate_analyze_action_inspection_run_rejection(
+                "ordinary semantic-reading type-check failure",
+                sentence,
+                0,
+                stale_result,
+                stale_rejection,
+            )
+
     def test_verification_rejects_repair_detail_and_action_drift(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         payloads = deepcopy(payloads)
@@ -17886,7 +18015,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_semantic_readings_repair_details(", verifier)
         self.assertIn("def validate_reading_type_check_diagnostics(", verifier)
         self.assertIn("def validate_reading_type_check_diagnostics_html(", verifier)
+        self.assertIn("def validate_reading_type_check_recovery_alignment(", verifier)
         self.assertIn("reading type-check diagnostic count drift", verifier)
+        self.assertIn("reading type-check recovery action index drift", verifier)
         self.assertIn("data-reading-type-check-path", verifier)
         self.assertIn("ordinary semantic-reading type-check failure", verifier)
         self.assertIn("def validate_successful_semantic_reading_contract(", verifier)
