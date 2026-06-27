@@ -3178,7 +3178,7 @@ def expected_modified_surface_slot_probe_meta_from_spec(
 def expected_modified_surface_slot_probe_matrix_meta_from_spec(
     spec: dict,
 ) -> tuple[list[str], dict[str, tuple[str, str, str, str, int, bool, str, list[str], dict]]]:
-    from translator.natural_language_pipeline import (
+    from translator.surface_type_contracts import (
         modified_transitive_surface_type_contract_registry,
     )
 
@@ -4025,6 +4025,10 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
         (
             'data-surface-slot-probe-matrix-type-contract-source="'
+            'translator/surface_type_contracts.py"'
+        ),
+        (
+            'data-surface-slot-probe-matrix-type-contract-registry-id="'
             'modified_transitive_adv_sequence.surface_slot_matrix"'
         ),
         'data-surface-slot-probe-id="subject_slot_john"',

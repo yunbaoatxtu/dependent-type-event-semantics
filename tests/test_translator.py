@@ -13,6 +13,7 @@ from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 
 import translator.natural_language_pipeline as natural_language_pipeline
+import translator.surface_type_contracts as surface_type_contracts
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES
 from scripts.verify_project import (
@@ -9439,15 +9440,23 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"],
+            surface_type_contracts.modified_transitive_surface_type_contract_registry(),
+        )
+        self.assertEqual(
             natural_language_pipeline.modified_transitive_surface_type_contract_registry(),
+            surface_type_contracts.modified_transitive_surface_type_contract_registry(),
         )
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"]["schema_version"],
-            "surface_type_contract_registry.v1",
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_REGISTRY_SCHEMA,
         )
         self.assertEqual(
             matrix_generation_spec["type_contract_registry"]["source"],
-            "modified_transitive_adv_sequence.surface_slot_matrix",
+            surface_type_contracts.SURFACE_TYPE_CONTRACT_SOURCE_MODULE,
+        )
+        self.assertEqual(
+            matrix_generation_spec["type_contract_registry"]["registry_id"],
+            surface_type_contracts.MODIFIED_TRANSITIVE_SURFACE_REGISTRY_ID,
         )
         self.assertEqual(
             matrix_generation_spec["axis_type_contract"],
@@ -10104,7 +10113,11 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-source="modified_transitive_adv_sequence.surface_slot_matrix"',
+            'data-surface-slot-probe-matrix-type-contract-source="translator/surface_type_contracts.py"',
+            page,
+        )
+        self.assertIn(
+            'data-surface-slot-probe-matrix-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
             page,
         )
         self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
@@ -15565,6 +15578,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
         self.assertIn("surface_type_contract_registry.v1", verifier)
+        self.assertIn("from translator.surface_type_contracts import", verifier)
+        self.assertIn("data-surface-slot-probe-matrix-type-contract-registry-id", verifier)
         self.assertIn("surface_slot_probe_matrix_generation.v1", verifier)
         self.assertIn("surface_slot_probe_generation.v1", verifier)
         self.assertIn("surface_slot_probes.v1", verifier)

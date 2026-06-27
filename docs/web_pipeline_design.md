@@ -211,7 +211,8 @@ include the type boundary for the matrix: Agent and Theme slots are
 families, modifier slots are `Adv`, and timed rows expose the `Time` argument
 used by the proposition-level temporal operator.
 The matrix generation spec also embeds a `surface_type_contract_registry.v1`
-object and mirrors its schema/source through
+object from `translator/surface_type_contracts.py` and mirrors its schema,
+source module, and registry id through
 `data-surface-slot-probe-matrix-type-contract-*`, making the UI boundary check
 the same source used by the verifier.
 The same manifest includes `semantic_snapshots` and `semantic_snapshot_count`.

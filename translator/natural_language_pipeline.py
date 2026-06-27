@@ -60,6 +60,9 @@ from translator.surface_lexicon import (
     temporal_phrase_value,
     temporal_prepositional_phrase_value,
 )
+from translator.surface_type_contracts import (
+    modified_transitive_surface_type_contract_registry,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -569,101 +572,6 @@ def modified_transitive_surface_slot_probes_from_spec(
             },
         )
     return probes
-
-
-def modified_transitive_surface_type_contract_registry() -> dict[str, Any]:
-    transitive_adv_type = (
-        "forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT"
-    )
-    return {
-        "schema_version": "surface_type_contract_registry.v1",
-        "source": "modified_transitive_adv_sequence.surface_slot_matrix",
-        "base_family": "modified_transitive_adv_sequence",
-        "axis_type_contract": {
-            "agents": {
-                "surface_slot": "subject",
-                "role_label": "Agent",
-                "dependent_type": "Entity",
-                "semantic_class": "Person",
-            },
-            "predicates": {
-                "surface_slot": "verb",
-                "dependent_type": transitive_adv_type,
-                "semantic_class": "TransitiveAdvPredicateFamily",
-                "role_frame": ["Agent", "Theme"],
-                "output_type": "PropT",
-            },
-            "themes": {
-                "surface_slot": "direct_object",
-                "role_label": "Theme",
-                "dependent_type": "Entity",
-                "semantic_class": "VisualObject",
-            },
-        },
-        "modifier_type_contract": {
-            "dependent_type": "Adv",
-            "constructor_type": "Entity -> Adv",
-            "accepted_semantic_roles": ["Location", "Instrument"],
-            "treat_modifier_objects_as_events": False,
-        },
-        "time_type_contract": {
-            "time_argument_type": "Time",
-            "time_operator_type": "Time -> PropT -> PropT",
-            "proposition_scope": True,
-        },
-        "axes": {
-            "agents": [
-                {
-                    "surface": "Mary",
-                    "semantic": "mary",
-                    "dependent_type": "Entity",
-                    "semantic_class": "Person",
-                    "role_label": "Agent",
-                },
-                {
-                    "surface": "John",
-                    "semantic": "john",
-                    "dependent_type": "Entity",
-                    "semantic_class": "Person",
-                    "role_label": "Agent",
-                },
-            ],
-            "predicates": [
-                {
-                    "surface": "admired",
-                    "semantic": "admire",
-                    "dependent_type": transitive_adv_type,
-                    "semantic_class": "TransitiveAdvPredicateFamily",
-                    "role_frame": ["Agent", "Theme"],
-                    "output_type": "PropT",
-                },
-                {
-                    "surface": "photographed",
-                    "semantic": "photograph",
-                    "dependent_type": transitive_adv_type,
-                    "semantic_class": "TransitiveAdvPredicateFamily",
-                    "role_frame": ["Agent", "Theme"],
-                    "output_type": "PropT",
-                },
-            ],
-            "themes": [
-                {
-                    "surface": "painting",
-                    "semantic": "painting",
-                    "dependent_type": "Entity",
-                    "semantic_class": "VisualObject",
-                    "role_label": "Theme",
-                },
-                {
-                    "surface": "sculpture",
-                    "semantic": "sculpture",
-                    "dependent_type": "Entity",
-                    "semantic_class": "VisualObject",
-                    "role_label": "Theme",
-                },
-            ],
-        },
-    }
 
 
 def modified_transitive_surface_slot_probe_matrix_generation_spec() -> dict[str, Any]:

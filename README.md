@@ -906,10 +906,11 @@ matrix also carries an axis-level type contract: agents and themes are
 `Entity`-typed role bearers, predicates are dependent transitive Adv families
 of type `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`,
 modifiers are `Adv`, and timed rows use a `Time -> PropT -> PropT` operator.
-That contract is now exposed as a `surface_type_contract_registry.v1` source
-inside the matrix generation spec, and the verifier checks that the copied
-axis, modifier, time, and lexical-frame fields remain synchronized with that
-source.
+That contract is now exposed as a `surface_type_contract_registry.v1` object
+implemented in `translator/surface_type_contracts.py`; its `registry_id`
+identifies the concrete `modified_transitive_adv_sequence.surface_slot_matrix`
+contract. The verifier checks that the copied axis, modifier, time, and
+lexical-frame fields remain synchronized with that source.
 It also exposes `semantic_snapshots`: one static, rule-indexed summary per
 registered construction. Each snapshot records the expected analysis label,
 required dependent-type translation fragments, semantic-reading names and
