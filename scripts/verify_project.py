@@ -1729,6 +1729,11 @@ def validate_ordinary_analyze_action_export_surface(
     action_bundle: dict,
     *,
     expected_failure_stage: str | None = None,
+    expected_action_kind: str | None = None,
+    expected_can_auto_run: bool | None = None,
+    expected_verification_scope_kind: str | None = None,
+    expected_certification_level: str = "none",
+    expected_verification_scope_rule: str | None = None,
 ) -> str:
     if analyze_payload.get("ok") is not False:
         raise SystemExit(f"web route smoke check failed: {label} analyze did not fail")
@@ -1741,6 +1746,26 @@ def validate_ordinary_analyze_action_export_surface(
         and diagnostics.get("failure_stage") != expected_failure_stage
     ):
         raise SystemExit(f"web route smoke check failed: {label} diagnostics stage drift")
+    actions = diagnostics.get("recovery_actions")
+    if not isinstance(actions, list) or action_index >= len(actions):
+        raise SystemExit(f"web route smoke check failed: {label} analyze action drift")
+    expected_action = actions[action_index]
+    if not isinstance(expected_action, dict):
+        raise SystemExit(f"web route smoke check failed: {label} analyze action shape drift")
+    if expected_action_kind is not None and expected_action.get("kind") != expected_action_kind:
+        raise SystemExit(f"web route smoke check failed: {label} action kind drift")
+    if (
+        expected_verification_scope_kind is not None
+        and expected_verification_scope_kind != "fallback_shallow"
+    ):
+        validate_verification_scope(
+            analyze_payload,
+            page,
+            label,
+            expected_verification_scope_kind,
+            expected_certification_level,
+            expected_verification_scope_rule,
+        )
     validate_analyze_recovery_action_run_metadata(
         label,
         sentence,
@@ -1755,6 +1780,14 @@ def validate_ordinary_analyze_action_export_surface(
         analyze_payload,
         action_bundle,
     )
+    repair_plan = action_bundle.get("repair_plan")
+    if not isinstance(repair_plan, dict):
+        raise SystemExit(f"web route smoke check failed: {label} analyze action plan drift")
+    if (
+        expected_can_auto_run is not None
+        and repair_plan.get("can_auto_run") is not expected_can_auto_run
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} analyze action run drift")
     validate_analyze_action_export_preview(
         label,
         page,
@@ -5381,11 +5414,39 @@ def run_web_route_smoke_check() -> None:
             burning_sentence,
         )
         ordinary_failure_matrix = (
-            ("ordinary input failure", "  ", "input"),
-            ("ordinary parsing failure", "John", "parsing"),
-            ("ordinary type-check failure", "the plant killed", "type_check"),
+            ("ordinary input failure", "  ", "input", "edit_input", False, "unverified_failure", "none", None),
+            ("ordinary parsing failure", "John", "parsing", "revise_sentence", False, "unverified_failure", "none", None),
+            (
+                "ordinary unsupported-fragment failure",
+                "if John left, Mary cried because Sue left",
+                "parsing",
+                "revise_sentence",
+                False,
+                "rejected_unsupported_fragment",
+                "none",
+                None,
+            ),
+            (
+                "ordinary type-check failure",
+                "the plant killed",
+                "type_check",
+                "inspect_ast",
+                True,
+                "registered_construction",
+                "construction_rule",
+                "lexical_state_change",
+            ),
         )
-        for failure_label, surface_sentence, expected_stage in ordinary_failure_matrix:
+        for (
+            failure_label,
+            surface_sentence,
+            expected_stage,
+            expected_action_kind,
+            expected_can_auto_run,
+            expected_scope_kind,
+            expected_certification_level,
+            expected_scope_rule,
+        ) in ordinary_failure_matrix:
             failure_query = urlencode({"sentence": surface_sentence, "require_coq": "1"})
             with opener.open(
                 f"{base_url}/api/analyze?{failure_query}",
@@ -5432,6 +5493,11 @@ def run_web_route_smoke_check() -> None:
                 failure_page,
                 analyze_action_payload,
                 expected_failure_stage=expected_stage,
+                expected_action_kind=expected_action_kind,
+                expected_can_auto_run=expected_can_auto_run,
+                expected_verification_scope_kind=expected_scope_kind,
+                expected_certification_level=expected_certification_level,
+                expected_verification_scope_rule=expected_scope_rule,
             )
             download_path = action.get("download_api_path")
             if not isinstance(download_path, str):

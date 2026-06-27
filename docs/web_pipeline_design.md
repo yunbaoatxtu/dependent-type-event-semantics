@@ -470,9 +470,12 @@ the export is read-only. The ordinary failure `Next Steps` row should render an
 expandable `Action JSON` preview for this bundle, and the verifier should compare
 that row-local preview with the `/api/analyze-action` payload so a stale page-wide
 JSON snippet cannot satisfy the contract. The ordinary-failure route check should
-cover at least three stage-local cases: normalized empty input with `edit_input`,
-short parsing failure such as `John` with `revise_sentence`, and type-check
-failure such as `the plant killed` with `inspect_ast`. Human-review actions in
+cover at least four stage-local cases: normalized empty input with `edit_input`,
+short parsing failure such as `John` with `revise_sentence`, unsupported-fragment
+rejection such as `if John left, Mary cried because Sue left` with
+`verification_scope.kind = rejected_unsupported_fragment`, and type-check failure
+such as `the plant killed` with `inspect_ast` under the registered construction
+scope `construction_rule` for `lexical_state_change`. Human-review actions in
 that matrix should still have downloadable action JSON, but their
 `/api/analyze-action-run` route should return a structured
 `diagnostic_inspection_run.v1` rejection rather than an auto-runnable snapshot.

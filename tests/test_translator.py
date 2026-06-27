@@ -12566,17 +12566,51 @@ class TranslatorTests(unittest.TestCase):
 
     def test_ordinary_failure_action_export_surface_covers_failure_matrix(self) -> None:
         cases = [
-            ("ordinary input failure", "  ", "input", "edit_input", False),
-            ("ordinary parsing failure", "John", "parsing", "revise_sentence", False),
-            ("ordinary type-check failure", "the plant killed", "type_check", "inspect_ast", True),
+            ("ordinary input failure", "  ", "input", "edit_input", False, "unverified_failure", "none", None),
+            ("ordinary parsing failure", "John", "parsing", "revise_sentence", False, "unverified_failure", "none", None),
+            (
+                "ordinary unsupported-fragment failure",
+                "if John left, Mary cried because Sue left",
+                "parsing",
+                "revise_sentence",
+                False,
+                "rejected_unsupported_fragment",
+                "none",
+                None,
+            ),
+            (
+                "ordinary type-check failure",
+                "the plant killed",
+                "type_check",
+                "inspect_ast",
+                True,
+                "registered_construction",
+                "construction_rule",
+                "lexical_state_change",
+            ),
         ]
-        for label, sentence, stage, action_kind, can_auto_run in cases:
+        for (
+            label,
+            sentence,
+            stage,
+            action_kind,
+            can_auto_run,
+            scope_kind,
+            certification_level,
+            scope_rule,
+        ) in cases:
             with self.subTest(label=label):
                 result = analyze_sentence(sentence, require_coq=True)
                 page = render_page(sentence, result=result, require_coq=True)
                 action_bundle, status = analyze_action_export_bundle(sentence, True, 0)
                 self.assertEqual(status, HTTPStatus.OK)
                 self.assertEqual(result["diagnostics"]["failure_stage"], stage)
+                self.assertEqual(result["verification_scope"]["kind"], scope_kind)
+                self.assertEqual(
+                    result["verification_scope"]["certification_level"],
+                    certification_level,
+                )
+                self.assertEqual(result["verification_scope"]["rule_id"], scope_rule)
                 self.assertEqual(action_bundle["failure_stage"], stage)
                 self.assertEqual(action_bundle["action"]["kind"], action_kind)
                 self.assertEqual(action_bundle["repair_plan"]["can_auto_run"], can_auto_run)
@@ -12590,6 +12624,11 @@ class TranslatorTests(unittest.TestCase):
                     page,
                     action_bundle,
                     expected_failure_stage=stage,
+                    expected_action_kind=action_kind,
+                    expected_can_auto_run=can_auto_run,
+                    expected_verification_scope_kind=scope_kind,
+                    expected_certification_level=certification_level,
+                    expected_verification_scope_rule=scope_rule,
                 )
                 self.assertEqual(normalized_sentence, result["input_sentence"])
 
@@ -14592,7 +14631,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("small ordinary-failure matrix", readme)
         self.assertIn("empty input is normalized", readme)
         self.assertIn("`John` is treated as a `parsing`", readme)
-        self.assertIn("first two human-review\nactions", readme)
+        self.assertIn("if John left, Mary cried because Sue", readme)
+        self.assertIn("rejected_unsupported_fragment", readme)
+        self.assertIn("registered construction scope", readme)
+        self.assertIn("`construction_rule`", readme)
+        self.assertIn("`lexical_state_change`", readme)
+        self.assertIn("human-review actions", readme)
         self.assertIn("`api_path`", readme)
         self.assertIn("`download_api_path`", readme)
         self.assertIn("`download_filename`", readme)
@@ -14875,6 +14919,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("ordinary-failure route check", web_design)
         self.assertIn("normalized empty input with `edit_input`", web_design)
         self.assertIn("short parsing failure such as `John`", web_design)
+        self.assertIn("unsupported-fragment\nrejection", web_design)
+        self.assertIn("`verification_scope.kind = rejected_unsupported_fragment`", web_design)
+        self.assertIn("registered construction\nscope `construction_rule`", web_design)
+        self.assertIn("`lexical_state_change`", web_design)
         self.assertIn("structured\n`diagnostic_inspection_run.v1` rejection", web_design)
         self.assertIn("`api_path`", web_design)
         self.assertIn("`download_api_path`", web_design)
@@ -15044,6 +15092,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("small stage-local matrix", manuscript)
         self.assertIn("normalized empty input", manuscript)
         self.assertIn("parsing-stage revise_sentence", manuscript)
+        self.assertIn("unsupported-fragment sentence", manuscript)
+        self.assertIn("verification_scope.kind rejected_unsupported_fragment", manuscript)
+        self.assertIn("registered construction scope construction_rule", manuscript)
+        self.assertIn("lexical_state_change", manuscript)
         self.assertIn("type_check-stage inspect_ast", manuscript)
         self.assertIn("diagnostic_inspection_run.v1 rejection", manuscript)
         self.assertIn("using the sentence and action index", manuscript)
@@ -15816,6 +15868,45 @@ class TranslatorTests(unittest.TestCase):
                 stale_rejection,
             )
 
+    def test_verification_rejects_ordinary_failure_scope_drift(self) -> None:
+        sentence = "if John left, Mary cried because Sue left"
+        result = analyze_sentence(sentence, require_coq=True)
+        page = render_page(sentence, result=result, require_coq=True)
+        action_bundle, status = analyze_action_export_bundle(sentence, True, 0)
+        self.assertEqual(status, HTTPStatus.OK)
+        validate_ordinary_analyze_action_export_surface(
+            "ordinary unsupported-fragment failure",
+            sentence,
+            True,
+            0,
+            result,
+            page,
+            action_bundle,
+            expected_failure_stage="parsing",
+            expected_action_kind="revise_sentence",
+            expected_can_auto_run=False,
+            expected_verification_scope_kind="rejected_unsupported_fragment",
+        )
+        stale_result = deepcopy(result)
+        stale_result["verification_scope"]["kind"] = "unverified_failure"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "ordinary unsupported-fragment failure verification scope kind drift",
+        ):
+            validate_ordinary_analyze_action_export_surface(
+                "ordinary unsupported-fragment failure",
+                sentence,
+                True,
+                0,
+                stale_result,
+                page,
+                action_bundle,
+                expected_failure_stage="parsing",
+                expected_action_kind="revise_sentence",
+                expected_can_auto_run=False,
+                expected_verification_scope_kind="rejected_unsupported_fragment",
+            )
+
     def test_verification_rejects_unknown_diagnostic_fixture_failure_stage(self) -> None:
         manifest, payloads, pages = self.diagnostic_fixture_route_artifacts()
         manifest = deepcopy(manifest)
@@ -16461,6 +16552,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_analyze_action_inspection_run_rejection(", verifier)
         self.assertIn('"ordinary input failure"', verifier)
         self.assertIn('"ordinary parsing failure"', verifier)
+        self.assertIn('"ordinary unsupported-fragment failure"', verifier)
+        self.assertIn('"rejected_unsupported_fragment"', verifier)
         self.assertIn("def analyze_action_api_path(", verifier)
         self.assertIn("def analyze_action_artifact_filename(", verifier)
         self.assertIn("def validate_analyze_recovery_action_run_metadata(", verifier)

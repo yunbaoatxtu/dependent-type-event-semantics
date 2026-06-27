@@ -1044,11 +1044,13 @@ its run bundle snapshots `ast` and `type_check`, preserves
 `analyze_inspection_run__the-plant-killed__0.json`. The same project-level
 check now walks a small ordinary-failure matrix: empty input is normalized to
 the `input` stage with an `edit_input` action, `John` is treated as a `parsing`
-failure with a `revise_sentence` action, and `the plant killed` remains the
-`type_check` example with an `inspect_ast` action. The first two human-review
-actions must still export row-local action JSON, but their inspection-run route
-must return a `diagnostic_inspection_run.v1` rejection rather than an executable
-snapshot. The ordinary
+failure with a `revise_sentence` action, `if John left, Mary cried because Sue
+left` remains a `parsing` failure with `verification_scope.kind:
+rejected_unsupported_fragment`, and `the plant killed` remains the `type_check`
+example with an `inspect_ast` action under the registered construction scope
+`construction_rule` for `lexical_state_change`. The human-review actions must still export
+row-local action JSON, but their inspection-run route must return a
+`diagnostic_inspection_run.v1` rejection rather than an executable snapshot. The ordinary
 `diagnostics.recovery_actions` entry now carries the same machine-readable
 `api_path`, `download_api_path`, `download_filename`, `automation_mode`,
 `can_auto_run`, `can_auto_apply`, `target_fields`, `inspection_run_api_path`,
