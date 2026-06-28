@@ -191,6 +191,9 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication": (
         "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope"
     ),
+    "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication": (
+        "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window"
+    ),
     "manner_instrument_intransitive_predication": (
         "Mary laughed loudly with a telescope"
     ),
@@ -231,7 +234,7 @@ FALLBACK_COVERAGE_EXAMPLES = (
     {
         "sentence": (
             "Mary laughed from a window with a camera beside a shelf loudly "
-            "under a lamp on a table with a microphone near a door with a telescope near a window yesterday"
+            "under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
         ),
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
@@ -872,6 +875,58 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "directional-instrument-location-manner-location-sequence-instrument-location-instrument-tail-intransitive-predication",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, laugh(10)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), near(door), with(microphone), near(window), with(telescope), mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "variant_id": "temporal_source_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "sentence": "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window yesterday",
+        "expected_event_analysis": "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(10)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "variant_id": "temporal_goal_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "sentence": "Mary laughed into a room with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window yesterday",
+        "expected_event_analysis": "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(10)(into(room), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "variant_id": "temporal_source_goal_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "sentence": "Mary laughed from a window into a room with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window yesterday",
+        "expected_event_analysis": "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(11)(from(window), into(room), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "variant_id": "temporal_extended_source_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication",
+        "sentence": "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window in the park yesterday",
+        "expected_event_analysis": "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(11)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), in(park), mary))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -2196,6 +2251,32 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_type_check_type": "t",
     },
     {
+        "rule_id": (
+            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication"
+        ),
+        "sentence": (
+            "Mary laughed from a window with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a telescope near a window"
+        ),
+        "expected_event_analysis": (
+            "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication"
+        ),
+        "expected_dependent_type_fragments": [
+            "laugh(10)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), mary)",
+        ],
+        "expected_reading_names": [
+            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication_single_reading"
+        ],
+        "expected_reading_sources": [
+            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication"
+        ],
+        "expected_reading_scopes": [
+            "explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail"
+        ],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
         "rule_id": "manner_instrument_intransitive_predication",
         "sentence": "Mary laughed loudly with a telescope",
         "expected_event_analysis": "manner-instrument-intransitive-predication",
@@ -2848,6 +2929,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "binder_signatures": [],
         "quantifier_signatures": [],
         "top_level_modifier_count": 9,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication": {
+        "kind": "application",
+        "predicate_symbols": ["laugh"],
+        "predicate_types": [],
+        "entity_symbols": ["mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 10,
         "top_level_time_modifier_count": 0,
         "reading_count": 0,
         "clause_count": 0,
@@ -16789,6 +16885,344 @@ def directional_instrument_location_manner_location_sequence_instrument_location
     )
 
 
+def directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_application_details(
+    ast: dict[str, Any],
+) -> dict[str, Any] | None:
+    if ast.get("kind") != "application":
+        return None
+    modifiers = ast.get("modifiers")
+    modifier_vector = ast.get("modifier_vector")
+    modifier_roles = ast.get("modifier_roles", {}).get("roles")
+    if (
+        not isinstance(modifiers, list)
+        or len(modifiers) < 10
+        or ast.get("adverb_count") != len(modifiers)
+        or not isinstance(modifier_vector, dict)
+        or modifier_vector.get("length") != len(modifiers)
+        or not isinstance(modifier_vector.get("items"), list)
+        or len(modifier_vector["items"]) != len(modifiers)
+        or not isinstance(modifier_roles, list)
+        or len(modifier_roles) != len(modifiers)
+    ):
+        return None
+
+    semantic_roles = []
+    for index, (modifier, vector_item, role_item) in enumerate(
+        zip(modifiers, modifier_vector["items"], modifier_roles)
+    ):
+        semantic_role = (
+            role_item.get("semantic_role") if isinstance(role_item, dict) else None
+        )
+        if (
+            not isinstance(vector_item, dict)
+            or not isinstance(role_item, dict)
+            or vector_item.get("modifier") != modifier
+            or vector_item.get("tail_length") != len(modifiers) - 1 - index
+            or role_item.get("modifier") != modifier
+            or role_item.get("type") != "Adv"
+            or role_item.get("source") != "modifier"
+        ):
+            return None
+        surface_lexicon = role_item.get("surface_lexicon")
+        if (
+            not isinstance(surface_lexicon, dict)
+            or surface_lexicon.get("type") != "Adv"
+            or surface_lexicon.get("semantic_role") != semantic_role
+        ):
+            return None
+        semantic_roles.append(str(semantic_role))
+
+    source_count = semantic_roles.count("Source")
+    goal_count = semantic_roles.count("Goal")
+    directional_count = source_count + goal_count
+    if (
+        directional_count not in {1, 2}
+        or source_count > 1
+        or goal_count > 1
+        or len(semantic_roles) < directional_count + 9
+        or semantic_roles[:directional_count].count("Source") != source_count
+        or semantic_roles[:directional_count].count("Goal") != goal_count
+        or any(role not in {"Source", "Goal"} for role in semantic_roles[:directional_count])
+        or semantic_roles[directional_count] != "Instrument"
+        or semantic_roles[directional_count + 1] != "Location"
+        or semantic_roles[directional_count + 2] != "Manner"
+    ):
+        return None
+
+    after_manner_roles = semantic_roles[directional_count + 3 :]
+    post_manner_location_count = 0
+    for role in after_manner_roles:
+        if role != "Location":
+            break
+        post_manner_location_count += 1
+    instrument_location_instrument_location_roles = after_manner_roles[
+        post_manner_location_count:
+    ]
+    instrument_tail_count = 0
+    for role in instrument_location_instrument_location_roles:
+        if role != "Instrument":
+            break
+        instrument_tail_count += 1
+    location_instrument_location_roles = instrument_location_instrument_location_roles[
+        instrument_tail_count:
+    ]
+    pre_final_instrument_location_tail_count = 0
+    for role in location_instrument_location_roles:
+        if role != "Location":
+            break
+        pre_final_instrument_location_tail_count += 1
+    instrument_location_tail_roles = location_instrument_location_roles[
+        pre_final_instrument_location_tail_count:
+    ]
+    final_instrument_tail_count = 0
+    for role in instrument_location_tail_roles:
+        if role != "Instrument":
+            break
+        final_instrument_tail_count += 1
+    final_location_tail_roles = instrument_location_tail_roles[
+        final_instrument_tail_count:
+    ]
+    if (
+        post_manner_location_count < 2
+        or instrument_tail_count < 1
+        or pre_final_instrument_location_tail_count < 1
+        or final_instrument_tail_count < 1
+        or not final_location_tail_roles
+        or any(role != "Location" for role in final_location_tail_roles)
+    ):
+        return None
+
+    role_details = plain_intransitive_application_details(
+        {
+            **ast,
+            "adverb_count": 0,
+            "modifiers": [],
+            "modifier_vector": {"kind": "modifier_vector", "length": 0, "items": []},
+            "modifier_roles": {"kind": "modifier_roles", "roles": []},
+        }
+    )
+    if role_details is None:
+        return None
+    return {
+        **role_details,
+        "modifiers": [str(modifier) for modifier in modifiers],
+        "modifier_roles": copy.deepcopy(modifier_roles),
+        "semantic_roles": semantic_roles,
+        "directional_count": directional_count,
+        "post_manner_location_count": post_manner_location_count,
+        "instrument_tail_count": instrument_tail_count,
+        "pre_final_instrument_location_tail_count": (
+            pre_final_instrument_location_tail_count
+        ),
+        "final_instrument_tail_count": final_instrument_tail_count,
+        "final_location_tail_count": len(final_location_tail_roles),
+    }
+
+
+def directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_predication_pipeline(
+    sentence: str,
+) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or translation.get("omitted_arguments"):
+        return None
+
+    time_modifier = None
+    application_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        application_ast = body
+    elif ast.get("kind") != "application":
+        return None
+
+    details = (
+        directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_application_details(
+            application_ast
+        )
+    )
+    if details is None:
+        return None
+
+    predicate = str(details["predicate"])
+    arguments = list(details["arguments"])
+    modifiers = [str(modifier) for modifier in details["modifiers"]]
+    modifier_roles = copy.deepcopy(details["modifier_roles"])
+    semantic_roles = [str(role) for role in details["semantic_roles"]]
+    directional_count = int(details["directional_count"])
+    post_manner_location_count = int(details["post_manner_location_count"])
+    instrument_tail_count = int(details["instrument_tail_count"])
+    pre_final_instrument_location_tail_count = int(
+        details["pre_final_instrument_location_tail_count"]
+    )
+    final_instrument_tail_count = int(details["final_instrument_tail_count"])
+    instrument_tail_start = directional_count + 3 + post_manner_location_count
+    pre_final_instrument_location_tail_start = (
+        instrument_tail_start + instrument_tail_count
+    )
+    final_instrument_tail_start = (
+        pre_final_instrument_location_tail_start
+        + pre_final_instrument_location_tail_count
+    )
+    final_location_tail_start = (
+        final_instrument_tail_start + final_instrument_tail_count
+    )
+    source_modifiers = [
+        modifier for modifier, role in zip(modifiers, semantic_roles) if role == "Source"
+    ]
+    goal_modifiers = [
+        modifier for modifier, role in zip(modifiers, semantic_roles) if role == "Goal"
+    ]
+    instrument_modifiers = [
+        modifier
+        for modifier, role in zip(modifiers, semantic_roles)
+        if role == "Instrument"
+    ]
+    location_modifiers = [
+        modifier
+        for modifier, role in zip(modifiers, semantic_roles)
+        if role == "Location"
+    ]
+    manner_modifiers = [
+        modifier for modifier, role in zip(modifiers, semantic_roles) if role == "Manner"
+    ]
+    initial_instrument_modifiers = [modifiers[directional_count]]
+    instrument_tail_modifiers = modifiers[
+        instrument_tail_start:pre_final_instrument_location_tail_start
+    ]
+    pre_manner_location_modifiers = [modifiers[directional_count + 1]]
+    post_manner_location_modifiers = modifiers[
+        directional_count + 3 : instrument_tail_start
+    ]
+    pre_final_instrument_location_tail_modifiers = modifiers[
+        pre_final_instrument_location_tail_start:final_instrument_tail_start
+    ]
+    final_instrument_tail_modifiers = modifiers[
+        final_instrument_tail_start:final_location_tail_start
+    ]
+    final_location_tail_modifiers = modifiers[final_location_tail_start:]
+    directional_modifiers = source_modifiers + goal_modifiers
+    scope = (
+        "explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_at_time"
+        if time_modifier
+        else "explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail"
+    )
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
+    predication_record = {
+        "predicate": predicate,
+        "agent": arguments[0],
+        "agent_type": "Entity",
+        "modifiers": modifiers,
+        "modifier_roles": modifier_roles,
+        "modifier_role_pattern": semantic_roles,
+        "directional_modifier_count": len(directional_modifiers),
+        "directional_modifiers": directional_modifiers,
+        "source_modifier_count": len(source_modifiers),
+        "source_modifiers": source_modifiers,
+        "goal_modifier_count": len(goal_modifiers),
+        "goal_modifiers": goal_modifiers,
+        "instrument_modifier_count": len(instrument_modifiers),
+        "instrument_modifiers": instrument_modifiers,
+        "initial_instrument_modifiers": initial_instrument_modifiers,
+        "instrument_tail_modifier_count": len(instrument_tail_modifiers),
+        "instrument_tail_modifiers": instrument_tail_modifiers,
+        "location_modifier_count": len(location_modifiers),
+        "location_modifiers": location_modifiers,
+        "pre_manner_location_modifiers": pre_manner_location_modifiers,
+        "post_manner_location_modifier_count": len(post_manner_location_modifiers),
+        "post_manner_location_modifiers": post_manner_location_modifiers,
+        "pre_final_instrument_location_tail_modifier_count": len(
+            pre_final_instrument_location_tail_modifiers
+        ),
+        "pre_final_instrument_location_tail_modifiers": (
+            pre_final_instrument_location_tail_modifiers
+        ),
+        "final_instrument_tail_modifier_count": len(final_instrument_tail_modifiers),
+        "final_instrument_tail_modifiers": final_instrument_tail_modifiers,
+        "final_location_tail_modifier_count": len(final_location_tail_modifiers),
+        "final_location_tail_modifiers": final_location_tail_modifiers,
+        "manner_modifier_count": len(manner_modifiers),
+        "manner_modifiers": manner_modifiers,
+        "representation": (
+            "ModifierSeq-indexed typed unary predicate over one explicit Agent, "
+            "a Source/Goal prefix, one initial Instrument Adv, one pre-Manner "
+            "Location Adv, one Manner Adv, an open post-Manner Location Adv "
+            "sequence, an Instrument Adv tail, a pre-final-instrument Location "
+            "Adv tail, a final Instrument Adv tail, and a terminal Location Adv tail"
+        ),
+    }
+    if time_modifier is not None:
+        predication_record["time_modifier"] = time_modifier
+    coq_code = export_module([translation], "coq")
+    rule_id = (
+        "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication"
+    )
+    return attach_single_semantic_reading(
+        {
+            "kind": rule_id,
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": (
+                    "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication"
+                ),
+                rule_id: predication_record,
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Directional-instrument-location-manner-location-sequence-"
+                f"instrument-location-instrument-location-tail intransitive "
+                f"predication: {predicate} is applied to typed Adv modifiers "
+                f"in surface order {', '.join(modifiers)}, including "
+                f"{len(source_modifiers)} Source Adv modifier(s), "
+                f"{len(goal_modifiers)} Goal Adv modifier(s), "
+                f"{len(initial_instrument_modifiers)} initial Instrument Adv "
+                f"modifier(s), {len(post_manner_location_modifiers)} "
+                f"post-Manner Location Adv modifier(s), "
+                f"{len(instrument_tail_modifiers)} Instrument tail modifier(s), "
+                f"{len(pre_final_instrument_location_tail_modifiers)} "
+                f"pre-final-instrument Location tail modifier(s), "
+                f"{len(final_instrument_tail_modifiers)} final Instrument tail "
+                f"modifier(s), and {len(final_location_tail_modifiers)} terminal "
+                f"Location tail modifier(s), then to explicit Entity Agent "
+                f"{arguments[0]} as a ModifierSeq-indexed unary predicate"
+                f"{time_summary}, without exporting Event, Agent, or Theme predicates."
+            ),
+            "coq_code": coq_code,
+        },
+        name=(
+            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication_single_reading"
+        ),
+        coq_definition="example_1",
+        source=rule_id,
+        scope=scope,
+    )
+
+
 def manner_instrument_intransitive_application_details(
     ast: dict[str, Any],
 ) -> dict[str, Any] | None:
@@ -19533,6 +19967,43 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter with_microphone : Entity.",
                 "Parameter near_window : Entity.",
                 "Parameter with_telescope : Entity.",
+            ),
+        ),
+        ConstructionRule(
+            rule_id=(
+                "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication"
+            ),
+            label=(
+                "Directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail intransitive predication"
+            ),
+            phenomenon=(
+                "Intransitive predicate with mixed Source/Goal, one initial "
+                "Instrument Adv, one pre-Manner Location Adv, one Manner Adv, "
+                "an open post-Manner Location Adv sequence, an Instrument Adv "
+                "tail, a pre-final-instrument Location Adv tail, a final "
+                "Instrument Adv tail, and a terminal Location Adv tail without "
+                "event variables"
+            ),
+            analyzer=(
+                directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_predication_pipeline
+            ),
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+                "Parameter from_window : Entity.",
+                "Parameter into_room : Entity.",
+                "Parameter with_camera : Entity.",
+                "Parameter beside_shelf : Entity.",
+                "Parameter loudly : Entity.",
+                "Parameter under_lamp : Entity.",
+                "Parameter on_table : Entity.",
+                "Parameter near_door : Entity.",
+                "Parameter with_microphone : Entity.",
+                "Parameter with_telescope : Entity.",
+                "Parameter near_window : Entity.",
+                "Parameter in_park : Entity.",
             ),
         ),
         ConstructionRule(

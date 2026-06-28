@@ -2476,7 +2476,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
             "from+a+window+with+a+camera+beside+a+shelf+"
             "loudly+under+a+lamp+on+a+table+with+a+microphone+"
             "near+a+door+with+a+telescope+near+a+window+"
-            "yesterday&amp;require_coq=1&amp;download=1"
+            "with+a+knife+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -6406,6 +6406,360 @@ def validate_analyze_directional_instrument_location_manner_location_sequence_in
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit(
             "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-tail page input drift"
+        )
+
+
+def validate_analyze_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = (
+        "analyze_directional_instrument_location_manner_location_sequence_"
+        "instrument_location_instrument_location_tail_success"
+    )
+    rule_id = (
+        "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication"
+    )
+    base_modifiers = [
+        "with(camera)",
+        "beside(shelf)",
+        "loudly",
+        "under(lamp)",
+        "on(table)",
+        "with(microphone)",
+        "near(door)",
+        "with(telescope)",
+        "near(window)",
+    ]
+    base_roles = [
+        "Instrument",
+        "Location",
+        "Manner",
+        "Location",
+        "Location",
+        "Instrument",
+        "Location",
+        "Instrument",
+        "Location",
+    ]
+    expectations = {
+        (
+            "Mary laughed from a window with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a telescope near a window"
+        ): {
+            "translation": (
+                "laugh(10)(from(window), with(camera), beside(shelf), loudly, "
+                "under(lamp), on(table), with(microphone), near(door), "
+                "with(telescope), near(window), mary)"
+            ),
+            "modifiers": ["from(window)", *base_modifiers],
+            "roles": ["Source", *base_roles],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": [],
+            "post_manner_locations": ["under(lamp)", "on(table)"],
+            "instrument_tail": ["with(microphone)"],
+            "pre_final_location_tail": ["near(door)"],
+            "final_instrument_tail": ["with(telescope)"],
+            "final_location_tail": ["near(window)"],
+            "time_modifier": None,
+        },
+        (
+            "Mary laughed from a window with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a telescope "
+            "near a window yesterday"
+        ): {
+            "translation": (
+                "at_T(yesterday, laugh(10)(from(window), with(camera), "
+                "beside(shelf), loudly, under(lamp), on(table), "
+                "with(microphone), near(door), with(telescope), near(window), mary))"
+            ),
+            "modifiers": ["from(window)", *base_modifiers],
+            "roles": ["Source", *base_roles],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": [],
+            "post_manner_locations": ["under(lamp)", "on(table)"],
+            "instrument_tail": ["with(microphone)"],
+            "pre_final_location_tail": ["near(door)"],
+            "final_instrument_tail": ["with(telescope)"],
+            "final_location_tail": ["near(window)"],
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+        (
+            "Mary laughed into a room with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a telescope "
+            "near a window yesterday"
+        ): {
+            "translation": (
+                "at_T(yesterday, laugh(10)(into(room), with(camera), "
+                "beside(shelf), loudly, under(lamp), on(table), "
+                "with(microphone), near(door), with(telescope), near(window), mary))"
+            ),
+            "modifiers": ["into(room)", *base_modifiers],
+            "roles": ["Goal", *base_roles],
+            "source_modifiers": [],
+            "goal_modifiers": ["into(room)"],
+            "post_manner_locations": ["under(lamp)", "on(table)"],
+            "instrument_tail": ["with(microphone)"],
+            "pre_final_location_tail": ["near(door)"],
+            "final_instrument_tail": ["with(telescope)"],
+            "final_location_tail": ["near(window)"],
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+        (
+            "Mary laughed from a window into a room with a camera beside a shelf "
+            "loudly under a lamp on a table with a microphone near a door with a "
+            "telescope near a window yesterday"
+        ): {
+            "translation": (
+                "at_T(yesterday, laugh(11)(from(window), into(room), "
+                "with(camera), beside(shelf), loudly, under(lamp), on(table), "
+                "with(microphone), near(door), with(telescope), near(window), mary))"
+            ),
+            "modifiers": ["from(window)", "into(room)", *base_modifiers],
+            "roles": ["Source", "Goal", *base_roles],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": ["into(room)"],
+            "post_manner_locations": ["under(lamp)", "on(table)"],
+            "instrument_tail": ["with(microphone)"],
+            "pre_final_location_tail": ["near(door)"],
+            "final_instrument_tail": ["with(telescope)"],
+            "final_location_tail": ["near(window)"],
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+        (
+            "Mary laughed from a window with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a telescope "
+            "near a window in the park yesterday"
+        ): {
+            "translation": (
+                "at_T(yesterday, laugh(11)(from(window), with(camera), "
+                "beside(shelf), loudly, under(lamp), on(table), "
+                "with(microphone), near(door), with(telescope), near(window), "
+                "in(park), mary))"
+            ),
+            "modifiers": ["from(window)", *base_modifiers, "in(park)"],
+            "roles": ["Source", *base_roles, "Location"],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": [],
+            "post_manner_locations": ["under(lamp)", "on(table)"],
+            "instrument_tail": ["with(microphone)"],
+            "pre_final_location_tail": ["near(door)"],
+            "final_instrument_tail": ["with(telescope)"],
+            "final_location_tail": ["near(window)", "in(park)"],
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+    }
+    expected = expectations.get(sentence)
+    if expected is None:
+        raise SystemExit(
+            "web route smoke check failed: unknown directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail fixture"
+        )
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        rule_id,
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        rule_id,
+        "registered_construction",
+        "construction_rule",
+        rule_id,
+    )
+    if payload.get("kind") != rule_id:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail kind drift"
+        )
+    if payload.get("dependent_type_translation") != expected["translation"]:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail translation drift"
+        )
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail exposes fallback draft"
+        )
+
+    ast = payload.get("ast")
+    application_ast = ast
+    if expected["time_modifier"] is not None:
+        if (
+            not isinstance(ast, dict)
+            or ast.get("kind") != "time"
+            or ast.get("operator") != expected["time_modifier"]["operator"]
+            or ast.get("arguments") != [expected["time_modifier"]["argument"]]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit(
+                "web route smoke check failed: timed directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail AST drift"
+            )
+        application_ast = ast["body"]
+    modifier_roles = (
+        application_ast.get("modifier_roles", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_vector = (
+        application_ast.get("modifier_vector", {}).get("items")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    if (
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "laugh"
+        or application_ast.get("arguments") != ["mary"]
+        or application_ast.get("modifiers") != expected["modifiers"]
+        or application_ast.get("adverb_count") != len(expected["modifiers"])
+        or not isinstance(modifier_roles, list)
+        or [role.get("semantic_role") for role in modifier_roles] != expected["roles"]
+        or any(role.get("type") != "Adv" for role in modifier_roles)
+        or not isinstance(modifier_vector, list)
+        or [item.get("tail_length") for item in modifier_vector]
+        != list(reversed(range(len(expected["modifiers"]))))
+    ):
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail AST drift"
+        )
+
+    event_semantics = payload.get("event_semantics")
+    typed_predication = (
+        event_semantics.get(rule_id) if isinstance(event_semantics, dict) else None
+    )
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis")
+        != "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail-intransitive-predication"
+        or not isinstance(typed_predication, dict)
+        or typed_predication.get("predicate") != "laugh"
+        or typed_predication.get("agent") != "mary"
+        or typed_predication.get("agent_type") != "Entity"
+        or typed_predication.get("modifiers") != expected["modifiers"]
+        or typed_predication.get("modifier_role_pattern") != expected["roles"]
+        or typed_predication.get("source_modifiers") != expected["source_modifiers"]
+        or typed_predication.get("goal_modifiers") != expected["goal_modifiers"]
+        or typed_predication.get("initial_instrument_modifiers") != ["with(camera)"]
+        or typed_predication.get("instrument_tail_modifiers")
+        != expected["instrument_tail"]
+        or typed_predication.get("pre_final_instrument_location_tail_modifiers")
+        != expected["pre_final_location_tail"]
+        or typed_predication.get("final_instrument_tail_modifiers")
+        != expected["final_instrument_tail"]
+        or typed_predication.get("final_location_tail_modifiers")
+        != expected["final_location_tail"]
+        or typed_predication.get("post_manner_location_modifiers")
+        != expected["post_manner_locations"]
+        or typed_predication.get("manner_modifiers") != ["loudly"]
+    ):
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail analysis drift"
+        )
+    if expected["time_modifier"] is None:
+        if "time_modifier" in typed_predication:
+            raise SystemExit(
+                "web route smoke check failed: untimed directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail time drift"
+            )
+    elif typed_predication.get("time_modifier") != expected["time_modifier"]:
+        raise SystemExit(
+            "web route smoke check failed: timed directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail time drift"
+        )
+
+    scope = (
+        "explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_at_time"
+        if expected["time_modifier"]
+        else "explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail"
+    )
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail reading count drift"
+        )
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": (
+                "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication_single_reading"
+            ),
+            "scope": scope,
+            "source": rule_id,
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail Coq drift"
+        )
+    expected_adv = {
+        "from(window)": "Parameter from_window : Adv.",
+        "into(room)": "Parameter into_room : Adv.",
+        "with(camera)": "Parameter with_camera : Adv.",
+        "beside(shelf)": "Parameter beside_shelf : Adv.",
+        "loudly": "Parameter loudly : Adv.",
+        "under(lamp)": "Parameter under_lamp : Adv.",
+        "on(table)": "Parameter on_table : Adv.",
+        "with(microphone)": "Parameter with_microphone : Adv.",
+        "near(door)": "Parameter near_door : Adv.",
+        "with(telescope)": "Parameter with_telescope : Adv.",
+        "near(window)": "Parameter near_window : Adv.",
+        "in(park)": "Parameter in_park : Adv.",
+    }
+    expected_entity = {
+        "from(window)": "Parameter from_window : Entity.",
+        "into(room)": "Parameter into_room : Entity.",
+        "with(camera)": "Parameter with_camera : Entity.",
+        "beside(shelf)": "Parameter beside_shelf : Entity.",
+        "loudly": "Parameter loudly : Entity.",
+        "under(lamp)": "Parameter under_lamp : Entity.",
+        "on(table)": "Parameter on_table : Entity.",
+        "with(microphone)": "Parameter with_microphone : Entity.",
+        "near(door)": "Parameter near_door : Entity.",
+        "with(telescope)": "Parameter with_telescope : Entity.",
+        "near(window)": "Parameter near_window : Entity.",
+        "in(park)": "Parameter in_park : Entity.",
+    }
+    for modifier in expected["modifiers"]:
+        if expected_adv[modifier] not in coq_code:
+            raise SystemExit(
+                "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail Adv declaration drift"
+            )
+        if expected_entity[modifier] in coq_code:
+            raise SystemExit(
+                "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail Entity surrogate drift"
+            )
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        f"<dt>rule</dt><dd>{rule_id}</dd>",
+        (
+            'data-reading-name="'
+            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication_single_reading"
+            '"'
+        ),
+        f"<dt>source</dt><dd>{rule_id}</dd>",
+        f"<dt>scope</dt><dd>{scope}</dd>",
+        expected["translation"],
+        f"Translation succeeded via construction rule {rule_id}.",
+    ]
+    require_text_fragments(
+        page,
+        expected_page_fragments,
+        "directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail intransitive HTML",
+    )
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner-location-sequence-instrument-location-instrument-location-tail page input drift"
         )
 
 
@@ -11760,6 +12114,65 @@ def run_web_route_smoke_check() -> None:
                 directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_page,
                 directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_sentence,
             )
+        for directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_sentence in (
+            (
+                "Mary laughed from a window with a camera beside a shelf loudly "
+                "under a lamp on a table with a microphone near a door with a telescope near a window"
+            ),
+            (
+                "Mary laughed from a window with a camera beside a shelf loudly "
+                "under a lamp on a table with a microphone near a door with a telescope "
+                "near a window yesterday"
+            ),
+            (
+                "Mary laughed into a room with a camera beside a shelf loudly "
+                "under a lamp on a table with a microphone near a door with a telescope "
+                "near a window yesterday"
+            ),
+            (
+                "Mary laughed from a window into a room with a camera beside a shelf "
+                "loudly under a lamp on a table with a microphone near a door with a "
+                "telescope near a window yesterday"
+            ),
+            (
+                "Mary laughed from a window with a camera beside a shelf loudly "
+                "under a lamp on a table with a microphone near a door with a telescope "
+                "near a window in the park yesterday"
+            ),
+        ):
+            directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_query = urlencode(
+                {
+                    "sentence": (
+                        directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_sentence
+                    ),
+                    "require_coq": "1",
+                }
+            )
+            with opener.open(
+                (
+                    f"{base_url}/api/analyze?"
+                    f"{directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_query}"
+                ),
+                timeout=5,
+            ) as response:
+                directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_payload = json.load(
+                    response
+                )
+            with opener.open(
+                (
+                    f"{base_url}/?"
+                    f"{directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_query}"
+                ),
+                timeout=5,
+            ) as response:
+                directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_page = response.read().decode(
+                    "utf-8"
+                )
+            validate_analyze_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_success(
+                directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_payload,
+                directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_page,
+                directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_sentence,
+            )
         manner_instrument_sentence = "Mary laughed loudly with a telescope"
         manner_instrument_query = urlencode(
             {"sentence": manner_instrument_sentence, "require_coq": "1"}
@@ -12508,7 +12921,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window yesterday"
+        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
