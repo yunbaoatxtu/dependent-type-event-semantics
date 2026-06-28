@@ -947,6 +947,12 @@ table` under `extended_manner_location_sequence_intransitive_predication`, and
 `Mary laughed loudly in the park near a window beside a shelf under a lamp on a
 table yesterday` under
 `temporal_extended_manner_location_sequence_intransitive_predication`,
+`Mary laughed loudly in the park with a telescope yesterday` under
+`temporal_manner_location_instrument_intransitive_predication`,
+`Mary laughed loudly in the park near a window beside a shelf under a lamp with
+a telescope` under `extended_manner_location_instrument_intransitive_predication`,
+and the corresponding timed long variant under
+`temporal_extended_manner_location_instrument_intransitive_predication`,
 `Mary admired the painting red yesterday` under `temporal_resultative_predication`,
 plus modifier-sequence
 variants such as
@@ -1320,6 +1326,18 @@ The extended Location sequence
 is also registered as
 `at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), on(table), mary))`,
 requiring `Parameter on_table : Adv.` rather than `Parameter on_table : Entity.`.
+It then requests the registered manner-location-instrument intransitive route
+`/api/analyze?sentence=Mary+laughed+loudly+in+the+park+with+a+telescope&require_coq=1`,
+requiring `manner_location_instrument_intransitive_predication_single_reading`,
+the `explicit_agent_with_manner_location_and_instrument_adv_sequence` scope,
+and typed Adv declarations for `loudly`, `in_park`, and `with_telescope`
+rather than entity surrogates. Its timed and extended variants remain
+registered, including
+`/api/analyze?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&require_coq=1`,
+which renders
+`at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))`
+with the scope
+`explicit_agent_with_manner_location_and_instrument_adv_sequence_at_time`.
 It then requests the registered
 plain-transitive route `/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring
 `plain_transitive_predication_single_reading`, the `explicit_agent_theme` scope,
@@ -1366,10 +1384,10 @@ surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+with+a+telescope+with+a+camera+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed six-modifier scaffold
-`at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))`, and the
+typed seven-modifier scaffold
+`at_T(yesterday, laugh(7)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), with(camera), mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
