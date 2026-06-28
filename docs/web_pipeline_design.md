@@ -173,7 +173,12 @@ adverbs contribute `Manner`, and the derived role inventory must remain
 `data-modifier-sequence-role-witness-*` attributes. The verifier reruns one
 registered witness sentence for each role and checks that the AST contains the
 expected Adv modifier and normalized constant, for example `into_room` for
-`Goal`, `on_mat` for `Location`, and `from_window` for `Source`.
+`Goal`, `on_mat` for `Location`, and `from_window` for `Source`. The witness
+table is guarded by a `semantic_role_witness_selection_contract` and exposed
+through `data-modifier-sequence-role-witness-selection-*` attributes; the
+contract fixes the selection scope to registered primary and variant success
+cases, requires one live sentence per registered `Adv` role, and leaves
+`full_witness_generation` false.
 The manifest also carries a `coverage_matrix` with
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`, plus matching

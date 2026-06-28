@@ -20447,6 +20447,36 @@ def registered_modifier_role_witnesses() -> list[dict[str, str]]:
     return copy.deepcopy(REGISTERED_MODIFIER_SEMANTIC_ROLE_WITNESSES)
 
 
+def registered_modifier_role_witness_selection_contract() -> dict[str, Any]:
+    return {
+        "schema_version": "modifier_role_witness_selection_contract.v1",
+        "selection_scope": "registered_primary_and_variant_success_cases",
+        "selection_unit": "one_live_sentence_per_registered_adv_role",
+        "role_inventory_source": "semantic_role_source_contract.derived_role_inventory",
+        "sentence_sources": [
+            "registered_primary_success_cases",
+            "registered_variant_success_cases",
+        ],
+        "required_witness_fields": [
+            "role",
+            "type",
+            "sentence",
+            "modifier",
+            "normalized_modifier",
+            "source",
+        ],
+        "live_ast_checks": [
+            "sentence_is_registered_success_case",
+            "ast_contains_advertised_modifier",
+            "ast_modifier_type_is_adv",
+            "ast_role_matches_surface_lexicon",
+            "normalized_modifier_matches_surface_lexicon",
+            "surface_lexicon_source_matches_contract",
+        ],
+        "full_witness_generation": False,
+    }
+
+
 def declared_application_modifier_counts(
     coverage_items: Iterable[dict[str, Any]],
 ) -> list[int]:
@@ -20649,6 +20679,9 @@ def registered_modifier_sequence_contract_payload(
             REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY,
         ),
         "registered_semantic_role_witnesses": registered_modifier_role_witnesses(),
+        "semantic_role_witness_selection_contract": (
+            registered_modifier_role_witness_selection_contract()
+        ),
         "semantic_role_source_contract": registered_modifier_role_source_contract(),
         "live_validation": {
             "validator": "scripts/verify_project.py::validate_registered_modifier_sequence_contract",
@@ -20656,6 +20689,7 @@ def registered_modifier_sequence_contract_payload(
             "max_application_modifier_count_is_recomputed": True,
             "semantic_role_inventory_is_recomputed": True,
             "semantic_role_source_contract_is_recomputed": True,
+            "semantic_role_witness_selection_contract_is_recomputed": True,
             "semantic_role_witnesses_are_live_checked": True,
         },
     }

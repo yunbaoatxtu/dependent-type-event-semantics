@@ -10483,6 +10483,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         declared_application_modifier_counts,
         exported_prop_definition_names,
         registered_modifier_role_source_contract,
+        registered_modifier_role_witness_selection_contract,
         registered_modifier_role_witnesses,
         run_pipeline,
     )
@@ -10566,6 +10567,9 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         [*snapshots, *registered_variant_cases],
     )
     expected_modifier_role_source_contract = registered_modifier_role_source_contract()
+    expected_modifier_role_witness_selection_contract = (
+        registered_modifier_role_witness_selection_contract()
+    )
     expected_modifier_role_witnesses = registered_modifier_role_witnesses()
     if (
         not isinstance(modifier_contract, dict)
@@ -10588,6 +10592,8 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         != expected_modifier_role_inventory
         or modifier_contract.get("registered_semantic_role_witnesses")
         != expected_modifier_role_witnesses
+        or modifier_contract.get("semantic_role_witness_selection_contract")
+        != expected_modifier_role_witness_selection_contract
         or modifier_contract.get("semantic_role_source_contract")
         != expected_modifier_role_source_contract
     ):
@@ -10600,6 +10606,10 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or live_validation.get("max_application_modifier_count_is_recomputed") is not True
         or live_validation.get("semantic_role_inventory_is_recomputed") is not True
         or live_validation.get("semantic_role_source_contract_is_recomputed") is not True
+        or live_validation.get(
+            "semantic_role_witness_selection_contract_is_recomputed",
+        )
+        is not True
         or live_validation.get("semantic_role_witnesses_are_live_checked") is not True
     ):
         raise SystemExit(
@@ -10625,6 +10635,23 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence role witness drift"
         )
+    witness_allowed_sources = set(
+        expected_modifier_role_witness_selection_contract.get("sentence_sources", []),
+    )
+    witness_required_fields = set(
+        expected_modifier_role_witness_selection_contract.get(
+            "required_witness_fields",
+            [],
+        ),
+    )
+    for witness in expected_modifier_role_witnesses:
+        if (
+            set(witness) != witness_required_fields
+            or witness.get("source") not in witness_allowed_sources
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified modifier sequence role witness drift"
+            )
     registered_witness_sentences = {
         str(case.get("sentence"))
         for case in [*registered_cases, *registered_variant_cases]
@@ -11354,6 +11381,23 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
         'data-modifier-sequence-role-witness-count="5"',
         'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
+        (
+            'data-modifier-sequence-role-witness-selection-schema="'
+            'modifier_role_witness_selection_contract.v1"'
+        ),
+        (
+            'data-modifier-sequence-role-witness-selection-scope="'
+            'registered_primary_and_variant_success_cases"'
+        ),
+        (
+            'data-modifier-sequence-role-witness-selection-unit="'
+            'one_live_sentence_per_registered_adv_role"'
+        ),
+        (
+            'data-modifier-sequence-role-witness-selection-sources="'
+            'registered_primary_success_cases,registered_variant_success_cases"'
+        ),
+        'data-modifier-sequence-role-witness-full-generation="false"',
         'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
         'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
         'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',

@@ -3374,6 +3374,11 @@ def certified_fragment_panel() -> str:
         for item in modifier_sequence_contract.get("registered_semantic_role_witnesses", [])
         if isinstance(item, dict)
     ]
+    modifier_role_witness_selection_contract = modifier_sequence_contract.get(
+        "semantic_role_witness_selection_contract",
+    )
+    if not isinstance(modifier_role_witness_selection_contract, dict):
+        modifier_role_witness_selection_contract = {}
     modifier_role_source_contract = modifier_sequence_contract.get(
         "semantic_role_source_contract",
     )
@@ -3395,6 +3400,14 @@ def certified_fragment_panel() -> str:
         for item in modifier_role_witnesses
         if isinstance(item.get("role"), str)
         and isinstance(item.get("normalized_modifier"), str)
+    )
+    witness_selection_sources = modifier_role_witness_selection_contract.get(
+        "sentence_sources",
+    )
+    if not isinstance(witness_selection_sources, list):
+        witness_selection_sources = []
+    witness_selection_source_summary = ",".join(
+        str(source) for source in witness_selection_sources if isinstance(source, str)
     )
     derived_role_inventory = modifier_role_source_contract.get(
         "derived_role_inventory",
@@ -3665,6 +3678,11 @@ def certified_fragment_panel() -> str:
         f'data-modifier-sequence-role-minima="{html.escape(modifier_role_minima, quote=True)}" '
         f'data-modifier-sequence-role-witness-count="{len(modifier_role_witnesses)}" '
         f'data-modifier-sequence-role-witnesses="{html.escape(modifier_role_witness_summary, quote=True)}" '
+        f'data-modifier-sequence-role-witness-selection-schema="{html.escape(str(modifier_role_witness_selection_contract.get("schema_version", "")), quote=True)}" '
+        f'data-modifier-sequence-role-witness-selection-scope="{html.escape(str(modifier_role_witness_selection_contract.get("selection_scope", "")), quote=True)}" '
+        f'data-modifier-sequence-role-witness-selection-unit="{html.escape(str(modifier_role_witness_selection_contract.get("selection_unit", "")), quote=True)}" '
+        f'data-modifier-sequence-role-witness-selection-sources="{html.escape(witness_selection_source_summary, quote=True)}" '
+        f'data-modifier-sequence-role-witness-full-generation="{str(modifier_role_witness_selection_contract.get("full_witness_generation") is True).lower()}" '
         f'data-modifier-sequence-role-source-schema="{html.escape(str(modifier_role_source_contract.get("schema_version", "")), quote=True)}" '
         f'data-modifier-sequence-role-source-module="{html.escape(str(modifier_role_source_contract.get("source_module", "")), quote=True)}" '
         f'data-modifier-sequence-role-source-table="{html.escape(str(modifier_role_source_contract.get("preposition_role_table", "")), quote=True)}" '
@@ -3694,6 +3712,7 @@ def certified_fragment_panel() -> str:
         f"<dt>modifier max</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('max_declared_application_modifier_count', '')))}</code></dd>"
         f"<dt>modifier roles</dt><dd><code>{html.escape(modifier_role_names)}</code></dd>"
         f"<dt>role witnesses</dt><dd><code>{html.escape(modifier_role_witness_summary)}</code></dd>"
+        f"<dt>witness selection</dt><dd><code>{html.escape(str(modifier_role_witness_selection_contract.get('selection_unit', '')))}</code></dd>"
         f"<dt>role source</dt><dd><code>{html.escape(str(modifier_role_source_contract.get('preposition_role_table', '')))}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"

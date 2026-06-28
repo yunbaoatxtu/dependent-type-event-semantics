@@ -13503,6 +13503,38 @@ class TranslatorTests(unittest.TestCase):
             ],
         )
         self.assertEqual(
+            modifier_contract["semantic_role_witness_selection_contract"],
+            {
+                "schema_version": "modifier_role_witness_selection_contract.v1",
+                "selection_scope": "registered_primary_and_variant_success_cases",
+                "selection_unit": "one_live_sentence_per_registered_adv_role",
+                "role_inventory_source": (
+                    "semantic_role_source_contract.derived_role_inventory"
+                ),
+                "sentence_sources": [
+                    "registered_primary_success_cases",
+                    "registered_variant_success_cases",
+                ],
+                "required_witness_fields": [
+                    "role",
+                    "type",
+                    "sentence",
+                    "modifier",
+                    "normalized_modifier",
+                    "source",
+                ],
+                "live_ast_checks": [
+                    "sentence_is_registered_success_case",
+                    "ast_contains_advertised_modifier",
+                    "ast_modifier_type_is_adv",
+                    "ast_role_matches_surface_lexicon",
+                    "normalized_modifier_matches_surface_lexicon",
+                    "surface_lexicon_source_matches_contract",
+                ],
+                "full_witness_generation": False,
+            },
+        )
+        self.assertEqual(
             modifier_contract["semantic_role_source_contract"],
             {
                 "schema_version": "modifier_role_source_contract.v1",
@@ -13535,6 +13567,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(
             modifier_contract["live_validation"][
                 "semantic_role_source_contract_is_recomputed"
+            ],
+        )
+        self.assertTrue(
+            modifier_contract["live_validation"][
+                "semantic_role_witness_selection_contract_is_recomputed"
             ],
         )
         self.assertTrue(
@@ -14250,6 +14287,13 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
             validate_certified_fragment_manifest(role_witness_drift_manifest)
 
+        role_witness_selection_drift_manifest = deepcopy(construction_fragment_manifest())
+        role_witness_selection_drift_manifest["registered_modifier_sequence_contract"][
+            "semantic_role_witness_selection_contract"
+        ]["selection_unit"] = "stale_manual_examples"
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(role_witness_selection_drift_manifest)
+
     def test_verification_rejects_surface_parser_generation_spec_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         generation_spec = manifest["surface_parser_coverage"][
@@ -14692,6 +14736,26 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-modifier-sequence-role-witness-count="5"', page)
         self.assertIn(
             'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-witness-selection-schema="modifier_role_witness_selection_contract.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-witness-selection-scope="registered_primary_and_variant_success_cases"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-witness-selection-unit="one_live_sentence_per_registered_adv_role"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-witness-selection-sources="registered_primary_success_cases,registered_variant_success_cases"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-witness-full-generation="false"',
             page,
         )
         self.assertIn(
@@ -20044,6 +20108,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("coverage_matrix", manuscript)
         self.assertIn("registered_success_cases", manuscript)
         self.assertIn("fallback_success_cases", manuscript)
+        self.assertIn("semantic_role_witness_selection_contract.v1", manuscript)
+        self.assertIn("full_witness_generation false", manuscript)
         self.assertIn("rejected_unsupported_cases", manuscript)
         self.assertIn("semantic_snapshots", manuscript)
         self.assertIn("semantic_snapshot_count", manuscript)
@@ -20872,6 +20938,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-modifier-sequence-role-source-*` hooks", readme)
         self.assertIn("`registered_semantic_role_witnesses`", readme)
         self.assertIn("`data-modifier-sequence-role-witness-*` hooks", readme)
+        self.assertIn("`semantic_role_witness_selection_contract`", readme)
+        self.assertIn(
+            "`data-modifier-sequence-role-witness-selection-*` hooks",
+            readme,
+        )
         self.assertIn("Mary laughed into a room yesterday", readme)
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("## API Contract", web_design)
@@ -20932,6 +21003,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", web_design)
         self.assertIn("`registered_semantic_role_witnesses`", web_design)
         self.assertIn("`data-modifier-sequence-role-witness-*` attributes", web_design)
+        self.assertIn("`semantic_role_witness_selection_contract`", web_design)
+        self.assertIn(
+            "`data-modifier-sequence-role-witness-selection-*` attributes",
+            web_design,
+        )
         self.assertIn("`into_room` for", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
