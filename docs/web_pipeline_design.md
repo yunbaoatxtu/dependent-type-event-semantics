@@ -163,6 +163,7 @@ uses `data-coverage-marker`. Current registered variants include
 `temporal_manner_intransitive_predication`,
 `temporal_manner_locative_intransitive_predication`,
 `temporal_manner_two_location_intransitive_predication`,
+`temporal_manner_three_location_intransitive_predication`,
 `temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
@@ -698,13 +699,22 @@ yesterday` remains registered as
 `at_T(yesterday, laugh(3)(loudly, in(park), near(window), mary))` with the
 `explicit_agent_with_manner_and_two_location_adv_at_time` scope and no fallback
 draft.
+`Mary laughed loudly in the park near a window beside a shelf` must surface as
+the registered `manner_three_location_intransitive_predication` construction
+with `manner_three_location_intransitive_predication_single_reading`; its
+scaffold must declare `loudly : Adv`, `in_park : Adv`, `near_window : Adv`, and
+`beside_shelf : Adv`, not entity surrogates. The timed variant `Mary laughed
+loudly in the park near a window beside a shelf yesterday` remains registered
+as `at_T(yesterday, laugh(4)(loudly, in(park), near(window), beside(shelf), mary))`
+with the `explicit_agent_with_manner_and_three_location_adv_at_time` scope and
+no fallback draft.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
 success contract is instead exercised with `Mary laughed loudly in the park near
-a window beside a shelf yesterday`, a shallow four-modifier scaffold
-`at_T(yesterday, laugh(4)(loudly, in(park), near(window), beside(shelf), mary))` with
+a window beside a shelf under a lamp yesterday`, a shallow five-modifier scaffold
+`at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))` with
 `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -923,9 +933,13 @@ sentences are still handled by the fallback parser. A third reviewed slice
 registers one Manner Adv plus two Location Advs:
 `Mary laughed loudly in the park near a window` exports
 `laugh(3)(loudly, in(park), near(window), mary)`, and its timed variant remains
-registered under `at_T`. For example, `Mary laughed loudly in the park near a
-window beside a shelf yesterday` remains a shallow four-modifier scaffold,
-`at_T(yesterday, laugh(4)(loudly, in(park), near(window), beside(shelf), mary))`,
+registered under `at_T`. A fourth reviewed slice registers one Manner Adv plus
+three Location Advs: `Mary laughed loudly in the park near a window beside a
+shelf` exports `laugh(4)(loudly, in(park), near(window), beside(shelf), mary)`,
+and its timed variant remains registered under `at_T`. For example, `Mary
+laughed loudly in the park near a window beside a shelf under a lamp yesterday`
+remains a shallow five-modifier scaffold,
+`at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))`,
 with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
