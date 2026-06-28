@@ -1599,14 +1599,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(timed["coq_check"]["status"], "passed")
 
         fallback = run_pipeline(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         self.assertTrue(fallback["ok"])
         self.assertEqual(fallback["verification_scope"]["kind"], "fallback_shallow")
         self.assertEqual(
             fallback["dependent_type_translation"],
-            "at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))",
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
         )
         self.assertEqual(
             fallback["construction_rule_draft"]["candidate_rule_id"],
@@ -1683,14 +1683,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(timed["coq_check"]["status"], "passed")
 
         fallback = run_pipeline(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         self.assertTrue(fallback["ok"])
         self.assertEqual(fallback["verification_scope"]["kind"], "fallback_shallow")
         self.assertEqual(
             fallback["dependent_type_translation"],
-            "at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))",
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
         )
 
     def test_manner_two_location_intransitive_predication_promotes_three_adv_sequence(
@@ -1777,14 +1777,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(timed["coq_check"]["status"], "passed")
 
         fallback = run_pipeline(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         self.assertTrue(fallback["ok"])
         self.assertEqual(fallback["verification_scope"]["kind"], "fallback_shallow")
         self.assertEqual(
             fallback["dependent_type_translation"],
-            "at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))",
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
         )
 
     def test_manner_three_location_intransitive_predication_promotes_four_adv_sequence(
@@ -1876,14 +1876,135 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(timed["coq_check"]["status"], "passed")
 
         fallback = run_pipeline(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         self.assertTrue(fallback["ok"])
         self.assertEqual(fallback["verification_scope"]["kind"], "fallback_shallow")
         self.assertEqual(
             fallback["dependent_type_translation"],
-            "at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))",
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
+        )
+
+    def test_manner_location_sequence_intransitive_predication_promotes_location_star(
+        self,
+    ) -> None:
+        result = run_pipeline(
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp",
+            require_coq=True,
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["kind"],
+            "manner_location_sequence_intransitive_predication",
+        )
+        self.assertEqual(result["verification_scope"]["kind"], "registered_construction")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary)",
+        )
+        self.assertEqual(
+            result["event_semantics"]["analysis"],
+            "manner-location-sequence-intransitive-predication",
+        )
+        predication = result["event_semantics"][
+            "manner_location_sequence_intransitive_predication"
+        ]
+        self.assertEqual(
+            predication["modifiers"],
+            ["loudly", "in(park)", "near(window)", "beside(shelf)", "under(lamp)"],
+        )
+        self.assertEqual(predication["location_modifier_count"], 4)
+        self.assertEqual(
+            [role["semantic_role"] for role in predication["modifier_roles"]],
+            ["Manner", "Location", "Location", "Location", "Location"],
+        )
+        self.assertEqual(
+            [item["tail_length"] for item in result["ast"]["modifier_vector"]["items"]],
+            [4, 3, 2, 1, 0],
+        )
+        reading = result["semantic_readings"][0]
+        self.assertEqual(
+            reading["name"],
+            "manner_location_sequence_intransitive_predication_single_reading",
+        )
+        self.assertEqual(
+            reading["source"],
+            "manner_location_sequence_intransitive_predication",
+        )
+        self.assertEqual(
+            reading["scope"],
+            "explicit_agent_with_manner_and_location_adv_sequence",
+        )
+        self.assertNotIn("construction_rule_draft", result)
+        for declaration in [
+            "Parameter loudly : Adv.",
+            "Parameter in_park : Adv.",
+            "Parameter near_window : Adv.",
+            "Parameter beside_shelf : Adv.",
+            "Parameter under_lamp : Adv.",
+        ]:
+            self.assertIn(declaration, result["coq_code"])
+        for bad_declaration in [
+            "Parameter loudly : Entity.",
+            "Parameter in_park : Entity.",
+            "Parameter near_window : Entity.",
+            "Parameter beside_shelf : Entity.",
+            "Parameter under_lamp : Entity.",
+        ]:
+            self.assertNotIn(bad_declaration, result["coq_code"])
+        self.assertIn(
+            "Definition example_1 : PropT := (laugh 5 (mods_cons 4 loudly (mods_cons 3 in_park (mods_cons 2 near_window (mods_cons 1 beside_shelf (mods_cons 0 under_lamp mods_nil))))) mary).",
+            result["coq_code"],
+        )
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
+        extended = run_pipeline(
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp on a table yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(extended["ok"])
+        self.assertEqual(
+            extended["kind"],
+            "manner_location_sequence_intransitive_predication",
+        )
+        self.assertEqual(
+            extended["dependent_type_translation"],
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), on(table), mary))",
+        )
+        self.assertEqual(
+            extended["semantic_readings"][0]["scope"],
+            "explicit_agent_with_manner_and_location_adv_sequence_at_time",
+        )
+        extended_body = extended["ast"]["body"]
+        self.assertEqual(
+            [item["tail_length"] for item in extended_body["modifier_vector"]["items"]],
+            [5, 4, 3, 2, 1, 0],
+        )
+        self.assertEqual(
+            [
+                role["semantic_role"]
+                for role in extended_body["modifier_roles"]["roles"]
+            ],
+            ["Manner", "Location", "Location", "Location", "Location", "Location"],
+        )
+        self.assertIn("Parameter on_table : Adv.", extended["coq_code"])
+        self.assertNotIn("Parameter on_table : Entity.", extended["coq_code"])
+        self.assertIn(
+            "Definition example_1 : PropT := (at_T yesterday (laugh 6 (mods_cons 5 loudly (mods_cons 4 in_park (mods_cons 3 near_window (mods_cons 2 beside_shelf (mods_cons 1 under_lamp (mods_cons 0 on_table mods_nil)))))) mary)).",
+            extended["coq_code"],
+        )
+        self.assertEqual(extended["coq_check"]["status"], "passed")
+
+        fallback = run_pipeline(
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(fallback["ok"])
+        self.assertEqual(fallback["verification_scope"]["kind"], "fallback_shallow")
+        self.assertEqual(
+            fallback["dependent_type_translation"],
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
         )
 
     def test_natural_language_pipeline_handles_cat_on_mat(self) -> None:
@@ -10542,7 +10663,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 27)
+        self.assertEqual(counts["registered_variant_success_cases"], 30)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -11555,7 +11676,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            27,
+            30,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -11630,7 +11751,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="27"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="30"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -11919,6 +12040,9 @@ class TranslatorTests(unittest.TestCase):
             "manner_three_location_intransitive_predication": (
                 "Mary laughed loudly in the park near a window beside a shelf"
             ),
+            "manner_location_sequence_intransitive_predication": (
+                "Mary laughed loudly in the park near a window beside a shelf under a lamp"
+            ),
             "plain_transitive_predication": "Mary admired the painting",
             "modified_transitive_predication": "Mary admired the painting in the gallery",
             "passive_argument_omission": "the toast was buttered",
@@ -11963,6 +12087,9 @@ class TranslatorTests(unittest.TestCase):
             ),
             "manner_three_location_intransitive_predication": (
                 "Mary laughed loudly in the park near a window beside a shelf"
+            ),
+            "manner_location_sequence_intransitive_predication": (
+                "Mary laughed loudly in the park near a window beside a shelf under a lamp"
             ),
             "plain_transitive_predication": "Mary admired the painting",
             "modified_transitive_predication": "Mary admired the painting in the gallery",
@@ -12399,7 +12526,7 @@ class TranslatorTests(unittest.TestCase):
             handler,
             (
                 "sentence=Mary+laughed+loudly+in+the+park+near+a+window+"
-                "beside+a+shelf+under+a+lamp+yesterday&require_coq=1"
+                "beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&require_coq=1"
             ),
         )
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
@@ -12443,7 +12570,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(rule_draft["candidate_analyzer"], "fallback_time_time_candidate_pipeline")
         self.assertEqual(
             rule_draft["accepted_examples"],
-            ["Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday"],
+            ["Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday"],
         )
         self.assertEqual(rule_draft["automation_mode"], "human_review_required")
         self.assertFalse(rule_draft["can_auto_apply"])
@@ -12521,7 +12648,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_fallback_upgrade_plan_generalizes_to_unregistered_simple_sentences(self) -> None:
         result = analyze_sentence(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         self.assertTrue(result["ok"])
@@ -12531,11 +12658,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(plan["candidate_rule_id"], "fallback_time_time_candidate")
         self.assertEqual(
             plan["source_sentence"],
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
         )
         self.assertEqual(
             plan["dependent_type_translation"],
-            "at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))",
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
         )
         self.assertEqual(plan["ast_summary"]["kind"], "time")
         self.assertEqual(fallback_candidate_rule_id(result["ast"]), plan["candidate_rule_id"])
@@ -12545,7 +12672,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(draft["candidate_analyzer"], "fallback_time_time_candidate_pipeline")
         self.assertEqual(
             draft["accepted_examples"],
-            ["Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday"],
+            ["Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday"],
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["name"],
@@ -12553,7 +12680,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["dependent_type_translation"],
-            "at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))",
+            "at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))",
         )
         self.assertEqual(draft["ast_summary"]["kind"], "time")
         self.assertEqual(
@@ -12564,7 +12691,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_verification_rejects_fallback_promotion_contract_drift(self) -> None:
         result = analyze_sentence(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         validate_fallback_promotion_contract("fallback", result)
@@ -12833,7 +12960,7 @@ class TranslatorTests(unittest.TestCase):
             handler,
             (
                 "sentence=Mary+laughed+loudly+in+the+park+near+a+window+"
-                "beside+a+shelf+under+a+lamp+yesterday&require_coq=1"
+                "beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&require_coq=1"
             ),
         )
         self.assertEqual(status.name, "OK")
@@ -12865,11 +12992,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             construction_rule_draft_api_path(
-                "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+                "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
                 True,
                 download=True,
             ),
-            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+yesterday&require_coq=1&download=1",
+            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&require_coq=1&download=1",
         )
         self.assertEqual(
             construction_rule_draft_artifact_filename("fallback_time_time_candidate"),
@@ -12952,7 +13079,7 @@ class TranslatorTests(unittest.TestCase):
         )
 
     def test_verification_rejects_construction_rule_draft_export_drift(self) -> None:
-        sentence = "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday"
+        sentence = "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday"
         handler = object.__new__(PipelineHandler)
         analyze_payload = analyze_sentence(sentence, require_coq=True)
         page = render_page(sentence, require_coq=True, result=analyze_payload)
@@ -12960,7 +13087,7 @@ class TranslatorTests(unittest.TestCase):
             handler,
             (
                 "sentence=Mary+laughed+loudly+in+the+park+near+a+window+"
-                "beside+a+shelf+under+a+lamp+yesterday&require_coq=1"
+                "beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&require_coq=1"
             ),
         )
         self.assertEqual(status, HTTPStatus.OK)
@@ -14549,7 +14676,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
         page = render_page(
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp yesterday",
+            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope yesterday",
             require_coq=True,
         )
         self.assertIn("Construction Rule", page)
@@ -14597,7 +14724,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+yesterday&amp;require_coq=1&amp;download=1",
+            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+beside+a+shelf+under+a+lamp+with+a+telescope+yesterday&amp;require_coq=1&amp;download=1",
             page,
         )
         self.assertIn("Parameter Event : Type.", page)
@@ -16665,12 +16792,21 @@ class TranslatorTests(unittest.TestCase):
             "manner_three_location_intransitive_predication_single_reading",
             web_design,
         )
+        self.assertIn("manner_location_sequence_intransitive_predication", web_design)
+        self.assertIn(
+            "manner_location_sequence_intransitive_predication_single_reading",
+            web_design,
+        )
         self.assertIn("Mary laughed loudly yesterday", web_design)
         self.assertIn("Mary laughed loudly in the", web_design)
         self.assertIn("near a window` exports", web_design)
         self.assertIn("park yesterday", web_design)
         self.assertIn("beside a shelf yesterday", web_design)
-        self.assertIn("five-modifier scaffold", web_design)
+        self.assertIn("`under_lamp : Adv`", web_design)
+        self.assertIn("`on_table : Adv`", web_design)
+        self.assertIn("on(table), mary))", web_design)
+        self.assertIn("under a lamp with a telescope", web_design)
+        self.assertIn("six-modifier scaffold", web_design)
         self.assertIn("multi-reading quantifier-scope success path", web_design)
         self.assertIn("some boy loves some girl", web_design)
         self.assertIn("registered perception-complement success path", web_design)
@@ -17667,6 +17803,30 @@ class TranslatorTests(unittest.TestCase):
             "temporal_manner_three_location_intransitive_predication",
             web_design,
         )
+        self.assertIn(
+            "temporal_manner_location_sequence_intransitive_predication",
+            readme,
+        )
+        self.assertIn(
+            "temporal_manner_location_sequence_intransitive_predication",
+            web_design,
+        )
+        self.assertIn(
+            "extended_manner_location_sequence_intransitive_predication",
+            readme,
+        )
+        self.assertIn(
+            "extended_manner_location_sequence_intransitive_predication",
+            web_design,
+        )
+        self.assertIn(
+            "temporal_extended_manner_location_sequence_intransitive_predication",
+            readme,
+        )
+        self.assertIn(
+            "temporal_extended_manner_location_sequence_intransitive_predication",
+            web_design,
+        )
         self.assertIn("temporal_resultative_predication", readme)
         self.assertIn("temporal_resultative_predication", web_design)
         self.assertIn("Mary smiled yesterday", web_design)
@@ -17675,7 +17835,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("near a window` exports", web_design)
         self.assertIn("park yesterday", web_design)
         self.assertIn("beside a shelf yesterday", web_design)
-        self.assertIn("five-modifier scaffold", web_design)
+        self.assertIn("six-modifier scaffold", web_design)
         self.assertIn("`semantic_snapshots`", web_design)
         self.assertIn("`semantic_snapshot_count`", web_design)
         self.assertIn("`data-semantic-snapshot-*`", web_design)

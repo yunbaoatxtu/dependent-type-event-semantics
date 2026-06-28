@@ -164,6 +164,9 @@ uses `data-coverage-marker`. Current registered variants include
 `temporal_manner_locative_intransitive_predication`,
 `temporal_manner_two_location_intransitive_predication`,
 `temporal_manner_three_location_intransitive_predication`,
+`temporal_manner_location_sequence_intransitive_predication`,
+`extended_manner_location_sequence_intransitive_predication`, and
+`temporal_extended_manner_location_sequence_intransitive_predication`,
 `temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
@@ -708,13 +711,26 @@ loudly in the park near a window beside a shelf yesterday` remains registered
 as `at_T(yesterday, laugh(4)(loudly, in(park), near(window), beside(shelf), mary))`
 with the `explicit_agent_with_manner_and_three_location_adv_at_time` scope and
 no fallback draft.
+`Mary laughed loudly in the park near a window beside a shelf under a lamp`
+must surface as the registered
+`manner_location_sequence_intransitive_predication` construction with
+`manner_location_sequence_intransitive_predication_single_reading`; its
+scaffold must declare `loudly : Adv`, `in_park : Adv`, `near_window : Adv`,
+`beside_shelf : Adv`, and `under_lamp : Adv`, not entity surrogates. The timed
+variant remains registered as
+`at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))`.
+The extended pure Location sequence `Mary laughed loudly in the park near a
+window beside a shelf under a lamp on a table yesterday` remains registered as
+`at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), on(table), mary))`,
+with `on_table : Adv` rather than an entity surrogate.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
 success contract is instead exercised with `Mary laughed loudly in the park near
-a window beside a shelf under a lamp yesterday`, a shallow five-modifier scaffold
-`at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))` with
+a window beside a shelf under a lamp with a telescope yesterday`, a shallow
+six-modifier scaffold
+`at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))` with
 `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -936,10 +952,16 @@ registers one Manner Adv plus two Location Advs:
 registered under `at_T`. A fourth reviewed slice registers one Manner Adv plus
 three Location Advs: `Mary laughed loudly in the park near a window beside a
 shelf` exports `laugh(4)(loudly, in(park), near(window), beside(shelf), mary)`,
-and its timed variant remains registered under `at_T`. For example, `Mary
-laughed loudly in the park near a window beside a shelf under a lamp yesterday`
-remains a shallow five-modifier scaffold,
-`at_T(yesterday, laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary))`,
+and its timed variant remains registered under `at_T`. A fifth reviewed slice
+registers the pure Location sequence beyond that fixed depth:
+`Mary laughed loudly in the park near a window beside a shelf under a lamp`
+exports `laugh(5)(loudly, in(park), near(window), beside(shelf), under(lamp), mary)`,
+and the extended timed sequence with `on a table yesterday` exports
+`at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), on(table), mary))`.
+The remaining fallback example is deliberately mixed-role: `Mary laughed loudly
+in the park near a window beside a shelf under a lamp with a telescope
+yesterday` remains a shallow six-modifier scaffold,
+`at_T(yesterday, laugh(6)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), mary))`,
 with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
