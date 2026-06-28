@@ -2195,10 +2195,13 @@ build dependencies. It also runs a smoke check for the lexicon patch exporter,
 verifying that it can write both the JSON bundle and review-only patch text,
 and a core JSON API artifact check that replays `/api/diagnostic-contract` and
 `/api/certified-fragment` without opening a port, validating
-`application/json`, UTF-8 charset, byte length, and payload equality. It also
-runs a web route smoke check that requests ordinary `/api/analyze` fallback and
-quantifier-scope successes plus a registered perception-complement success plus
-registered timed-after and universal timed burning successes before the
+`application/json`, UTF-8 charset, byte length, and payload equality. A matching
+diagnostic fixtures manifest JSON artifact check replays
+`/api/diagnostic-fixtures` from the handler before the live route is opened,
+then validates the manifest against the fixture payloads and HTML pages. It
+also runs a web route smoke check that requests ordinary `/api/analyze` fallback
+and quantifier-scope successes plus a registered perception-complement success
+plus registered timed-after and universal timed burning successes before the
 diagnostic fixture manifest through the local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is

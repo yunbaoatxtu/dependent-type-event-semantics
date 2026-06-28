@@ -687,7 +687,11 @@ record should name the `diagnostic_recovery_action.v1` schema, case, action
 index, action kind, failure stage, `/api/recovery-action` path, automation
 mode, `can_auto_run`, `can_auto_apply`, `target_fields`, and either an
 `inspection_run_api_path` for read-only inspection actions or `null` for
-human-review-required repairs. The fixture selector should also expose
+human-review-required repairs. A no-port manifest JSON artifact check should
+replay the same `/api/diagnostic-fixtures` payload from the handler, validate
+`application/json`, UTF-8 charset, byte length, and payload equality, and then
+run the manifest against the fixture payloads and HTML pages before the live
+route smoke check is opened. The fixture selector should also expose
 `data-inspection-run-count` on each option, so clients can discover whether a
 case has executable diagnostic inspections before opening the full fixture
 payload.

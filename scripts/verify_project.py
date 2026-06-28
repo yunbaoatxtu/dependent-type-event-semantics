@@ -12569,6 +12569,58 @@ def validate_core_json_api_artifacts() -> None:
         )
 
 
+def validate_diagnostic_fixtures_manifest_json_artifact() -> None:
+    from web.app import (
+        PipelineHandler,
+        compact_json,
+        diagnostic_fixture_manifest,
+        diagnostic_fixture_result,
+        render_page,
+    )
+
+    print("==> diagnostic fixtures manifest JSON artifact check")
+    handler = object.__new__(PipelineHandler)
+    manifest = PipelineHandler.handle_diagnostic_fixtures_api(handler)
+    expected_manifest = diagnostic_fixture_manifest()
+    if manifest != expected_manifest:
+        raise SystemExit(
+            "diagnostic fixtures manifest JSON artifact check failed: manifest drift"
+        )
+    fixture_payloads = {}
+    fixture_pages = {}
+    for fixture in manifest.get("cases", []):
+        if not isinstance(fixture, dict):
+            raise SystemExit(
+                "diagnostic fixtures manifest JSON artifact check failed: "
+                "malformed fixture case"
+            )
+        case = fixture.get("case")
+        if not isinstance(case, str):
+            raise SystemExit(
+                "diagnostic fixtures manifest JSON artifact check failed: "
+                "incomplete fixture case metadata"
+            )
+        payload = diagnostic_fixture_result(case)
+        fixture_payloads[case] = payload
+        fixture_pages[case] = render_page(
+            str(payload.get("input_sentence", f"diagnostic fixture: {case}")),
+            result=payload,
+            endpoint="/api/diagnostic-fixture",
+        )
+    validate_diagnostic_fixture_routes(manifest, fixture_payloads, fixture_pages)
+    raw = compact_json(manifest).encode("utf-8")
+    validate_json_api_response_bytes(
+        "diagnostic_fixtures",
+        "diagnostic fixtures manifest",
+        status=HTTPStatus.OK,
+        content_type="application/json",
+        content_header="application/json; charset=utf-8",
+        content_length=str(len(raw)),
+        raw=raw,
+        expected_payload=manifest,
+    )
+
+
 def validate_construction_rule_draft_download_artifact() -> None:
     from web.app import PipelineHandler, compact_json
 
@@ -14647,7 +14699,19 @@ def run_web_route_smoke_check() -> None:
             certified_fragment_manifest,
         )
         with opener.open(f"{base_url}/api/diagnostic-fixtures", timeout=5) as response:
-            manifest = json.load(response)
+            raw = response.read()
+            manifest = validate_json_api_response_bytes(
+                "diagnostic_fixtures",
+                "diagnostic fixtures manifest",
+                status=response.status,
+                content_type=response.headers.get_content_type(),
+                content_header=response.headers.get("Content-Type", ""),
+                content_length=response.headers.get("Content-Length"),
+                raw=raw,
+                expected_payload=PipelineHandler.handle_diagnostic_fixtures_api(
+                    smoke_handler
+                ),
+            )
         manifest_cases = manifest.get("cases", [])
         if not isinstance(manifest_cases, list):
             raise SystemExit("web route smoke check failed: missing fixture cases")
@@ -14826,6 +14890,7 @@ def main() -> None:
     run_lexicon_export_smoke_check()
     run_lexicon_warning_schema_check()
     validate_core_json_api_artifacts()
+    validate_diagnostic_fixtures_manifest_json_artifact()
     validate_lexicon_patch_json_artifacts()
     validate_lexicon_patch_text_artifacts()
     validate_construction_rule_draft_download_artifact()
