@@ -643,7 +643,9 @@ content-length, filename, or payload drift at the HTTP boundary. A matching
 no-port helper should rebuild the ordinary failure matrix directly from the
 bundle builders, including human-review rejection rows and inspection-only
 download rows, so the artifact contract remains testable when a local HTTP
-server cannot start.
+server cannot start. The same no-port fixture helper should rebuild every
+controlled diagnostic recovery-action export and inspection-run download from
+the manifest and bundle builders before the live fixture HTML is requested.
 The download-response helper should also be tested with direct counterexamples
 for status, content-type, content-length, filename, and payload drift, so the
 HTTP artifact contract remains guarded even when the route smoke check is not

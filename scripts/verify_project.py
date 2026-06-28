@@ -12672,6 +12672,161 @@ def validate_analyze_action_download_artifacts() -> None:
             )
 
 
+def validate_diagnostic_fixture_download_artifacts() -> None:
+    from web.app import (
+        PipelineHandler,
+        compact_json,
+        diagnostic_fixture_manifest,
+        diagnostic_fixture_result,
+        recovery_action_export_bundle,
+        recovery_action_inspection_run_bundle,
+    )
+
+    print("==> diagnostic fixture download artifact check")
+    manifest = diagnostic_fixture_manifest()
+    manifest_cases = manifest.get("cases")
+    if not isinstance(manifest_cases, list) or not manifest_cases:
+        raise SystemExit(
+            "diagnostic fixture download artifact check failed: missing manifest cases"
+        )
+    handler = object.__new__(PipelineHandler)
+    for fixture in manifest_cases:
+        if not isinstance(fixture, dict):
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: malformed fixture"
+            )
+        case = fixture.get("case")
+        failure_stage = fixture.get("failure_stage")
+        action_kinds = fixture.get("recovery_action_kinds")
+        action_exports = fixture.get("recovery_action_exports")
+        if not isinstance(case, str) or not isinstance(failure_stage, str):
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: incomplete fixture"
+            )
+        if not isinstance(action_kinds, list) or not isinstance(action_exports, list):
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: "
+                f"{case} incomplete action metadata"
+            )
+        fixture_payload = diagnostic_fixture_result(case)
+        diagnostics = fixture_payload.get("diagnostics")
+        if not isinstance(diagnostics, dict):
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: "
+                f"{case} diagnostics missing"
+            )
+        if diagnostics.get("failure_stage") != failure_stage:
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: "
+                f"{case} stage drift"
+            )
+        actions = diagnostics.get("recovery_actions")
+        if not isinstance(actions, list) or len(actions) != len(action_kinds):
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: "
+                f"{case} action count drift"
+            )
+        if len(action_exports) != len(actions):
+            raise SystemExit(
+                "diagnostic fixture download artifact check failed: "
+                f"{case} export count drift"
+            )
+        for action_index, action in enumerate(actions):
+            if not isinstance(action, dict):
+                raise SystemExit(
+                    "diagnostic fixture download artifact check failed: "
+                    f"{case} malformed action"
+                )
+            expected_kind = action_kinds[action_index]
+            if action.get("kind") != expected_kind:
+                raise SystemExit(
+                    "diagnostic fixture download artifact check failed: "
+                    f"{case} action kind drift"
+                )
+            action_export = action_exports[action_index]
+            validate_recovery_action_export_manifest_entry(
+                case,
+                action_index,
+                failure_stage,
+                str(expected_kind),
+                action_export,
+                action,
+            )
+            action_payload = recovery_action_export_bundle(case, action_index)
+            validate_recovery_action_export_bundle(
+                case,
+                action_index,
+                action,
+                action_payload,
+            )
+            action_filename = recovery_action_artifact_filename(case, action_index)
+            if action_export.get("download_filename") != action_filename:
+                raise SystemExit(
+                    "diagnostic fixture download artifact check failed: "
+                    f"{case} action download filename drift"
+                )
+            action_raw = compact_json(action_payload).encode("utf-8")
+            validate_json_download_response_bytes(
+                case,
+                "recovery action",
+                status=HTTPStatus.OK,
+                content_type="application/json",
+                content_length=str(len(action_raw)),
+                content_disposition=f'attachment; filename="{action_filename}"',
+                raw=action_raw,
+                expected_payload=action_payload,
+                expected_filename=action_filename,
+            )
+            run_query = urlencode({"case": case, "index": str(action_index)})
+            run_payload, run_status = PipelineHandler.handle_recovery_action_run_api(
+                handler,
+                run_query,
+            )
+            if action_payload.get("repair_plan", {}).get("can_auto_run") is True:
+                if run_status != HTTPStatus.OK:
+                    raise SystemExit(
+                        "diagnostic fixture download artifact check failed: "
+                        f"{case} inspection status drift"
+                    )
+                validate_recovery_action_inspection_run_bundle(
+                    case,
+                    action_index,
+                    action_payload,
+                    fixture_payload,
+                    run_payload,
+                )
+                run_filename = recovery_action_run_artifact_filename(case, action_index)
+                if action_export.get("inspection_run_download_filename") != run_filename:
+                    raise SystemExit(
+                        "diagnostic fixture download artifact check failed: "
+                        f"{case} inspection filename drift"
+                    )
+                run_raw = compact_json(run_payload).encode("utf-8")
+                validate_json_download_response_bytes(
+                    case,
+                    "recovery action run",
+                    status=HTTPStatus.OK,
+                    content_type="application/json",
+                    content_length=str(len(run_raw)),
+                    content_disposition=f'attachment; filename="{run_filename}"',
+                    raw=run_raw,
+                    expected_payload=run_payload,
+                    expected_filename=run_filename,
+                )
+            else:
+                if run_status != HTTPStatus.BAD_REQUEST:
+                    raise SystemExit(
+                        "diagnostic fixture download artifact check failed: "
+                        f"{case} human-review inspection accepted"
+                    )
+                validate_recovery_action_inspection_run_rejection(
+                    case,
+                    action_index,
+                    action_payload,
+                    run_payload,
+                )
+
+
 def run_web_route_smoke_check() -> None:
     from web.app import PipelineHandler
 
@@ -14451,6 +14606,7 @@ def main() -> None:
     run_lexicon_warning_schema_check()
     validate_construction_rule_draft_download_artifact()
     validate_analyze_action_download_artifacts()
+    validate_diagnostic_fixture_download_artifacts()
     run_web_route_smoke_check()
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")
