@@ -10,6 +10,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 
@@ -14269,6 +14270,40 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "certified fallback gap drift"):
             validate_certified_fragment_manifest(manifest)
 
+    def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
+        manifest = construction_fragment_manifest()
+        fallback_sentence = manifest["coverage_matrix"]["fallback_success_cases"][0][
+            "sentence"
+        ]
+        original_run_pipeline = natural_language_pipeline.run_pipeline
+
+        def fake_run_pipeline(sentence: str, require_coq: bool = False) -> dict:
+            result = deepcopy(original_run_pipeline(sentence, require_coq=require_coq))
+            if sentence == fallback_sentence:
+                result["ok"] = False
+            return result
+
+        with patch.object(natural_language_pipeline, "run_pipeline", fake_run_pipeline):
+            with self.assertRaisesRegex(SystemExit, "fallback coverage runtime drift"):
+                validate_certified_fragment_manifest(manifest)
+
+    def test_verification_rejects_certified_fragment_rejected_runtime_drift(self) -> None:
+        manifest = construction_fragment_manifest()
+        rejected_sentence = manifest["coverage_matrix"]["rejected_unsupported_cases"][0][
+            "sentence"
+        ]
+        original_run_pipeline = natural_language_pipeline.run_pipeline
+
+        def fake_run_pipeline(sentence: str, require_coq: bool = False) -> dict:
+            result = deepcopy(original_run_pipeline(sentence, require_coq=require_coq))
+            if sentence == rejected_sentence:
+                result["ok"] = True
+            return result
+
+        with patch.object(natural_language_pipeline, "run_pipeline", fake_run_pipeline):
+            with self.assertRaisesRegex(SystemExit, "rejected coverage runtime drift"):
+                validate_certified_fragment_manifest(manifest)
+
     def test_verification_rejects_registered_modifier_sequence_contract_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         manifest["registered_modifier_sequence_contract"][
@@ -20484,6 +20519,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("translation-fragment count", manuscript)
         self.assertIn("every coverage_matrix row", manuscript)
         self.assertIn("boundary status", manuscript)
+        self.assertIn("fallback_success_cases and rejected_unsupported_cases", manuscript)
+        self.assertIn("avoid emitting dependent-type or Coq/Rocq output", manuscript)
         self.assertIn("parser-level drift", manuscript)
         self.assertIn("semantic drift", manuscript)
         self.assertIn("Certified Fragment panel", manuscript)
@@ -21325,6 +21362,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("derived `data-semantic-snapshot-*` row hooks", readme)
         self.assertIn("registered-primary", readme)
         self.assertIn("rejected row", readme)
+        self.assertIn("expected certification gaps", readme)
+        self.assertIn("without generated", readme)
+        self.assertIn("dependent-type or Coq/Rocq output", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -21342,6 +21382,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`kind: registered_construction`", web_design)
         self.assertIn("`kind: fallback_shallow`", web_design)
         self.assertIn("`certification_gaps`", web_design)
+        self.assertIn("fallback and rejected rows", web_design)
+        self.assertIn("avoid emitting dependent-type or Coq/Rocq output", web_design)
         self.assertIn('`schema_version: "certification_upgrade_plan.v1"`', web_design)
         self.assertIn("`candidate_rule_id`", web_design)
         self.assertIn("`Certification Upgrade Plan` panel", web_design)

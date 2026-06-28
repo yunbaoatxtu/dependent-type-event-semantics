@@ -1701,6 +1701,10 @@ the actual pipeline, so the coverage matrix cannot become a prose-only
 inventory. The Certified Fragment page check now derives every registered-primary
 row, registered-variant row, fallback row, and rejected row from the
 manifest before accepting the coverage panel.
+The project verifier also reruns the fallback and rejected rows themselves:
+fallback rows must remain shallow successes with the expected certification gaps,
+and rejected rows must still fail before fallback without generated
+dependent-type or Coq/Rocq output.
 The certified-fragment smoke check also validates `semantic_snapshot_count`,
 the per-rule snapshot hooks in HTML, and the live analyzer output against every
 snapshot's expected analysis, readings, Coq/Rocq definitions, and translation

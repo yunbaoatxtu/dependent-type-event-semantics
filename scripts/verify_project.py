@@ -11270,34 +11270,81 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     ):
         raise SystemExit("web route smoke check failed: certified fallback drift")
     fallback_gaps = fallback.get("certification_gaps")
+    expected_fallback_gap_ids = [
+        "no_registered_construction_rule",
+        "no_fragment_specific_readings",
+        "no_construction_hygiene_policy",
+    ]
     if (
         not isinstance(fallback_gaps, list)
         or [gap.get("id") for gap in fallback_gaps if isinstance(gap, dict)]
-        != [
-            "no_registered_construction_rule",
-            "no_fragment_specific_readings",
-            "no_construction_hygiene_policy",
-        ]
+        != expected_fallback_gap_ids
     ):
         raise SystemExit("web route smoke check failed: certified fallback gap drift")
     for case in fallback_cases:
+        sentence = case.get("sentence")
         if (
             not isinstance(case, dict)
             or case.get("expected_verification_scope_kind") != "fallback_shallow"
             or case.get("expected_certification_level") != "shallow_scaffold"
-            or not isinstance(case.get("sentence"), str)
+            or case.get("boundary_status") != "structurally_checked_shallow_scaffold"
+            or not isinstance(sentence, str)
+            or not sentence
         ):
             raise SystemExit("web route smoke check failed: certified fallback coverage drift")
+        result = run_pipeline(sentence, require_coq=False)
+        scope = result.get("verification_scope")
+        if (
+            not result.get("ok")
+            or not isinstance(scope, dict)
+            or scope.get("kind") != case.get("expected_verification_scope_kind")
+            or scope.get("certification_level") != case.get("expected_certification_level")
+            or result.get("construction_rule") is not None
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified fallback coverage runtime drift"
+            )
+        runtime_gaps = scope.get("certification_gaps")
+        if (
+            not isinstance(runtime_gaps, list)
+            or [gap.get("id") for gap in runtime_gaps if isinstance(gap, dict)]
+            != expected_fallback_gap_ids
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified fallback coverage gap runtime drift"
+            )
     for case in rejected_cases:
+        sentence = case.get("sentence")
+        marker = case.get("marker")
         if (
             not isinstance(case, dict)
             or case.get("expected_verification_scope_kind")
             != "rejected_unsupported_fragment"
             or case.get("expected_certification_level") != "none"
-            or case.get("marker") not in manifest.get("rejected_fragment_markers", [])
-            or not isinstance(case.get("sentence"), str)
+            or marker not in manifest.get("rejected_fragment_markers", [])
+            or case.get("boundary_status") != "rejected_before_fallback"
+            or not isinstance(sentence, str)
+            or not sentence
+            or not isinstance(marker, str)
+            or not marker
         ):
             raise SystemExit("web route smoke check failed: certified rejected coverage drift")
+        result = run_pipeline(sentence, require_coq=False)
+        scope = result.get("verification_scope")
+        error = result.get("error")
+        if (
+            result.get("ok") is not False
+            or not isinstance(scope, dict)
+            or scope.get("kind") != case.get("expected_verification_scope_kind")
+            or scope.get("certification_level") != case.get("expected_certification_level")
+            or not isinstance(error, str)
+            or marker not in error
+            or result.get("dependent_type_translation") is not None
+            or result.get("coq_code") is not None
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified rejected coverage runtime drift"
+            )
     if "who" not in manifest.get("rejected_fragment_markers", []):
         raise SystemExit("web route smoke check failed: certified marker drift")
 

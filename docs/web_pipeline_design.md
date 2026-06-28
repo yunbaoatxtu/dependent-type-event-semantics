@@ -962,6 +962,10 @@ row, registered-variant row, fallback row, and rejected row from the
 manifest lists, including each row's scope, certification level, and boundary
 status. The row-level `data-coverage-boundary` hook gives tests a stable
 boundary-status marker.
+The project-level verifier should also execute the fallback and rejected rows
+listed in the matrix: fallback rows must still be shallow successes with the
+advertised gap ids, while rejected rows must still stop before fallback and
+avoid emitting dependent-type or Coq/Rocq output.
 It should likewise validate `semantic_snapshot_count`, the page's
 `data-semantic-snapshot-*` hooks, and the live pipeline output for every
 snapshot so analysis labels, reading names, Coq/Rocq definitions, and
