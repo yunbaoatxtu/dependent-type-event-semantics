@@ -905,6 +905,15 @@ payload exactly. The same promotion contract also cross-checks the
 sentence, dependent-type translation, AST summary, semantic-reading draft,
 test draft, verification command, and patch-text preview must agree before the
 fallback artifact is treated as a coherent human-review candidate.
+The draft now also embeds `registration_preflight` with
+`schema_version: "construction_rule_registration_preflight.v1"`. This preflight
+checks that the candidate rule id and analyzer name do not collide with the
+live construction registry, that accepted examples, semantic-reading drafts,
+hygiene fragments, and a registration test draft are present, and that
+`can_auto_register` remains `false` with `registration_status:
+"human_review_required"`. In other words, the artifact can be reviewed as a
+coherent candidate, but the system still refuses to auto-register it as a
+certified construction.
 The project-level coverage boundary is available separately at
 `/api/certified-fragment` with `schema_version: "certified_fragment.v1"`.
 That manifest is generated from the live registered construction table rather

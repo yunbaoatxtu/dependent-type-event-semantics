@@ -130,6 +130,13 @@ cannot start the local HTTP smoke-test server. A promotion-contract helper also
 compares `certification_upgrade_plan` with the draft: candidate rule id, source
 sentence, dependent-type translation, AST summary, semantic-reading draft, test
 draft, verification commands, and patch-text preview must agree.
+The draft additionally carries `registration_preflight` with
+`schema_version: "construction_rule_registration_preflight.v1"`. It checks
+candidate rule-id and analyzer-name uniqueness against the live registry,
+presence of accepted examples, semantic-reading drafts, hygiene fragments, and
+a registration test draft, and it must expose
+`registration_status: "human_review_required"` with `can_auto_register: false`.
+The page renders these checks through `data-rule-draft-preflight-*` hooks.
 Rejected or failed paths use
 `certification_level: none`.
 The page also exposes a project-level certified-fragment contract. The

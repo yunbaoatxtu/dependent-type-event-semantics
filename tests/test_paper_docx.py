@@ -121,6 +121,8 @@ class PaperDocxTests(unittest.TestCase):
         self.assertIn("Raw draft JSON preview", manuscript)
         self.assertIn("promotion contract cross-checks", manuscript)
         self.assertIn("verification commands, and patch-text preview", manuscript)
+        self.assertIn("construction_rule_registration_preflight.v1 record", manuscript)
+        self.assertIn("can_auto_register false", manuscript)
         self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("action/detail drift", manuscript)

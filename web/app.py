@@ -2883,6 +2883,73 @@ def construction_rule_draft_panel(
     analyzer = str(draft.get("candidate_analyzer", ""))
     automation_mode = str(draft.get("automation_mode", ""))
     can_auto_apply = draft.get("can_auto_apply") is True
+    preflight = draft.get("registration_preflight")
+    preflight_schema = ""
+    registration_status = ""
+    can_auto_register = False
+    preflight_html = ""
+    if isinstance(preflight, dict):
+        preflight_schema = str(preflight.get("schema_version", ""))
+        registration_status = str(preflight.get("registration_status", ""))
+        can_auto_register = preflight.get("can_auto_register") is True
+        preflight_checks = []
+        checks = preflight.get("checks", [])
+        checked_checks = checks if isinstance(checks, list) else []
+        for check in checked_checks:
+            if not isinstance(check, dict):
+                continue
+            check_id = str(check.get("id", ""))
+            check_ok = check.get("ok") is True
+            preflight_checks.append(
+                '<li '
+                f'data-rule-draft-preflight-check-id="{html.escape(check_id, quote=True)}" '
+                f'data-rule-draft-preflight-check-ok="{str(check_ok).lower()}">'
+                f'<strong>{html.escape(check_id)}</strong>'
+                '<dl>'
+                f'<dt>ok</dt><dd>{"yes" if check_ok else "no"}</dd>'
+                f'<dt>detail</dt><dd>{html.escape(str(check.get("detail", "")))}</dd>'
+                '</dl>'
+                '</li>'
+            )
+        blocking_issues = preflight.get("blocking_issues", [])
+        blocking_items = (
+            "".join(
+                f"<li>{html.escape(str(issue))}</li>"
+                for issue in blocking_issues
+                if isinstance(issue, str)
+            )
+            if isinstance(blocking_issues, list) and blocking_issues
+            else "<li>none</li>"
+        )
+        review_fields = preflight.get("required_human_review_fields", [])
+        review_items = (
+            "".join(
+                f"<li>{html.escape(str(field))}</li>"
+                for field in review_fields
+                if isinstance(field, str)
+            )
+            if isinstance(review_fields, list) and review_fields
+            else "<li>none</li>"
+        )
+        preflight_html = (
+            '<div class="construction-rule-draft-section construction-rule-draft-preflight">'
+            "<strong>registration preflight</strong>"
+            '<dl class="construction-rule-draft-preflight-details">'
+            f"<dt>schema</dt><dd>{html.escape(preflight_schema)}</dd>"
+            f"<dt>status</dt><dd>{html.escape(registration_status)}</dd>"
+            f"<dt>auto register</dt><dd>{'yes' if can_auto_register else 'no'}</dd>"
+            "</dl>"
+            '<ul class="construction-rule-draft-preflight-checks">'
+            + "".join(preflight_checks)
+            + "</ul>"
+            '<div class="construction-rule-draft-preflight-blockers">'
+            "<strong>blocking issues</strong>"
+            f"<ul>{blocking_items}</ul></div>"
+            '<div class="construction-rule-draft-preflight-review">'
+            "<strong>human review fields</strong>"
+            f"<ul>{review_items}</ul></div>"
+            "</div>"
+        )
     readings = draft.get("semantic_reading_drafts", [])
     hygiene = draft.get("hygiene_policy_draft", {})
     forbidden_fragments = []
@@ -2956,6 +3023,7 @@ def construction_rule_draft_panel(
         f"{reading_html}</div>"
         '<div class="construction-rule-draft-section"><strong>forbidden Coq/Rocq fragments</strong>'
         f"<ul>{forbidden_html}</ul></div>"
+        f"{preflight_html}"
         '<div class="construction-rule-draft-section"><strong>verification commands</strong>'
         f"<ul>{commands_html}</ul></div>"
         '<details class="construction-rule-draft-raw"><summary>Raw draft JSON</summary>'
@@ -2968,7 +3036,10 @@ def construction_rule_draft_panel(
         f'data-rule-draft-source-scope="{html.escape(source_scope, quote=True)}" '
         f'data-rule-draft-id="{html.escape(candidate_rule_id, quote=True)}" '
         f'data-rule-draft-analyzer="{html.escape(analyzer, quote=True)}" '
-        f'data-rule-draft-can-auto-apply="{str(can_auto_apply).lower()}">'
+        f'data-rule-draft-can-auto-apply="{str(can_auto_apply).lower()}" '
+        f'data-rule-draft-preflight-schema="{html.escape(preflight_schema, quote=True)}" '
+        f'data-rule-draft-registration-status="{html.escape(registration_status, quote=True)}" '
+        f'data-rule-draft-can-auto-register="{str(can_auto_register).lower()}">'
         "<h2>Construction Rule Draft</h2>"
         f'<div class="construction-rule-draft">{body}</div>'
         "</section>"

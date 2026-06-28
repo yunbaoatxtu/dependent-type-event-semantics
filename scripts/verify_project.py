@@ -2307,6 +2307,46 @@ def validate_fallback_promotion_contract(label: str, payload: dict) -> None:
     ):
         raise SystemExit(f"web route smoke check failed: {label} promotion patch drift")
 
+    preflight = rule_draft.get("registration_preflight")
+    if not isinstance(preflight, dict):
+        raise SystemExit(f"web route smoke check failed: {label} promotion preflight missing")
+    if (
+        preflight.get("schema_version") != "construction_rule_registration_preflight.v1"
+        or preflight.get("candidate_rule_id") != candidate_rule_id
+        or preflight.get("candidate_analyzer") != f"{candidate_rule_id}_pipeline"
+        or preflight.get("ok") is not True
+        or preflight.get("registration_status") != "human_review_required"
+        or preflight.get("can_auto_register") is not False
+        or preflight.get("human_review_required") is not True
+        or preflight.get("blocking_issues") != []
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion preflight drift")
+    checks = preflight.get("checks")
+    expected_check_ids = [
+        "candidate_rule_id_unique",
+        "candidate_analyzer_unique",
+        "accepted_examples_present",
+        "semantic_reading_draft_present",
+        "hygiene_policy_present",
+        "test_draft_present",
+    ]
+    if (
+        not isinstance(checks, list)
+        or [check.get("id") for check in checks if isinstance(check, dict)] != expected_check_ids
+        or any(
+            not isinstance(check, dict) or check.get("ok") is not True
+            for check in checks
+        )
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion preflight check drift")
+    review_fields = preflight.get("required_human_review_fields")
+    if (
+        not isinstance(review_fields, list)
+        or "analyzer implementation" not in review_fields
+        or "registration tests" not in review_fields
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion preflight review drift")
+
 
 def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -> None:
     case = "analyze_fallback_success"
@@ -2503,6 +2543,9 @@ def validate_construction_rule_draft_export(
         f'data-rule-draft-source-scope="{html.escape(str(draft.get("source_verification_scope", "")), quote=True)}"',
         f'data-rule-draft-id="{html.escape(candidate_rule_id, quote=True)}"',
         f'data-rule-draft-analyzer="{html.escape(str(draft.get("candidate_analyzer", "")), quote=True)}"',
+        'data-rule-draft-preflight-schema="construction_rule_registration_preflight.v1"',
+        'data-rule-draft-registration-status="human_review_required"',
+        'data-rule-draft-can-auto-register="false"',
         f'href="{html.escape(expected_href, quote=True)}"',
         raw_json,
     ]
@@ -2552,6 +2595,32 @@ def validate_construction_rule_draft_export(
                 ),
             ],
             f"{label} construction rule draft hygiene HTML",
+        )
+
+    preflight = draft.get("registration_preflight")
+    checks = preflight.get("checks") if isinstance(preflight, dict) else []
+    if not isinstance(checks, list):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft preflight drift"
+        )
+    for check in checks:
+        if not isinstance(check, dict):
+            raise SystemExit(
+                f"web route smoke check failed: {label} construction rule draft preflight drift"
+            )
+        require_text_fragments(
+            page,
+            [
+                (
+                    'data-rule-draft-preflight-check-id="'
+                    f'{html.escape(str(check.get("id", "")), quote=True)}"'
+                ),
+                (
+                    'data-rule-draft-preflight-check-ok="'
+                    f'{str(check.get("ok") is True).lower()}"'
+                ),
+            ],
+            f"{label} construction rule draft preflight HTML",
         )
 
     expected_filename = construction_rule_draft_artifact_filename(candidate_rule_id)

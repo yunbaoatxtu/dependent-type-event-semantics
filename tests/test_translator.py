@@ -68,6 +68,7 @@ from translator.dependent_type_event_translator import (
 from translator.natural_language_pipeline import (
     CERTIFICATION_UPGRADE_PLAN_SCHEMA,
     CONSTRUCTION_RULE_DRAFT_SCHEMA,
+    CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
     ConstructionRule,
     ast_structure_summary,
     check_causal_because_ast,
@@ -89,6 +90,7 @@ from translator.natural_language_pipeline import (
     exported_prop_definition_names,
     fallback_candidate_rule_id,
     fallback_certification_gap_payload,
+    fallback_construction_rule_registration_preflight,
     run_registered_rule,
     run_pipeline,
     sentence_to_event_semantics,
@@ -11917,6 +11919,37 @@ class TranslatorTests(unittest.TestCase):
             "Parameter Event : Type.",
             rule_draft["hygiene_policy_draft"]["forbidden_coq_fragments"],
         )
+        preflight = rule_draft["registration_preflight"]
+        self.assertEqual(
+            preflight["schema_version"],
+            CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
+        )
+        self.assertTrue(preflight["ok"])
+        self.assertEqual(preflight["candidate_rule_id"], "fallback_time_time_candidate")
+        self.assertEqual(
+            preflight["candidate_analyzer"],
+            "fallback_time_time_candidate_pipeline",
+        )
+        self.assertEqual(preflight["registration_status"], "human_review_required")
+        self.assertFalse(preflight["can_auto_register"])
+        self.assertTrue(preflight["human_review_required"])
+        self.assertEqual(preflight["blocking_issues"], [])
+        self.assertEqual(
+            [check["id"] for check in preflight["checks"]],
+            [
+                "candidate_rule_id_unique",
+                "candidate_analyzer_unique",
+                "accepted_examples_present",
+                "semantic_reading_draft_present",
+                "hygiene_policy_present",
+                "test_draft_present",
+            ],
+        )
+        self.assertTrue(all(check["ok"] for check in preflight["checks"]))
+        self.assertIn(
+            "analyzer implementation",
+            preflight["required_human_review_fields"],
+        )
         self.assertEqual(
             rule_draft["test_draft"]["expected_certification_level"],
             "construction_rule",
@@ -11983,6 +12016,11 @@ class TranslatorTests(unittest.TestCase):
             "at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))",
         )
         self.assertEqual(draft["ast_summary"]["kind"], "time")
+        self.assertEqual(
+            draft["registration_preflight"]["candidate_rule_id"],
+            plan["candidate_rule_id"],
+        )
+        self.assertFalse(draft["registration_preflight"]["can_auto_register"])
 
     def test_verification_rejects_fallback_promotion_contract_drift(self) -> None:
         result = analyze_sentence(
@@ -12031,6 +12069,63 @@ class TranslatorTests(unittest.TestCase):
         stale_patch["construction_rule_draft"]["patch_text_preview"] = ""
         with self.assertRaisesRegex(SystemExit, "fallback promotion patch drift"):
             validate_fallback_promotion_contract("fallback", stale_patch)
+
+        missing_preflight = deepcopy(result)
+        missing_preflight["construction_rule_draft"].pop("registration_preflight")
+        with self.assertRaisesRegex(SystemExit, "fallback promotion preflight missing"):
+            validate_fallback_promotion_contract("fallback", missing_preflight)
+
+        stale_preflight = deepcopy(result)
+        stale_preflight["construction_rule_draft"]["registration_preflight"][
+            "can_auto_register"
+        ] = True
+        with self.assertRaisesRegex(SystemExit, "fallback promotion preflight drift"):
+            validate_fallback_promotion_contract("fallback", stale_preflight)
+
+        stale_preflight_check = deepcopy(result)
+        stale_preflight_check["construction_rule_draft"]["registration_preflight"][
+            "checks"
+        ][0]["ok"] = False
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback promotion preflight check drift",
+        ):
+            validate_fallback_promotion_contract("fallback", stale_preflight_check)
+
+    def test_fallback_registration_preflight_blocks_registered_collisions(self) -> None:
+        preflight = fallback_construction_rule_registration_preflight(
+            "event_counting",
+            "event_counting_pipeline",
+            ["John knocked twice"],
+            [
+                {
+                    "name": "event_counting_single_reading",
+                    "source": "event_counting",
+                    "coq_definition": "event_counting_single_reading",
+                }
+            ],
+            ["Parameter Event : Type."],
+            {
+                "positive_sentence": "John knocked twice",
+                "expected_verification_scope_kind": "registered_construction",
+                "expected_certification_level": "construction_rule",
+            },
+        )
+        self.assertEqual(
+            preflight["schema_version"],
+            CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
+        )
+        self.assertFalse(preflight["ok"])
+        self.assertEqual(preflight["registration_status"], "blocked")
+        self.assertFalse(preflight["can_auto_register"])
+        self.assertTrue(preflight["human_review_required"])
+        self.assertIn("candidate_rule_id_unique", preflight["blocking_issues"])
+        self.assertIn("candidate_analyzer_unique", preflight["blocking_issues"])
+        checks = {check["id"]: check for check in preflight["checks"]}
+        self.assertFalse(checks["candidate_rule_id_unique"]["ok"])
+        self.assertFalse(checks["candidate_analyzer_unique"]["ok"])
+        self.assertTrue(checks["accepted_examples_present"]["ok"])
+        self.assertIn("registration tests", preflight["required_human_review_fields"])
 
     def test_active_argument_omission_promotes_john_ate(self) -> None:
         result = analyze_sentence("John ate", require_coq=True)
@@ -13943,6 +14038,18 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-rule-draft-can-auto-apply="false"', page)
         self.assertIn(
+            'data-rule-draft-preflight-schema="construction_rule_registration_preflight.v1"',
+            page,
+        )
+        self.assertIn('data-rule-draft-registration-status="human_review_required"', page)
+        self.assertIn('data-rule-draft-can-auto-register="false"', page)
+        self.assertIn(
+            'data-rule-draft-preflight-check-id="candidate_rule_id_unique"',
+            page,
+        )
+        self.assertIn('data-rule-draft-preflight-check-ok="true"', page)
+        self.assertIn("human review fields", page)
+        self.assertIn(
             'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
             page,
         )
@@ -15541,6 +15648,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("page's raw draft JSON preview", readme)
         self.assertIn("promotion contract", readme)
         self.assertIn("semantic-reading draft", readme)
+        self.assertIn("`registration_preflight`", readme)
+        self.assertIn('`schema_version: "construction_rule_registration_preflight.v1"`', readme)
+        self.assertIn("`can_auto_register` remains `false`", readme)
         self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
@@ -16066,6 +16176,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Raw draft JSON preview", manuscript)
         self.assertIn("promotion contract cross-checks", manuscript)
         self.assertIn("verification commands, and patch-text preview", manuscript)
+        self.assertIn("construction_rule_registration_preflight.v1 record", manuscript)
+        self.assertIn("can_auto_register false", manuscript)
         self.assertIn("candidate analyzer", manuscript)
         self.assertIn("semantic-reading draft", manuscript)
         self.assertIn("human_review_required", manuscript)
@@ -16927,6 +17039,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("HTML `Raw draft JSON` preview", web_design)
         self.assertIn("promotion-contract helper", web_design)
         self.assertIn("verification commands, and patch-text preview", web_design)
+        self.assertIn("`registration_preflight`", web_design)
+        self.assertIn('`schema_version: "construction_rule_registration_preflight.v1"`', web_design)
+        self.assertIn("`data-rule-draft-preflight-*` hooks", web_design)
         self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
@@ -18174,6 +18289,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_fallback_promotion_contract(", verifier)
         self.assertIn("promotion candidate drift", verifier)
         self.assertIn("promotion command drift", verifier)
+        self.assertIn("construction_rule_registration_preflight.v1", verifier)
+        self.assertIn("promotion preflight drift", verifier)
+        self.assertIn("data-rule-draft-preflight-check-id", verifier)
         self.assertIn("construction rule draft response drift", verifier)
         self.assertIn("construction rule draft diagnostics drift", verifier)
         self.assertIn("def validate_analyze_plain_transitive_success(", verifier)

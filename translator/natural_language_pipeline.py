@@ -965,6 +965,9 @@ FALLBACK_CERTIFICATION_GAPS = (
 
 CERTIFICATION_UPGRADE_PLAN_SCHEMA = "certification_upgrade_plan.v1"
 CONSTRUCTION_RULE_DRAFT_SCHEMA = "construction_rule_draft.v1"
+CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA = (
+    "construction_rule_registration_preflight.v1"
+)
 
 
 def fallback_certification_gap_payload() -> list[dict[str, str]]:
@@ -1790,6 +1793,78 @@ def fallback_certification_upgrade_plan(
     }
 
 
+def fallback_construction_rule_registration_preflight(
+    candidate_rule_id: str,
+    candidate_analyzer: str,
+    accepted_examples: list[str],
+    semantic_reading_drafts: list[dict[str, Any]],
+    forbidden_coq_fragments: list[str],
+    test_draft: dict[str, Any],
+) -> dict[str, Any]:
+    registered_rules = construction_rules()
+    registered_rule_ids = sorted(rule.rule_id for rule in registered_rules)
+    registered_analyzers = sorted(rule.analyzer.__name__ for rule in registered_rules)
+    checks = [
+        {
+            "id": "candidate_rule_id_unique",
+            "ok": candidate_rule_id not in registered_rule_ids,
+            "detail": "Candidate rule id must not collide with an existing ConstructionRule.",
+        },
+        {
+            "id": "candidate_analyzer_unique",
+            "ok": candidate_analyzer not in registered_analyzers,
+            "detail": "Candidate analyzer name must not collide with an existing analyzer.",
+        },
+        {
+            "id": "accepted_examples_present",
+            "ok": bool(accepted_examples) and all(isinstance(item, str) and item for item in accepted_examples),
+            "detail": "At least one accepted example must be available for registration tests.",
+        },
+        {
+            "id": "semantic_reading_draft_present",
+            "ok": bool(semantic_reading_drafts)
+            and all(isinstance(item, dict) and item.get("name") for item in semantic_reading_drafts),
+            "detail": "A promoted rule needs named, construction-specific semantic-reading drafts.",
+        },
+        {
+            "id": "hygiene_policy_present",
+            "ok": bool(forbidden_coq_fragments),
+            "detail": "A promoted rule needs forbidden Coq/Rocq fragments for construction hygiene.",
+        },
+        {
+            "id": "test_draft_present",
+            "ok": bool(test_draft)
+            and test_draft.get("expected_verification_scope_kind") == "registered_construction"
+            and test_draft.get("expected_certification_level") == "construction_rule",
+            "detail": "A promoted rule needs a test draft expecting construction-rule certification.",
+        },
+    ]
+    blocking_issues = [
+        str(check["id"])
+        for check in checks
+        if check.get("ok") is not True
+    ]
+    return {
+        "schema_version": CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
+        "candidate_rule_id": candidate_rule_id,
+        "candidate_analyzer": candidate_analyzer,
+        "ok": not blocking_issues,
+        "registration_status": "human_review_required" if not blocking_issues else "blocked",
+        "can_auto_register": False,
+        "human_review_required": True,
+        "checks": checks,
+        "blocking_issues": blocking_issues,
+        "registered_rule_count": len(registered_rule_ids),
+        "registered_analyzer_count": len(registered_analyzers),
+        "required_human_review_fields": [
+            "analyzer implementation",
+            "construction-specific semantic readings",
+            "construction hygiene policy",
+            "registration tests",
+        ],
+    }
+
+
 def fallback_construction_rule_draft(
     sentence: str,
     ast: dict[str, Any],
@@ -1804,6 +1879,22 @@ def fallback_construction_rule_draft(
         "Parameter Agent :",
         "Parameter Theme :",
     ]
+    semantic_reading_drafts = [
+        {
+            "name": reading_name,
+            "source": candidate_rule_id,
+            "scope": "single_reading",
+            "dependent_type_translation": dependent_type_translation,
+            "coq_definition": reading_name,
+            "attachment_summary_kind": "none",
+        }
+    ]
+    test_draft = {
+        "positive_sentence": sentence,
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "expected_forbidden_fragment_count": len(forbidden_coq_fragments),
+    }
     return {
         "schema_version": CONSTRUCTION_RULE_DRAFT_SCHEMA,
         "source_verification_scope": "fallback_shallow",
@@ -1812,16 +1903,7 @@ def fallback_construction_rule_draft(
         "label": f"Promote fallback candidate {candidate_rule_id}",
         "phenomenon": "Human-reviewed promotion of a shallow fallback analysis",
         "accepted_examples": [sentence],
-        "semantic_reading_drafts": [
-            {
-                "name": reading_name,
-                "source": candidate_rule_id,
-                "scope": "single_reading",
-                "dependent_type_translation": dependent_type_translation,
-                "coq_definition": reading_name,
-                "attachment_summary_kind": "none",
-            }
-        ],
+        "semantic_reading_drafts": semantic_reading_drafts,
         "hygiene_policy_draft": {
             "forbidden_coq_fragments": forbidden_coq_fragments,
             "reason": (
@@ -1829,12 +1911,15 @@ def fallback_construction_rule_draft(
                 "or untyped neo-Davidsonian role predicates."
             ),
         },
-        "test_draft": {
-            "positive_sentence": sentence,
-            "expected_verification_scope_kind": "registered_construction",
-            "expected_certification_level": "construction_rule",
-            "expected_forbidden_fragment_count": len(forbidden_coq_fragments),
-        },
+        "test_draft": test_draft,
+        "registration_preflight": fallback_construction_rule_registration_preflight(
+            candidate_rule_id,
+            analyzer_name,
+            [sentence],
+            semantic_reading_drafts,
+            forbidden_coq_fragments,
+            test_draft,
+        ),
         "ast_summary": ast_structure_summary(ast if isinstance(ast, dict) else {}),
         "automation_mode": "human_review_required",
         "can_auto_apply": False,
