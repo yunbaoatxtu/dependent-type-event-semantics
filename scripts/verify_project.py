@@ -72,6 +72,40 @@ LEXICON_WARNING_EXPECTATIONS = {
         "unknown_source_allowed",
     ),
 }
+ORDINARY_ANALYZE_FAILURE_CASES = (
+    ("ordinary input failure", "  ", "input", "edit_input", False, "unverified_failure", "none", None),
+    ("ordinary parsing failure", "John", "parsing", "revise_sentence", False, "unverified_failure", "none", None),
+    (
+        "ordinary unsupported-fragment failure",
+        "if John left, Mary cried because Sue left",
+        "parsing",
+        "revise_sentence",
+        False,
+        "rejected_unsupported_fragment",
+        "none",
+        None,
+    ),
+    (
+        "ordinary semantic-reading type-check failure",
+        "Mary admired the door because it was closed and open",
+        "semantic_readings_check",
+        "fix_reading_type_checks",
+        False,
+        "registered_construction",
+        "construction_rule",
+        "causal_because",
+    ),
+    (
+        "ordinary type-check failure",
+        "the plant killed",
+        "type_check",
+        "inspect_ast",
+        True,
+        "registered_construction",
+        "construction_rule",
+        "lexical_state_change",
+    ),
+)
 
 
 def run(label: str, command: list[str]) -> None:
@@ -12475,6 +12509,169 @@ def validate_construction_rule_draft_download_artifact() -> None:
     )
 
 
+def validate_analyze_action_download_artifacts() -> None:
+    from web.app import (
+        analyze_action_export_bundle,
+        analyze_action_inspection_run_bundle,
+        analyze_sentence,
+        compact_json,
+    )
+
+    print("==> ordinary analyze action download artifact check")
+    for (
+        label,
+        surface_sentence,
+        expected_stage,
+        expected_action_kind,
+        expected_can_auto_run,
+        expected_scope_kind,
+        expected_certification_level,
+        expected_scope_rule,
+    ) in ORDINARY_ANALYZE_FAILURE_CASES:
+        analyze_payload = analyze_sentence(surface_sentence, require_coq=True)
+        if analyze_payload.get("ok") is not False:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} did not fail"
+            )
+        normalized_sentence = str(analyze_payload.get("input_sentence", surface_sentence))
+        diagnostics = analyze_payload.get("diagnostics")
+        if not isinstance(diagnostics, dict):
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} diagnostics missing"
+            )
+        if diagnostics.get("failure_stage") != expected_stage:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} stage drift"
+            )
+        scope = analyze_payload.get("verification_scope")
+        if not isinstance(scope, dict):
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} verification scope missing"
+            )
+        if scope.get("kind") != expected_scope_kind:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} scope kind drift"
+            )
+        if scope.get("certification_level") != expected_certification_level:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} scope level drift"
+            )
+        if scope.get("rule_id") != expected_scope_rule:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} scope rule drift"
+            )
+        actions = diagnostics.get("recovery_actions")
+        if not isinstance(actions, list) or not actions or not isinstance(actions[0], dict):
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} action missing"
+            )
+        if actions[0].get("kind") != expected_action_kind:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} action kind drift"
+            )
+        validate_analyze_recovery_action_run_metadata(
+            label,
+            normalized_sentence,
+            True,
+            0,
+            analyze_payload,
+        )
+        action_payload, action_status = analyze_action_export_bundle(
+            surface_sentence,
+            True,
+            0,
+        )
+        if action_status != HTTPStatus.OK:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} action status drift"
+            )
+        validate_analyze_action_export_bundle(
+            label,
+            normalized_sentence,
+            0,
+            analyze_payload,
+            action_payload,
+        )
+        repair_plan = action_payload.get("repair_plan")
+        if not isinstance(repair_plan, dict):
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} repair plan drift"
+            )
+        if repair_plan.get("can_auto_run") is not expected_can_auto_run:
+            raise SystemExit(
+                "ordinary analyze action download artifact check failed: "
+                f"{label} auto-run drift"
+            )
+        action_filename = analyze_action_artifact_filename(normalized_sentence, 0)
+        action_raw = compact_json(action_payload).encode("utf-8")
+        validate_json_download_response_bytes(
+            label,
+            "analyze recovery action",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_length=str(len(action_raw)),
+            content_disposition=f'attachment; filename="{action_filename}"',
+            raw=action_raw,
+            expected_payload=action_payload,
+            expected_filename=action_filename,
+        )
+        run_payload, run_status = analyze_action_inspection_run_bundle(
+            surface_sentence,
+            True,
+            0,
+        )
+        if expected_can_auto_run:
+            if run_status != HTTPStatus.OK:
+                raise SystemExit(
+                    "ordinary analyze action download artifact check failed: "
+                    f"{label} inspection status drift"
+                )
+            validate_analyze_action_inspection_run_bundle(
+                label,
+                normalized_sentence,
+                0,
+                analyze_payload,
+                run_payload,
+            )
+            run_filename = analyze_action_run_artifact_filename(normalized_sentence, 0)
+            run_raw = compact_json(run_payload).encode("utf-8")
+            validate_json_download_response_bytes(
+                label,
+                "analyze inspection run",
+                status=HTTPStatus.OK,
+                content_type="application/json",
+                content_length=str(len(run_raw)),
+                content_disposition=f'attachment; filename="{run_filename}"',
+                raw=run_raw,
+                expected_payload=run_payload,
+                expected_filename=run_filename,
+            )
+        else:
+            if run_status != HTTPStatus.BAD_REQUEST:
+                raise SystemExit(
+                    "ordinary analyze action download artifact check failed: "
+                    f"{label} unsafe inspection run accepted"
+                )
+            validate_analyze_action_inspection_run_rejection(
+                label,
+                normalized_sentence,
+                0,
+                analyze_payload,
+                run_payload,
+            )
+
+
 def run_web_route_smoke_check() -> None:
     from web.app import PipelineHandler
 
@@ -13934,40 +14131,6 @@ def run_web_route_smoke_check() -> None:
             burning_page,
             burning_sentence,
         )
-        ordinary_failure_matrix = (
-            ("ordinary input failure", "  ", "input", "edit_input", False, "unverified_failure", "none", None),
-            ("ordinary parsing failure", "John", "parsing", "revise_sentence", False, "unverified_failure", "none", None),
-            (
-                "ordinary unsupported-fragment failure",
-                "if John left, Mary cried because Sue left",
-                "parsing",
-                "revise_sentence",
-                False,
-                "rejected_unsupported_fragment",
-                "none",
-                None,
-            ),
-            (
-                "ordinary semantic-reading type-check failure",
-                "Mary admired the door because it was closed and open",
-                "semantic_readings_check",
-                "fix_reading_type_checks",
-                False,
-                "registered_construction",
-                "construction_rule",
-                "causal_because",
-            ),
-            (
-                "ordinary type-check failure",
-                "the plant killed",
-                "type_check",
-                "inspect_ast",
-                True,
-                "registered_construction",
-                "construction_rule",
-                "lexical_state_change",
-            ),
-        )
         for (
             failure_label,
             surface_sentence,
@@ -13977,7 +14140,7 @@ def run_web_route_smoke_check() -> None:
             expected_scope_kind,
             expected_certification_level,
             expected_scope_rule,
-        ) in ordinary_failure_matrix:
+        ) in ORDINARY_ANALYZE_FAILURE_CASES:
             failure_query = urlencode({"sentence": surface_sentence, "require_coq": "1"})
             with opener.open(
                 f"{base_url}/api/analyze?{failure_query}",
@@ -14287,6 +14450,7 @@ def main() -> None:
     run_lexicon_export_smoke_check()
     run_lexicon_warning_schema_check()
     validate_construction_rule_draft_download_artifact()
+    validate_analyze_action_download_artifacts()
     run_web_route_smoke_check()
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")

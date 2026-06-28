@@ -33,6 +33,7 @@ from scripts.verify_project import (
     validate_diagnostic_contract_manifest,
     validate_certified_fragment_manifest,
     validate_diagnostic_fixture_routes,
+    validate_analyze_action_download_artifacts,
     validate_construction_rule_draft_download_artifact,
     validate_json_download_http_response,
     validate_json_download_response_bytes,
@@ -16741,6 +16742,56 @@ class TranslatorTests(unittest.TestCase):
                         **values,
                     )
 
+    def test_verifier_checks_analyze_action_downloads_without_http(self) -> None:
+        validate_analyze_action_download_artifacts()
+
+        sentence = "the plant killed"
+        action_bundle, action_status = analyze_action_export_bundle(sentence, True, 0)
+        self.assertEqual(action_status, HTTPStatus.OK)
+        action_filename = analyze_action_artifact_filename(sentence, 0)
+        action_raw = compact_json(action_bundle).encode("utf-8")
+        validate_json_download_response_bytes(
+            "ordinary type-check failure",
+            "analyze recovery action",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_length=str(len(action_raw)),
+            content_disposition=f'attachment; filename="{action_filename}"',
+            raw=action_raw,
+            expected_payload=action_bundle,
+            expected_filename=action_filename,
+        )
+
+        run_bundle, run_status = analyze_action_inspection_run_bundle(sentence, True, 0)
+        self.assertEqual(run_status, HTTPStatus.OK)
+        run_filename = analyze_action_run_artifact_filename(sentence, 0)
+        run_raw = compact_json(run_bundle).encode("utf-8")
+        validate_json_download_response_bytes(
+            "ordinary type-check failure",
+            "analyze inspection run",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_length=str(len(run_raw)),
+            content_disposition=f'attachment; filename="{run_filename}"',
+            raw=run_raw,
+            expected_payload=run_bundle,
+            expected_filename=run_filename,
+        )
+
+        stale_raw = compact_json({**action_bundle, "action_index": 99}).encode("utf-8")
+        with self.assertRaisesRegex(SystemExit, "download payload drift"):
+            validate_json_download_response_bytes(
+                "ordinary type-check failure",
+                "analyze recovery action",
+                status=HTTPStatus.OK,
+                content_type="application/json",
+                content_length=str(len(stale_raw)),
+                content_disposition=f'attachment; filename="{action_filename}"',
+                raw=stale_raw,
+                expected_payload=action_bundle,
+                expected_filename=action_filename,
+            )
+
     def test_verification_rejects_construction_rule_draft_export_drift(self) -> None:
         sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
         handler = object.__new__(PipelineHandler)
@@ -20143,6 +20194,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`download=1` path", readme)
         self.assertIn("live web smoke check now requests", readme)
         self.assertIn("direct counterexample tests", readme)
+        self.assertIn("no-port ordinary\nanalyze-action download check", readme)
         self.assertIn("`diagnostic_recovery_action.v1`", readme)
         self.assertIn("`Recovery Action Exports` panel", readme)
         self.assertIn("Ordinary failed `/api/analyze` responses", readme)
@@ -20307,10 +20359,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`Content-Disposition` attachment header", web_design)
         self.assertIn("content-type,", web_design)
         self.assertIn("content-length, filename, or payload drift", web_design)
+        self.assertIn("no-port helper should rebuild the ordinary failure matrix", web_design)
         self.assertIn("when the route smoke check is not", web_design)
         self.assertIn("stable JSON filenames", manuscript)
         self.assertIn("Content-Disposition attachment header", manuscript)
         self.assertIn("content-type, byte-length, filename, or payload drift", manuscript)
+        self.assertIn("same matrix is now replayed without opening an HTTP port", manuscript)
         self.assertIn("without requiring a running server", manuscript)
         self.assertIn("browser-download artifact", manuscript)
         self.assertIn("attachment_summary", manuscript)
@@ -20725,6 +20779,8 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Surface Type Contract Diagnostics panel", manuscript)
         self.assertIn("data-action-surface-type-contract-* hooks", manuscript)
+        self.assertIn("fix_reading_type_checks row under causal_because", manuscript)
+        self.assertIn("stable analyze_recovery_action and analyze_inspection_run filenames", manuscript)
         self.assertIn("repair controls can remain bound", manuscript)
         self.assertIn("stale action-export panels", manuscript)
         self.assertIn("expandable Action JSON preview", manuscript)
@@ -23351,6 +23407,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction_rule_draft_response.v1", verifier)
         self.assertIn("def validate_json_download_response_bytes(", verifier)
         self.assertIn("def validate_construction_rule_draft_download_artifact(", verifier)
+        self.assertIn("ORDINARY_ANALYZE_FAILURE_CASES", verifier)
+        self.assertIn("def validate_analyze_action_download_artifacts(", verifier)
         self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', verifier)
         self.assertIn("data-rule-draft-accepted-example-count", verifier)
         self.assertIn("data-rule-draft-test-positive-sentence", verifier)
@@ -23358,6 +23416,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("data-rule-draft-download-filename", verifier)
         self.assertIn("construction rule draft download drift", verifier)
         self.assertIn("construction rule draft download artifact check", verifier)
+        self.assertIn("ordinary analyze action download artifact check", verifier)
         self.assertIn('data-coq-definition="example_1"', verifier)
         self.assertIn('"fallback"', verifier)
         self.assertIn("reading_explanation HTML drift", verifier)

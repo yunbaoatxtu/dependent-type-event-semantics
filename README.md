@@ -1376,8 +1376,10 @@ name from visible prose. The project-level live web smoke check now requests
 both ordinary and download paths, compares the JSON payloads, and checks the
 download `Content-Disposition` filename, content type, and byte length. The
 download-response validator also has direct counterexample tests for status,
-content-type, content-length, filename, and payload drift, so those HTTP
-artifact guarantees are checked independently of a running web server.
+content-type, content-length, filename, and payload drift. A no-port ordinary
+analyze-action download check now reconstructs the same matrix for
+`/api/analyze-action` and inspection-run downloads, so those artifact guarantees
+are checked independently of a running web server.
 The web service also exposes controlled diagnostics fixtures for these failure
 states. Use
 `/api/diagnostic-fixture?case=semantic_readings_missing_export` for JSON, or

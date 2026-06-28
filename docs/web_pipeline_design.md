@@ -639,7 +639,11 @@ run bundle. The server should return the same JSON payload with a
 `Content-Disposition` attachment header for those download URLs, while leaving
 the ordinary API path unchanged for clients that want to parse JSON directly.
 The live web smoke check should request both forms and reject content-type,
-content-length, filename, or payload drift at the HTTP boundary.
+content-length, filename, or payload drift at the HTTP boundary. A matching
+no-port helper should rebuild the ordinary failure matrix directly from the
+bundle builders, including human-review rejection rows and inspection-only
+download rows, so the artifact contract remains testable when a local HTTP
+server cannot start.
 The download-response helper should also be tested with direct counterexamples
 for status, content-type, content-length, filename, and payload drift, so the
 HTTP artifact contract remains guarded even when the route smoke check is not
