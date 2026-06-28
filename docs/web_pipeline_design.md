@@ -465,6 +465,9 @@ The project-level web smoke check exercises the live HTTP route as well,
 checking that `/api/lexicon-patch-drafts` returns JSON as `application/json`,
 patch text as `text/plain`, matching byte lengths, and payloads identical to
 the fixed bundle builder for pending, resolved, and validation-error cases.
+The same patch-text artifact contract is replayed without opening an HTTP port,
+including `text/plain`, UTF-8 charset, byte length, format dispatch, and
+payload equality to `patch_text_preview`.
 Negative HTTP cases are checked on the same route. Empty input is represented as
 a bundle validation error with no candidate patch lines, conflicting
 source-state choices keep the bundle non-auto-applicable, repeated identical

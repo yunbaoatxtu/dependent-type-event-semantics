@@ -35,9 +35,11 @@ from scripts.verify_project import (
     validate_diagnostic_fixture_routes,
     validate_analyze_action_download_artifacts,
     validate_diagnostic_fixture_download_artifacts,
+    validate_lexicon_patch_text_artifacts,
     validate_construction_rule_draft_download_artifact,
     validate_json_download_http_response,
     validate_json_download_response_bytes,
+    validate_text_artifact_response_bytes,
     validate_construction_rule_draft_export,
     validate_fallback_promotion_contract,
     validate_recovery_action_export_bundle,
@@ -16842,6 +16844,57 @@ class TranslatorTests(unittest.TestCase):
                 expected_filename=run_filename,
             )
 
+    def test_verifier_checks_lexicon_patch_text_artifacts_without_http(self) -> None:
+        validate_lexicon_patch_text_artifacts()
+
+        handler = object.__new__(PipelineHandler)
+        query = (
+            "sentence=Mary+painted+the+door+red&require_coq=1"
+            "&resolve=state-red--unknown_source_allowed=not_red"
+        )
+        bundle = PipelineHandler.handle_patch_api(handler, query)
+        patch_text = PipelineHandler.handle_patch_text_api(
+            handler,
+            f"{query}&format=patch",
+        )
+        self.assertEqual(patch_text, bundle["patch_text_preview"])
+        raw = patch_text.encode("utf-8")
+        validate_text_artifact_response_bytes(
+            "resolved_red_bundle",
+            "patch text",
+            status=HTTPStatus.OK,
+            content_type="text/plain",
+            content_header="text/plain; charset=utf-8",
+            content_length=str(len(raw)),
+            raw=raw,
+            expected_text=patch_text,
+        )
+
+        negative_cases = [
+            ("text status drift", {"status": HTTPStatus.INTERNAL_SERVER_ERROR}),
+            ("text content type drift", {"content_type": "application/json"}),
+            ("text charset drift", {"content_header": "text/plain"}),
+            ("text length drift", {"content_length": "999"}),
+            ("text payload drift", {"expected_text": patch_text + "\n# stale"}),
+        ]
+        defaults = {
+            "status": HTTPStatus.OK,
+            "content_type": "text/plain",
+            "content_header": "text/plain; charset=utf-8",
+            "content_length": str(len(raw)),
+            "raw": raw,
+            "expected_text": patch_text,
+        }
+        for expected_error, overrides in negative_cases:
+            with self.subTest(expected_error=expected_error):
+                values = {**defaults, **overrides}
+                with self.assertRaisesRegex(SystemExit, expected_error):
+                    validate_text_artifact_response_bytes(
+                        "resolved_red_bundle",
+                        "patch text",
+                        **values,
+                    )
+
     def test_verification_rejects_construction_rule_draft_export_drift(self) -> None:
         sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
         handler = object.__new__(PipelineHandler)
@@ -21120,6 +21173,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("channels stay synchronized", readme)
         self.assertIn("starts a real local server", readme)
         self.assertIn("`Content-Type`, `Content-Length`, parsed JSON", readme)
+        self.assertIn("no-port lexicon patch text artifact", readme)
+        self.assertIn("validating\n`text/plain` charset, byte length", readme)
         self.assertIn("empty sentences add a", readme)
         self.assertIn("unsupported `format` values return a 400 JSON", readme)
         self.assertIn("CLI exporter is checked against the same live HTTP outputs", readme)
@@ -21146,6 +21201,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("package-build smoke check", readme)
         self.assertIn("package-build smoke check", manuscript)
         self.assertIn("smoke check for the lexicon patch exporter", readme)
+        self.assertIn("replays lexicon patch text artifacts without opening an HTTP port", manuscript)
         self.assertIn("web route smoke check", readme)
         self.assertIn("real local web route", manuscript)
         self.assertIn("certified-fragment safety guard", readme)
@@ -21561,6 +21617,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("one repair contract", web_design)
         self.assertIn("exercises the live HTTP route", web_design)
         self.assertIn("matching byte lengths", web_design)
+        self.assertIn("same patch-text artifact contract is replayed", web_design)
+        self.assertIn("payload equality to `patch_text_preview`", web_design)
         self.assertIn("Negative HTTP cases are checked", web_design)
         self.assertIn("allowed formats", web_design)
         self.assertIn("CLI exporter is regression-tested against those live HTTP outputs", web_design)
@@ -23462,10 +23520,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/construction-rule-draft?", verifier)
         self.assertIn("construction_rule_draft_response.v1", verifier)
         self.assertIn("def validate_json_download_response_bytes(", verifier)
+        self.assertIn("def validate_text_artifact_response_bytes(", verifier)
         self.assertIn("def validate_construction_rule_draft_download_artifact(", verifier)
         self.assertIn("ORDINARY_ANALYZE_FAILURE_CASES", verifier)
         self.assertIn("def validate_analyze_action_download_artifacts(", verifier)
         self.assertIn("def validate_diagnostic_fixture_download_artifacts(", verifier)
+        self.assertIn("def validate_lexicon_patch_text_artifacts(", verifier)
         self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', verifier)
         self.assertIn("data-rule-draft-accepted-example-count", verifier)
         self.assertIn("data-rule-draft-test-positive-sentence", verifier)
@@ -23475,6 +23535,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction rule draft download artifact check", verifier)
         self.assertIn("ordinary analyze action download artifact check", verifier)
         self.assertIn("diagnostic fixture download artifact check", verifier)
+        self.assertIn("lexicon patch text artifact check", verifier)
         self.assertIn('data-coq-definition="example_1"', verifier)
         self.assertIn('"fallback"', verifier)
         self.assertIn("reading_explanation HTML drift", verifier)

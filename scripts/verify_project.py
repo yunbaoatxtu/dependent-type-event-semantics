@@ -12361,17 +12361,16 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
             timeout=5,
         ) as response:
             raw = response.read()
-            if response.status != 200:
-                raise SystemExit(f"web route smoke check failed: {case} patch status drift")
-            if response.headers.get_content_type() != "text/plain":
-                raise SystemExit(f"web route smoke check failed: {case} patch content type drift")
-            if "charset=utf-8" not in response.headers.get("Content-Type", ""):
-                raise SystemExit(f"web route smoke check failed: {case} patch charset drift")
-            if response.headers.get("Content-Length") != str(len(raw)):
-                raise SystemExit(f"web route smoke check failed: {case} patch length drift")
-        observed_patch = raw.decode("utf-8")
-        if observed_patch != observed_bundle.get("patch_text_preview"):
-            raise SystemExit(f"web route smoke check failed: {case} patch preview drift")
+            validate_text_artifact_response_bytes(
+                case,
+                "patch text",
+                status=response.status,
+                content_type=response.headers.get_content_type(),
+                content_header=response.headers.get("Content-Type", ""),
+                content_length=response.headers.get("Content-Length"),
+                raw=raw,
+                expected_text=str(observed_bundle.get("patch_text_preview", "")),
+            )
 
     unknown_format_url = (
         f"http://127.0.0.1:{port}/api/lexicon-patch-drafts?"
@@ -12404,6 +12403,40 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         raise SystemExit("web route smoke check failed: unknown format allowed formats drift")
     if "Unsupported lexicon patch response format" not in str(payload.get("error", "")):
         raise SystemExit("web route smoke check failed: unknown format error drift")
+
+
+def validate_text_artifact_response_bytes(
+    case: str,
+    label: str,
+    *,
+    status: int,
+    content_type: object,
+    content_header: object,
+    content_length: object,
+    raw: bytes,
+    expected_text: str,
+) -> None:
+    if status != 200:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} text status drift"
+        )
+    if content_type != "text/plain":
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} text content type drift"
+        )
+    if "charset=utf-8" not in str(content_header):
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} text charset drift"
+        )
+    if content_length != str(len(raw)):
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} text length drift"
+        )
+    observed_text = raw.decode("utf-8")
+    if observed_text != expected_text:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} text payload drift"
+        )
 
 
 def validate_json_download_response_bytes(
@@ -12824,7 +12857,61 @@ def validate_diagnostic_fixture_download_artifacts() -> None:
                     action_index,
                     action_payload,
                     run_payload,
-                )
+            )
+
+
+def validate_lexicon_patch_text_artifacts() -> None:
+    from web.app import PipelineHandler
+
+    print("==> lexicon patch text artifact check")
+    handler = object.__new__(PipelineHandler)
+    for contract_case in LEXICON_PATCH_CONTRACT_CASES:
+        case = f"{contract_case.name}_bundle"
+        query = contract_case.query(require_coq=True)
+        expected_bundle = contract_case.expected_bundle(require_coq=True)
+        if PipelineHandler.patch_response_format(handler, query) != "json":
+            raise SystemExit(
+                "lexicon patch text artifact check failed: "
+                f"{case} default format drift"
+            )
+        if PipelineHandler.patch_response_format(handler, f"{query}&format=patch") != "patch":
+            raise SystemExit(
+                "lexicon patch text artifact check failed: "
+                f"{case} patch format drift"
+            )
+        bundle = PipelineHandler.handle_patch_api(handler, query)
+        if bundle != expected_bundle:
+            raise SystemExit(
+                "lexicon patch text artifact check failed: "
+                f"{case} bundle drift"
+            )
+        validate_lexicon_patch_bundle(case, bundle)
+        contract_errors = contract_case.validation_errors_for(bundle)
+        if contract_errors:
+            raise SystemExit(
+                "lexicon patch text artifact check failed: "
+                f"{case} validation-error contract drift: {'; '.join(contract_errors)}"
+            )
+        patch_text = PipelineHandler.handle_patch_text_api(
+            handler,
+            f"{query}&format=patch",
+        )
+        if patch_text != bundle.get("patch_text_preview"):
+            raise SystemExit(
+                "lexicon patch text artifact check failed: "
+                f"{case} patch preview drift"
+            )
+        raw = patch_text.encode("utf-8")
+        validate_text_artifact_response_bytes(
+            case,
+            "patch text",
+            status=HTTPStatus.OK,
+            content_type="text/plain",
+            content_header="text/plain; charset=utf-8",
+            content_length=str(len(raw)),
+            raw=raw,
+            expected_text=patch_text,
+        )
 
 
 def run_web_route_smoke_check() -> None:
@@ -14604,6 +14691,7 @@ def main() -> None:
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
     run_lexicon_warning_schema_check()
+    validate_lexicon_patch_text_artifacts()
     validate_construction_rule_draft_download_artifact()
     validate_analyze_action_download_artifacts()
     validate_diagnostic_fixture_download_artifacts()

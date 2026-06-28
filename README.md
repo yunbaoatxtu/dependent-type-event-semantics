@@ -1845,7 +1845,10 @@ channels stay synchronized.
 The repository-level web smoke check also starts a real local server and
 requests both `/api/lexicon-patch-drafts` response formats, checking HTTP
 status, `Content-Type`, `Content-Length`, parsed JSON, and patch text against the
-same fixed bundle contract.
+same fixed bundle contract. A matching no-port lexicon patch text artifact
+check rebuilds every contract case directly from the handler, validating
+`text/plain` charset, byte length, format dispatch, and payload without opening
+a port.
 HTTP-level negative cases are part of the same guard: empty sentences add a
 bundle `validation_errors` entry and suppress candidate lines, conflicting
 source-state choices remain non-auto-applicable, repeated identical choices are
@@ -2082,7 +2085,9 @@ API JSON, API patch-text download, direct builder output, CLI JSON, and CLI
 and validation-error bundles.
 The live HTTP route is covered too: the verifier checks the JSON response as
 `application/json`, the patch response as `text/plain`, and the byte length and
-payload for each response.
+payload for each response. The same patch-text artifact contract is replayed
+without opening an HTTP port, so the review text cannot drift from the fixed
+bundle even when local networking is unavailable.
 It also checks empty-input, repeated-resolution, conflicting-resolution, and
 unknown-format cases so downloadable patch text cannot bypass the same
 validation contract.
