@@ -986,6 +986,13 @@ yesterday` under
 `temporal_goal_instrument_directional_instrument_intransitive_predication`, and
 `Mary laughed from a window into a room with a camera yesterday` under
 `temporal_source_goal_instrument_directional_instrument_intransitive_predication`,
+`Mary laughed from a window with a camera beside a shelf yesterday` under
+`temporal_source_instrument_location_directional_instrument_location_intransitive_predication`,
+`Mary laughed into a room with a camera beside a shelf yesterday` under
+`temporal_goal_instrument_location_directional_instrument_location_intransitive_predication`, and
+`Mary laughed from a window into a room with a camera beside a shelf yesterday`
+under
+`temporal_source_goal_instrument_location_directional_instrument_location_intransitive_predication`,
 `Mary admired the painting red yesterday` under `temporal_resultative_predication`,
 plus modifier-sequence
 variants such as
@@ -1460,10 +1467,10 @@ rather than an Entity surrogate; the same rule also checks a Goal witness with
 requiring `locative_intransitive_predication_single_reading`,
 `at_T(yesterday, laugh(1)(near(window), mary))`, and `near_window : Adv`
 rather than an Entity surrogate. It then checks ordinary fallback separately with
-`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed Source+Instrument+Location mixed modifier scaffold
-`at_T(yesterday, laugh(3)(from(window), with(camera), beside(shelf), mary))`, and the
+typed Source+Instrument+Location+Manner mixed modifier scaffold
+`at_T(yesterday, laugh(4)(from(window), with(camera), beside(shelf), loudly, mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the

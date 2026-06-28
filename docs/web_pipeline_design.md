@@ -184,6 +184,9 @@ and `stacked_instrument_manner_location_instrument_intransitive_predication`,
 `temporal_source_instrument_directional_instrument_intransitive_predication`,
 `temporal_goal_instrument_directional_instrument_intransitive_predication`, and
 `temporal_source_goal_instrument_directional_instrument_intransitive_predication`,
+`temporal_source_instrument_location_directional_instrument_location_intransitive_predication`,
+`temporal_goal_instrument_location_directional_instrument_location_intransitive_predication`, and
+`temporal_source_goal_instrument_location_directional_instrument_location_intransitive_predication`,
 `temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
@@ -794,11 +797,16 @@ registered directional route now covers `Mary laughed from a window yesterday`,
 `Mary laughed from a window with a camera yesterday`,
 `Mary laughed into a room with a camera yesterday`, and the Source+Goal+Instrument
 sequence under `directional_instrument_intransitive_predication`, again with
-all modifiers declared as `Adv`. The ordinary fallback success contract is
-instead exercised with `Mary laughed from a window with a camera beside a shelf yesterday`, a
-shallow Source+Instrument+Location mixed modifier scaffold
-`at_T(yesterday, laugh(3)(from(window), with(camera), beside(shelf), mary))` with
-`fallback_single_reading` and a downloadable construction-rule draft. This
+all modifiers declared as `Adv`. The Directional+Instrument+Location route now
+covers `Mary laughed from a window with a camera beside a shelf yesterday`,
+`Mary laughed into a room with a camera beside a shelf yesterday`, and the
+Source+Goal+Instrument+Location sequence under
+`directional_instrument_location_intransitive_predication`, again with all
+modifiers declared as `Adv`. The ordinary fallback success contract is instead
+exercised with `Mary laughed from a window with a camera beside a shelf loudly yesterday`,
+a shallow Source+Instrument+Location+Manner mixed modifier scaffold
+`at_T(yesterday, laugh(4)(from(window), with(camera), beside(shelf), loudly, mary))`
+with `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
@@ -1047,11 +1055,12 @@ yesterday` exports
 under `manner_mixed_directional_instrument_intransitive_predication`, and its
 Goal witness uses `into(room)` in the same typed Adv position. The remaining
 fallback example is deliberately narrower because the Instrument-only,
-Source/Goal-only, Source/Goal+Instrument, and Manner/Instrument slices are now registered:
-`Mary laughed from a window with a camera beside a shelf yesterday` remains a shallow
-Source+Instrument+Location mixed modifier scaffold,
-`at_T(yesterday, laugh(3)(from(window), with(camera), beside(shelf), mary))`, with a
-construction-rule draft rather than construction-level certification.
+Source/Goal-only, Source/Goal+Instrument, Source/Goal+Instrument+Location, and
+Manner/Instrument slices are now registered:
+`Mary laughed from a window with a camera beside a shelf loudly yesterday`
+remains a shallow Source+Instrument+Location+Manner mixed modifier scaffold,
+`at_T(yesterday, laugh(4)(from(window), with(camera), beside(shelf), loudly, mary))`,
+with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as
