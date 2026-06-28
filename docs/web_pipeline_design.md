@@ -159,6 +159,8 @@ The manifest also carries a `coverage_matrix` with
 rejected example rows with `data-coverage-kind`, `data-coverage-sentence`, and,
 for registered variants, `data-coverage-variant-id`; for rejection rows it also
 uses `data-coverage-marker`. Current registered variants include
+`temporal_event_counting`, `temporal_resultative_predication`,
+`temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
 `triple_adv_modified_transitive_predication`, and
@@ -666,10 +668,10 @@ Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
-success contract is instead exercised with `Mary admired the painting red
-yesterday`, a shallow timed resultative scaffold with `fallback_single_reading`
-and a downloadable construction-rule draft. This keeps promoted constructions
-and the remaining fallback success contract from drifting apart.
+success contract is instead exercised with `Mary smiled yesterday`, a shallow
+timed intransitive scaffold with `fallback_single_reading` and a downloadable
+construction-rule draft. This keeps promoted constructions and the remaining
+fallback success contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
@@ -857,14 +859,16 @@ the metal flat` is checked under `resultative_predication`, exposes
 an `Entity`, `flat`/`not_flat` as `State` values, and `shape_scale` as a
 `StateScale`. `Mary painted the door red` follows the same registered route,
 while still surfacing a non-fatal warning because `red` has no unique lexical
-pre-state and therefore uses `unknown_state`. The construction hygiene policy
+pre-state and therefore uses `unknown_state`. Simple temporal wrappers are now
+registered too: `Mary admired the painting red yesterday` exports
+`at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))` with
+the scope `explicit_agent_theme_result_at_time`. The construction hygiene policy
 rejects hidden `Event`, `Agent`, `Theme`, and `ResultState` predicate fragments.
 
 Other simple English sentences are still handled by the fallback parser. For
-example, `Mary admired the painting red yesterday` remains a shallow timed
-resultative scaffold,
-`at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))`, with
-a construction-rule draft rather than construction-level certification.
+example, `Mary smiled yesterday` remains a shallow timed intransitive scaffold,
+`at_T(yesterday, smile(0)(mary))`, with a construction-rule draft rather than
+construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as

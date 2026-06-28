@@ -179,7 +179,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary admired the painting red yesterday",
+        "sentence": "Mary smiled yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -338,6 +338,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "event-counting",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, repeat(2, knock(0)(john)))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "resultative_predication",
+        "variant_id": "temporal_resultative_predication",
+        "sentence": "Mary admired the painting red yesterday",
+        "expected_event_analysis": "resultative-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -13073,7 +13086,30 @@ def resultative_predication_pipeline(sentence: str) -> dict[str, Any] | None:
     ast = translation.get("ast", {})
     if not isinstance(ast, dict) or translation.get("omitted_arguments"):
         return None
-    details = resultative_predication_details(ast)
+
+    time_modifier = None
+    cause_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        cause_ast = body
+    elif ast.get("kind") != "cause":
+        return None
+
+    details = resultative_predication_details(cause_ast)
     if details is None:
         return None
 
@@ -13085,6 +13121,32 @@ def resultative_predication_pipeline(sentence: str) -> dict[str, Any] | None:
         if source_state == "_"
         else f"source State {source_state}"
     )
+    scope = (
+        "explicit_agent_theme_result_at_time"
+        if time_modifier
+        else "explicit_agent_theme_result"
+    )
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
+    resultative_record = {
+        "predicate": details["predicate"],
+        "agent": details["agent"],
+        "agent_type": "Entity",
+        "theme": details["theme"],
+        "theme_type": details["theme_type"],
+        "state_scale": details["state_scale"],
+        "source_state": source_state,
+        "target_state": target_state,
+        "representation": (
+            "Cause over a typed Transition from source State to "
+            "target State, without an event argument"
+        ),
+    }
+    if time_modifier is not None:
+        resultative_record["time_modifier"] = time_modifier
     return attach_single_semantic_reading(
         {
             "kind": "resultative_predication",
@@ -13092,20 +13154,7 @@ def resultative_predication_pipeline(sentence: str) -> dict[str, Any] | None:
             "event_semantics": {
                 **event_semantics,
                 "analysis": "resultative-predication",
-                "resultative_predication": {
-                    "predicate": details["predicate"],
-                    "agent": details["agent"],
-                    "agent_type": "Entity",
-                    "theme": details["theme"],
-                    "theme_type": details["theme_type"],
-                    "state_scale": details["state_scale"],
-                    "source_state": source_state,
-                    "target_state": target_state,
-                    "representation": (
-                        "Cause over a typed Transition from source State to "
-                        "target State, without an event argument"
-                    ),
-                },
+                "resultative_predication": resultative_record,
             },
             "dependent_type_translation": translation["translation"],
             "result_state_lexicon": translation["result_state_lexicon"],
@@ -13116,7 +13165,7 @@ def resultative_predication_pipeline(sentence: str) -> dict[str, Any] | None:
                 f"explicit Entity Agent {details['agent']} and Theme "
                 f"{details['theme']}; the result phrase contributes target "
                 f"State {target_state} on {details['state_scale']} from "
-                f"{source_summary}. The causal result is represented as "
+                f"{source_summary}{time_summary}. The causal result is represented as "
                 "Cause(_, Transition(...)) rather than through an Event or "
                 "ResultState predicate."
             ),
@@ -13125,7 +13174,7 @@ def resultative_predication_pipeline(sentence: str) -> dict[str, Any] | None:
         name="resultative_predication_single_reading",
         coq_definition="example_1",
         source="resultative_predication",
-        scope="explicit_agent_theme_result",
+        scope=scope,
     )
 
 

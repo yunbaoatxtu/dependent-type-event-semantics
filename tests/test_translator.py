@@ -714,6 +714,47 @@ class TranslatorTests(unittest.TestCase):
             painted["coq_code"],
         )
 
+        timed = run_pipeline("Mary admired the painting red yesterday", require_coq=True)
+        self.assertTrue(timed["ok"])
+        self.assertEqual(timed["kind"], "resultative_predication")
+        self.assertEqual(timed["construction_rule"]["id"], "resultative_predication")
+        self.assertEqual(
+            timed["verification_scope"]["certification_level"],
+            "construction_rule",
+        )
+        self.assertNotIn("construction_rule_draft", timed)
+        self.assertEqual(
+            timed["semantic_readings"][0]["scope"],
+            "explicit_agent_theme_result_at_time",
+        )
+        self.assertEqual(
+            timed["event_semantics"]["resultative_predication"]["time_modifier"],
+            {"operator": "at", "argument": "yesterday"},
+        )
+        self.assertEqual(
+            timed["dependent_type_translation"],
+            "at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))",
+        )
+        self.assertEqual(timed["ast"]["kind"], "time")
+        self.assertEqual(timed["ast"]["body"]["effect"]["target_state"], "red")
+        self.assertIn("Parameter yesterday : Entity.", timed["coq_code"])
+        self.assertIn(
+            "Definition example_1 : PropT := (at_T yesterday (Cause mary (Transition painting color_scale unknown_state red))).",
+            timed["coq_code"],
+        )
+        self.assertEqual(timed["coq_check"]["status"], "passed")
+
+        activity_modified = run_pipeline(
+            "Mary painted the door red with a brush yesterday",
+            require_coq=True,
+        )
+        self.assertTrue(activity_modified["ok"])
+        self.assertEqual(
+            activity_modified["verification_scope"]["kind"],
+            "fallback_shallow",
+        )
+        self.assertIn("construction_rule_draft", activity_modified)
+
         flat_api = analyze_sentence("John hammered the metal flat", require_coq=True)
         self.assertTrue(flat_api["ok"])
         self.assertEqual(
@@ -10072,7 +10113,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 21)
+        self.assertEqual(counts["registered_variant_success_cases"], 22)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -11085,7 +11126,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["registered_variant_success_cases"],
-            21,
+            22,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -11160,7 +11201,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="21"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="22"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -11306,6 +11347,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-coverage-rule-id="event_counting"', page)
         self.assertIn('data-coverage-variant-id="temporal_event_counting"', page)
         self.assertIn('data-coverage-sentence="John knocked twice yesterday"', page)
+        self.assertIn('data-coverage-rule-id="resultative_predication"', page)
+        self.assertIn(
+            'data-coverage-variant-id="temporal_resultative_predication"',
+            page,
+        )
+        self.assertIn(
+            'data-coverage-sentence="Mary admired the painting red yesterday"',
+            page,
+        )
         self.assertIn('data-coverage-rule-id="plain_transitive_predication"', page)
         self.assertIn(
             'data-coverage-variant-id="temporal_plain_transitive_predication"',
@@ -11896,7 +11946,7 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
             handler,
-            "sentence=Mary+admired+the+painting+red+yesterday&require_coq=1",
+            "sentence=Mary+smiled+yesterday&require_coq=1",
         )
         self.assertEqual(result["schema_version"], ANALYZE_RESPONSE_SCHEMA)
         self.assertTrue(result["ok"])
@@ -11939,7 +11989,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(rule_draft["candidate_analyzer"], "fallback_time_time_candidate_pipeline")
         self.assertEqual(
             rule_draft["accepted_examples"],
-            ["Mary admired the painting red yesterday"],
+            ["Mary smiled yesterday"],
         )
         self.assertEqual(rule_draft["automation_mode"], "human_review_required")
         self.assertFalse(rule_draft["can_auto_apply"])
@@ -12017,7 +12067,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_fallback_upgrade_plan_generalizes_to_unregistered_simple_sentences(self) -> None:
         result = analyze_sentence(
-            "Mary admired the painting red yesterday",
+            "Mary smiled yesterday",
             require_coq=True,
         )
         self.assertTrue(result["ok"])
@@ -12027,11 +12077,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(plan["candidate_rule_id"], "fallback_time_time_candidate")
         self.assertEqual(
             plan["source_sentence"],
-            "Mary admired the painting red yesterday",
+            "Mary smiled yesterday",
         )
         self.assertEqual(
             plan["dependent_type_translation"],
-            "at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))",
+            "at_T(yesterday, smile(0)(mary))",
         )
         self.assertEqual(plan["ast_summary"]["kind"], "time")
         self.assertEqual(fallback_candidate_rule_id(result["ast"]), plan["candidate_rule_id"])
@@ -12041,7 +12091,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(draft["candidate_analyzer"], "fallback_time_time_candidate_pipeline")
         self.assertEqual(
             draft["accepted_examples"],
-            ["Mary admired the painting red yesterday"],
+            ["Mary smiled yesterday"],
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["name"],
@@ -12049,7 +12099,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             draft["semantic_reading_drafts"][0]["dependent_type_translation"],
-            "at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))",
+            "at_T(yesterday, smile(0)(mary))",
         )
         self.assertEqual(draft["ast_summary"]["kind"], "time")
         self.assertEqual(
@@ -12060,7 +12110,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_verification_rejects_fallback_promotion_contract_drift(self) -> None:
         result = analyze_sentence(
-            "Mary admired the painting red yesterday",
+            "Mary smiled yesterday",
             require_coq=True,
         )
         validate_fallback_promotion_contract("fallback", result)
@@ -12327,7 +12377,7 @@ class TranslatorTests(unittest.TestCase):
         handler = object.__new__(PipelineHandler)
         payload, status = PipelineHandler.handle_construction_rule_draft_api(
             handler,
-            "sentence=Mary+admired+the+painting+red+yesterday&require_coq=1",
+            "sentence=Mary+smiled+yesterday&require_coq=1",
         )
         self.assertEqual(status.name, "OK")
         self.assertEqual(
@@ -12358,14 +12408,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             construction_rule_draft_api_path(
-                "Mary admired the painting red yesterday",
+                "Mary smiled yesterday",
                 True,
                 download=True,
             ),
-            (
-                "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
-                "red+yesterday&require_coq=1&download=1"
-            ),
+            "/api/construction-rule-draft?sentence=Mary+smiled+yesterday&require_coq=1&download=1",
         )
         self.assertEqual(
             construction_rule_draft_artifact_filename("fallback_time_time_candidate"),
@@ -12448,13 +12495,13 @@ class TranslatorTests(unittest.TestCase):
         )
 
     def test_verification_rejects_construction_rule_draft_export_drift(self) -> None:
-        sentence = "Mary admired the painting red yesterday"
+        sentence = "Mary smiled yesterday"
         handler = object.__new__(PipelineHandler)
         analyze_payload = analyze_sentence(sentence, require_coq=True)
         page = render_page(sentence, require_coq=True, result=analyze_payload)
         draft_payload, status = PipelineHandler.handle_construction_rule_draft_api(
             handler,
-            "sentence=Mary+admired+the+painting+red+yesterday&require_coq=1",
+            "sentence=Mary+smiled+yesterday&require_coq=1",
         )
         self.assertEqual(status, HTTPStatus.OK)
         validate_construction_rule_draft_export(
@@ -14042,7 +14089,7 @@ class TranslatorTests(unittest.TestCase):
 
     def test_web_page_marks_fallback_when_no_registered_rule_matched(self) -> None:
         page = render_page(
-            "Mary admired the painting red yesterday",
+            "Mary smiled yesterday",
             require_coq=True,
         )
         self.assertIn("Construction Rule", page)
@@ -14090,10 +14137,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            (
-                "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
-                "red+yesterday&amp;require_coq=1&amp;download=1"
-            ),
+            "/api/construction-rule-draft?sentence=Mary+smiled+yesterday&amp;require_coq=1&amp;download=1",
             page,
         )
         self.assertIn("Parameter Event : Type.", page)
@@ -16141,7 +16185,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("in the gallery with a telescope near a", web_design)
         self.assertIn("window` is checked", web_design)
         self.assertIn("under a lamp yesterday` is checked", web_design)
-        self.assertIn("red yesterday` remains", web_design)
+        self.assertIn("explicit_agent_theme_result_at_time", web_design)
+        self.assertIn("Mary smiled yesterday", web_design)
         self.assertIn("multi-reading quantifier-scope success path", web_design)
         self.assertIn("some boy loves some girl", web_design)
         self.assertIn("registered perception-complement success path", web_design)
@@ -17120,7 +17165,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("in the gallery with a telescope near a", web_design)
         self.assertIn("window` is checked", web_design)
         self.assertIn("under a lamp yesterday` is checked", web_design)
-        self.assertIn("red yesterday` remains", web_design)
+        self.assertIn("temporal_resultative_predication", readme)
+        self.assertIn("temporal_resultative_predication", web_design)
+        self.assertIn("Mary smiled yesterday", web_design)
         self.assertIn("`semantic_snapshots`", web_design)
         self.assertIn("`semantic_snapshot_count`", web_design)
         self.assertIn("`data-semantic-snapshot-*`", web_design)

@@ -2472,8 +2472,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
         (
-            "/api/construction-rule-draft?sentence=Mary+admired+the+painting+"
-            "red+yesterday&amp;"
+            "/api/construction-rule-draft?sentence=Mary+smiled+yesterday&amp;"
             "require_coq=1&amp;download=1"
         ),
     ]
@@ -3173,6 +3172,52 @@ def validate_analyze_resultative_predication_success(
     sentence: str,
 ) -> None:
     case = "analyze_resultative_predication_success"
+    expectations = {
+        "John hammered the metal flat": {
+            "translation": "Cause(john, Transition(metal, shape_scale, not_flat, flat))",
+            "scope": "explicit_agent_theme_result",
+            "ast_kind": "cause",
+            "time_argument": None,
+            "causer": "john",
+            "predicate": "hammer",
+            "arguments": ["john", "metal"],
+            "theme": "metal",
+            "state_scale": "shape_scale",
+            "source_state": "not_flat",
+            "target_state": "flat",
+            "coq_fragments": [
+                "Parameter metal : Entity.",
+                "Parameter shape_scale : StateScale.",
+                "Parameter not_flat : State.",
+                "Parameter flat : State.",
+            ],
+        },
+        "Mary admired the painting red yesterday": {
+            "translation": (
+                "at_T(yesterday, Cause(mary, Transition(painting, color_scale, _, red)))"
+            ),
+            "scope": "explicit_agent_theme_result_at_time",
+            "ast_kind": "time",
+            "time_argument": "yesterday",
+            "causer": "mary",
+            "predicate": "admire",
+            "arguments": ["mary", "painting"],
+            "theme": "painting",
+            "state_scale": "color_scale",
+            "source_state": "_",
+            "target_state": "red",
+            "coq_fragments": [
+                "Parameter painting : Entity.",
+                "Parameter color_scale : StateScale.",
+                "Parameter unknown_state : State.",
+                "Parameter red : State.",
+                "Parameter yesterday : Entity.",
+            ],
+        },
+    }
+    expected = expectations.get(sentence)
+    if expected is None:
+        raise SystemExit("web route smoke check failed: unknown resultative fixture")
     validate_analyze_success_envelope(
         payload,
         sentence,
@@ -3189,26 +3234,37 @@ def validate_analyze_resultative_predication_success(
     )
     if payload.get("kind") != "resultative_predication":
         raise SystemExit("web route smoke check failed: resultative kind drift")
-    expected_translation = "Cause(john, Transition(metal, shape_scale, not_flat, flat))"
+    expected_translation = expected["translation"]
     if payload.get("dependent_type_translation") != expected_translation:
         raise SystemExit("web route smoke check failed: resultative translation drift")
     ast = payload.get("ast")
-    activity = ast.get("activity") if isinstance(ast, dict) else None
-    effect = ast.get("effect") if isinstance(ast, dict) else None
+    cause_ast = ast
+    if expected["ast_kind"] == "time":
+        if (
+            not isinstance(ast, dict)
+            or ast.get("kind") != "time"
+            or ast.get("operator") != "at"
+            or ast.get("arguments") != [expected["time_argument"]]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit("web route smoke check failed: timed resultative AST drift")
+        cause_ast = ast["body"]
+    activity = cause_ast.get("activity") if isinstance(cause_ast, dict) else None
+    effect = cause_ast.get("effect") if isinstance(cause_ast, dict) else None
     if (
-        not isinstance(ast, dict)
-        or ast.get("kind") != "cause"
-        or ast.get("causer") != "john"
+        not isinstance(cause_ast, dict)
+        or cause_ast.get("kind") != "cause"
+        or cause_ast.get("causer") != expected["causer"]
         or not isinstance(activity, dict)
         or activity.get("kind") != "application"
-        or activity.get("function") != "hammer"
-        or activity.get("arguments") != ["john", "metal"]
+        or activity.get("function") != expected["predicate"]
+        or activity.get("arguments") != expected["arguments"]
         or not isinstance(effect, dict)
         or effect.get("kind") != "transition"
-        or effect.get("theme") != "metal"
-        or effect.get("state_scale") != "shape_scale"
-        or effect.get("source_state") != "not_flat"
-        or effect.get("target_state") != "flat"
+        or effect.get("theme") != expected["theme"]
+        or effect.get("state_scale") != expected["state_scale"]
+        or effect.get("source_state") != expected["source_state"]
+        or effect.get("target_state") != expected["target_state"]
     ):
         raise SystemExit("web route smoke check failed: resultative AST drift")
     if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
@@ -3231,7 +3287,7 @@ def validate_analyze_resultative_predication_success(
         readings[0],
         {
             "name": "resultative_predication_single_reading",
-            "scope": "explicit_agent_theme_result",
+            "scope": expected["scope"],
             "source": "resultative_predication",
             "coq_definition": "example_1",
         },
@@ -3243,10 +3299,7 @@ def validate_analyze_resultative_predication_success(
     if (
         not isinstance(coq_code, str)
         or "Definition example_1" not in coq_code
-        or "Parameter metal : Entity." not in coq_code
-        or "Parameter shape_scale : StateScale." not in coq_code
-        or "Parameter not_flat : State." not in coq_code
-        or "Parameter flat : State." not in coq_code
+        or any(fragment not in coq_code for fragment in expected["coq_fragments"])
         or "Parameter Event : Type." in coq_code
         or "Parameter Agent :" in coq_code
         or "Parameter Theme :" in coq_code
@@ -3260,13 +3313,10 @@ def validate_analyze_resultative_predication_success(
         "<dt>rule</dt><dd>resultative_predication</dd>",
         'data-reading-name="resultative_predication_single_reading"',
         "<dt>source</dt><dd>resultative_predication</dd>",
-        "<dt>scope</dt><dd>explicit_agent_theme_result</dd>",
+        f"<dt>scope</dt><dd>{expected['scope']}</dd>",
         "Resultative predication",
         expected_translation,
-        "Parameter metal : Entity.",
-        "Parameter shape_scale : StateScale.",
-        "Parameter not_flat : State.",
-        "Parameter flat : State.",
+        *expected["coq_fragments"],
     ]
     require_text_fragments(page, expected_page_fragments, "resultative HTML")
 
@@ -6084,7 +6134,26 @@ def run_web_route_smoke_check() -> None:
             resultative_page,
             resultative_sentence,
         )
-        fallback_sentence = "Mary admired the painting red yesterday"
+        timed_resultative_sentence = "Mary admired the painting red yesterday"
+        timed_resultative_query = urlencode(
+            {"sentence": timed_resultative_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_resultative_query}",
+            timeout=5,
+        ) as response:
+            timed_resultative_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_resultative_query}",
+            timeout=5,
+        ) as response:
+            timed_resultative_page = response.read().decode("utf-8")
+        validate_analyze_resultative_predication_success(
+            timed_resultative_payload,
+            timed_resultative_page,
+            timed_resultative_sentence,
+        )
+        fallback_sentence = "Mary smiled yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

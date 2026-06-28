@@ -932,7 +932,8 @@ The same manifest now includes a `coverage_matrix` with four audited slices:
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases
 point back to each rule's primary example, registered variants capture
 composition examples such as `John knocked twice yesterday` under
-`temporal_event_counting`, plus modifier-sequence variants such as
+`temporal_event_counting`, `Mary admired the painting red yesterday` under
+`temporal_resultative_predication`, plus modifier-sequence variants such as
 `multi_adv_modified_transitive_predication` and
 `temporal_multi_adv_modified_transitive_predication`,
 `triple_adv_modified_transitive_predication`, and
@@ -1658,8 +1659,10 @@ see, for example, that `flat` uses the lexical pre-state `not_flat`, while
 `red` keeps an unknown source.
 Successful registered resultatives expose
 `resultative_predication_single_reading` with scope
-`explicit_agent_theme_result`, and construction hygiene rejects hidden `Event`,
-`Agent`, `Theme`, and `ResultState` predicate fragments.
+`explicit_agent_theme_result`; simple temporal wrappers such as `Mary admired
+the painting red yesterday` keep the same registered construction and use the
+scope `explicit_agent_theme_result_at_time`. Construction hygiene rejects hidden
+`Event`, `Agent`, `Theme`, and `ResultState` predicate fragments.
 The web page renders these records in a dedicated Result State Lexicon panel
 and also exposes the raw JSON for exact auditing. Entries whose source is
 licensed as unknown are also surfaced through `diagnostics.warnings`, so a
