@@ -783,9 +783,14 @@ must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`; their Coq/Rocq scaffolds
 must declare `on_mat : Adv` and `near_window : Adv`, not Entity surrogates. The
-ordinary fallback success contract is instead exercised with `Mary laughed from
-a window yesterday`, a shallow Source-only directional modifier scaffold
-`at_T(yesterday, laugh(1)(from(window), mary))` with
+registered directional route now covers `Mary laughed from a window yesterday`,
+`Mary laughed into a room yesterday`, and the Source+Goal sequence
+`Mary laughed from a window into a room yesterday` under
+`directional_intransitive_predication`, with Source/Goal modifiers declared as
+`Adv` rather than Entity surrogates. The ordinary fallback success contract is
+instead exercised with `Mary laughed from a window with a camera yesterday`, a
+shallow Source+Instrument mixed modifier scaffold
+`at_T(yesterday, laugh(2)(from(window), with(camera), mary))` with
 `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -1034,11 +1039,11 @@ yesterday` exports
 `at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))`
 under `manner_mixed_directional_instrument_intransitive_predication`, and its
 Goal witness uses `into(room)` in the same typed Adv position. The remaining
-fallback example is deliberately narrower because the Instrument-only and
-Manner/Instrument slices are now registered:
-`Mary laughed from a window yesterday` remains a shallow Source-only directional
-modifier scaffold,
-`at_T(yesterday, laugh(1)(from(window), mary))`, with a
+fallback example is deliberately narrower because the Instrument-only,
+Source/Goal-only, and Manner/Instrument slices are now registered:
+`Mary laughed from a window with a camera yesterday` remains a shallow
+Source+Instrument mixed modifier scaffold,
+`at_T(yesterday, laugh(2)(from(window), with(camera), mary))`, with a
 construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
