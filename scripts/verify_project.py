@@ -12517,13 +12517,43 @@ class JsonApiRouteValidatingOpener:
         self._opener = opener
         self._route_expectations = route_expectations
 
-    def open(self, url, *args, **kwargs):
-        response = self._opener.open(url, *args, **kwargs)
+    def _expectation_for_url(self, url):
         parsed = urlparse(url)
         expected_for_route = self._route_expectations.get(parsed.path)
         if expected_for_route is None:
+            return None
+        return expected_for_route(parsed)
+
+    def open(self, url, *args, **kwargs):
+        try:
+            response = self._opener.open(url, *args, **kwargs)
+        except HTTPError as error:
+            expectation = self._expectation_for_url(url)
+            if expectation is None:
+                raise
+            raw = error.read()
+            expected_status = expectation.get("expected_status", HTTPStatus.OK)
+            validate_json_api_response_bytes(
+                expectation["case"],
+                expectation["label"],
+                status=error.code,
+                content_type=error.headers.get_content_type(),
+                content_header=error.headers.get("Content-Type", ""),
+                content_length=error.headers.get("Content-Length"),
+                raw=raw,
+                expected_payload=expectation.get("expected_payload"),
+                expected_status=expected_status,
+            )
+            raise HTTPError(
+                error.url,
+                error.code,
+                error.msg,
+                error.headers,
+                io.BytesIO(raw),
+            ) from None
+        expectation = self._expectation_for_url(url)
+        if expectation is None:
             return response
-        expectation = expected_for_route(parsed)
         expected_status = expectation.get("expected_status", HTTPStatus.OK)
         return JsonApiValidatingResponse(
             response,
@@ -12582,10 +12612,54 @@ def json_api_route_expectations_for_handler(handler):
             "expected_status": status,
         }
 
+    def diagnostic_fixtures_expectation(_parsed):
+        return {
+            "case": "live diagnostic fixtures manifest",
+            "label": "diagnostic fixtures manifest",
+            "expected_payload": handler.handle_diagnostic_fixtures_api(),
+        }
+
+    def diagnostic_fixture_expectation(parsed):
+        params = parse_qs(parsed.query)
+        case = params.get("case", ["<default>"])[0].strip() or "<default>"
+        return {
+            "case": f"live diagnostic fixture {case}",
+            "label": "diagnostic fixture",
+            "expected_payload": handler.handle_diagnostic_fixture_api(parsed.query),
+        }
+
+    def recovery_action_expectation(parsed):
+        params = parse_qs(parsed.query)
+        case = params.get("case", ["<default>"])[0].strip() or "<default>"
+        index = params.get("index", ["0"])[0].strip() or "0"
+        payload, status = handler.handle_recovery_action_api(parsed.query)
+        return {
+            "case": f"live recovery action {case}[{index}]",
+            "label": "diagnostic recovery action",
+            "expected_payload": payload,
+            "expected_status": status,
+        }
+
+    def recovery_action_run_expectation(parsed):
+        params = parse_qs(parsed.query)
+        case = params.get("case", ["<default>"])[0].strip() or "<default>"
+        index = params.get("index", ["0"])[0].strip() or "0"
+        payload, status = handler.handle_recovery_action_run_api(parsed.query)
+        return {
+            "case": f"live recovery action run {case}[{index}]",
+            "label": "diagnostic recovery action run",
+            "expected_payload": payload,
+            "expected_status": status,
+        }
+
     return {
         "/api/analyze": analyze_expectation,
         "/api/analyze-action": analyze_action_expectation,
         "/api/analyze-action-run": analyze_action_run_expectation,
+        "/api/diagnostic-fixtures": diagnostic_fixtures_expectation,
+        "/api/diagnostic-fixture": diagnostic_fixture_expectation,
+        "/api/recovery-action": recovery_action_expectation,
+        "/api/recovery-action-run": recovery_action_run_expectation,
     }
 
 

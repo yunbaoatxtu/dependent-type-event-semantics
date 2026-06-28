@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 import html
+import io
 import json
 import subprocess
 import sys
@@ -16936,6 +16937,105 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(run_payload["schema_version"], RECOVERY_INSPECTION_RUN_SCHEMA)
         self.assertEqual(run_payload["action_kind"], "inspect_ast")
 
+    def test_live_diagnostic_routes_use_validating_json_opener(self) -> None:
+        with pipeline_server() as (base_url, base_opener):
+            handler = object.__new__(PipelineHandler)
+            opener = JsonApiRouteValidatingOpener(
+                base_opener,
+                json_api_route_expectations_for_handler(handler),
+            )
+            with opener.open(f"{base_url}/api/diagnostic-fixtures", timeout=5) as response:
+                manifest = json.load(response)
+            with opener.open(
+                f"{base_url}/api/diagnostic-fixture?case=type_check_failure",
+                timeout=5,
+            ) as response:
+                fixture_payload = json.load(response)
+            with opener.open(
+                f"{base_url}/api/recovery-action?case=type_check_failure&index=0",
+                timeout=5,
+            ) as response:
+                action_payload = json.load(response)
+            with opener.open(
+                f"{base_url}/api/recovery-action-run?case=type_check_failure&index=0",
+                timeout=5,
+            ) as response:
+                run_payload = json.load(response)
+            with self.assertRaises(HTTPError) as rejected_run:
+                opener.open(
+                    f"{base_url}/api/recovery-action-run?"
+                    "case=semantic_readings_missing_export&index=0",
+                    timeout=5,
+                )
+            rejection_payload = json.loads(
+                rejected_run.exception.read().decode("utf-8")
+            )
+
+        self.assertEqual(manifest["schema_version"], "diagnostic_fixtures.v1")
+        self.assertEqual(fixture_payload["diagnostics"]["failure_stage"], "type_check")
+        self.assertEqual(action_payload["schema_version"], RECOVERY_ACTION_SCHEMA)
+        self.assertEqual(action_payload["action"]["kind"], "inspect_ast")
+        self.assertEqual(run_payload["schema_version"], RECOVERY_INSPECTION_RUN_SCHEMA)
+        self.assertEqual(run_payload["action_kind"], "inspect_ast")
+        self.assertEqual(rejected_run.exception.code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            rejection_payload["schema_version"],
+            RECOVERY_INSPECTION_RUN_SCHEMA,
+        )
+        self.assertFalse(rejection_payload["ok"])
+        self.assertEqual(
+            rejection_payload["automation_mode"],
+            "human_review_required",
+        )
+
+    def test_json_route_validating_opener_checks_http_error_payload(self) -> None:
+        query = "case=semantic_readings_missing_export&index=0"
+        url = f"http://example.test/api/recovery-action-run?{query}"
+        handler = object.__new__(PipelineHandler)
+        expected_payload, _expected_status = handler.handle_recovery_action_run_api(query)
+
+        class Headers(dict):
+            def get_content_type(self) -> str:
+                return str(self["Content-Type"]).split(";", 1)[0]
+
+        class BadRequestOpener:
+            def __init__(self, payload: dict) -> None:
+                self._payload = payload
+
+            def open(self, url, *args, **kwargs):
+                raw = compact_json(self._payload).encode("utf-8")
+                raise HTTPError(
+                    url,
+                    HTTPStatus.BAD_REQUEST,
+                    "Bad Request",
+                    Headers(
+                        {
+                            "Content-Type": "application/json; charset=utf-8",
+                            "Content-Length": str(len(raw)),
+                        }
+                    ),
+                    io.BytesIO(raw),
+                )
+
+        validating_opener = JsonApiRouteValidatingOpener(
+            BadRequestOpener({**expected_payload, "error": "stale"}),
+            json_api_route_expectations_for_handler(handler),
+        )
+        with self.assertRaisesRegex(SystemExit, "JSON payload drift"):
+            validating_opener.open(url)
+
+        validating_opener = JsonApiRouteValidatingOpener(
+            BadRequestOpener(expected_payload),
+            json_api_route_expectations_for_handler(handler),
+        )
+        with self.assertRaises(HTTPError) as validated_error:
+            validating_opener.open(url)
+        self.assertEqual(validated_error.exception.code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            json.loads(validated_error.exception.read().decode("utf-8")),
+            expected_payload,
+        )
+
     def test_verifier_checks_construction_rule_draft_download_without_http(self) -> None:
         validate_construction_rule_draft_download_artifact()
 
@@ -20867,6 +20967,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("ordinary analyze-action export", web_design)
         self.assertIn("route-configured wrapper", web_design)
         self.assertIn("successful\n`/api/analyze-action-run` inspection snapshots", web_design)
+        self.assertIn("fixture recovery-action exports", web_design)
+        self.assertIn("expected 400 JSON inspection-run\nrejections", web_design)
         self.assertIn("`Reading Type Check Diagnostics` panel", web_design)
         self.assertIn("`data-reading-type-check-name`", web_design)
         self.assertIn("`data-reading-type-check-state-opposition-count`", web_design)
@@ -21541,7 +21643,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("replays lexicon patch JSON and text artifacts", manuscript)
         self.assertIn("web route smoke check", readme)
         self.assertIn("ordinary `/api/analyze-action` exports", readme)
-        self.assertIn("successful `/api/analyze-action-run` inspection snapshots", readme)
+        self.assertIn("successful\n`/api/analyze-action-run` inspection snapshots", readme)
+        self.assertIn("fixture recovery-action exports", readme)
+        self.assertIn("expected 400 JSON inspection-run\nrejections", readme)
+        self.assertIn("expected HTTP 400 inspection-run rejections", manuscript)
         self.assertIn("real local web route", manuscript)
         self.assertIn("certified-fragment safety guard", readme)
         self.assertIn("`if John left,", readme)
@@ -23871,6 +23976,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"label": "ordinary analyze"', verifier)
         self.assertIn('"label": "ordinary analyze action"', verifier)
         self.assertIn('"label": "ordinary analyze inspection run"', verifier)
+        self.assertIn('"label": "diagnostic fixture"', verifier)
+        self.assertIn('"label": "diagnostic recovery action"', verifier)
+        self.assertIn('"label": "diagnostic recovery action run"', verifier)
+        self.assertIn("except HTTPError as error:", verifier)
         self.assertIn("def validate_json_download_response_bytes(", verifier)
         self.assertIn("def validate_text_artifact_response_bytes(", verifier)
         self.assertIn("def validate_core_json_api_artifacts(", verifier)
