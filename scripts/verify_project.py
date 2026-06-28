@@ -10475,8 +10475,10 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
 
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
+        application_modifier_sequence_summaries,
         ast_structure_summary,
         construction_rules,
+        declared_application_modifier_counts,
         exported_prop_definition_names,
         run_pipeline,
     )
@@ -10537,6 +10539,70 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: certified fallback coverage count drift")
     if counts.get("rejected_unsupported_cases") != len(rejected_cases):
         raise SystemExit("web route smoke check failed: certified rejected coverage count drift")
+    modifier_contract = manifest.get("registered_modifier_sequence_contract")
+    expected_modifier_invariants = [
+        "modifier_vector_length_matches_modifiers",
+        "modifier_vector_tail_lengths_decrease_to_zero",
+        "modifier_roles_length_matches_modifiers",
+        "modifier_roles_are_adv_not_entity",
+        "surface_lexicon_matches_modifier_roles",
+    ]
+    expected_declared_modifier_counts = declared_application_modifier_counts(
+        [*snapshots, *registered_variant_cases],
+    )
+    if (
+        not isinstance(modifier_contract, dict)
+        or modifier_contract.get("schema_version")
+        != "registered_modifier_sequence_contract.v1"
+        or modifier_contract.get("source")
+        != "registered_primary_and_variant_success_cases"
+        or modifier_contract.get("claim") != "registered_examples_only"
+        or modifier_contract.get("full_surface_parser_certification") is not False
+        or modifier_contract.get("primary_case_count") != len(snapshots)
+        or modifier_contract.get("variant_case_count") != len(registered_variant_cases)
+        or modifier_contract.get("case_count")
+        != len(snapshots) + len(registered_variant_cases)
+        or modifier_contract.get("declared_application_modifier_counts")
+        != expected_declared_modifier_counts
+        or modifier_contract.get("max_declared_application_modifier_count")
+        != (max(expected_declared_modifier_counts) if expected_declared_modifier_counts else 0)
+        or modifier_contract.get("required_invariants") != expected_modifier_invariants
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence contract drift"
+        )
+    live_validation = modifier_contract.get("live_validation")
+    if (
+        not isinstance(live_validation, dict)
+        or live_validation.get("max_application_modifier_count_is_recomputed") is not True
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence live validator drift"
+        )
+
+    observed_application_modifier_counts: list[int] = []
+
+    def observe_modifier_sequences(result: dict, label: str) -> None:
+        for summary in application_modifier_sequence_summaries(result.get("ast", {})):
+            modifier_count = summary.get("modifier_count")
+            if not isinstance(modifier_count, int):
+                raise SystemExit(
+                    f"web route smoke check failed: {label} modifier count drift"
+                )
+            observed_application_modifier_counts.append(modifier_count)
+            if (
+                summary.get("adverb_count") != modifier_count
+                or summary.get("vector_length") != modifier_count
+                or summary.get("vector_item_count") != modifier_count
+                or summary.get("role_count") != modifier_count
+                or summary.get("vector_matches_modifiers") is not True
+                or summary.get("roles_match_modifiers") is not True
+                or summary.get("roles_are_adv") is not True
+                or summary.get("surface_lexicon_matches") is not True
+            ):
+                raise SystemExit(
+                    f"web route smoke check failed: {label} modifier sequence invariant drift"
+                )
     surface_parser_coverage = manifest.get("surface_parser_coverage")
     if not isinstance(surface_parser_coverage, dict):
         raise SystemExit("web route smoke check failed: certified surface parser coverage missing")
@@ -10921,6 +10987,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} snapshot no longer runs"
             )
+        observe_modifier_sequences(result, f"certified rule {rule_id} primary")
         if result.get("construction_rule", {}).get("id") != rule_id:
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} snapshot rule drift"
@@ -11043,6 +11110,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit(
                 f"web route smoke check failed: certified rule {rule_id} variant runtime drift"
             )
+        observe_modifier_sequences(result, f"certified rule {rule_id} variant {variant_id}")
         dependent_type_translation = str(result.get("dependent_type_translation", ""))
         for fragment in expected_fragments:
             if fragment not in dependent_type_translation:
@@ -11050,6 +11118,22 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                     "web route smoke check failed: certified rule "
                     f"{rule_id} variant translation drift"
                 )
+    if not observed_application_modifier_counts:
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence live coverage missing"
+        )
+    observed_declared_counts = sorted(
+        set(observed_application_modifier_counts)
+        & set(expected_declared_modifier_counts),
+    )
+    if (
+        max(observed_application_modifier_counts)
+        != modifier_contract.get("max_declared_application_modifier_count")
+        or observed_declared_counts != expected_declared_modifier_counts
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence live coverage drift"
+        )
     fallback = manifest.get("fallback")
     if (
         not isinstance(fallback, dict)
@@ -11162,6 +11246,14 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             'data-surface-slot-probe-matrix-type-contract-registry-id="'
             'modified_transitive_adv_sequence.surface_slot_matrix"'
         ),
+        'data-modifier-sequence-contract-schema="registered_modifier_sequence_contract.v1"',
+        'data-modifier-sequence-claim="registered_examples_only"',
+        'data-modifier-sequence-case-count="122"',
+        'data-modifier-sequence-max-count="11"',
+        'data-modifier-sequence-declared-counts="0,1,2,3,4,5,6,7,8,9,10,11"',
+        'data-modifier-sequence-full-certification="false"',
+        'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
+        'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',

@@ -20370,6 +20370,164 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
     }
 
 
+APPLICATION_MODIFIER_COUNT_PATTERN = re.compile(
+    r"\b[A-Za-z_][A-Za-z0-9_]*\((\d+)\)\("
+)
+
+
+def declared_application_modifier_counts(
+    coverage_items: Iterable[dict[str, Any]],
+) -> list[int]:
+    counts: set[int] = set()
+    for item in coverage_items:
+        fragments = item.get("expected_dependent_type_fragments")
+        if not isinstance(fragments, list):
+            continue
+        for fragment in fragments:
+            if not isinstance(fragment, str):
+                continue
+            counts.update(
+                int(match.group(1))
+                for match in APPLICATION_MODIFIER_COUNT_PATTERN.finditer(fragment)
+            )
+    return sorted(counts)
+
+
+def application_modifier_sequence_summaries(ast: dict[str, Any]) -> list[dict[str, Any]]:
+    summaries: list[dict[str, Any]] = []
+
+    def walk(value: Any) -> None:
+        if isinstance(value, dict):
+            if value.get("kind") == "application":
+                modifiers = value.get("modifiers")
+                modifier_list = modifiers if isinstance(modifiers, list) else []
+                modifier_vector = value.get("modifier_vector")
+                vector_items = (
+                    modifier_vector.get("items")
+                    if isinstance(modifier_vector, dict)
+                    else None
+                )
+                vector_item_list = vector_items if isinstance(vector_items, list) else []
+                modifier_roles = value.get("modifier_roles")
+                role_items = (
+                    modifier_roles.get("roles")
+                    if isinstance(modifier_roles, dict)
+                    else None
+                )
+                role_item_list = role_items if isinstance(role_items, list) else []
+                tail_lengths = [
+                    item.get("tail_length")
+                    for item in vector_item_list
+                    if isinstance(item, dict)
+                ]
+                role_pattern = [
+                    str(item.get("semantic_role", ""))
+                    for item in role_item_list
+                    if isinstance(item, dict)
+                ]
+                modifier_count = len(modifier_list)
+                vector_length = (
+                    modifier_vector.get("length")
+                    if isinstance(modifier_vector, dict)
+                    else None
+                )
+                vector_matches_modifiers = (
+                    isinstance(modifier_vector, dict)
+                    and vector_length == modifier_count
+                    and len(vector_item_list) == modifier_count
+                    and [
+                        item.get("modifier")
+                        for item in vector_item_list
+                        if isinstance(item, dict)
+                    ]
+                    == modifier_list
+                    and tail_lengths == list(range(modifier_count - 1, -1, -1))
+                )
+                roles_match_modifiers = (
+                    isinstance(modifier_roles, dict)
+                    and len(role_item_list) == modifier_count
+                    and [
+                        item.get("modifier")
+                        for item in role_item_list
+                        if isinstance(item, dict)
+                    ]
+                    == modifier_list
+                )
+                roles_are_adv = all(
+                    isinstance(item, dict) and item.get("type") == "Adv"
+                    for item in role_item_list
+                )
+                surface_lexicon_matches = all(
+                    isinstance(item, dict)
+                    and isinstance(item.get("surface_lexicon"), dict)
+                    and item["surface_lexicon"].get("surface_modifier")
+                    == item.get("modifier")
+                    and item["surface_lexicon"].get("type") == "Adv"
+                    and item["surface_lexicon"].get("semantic_role")
+                    == item.get("semantic_role")
+                    for item in role_item_list
+                )
+                summaries.append(
+                    {
+                        "function": str(value.get("function", "")),
+                        "modifier_count": modifier_count,
+                        "adverb_count": value.get("adverb_count"),
+                        "vector_length": vector_length,
+                        "vector_item_count": len(vector_item_list),
+                        "role_count": len(role_item_list),
+                        "tail_lengths": tail_lengths,
+                        "role_pattern": role_pattern,
+                        "vector_matches_modifiers": vector_matches_modifiers,
+                        "roles_match_modifiers": roles_match_modifiers,
+                        "roles_are_adv": roles_are_adv,
+                        "surface_lexicon_matches": surface_lexicon_matches,
+                    }
+                )
+            for child in value.values():
+                walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                walk(child)
+
+    walk(ast)
+    return summaries
+
+
+def registered_modifier_sequence_contract_payload(
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
+) -> dict[str, Any]:
+    declared_counts = declared_application_modifier_counts(
+        [*semantic_snapshots, *registered_variant_success_cases],
+    )
+    return {
+        "schema_version": "registered_modifier_sequence_contract.v1",
+        "source": "registered_primary_and_variant_success_cases",
+        "claim": "registered_examples_only",
+        "full_surface_parser_certification": False,
+        "primary_case_count": len(semantic_snapshots),
+        "variant_case_count": len(registered_variant_success_cases),
+        "case_count": len(semantic_snapshots) + len(registered_variant_success_cases),
+        "declared_application_modifier_counts": declared_counts,
+        "max_declared_application_modifier_count": (
+            max(declared_counts) if declared_counts else 0
+        ),
+        "application_family_pattern": "predicate(n)(ModifierSeq n, ...)",
+        "required_invariants": [
+            "modifier_vector_length_matches_modifiers",
+            "modifier_vector_tail_lengths_decrease_to_zero",
+            "modifier_roles_length_matches_modifiers",
+            "modifier_roles_are_adv_not_entity",
+            "surface_lexicon_matches_modifier_roles",
+        ],
+        "live_validation": {
+            "validator": "scripts/verify_project.py::validate_registered_modifier_sequence_contract",
+            "scope": "run every registered primary and variant success case",
+            "max_application_modifier_count_is_recomputed": True,
+        },
+    }
+
+
 def construction_fragment_manifest() -> dict[str, Any]:
     rules = construction_rules()
     variant_examples_by_rule: dict[str, list[str]] = {}
@@ -20425,12 +20583,17 @@ def construction_fragment_manifest() -> dict[str, Any]:
         if ast_summary is not None:
             snapshot_copy["expected_ast_summary"] = copy.deepcopy(ast_summary)
         semantic_snapshots.append(snapshot_copy)
+    modifier_sequence_contract = registered_modifier_sequence_contract_payload(
+        semantic_snapshots,
+        registered_variant_success_cases,
+    )
     return {
         "schema_version": "certified_fragment.v1",
         "full_natural_language_certification": False,
         "registered_construction_count": len(registered),
         "registered_constructions": registered,
         "surface_parser_coverage": surface_parser_coverage_payload(),
+        "registered_modifier_sequence_contract": modifier_sequence_contract,
         "semantic_snapshot_count": len(semantic_snapshots),
         "semantic_snapshots": semantic_snapshots,
         "fallback": {

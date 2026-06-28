@@ -3248,6 +3248,9 @@ def certified_fragment_panel() -> str:
     )
     if not isinstance(modified_surface, dict):
         modified_surface = {}
+    modifier_sequence_contract = manifest.get("registered_modifier_sequence_contract")
+    if not isinstance(modifier_sequence_contract, dict):
+        modifier_sequence_contract = {}
 
     def count_list_attribute(value: object) -> str:
         if not isinstance(value, list):
@@ -3347,6 +3350,19 @@ def certified_fragment_panel() -> str:
     )
     surface_slot_probe_matrix_type_contract_registry_id = str(
         surface_slot_probe_matrix_type_contract_registry.get("registry_id", ""),
+    )
+    modifier_sequence_declared_counts = count_list_attribute(
+        modifier_sequence_contract.get("declared_application_modifier_counts"),
+    )
+    modifier_sequence_invariant_items = "".join(
+        (
+            '<li '
+            f'data-modifier-sequence-invariant="{html.escape(str(invariant), quote=True)}">'
+            f"<code>{html.escape(str(invariant))}</code>"
+            "</li>"
+        )
+        for invariant in modifier_sequence_contract.get("required_invariants", [])
+        if isinstance(invariant, str)
     )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
@@ -3572,6 +3588,12 @@ def certified_fragment_panel() -> str:
         f'data-surface-slot-probe-matrix-type-contract-diagnostic-categories="{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_categories, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-source="{html.escape(surface_slot_probe_matrix_type_contract_source, quote=True)}" '
         f'data-surface-slot-probe-matrix-type-contract-registry-id="{html.escape(surface_slot_probe_matrix_type_contract_registry_id, quote=True)}" '
+        f'data-modifier-sequence-contract-schema="{html.escape(str(modifier_sequence_contract.get("schema_version", "")), quote=True)}" '
+        f'data-modifier-sequence-claim="{html.escape(str(modifier_sequence_contract.get("claim", "")), quote=True)}" '
+        f'data-modifier-sequence-case-count="{html.escape(str(modifier_sequence_contract.get("case_count", "")), quote=True)}" '
+        f'data-modifier-sequence-max-count="{html.escape(str(modifier_sequence_contract.get("max_declared_application_modifier_count", "")), quote=True)}" '
+        f'data-modifier-sequence-declared-counts="{html.escape(modifier_sequence_declared_counts, quote=True)}" '
+        f'data-modifier-sequence-full-certification="{str(modifier_sequence_contract.get("full_surface_parser_certification") is True).lower()}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -3593,6 +3615,8 @@ def certified_fragment_panel() -> str:
         f"<dt>slot probe generator</dt><dd><code>{html.escape(surface_slot_probe_generator_kind)}</code></dd>"
         f"<dt>slot matrix</dt><dd><code>{html.escape(surface_slot_probe_matrix_count)}</code></dd>"
         f"<dt>type diagnostics</dt><dd><code>{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_categories)}</code></dd>"
+        f"<dt>modifier contract</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('schema_version', '')))}</code></dd>"
+        f"<dt>modifier max</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('max_declared_application_modifier_count', '')))}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
@@ -3606,6 +3630,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{fallback_gap_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'
         f"<ul>{rejected_items}</ul></div>"
+        '<div class="certified-fragment-modifier-contract"><strong>modifier sequence contract</strong>'
+        f"<ul>{modifier_sequence_invariant_items}</ul></div>"
         '<div class="certified-fragment-surface-parser"><strong>surface parser coverage</strong>'
         f"<ul>{surface_parser_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
@@ -4432,6 +4458,7 @@ def render_page(
     }}
     .certified-fragment-rules,
     .certified-fragment-coverage,
+    .certified-fragment-modifier-contract,
     .certified-fragment-snapshots,
     .certified-fragment-markers {{
       border-top: 1px solid var(--line);
@@ -4444,6 +4471,7 @@ def render_page(
     }}
     .certified-fragment-rules strong,
     .certified-fragment-coverage strong,
+    .certified-fragment-modifier-contract strong,
     .certified-fragment-snapshots strong,
     .certified-fragment-markers strong {{
       display: block;
@@ -4460,6 +4488,7 @@ def render_page(
     }}
     .certified-fragment-rules ul,
     .certified-fragment-coverage ul,
+    .certified-fragment-modifier-contract ul,
     .certified-fragment-snapshots ul,
     .certified-fragment-markers ul {{
       display: flex;
@@ -4478,6 +4507,7 @@ def render_page(
     }}
     .certified-fragment-rules li,
     .certified-fragment-coverage li,
+    .certified-fragment-modifier-contract li,
     .certified-fragment-snapshots li,
     .certified-fragment-markers li {{
       border: 1px solid var(--line);

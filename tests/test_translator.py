@@ -70,6 +70,7 @@ from translator.natural_language_pipeline import (
     CONSTRUCTION_RULE_DRAFT_SCHEMA,
     CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
     ConstructionRule,
+    application_modifier_sequence_summaries,
     ast_structure_summary,
     check_causal_because_ast,
     check_copular_property_ast,
@@ -3789,6 +3790,19 @@ class TranslatorTests(unittest.TestCase):
                 self.assertTrue(timed["ok"])
                 self.assertEqual(timed["kind"], rule_id)
                 self.assertEqual(timed["dependent_type_translation"], translation)
+                sequence_summaries = application_modifier_sequence_summaries(
+                    timed["ast"],
+                )
+                self.assertTrue(sequence_summaries)
+                self.assertIn(
+                    len(timed["ast"]["body"]["modifiers"]),
+                    [summary["modifier_count"] for summary in sequence_summaries],
+                )
+                for summary in sequence_summaries:
+                    self.assertTrue(summary["vector_matches_modifiers"])
+                    self.assertTrue(summary["roles_match_modifiers"])
+                    self.assertTrue(summary["roles_are_adv"])
+                    self.assertTrue(summary["surface_lexicon_matches"])
                 self.assertEqual(
                     timed["semantic_readings"][0]["scope"],
                     "explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_at_time",
@@ -13399,6 +13413,33 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(counts["registered_variant_success_cases"], 79)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
+        modifier_contract = manifest["registered_modifier_sequence_contract"]
+        self.assertEqual(
+            modifier_contract["schema_version"],
+            "registered_modifier_sequence_contract.v1",
+        )
+        self.assertEqual(modifier_contract["claim"], "registered_examples_only")
+        self.assertFalse(modifier_contract["full_surface_parser_certification"])
+        self.assertEqual(modifier_contract["primary_case_count"], len(rules))
+        self.assertEqual(modifier_contract["variant_case_count"], 79)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 79)
+        self.assertEqual(
+            modifier_contract["declared_application_modifier_counts"],
+            list(range(12)),
+        )
+        self.assertEqual(
+            modifier_contract["max_declared_application_modifier_count"],
+            11,
+        )
+        self.assertIn(
+            "modifier_vector_tail_lengths_decrease_to_zero",
+            modifier_contract["required_invariants"],
+        )
+        self.assertTrue(
+            modifier_contract["live_validation"][
+                "max_application_modifier_count_is_recomputed"
+            ],
+        )
         surface_parser_coverage = manifest["surface_parser_coverage"][
             "modified_transitive_adv_sequence"
         ]
@@ -14062,6 +14103,21 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "certified fallback gap drift"):
             validate_certified_fragment_manifest(manifest)
 
+    def test_verification_rejects_registered_modifier_sequence_contract_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["registered_modifier_sequence_contract"][
+            "max_declared_application_modifier_count"
+        ] = 10
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(manifest)
+
+        stale_manifest = deepcopy(construction_fragment_manifest())
+        stale_manifest["registered_modifier_sequence_contract"][
+            "required_invariants"
+        ] = []
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(stale_manifest)
+
     def test_verification_rejects_surface_parser_generation_spec_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         generation_spec = manifest["surface_parser_coverage"][
@@ -14484,6 +14540,18 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn('data-coverage-registered-variant-success-count="79"', page)
+        self.assertIn(
+            'data-modifier-sequence-contract-schema="registered_modifier_sequence_contract.v1"',
+            page,
+        )
+        self.assertIn('data-modifier-sequence-claim="registered_examples_only"', page)
+        self.assertIn('data-modifier-sequence-case-count="122"', page)
+        self.assertIn('data-modifier-sequence-max-count="11"', page)
+        self.assertIn('data-modifier-sequence-declared-counts="0,1,2,3,4,5,6,7,8,9,10,11"', page)
+        self.assertIn(
+            'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
+            page,
+        )
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -19702,6 +19770,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("after the singing of the Marseillaise", web_design)
         self.assertIn("registered universal timed burning success path", web_design)
         self.assertIn("In every burning, oxygen is consumed", web_design)
+        self.assertIn("registered_modifier_sequence_contract.v1", manuscript)
+        self.assertIn("dependent application modifier counts 0 through 11", manuscript)
+        self.assertIn("ModifierSeq lengths match surface modifier lists", manuscript)
+        self.assertIn("unrestricted natural-language parsing as open", manuscript)
         self.assertIn(
             "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
             manuscript,
@@ -20606,6 +20678,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_snapshots`", readme)
         self.assertIn("`semantic_snapshot_count`", readme)
         self.assertIn("`expected_ast_summary`", readme)
+        self.assertIn("`registered_modifier_sequence_contract`", readme)
+        self.assertIn('"registered_modifier_sequence_contract.v1"', readme)
+        self.assertIn("the maximum declared count `11`", readme)
+        self.assertIn("modifier-role rows must be `Adv` rather than `Entity`", readme)
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
@@ -20654,6 +20730,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-coverage-marker`", web_design)
         self.assertIn("`registered_variant_success_cases`", web_design)
         self.assertIn("`data-coverage-variant-id`", web_design)
+        self.assertIn("`registered_modifier_sequence_contract.v1`", web_design)
+        self.assertIn("`data-modifier-sequence-*` attributes", web_design)
+        self.assertIn("nested vector tails to decrease to zero", web_design)
+        self.assertIn("to remain `Adv` typed rather than `Entity` typed", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)

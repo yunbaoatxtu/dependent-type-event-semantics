@@ -927,6 +927,16 @@ is accepted but what remains to be supplied before a fallback sentence can be
 claimed as certified. The page renders the same data in a `Certified Fragment`
 panel, so users can distinguish the current certified fragment from the
 stronger, still-open goal of arbitrary natural-language certification.
+The manifest also exposes a `registered_modifier_sequence_contract` with
+`schema_version: "registered_modifier_sequence_contract.v1"`. This contract is
+explicitly scoped to `registered_examples_only`, not full surface-parser
+certification. It records the currently declared dependent application modifier
+counts `0..11`, the maximum declared count `11`, and the live invariants checked
+for every registered primary and variant success case: modifier vectors must have
+the same length as the surface modifiers, nested vector tails must decrease to
+zero, modifier-role rows must be `Adv` rather than `Entity`, and the surface
+lexicon audit must match those roles. The verifier recomputes these facts from
+the live analyzer before accepting the certified-fragment manifest.
 The same manifest now includes a `coverage_matrix` with four audited slices:
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases

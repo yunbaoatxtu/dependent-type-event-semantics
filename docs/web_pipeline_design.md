@@ -151,6 +151,14 @@ each registered rule id through `data-certified-rule-id`. It also exposes each
 fallback gap through `data-fallback-gap-id`, which gives smoke tests a stable
 hook for checking that shallow fallback success is not presented as a completed
 certification result.
+The same panel exposes `registered_modifier_sequence_contract.v1` through
+`data-modifier-sequence-*` attributes. The contract remains scoped to
+`registered_examples_only`: it publishes the declared dependent application
+modifier counts, the maximum declared count, and the invariant list checked by
+the verifier. Those invariants require `ModifierSeq` lengths to match the
+surface modifier list, nested vector tails to decrease to zero, modifier roles
+to remain `Adv` typed rather than `Entity` typed, and the surface lexicon audit
+to agree with the role rows.
 The manifest also carries a `coverage_matrix` with
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`, plus matching
