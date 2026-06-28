@@ -10476,12 +10476,14 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
 
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
+        application_modifier_role_occurrences,
         application_modifier_sequence_summaries,
         ast_structure_summary,
         construction_rules,
         declared_application_modifier_counts,
         exported_prop_definition_names,
         registered_modifier_role_source_contract,
+        registered_modifier_role_witnesses,
         run_pipeline,
     )
 
@@ -10551,6 +10553,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "observed_modifier_roles_are_registered",
         "registered_modifier_role_minima_are_observed",
         "registered_modifier_roles_are_surface_lexicon_derived",
+        "registered_modifier_roles_have_live_witnesses",
     ]
     expected_modifier_role_inventory = [
         {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
@@ -10563,6 +10566,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         [*snapshots, *registered_variant_cases],
     )
     expected_modifier_role_source_contract = registered_modifier_role_source_contract()
+    expected_modifier_role_witnesses = registered_modifier_role_witnesses()
     if (
         not isinstance(modifier_contract, dict)
         or modifier_contract.get("schema_version")
@@ -10582,6 +10586,8 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or modifier_contract.get("required_invariants") != expected_modifier_invariants
         or modifier_contract.get("registered_semantic_role_inventory")
         != expected_modifier_role_inventory
+        or modifier_contract.get("registered_semantic_role_witnesses")
+        != expected_modifier_role_witnesses
         or modifier_contract.get("semantic_role_source_contract")
         != expected_modifier_role_source_contract
     ):
@@ -10594,6 +10600,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or live_validation.get("max_application_modifier_count_is_recomputed") is not True
         or live_validation.get("semantic_role_inventory_is_recomputed") is not True
         or live_validation.get("semantic_role_source_contract_is_recomputed") is not True
+        or live_validation.get("semantic_role_witnesses_are_live_checked") is not True
     ):
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence live validator drift"
@@ -10611,6 +10618,18 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence role source drift"
         )
+    expected_modifier_role_witness_names = {
+        str(item.get("role")) for item in expected_modifier_role_witnesses
+    }
+    if expected_modifier_role_witness_names != expected_modifier_role_names:
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence role witness drift"
+        )
+    registered_witness_sentences = {
+        str(case.get("sentence"))
+        for case in [*registered_cases, *registered_variant_cases]
+        if isinstance(case, dict) and case.get("sentence")
+    }
     expected_modifier_role_minima = {
         str(item["role"]): int(item["minimum_observed_occurrences"])
         for item in expected_modifier_role_inventory
@@ -10747,6 +10766,30 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                 raise SystemExit(
                     "web route smoke check failed: certified surface parser witness live translation drift"
                 )
+    for witness in expected_modifier_role_witnesses:
+        role = str(witness.get("role", ""))
+        sentence = str(witness.get("sentence", ""))
+        if sentence not in registered_witness_sentences:
+            raise SystemExit(
+                "web route smoke check failed: certified modifier sequence role witness drift"
+            )
+        result = run_pipeline(sentence, require_coq=False)
+        occurrences = application_modifier_role_occurrences(result.get("ast", {}))
+        if not any(
+            occurrence.get("semantic_role") == role
+            and occurrence.get("type") == witness.get("type")
+            and occurrence.get("surface_type") == witness.get("type")
+            and occurrence.get("surface_semantic_role") == role
+            and occurrence.get("modifier") == witness.get("modifier")
+            and occurrence.get("normalized_modifier")
+            == witness.get("normalized_modifier")
+            and occurrence.get("source")
+            == expected_modifier_role_source_contract.get("source_module")
+            for occurrence in occurrences
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified modifier sequence role witness drift"
+            )
     slot_probe_examples = modified_surface.get("slot_probe_examples")
     if (
         not isinstance(slot_probe_examples, dict)
@@ -11309,17 +11352,30 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-role-inventory="Goal,Instrument,Location,Manner,Source"',
         'data-modifier-sequence-role-count="5"',
         'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
+        'data-modifier-sequence-role-witness-count="5"',
+        'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
         'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
         'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
         'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',
         'data-modifier-sequence-role-source-derived="Goal,Instrument,Location,Manner,Source"',
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
+        'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
         'data-modifier-sequence-role="Goal"',
         'data-modifier-sequence-role="Instrument"',
         'data-modifier-sequence-role="Location"',
         'data-modifier-sequence-role="Manner"',
         'data-modifier-sequence-role="Source"',
+        'data-modifier-sequence-role-witness-role="Goal"',
+        'data-modifier-sequence-role-witness-normalized="into_room"',
+        'data-modifier-sequence-role-witness-role="Instrument"',
+        'data-modifier-sequence-role-witness-normalized="with_telescope"',
+        'data-modifier-sequence-role-witness-role="Location"',
+        'data-modifier-sequence-role-witness-normalized="on_mat"',
+        'data-modifier-sequence-role-witness-role="Manner"',
+        'data-modifier-sequence-role-witness-normalized="loudly"',
+        'data-modifier-sequence-role-witness-role="Source"',
+        'data-modifier-sequence-role-witness-normalized="from_window"',
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',

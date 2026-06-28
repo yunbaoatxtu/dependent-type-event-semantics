@@ -13458,6 +13458,51 @@ class TranslatorTests(unittest.TestCase):
             ],
         )
         self.assertEqual(
+            modifier_contract["registered_semantic_role_witnesses"],
+            [
+                {
+                    "role": "Goal",
+                    "type": "Adv",
+                    "sentence": "Mary laughed into a room yesterday",
+                    "modifier": "into(room)",
+                    "normalized_modifier": "into_room",
+                    "source": "registered_variant_success_cases",
+                },
+                {
+                    "role": "Instrument",
+                    "type": "Adv",
+                    "sentence": "Mary laughed with a telescope yesterday",
+                    "modifier": "with(telescope)",
+                    "normalized_modifier": "with_telescope",
+                    "source": "registered_variant_success_cases",
+                },
+                {
+                    "role": "Location",
+                    "type": "Adv",
+                    "sentence": "a cat sits on a mat",
+                    "modifier": "on(mat)",
+                    "normalized_modifier": "on_mat",
+                    "source": "registered_primary_success_cases",
+                },
+                {
+                    "role": "Manner",
+                    "type": "Adv",
+                    "sentence": "Mary laughed loudly yesterday",
+                    "modifier": "loudly",
+                    "normalized_modifier": "loudly",
+                    "source": "registered_variant_success_cases",
+                },
+                {
+                    "role": "Source",
+                    "type": "Adv",
+                    "sentence": "Mary laughed from a window yesterday",
+                    "modifier": "from(window)",
+                    "normalized_modifier": "from_window",
+                    "source": "registered_variant_success_cases",
+                },
+            ],
+        )
+        self.assertEqual(
             modifier_contract["semantic_role_source_contract"],
             {
                 "schema_version": "modifier_role_source_contract.v1",
@@ -13490,6 +13535,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(
             modifier_contract["live_validation"][
                 "semantic_role_source_contract_is_recomputed"
+            ],
+        )
+        self.assertTrue(
+            modifier_contract["live_validation"][
+                "semantic_role_witnesses_are_live_checked"
             ],
         )
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -14193,6 +14243,13 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
             validate_certified_fragment_manifest(role_source_drift_manifest)
 
+        role_witness_drift_manifest = deepcopy(construction_fragment_manifest())
+        role_witness_drift_manifest["registered_modifier_sequence_contract"][
+            "registered_semantic_role_witnesses"
+        ][0]["normalized_modifier"] = "into_hall"
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(role_witness_drift_manifest)
+
     def test_verification_rejects_surface_parser_generation_spec_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         generation_spec = manifest["surface_parser_coverage"][
@@ -14632,6 +14689,11 @@ class TranslatorTests(unittest.TestCase):
             'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
             page,
         )
+        self.assertIn('data-modifier-sequence-role-witness-count="5"', page)
+        self.assertIn(
+            'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
+            page,
+        )
         self.assertIn(
             'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
             page,
@@ -14652,7 +14714,21 @@ class TranslatorTests(unittest.TestCase):
             'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
             page,
         )
+        self.assertIn(
+            'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
+            page,
+        )
         self.assertIn('data-modifier-sequence-role="Instrument"', page)
+        self.assertIn('data-modifier-sequence-role-witness-role="Goal"', page)
+        self.assertIn(
+            'data-modifier-sequence-role-witness-normalized="into_room"',
+            page,
+        )
+        self.assertIn('data-modifier-sequence-role-witness-role="Location"', page)
+        self.assertIn(
+            'data-modifier-sequence-role-witness-normalized="on_mat"',
+            page,
+        )
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -19875,6 +19951,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("dependent application modifier counts 0 through 11", manuscript)
         self.assertIn("ModifierSeq lengths match surface modifier lists", manuscript)
         self.assertIn("Goal, Instrument, Location, Manner, and Source", manuscript)
+        self.assertIn("registered_semantic_role_witnesses", manuscript)
+        self.assertIn("Mary laughed into a room yesterday", manuscript)
+        self.assertIn("a cat sits on a mat for Location", manuscript)
         self.assertIn("protects thematic-role typing", manuscript)
         self.assertIn("unrestricted natural-language parsing as open", manuscript)
         self.assertIn(
@@ -20791,6 +20870,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", readme)
         self.assertIn("`COMMON_ADVERBS`", readme)
         self.assertIn("`data-modifier-sequence-role-source-*` hooks", readme)
+        self.assertIn("`registered_semantic_role_witnesses`", readme)
+        self.assertIn("`data-modifier-sequence-role-witness-*` hooks", readme)
+        self.assertIn("Mary laughed into a room yesterday", readme)
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
@@ -20848,6 +20930,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_role_source_contract`", web_design)
         self.assertIn("`data-modifier-sequence-role-source-*` attributes", web_design)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", web_design)
+        self.assertIn("`registered_semantic_role_witnesses`", web_design)
+        self.assertIn("`data-modifier-sequence-role-witness-*` attributes", web_design)
+        self.assertIn("`into_room` for", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)

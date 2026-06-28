@@ -20383,6 +20383,49 @@ REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY = [
     {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
 ]
 
+REGISTERED_MODIFIER_SEMANTIC_ROLE_WITNESSES = [
+    {
+        "role": "Goal",
+        "type": "Adv",
+        "sentence": "Mary laughed into a room yesterday",
+        "modifier": "into(room)",
+        "normalized_modifier": "into_room",
+        "source": "registered_variant_success_cases",
+    },
+    {
+        "role": "Instrument",
+        "type": "Adv",
+        "sentence": "Mary laughed with a telescope yesterday",
+        "modifier": "with(telescope)",
+        "normalized_modifier": "with_telescope",
+        "source": "registered_variant_success_cases",
+    },
+    {
+        "role": "Location",
+        "type": "Adv",
+        "sentence": "a cat sits on a mat",
+        "modifier": "on(mat)",
+        "normalized_modifier": "on_mat",
+        "source": "registered_primary_success_cases",
+    },
+    {
+        "role": "Manner",
+        "type": "Adv",
+        "sentence": "Mary laughed loudly yesterday",
+        "modifier": "loudly",
+        "normalized_modifier": "loudly",
+        "source": "registered_variant_success_cases",
+    },
+    {
+        "role": "Source",
+        "type": "Adv",
+        "sentence": "Mary laughed from a window yesterday",
+        "modifier": "from(window)",
+        "normalized_modifier": "from_window",
+        "source": "registered_variant_success_cases",
+    },
+]
+
 
 def registered_modifier_role_source_contract() -> dict[str, Any]:
     preposition_roles = sorted(set(MODIFIER_ROLE_BY_PREDICATE.values()))
@@ -20398,6 +20441,10 @@ def registered_modifier_role_source_contract() -> dict[str, Any]:
         "role_type": "Adv",
         "derived_role_inventory": derived_roles,
     }
+
+
+def registered_modifier_role_witnesses() -> list[dict[str, str]]:
+    return copy.deepcopy(REGISTERED_MODIFIER_SEMANTIC_ROLE_WITNESSES)
 
 
 def declared_application_modifier_counts(
@@ -20518,6 +20565,55 @@ def application_modifier_sequence_summaries(ast: dict[str, Any]) -> list[dict[st
     return summaries
 
 
+def application_modifier_role_occurrences(ast: dict[str, Any]) -> list[dict[str, Any]]:
+    occurrences: list[dict[str, Any]] = []
+
+    def walk(value: Any) -> None:
+        if isinstance(value, dict):
+            if value.get("kind") == "application":
+                modifier_roles = value.get("modifier_roles")
+                role_items = (
+                    modifier_roles.get("roles")
+                    if isinstance(modifier_roles, dict)
+                    else None
+                )
+                role_item_list = role_items if isinstance(role_items, list) else []
+                for index, role_item in enumerate(role_item_list):
+                    if not isinstance(role_item, dict):
+                        continue
+                    surface_lexicon = role_item.get("surface_lexicon")
+                    if not isinstance(surface_lexicon, dict):
+                        surface_lexicon = {}
+                    occurrences.append(
+                        {
+                            "function": str(value.get("function", "")),
+                            "index": index,
+                            "modifier": role_item.get("modifier"),
+                            "semantic_role": role_item.get("semantic_role"),
+                            "type": role_item.get("type"),
+                            "surface_modifier": surface_lexicon.get(
+                                "surface_modifier",
+                            ),
+                            "normalized_modifier": surface_lexicon.get(
+                                "normalized_modifier",
+                            ),
+                            "surface_type": surface_lexicon.get("type"),
+                            "surface_semantic_role": surface_lexicon.get(
+                                "semantic_role",
+                            ),
+                            "source": surface_lexicon.get("source"),
+                        }
+                    )
+            for child in value.values():
+                walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                walk(child)
+
+    walk(ast)
+    return occurrences
+
+
 def registered_modifier_sequence_contract_payload(
     semantic_snapshots: list[dict[str, Any]],
     registered_variant_success_cases: list[dict[str, Any]],
@@ -20547,10 +20643,12 @@ def registered_modifier_sequence_contract_payload(
             "observed_modifier_roles_are_registered",
             "registered_modifier_role_minima_are_observed",
             "registered_modifier_roles_are_surface_lexicon_derived",
+            "registered_modifier_roles_have_live_witnesses",
         ],
         "registered_semantic_role_inventory": copy.deepcopy(
             REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY,
         ),
+        "registered_semantic_role_witnesses": registered_modifier_role_witnesses(),
         "semantic_role_source_contract": registered_modifier_role_source_contract(),
         "live_validation": {
             "validator": "scripts/verify_project.py::validate_registered_modifier_sequence_contract",
@@ -20558,6 +20656,7 @@ def registered_modifier_sequence_contract_payload(
             "max_application_modifier_count_is_recomputed": True,
             "semantic_role_inventory_is_recomputed": True,
             "semantic_role_source_contract_is_recomputed": True,
+            "semantic_role_witnesses_are_live_checked": True,
         },
     }
 

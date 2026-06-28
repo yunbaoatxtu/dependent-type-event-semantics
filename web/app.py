@@ -3369,6 +3369,11 @@ def certified_fragment_panel() -> str:
         for item in modifier_sequence_contract.get("registered_semantic_role_inventory", [])
         if isinstance(item, dict)
     ]
+    modifier_role_witnesses = [
+        item
+        for item in modifier_sequence_contract.get("registered_semantic_role_witnesses", [])
+        if isinstance(item, dict)
+    ]
     modifier_role_source_contract = modifier_sequence_contract.get(
         "semantic_role_source_contract",
     )
@@ -3384,6 +3389,12 @@ def certified_fragment_panel() -> str:
         for item in modifier_role_inventory
         if isinstance(item.get("role"), str)
         and isinstance(item.get("minimum_observed_occurrences"), int)
+    )
+    modifier_role_witness_summary = ",".join(
+        f"{item.get('role')}:{item.get('normalized_modifier')}"
+        for item in modifier_role_witnesses
+        if isinstance(item.get("role"), str)
+        and isinstance(item.get("normalized_modifier"), str)
     )
     derived_role_inventory = modifier_role_source_contract.get(
         "derived_role_inventory",
@@ -3404,6 +3415,20 @@ def certified_fragment_panel() -> str:
             "</li>"
         )
         for item in modifier_role_inventory
+    )
+    modifier_role_witness_items = "".join(
+        (
+            '<li '
+            f'data-modifier-sequence-role-witness-role="{html.escape(str(item.get("role", "")), quote=True)}" '
+            f'data-modifier-sequence-role-witness-type="{html.escape(str(item.get("type", "")), quote=True)}" '
+            f'data-modifier-sequence-role-witness-modifier="{html.escape(str(item.get("modifier", "")), quote=True)}" '
+            f'data-modifier-sequence-role-witness-normalized="{html.escape(str(item.get("normalized_modifier", "")), quote=True)}" '
+            f'data-modifier-sequence-role-witness-source="{html.escape(str(item.get("source", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('role', '')))}</code> "
+            f"<span>{html.escape(str(item.get('sentence', '')))}</span>"
+            "</li>"
+        )
+        for item in modifier_role_witnesses
     )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
@@ -3638,6 +3663,8 @@ def certified_fragment_panel() -> str:
         f'data-modifier-sequence-role-inventory="{html.escape(modifier_role_names, quote=True)}" '
         f'data-modifier-sequence-role-count="{len(modifier_role_inventory)}" '
         f'data-modifier-sequence-role-minima="{html.escape(modifier_role_minima, quote=True)}" '
+        f'data-modifier-sequence-role-witness-count="{len(modifier_role_witnesses)}" '
+        f'data-modifier-sequence-role-witnesses="{html.escape(modifier_role_witness_summary, quote=True)}" '
         f'data-modifier-sequence-role-source-schema="{html.escape(str(modifier_role_source_contract.get("schema_version", "")), quote=True)}" '
         f'data-modifier-sequence-role-source-module="{html.escape(str(modifier_role_source_contract.get("source_module", "")), quote=True)}" '
         f'data-modifier-sequence-role-source-table="{html.escape(str(modifier_role_source_contract.get("preposition_role_table", "")), quote=True)}" '
@@ -3666,6 +3693,7 @@ def certified_fragment_panel() -> str:
         f"<dt>modifier contract</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('schema_version', '')))}</code></dd>"
         f"<dt>modifier max</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('max_declared_application_modifier_count', '')))}</code></dd>"
         f"<dt>modifier roles</dt><dd><code>{html.escape(modifier_role_names)}</code></dd>"
+        f"<dt>role witnesses</dt><dd><code>{html.escape(modifier_role_witness_summary)}</code></dd>"
         f"<dt>role source</dt><dd><code>{html.escape(str(modifier_role_source_contract.get('preposition_role_table', '')))}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
@@ -3683,7 +3711,9 @@ def certified_fragment_panel() -> str:
         '<div class="certified-fragment-modifier-contract"><strong>modifier sequence contract</strong>'
         f"<ul>{modifier_sequence_invariant_items}</ul>"
         "<strong>registered modifier roles</strong>"
-        f"<ul>{modifier_role_inventory_items}</ul></div>"
+        f"<ul>{modifier_role_inventory_items}</ul>"
+        "<strong>registered modifier role witnesses</strong>"
+        f"<ul>{modifier_role_witness_items}</ul></div>"
         '<div class="certified-fragment-surface-parser"><strong>surface parser coverage</strong>'
         f"<ul>{surface_parser_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
