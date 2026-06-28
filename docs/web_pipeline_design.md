@@ -205,6 +205,10 @@ and `stacked_instrument_manner_location_instrument_intransitive_predication`,
 `temporal_goal_instrument_location_manner_location_sequence_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_tail_intransitive_predication`,
 `temporal_source_goal_instrument_location_manner_location_sequence_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_tail_intransitive_predication`, and
 `temporal_extended_source_instrument_location_manner_location_sequence_instrument_location_tail_directional_instrument_location_manner_location_sequence_instrument_location_tail_intransitive_predication`,
+`temporal_source_instrument_location_manner_location_sequence_instrument_location_instrument_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication`,
+`temporal_goal_instrument_location_manner_location_sequence_instrument_location_instrument_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication`,
+`temporal_source_goal_instrument_location_manner_location_sequence_instrument_location_instrument_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication`, and
+`temporal_extended_source_instrument_location_manner_location_sequence_instrument_location_instrument_tail_directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication`,
 `temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
@@ -852,10 +856,18 @@ corresponding Goal witness, the Source+Goal witness, and a longer
 Location-before-Instrument plus final Location-tail variant under
 `directional_instrument_location_manner_location_sequence_instrument_location_tail_intransitive_predication`,
 with `near_door` declared as `Adv` rather than an Entity surrogate. The
+Directional+Instrument+Location+Manner+Location-sequence+Instrument+Location+Instrument-tail
+route now covers `Mary laughed from a window with a camera beside a shelf loudly
+under a lamp on a table with a microphone near a door with a telescope
+yesterday`, the corresponding Goal witness, the Source+Goal witness, and a
+longer Location-before-Instrument plus final Location-before-final-Instrument
+variant under
+`directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication`,
+with `with_telescope` declared as `Adv` rather than an Entity surrogate. The
 ordinary fallback success contract is instead
-exercised with `Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope yesterday`,
-a shallow Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument mixed modifier scaffold
-`at_T(yesterday, laugh(9)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), mary))`
+exercised with `Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window yesterday`,
+a shallow Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location mixed modifier scaffold
+`at_T(yesterday, laugh(10)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), mary))`
 with `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -1103,17 +1115,26 @@ reviewed slice registers directional/Instrument interleaving:
 yesterday` exports
 `at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))`
 under `manner_mixed_directional_instrument_intransitive_predication`, and its
-Goal witness uses `into(room)` in the same typed Adv position. The remaining
-fallback example is deliberately narrower because the Instrument-only,
+Goal witness uses `into(room)` in the same typed Adv position. A further
+reviewed slice registers Source/Goal+Instrument+Location+Manner+Location-sequence+Instrument+Location+Instrument-tail
+predication: `Mary laughed from a window with a camera beside a shelf loudly
+under a lamp on a table with a microphone near a door with a telescope
+yesterday` exports
+`at_T(yesterday, laugh(9)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), mary))`
+under
+`directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication`,
+with `with_telescope` typed as `Adv`. The remaining fallback example is
+deliberately narrower because the Instrument-only,
 Source/Goal-only, Source/Goal+Instrument, Source/Goal+Instrument+Location, and
 Source/Goal+Instrument+Location+Manner slices, the
 Source/Goal+Instrument+Location+Manner+Location-sequence slice, and the final
-Instrument-tail and Instrument+Location-tail extensions, plus the
+Instrument-tail, Instrument+Location-tail, and Instrument+Location+Instrument-tail
+extensions, plus the
 Manner/Instrument slices, are now
 registered:
-`Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope yesterday`
-remains a shallow Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument mixed modifier scaffold,
-`at_T(yesterday, laugh(9)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), mary))`,
+`Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window yesterday`
+remains a shallow Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location mixed modifier scaffold,
+`at_T(yesterday, laugh(10)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), mary))`,
 with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
