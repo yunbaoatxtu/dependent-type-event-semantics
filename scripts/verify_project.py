@@ -2187,6 +2187,127 @@ def validate_semantic_reading_summary(
         raise SystemExit(f"web route smoke check failed: {label} reading type drift")
 
 
+def validate_fallback_promotion_contract(label: str, payload: dict) -> None:
+    sentence = str(payload.get("input_sentence", ""))
+    translation = payload.get("dependent_type_translation")
+    verification_scope = payload.get("verification_scope")
+    upgrade_plan = payload.get("certification_upgrade_plan")
+    rule_draft = payload.get("construction_rule_draft")
+    if not isinstance(verification_scope, dict):
+        raise SystemExit(f"web route smoke check failed: {label} promotion scope missing")
+    if not isinstance(upgrade_plan, dict):
+        raise SystemExit(f"web route smoke check failed: {label} promotion plan missing")
+    if not isinstance(rule_draft, dict):
+        raise SystemExit(f"web route smoke check failed: {label} promotion draft missing")
+    if (
+        verification_scope.get("kind") != "fallback_shallow"
+        or verification_scope.get("certification_level") != "shallow_scaffold"
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion scope drift")
+
+    candidate_rule_id = rule_draft.get("candidate_rule_id")
+    if (
+        not isinstance(candidate_rule_id, str)
+        or not candidate_rule_id
+        or upgrade_plan.get("candidate_rule_id") != candidate_rule_id
+        or rule_draft.get("candidate_analyzer") != f"{candidate_rule_id}_pipeline"
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion candidate drift")
+    if (
+        upgrade_plan.get("schema_version") != "certification_upgrade_plan.v1"
+        or rule_draft.get("schema_version") != "construction_rule_draft.v1"
+        or upgrade_plan.get("source_verification_scope") != "fallback_shallow"
+        or rule_draft.get("source_verification_scope") != "fallback_shallow"
+        or upgrade_plan.get("target_certification_level") != "construction_rule"
+        or upgrade_plan.get("automation_mode") != "human_review_required"
+        or rule_draft.get("automation_mode") != "human_review_required"
+        or upgrade_plan.get("can_auto_apply") is not False
+        or rule_draft.get("can_auto_apply") is not False
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion metadata drift")
+    if (
+        upgrade_plan.get("source_sentence") != sentence
+        or rule_draft.get("accepted_examples") != [sentence]
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion sentence drift")
+    if (
+        upgrade_plan.get("dependent_type_translation") != translation
+        or upgrade_plan.get("ast_summary") != rule_draft.get("ast_summary")
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion analysis drift")
+
+    gaps = verification_scope.get("certification_gaps")
+    gap_ids = [gap.get("id") for gap in gaps if isinstance(gap, dict)] if isinstance(gaps, list) else []
+    expected_gap_ids = [
+        "no_registered_construction_rule",
+        "no_fragment_specific_readings",
+        "no_construction_hygiene_policy",
+    ]
+    if gap_ids != expected_gap_ids:
+        raise SystemExit(f"web route smoke check failed: {label} promotion gap drift")
+    steps = upgrade_plan.get("steps")
+    checked_steps = steps if isinstance(steps, list) else []
+    step_gap_ids = (
+        [step.get("gap_id") for step in checked_steps if isinstance(step, dict)]
+    )
+    if step_gap_ids != gap_ids:
+        raise SystemExit(f"web route smoke check failed: {label} promotion step drift")
+    for step in checked_steps:
+        if (
+            not isinstance(step, dict)
+            or step.get("can_auto_apply") is not False
+            or not isinstance(step.get("target_artifact"), str)
+            or not isinstance(step.get("verification"), str)
+        ):
+            raise SystemExit(f"web route smoke check failed: {label} promotion step drift")
+
+    readings = rule_draft.get("semantic_reading_drafts")
+    if not isinstance(readings, list) or len(readings) != 1 or not isinstance(readings[0], dict):
+        raise SystemExit(f"web route smoke check failed: {label} promotion reading drift")
+    reading = readings[0]
+    expected_reading_name = f"{candidate_rule_id}_single_reading"
+    if (
+        reading.get("name") != expected_reading_name
+        or reading.get("source") != candidate_rule_id
+        or reading.get("coq_definition") != expected_reading_name
+        or reading.get("dependent_type_translation") != translation
+        or reading.get("attachment_summary_kind") != "none"
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion reading drift")
+
+    hygiene = rule_draft.get("hygiene_policy_draft")
+    forbidden_fragments = (
+        hygiene.get("forbidden_coq_fragments") if isinstance(hygiene, dict) else None
+    )
+    if not isinstance(forbidden_fragments, list) or len(forbidden_fragments) < 4:
+        raise SystemExit(f"web route smoke check failed: {label} promotion hygiene drift")
+    test_draft = rule_draft.get("test_draft")
+    if (
+        not isinstance(test_draft, dict)
+        or test_draft.get("positive_sentence") != sentence
+        or test_draft.get("expected_verification_scope_kind") != "registered_construction"
+        or test_draft.get("expected_certification_level") != "construction_rule"
+        or test_draft.get("expected_forbidden_fragment_count") != len(forbidden_fragments)
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion test drift")
+
+    commands = upgrade_plan.get("verification_commands")
+    if (
+        not isinstance(commands, list)
+        or not commands
+        or commands != rule_draft.get("verification_commands")
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion command drift")
+    patch_text = rule_draft.get("patch_text_preview")
+    if (
+        not isinstance(patch_text, str)
+        or f"rule_id = {candidate_rule_id!r}" not in patch_text
+        or f"analyzer = {candidate_rule_id + '_pipeline'!r}" not in patch_text
+        or f"semantic_reading = {expected_reading_name!r}" not in patch_text
+    ):
+        raise SystemExit(f"web route smoke check failed: {label} promotion patch drift")
+
+
 def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -> None:
     case = "analyze_fallback_success"
     validate_analyze_success_envelope(
@@ -2203,6 +2324,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         "shallow_scaffold",
         None,
     )
+    validate_fallback_promotion_contract(case, payload)
     certification_gaps = payload.get("verification_scope", {}).get("certification_gaps")
     expected_gap_ids = [
         "no_registered_construction_rule",
@@ -2349,6 +2471,7 @@ def validate_construction_rule_draft_export(
         raise SystemExit(
             f"web route smoke check failed: {label} construction rule draft diagnostics drift"
         )
+    validate_fallback_promotion_contract(label, analyze_payload)
 
     candidate_rule_id = str(draft.get("candidate_rule_id", ""))
     if (
@@ -2432,7 +2555,10 @@ def validate_construction_rule_draft_export(
         )
 
     expected_filename = construction_rule_draft_artifact_filename(candidate_rule_id)
-    if expected_filename != "construction_rule_draft__fallback_time_time_candidate.json":
+    if (
+        not expected_filename.startswith("construction_rule_draft__")
+        or not expected_filename.endswith(".json")
+    ):
         raise SystemExit(
             f"web route smoke check failed: {label} construction rule draft filename drift"
         )

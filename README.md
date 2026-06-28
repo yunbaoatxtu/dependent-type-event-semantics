@@ -900,7 +900,11 @@ when the local HTTP smoke test is unavailable: the
 `construction_rule_draft_response.v1` wrapper must carry the same
 `construction_rule_draft`, `verification_scope`, and `diagnostics` as the
 ordinary analysis, and the page's raw draft JSON preview must match the API
-payload exactly.
+payload exactly. The same promotion contract also cross-checks the
+`certification_upgrade_plan` against the draft: candidate rule id, source
+sentence, dependent-type translation, AST summary, semantic-reading draft,
+test draft, verification command, and patch-text preview must agree before the
+fallback artifact is treated as a coherent human-review candidate.
 The project-level coverage boundary is available separately at
 `/api/certified-fragment` with `schema_version: "certified_fragment.v1"`.
 That manifest is generated from the live registered construction table rather

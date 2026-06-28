@@ -32,6 +32,7 @@ from scripts.verify_project import (
     validate_diagnostic_fixture_routes,
     validate_json_download_http_response,
     validate_construction_rule_draft_export,
+    validate_fallback_promotion_contract,
     validate_recovery_action_export_bundle,
     validate_analyze_failure_surface_type_contract,
     validate_analyze_action_export_bundle,
@@ -11983,6 +11984,54 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(draft["ast_summary"]["kind"], "time")
 
+    def test_verification_rejects_fallback_promotion_contract_drift(self) -> None:
+        result = analyze_sentence(
+            "Mary admired the painting red yesterday",
+            require_coq=True,
+        )
+        validate_fallback_promotion_contract("fallback", result)
+
+        stale_candidate = deepcopy(result)
+        stale_candidate["certification_upgrade_plan"]["candidate_rule_id"] = "stale_rule"
+        with self.assertRaisesRegex(SystemExit, "fallback promotion candidate drift"):
+            validate_fallback_promotion_contract("fallback", stale_candidate)
+
+        stale_sentence = deepcopy(result)
+        stale_sentence["construction_rule_draft"]["accepted_examples"] = ["stale sentence"]
+        with self.assertRaisesRegex(SystemExit, "fallback promotion sentence drift"):
+            validate_fallback_promotion_contract("fallback", stale_sentence)
+
+        stale_analysis = deepcopy(result)
+        stale_analysis["certification_upgrade_plan"]["ast_summary"]["kind"] = "stale"
+        with self.assertRaisesRegex(SystemExit, "fallback promotion analysis drift"):
+            validate_fallback_promotion_contract("fallback", stale_analysis)
+
+        stale_reading = deepcopy(result)
+        stale_reading["construction_rule_draft"]["semantic_reading_drafts"][0][
+            "coq_definition"
+        ] = "stale_reading"
+        with self.assertRaisesRegex(SystemExit, "fallback promotion reading drift"):
+            validate_fallback_promotion_contract("fallback", stale_reading)
+
+        stale_test = deepcopy(result)
+        stale_test["construction_rule_draft"]["test_draft"][
+            "expected_forbidden_fragment_count"
+        ] = 99
+        with self.assertRaisesRegex(SystemExit, "fallback promotion test drift"):
+            validate_fallback_promotion_contract("fallback", stale_test)
+
+        stale_command = deepcopy(result)
+        stale_command["construction_rule_draft"]["verification_commands"] = [
+            "python3 scripts/stale.py"
+        ]
+        with self.assertRaisesRegex(SystemExit, "fallback promotion command drift"):
+            validate_fallback_promotion_contract("fallback", stale_command)
+
+        stale_patch = deepcopy(result)
+        stale_patch["construction_rule_draft"]["patch_text_preview"] = ""
+        with self.assertRaisesRegex(SystemExit, "fallback promotion patch drift"):
+            validate_fallback_promotion_contract("fallback", stale_patch)
+
     def test_active_argument_omission_promotes_john_ate(self) -> None:
         result = analyze_sentence("John ate", require_coq=True)
         self.assertTrue(result["ok"])
@@ -15490,6 +15539,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/construction-rule-draft", readme)
         self.assertIn("`construction_rule_draft_response.v1` wrapper", readme)
         self.assertIn("page's raw draft JSON preview", readme)
+        self.assertIn("promotion contract", readme)
+        self.assertIn("semantic-reading draft", readme)
         self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
@@ -16013,6 +16064,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction_rule_draft", manuscript)
         self.assertIn("construction_rule_draft_response.v1 wrapper", manuscript)
         self.assertIn("Raw draft JSON preview", manuscript)
+        self.assertIn("promotion contract cross-checks", manuscript)
+        self.assertIn("verification commands, and patch-text preview", manuscript)
         self.assertIn("candidate analyzer", manuscript)
         self.assertIn("semantic-reading draft", manuscript)
         self.assertIn("human_review_required", manuscript)
@@ -16872,6 +16925,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('`schema_version: "construction_rule_draft_response.v1"`', web_design)
         self.assertIn("pure verifier helper", web_design)
         self.assertIn("HTML `Raw draft JSON` preview", web_design)
+        self.assertIn("promotion-contract helper", web_design)
+        self.assertIn("verification commands, and patch-text preview", web_design)
         self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
@@ -18116,6 +18171,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def forbid_text_fragments(", verifier)
         self.assertIn("def validate_analyze_fallback_success(", verifier)
         self.assertIn("def validate_construction_rule_draft_export(", verifier)
+        self.assertIn("def validate_fallback_promotion_contract(", verifier)
+        self.assertIn("promotion candidate drift", verifier)
+        self.assertIn("promotion command drift", verifier)
         self.assertIn("construction rule draft response drift", verifier)
         self.assertIn("construction rule draft diagnostics drift", verifier)
         self.assertIn("def validate_analyze_plain_transitive_success(", verifier)
