@@ -2474,7 +2474,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         (
             "/api/construction-rule-draft?sentence=Mary+laughed+"
             "from+a+window+with+a+camera+beside+a+shelf+"
-            "loudly+yesterday&amp;require_coq=1&amp;download=1"
+            "loudly+under+a+lamp+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -4221,6 +4221,280 @@ def validate_analyze_directional_instrument_location_intransitive_success(
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit(
             "web route smoke check failed: directional-instrument-location page input drift"
+        )
+
+
+def validate_analyze_directional_instrument_location_manner_intransitive_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_directional_instrument_location_manner_intransitive_success"
+    expectations = {
+        "Mary laughed from a window with a camera beside a shelf loudly": {
+            "translation": (
+                "laugh(4)(from(window), with(camera), beside(shelf), loudly, mary)"
+            ),
+            "modifiers": ["from(window)", "with(camera)", "beside(shelf)", "loudly"],
+            "roles": ["Source", "Instrument", "Location", "Manner"],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": [],
+            "definition": (
+                "Definition example_1 : PropT := (laugh 4 "
+                "(mods_cons 3 from_window (mods_cons 2 with_camera "
+                "(mods_cons 1 beside_shelf (mods_cons 0 loudly mods_nil)))) mary)."
+            ),
+            "time_modifier": None,
+        },
+        "Mary laughed from a window with a camera beside a shelf loudly yesterday": {
+            "translation": (
+                "at_T(yesterday, laugh(4)(from(window), with(camera), "
+                "beside(shelf), loudly, mary))"
+            ),
+            "modifiers": ["from(window)", "with(camera)", "beside(shelf)", "loudly"],
+            "roles": ["Source", "Instrument", "Location", "Manner"],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": [],
+            "definition": (
+                "Definition example_1 : PropT := (at_T yesterday (laugh 4 "
+                "(mods_cons 3 from_window (mods_cons 2 with_camera "
+                "(mods_cons 1 beside_shelf (mods_cons 0 loudly mods_nil)))) mary))."
+            ),
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+        "Mary laughed into a room with a camera beside a shelf loudly yesterday": {
+            "translation": (
+                "at_T(yesterday, laugh(4)(into(room), with(camera), "
+                "beside(shelf), loudly, mary))"
+            ),
+            "modifiers": ["into(room)", "with(camera)", "beside(shelf)", "loudly"],
+            "roles": ["Goal", "Instrument", "Location", "Manner"],
+            "source_modifiers": [],
+            "goal_modifiers": ["into(room)"],
+            "definition": (
+                "Definition example_1 : PropT := (at_T yesterday (laugh 4 "
+                "(mods_cons 3 into_room (mods_cons 2 with_camera "
+                "(mods_cons 1 beside_shelf (mods_cons 0 loudly mods_nil)))) mary))."
+            ),
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+        (
+            "Mary laughed from a window into a room with a camera beside a shelf "
+            "loudly yesterday"
+        ): {
+            "translation": (
+                "at_T(yesterday, laugh(5)(from(window), into(room), "
+                "with(camera), beside(shelf), loudly, mary))"
+            ),
+            "modifiers": [
+                "from(window)",
+                "into(room)",
+                "with(camera)",
+                "beside(shelf)",
+                "loudly",
+            ],
+            "roles": ["Source", "Goal", "Instrument", "Location", "Manner"],
+            "source_modifiers": ["from(window)"],
+            "goal_modifiers": ["into(room)"],
+            "definition": (
+                "Definition example_1 : PropT := (at_T yesterday (laugh 5 "
+                "(mods_cons 4 from_window (mods_cons 3 into_room "
+                "(mods_cons 2 with_camera (mods_cons 1 beside_shelf "
+                "(mods_cons 0 loudly mods_nil))))) mary))."
+            ),
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+    }
+    expected = expectations.get(sentence)
+    if expected is None:
+        raise SystemExit(
+            "web route smoke check failed: unknown directional-instrument-location-manner fixture"
+        )
+    rule_id = "directional_instrument_location_manner_intransitive_predication"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        rule_id,
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        rule_id,
+        "registered_construction",
+        "construction_rule",
+        rule_id,
+    )
+    if payload.get("kind") != rule_id:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner kind drift"
+        )
+    if payload.get("dependent_type_translation") != expected["translation"]:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner translation drift"
+        )
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner exposes fallback draft"
+        )
+    ast = payload.get("ast")
+    application_ast = ast
+    if expected["time_modifier"] is not None:
+        if (
+            not isinstance(ast, dict)
+            or ast.get("kind") != "time"
+            or ast.get("operator") != expected["time_modifier"]["operator"]
+            or ast.get("arguments") != [expected["time_modifier"]["argument"]]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit(
+                "web route smoke check failed: timed directional-instrument-location-manner AST drift"
+            )
+        application_ast = ast["body"]
+    modifier_roles = (
+        application_ast.get("modifier_roles", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_vector = (
+        application_ast.get("modifier_vector", {}).get("items")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    if (
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "laugh"
+        or application_ast.get("arguments") != ["mary"]
+        or application_ast.get("modifiers") != expected["modifiers"]
+        or application_ast.get("adverb_count") != len(expected["modifiers"])
+        or not isinstance(modifier_roles, list)
+        or [role.get("semantic_role") for role in modifier_roles] != expected["roles"]
+        or any(role.get("type") != "Adv" for role in modifier_roles)
+        or not isinstance(modifier_vector, list)
+        or [item.get("tail_length") for item in modifier_vector]
+        != list(reversed(range(len(expected["modifiers"]))))
+    ):
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner AST drift"
+        )
+    event_semantics = payload.get("event_semantics")
+    typed_predication = (
+        event_semantics.get(rule_id) if isinstance(event_semantics, dict) else None
+    )
+    instrument_modifiers = ["with(camera)"]
+    location_modifiers = ["beside(shelf)"]
+    manner_modifiers = ["loudly"]
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis")
+        != "directional-instrument-location-manner-intransitive-predication"
+        or not isinstance(typed_predication, dict)
+        or typed_predication.get("predicate") != "laugh"
+        or typed_predication.get("agent") != "mary"
+        or typed_predication.get("agent_type") != "Entity"
+        or typed_predication.get("modifiers") != expected["modifiers"]
+        or typed_predication.get("modifier_role_pattern") != expected["roles"]
+        or typed_predication.get("source_modifiers") != expected["source_modifiers"]
+        or typed_predication.get("goal_modifiers") != expected["goal_modifiers"]
+        or typed_predication.get("instrument_modifiers") != instrument_modifiers
+        or typed_predication.get("location_modifiers") != location_modifiers
+        or typed_predication.get("manner_modifiers") != manner_modifiers
+        or typed_predication.get("manner_modifier_count") != 1
+    ):
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner analysis drift"
+        )
+    if expected["time_modifier"] is None:
+        if "time_modifier" in typed_predication:
+            raise SystemExit(
+                "web route smoke check failed: untimed directional-instrument-location-manner time drift"
+            )
+    elif typed_predication.get("time_modifier") != expected["time_modifier"]:
+        raise SystemExit(
+            "web route smoke check failed: timed directional-instrument-location-manner time drift"
+        )
+    readings = payload.get("semantic_readings")
+    scope = (
+        "explicit_agent_with_directional_instrument_location_and_manner_adv_sequence_at_time"
+        if expected["time_modifier"]
+        else "explicit_agent_with_directional_instrument_location_and_manner_adv_sequence"
+    )
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner reading count drift"
+        )
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": (
+                "directional_instrument_location_manner_intransitive_predication_single_reading"
+            ),
+            "scope": scope,
+            "source": rule_id,
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or expected["definition"] not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner Coq drift"
+        )
+    expected_adv = {
+        "from(window)": "Parameter from_window : Adv.",
+        "into(room)": "Parameter into_room : Adv.",
+        "with(camera)": "Parameter with_camera : Adv.",
+        "beside(shelf)": "Parameter beside_shelf : Adv.",
+        "loudly": "Parameter loudly : Adv.",
+    }
+    expected_entity = {
+        "from(window)": "Parameter from_window : Entity.",
+        "into(room)": "Parameter into_room : Entity.",
+        "with(camera)": "Parameter with_camera : Entity.",
+        "beside(shelf)": "Parameter beside_shelf : Entity.",
+        "loudly": "Parameter loudly : Entity.",
+    }
+    for modifier in expected["modifiers"]:
+        if expected_adv[modifier] not in coq_code:
+            raise SystemExit(
+                "web route smoke check failed: directional-instrument-location-manner Adv declaration drift"
+            )
+        if expected_entity[modifier] in coq_code:
+            raise SystemExit(
+                "web route smoke check failed: directional-instrument-location-manner Entity surrogate drift"
+            )
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        f"<dt>rule</dt><dd>{rule_id}</dd>",
+        (
+            'data-reading-name="'
+            "directional_instrument_location_manner_intransitive_predication_single_reading"
+            '"'
+        ),
+        f"<dt>source</dt><dd>{rule_id}</dd>",
+        f"<dt>scope</dt><dd>{scope}</dd>",
+        expected["translation"],
+        f"Translation succeeded via construction rule {rule_id}.",
+    ]
+    require_text_fragments(
+        page,
+        expected_page_fragments,
+        "directional-instrument-location-manner intransitive HTML",
+    )
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit(
+            "web route smoke check failed: directional-instrument-location-manner page input drift"
         )
 
 
@@ -9269,6 +9543,41 @@ def run_web_route_smoke_check() -> None:
                 directional_instrument_location_page,
                 directional_instrument_location_sentence,
             )
+        for directional_instrument_location_manner_sentence in (
+            "Mary laughed from a window with a camera beside a shelf loudly",
+            "Mary laughed from a window with a camera beside a shelf loudly yesterday",
+            "Mary laughed into a room with a camera beside a shelf loudly yesterday",
+            (
+                "Mary laughed from a window into a room with a camera beside a shelf "
+                "loudly yesterday"
+            ),
+        ):
+            directional_instrument_location_manner_query = urlencode(
+                {
+                    "sentence": directional_instrument_location_manner_sentence,
+                    "require_coq": "1",
+                }
+            )
+            with opener.open(
+                (
+                    f"{base_url}/api/analyze?"
+                    f"{directional_instrument_location_manner_query}"
+                ),
+                timeout=5,
+            ) as response:
+                directional_instrument_location_manner_payload = json.load(response)
+            with opener.open(
+                f"{base_url}/?{directional_instrument_location_manner_query}",
+                timeout=5,
+            ) as response:
+                directional_instrument_location_manner_page = response.read().decode(
+                    "utf-8"
+                )
+            validate_analyze_directional_instrument_location_manner_intransitive_success(
+                directional_instrument_location_manner_payload,
+                directional_instrument_location_manner_page,
+                directional_instrument_location_manner_sentence,
+            )
         manner_instrument_sentence = "Mary laughed loudly with a telescope"
         manner_instrument_query = urlencode(
             {"sentence": manner_instrument_sentence, "require_coq": "1"}
@@ -10017,7 +10326,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly yesterday"
+        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
