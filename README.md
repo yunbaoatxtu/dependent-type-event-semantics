@@ -2203,10 +2203,11 @@ ordinary analyze JSON artifact check similarly replays representative
 `/api/analyze` success and failure responses without opening a port, validating
 the JSON response envelope, byte length, and payload equality before the live
 route smoke check runs. The live smoke check now wraps ordinary `/api/analyze`
-responses with the same JSON validator, so the local HTTP route must preserve
-`application/json`, UTF-8 charset, byte length, and handler-equivalent payloads
-for every ordinary sentence-analysis request it opens. It also runs a web route smoke check
-that requests ordinary `/api/analyze` fallback and quantifier-scope successes plus a
+responses with the same JSON validator, and applies the same route-configured
+check to ordinary `/api/analyze-action` exports and successful `/api/analyze-action-run` inspection snapshots. The local HTTP route must
+preserve `application/json`, UTF-8 charset, byte length, and handler-equivalent
+payloads for every ordinary sentence-analysis or action request it opens. It
+also runs a web route smoke check that requests ordinary `/api/analyze` fallback and quantifier-scope successes plus a
 registered perception-complement success plus registered timed-after and
 universal timed burning successes before the diagnostic fixture manifest through
 the local HTTP handler.

@@ -12512,24 +12512,81 @@ class JsonApiValidatingResponse:
         return self._validated_buffer().read(*args)
 
 
-class AnalyzeJsonValidatingOpener:
-    def __init__(self, opener, expected_payload_for_query) -> None:
+class JsonApiRouteValidatingOpener:
+    def __init__(self, opener, route_expectations) -> None:
         self._opener = opener
-        self._expected_payload_for_query = expected_payload_for_query
+        self._route_expectations = route_expectations
 
     def open(self, url, *args, **kwargs):
         response = self._opener.open(url, *args, **kwargs)
         parsed = urlparse(url)
-        if parsed.path != "/api/analyze":
+        expected_for_route = self._route_expectations.get(parsed.path)
+        if expected_for_route is None:
             return response
-        params = parse_qs(parsed.query)
-        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        expectation = expected_for_route(parsed)
+        expected_status = expectation.get("expected_status", HTTPStatus.OK)
         return JsonApiValidatingResponse(
             response,
-            case=f"live analyze {sentence}",
-            label="ordinary analyze",
-            expected_payload=self._expected_payload_for_query(parsed.query),
+            case=expectation["case"],
+            label=expectation["label"],
+            expected_payload=expectation.get("expected_payload"),
+            expected_status=expected_status,
         )
+
+
+class AnalyzeJsonValidatingOpener(JsonApiRouteValidatingOpener):
+    def __init__(self, opener, expected_payload_for_query) -> None:
+        def analyze_expectation(parsed):
+            params = parse_qs(parsed.query)
+            sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+            return {
+                "case": f"live analyze {sentence}",
+                "label": "ordinary analyze",
+                "expected_payload": expected_payload_for_query(parsed.query),
+            }
+
+        super().__init__(opener, {"/api/analyze": analyze_expectation})
+
+
+def json_api_route_expectations_for_handler(handler):
+    def analyze_expectation(parsed):
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        return {
+            "case": f"live analyze {sentence}",
+            "label": "ordinary analyze",
+            "expected_payload": handler.handle_api(parsed.query),
+        }
+
+    def analyze_action_expectation(parsed):
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        index = params.get("index", ["0"])[0].strip() or "0"
+        payload, status = handler.handle_analyze_action_api(parsed.query)
+        return {
+            "case": f"live analyze action {sentence}[{index}]",
+            "label": "ordinary analyze action",
+            "expected_payload": payload,
+            "expected_status": status,
+        }
+
+    def analyze_action_run_expectation(parsed):
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        index = params.get("index", ["0"])[0].strip() or "0"
+        payload, status = handler.handle_analyze_action_run_api(parsed.query)
+        return {
+            "case": f"live analyze action run {sentence}[{index}]",
+            "label": "ordinary analyze inspection run",
+            "expected_payload": payload,
+            "expected_status": status,
+        }
+
+    return {
+        "/api/analyze": analyze_expectation,
+        "/api/analyze-action": analyze_action_expectation,
+        "/api/analyze-action-run": analyze_action_run_expectation,
+    }
 
 
 def validate_text_artifact_response_bytes(
@@ -13265,9 +13322,9 @@ def run_web_route_smoke_check() -> None:
         port = server.server_address[1]
         base_url = f"http://127.0.0.1:{port}"
         smoke_handler = object.__new__(PipelineHandler)
-        opener = AnalyzeJsonValidatingOpener(
+        opener = JsonApiRouteValidatingOpener(
             build_opener(ProxyHandler({})),
-            lambda query: PipelineHandler.handle_api(smoke_handler, query),
+            json_api_route_expectations_for_handler(smoke_handler),
         )
         event_counting_sentence = "John knocked twice"
         event_counting_query = urlencode(

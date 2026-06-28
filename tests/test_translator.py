@@ -22,6 +22,7 @@ from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES
 from scripts.verify_project import (
     AnalyzeJsonValidatingOpener,
+    JsonApiRouteValidatingOpener,
     VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     VALID_DIAGNOSTIC_FAILURE_STAGES,
@@ -44,6 +45,7 @@ from scripts.verify_project import (
     validate_construction_rule_draft_download_artifact,
     validate_json_api_response_bytes,
     validate_json_api_http_response,
+    json_api_route_expectations_for_handler,
     validate_json_download_http_response,
     validate_json_download_response_bytes,
     validate_text_artifact_response_bytes,
@@ -16909,6 +16911,31 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(observed_raw, raw)
 
+    def test_live_analyze_action_routes_use_validating_json_opener(self) -> None:
+        with pipeline_server() as (base_url, base_opener):
+            handler = object.__new__(PipelineHandler)
+            opener = JsonApiRouteValidatingOpener(
+                base_opener,
+                json_api_route_expectations_for_handler(handler),
+            )
+            query = "sentence=the+plant+killed&require_coq=1"
+            with opener.open(f"{base_url}/api/analyze?{query}", timeout=5) as response:
+                failure_payload = json.load(response)
+            action = failure_payload["diagnostics"]["recovery_actions"][0]
+            with opener.open(f"{base_url}{action['api_path']}", timeout=5) as response:
+                action_payload = json.load(response)
+            with opener.open(
+                f"{base_url}{action['inspection_run_api_path']}",
+                timeout=5,
+            ) as response:
+                run_payload = json.load(response)
+
+        self.assertFalse(failure_payload["ok"])
+        self.assertEqual(action_payload["schema_version"], RECOVERY_ACTION_SCHEMA)
+        self.assertEqual(action_payload["action"]["kind"], "inspect_ast")
+        self.assertEqual(run_payload["schema_version"], RECOVERY_INSPECTION_RUN_SCHEMA)
+        self.assertEqual(run_payload["action_kind"], "inspect_ast")
+
     def test_verifier_checks_construction_rule_draft_download_without_http(self) -> None:
         validate_construction_rule_draft_download_artifact()
 
@@ -20838,6 +20865,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("record-level `error_count`", web_design)
         self.assertIn("`data-reading-type-check-index`", web_design)
         self.assertIn("ordinary analyze-action export", web_design)
+        self.assertIn("route-configured wrapper", web_design)
+        self.assertIn("successful\n`/api/analyze-action-run` inspection snapshots", web_design)
         self.assertIn("`Reading Type Check Diagnostics` panel", web_design)
         self.assertIn("`data-reading-type-check-name`", web_design)
         self.assertIn("`data-reading-type-check-state-opposition-count`", web_design)
@@ -21508,8 +21537,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("replays the diagnostic fixtures manifest", manuscript)
         self.assertIn("ordinary analyze success and failure JSON artifacts", manuscript)
         self.assertIn("wraps live ordinary analyze HTTP responses", manuscript)
+        self.assertIn("route-configured JSON wrapper", manuscript)
         self.assertIn("replays lexicon patch JSON and text artifacts", manuscript)
         self.assertIn("web route smoke check", readme)
+        self.assertIn("ordinary `/api/analyze-action` exports", readme)
+        self.assertIn("successful `/api/analyze-action-run` inspection snapshots", readme)
         self.assertIn("real local web route", manuscript)
         self.assertIn("certified-fragment safety guard", readme)
         self.assertIn("`if John left,", readme)
@@ -23833,8 +23865,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction_rule_draft_response.v1", verifier)
         self.assertIn("def validate_json_api_response_bytes(", verifier)
         self.assertIn("def validate_json_api_http_response(", verifier)
+        self.assertIn("class JsonApiRouteValidatingOpener", verifier)
         self.assertIn("class AnalyzeJsonValidatingOpener", verifier)
-        self.assertIn('label="ordinary analyze"', verifier)
+        self.assertIn("def json_api_route_expectations_for_handler(", verifier)
+        self.assertIn('"label": "ordinary analyze"', verifier)
+        self.assertIn('"label": "ordinary analyze action"', verifier)
+        self.assertIn('"label": "ordinary analyze inspection run"', verifier)
         self.assertIn("def validate_json_download_response_bytes(", verifier)
         self.assertIn("def validate_text_artifact_response_bytes(", verifier)
         self.assertIn("def validate_core_json_api_artifacts(", verifier)
