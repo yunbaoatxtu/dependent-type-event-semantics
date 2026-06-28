@@ -204,7 +204,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary laughed near a window yesterday",
+        "sentence": "Mary laughed from a window yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -428,6 +428,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "instrument-intransitive-predication",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, laugh(1)(with(telescope), mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "locative_intransitive_predication",
+        "variant_id": "temporal_locative_intransitive_predication",
+        "sentence": "Mary laughed near a window yesterday",
+        "expected_event_analysis": "locative-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(1)(near(window), mary))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -16084,12 +16097,35 @@ def locative_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] 
     except ValueError:
         return None
     ast = translation.get("ast", {})
-    if not isinstance(ast, dict) or ast.get("kind") != "application":
+    if not isinstance(ast, dict) or translation.get("omitted_arguments"):
         return None
-    modifiers = ast.get("modifiers")
-    arguments = ast.get("arguments")
-    modifier_roles = ast.get("modifier_roles", {}).get("roles")
-    role_frame = ast.get("role_frame", {}).get("roles")
+
+    time_modifier = None
+    application_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        application_ast = body
+    elif ast.get("kind") != "application":
+        return None
+
+    modifiers = application_ast.get("modifiers")
+    arguments = application_ast.get("arguments")
+    modifier_roles = application_ast.get("modifier_roles", {}).get("roles")
+    role_frame = application_ast.get("role_frame", {}).get("roles")
     if (
         not isinstance(modifiers, list)
         or not modifiers
@@ -16115,7 +16151,23 @@ def locative_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] 
         or subject_role.get("type") != "Entity"
     ):
         return None
-    predicate = str(ast.get("function", "predicate"))
+    predicate = str(application_ast.get("function", "predicate"))
+    predication_record = {
+        "predicate": predicate,
+        "subject": arguments[0],
+        "modifier_count": len(modifiers),
+        "modifiers": [str(modifier) for modifier in modifiers],
+        "modifier_type": "Adv",
+        "modifier_semantic_role": "Location",
+        "representation": "ModifierSeq-indexed predicate over an Entity subject",
+    }
+    if time_modifier is not None:
+        predication_record["time_modifier"] = time_modifier
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
     coq_code = export_module([translation], "coq")
     return {
         "kind": "locative_intransitive_predication",
@@ -16123,14 +16175,7 @@ def locative_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] 
         "event_semantics": {
             **event_semantics,
             "analysis": "locative-intransitive-predication",
-            "locative_predication": {
-                "predicate": predicate,
-                "subject": arguments[0],
-                "modifier_count": len(modifiers),
-                "modifier_type": "Adv",
-                "modifier_semantic_role": "Location",
-                "representation": "ModifierSeq-indexed predicate over an Entity subject",
-            },
+            "locative_predication": predication_record,
         },
         "dependent_type_translation": translation["translation"],
         "result_state_lexicon": translation["result_state_lexicon"],
@@ -16139,7 +16184,7 @@ def locative_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] 
         "construction_summary": (
             f"Locative intransitive predication: {predicate} is applied to one "
             "Entity subject and Location Adv modifier(s) through ModifierSeq, "
-            "without an Event argument or neo-Davidsonian Agent/Theme export."
+            f"without an Event argument or neo-Davidsonian Agent/Theme export{time_summary}."
         ),
         "coq_code": coq_code,
     }
@@ -16366,6 +16411,7 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Agent :",
                 "Parameter Theme :",
                 "Parameter on_mat : Entity.",
+                "Parameter near_window : Entity.",
             ),
         ),
         ConstructionRule(

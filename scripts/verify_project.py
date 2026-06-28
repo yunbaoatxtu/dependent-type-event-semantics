@@ -2473,7 +2473,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
         (
             "/api/construction-rule-draft?sentence=Mary+laughed+"
-            "near+a+window+yesterday&amp;require_coq=1&amp;download=1"
+            "from+a+window+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -5366,6 +5366,31 @@ def validate_analyze_locative_intransitive_success(
     page: str,
     sentence: str,
 ) -> None:
+    expectations = {
+        "a cat sits on a mat": {
+            "translation": "sit(1)(on(mat), cat)",
+            "ast_kind": "application",
+            "predicate": "sit",
+            "arguments": ["cat"],
+            "modifier": "on(mat)",
+            "coq_adv": "Parameter on_mat : Adv.",
+            "forbidden_entity": "Parameter on_mat : Entity.",
+            "time_modifier": None,
+        },
+        "Mary laughed near a window yesterday": {
+            "translation": "at_T(yesterday, laugh(1)(near(window), mary))",
+            "ast_kind": "time",
+            "predicate": "laugh",
+            "arguments": ["mary"],
+            "modifier": "near(window)",
+            "coq_adv": "Parameter near_window : Adv.",
+            "forbidden_entity": "Parameter near_window : Entity.",
+            "time_modifier": {"operator": "at", "argument": "yesterday"},
+        },
+    }
+    expected = expectations.get(sentence)
+    if expected is None:
+        raise SystemExit("web route smoke check failed: unknown locative expectation")
     case = "analyze_locative_intransitive_success"
     validate_analyze_success_envelope(
         payload,
@@ -5383,19 +5408,31 @@ def validate_analyze_locative_intransitive_success(
     )
     if payload.get("kind") != "locative_intransitive_predication":
         raise SystemExit("web route smoke check failed: locative kind drift")
-    if payload.get("dependent_type_translation") != "sit(1)(on(mat), cat)":
+    if payload.get("dependent_type_translation") != expected["translation"]:
         raise SystemExit("web route smoke check failed: locative translation drift")
     ast = payload.get("ast")
+    application_ast = ast
+    if expected["ast_kind"] == "time":
+        if (
+            not isinstance(ast, dict)
+            or ast.get("kind") != "time"
+            or ast.get("operator") != expected["time_modifier"]["operator"]
+            or ast.get("arguments") != [expected["time_modifier"]["argument"]]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit("web route smoke check failed: timed locative AST drift")
+        application_ast = ast["body"]
     modifier_roles = (
-        ast.get("modifier_roles", {}).get("roles")
-        if isinstance(ast, dict)
+        application_ast.get("modifier_roles", {}).get("roles")
+        if isinstance(application_ast, dict)
         else None
     )
     if (
-        not isinstance(ast, dict)
-        or ast.get("kind") != "application"
-        or ast.get("function") != "sit"
-        or ast.get("arguments") != ["cat"]
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != expected["predicate"]
+        or application_ast.get("arguments") != expected["arguments"]
+        or application_ast.get("modifiers") != [expected["modifier"]]
         or not isinstance(modifier_roles, list)
         or len(modifier_roles) != 1
         or modifier_roles[0].get("type") != "Adv"
@@ -5404,8 +5441,26 @@ def validate_analyze_locative_intransitive_success(
         raise SystemExit("web route smoke check failed: locative AST drift")
     if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
         raise SystemExit("web route smoke check failed: registered locative exposes fallback draft")
-    if payload.get("event_semantics", {}).get("analysis") != "locative-intransitive-predication":
+    event_semantics = payload.get("event_semantics")
+    locative = (
+        event_semantics.get("locative_predication")
+        if isinstance(event_semantics, dict)
+        else None
+    )
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis") != "locative-intransitive-predication"
+        or not isinstance(locative, dict)
+        or locative.get("predicate") != expected["predicate"]
+        or locative.get("subject") != expected["arguments"][0]
+        or locative.get("modifiers") != [expected["modifier"]]
+    ):
         raise SystemExit("web route smoke check failed: locative analysis drift")
+    if expected["time_modifier"] is None:
+        if "time_modifier" in locative:
+            raise SystemExit("web route smoke check failed: untimed locative time drift")
+    elif locative.get("time_modifier") != expected["time_modifier"]:
+        raise SystemExit("web route smoke check failed: timed locative time drift")
     construction_rule = payload.get("construction_rule")
     if (
         not isinstance(construction_rule, dict)
@@ -5434,8 +5489,8 @@ def validate_analyze_locative_intransitive_success(
     if (
         not isinstance(coq_code, str)
         or "Definition example_1" not in coq_code
-        or "Parameter on_mat : Adv." not in coq_code
-        or "Parameter on_mat : Entity." in coq_code
+        or expected["coq_adv"] not in coq_code
+        or expected["forbidden_entity"] in coq_code
         or "Parameter Event : Type." in coq_code
     ):
         raise SystemExit("web route smoke check failed: locative Coq drift")
@@ -5447,8 +5502,8 @@ def validate_analyze_locative_intransitive_success(
         'data-reading-name="locative_intransitive_predication_single_reading"',
         "<dt>source</dt><dd>locative_intransitive_predication</dd>",
         "Locative intransitive predication",
-        "sit(1)(on(mat), cat)",
-        "Parameter on_mat : Adv.",
+        expected["translation"],
+        expected["coq_adv"],
     ]
     require_text_fragments(page, expected_page_fragments, "locative HTML")
 
@@ -8734,6 +8789,25 @@ def run_web_route_smoke_check() -> None:
             locative_page,
             locative_sentence,
         )
+        timed_locative_sentence = "Mary laughed near a window yesterday"
+        timed_locative_query = urlencode(
+            {"sentence": timed_locative_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_locative_query}",
+            timeout=5,
+        ) as response:
+            timed_locative_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_locative_query}",
+            timeout=5,
+        ) as response:
+            timed_locative_page = response.read().decode("utf-8")
+        validate_analyze_locative_intransitive_success(
+            timed_locative_payload,
+            timed_locative_page,
+            timed_locative_sentence,
+        )
         plain_transitive_sentence = "Mary admired the painting"
         plain_transitive_query = urlencode(
             {"sentence": plain_transitive_sentence, "require_coq": "1"}
@@ -9004,7 +9078,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary laughed near a window yesterday"
+        fallback_sentence = "Mary laughed from a window yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

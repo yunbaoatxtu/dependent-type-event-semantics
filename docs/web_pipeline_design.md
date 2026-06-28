@@ -162,6 +162,7 @@ uses `data-coverage-marker`. Current registered variants include
 `temporal_event_counting`, `temporal_plain_intransitive_predication`,
 `temporal_manner_intransitive_predication`,
 `temporal_instrument_intransitive_predication`,
+`temporal_locative_intransitive_predication`,
 `temporal_manner_instrument_intransitive_predication`,
 `temporal_manner_locative_intransitive_predication`,
 `temporal_manner_two_location_intransitive_predication`,
@@ -777,13 +778,14 @@ now registered under `instrument_intransitive_predication`: it preserves the
 surface role pattern `Instrument`, exports
 `at_T(yesterday, laugh(1)(with(telescope), mary))`, declares `with_telescope`
 as `Adv`, and surfaces `instrument_intransitive_predication_single_reading`.
-Meanwhile, `a cat sits on a mat` must surface
+Meanwhile, `a cat sits on a mat` and `Mary laughed near a window yesterday`
+must surface
 as the registered `locative_intransitive_predication` construction with
-`locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
-must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
-success contract is instead exercised with `Mary laughed near a window
-yesterday`, a shallow Location-only modifier scaffold
-`at_T(yesterday, laugh(1)(near(window), mary))` with
+`locative_intransitive_predication_single_reading`; their Coq/Rocq scaffolds
+must declare `on_mat : Adv` and `near_window : Adv`, not Entity surrogates. The
+ordinary fallback success contract is instead exercised with `Mary laughed from
+a window yesterday`, a shallow Source-only directional modifier scaffold
+`at_T(yesterday, laugh(1)(from(window), mary))` with
 `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -1034,9 +1036,9 @@ under `manner_mixed_directional_instrument_intransitive_predication`, and its
 Goal witness uses `into(room)` in the same typed Adv position. The remaining
 fallback example is deliberately narrower because the Instrument-only and
 Manner/Instrument slices are now registered:
-`Mary laughed near a window yesterday` remains a shallow Location-only
+`Mary laughed from a window yesterday` remains a shallow Source-only directional
 modifier scaffold,
-`at_T(yesterday, laugh(1)(near(window), mary))`, with a
+`at_T(yesterday, laugh(1)(from(window), mary))`, with a
 construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
