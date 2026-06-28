@@ -11307,6 +11307,61 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         item for item in manifest.get("registered_constructions", [])
         if isinstance(item, dict)
     ]
+    modifier_sequence_contract = manifest.get("registered_modifier_sequence_contract")
+    if not isinstance(modifier_sequence_contract, dict):
+        modifier_sequence_contract = {}
+    modifier_role_inventory = [
+        item
+        for item in modifier_sequence_contract.get("registered_semantic_role_inventory", [])
+        if isinstance(item, dict)
+    ]
+    modifier_role_witnesses = [
+        item
+        for item in modifier_sequence_contract.get("registered_semantic_role_witnesses", [])
+        if isinstance(item, dict)
+    ]
+    modifier_role_witness_selection_contract = modifier_sequence_contract.get(
+        "semantic_role_witness_selection_contract",
+    )
+    if not isinstance(modifier_role_witness_selection_contract, dict):
+        modifier_role_witness_selection_contract = {}
+    modifier_role_source_contract = modifier_sequence_contract.get(
+        "semantic_role_source_contract",
+    )
+    if not isinstance(modifier_role_source_contract, dict):
+        modifier_role_source_contract = {}
+
+    def csv_attribute(value: object) -> str:
+        if not isinstance(value, list):
+            return ""
+        return ",".join(str(item) for item in value)
+
+    def data_fragment(name: str, value: object) -> str:
+        return f'{name}="{html.escape(str(value), quote=True)}"'
+
+    modifier_role_names = ",".join(
+        str(item.get("role", ""))
+        for item in modifier_role_inventory
+        if isinstance(item.get("role"), str)
+    )
+    modifier_role_minima = ",".join(
+        f"{item.get('role')}:{item.get('minimum_observed_occurrences')}"
+        for item in modifier_role_inventory
+        if isinstance(item.get("role"), str)
+        and isinstance(item.get("minimum_observed_occurrences"), int)
+    )
+    modifier_role_witness_summary = ",".join(
+        f"{item.get('role')}:{item.get('normalized_modifier')}"
+        for item in modifier_role_witnesses
+        if isinstance(item.get("role"), str)
+        and isinstance(item.get("normalized_modifier"), str)
+    )
+    witness_sources = csv_attribute(
+        modifier_role_witness_selection_contract.get("sentence_sources"),
+    )
+    source_roles = csv_attribute(
+        modifier_role_source_contract.get("derived_role_inventory"),
+    )
     expected_fragments = [
         'class="panel certified-fragment-panel"',
         'data-certified-fragment-schema="certified_fragment.v1"',
@@ -11374,56 +11429,79 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             'data-surface-slot-probe-matrix-type-contract-registry-id="'
             'modified_transitive_adv_sequence.surface_slot_matrix"'
         ),
-        'data-modifier-sequence-contract-schema="registered_modifier_sequence_contract.v1"',
-        'data-modifier-sequence-claim="registered_examples_only"',
-        'data-modifier-sequence-case-count="122"',
-        'data-modifier-sequence-max-count="11"',
-        'data-modifier-sequence-declared-counts="0,1,2,3,4,5,6,7,8,9,10,11"',
-        'data-modifier-sequence-full-certification="false"',
-        'data-modifier-sequence-role-inventory="Goal,Instrument,Location,Manner,Source"',
-        'data-modifier-sequence-role-count="5"',
-        'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
-        'data-modifier-sequence-role-witness-count="5"',
-        'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
-        (
-            'data-modifier-sequence-role-witness-selection-schema="'
-            'modifier_role_witness_selection_contract.v2"'
+        data_fragment(
+            "data-modifier-sequence-contract-schema",
+            modifier_sequence_contract.get("schema_version", ""),
         ),
-        (
-            'data-modifier-sequence-role-witness-selection-scope="'
-            'registered_primary_and_variant_success_cases"'
+        data_fragment(
+            "data-modifier-sequence-claim",
+            modifier_sequence_contract.get("claim", ""),
         ),
-        (
-            'data-modifier-sequence-role-witness-selection-unit="'
-            'one_live_sentence_per_registered_adv_role"'
+        data_fragment(
+            "data-modifier-sequence-case-count",
+            modifier_sequence_contract.get("case_count", ""),
         ),
-        (
-            'data-modifier-sequence-role-witness-selection-sources="'
-            'registered_primary_success_cases,registered_variant_success_cases"'
+        data_fragment(
+            "data-modifier-sequence-max-count",
+            modifier_sequence_contract.get("max_declared_application_modifier_count", ""),
         ),
-        'data-modifier-sequence-role-witness-full-generation="true"',
-        'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
-        'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
-        'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',
-        'data-modifier-sequence-role-source-derived="Goal,Instrument,Location,Manner,Source"',
+        data_fragment(
+            "data-modifier-sequence-declared-counts",
+            csv_attribute(
+                modifier_sequence_contract.get("declared_application_modifier_counts"),
+            ),
+        ),
+        data_fragment(
+            "data-modifier-sequence-full-certification",
+            str(modifier_sequence_contract.get("full_surface_parser_certification") is True).lower(),
+        ),
+        data_fragment("data-modifier-sequence-role-inventory", modifier_role_names),
+        data_fragment("data-modifier-sequence-role-count", len(modifier_role_inventory)),
+        data_fragment("data-modifier-sequence-role-minima", modifier_role_minima),
+        data_fragment(
+            "data-modifier-sequence-role-witness-count",
+            len(modifier_role_witnesses),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-witnesses",
+            modifier_role_witness_summary,
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-witness-selection-schema",
+            modifier_role_witness_selection_contract.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-witness-selection-scope",
+            modifier_role_witness_selection_contract.get("selection_scope", ""),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-witness-selection-unit",
+            modifier_role_witness_selection_contract.get("selection_unit", ""),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-witness-selection-sources",
+            witness_sources,
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-witness-full-generation",
+            str(modifier_role_witness_selection_contract.get("full_witness_generation") is True).lower(),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-source-schema",
+            modifier_role_source_contract.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-source-module",
+            modifier_role_source_contract.get("source_module", ""),
+        ),
+        data_fragment(
+            "data-modifier-sequence-role-source-table",
+            modifier_role_source_contract.get("preposition_role_table", ""),
+        ),
+        data_fragment("data-modifier-sequence-role-source-derived", source_roles),
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
-        'data-modifier-sequence-role="Goal"',
-        'data-modifier-sequence-role="Instrument"',
-        'data-modifier-sequence-role="Location"',
-        'data-modifier-sequence-role="Manner"',
-        'data-modifier-sequence-role="Source"',
-        'data-modifier-sequence-role-witness-role="Goal"',
-        'data-modifier-sequence-role-witness-normalized="into_room"',
-        'data-modifier-sequence-role-witness-role="Instrument"',
-        'data-modifier-sequence-role-witness-normalized="with_telescope"',
-        'data-modifier-sequence-role-witness-role="Location"',
-        'data-modifier-sequence-role-witness-normalized="on_mat"',
-        'data-modifier-sequence-role-witness-role="Manner"',
-        'data-modifier-sequence-role-witness-normalized="loudly"',
-        'data-modifier-sequence-role-witness-role="Source"',
-        'data-modifier-sequence-role-witness-normalized="from_window"',
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',
@@ -11472,6 +11550,30 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         "surface parser coverage",
         "<h2>Certified Fragment</h2>",
     ]
+    expected_fragments.extend(
+        data_fragment("data-modifier-sequence-role", item.get("role", ""))
+        for item in modifier_role_inventory
+    )
+    expected_fragments.extend(
+        data_fragment(
+            "data-modifier-sequence-role-minimum",
+            item.get("minimum_observed_occurrences", ""),
+        )
+        for item in modifier_role_inventory
+    )
+    for witness in modifier_role_witnesses:
+        expected_fragments.append(
+            data_fragment(
+                "data-modifier-sequence-role-witness-role",
+                witness.get("role", ""),
+            ),
+        )
+        expected_fragments.append(
+            data_fragment(
+                "data-modifier-sequence-role-witness-normalized",
+                witness.get("normalized_modifier", ""),
+            ),
+        )
     expected_fragments.extend(
         f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}"'
         for item in registered

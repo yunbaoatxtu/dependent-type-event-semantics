@@ -38,6 +38,7 @@ from scripts.verify_project import (
     validate_analyze_action_export_bundle,
     validate_analyze_action_export_preview,
     validate_analyze_action_inspection_run_rejection,
+    validate_certified_fragment_html_panel,
     validate_ordinary_analyze_action_export_surface,
     validate_reading_type_check_diagnostics,
     validate_reading_type_check_diagnostics_html,
@@ -14727,6 +14728,52 @@ class TranslatorTests(unittest.TestCase):
                 "temporal_quint_adv_modified_transitive_predication",
             ],
         )
+        modifier_sequence_contract = manifest["registered_modifier_sequence_contract"]
+        modifier_role_inventory = modifier_sequence_contract[
+            "registered_semantic_role_inventory"
+        ]
+        modifier_role_witnesses = modifier_sequence_contract[
+            "registered_semantic_role_witnesses"
+        ]
+        witness_selection_contract = modifier_sequence_contract[
+            "semantic_role_witness_selection_contract"
+        ]
+        role_source_contract = modifier_sequence_contract[
+            "semantic_role_source_contract"
+        ]
+
+        def data_attr(name: str, value: object) -> str:
+            return f'{name}="{html.escape(str(value), quote=True)}"'
+
+        def csv_attr(value: list[object]) -> str:
+            return ",".join(str(item) for item in value)
+
+        role_inventory_attr = data_attr(
+            "data-modifier-sequence-role-inventory",
+            csv_attr([item["role"] for item in modifier_role_inventory]),
+        )
+        role_minima_attr = data_attr(
+            "data-modifier-sequence-role-minima",
+            csv_attr(
+                [
+                    f"{item['role']}:{item['minimum_observed_occurrences']}"
+                    for item in modifier_role_inventory
+                ],
+            ),
+        )
+        role_witnesses_attr = data_attr(
+            "data-modifier-sequence-role-witnesses",
+            csv_attr(
+                [
+                    f"{item['role']}:{item['normalized_modifier']}"
+                    for item in modifier_role_witnesses
+                ],
+            ),
+        )
+        role_source_derived_attr = data_attr(
+            "data-modifier-sequence-role-source-derived",
+            csv_attr(role_source_contract["derived_role_inventory"]),
+        )
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -14743,63 +14790,117 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-coverage-registered-variant-success-count="79"', page)
         self.assertIn(
-            'data-modifier-sequence-contract-schema="registered_modifier_sequence_contract.v1"',
-            page,
-        )
-        self.assertIn('data-modifier-sequence-claim="registered_examples_only"', page)
-        self.assertIn('data-modifier-sequence-case-count="122"', page)
-        self.assertIn('data-modifier-sequence-max-count="11"', page)
-        self.assertIn('data-modifier-sequence-declared-counts="0,1,2,3,4,5,6,7,8,9,10,11"', page)
-        self.assertIn(
-            'data-modifier-sequence-role-inventory="Goal,Instrument,Location,Manner,Source"',
-            page,
-        )
-        self.assertIn('data-modifier-sequence-role-count="5"', page)
-        self.assertIn(
-            'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
-            page,
-        )
-        self.assertIn('data-modifier-sequence-role-witness-count="5"', page)
-        self.assertIn(
-            'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
+            data_attr(
+                "data-modifier-sequence-contract-schema",
+                modifier_sequence_contract["schema_version"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-selection-schema="modifier_role_witness_selection_contract.v2"',
+            data_attr(
+                "data-modifier-sequence-claim",
+                modifier_sequence_contract["claim"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-selection-scope="registered_primary_and_variant_success_cases"',
+            data_attr(
+                "data-modifier-sequence-case-count",
+                modifier_sequence_contract["case_count"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-selection-unit="one_live_sentence_per_registered_adv_role"',
+            data_attr(
+                "data-modifier-sequence-max-count",
+                modifier_sequence_contract["max_declared_application_modifier_count"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-selection-sources="registered_primary_success_cases,registered_variant_success_cases"',
+            data_attr(
+                "data-modifier-sequence-declared-counts",
+                csv_attr(modifier_sequence_contract["declared_application_modifier_counts"]),
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-full-generation="true"',
+            role_inventory_attr,
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
+            data_attr(
+                "data-modifier-sequence-role-count",
+                len(modifier_role_inventory),
+            ),
+            page,
+        )
+        self.assertIn(role_minima_attr, page)
+        self.assertIn(
+            data_attr(
+                "data-modifier-sequence-role-witness-count",
+                len(modifier_role_witnesses),
+            ),
+            page,
+        )
+        self.assertIn(role_witnesses_attr, page)
+        self.assertIn(
+            data_attr(
+                "data-modifier-sequence-role-witness-selection-schema",
+                witness_selection_contract["schema_version"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
+            data_attr(
+                "data-modifier-sequence-role-witness-selection-scope",
+                witness_selection_contract["selection_scope"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',
+            data_attr(
+                "data-modifier-sequence-role-witness-selection-unit",
+                witness_selection_contract["selection_unit"],
+            ),
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-source-derived="Goal,Instrument,Location,Manner,Source"',
+            data_attr(
+                "data-modifier-sequence-role-witness-selection-sources",
+                csv_attr(witness_selection_contract["sentence_sources"]),
+            ),
             page,
         )
+        self.assertIn(
+            data_attr(
+                "data-modifier-sequence-role-witness-full-generation",
+                str(witness_selection_contract["full_witness_generation"] is True).lower(),
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-modifier-sequence-role-source-schema",
+                role_source_contract["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-modifier-sequence-role-source-module",
+                role_source_contract["source_module"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-modifier-sequence-role-source-table",
+                role_source_contract["preposition_role_table"],
+            ),
+            page,
+        )
+        self.assertIn(role_source_derived_attr, page)
         self.assertIn(
             'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
             page,
@@ -14819,6 +14920,12 @@ class TranslatorTests(unittest.TestCase):
             'data-modifier-sequence-role-witness-normalized="on_mat"',
             page,
         )
+        validate_certified_fragment_html_panel(page, manifest)
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(role_minima_attr, data_attr("data-modifier-sequence-role-minima", "stale")),
+                manifest,
+            )
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -20044,6 +20151,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("registered_semantic_role_witnesses", manuscript)
         self.assertIn("Mary laughed into a room yesterday", manuscript)
         self.assertIn("a cat sits on a mat for Location", manuscript)
+        self.assertIn("no longer carries a second hard-coded role table", manuscript)
         self.assertIn("protects thematic-role typing", manuscript)
         self.assertIn("unrestricted natural-language parsing as open", manuscript)
         self.assertIn(
@@ -20963,6 +21071,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`COMMON_ADVERBS`", readme)
         self.assertIn("`data-modifier-sequence-role-source-*` hooks", readme)
         self.assertIn("coverage-derived role minima", readme)
+        self.assertIn("hard-coded role table", readme)
         self.assertIn("`registered_semantic_role_witnesses`", readme)
         self.assertIn("`data-modifier-sequence-role-witness-*` hooks", readme)
         self.assertIn("`semantic_role_witness_selection_contract`", readme)
@@ -21028,6 +21137,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`semantic_role_source_contract`", web_design)
         self.assertIn("`data-modifier-sequence-role-source-*` attributes", web_design)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", web_design)
+        self.assertIn("second hard-coded webpage contract", web_design)
         self.assertIn("`registered_semantic_role_witnesses`", web_design)
         self.assertIn("`data-modifier-sequence-role-witness-*` attributes", web_design)
         self.assertIn("`semantic_role_witness_selection_contract`", web_design)

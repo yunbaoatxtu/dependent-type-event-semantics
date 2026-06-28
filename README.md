@@ -956,7 +956,10 @@ for `Location`, and `Mary laughed from a window` for `Source`. The
 verifier reruns those witness sentences and checks the AST modifier, normalized
 Adv constant, role label, and `surface_lexicon` source before accepting the
 manifest; the web panel mirrors the summary through
-`data-modifier-sequence-role-witness-*` hooks. A companion
+`data-modifier-sequence-role-witness-*` hooks. The HTML smoke check computes the
+role inventory, minima, source summary, and witness summary from the manifest
+before checking those `data-*` hooks, so the page no longer maintains a second
+hard-coded role table. A companion
 `semantic_role_witness_selection_contract` records that these witnesses are
 derived as one live sentence per registered `Adv` role from
 `registered_primary_success_cases` and `registered_variant_success_cases`, using
