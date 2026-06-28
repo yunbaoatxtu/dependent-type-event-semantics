@@ -21,6 +21,7 @@ import translator.surface_type_contracts as surface_type_contracts
 from scripts.export_lexicon_patch_drafts import build_patch_bundle, write_output_file
 from scripts.lexicon_patch_contract_cases import LEXICON_PATCH_CONTRACT_CASES
 from scripts.verify_project import (
+    AnalyzeJsonValidatingOpener,
     VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     VALID_DIAGNOSTIC_FAILURE_STAGES,
@@ -42,6 +43,7 @@ from scripts.verify_project import (
     validate_lexicon_patch_text_artifacts,
     validate_construction_rule_draft_download_artifact,
     validate_json_api_response_bytes,
+    validate_json_api_http_response,
     validate_json_download_http_response,
     validate_json_download_response_bytes,
     validate_text_artifact_response_bytes,
@@ -16867,6 +16869,46 @@ class TranslatorTests(unittest.TestCase):
                         **values,
                     )
 
+    def test_live_analyze_route_uses_validating_json_opener(self) -> None:
+        with pipeline_server() as (base_url, base_opener):
+            handler = object.__new__(PipelineHandler)
+            opener = AnalyzeJsonValidatingOpener(
+                base_opener,
+                lambda query: PipelineHandler.handle_api(handler, query),
+            )
+            query = "sentence=John+knocked+twice&require_coq=1"
+            with opener.open(f"{base_url}/api/analyze?{query}", timeout=5) as response:
+                payload = json.load(response)
+
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+
+        raw = compact_json(payload).encode("utf-8")
+
+        class Headers(dict):
+            def get_content_type(self) -> str:
+                return str(self["Content-Type"]).split(";", 1)[0]
+
+        class Response:
+            status = HTTPStatus.OK
+            headers = Headers(
+                {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Content-Length": str(len(raw)),
+                }
+            )
+
+            def read(self) -> bytes:
+                return raw
+
+        observed_raw = validate_json_api_http_response(
+            "event_counting",
+            "ordinary analyze",
+            Response(),
+            payload,
+        )
+        self.assertEqual(observed_raw, raw)
+
     def test_verifier_checks_construction_rule_draft_download_without_http(self) -> None:
         validate_construction_rule_draft_download_artifact()
 
@@ -21461,9 +21503,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("core JSON API artifact check", readme)
         self.assertIn("diagnostic fixtures manifest JSON artifact check", readme)
         self.assertIn("ordinary analyze JSON artifact check", readme)
+        self.assertIn("wraps ordinary `/api/analyze`", readme)
         self.assertIn("replays core JSON API artifacts", manuscript)
         self.assertIn("replays the diagnostic fixtures manifest", manuscript)
         self.assertIn("ordinary analyze success and failure JSON artifacts", manuscript)
+        self.assertIn("wraps live ordinary analyze HTTP responses", manuscript)
         self.assertIn("replays lexicon patch JSON and text artifacts", manuscript)
         self.assertIn("web route smoke check", readme)
         self.assertIn("real local web route", manuscript)
@@ -22040,6 +22084,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/certified-fragment", web_design)
         self.assertIn("core JSON API artifacts", web_design)
         self.assertIn("representative ordinary `/api/analyze`", web_design)
+        self.assertIn("rather than merely being parsed with `json.load`", web_design)
         self.assertIn("payload equality from the\nhandler", web_design)
         self.assertIn('"certified_fragment.v1"', web_design)
         self.assertIn("`Certified Fragment` panel", web_design)
@@ -23787,6 +23832,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/construction-rule-draft?", verifier)
         self.assertIn("construction_rule_draft_response.v1", verifier)
         self.assertIn("def validate_json_api_response_bytes(", verifier)
+        self.assertIn("def validate_json_api_http_response(", verifier)
+        self.assertIn("class AnalyzeJsonValidatingOpener", verifier)
+        self.assertIn('label="ordinary analyze"', verifier)
         self.assertIn("def validate_json_download_response_bytes(", verifier)
         self.assertIn("def validate_text_artifact_response_bytes(", verifier)
         self.assertIn("def validate_core_json_api_artifacts(", verifier)

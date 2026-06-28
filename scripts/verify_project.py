@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import io
 import json
 import shutil
 import subprocess
@@ -12444,6 +12445,93 @@ def validate_json_api_response_bytes(
     return observed_payload
 
 
+def validate_json_api_http_response(
+    case: str,
+    label: str,
+    response,
+    expected_payload: dict | None,
+    expected_status: int = HTTPStatus.OK,
+) -> bytes:
+    raw = response.read()
+    validate_json_api_response_bytes(
+        case,
+        label,
+        status=response.status,
+        content_type=response.headers.get_content_type(),
+        content_header=response.headers.get("Content-Type", ""),
+        content_length=response.headers.get("Content-Length"),
+        raw=raw,
+        expected_payload=expected_payload,
+        expected_status=expected_status,
+    )
+    return raw
+
+
+class JsonApiValidatingResponse:
+    def __init__(
+        self,
+        response,
+        *,
+        case: str,
+        label: str,
+        expected_payload: dict | None,
+        expected_status: int = HTTPStatus.OK,
+    ) -> None:
+        self._response = response
+        self._case = case
+        self._label = label
+        self._expected_payload = expected_payload
+        self._expected_status = expected_status
+        self._buffer: io.BytesIO | None = None
+        self.headers = response.headers
+        self.status = response.status
+
+    def __enter__(self):
+        self._response.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self._response.__exit__(exc_type, exc_value, traceback)
+
+    def __getattr__(self, name: str):
+        return getattr(self._response, name)
+
+    def _validated_buffer(self) -> io.BytesIO:
+        if self._buffer is None:
+            raw = validate_json_api_http_response(
+                self._case,
+                self._label,
+                self._response,
+                self._expected_payload,
+                self._expected_status,
+            )
+            self._buffer = io.BytesIO(raw)
+        return self._buffer
+
+    def read(self, *args):
+        return self._validated_buffer().read(*args)
+
+
+class AnalyzeJsonValidatingOpener:
+    def __init__(self, opener, expected_payload_for_query) -> None:
+        self._opener = opener
+        self._expected_payload_for_query = expected_payload_for_query
+
+    def open(self, url, *args, **kwargs):
+        response = self._opener.open(url, *args, **kwargs)
+        parsed = urlparse(url)
+        if parsed.path != "/api/analyze":
+            return response
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        return JsonApiValidatingResponse(
+            response,
+            case=f"live analyze {sentence}",
+            label="ordinary analyze",
+            expected_payload=self._expected_payload_for_query(parsed.query),
+        )
+
+
 def validate_text_artifact_response_bytes(
     case: str,
     label: str,
@@ -13176,7 +13264,11 @@ def run_web_route_smoke_check() -> None:
     try:
         port = server.server_address[1]
         base_url = f"http://127.0.0.1:{port}"
-        opener = build_opener(ProxyHandler({}))
+        smoke_handler = object.__new__(PipelineHandler)
+        opener = AnalyzeJsonValidatingOpener(
+            build_opener(ProxyHandler({})),
+            lambda query: PipelineHandler.handle_api(smoke_handler, query),
+        )
         event_counting_sentence = "John knocked twice"
         event_counting_query = urlencode(
             {"sentence": event_counting_sentence, "require_coq": "1"}
@@ -14751,7 +14843,6 @@ def run_web_route_smoke_check() -> None:
                     failure_payload,
                     rejection_payload,
                 )
-        smoke_handler = object.__new__(PipelineHandler)
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
             raw = response.read()
             diagnostic_contract_payload = validate_json_api_response_bytes(

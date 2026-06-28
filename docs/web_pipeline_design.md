@@ -987,7 +987,10 @@ The same no-port boundary should replay representative ordinary `/api/analyze`
 successes and failures from the handler, render their matching pages, run the
 construction-specific semantic validators, and then validate the JSON response
 envelope, byte length, and payload equality before relying on the live route
-smoke check.
+smoke check. The live smoke check should wrap ordinary `/api/analyze` responses
+with the same JSON validator, so real HTTP responses are checked for
+`application/json`, UTF-8 charset, byte length, and equality with the direct
+handler payload rather than merely being parsed with `json.load`.
 It should also validate `coverage_matrix_counts` against the actual matrix
 lists and compare the page's coverage-count attributes and example hooks with
 the JSON manifest. The page-level smoke check should derive every registered-primary
