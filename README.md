@@ -2193,9 +2193,12 @@ This includes a package-build smoke check that runs
 environment's local build tooling rather than requiring a network fetch for
 build dependencies. It also runs a smoke check for the lexicon patch exporter,
 verifying that it can write both the JSON bundle and review-only patch text,
-and a web route smoke check that requests ordinary `/api/analyze` fallback and
-quantifier-scope successes plus a registered perception-complement success
-plus registered timed-after and universal timed burning successes before the
+and a core JSON API artifact check that replays `/api/diagnostic-contract` and
+`/api/certified-fragment` without opening a port, validating
+`application/json`, UTF-8 charset, byte length, and payload equality. It also
+runs a web route smoke check that requests ordinary `/api/analyze` fallback and
+quantifier-scope successes plus a registered perception-complement success plus
+registered timed-after and universal timed burning successes before the
 diagnostic fixture manifest through the local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is

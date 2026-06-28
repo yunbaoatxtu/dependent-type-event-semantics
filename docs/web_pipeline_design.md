@@ -975,6 +975,10 @@ fallback scaffold.
 The same smoke check should fetch `/api/certified-fragment` and compare the
 manifest with the `Certified Fragment` panel. This keeps the project-level
 coverage boundary synchronized with the registered construction registry.
+The no-port verifier should replay the core JSON API artifacts for
+`/api/diagnostic-contract` and `/api/certified-fragment`, validating
+`application/json`, UTF-8 charset, byte length, and payload equality from the
+handler before the live HTTP route is exercised.
 It should also validate `coverage_matrix_counts` against the actual matrix
 lists and compare the page's coverage-count attributes and example hooks with
 the JSON manifest. The page-level smoke check should derive every registered-primary

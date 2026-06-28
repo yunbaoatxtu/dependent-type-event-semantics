@@ -12535,6 +12535,40 @@ def validate_json_download_http_response(
     )
 
 
+def validate_core_json_api_artifacts() -> None:
+    from web.app import PipelineHandler, compact_json
+
+    print("==> core JSON API artifact check")
+    handler = object.__new__(PipelineHandler)
+    cases = (
+        (
+            "diagnostic_contract",
+            "diagnostic contract",
+            PipelineHandler.handle_diagnostic_contract_api(handler),
+            validate_diagnostic_contract_manifest,
+        ),
+        (
+            "certified_fragment",
+            "certified fragment",
+            PipelineHandler.handle_certified_fragment_api(handler),
+            validate_certified_fragment_manifest,
+        ),
+    )
+    for case, label, payload, validator in cases:
+        validator(payload)
+        raw = compact_json(payload).encode("utf-8")
+        validate_json_api_response_bytes(
+            case,
+            label,
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_header="application/json; charset=utf-8",
+            content_length=str(len(raw)),
+            raw=raw,
+            expected_payload=payload,
+        )
+
+
 def validate_construction_rule_draft_download_artifact() -> None:
     from web.app import PipelineHandler, compact_json
 
@@ -14577,10 +14611,36 @@ def run_web_route_smoke_check() -> None:
                     failure_payload,
                     rejection_payload,
                 )
+        smoke_handler = object.__new__(PipelineHandler)
         with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
-            validate_diagnostic_contract_manifest(json.load(response))
+            raw = response.read()
+            diagnostic_contract_payload = validate_json_api_response_bytes(
+                "diagnostic_contract",
+                "diagnostic contract",
+                status=response.status,
+                content_type=response.headers.get_content_type(),
+                content_header=response.headers.get("Content-Type", ""),
+                content_length=response.headers.get("Content-Length"),
+                raw=raw,
+                expected_payload=PipelineHandler.handle_diagnostic_contract_api(
+                    smoke_handler
+                ),
+            )
+        validate_diagnostic_contract_manifest(diagnostic_contract_payload)
         with opener.open(f"{base_url}/api/certified-fragment", timeout=5) as response:
-            certified_fragment_manifest = json.load(response)
+            raw = response.read()
+            certified_fragment_manifest = validate_json_api_response_bytes(
+                "certified_fragment",
+                "certified fragment",
+                status=response.status,
+                content_type=response.headers.get_content_type(),
+                content_header=response.headers.get("Content-Type", ""),
+                content_length=response.headers.get("Content-Length"),
+                raw=raw,
+                expected_payload=PipelineHandler.handle_certified_fragment_api(
+                    smoke_handler
+                ),
+            )
         validate_certified_fragment_manifest(certified_fragment_manifest)
         validate_certified_fragment_html_panel(
             fallback_page,
@@ -14765,6 +14825,7 @@ def main() -> None:
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
     run_lexicon_warning_schema_check()
+    validate_core_json_api_artifacts()
     validate_lexicon_patch_json_artifacts()
     validate_lexicon_patch_text_artifacts()
     validate_construction_rule_draft_download_artifact()
