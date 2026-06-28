@@ -2472,8 +2472,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
         (
-            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+"
-            "with+a+telescope+from+a+window+with+a+camera+yesterday&amp;require_coq=1&amp;download=1"
+            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+"
+            "with+a+telescope+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -4525,6 +4525,266 @@ def validate_analyze_manner_mixed_location_instrument_intransitive_success(
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit(
             "web route smoke check failed: manner-mixed-location-instrument page input drift"
+        )
+
+
+def validate_analyze_manner_mixed_directional_instrument_intransitive_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_manner_mixed_directional_instrument_intransitive_success"
+    is_timed = sentence.endswith(" yesterday")
+    expected_modifiers = ["loudly", "in(park)", "with(telescope)"]
+    expected_constants = ["loudly", "in_park", "with_telescope"]
+    expected_roles = ["Manner", "Location", "Instrument"]
+    expected_sources: list[str] = []
+    expected_goals: list[str] = []
+    if "from a window" in sentence:
+        expected_modifiers.append("from(window)")
+        expected_constants.append("from_window")
+        expected_roles.append("Source")
+        expected_sources.append("from(window)")
+    elif "into a room" in sentence:
+        expected_modifiers.append("into(room)")
+        expected_constants.append("into_room")
+        expected_roles.append("Goal")
+        expected_goals.append("into(room)")
+    else:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument fixture drift"
+        )
+    expected_modifiers.append("with(camera)")
+    expected_constants.append("with_camera")
+    expected_roles.append("Instrument")
+    expected_inner_translation = (
+        f"laugh({len(expected_modifiers)})"
+        f"({', '.join(expected_modifiers)}, mary)"
+    )
+    expected_translation = (
+        f"at_T(yesterday, {expected_inner_translation})"
+        if is_timed
+        else expected_inner_translation
+    )
+    expected_scope = (
+        "explicit_agent_with_manner_mixed_directional_instrument_adv_sequence_at_time"
+        if is_timed
+        else "explicit_agent_with_manner_mixed_directional_instrument_adv_sequence"
+    )
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "manner_mixed_directional_instrument_intransitive_predication",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "manner_mixed_directional_instrument_intransitive_predication",
+        "registered_construction",
+        "construction_rule",
+        "manner_mixed_directional_instrument_intransitive_predication",
+    )
+    if payload.get("kind") != "manner_mixed_directional_instrument_intransitive_predication":
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument kind drift"
+        )
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument translation drift"
+        )
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument exposes fallback draft"
+        )
+    ast = payload.get("ast")
+    application_ast = ast
+    if is_timed and isinstance(ast, dict):
+        if (
+            ast.get("kind") != "time"
+            or ast.get("operator") != "at"
+            or ast.get("arguments") != ["yesterday"]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit(
+                "web route smoke check failed: timed manner-mixed-directional-instrument AST drift"
+            )
+        application_ast = ast["body"]
+    role_frame = (
+        application_ast.get("role_frame", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_roles = (
+        application_ast.get("modifier_roles", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_vector = (
+        application_ast.get("modifier_vector", {}).get("items")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    if (
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "laugh"
+        or application_ast.get("arguments") != ["mary"]
+        or application_ast.get("modifiers") != expected_modifiers
+        or application_ast.get("adverb_count") != len(expected_modifiers)
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 1
+        or role_frame[0].get("role") != "Agent"
+        or role_frame[0].get("type") != "Entity"
+        or role_frame[0].get("source") != "explicit"
+        or not isinstance(modifier_roles, list)
+        or [role.get("type") for role in modifier_roles]
+        != ["Adv" for _ in expected_modifiers]
+        or [role.get("semantic_role") for role in modifier_roles] != expected_roles
+        or not isinstance(modifier_vector, list)
+        or [item.get("tail_length") for item in modifier_vector]
+        != list(range(len(expected_modifiers) - 1, -1, -1))
+    ):
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument AST drift"
+        )
+    event_semantics = payload.get("event_semantics")
+    typed_predication = (
+        event_semantics.get(
+            "manner_mixed_directional_instrument_intransitive_predication"
+        )
+        if isinstance(event_semantics, dict)
+        else None
+    )
+    expected_locations = [
+        modifier
+        for modifier, role in zip(expected_modifiers, expected_roles)
+        if role == "Location"
+    ]
+    expected_instruments = [
+        modifier
+        for modifier, role in zip(expected_modifiers, expected_roles)
+        if role == "Instrument"
+    ]
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis")
+        != "manner-mixed-directional-instrument-intransitive-predication"
+        or not isinstance(typed_predication, dict)
+        or typed_predication.get("predicate") != "laugh"
+        or typed_predication.get("agent") != "mary"
+        or typed_predication.get("agent_type") != "Entity"
+        or typed_predication.get("modifiers") != expected_modifiers
+        or typed_predication.get("modifier_role_pattern") != expected_roles
+        or typed_predication.get("location_modifiers") != expected_locations
+        or typed_predication.get("instrument_modifiers") != expected_instruments
+        or typed_predication.get("source_modifiers") != expected_sources
+        or typed_predication.get("goal_modifiers") != expected_goals
+        or typed_predication.get("directional_modifier_count") != 1
+        or typed_predication.get("directional_after_instrument_count") != 1
+        or typed_predication.get("directional_to_instrument_count") != 1
+    ):
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument analysis drift"
+        )
+    if is_timed:
+        if typed_predication.get("time_modifier") != {
+            "operator": "at",
+            "argument": "yesterday",
+        }:
+            raise SystemExit(
+                "web route smoke check failed: timed manner-mixed-directional-instrument time drift"
+            )
+    elif "time_modifier" in typed_predication:
+        raise SystemExit(
+            "web route smoke check failed: untimed manner-mixed-directional-instrument time drift"
+        )
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument hygiene drift"
+        )
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument reading count drift"
+        )
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": (
+                "manner_mixed_directional_instrument_intransitive_predication_single_reading"
+            ),
+            "scope": expected_scope,
+            "source": "manner_mixed_directional_instrument_intransitive_predication",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    modifier_seq = coq_modifier_sequence(expected_constants)
+    expected_definition = (
+        f"Definition example_1 : PropT := (at_T yesterday (laugh {len(expected_constants)} {modifier_seq} mary))."
+        if is_timed
+        else f"Definition example_1 : PropT := (laugh {len(expected_constants)} {modifier_seq} mary)."
+    )
+    if not isinstance(coq_code, str) or expected_definition not in coq_code:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument Coq definition drift"
+        )
+    for constant in expected_constants:
+        if f"Parameter {constant} : Adv." not in coq_code:
+            raise SystemExit(
+                "web route smoke check failed: manner-mixed-directional-instrument Adv declaration drift"
+            )
+        if f"Parameter {constant} : Entity." in coq_code:
+            raise SystemExit(
+                "web route smoke check failed: manner-mixed-directional-instrument Entity surrogate drift"
+            )
+    if (
+        "Parameter laugh : forall n : nat, ModifierSeq n -> Entity -> PropT."
+        not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument Coq drift"
+        )
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        (
+            "<dt>rule</dt><dd>"
+            "manner_mixed_directional_instrument_intransitive_predication</dd>"
+        ),
+        (
+            'data-reading-name="'
+            "manner_mixed_directional_instrument_intransitive_predication_single_reading"
+            '"'
+        ),
+        (
+            "<dt>source</dt><dd>"
+            "manner_mixed_directional_instrument_intransitive_predication</dd>"
+        ),
+        f"<dt>scope</dt><dd>{expected_scope}</dd>",
+        expected_translation,
+        (
+            "Translation succeeded via construction rule "
+            "manner_mixed_directional_instrument_intransitive_predication."
+        ),
+    ]
+    require_text_fragments(
+        page,
+        expected_page_fragments,
+        "manner-mixed-directional-instrument intransitive HTML",
+    )
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit(
+            "web route smoke check failed: manner-mixed-directional-instrument page input drift"
         )
 
 
@@ -7965,6 +8225,56 @@ def run_web_route_smoke_check() -> None:
             extended_mixed_location_instrument_page,
             extended_mixed_location_instrument_sentence,
         )
+        mixed_directional_source_sentence = (
+            "Mary laughed loudly in the park with a telescope from a window "
+            "with a camera yesterday"
+        )
+        mixed_directional_source_query = urlencode(
+            {
+                "sentence": mixed_directional_source_sentence,
+                "require_coq": "1",
+            }
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{mixed_directional_source_query}",
+            timeout=5,
+        ) as response:
+            mixed_directional_source_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{mixed_directional_source_query}",
+            timeout=5,
+        ) as response:
+            mixed_directional_source_page = response.read().decode("utf-8")
+        validate_analyze_manner_mixed_directional_instrument_intransitive_success(
+            mixed_directional_source_payload,
+            mixed_directional_source_page,
+            mixed_directional_source_sentence,
+        )
+        mixed_directional_goal_sentence = (
+            "Mary laughed loudly in the park with a telescope into a room "
+            "with a camera yesterday"
+        )
+        mixed_directional_goal_query = urlencode(
+            {
+                "sentence": mixed_directional_goal_sentence,
+                "require_coq": "1",
+            }
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{mixed_directional_goal_query}",
+            timeout=5,
+        ) as response:
+            mixed_directional_goal_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{mixed_directional_goal_query}",
+            timeout=5,
+        ) as response:
+            mixed_directional_goal_page = response.read().decode("utf-8")
+        validate_analyze_manner_mixed_directional_instrument_intransitive_success(
+            mixed_directional_goal_payload,
+            mixed_directional_goal_page,
+            mixed_directional_goal_sentence,
+        )
         locative_sentence = "a cat sits on a mat"
         locative_query = urlencode({"sentence": locative_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{locative_query}", timeout=5) as response:
@@ -8246,10 +8556,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = (
-            "Mary laughed loudly in the park with a telescope from a window "
-            "with a camera yesterday"
-        )
+        fallback_sentence = "Mary laughed loudly with a telescope yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

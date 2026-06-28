@@ -968,6 +968,12 @@ yesterday` under
 `Mary laughed loudly in the park with a telescope near a window beside a shelf
 with a camera yesterday` under
 `temporal_extended_manner_mixed_location_instrument_intransitive_predication`,
+`Mary laughed loudly in the park with a telescope from a window with a camera
+yesterday` under
+`temporal_manner_mixed_directional_instrument_intransitive_predication`, and
+`Mary laughed loudly in the park with a telescope into a room with a camera
+yesterday` under
+`temporal_goal_manner_mixed_directional_instrument_intransitive_predication`,
 `Mary admired the painting red yesterday` under `temporal_resultative_predication`,
 plus modifier-sequence
 variants such as
@@ -1411,11 +1417,19 @@ requiring
 `explicit_agent_with_manner_mixed_location_instrument_adv_sequence_at_time`
 scope, and typed Adv declarations for `loudly`, `in_park`, `with_telescope`,
 `near_window`, and `with_camera`. The ordinary fallback success contract is
-checked separately with
+now narrower: the live boundary also requests the registered mixed
+directional/Instrument route
 `/api/analyze?sentence=Mary+laughed+loudly+in+the+park+with+a+telescope+from+a+window+with+a+camera+yesterday&require_coq=1`,
+requiring
+`manner_mixed_directional_instrument_intransitive_predication_single_reading`,
+the
+`explicit_agent_with_manner_mixed_directional_instrument_adv_sequence_at_time`
+scope, and typed Adv declarations for `from_window` and `with_camera` rather
+than Entity surrogates. It then checks ordinary fallback separately with
+`/api/analyze?sentence=Mary+laughed+loudly+with+a+telescope+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed Source/Instrument five-modifier scaffold
-`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))`, and the
+typed Manner/Instrument two-modifier scaffold
+`at_T(yesterday, laugh(2)(loudly, with(telescope), mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
