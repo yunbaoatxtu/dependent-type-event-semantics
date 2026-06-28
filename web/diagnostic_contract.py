@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
+from typing import Iterable
 
 from translator.semantic_reading_contract import SEMANTIC_READING_CONTRACT_FIELDS
 
@@ -72,14 +74,39 @@ class JsonApiRouteValidationSpec:
         text_bypass_modes = tuple(mode.strip() for mode in self.text_bypass_modes)
         if not path.startswith("/api/"):
             raise ValueError(f"JSON route validation path must be an API route: {path!r}.")
+        if "?" in path:
+            raise ValueError(
+                f"JSON route validation path must not include a query: {path!r}."
+            )
         if not label:
             raise ValueError(f"JSON route validation path {path!r} needs a label.")
         if not expected_statuses:
             raise ValueError(f"JSON route validation path {path!r} needs statuses.")
+        if any(status < 100 or status > 599 for status in expected_statuses):
+            raise ValueError(
+                f"JSON route validation path {path!r} has invalid HTTP statuses."
+            )
+        if len(set(expected_statuses)) != len(expected_statuses):
+            raise ValueError(
+                f"JSON route validation path {path!r} has duplicate statuses."
+            )
         if not json_modes:
             raise ValueError(f"JSON route validation path {path!r} needs JSON modes.")
         if any(not mode for mode in json_modes + text_bypass_modes):
             raise ValueError(f"JSON route validation path {path!r} has an empty mode.")
+        if len(set(json_modes)) != len(json_modes):
+            raise ValueError(
+                f"JSON route validation path {path!r} has duplicate JSON modes."
+            )
+        if len(set(text_bypass_modes)) != len(text_bypass_modes):
+            raise ValueError(
+                f"JSON route validation path {path!r} has duplicate text bypass modes."
+            )
+        overlap = sorted(set(json_modes) & set(text_bypass_modes))
+        if overlap:
+            raise ValueError(
+                f"JSON route validation path {path!r} has mode overlap: {overlap!r}."
+            )
         object.__setattr__(self, "path", path)
         object.__setattr__(self, "label", label)
         object.__setattr__(self, "expected_statuses", expected_statuses)
@@ -97,74 +124,89 @@ class JsonApiRouteValidationSpec:
         }
 
 
-JSON_API_ROUTE_VALIDATION_SPECS = (
-    JsonApiRouteValidationSpec(
-        "/api/analyze",
-        "ordinary analyze",
-        (200,),
-        ("ordinary_success_or_failure_json",),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/analyze-action",
-        "ordinary analyze action",
-        (200, 400),
-        ("action_export_json", "action_download_json", "invalid_index_error_json"),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/analyze-action-run",
-        "ordinary analyze inspection run",
-        (200, 400),
-        ("inspection_json", "inspection_download_json", "human_review_error_json"),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/construction-rule-draft",
-        "construction rule draft",
-        (200, 400),
-        ("draft_json", "draft_download_json", "no_draft_error_json"),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/diagnostic-contract",
-        "diagnostic contract",
-        (200,),
-        ("manifest_json",),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/certified-fragment",
-        "certified fragment",
-        (200,),
-        ("manifest_json",),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/diagnostic-fixtures",
-        "diagnostic fixtures manifest",
-        (200,),
-        ("manifest_json",),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/diagnostic-fixture",
-        "diagnostic fixture",
-        (200,),
-        ("fixture_json",),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/recovery-action",
-        "diagnostic recovery action",
-        (200, 400),
-        ("action_export_json", "action_download_json", "bad_request_json"),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/recovery-action-run",
-        "diagnostic recovery action run",
-        (200, 400),
-        ("inspection_json", "inspection_download_json", "human_review_error_json"),
-    ),
-    JsonApiRouteValidationSpec(
-        "/api/lexicon-patch-drafts",
-        "lexicon patch bundle",
-        (200, 400),
-        ("bundle_json", "unsupported_format_error_json"),
-        ("format=patch",),
-    ),
+def validate_json_api_route_validation_specs(
+    specs: Iterable[JsonApiRouteValidationSpec],
+) -> tuple[JsonApiRouteValidationSpec, ...]:
+    normalized = tuple(specs)
+    if not normalized:
+        raise ValueError("JSON route validation specs require at least one route.")
+    paths = [spec.path for spec in normalized]
+    duplicates = sorted(path for path, count in Counter(paths).items() if count > 1)
+    if duplicates:
+        raise ValueError(f"Duplicate JSON route validation paths: {duplicates!r}.")
+    return normalized
+
+
+JSON_API_ROUTE_VALIDATION_SPECS = validate_json_api_route_validation_specs(
+    (
+        JsonApiRouteValidationSpec(
+            "/api/analyze",
+            "ordinary analyze",
+            (200,),
+            ("ordinary_success_or_failure_json",),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/analyze-action",
+            "ordinary analyze action",
+            (200, 400),
+            ("action_export_json", "action_download_json", "invalid_index_error_json"),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/analyze-action-run",
+            "ordinary analyze inspection run",
+            (200, 400),
+            ("inspection_json", "inspection_download_json", "human_review_error_json"),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/construction-rule-draft",
+            "construction rule draft",
+            (200, 400),
+            ("draft_json", "draft_download_json", "no_draft_error_json"),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/diagnostic-contract",
+            "diagnostic contract",
+            (200,),
+            ("manifest_json",),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/certified-fragment",
+            "certified fragment",
+            (200,),
+            ("manifest_json",),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/diagnostic-fixtures",
+            "diagnostic fixtures manifest",
+            (200,),
+            ("manifest_json",),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/diagnostic-fixture",
+            "diagnostic fixture",
+            (200,),
+            ("fixture_json",),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/recovery-action",
+            "diagnostic recovery action",
+            (200, 400),
+            ("action_export_json", "action_download_json", "bad_request_json"),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/recovery-action-run",
+            "diagnostic recovery action run",
+            (200, 400),
+            ("inspection_json", "inspection_download_json", "human_review_error_json"),
+        ),
+        JsonApiRouteValidationSpec(
+            "/api/lexicon-patch-drafts",
+            "lexicon patch bundle",
+            (200, 400),
+            ("bundle_json", "unsupported_format_error_json"),
+            ("format=patch",),
+        ),
+    )
 )
 
 

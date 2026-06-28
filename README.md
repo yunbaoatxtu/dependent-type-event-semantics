@@ -1427,6 +1427,9 @@ That manifest also nests a `json_api_route_validation.v1` object that lists the
 live JSON API routes guarded by `JsonApiRouteValidatingOpener`, including each
 route's expected statuses, JSON response modes, and any text-artifact bypass
 such as `format=patch`.
+Each route entry is a validated `JsonApiRouteValidationSpec`: duplicate paths,
+duplicate statuses or modes, query-bearing paths, and invalid HTTP statuses are
+rejected before the manifest can be served.
 The verifier rejects schema drift, failure-stage drift, required-fixture-stage
 drift, recovery-action drift, semantic-reading field drift, JSON route
 validation drift, and stale selector

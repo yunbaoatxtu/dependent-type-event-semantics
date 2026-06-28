@@ -73,9 +73,11 @@ from web.diagnostic_contract import (
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     JSON_API_ROUTE_VALIDATION_SCHEMA,
     JSON_API_ROUTE_VALIDATION_SPECS,
+    JsonApiRouteValidationSpec,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     SEMANTIC_READING_CONTRACT_FIELDS,
     json_api_route_validation_manifest,
+    validate_json_api_route_validation_specs,
 )
 from translator.dependent_type_event_translator import (
     INCOMPATIBLE_STATE_PAIRS,
@@ -19681,6 +19683,60 @@ class TranslatorTests(unittest.TestCase):
             contract["inspection_only_recovery_action_kinds"],
         )
 
+    def test_json_api_route_validation_spec_rejects_invalid_values(self) -> None:
+        base = {
+            "path": "/api/example",
+            "label": "example",
+            "expected_statuses": (200,),
+            "json_modes": ("example_json",),
+        }
+        cases = [
+            ({**base, "path": "/example"}, "must be an API route"),
+            ({**base, "path": "/api/example?download=1"}, "must not include a query"),
+            ({**base, "label": " "}, "needs a label"),
+            ({**base, "expected_statuses": ()}, "needs statuses"),
+            ({**base, "expected_statuses": (99,)}, "invalid HTTP statuses"),
+            ({**base, "expected_statuses": (200, 200)}, "duplicate statuses"),
+            ({**base, "json_modes": ()}, "needs JSON modes"),
+            ({**base, "json_modes": ("example_json", "")}, "empty mode"),
+            (
+                {**base, "json_modes": ("example_json", "example_json")},
+                "duplicate JSON modes",
+            ),
+            (
+                {
+                    **base,
+                    "text_bypass_modes": ("format=patch", "format=patch"),
+                },
+                "duplicate text bypass modes",
+            ),
+            (
+                {
+                    **base,
+                    "json_modes": ("format=patch",),
+                    "text_bypass_modes": ("format=patch",),
+                },
+                "mode overlap",
+            ),
+        ]
+        for kwargs, message in cases:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(ValueError, message):
+                    JsonApiRouteValidationSpec(**kwargs)
+
+    def test_json_api_route_validation_specs_reject_duplicate_paths(self) -> None:
+        spec = JsonApiRouteValidationSpec(
+            "/api/example",
+            "example",
+            (200,),
+            ("example_json",),
+        )
+        with self.assertRaisesRegex(ValueError, "at least one route"):
+            validate_json_api_route_validation_specs(())
+        with self.assertRaisesRegex(ValueError, "Duplicate JSON route validation paths"):
+            validate_json_api_route_validation_specs((spec, spec))
+        self.assertEqual(validate_json_api_route_validation_specs((spec,)), (spec,))
+
     def test_verification_rejects_diagnostic_contract_manifest_drift(self) -> None:
         contract = diagnostic_contract_manifest()
         bad_schema = deepcopy(contract)
@@ -20809,6 +20865,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic_contract.v1` manifest", readme)
         self.assertIn("`required_fixture_stages`", readme)
         self.assertIn("`semantic_reading_fields`", readme)
+        self.assertIn("validated `JsonApiRouteValidationSpec`", readme)
+        self.assertIn("duplicate statuses or modes", readme)
+        self.assertIn("query-bearing paths", readme)
         self.assertIn("semantic-reading field drift", readme)
         self.assertIn("`reading_explanation` is rendered as the row's `interpretation`", readme)
         self.assertIn("The core `check_semantic_readings` boundary", readme)
@@ -21192,6 +21251,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`diagnostic_contract.v1` manifest", web_design)
         self.assertIn("`required_fixture_stages`", web_design)
         self.assertIn("`semantic_reading_fields`", web_design)
+        self.assertIn("validated `JsonApiRouteValidationSpec`", web_design)
+        self.assertIn("invalid\nHTTP statuses", web_design)
         self.assertIn("semantic-reading field", web_design)
         self.assertIn("JSON\n`reading_explanation` text appears", web_design)
         self.assertIn("The core analyzer boundary", web_design)
@@ -21410,6 +21471,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("diagnostic_contract.v1 manifest", manuscript)
         self.assertIn("required_fixture_stages", manuscript)
         self.assertIn("semantic_reading_fields", manuscript)
+        self.assertIn("validated JsonApiRouteValidationSpec records", manuscript)
+        self.assertIn("query-bearing paths", manuscript)
         self.assertIn("semantic-reading-field drift", manuscript)
         self.assertIn("reading_explanation is rendered", manuscript)
         self.assertIn("The core check_semantic_readings boundary", manuscript)
