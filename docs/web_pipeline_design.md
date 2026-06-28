@@ -190,6 +190,9 @@ and `stacked_instrument_manner_location_instrument_intransitive_predication`,
 `temporal_source_instrument_location_manner_directional_instrument_location_manner_intransitive_predication`,
 `temporal_goal_instrument_location_manner_directional_instrument_location_manner_intransitive_predication`, and
 `temporal_source_goal_instrument_location_manner_directional_instrument_location_manner_intransitive_predication`,
+`temporal_source_instrument_two_location_manner_directional_instrument_two_location_manner_intransitive_predication`,
+`temporal_goal_instrument_two_location_manner_directional_instrument_two_location_manner_intransitive_predication`, and
+`temporal_source_goal_instrument_two_location_manner_directional_instrument_two_location_manner_intransitive_predication`,
 `temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
@@ -810,10 +813,16 @@ now covers `Mary laughed from a window with a camera beside a shelf loudly
 yesterday`, the corresponding Goal witness, and the
 Source+Goal+Instrument+Location+Manner sequence under
 `directional_instrument_location_manner_intransitive_predication`, again with
-all modifiers declared as `Adv`. The ordinary fallback success contract is instead
-exercised with `Mary laughed from a window with a camera beside a shelf loudly under a lamp yesterday`,
-a shallow Source+Instrument+Location+Manner+Location mixed modifier scaffold
-`at_T(yesterday, laugh(5)(from(window), with(camera), beside(shelf), loudly, under(lamp), mary))`
+all modifiers declared as `Adv`. The Directional+Instrument+two-Location+Manner
+route now covers `Mary laughed from a window with a camera beside a shelf loudly
+under a lamp yesterday`, the corresponding Goal witness, and the
+Source+Goal+Instrument+Location+Manner+Location sequence under
+`directional_instrument_two_location_manner_intransitive_predication`, again
+with `under_lamp` declared as `Adv` rather than an Entity surrogate. The
+ordinary fallback success contract is instead
+exercised with `Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table yesterday`,
+a shallow Source+Instrument+Location+Manner+Location+Location mixed modifier scaffold
+`at_T(yesterday, laugh(6)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), mary))`
 with `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -1066,9 +1075,9 @@ fallback example is deliberately narrower because the Instrument-only,
 Source/Goal-only, Source/Goal+Instrument, Source/Goal+Instrument+Location, and
 Source/Goal+Instrument+Location+Manner slices, plus the Manner/Instrument
 slices, are now registered:
-`Mary laughed from a window with a camera beside a shelf loudly under a lamp yesterday`
-remains a shallow Source+Instrument+Location+Manner+Location mixed modifier scaffold,
-`at_T(yesterday, laugh(5)(from(window), with(camera), beside(shelf), loudly, under(lamp), mary))`,
+`Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table yesterday`
+remains a shallow Source+Instrument+Location+Manner+Location+Location mixed modifier scaffold,
+`at_T(yesterday, laugh(6)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), mary))`,
 with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles

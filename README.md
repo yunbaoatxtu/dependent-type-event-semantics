@@ -1001,6 +1001,15 @@ under
 `Mary laughed from a window into a room with a camera beside a shelf loudly
 yesterday` under
 `temporal_source_goal_instrument_location_manner_directional_instrument_location_manner_intransitive_predication`,
+`Mary laughed from a window with a camera beside a shelf loudly under a lamp
+yesterday` under
+`temporal_source_instrument_two_location_manner_directional_instrument_two_location_manner_intransitive_predication`,
+`Mary laughed into a room with a camera beside a shelf loudly under a lamp
+yesterday` under
+`temporal_goal_instrument_two_location_manner_directional_instrument_two_location_manner_intransitive_predication`, and
+`Mary laughed from a window into a room with a camera beside a shelf loudly
+under a lamp yesterday` under
+`temporal_source_goal_instrument_two_location_manner_directional_instrument_two_location_manner_intransitive_predication`,
 `Mary admired the painting red yesterday` under `temporal_resultative_predication`,
 plus modifier-sequence
 variants such as
@@ -1470,15 +1479,25 @@ requiring `directional_intransitive_predication_single_reading`, the
 `explicit_agent_with_directional_adv_sequence_at_time` scope,
 `at_T(yesterday, laugh(1)(from(window), mary))`, and `from_window : Adv`
 rather than an Entity surrogate; the same rule also checks a Goal witness with
-`into(room)` and a Source+Goal sequence. It also requests the timed locative route
+`into(room)` and a Source+Goal sequence.
+It also requests the registered Source/Goal+Instrument+two-Location+Manner
+route
+`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+yesterday&require_coq=1`,
+requiring
+`directional_instrument_two_location_manner_intransitive_predication_single_reading`,
+the
+`explicit_agent_with_directional_instrument_two_location_and_manner_adv_sequence_at_time`
+scope, typed Adv declarations for `from_window`, `with_camera`, `beside_shelf`,
+`loudly`, and `under_lamp`, and no Entity surrogate for any of those modifiers.
+It also requests the timed locative route
 `/api/analyze?sentence=Mary+laughed+near+a+window+yesterday&require_coq=1`,
 requiring `locative_intransitive_predication_single_reading`,
 `at_T(yesterday, laugh(1)(near(window), mary))`, and `near_window : Adv`
 rather than an Entity surrogate. It then checks ordinary fallback separately with
-`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed Source+Instrument+Location+Manner+Location mixed modifier scaffold
-`at_T(yesterday, laugh(5)(from(window), with(camera), beside(shelf), loudly, under(lamp), mary))`, and the
+typed Source+Instrument+Location+Manner+Location+Location mixed modifier scaffold
+`at_T(yesterday, laugh(6)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
