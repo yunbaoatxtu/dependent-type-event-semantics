@@ -161,6 +161,7 @@ for registered variants, `data-coverage-variant-id`; for rejection rows it also
 uses `data-coverage-marker`. Current registered variants include
 `temporal_event_counting`, `temporal_plain_intransitive_predication`,
 `temporal_manner_intransitive_predication`,
+`temporal_instrument_intransitive_predication`,
 `temporal_manner_instrument_intransitive_predication`,
 `temporal_manner_locative_intransitive_predication`,
 `temporal_manner_two_location_intransitive_predication`,
@@ -771,13 +772,18 @@ pattern `Manner, Instrument`, exports
 `at_T(yesterday, laugh(2)(loudly, with(telescope), mary))`, and declares both
 `loudly` and `with_telescope` as `Adv`. The semantic-reading row is
 `manner_instrument_intransitive_predication_single_reading`.
+The smaller Instrument-only route `Mary laughed with a telescope yesterday` is
+now registered under `instrument_intransitive_predication`: it preserves the
+surface role pattern `Instrument`, exports
+`at_T(yesterday, laugh(1)(with(telescope), mary))`, declares `with_telescope`
+as `Adv`, and surfaces `instrument_intransitive_predication_single_reading`.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
-success contract is instead exercised with `Mary laughed with a telescope
-yesterday`, a shallow Instrument-only modifier scaffold
-`at_T(yesterday, laugh(1)(with(telescope), mary))` with
+success contract is instead exercised with `Mary laughed near a window
+yesterday`, a shallow Location-only modifier scaffold
+`at_T(yesterday, laugh(1)(near(window), mary))` with
 `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -1026,11 +1032,11 @@ yesterday` exports
 `at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))`
 under `manner_mixed_directional_instrument_intransitive_predication`, and its
 Goal witness uses `into(room)` in the same typed Adv position. The remaining
-fallback example is deliberately narrower because the Manner/Instrument slice is
-now registered:
-`Mary laughed with a telescope yesterday` remains a shallow Instrument-only
+fallback example is deliberately narrower because the Instrument-only and
+Manner/Instrument slices are now registered:
+`Mary laughed near a window yesterday` remains a shallow Location-only
 modifier scaffold,
-`at_T(yesterday, laugh(1)(with(telescope), mary))`, with a
+`at_T(yesterday, laugh(1)(near(window), mary))`, with a
 construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
