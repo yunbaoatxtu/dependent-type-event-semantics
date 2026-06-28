@@ -957,7 +957,11 @@ manifest with the `Certified Fragment` panel. This keeps the project-level
 coverage boundary synchronized with the registered construction registry.
 It should also validate `coverage_matrix_counts` against the actual matrix
 lists and compare the page's coverage-count attributes and example hooks with
-the JSON manifest.
+the JSON manifest. The page-level smoke check should derive every registered-primary
+row, registered-variant row, fallback row, and rejected row from the
+manifest lists, including each row's scope, certification level, and boundary
+status. The row-level `data-coverage-boundary` hook gives tests a stable
+boundary-status marker.
 It should likewise validate `semantic_snapshot_count`, the page's
 `data-semantic-snapshot-*` hooks, and the live pipeline output for every
 snapshot so analysis labels, reading names, Coq/Rocq definitions, and

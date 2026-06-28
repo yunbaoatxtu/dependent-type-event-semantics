@@ -15071,6 +15071,13 @@ class TranslatorTests(unittest.TestCase):
         surface_probe_rows = surface_slot_probes["probes"]
         surface_matrix_rows = surface_slot_probes["matrix_examples"]
         semantic_snapshots = manifest["semantic_snapshots"]
+        coverage_matrix = manifest["coverage_matrix"]
+        registered_coverage_rows = coverage_matrix["registered_success_cases"]
+        registered_variant_coverage_rows = coverage_matrix[
+            "registered_variant_success_cases"
+        ]
+        fallback_coverage_rows = coverage_matrix["fallback_success_cases"]
+        rejected_coverage_rows = coverage_matrix["rejected_unsupported_cases"]
 
         def surface_example_attrs(example: dict[str, object]) -> list[str]:
             fragments = example.get("expected_dependent_type_fragments")
@@ -15219,6 +15226,28 @@ class TranslatorTests(unittest.TestCase):
                 ),
             ]
 
+        def coverage_attrs(kind: str, row: dict[str, object]) -> list[str]:
+            attrs = [
+                data_attr("data-coverage-kind", kind),
+                data_attr("data-coverage-sentence", row["sentence"]),
+                data_attr(
+                    "data-coverage-scope",
+                    row["expected_verification_scope_kind"],
+                ),
+                data_attr(
+                    "data-coverage-level",
+                    row["expected_certification_level"],
+                ),
+                data_attr("data-coverage-boundary", row["boundary_status"]),
+            ]
+            if "rule_id" in row:
+                attrs.append(data_attr("data-coverage-rule-id", row["rule_id"]))
+            if "variant_id" in row:
+                attrs.append(data_attr("data-coverage-variant-id", row["variant_id"]))
+            if "marker" in row:
+                attrs.append(data_attr("data-coverage-marker", row["marker"]))
+            return attrs
+
         for example in surface_examples:
             for expected_attr in surface_example_attrs(example):
                 self.assertIn(expected_attr, page)
@@ -15230,6 +15259,18 @@ class TranslatorTests(unittest.TestCase):
                 self.assertIn(expected_attr, page)
         for snapshot in semantic_snapshots:
             for expected_attr in semantic_snapshot_attrs(snapshot):
+                self.assertIn(expected_attr, page)
+        for row in registered_coverage_rows:
+            for expected_attr in coverage_attrs("registered_success", row):
+                self.assertIn(expected_attr, page)
+        for row in registered_variant_coverage_rows:
+            for expected_attr in coverage_attrs("registered_variant_success", row):
+                self.assertIn(expected_attr, page)
+        for row in fallback_coverage_rows:
+            for expected_attr in coverage_attrs("fallback_success", row):
+                self.assertIn(expected_attr, page)
+        for row in rejected_coverage_rows:
+            for expected_attr in coverage_attrs("rejected_unsupported", row):
                 self.assertIn(expected_attr, page)
         stale_surface_example_attr = data_attr(
             "data-surface-example-variant-id",
@@ -15314,6 +15355,58 @@ class TranslatorTests(unittest.TestCase):
                 ),
                 manifest,
             )
+        stale_registered_coverage_attr = data_attr(
+            "data-coverage-rule-id",
+            registered_coverage_rows[0]["rule_id"],
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_registered_coverage_attr,
+                    data_attr("data-coverage-rule-id", "stale_rule"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_variant_coverage_attr = data_attr(
+            "data-coverage-variant-id",
+            registered_variant_coverage_rows[0]["variant_id"],
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_variant_coverage_attr,
+                    data_attr("data-coverage-variant-id", "stale_variant"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_fallback_coverage_attr = data_attr(
+            "data-coverage-sentence",
+            fallback_coverage_rows[0]["sentence"],
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_fallback_coverage_attr,
+                    data_attr("data-coverage-sentence", "stale fallback"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_rejected_coverage_attr = data_attr(
+            "data-coverage-marker",
+            rejected_coverage_rows[0]["marker"],
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_rejected_coverage_attr,
+                    data_attr("data-coverage-marker", "stale_marker"),
+                    1,
+                ),
+                manifest,
+            )
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)
@@ -15331,135 +15424,6 @@ class TranslatorTests(unittest.TestCase):
             'data-semantic-snapshot-coq-definitions="some_boy_wide_scope,some_girl_wide_scope"',
             page,
         )
-        self.assertIn('data-coverage-kind="registered_variant_success"', page)
-        self.assertIn('data-coverage-rule-id="event_counting"', page)
-        self.assertIn('data-coverage-variant-id="temporal_event_counting"', page)
-        self.assertIn('data-coverage-sentence="John knocked twice yesterday"', page)
-        self.assertIn('data-coverage-rule-id="resultative_predication"', page)
-        self.assertIn(
-            'data-coverage-variant-id="temporal_resultative_predication"',
-            page,
-        )
-        self.assertIn(
-            'data-coverage-sentence="Mary admired the painting red yesterday"',
-            page,
-        )
-        self.assertIn('data-coverage-rule-id="plain_transitive_predication"', page)
-        self.assertIn(
-            'data-coverage-variant-id="temporal_plain_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            'data-coverage-sentence="Mary admired the painting yesterday"',
-            page,
-        )
-        self.assertIn('data-coverage-rule-id="modified_transitive_predication"', page)
-        self.assertIn(
-            'data-coverage-variant-id="temporal_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            'data-coverage-sentence="Mary admired the painting in the gallery yesterday"',
-            page,
-        )
-        self.assertIn(
-            'data-coverage-variant-id="multi_adv_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            'data-coverage-sentence="Mary admired the painting in the gallery with a telescope"',
-            page,
-        )
-        self.assertIn(
-            'data-coverage-variant-id="temporal_multi_adv_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope yesterday"'
-            ),
-            page,
-        )
-        self.assertIn(
-            'data-coverage-variant-id="triple_adv_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope near a window"'
-            ),
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-variant-id="'
-                'temporal_triple_adv_modified_transitive_predication"'
-            ),
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope near a window yesterday"'
-            ),
-            page,
-        )
-        self.assertIn(
-            'data-coverage-variant-id="quad_adv_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope near a window beside a shelf"'
-            ),
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-variant-id="'
-                'temporal_quad_adv_modified_transitive_predication"'
-            ),
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope near a window beside a shelf yesterday"'
-            ),
-            page,
-        )
-        self.assertIn(
-            'data-coverage-variant-id="quint_adv_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope near a window beside a shelf under a lamp"'
-            ),
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-variant-id="'
-                'temporal_quint_adv_modified_transitive_predication"'
-            ),
-            page,
-        )
-        self.assertIn(
-            (
-                'data-coverage-sentence="Mary admired the painting in the gallery '
-                'with a telescope near a window beside a shelf under a lamp yesterday"'
-            ),
-            page,
-        )
-        self.assertIn('data-coverage-kind="fallback_success"', page)
-        self.assertIn('data-coverage-kind="rejected_unsupported"', page)
-        self.assertIn('data-coverage-marker="because"', page)
-        self.assertIn('data-coverage-marker="who"', page)
         self.assertIn("A successful fallback analysis is intentionally weaker", page)
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
@@ -20518,6 +20482,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("expected_ast_summary", manuscript)
         self.assertIn("row-level HTML data attributes", manuscript)
         self.assertIn("translation-fragment count", manuscript)
+        self.assertIn("every coverage_matrix row", manuscript)
+        self.assertIn("boundary status", manuscript)
         self.assertIn("parser-level drift", manuscript)
         self.assertIn("semantic drift", manuscript)
         self.assertIn("Certified Fragment panel", manuscript)
@@ -21357,6 +21323,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("translation-fragment count", readme)
         self.assertIn("derived `data-semantic-snapshot-*` row hooks", readme)
+        self.assertIn("registered-primary", readme)
+        self.assertIn("rejected row", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -21836,6 +21804,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-semantic-snapshot-ast-kind`", web_design)
         self.assertIn("translation-fragment count", web_design)
         self.assertIn("every manifest snapshot row", web_design)
+        self.assertIn("registered-primary", web_design)
+        self.assertIn("boundary-status", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)

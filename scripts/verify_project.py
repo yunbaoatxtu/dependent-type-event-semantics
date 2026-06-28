@@ -11798,21 +11798,94 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     )
     coverage = manifest.get("coverage_matrix", {})
     if isinstance(coverage, dict):
-        expected_fragments.extend(
-            f'data-coverage-variant-id="{html.escape(str(item.get("variant_id", "")), quote=True)}"'
-            for item in coverage.get("registered_variant_success_cases", [])
-            if isinstance(item, dict)
-        )
-        expected_fragments.extend(
-            f'data-coverage-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}"'
-            for item in coverage.get("registered_variant_success_cases", [])
-            if isinstance(item, dict)
-        )
-        expected_fragments.extend(
-            f'data-coverage-marker="{html.escape(str(item.get("marker", "")), quote=True)}"'
-            for item in coverage.get("rejected_unsupported_cases", [])
-            if isinstance(item, dict)
-        )
+        for item in coverage.get("registered_success_cases", []):
+            if not isinstance(item, dict):
+                continue
+            expected_fragments.extend(
+                [
+                    data_fragment("data-coverage-kind", "registered_success"),
+                    data_fragment("data-coverage-rule-id", item.get("rule_id", "")),
+                    data_fragment("data-coverage-sentence", item.get("sentence", "")),
+                    data_fragment(
+                        "data-coverage-scope",
+                        item.get("expected_verification_scope_kind", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-level",
+                        item.get("expected_certification_level", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-boundary",
+                        item.get("boundary_status", ""),
+                    ),
+                ],
+            )
+        for item in coverage.get("registered_variant_success_cases", []):
+            if not isinstance(item, dict):
+                continue
+            expected_fragments.extend(
+                [
+                    data_fragment("data-coverage-kind", "registered_variant_success"),
+                    data_fragment("data-coverage-rule-id", item.get("rule_id", "")),
+                    data_fragment("data-coverage-variant-id", item.get("variant_id", "")),
+                    data_fragment("data-coverage-sentence", item.get("sentence", "")),
+                    data_fragment(
+                        "data-coverage-scope",
+                        item.get("expected_verification_scope_kind", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-level",
+                        item.get("expected_certification_level", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-boundary",
+                        item.get("boundary_status", ""),
+                    ),
+                ],
+            )
+        for item in coverage.get("fallback_success_cases", []):
+            if not isinstance(item, dict):
+                continue
+            expected_fragments.extend(
+                [
+                    data_fragment("data-coverage-kind", "fallback_success"),
+                    data_fragment("data-coverage-sentence", item.get("sentence", "")),
+                    data_fragment(
+                        "data-coverage-scope",
+                        item.get("expected_verification_scope_kind", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-level",
+                        item.get("expected_certification_level", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-boundary",
+                        item.get("boundary_status", ""),
+                    ),
+                ],
+            )
+        for item in coverage.get("rejected_unsupported_cases", []):
+            if not isinstance(item, dict):
+                continue
+            expected_fragments.extend(
+                [
+                    data_fragment("data-coverage-kind", "rejected_unsupported"),
+                    data_fragment("data-coverage-marker", item.get("marker", "")),
+                    data_fragment("data-coverage-sentence", item.get("sentence", "")),
+                    data_fragment(
+                        "data-coverage-scope",
+                        item.get("expected_verification_scope_kind", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-level",
+                        item.get("expected_certification_level", ""),
+                    ),
+                    data_fragment(
+                        "data-coverage-boundary",
+                        item.get("boundary_status", ""),
+                    ),
+                ],
+            )
     snapshots = manifest.get("semantic_snapshots", [])
     if isinstance(snapshots, list):
         for item in snapshots:

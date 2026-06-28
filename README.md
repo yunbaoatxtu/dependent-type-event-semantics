@@ -1698,7 +1698,9 @@ It also checks the coverage-matrix counts and page hooks for registered,
 fallback, and rejected examples. Unit tests run the manifest's registered
 success cases, fallback success cases, and rejected unsupported cases against
 the actual pipeline, so the coverage matrix cannot become a prose-only
-inventory.
+inventory. The Certified Fragment page check now derives every registered-primary
+row, registered-variant row, fallback row, and rejected row from the
+manifest before accepting the coverage panel.
 The certified-fragment smoke check also validates `semantic_snapshot_count`,
 the per-rule snapshot hooks in HTML, and the live analyzer output against every
 snapshot's expected analysis, readings, Coq/Rocq definitions, and translation

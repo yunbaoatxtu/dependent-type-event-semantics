@@ -3538,17 +3538,33 @@ def certified_fragment_panel() -> str:
         if isinstance(marker, str)
     )
     fallback_items = ""
+    registered_coverage_items = ""
     registered_variant_items = ""
     fallback_gap_items = ""
     rejected_items = ""
     if isinstance(coverage, dict):
+        registered_coverage_items = "".join(
+            '<li '
+            f'data-coverage-kind="registered_success" '
+            f'data-coverage-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
+            f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
+            f'data-coverage-scope="{html.escape(str(item.get("expected_verification_scope_kind", "")), quote=True)}" '
+            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}" '
+            f'data-coverage-boundary="{html.escape(str(item.get("boundary_status", "")), quote=True)}">'
+            f"{html.escape(str(item.get('sentence', '')))}"
+            "</li>"
+            for item in coverage.get("registered_success_cases", [])
+            if isinstance(item, dict)
+        )
         registered_variant_items = "".join(
             '<li '
             f'data-coverage-kind="registered_variant_success" '
             f'data-coverage-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
             f'data-coverage-variant-id="{html.escape(str(item.get("variant_id", "")), quote=True)}" '
             f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
-            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}">'
+            f'data-coverage-scope="{html.escape(str(item.get("expected_verification_scope_kind", "")), quote=True)}" '
+            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}" '
+            f'data-coverage-boundary="{html.escape(str(item.get("boundary_status", "")), quote=True)}">'
             f"{html.escape(str(item.get('sentence', '')))}"
             "</li>"
             for item in coverage.get("registered_variant_success_cases", [])
@@ -3558,7 +3574,9 @@ def certified_fragment_panel() -> str:
             '<li '
             f'data-coverage-kind="fallback_success" '
             f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
-            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}">'
+            f'data-coverage-scope="{html.escape(str(item.get("expected_verification_scope_kind", "")), quote=True)}" '
+            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}" '
+            f'data-coverage-boundary="{html.escape(str(item.get("boundary_status", "")), quote=True)}">'
             f"{html.escape(str(item.get('sentence', '')))}"
             "</li>"
             for item in coverage.get("fallback_success_cases", [])
@@ -3568,7 +3586,10 @@ def certified_fragment_panel() -> str:
             '<li '
             f'data-coverage-kind="rejected_unsupported" '
             f'data-coverage-marker="{html.escape(str(item.get("marker", "")), quote=True)}" '
-            f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}">'
+            f'data-coverage-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
+            f'data-coverage-scope="{html.escape(str(item.get("expected_verification_scope_kind", "")), quote=True)}" '
+            f'data-coverage-level="{html.escape(str(item.get("expected_certification_level", "")), quote=True)}" '
+            f'data-coverage-boundary="{html.escape(str(item.get("boundary_status", "")), quote=True)}">'
             f"{html.escape(str(item.get('sentence', '')))}"
             "</li>"
             for item in coverage.get("rejected_unsupported_cases", [])
@@ -3731,6 +3752,8 @@ def certified_fragment_panel() -> str:
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
         '<div class="certified-fragment-rules"><strong>registered constructions</strong>'
         f"<ul>{rule_items}</ul></div>"
+        '<div class="certified-fragment-coverage"><strong>registered coverage</strong>'
+        f"<ul>{registered_coverage_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>registered variants</strong>'
         f"<ul>{registered_variant_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>fallback coverage</strong>'
