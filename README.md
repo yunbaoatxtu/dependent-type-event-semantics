@@ -962,6 +962,12 @@ the long timed two-Instrument variant under
 and `Mary laughed loudly in the park with a telescope with a camera with a
 microphone` under
 `stacked_instrument_manner_location_instrument_intransitive_predication`,
+`Mary laughed loudly in the park with a telescope near a window with a camera
+yesterday` under
+`temporal_manner_mixed_location_instrument_intransitive_predication`, and
+`Mary laughed loudly in the park with a telescope near a window beside a shelf
+with a camera yesterday` under
+`temporal_extended_manner_mixed_location_instrument_intransitive_predication`,
 `Mary admired the painting red yesterday` under `temporal_resultative_predication`,
 plus modifier-sequence
 variants such as
@@ -1397,12 +1403,19 @@ requests the registered locative route
 `/api/analyze?sentence=a+cat+sits+on+a+mat&require_coq=1`, requiring both
 surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
-Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
-contract is checked separately with
+Adv.` rather than `Parameter on_mat : Entity.`. The same live boundary now
+requests the registered mixed Location/Instrument intransitive route
 `/api/analyze?sentence=Mary+laughed+loudly+in+the+park+with+a+telescope+near+a+window+with+a+camera+yesterday&require_coq=1`,
+requiring
+`manner_mixed_location_instrument_intransitive_predication_single_reading`, the
+`explicit_agent_with_manner_mixed_location_instrument_adv_sequence_at_time`
+scope, and typed Adv declarations for `loudly`, `in_park`, `with_telescope`,
+`near_window`, and `with_camera`. The ordinary fallback success contract is
+checked separately with
+`/api/analyze?sentence=Mary+laughed+loudly+in+the+park+with+a+telescope+from+a+window+with+a+camera+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed interleaved five-modifier scaffold
-`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), near(window), with(camera), mary))`, and the
+typed Source/Instrument five-modifier scaffold
+`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the

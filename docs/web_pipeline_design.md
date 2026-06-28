@@ -174,6 +174,8 @@ uses `data-coverage-marker`. Current registered variants include
 `temporal_repeated_instrument_manner_location_instrument_intransitive_predication`,
 `temporal_extended_repeated_instrument_manner_location_instrument_intransitive_predication`,
 and `stacked_instrument_manner_location_instrument_intransitive_predication`,
+`temporal_manner_mixed_location_instrument_intransitive_predication`, and
+`temporal_extended_manner_mixed_location_instrument_intransitive_predication`,
 `temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
@@ -743,14 +745,22 @@ loudly in the park near a window beside a shelf under a lamp with a telescope
 with a camera yesterday` exports
 `at_T(yesterday, laugh(7)(loudly, in(park), near(window), beside(shelf), under(lamp), with(telescope), with(camera), mary))`
 and must declare both `with_telescope : Adv` and `with_camera : Adv`.
+The mixed Location/Instrument route `Mary laughed loudly in the park with a
+telescope near a window with a camera yesterday` is also registered, but under
+`manner_mixed_location_instrument_intransitive_predication`: it preserves the
+surface role pattern `Manner, Location, Instrument, Location, Instrument`,
+exports
+`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), near(window), with(camera), mary))`,
+and declares `with_telescope`, `near_window`, and `with_camera` as `Adv`
+rather than `Entity`.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
 success contract is instead exercised with `Mary laughed loudly in the park
-with a telescope near a window with a camera yesterday`,
-a shallow interleaved five-modifier scaffold
-`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), near(window), with(camera), mary))` with
+with a telescope from a window with a camera yesterday`,
+a shallow Source/Instrument five-modifier scaffold
+`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))` with
 `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -988,10 +998,15 @@ yesterday` exports
 It now also registers tail Instrument+ sequences: `Mary laughed loudly in the
 park with a telescope with a camera with a microphone` exports
 `laugh(5)(loudly, in(park), with(telescope), with(camera), with(microphone), mary)`.
-The remaining fallback example is deliberately outside that tail-Instrument
-shape: `Mary laughed loudly in the park with a telescope near a window with a
-camera yesterday` remains a shallow interleaved five-modifier scaffold,
-`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), near(window), with(camera), mary))`,
+The next reviewed slice then registers true Location/Instrument interleaving:
+`Mary laughed loudly in the park with a telescope near a window with a camera
+yesterday` exports
+`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), near(window), with(camera), mary))`
+under `manner_mixed_location_instrument_intransitive_predication`. The remaining
+fallback example is deliberately outside that Location/Instrument-only shape:
+`Mary laughed loudly in the park with a telescope from a window with a camera
+yesterday` remains a shallow Source/Instrument five-modifier scaffold,
+`at_T(yesterday, laugh(5)(loudly, in(park), with(telescope), from(window), with(camera), mary))`,
 with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
