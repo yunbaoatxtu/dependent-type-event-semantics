@@ -956,10 +956,12 @@ Adv constant, role label, and `surface_lexicon` source before accepting the
 manifest; the web panel mirrors the summary through
 `data-modifier-sequence-role-witness-*` hooks. A companion
 `semantic_role_witness_selection_contract` records that these witnesses are
-chosen as one live sentence per registered `Adv` role from
-`registered_primary_success_cases` and `registered_variant_success_cases`, lists
-the required witness fields, keeps `full_witness_generation: false`, and is
-mirrored through `data-modifier-sequence-role-witness-selection-*` hooks.
+derived as one live sentence per registered `Adv` role from
+`registered_primary_success_cases` and `registered_variant_success_cases`, using
+a deterministic candidate order that prefers lower modifier counts, primary
+cases, untimed cases, and stable lexical order. It lists the required witness
+fields, keeps `full_witness_generation: true`, and is mirrored through
+`data-modifier-sequence-role-witness-selection-*` hooks.
 The same manifest now includes a `coverage_matrix` with four audited slices:
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases

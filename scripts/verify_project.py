@@ -10481,10 +10481,10 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         ast_structure_summary,
         construction_rules,
         declared_application_modifier_counts,
+        derive_registered_modifier_role_witnesses,
         exported_prop_definition_names,
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
-        registered_modifier_role_witnesses,
         run_pipeline,
     )
 
@@ -10555,6 +10555,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "registered_modifier_role_minima_are_observed",
         "registered_modifier_roles_are_surface_lexicon_derived",
         "registered_modifier_roles_have_live_witnesses",
+        "registered_modifier_role_witnesses_are_coverage_derived",
     ]
     expected_modifier_role_inventory = [
         {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
@@ -10570,7 +10571,10 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     expected_modifier_role_witness_selection_contract = (
         registered_modifier_role_witness_selection_contract()
     )
-    expected_modifier_role_witnesses = registered_modifier_role_witnesses()
+    expected_modifier_role_witnesses = derive_registered_modifier_role_witnesses(
+        snapshots,
+        registered_variant_cases,
+    )
     if (
         not isinstance(modifier_contract, dict)
         or modifier_contract.get("schema_version")
@@ -10610,6 +10614,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             "semantic_role_witness_selection_contract_is_recomputed",
         )
         is not True
+        or live_validation.get("semantic_role_witnesses_are_coverage_derived") is not True
         or live_validation.get("semantic_role_witnesses_are_live_checked") is not True
     ):
         raise SystemExit(
@@ -11383,7 +11388,7 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-role-witnesses="Goal:into_room,Instrument:with_telescope,Location:on_mat,Manner:loudly,Source:from_window"',
         (
             'data-modifier-sequence-role-witness-selection-schema="'
-            'modifier_role_witness_selection_contract.v1"'
+            'modifier_role_witness_selection_contract.v2"'
         ),
         (
             'data-modifier-sequence-role-witness-selection-scope="'
@@ -11397,7 +11402,7 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             'data-modifier-sequence-role-witness-selection-sources="'
             'registered_primary_success_cases,registered_variant_success_cases"'
         ),
-        'data-modifier-sequence-role-witness-full-generation="false"',
+        'data-modifier-sequence-role-witness-full-generation="true"',
         'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
         'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
         'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',

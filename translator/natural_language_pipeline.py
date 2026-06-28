@@ -20383,50 +20383,6 @@ REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY = [
     {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
 ]
 
-REGISTERED_MODIFIER_SEMANTIC_ROLE_WITNESSES = [
-    {
-        "role": "Goal",
-        "type": "Adv",
-        "sentence": "Mary laughed into a room yesterday",
-        "modifier": "into(room)",
-        "normalized_modifier": "into_room",
-        "source": "registered_variant_success_cases",
-    },
-    {
-        "role": "Instrument",
-        "type": "Adv",
-        "sentence": "Mary laughed with a telescope yesterday",
-        "modifier": "with(telescope)",
-        "normalized_modifier": "with_telescope",
-        "source": "registered_variant_success_cases",
-    },
-    {
-        "role": "Location",
-        "type": "Adv",
-        "sentence": "a cat sits on a mat",
-        "modifier": "on(mat)",
-        "normalized_modifier": "on_mat",
-        "source": "registered_primary_success_cases",
-    },
-    {
-        "role": "Manner",
-        "type": "Adv",
-        "sentence": "Mary laughed loudly yesterday",
-        "modifier": "loudly",
-        "normalized_modifier": "loudly",
-        "source": "registered_variant_success_cases",
-    },
-    {
-        "role": "Source",
-        "type": "Adv",
-        "sentence": "Mary laughed from a window yesterday",
-        "modifier": "from(window)",
-        "normalized_modifier": "from_window",
-        "source": "registered_variant_success_cases",
-    },
-]
-
-
 def registered_modifier_role_source_contract() -> dict[str, Any]:
     preposition_roles = sorted(set(MODIFIER_ROLE_BY_PREDICATE.values()))
     derived_roles = sorted({*preposition_roles, "Manner"})
@@ -20443,19 +20399,23 @@ def registered_modifier_role_source_contract() -> dict[str, Any]:
     }
 
 
-def registered_modifier_role_witnesses() -> list[dict[str, str]]:
-    return copy.deepcopy(REGISTERED_MODIFIER_SEMANTIC_ROLE_WITNESSES)
-
-
 def registered_modifier_role_witness_selection_contract() -> dict[str, Any]:
     return {
-        "schema_version": "modifier_role_witness_selection_contract.v1",
+        "schema_version": "modifier_role_witness_selection_contract.v2",
         "selection_scope": "registered_primary_and_variant_success_cases",
         "selection_unit": "one_live_sentence_per_registered_adv_role",
+        "generator": "derive_first_minimal_registered_occurrence_per_role",
         "role_inventory_source": "semantic_role_source_contract.derived_role_inventory",
         "sentence_sources": [
             "registered_primary_success_cases",
             "registered_variant_success_cases",
+        ],
+        "candidate_order": [
+            "minimum_modifier_count",
+            "primary_before_variant",
+            "untimed_before_timed",
+            "sentence_lexicographic",
+            "modifier_lexicographic",
         ],
         "required_witness_fields": [
             "role",
@@ -20473,8 +20433,104 @@ def registered_modifier_role_witness_selection_contract() -> dict[str, Any]:
             "normalized_modifier_matches_surface_lexicon",
             "surface_lexicon_source_matches_contract",
         ],
-        "full_witness_generation": False,
+        "full_witness_generation": True,
     }
+
+
+def split_top_level_arguments(arguments: str) -> list[str]:
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    for index, char in enumerate(arguments):
+        if char == "(":
+            depth += 1
+        elif char == ")" and depth:
+            depth -= 1
+        elif char == "," and depth == 0:
+            parts.append(arguments[start:index].strip())
+            start = index + 1
+    tail = arguments[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def application_modifier_arguments_from_fragment(fragment: str) -> list[str]:
+    modifiers: list[str] = []
+    for match in APPLICATION_MODIFIER_COUNT_PATTERN.finditer(fragment):
+        modifier_count = int(match.group(1))
+        start = match.end()
+        depth = 1
+        cursor = start
+        while cursor < len(fragment) and depth:
+            char = fragment[cursor]
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+            cursor += 1
+        if depth:
+            continue
+        arguments = split_top_level_arguments(fragment[start : cursor - 1])
+        modifiers.extend(arguments[:modifier_count])
+    return modifiers
+
+
+def derive_registered_modifier_role_witnesses(
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    candidates: dict[str, list[tuple[tuple[int, int, int, str, str], dict[str, str]]]] = {}
+    source_rank = {
+        "registered_primary_success_cases": 0,
+        "registered_variant_success_cases": 1,
+    }
+    coverage_items = [
+        ("registered_primary_success_cases", semantic_snapshots),
+        ("registered_variant_success_cases", registered_variant_success_cases),
+    ]
+    for source, items in coverage_items:
+        for item in items:
+            sentence = item.get("sentence")
+            fragments = item.get("expected_dependent_type_fragments")
+            if not isinstance(sentence, str) or not isinstance(fragments, list):
+                continue
+            sentence_is_timed = any(
+                token in sentence.lower().split()
+                for token in sorted(TEMPORAL_ADVERBS)
+            )
+            for fragment in fragments:
+                if not isinstance(fragment, str):
+                    continue
+                fragment_modifiers = application_modifier_arguments_from_fragment(fragment)
+                modifier_count = len(fragment_modifiers)
+                for modifier in fragment_modifiers:
+                    if not modifier:
+                        continue
+                    role = modifier_semantic_role(modifier)
+                    witness = {
+                        "role": role,
+                        "type": "Adv",
+                        "sentence": sentence,
+                        "modifier": modifier,
+                        "normalized_modifier": normalize_surface_name(modifier),
+                        "source": source,
+                    }
+                    score = (
+                        modifier_count,
+                        source_rank[source],
+                        int(sentence_is_timed),
+                        sentence.casefold(),
+                        modifier.casefold(),
+                    )
+                    candidates.setdefault(role, []).append((score, witness))
+    derived_roles = registered_modifier_role_source_contract()["derived_role_inventory"]
+    witnesses: list[dict[str, str]] = []
+    for role in derived_roles:
+        role_candidates = candidates.get(str(role), [])
+        if role_candidates:
+            witnesses.append(copy.deepcopy(min(role_candidates, key=lambda item: item[0])[1]))
+    return witnesses
 
 
 def declared_application_modifier_counts(
@@ -20674,11 +20730,17 @@ def registered_modifier_sequence_contract_payload(
             "registered_modifier_role_minima_are_observed",
             "registered_modifier_roles_are_surface_lexicon_derived",
             "registered_modifier_roles_have_live_witnesses",
+            "registered_modifier_role_witnesses_are_coverage_derived",
         ],
         "registered_semantic_role_inventory": copy.deepcopy(
             REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY,
         ),
-        "registered_semantic_role_witnesses": registered_modifier_role_witnesses(),
+        "registered_semantic_role_witnesses": (
+            derive_registered_modifier_role_witnesses(
+                semantic_snapshots,
+                registered_variant_success_cases,
+            )
+        ),
         "semantic_role_witness_selection_contract": (
             registered_modifier_role_witness_selection_contract()
         ),
@@ -20690,6 +20752,7 @@ def registered_modifier_sequence_contract_payload(
             "semantic_role_inventory_is_recomputed": True,
             "semantic_role_source_contract_is_recomputed": True,
             "semantic_role_witness_selection_contract_is_recomputed": True,
+            "semantic_role_witnesses_are_coverage_derived": True,
             "semantic_role_witnesses_are_live_checked": True,
         },
     }

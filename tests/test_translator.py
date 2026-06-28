@@ -13471,10 +13471,10 @@ class TranslatorTests(unittest.TestCase):
                 {
                     "role": "Instrument",
                     "type": "Adv",
-                    "sentence": "Mary laughed with a telescope yesterday",
+                    "sentence": "Mary laughed with a telescope",
                     "modifier": "with(telescope)",
                     "normalized_modifier": "with_telescope",
-                    "source": "registered_variant_success_cases",
+                    "source": "registered_primary_success_cases",
                 },
                 {
                     "role": "Location",
@@ -13487,33 +13487,41 @@ class TranslatorTests(unittest.TestCase):
                 {
                     "role": "Manner",
                     "type": "Adv",
-                    "sentence": "Mary laughed loudly yesterday",
+                    "sentence": "Mary laughed loudly",
                     "modifier": "loudly",
                     "normalized_modifier": "loudly",
-                    "source": "registered_variant_success_cases",
+                    "source": "registered_primary_success_cases",
                 },
                 {
                     "role": "Source",
                     "type": "Adv",
-                    "sentence": "Mary laughed from a window yesterday",
+                    "sentence": "Mary laughed from a window",
                     "modifier": "from(window)",
                     "normalized_modifier": "from_window",
-                    "source": "registered_variant_success_cases",
+                    "source": "registered_primary_success_cases",
                 },
             ],
         )
         self.assertEqual(
             modifier_contract["semantic_role_witness_selection_contract"],
             {
-                "schema_version": "modifier_role_witness_selection_contract.v1",
+                "schema_version": "modifier_role_witness_selection_contract.v2",
                 "selection_scope": "registered_primary_and_variant_success_cases",
                 "selection_unit": "one_live_sentence_per_registered_adv_role",
+                "generator": "derive_first_minimal_registered_occurrence_per_role",
                 "role_inventory_source": (
                     "semantic_role_source_contract.derived_role_inventory"
                 ),
                 "sentence_sources": [
                     "registered_primary_success_cases",
                     "registered_variant_success_cases",
+                ],
+                "candidate_order": [
+                    "minimum_modifier_count",
+                    "primary_before_variant",
+                    "untimed_before_timed",
+                    "sentence_lexicographic",
+                    "modifier_lexicographic",
                 ],
                 "required_witness_fields": [
                     "role",
@@ -13531,7 +13539,7 @@ class TranslatorTests(unittest.TestCase):
                     "normalized_modifier_matches_surface_lexicon",
                     "surface_lexicon_source_matches_contract",
                 ],
-                "full_witness_generation": False,
+                "full_witness_generation": True,
             },
         )
         self.assertEqual(
@@ -13572,6 +13580,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(
             modifier_contract["live_validation"][
                 "semantic_role_witness_selection_contract_is_recomputed"
+            ],
+        )
+        self.assertTrue(
+            modifier_contract["live_validation"][
+                "semantic_role_witnesses_are_coverage_derived"
             ],
         )
         self.assertTrue(
@@ -14739,7 +14752,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-selection-schema="modifier_role_witness_selection_contract.v1"',
+            'data-modifier-sequence-role-witness-selection-schema="modifier_role_witness_selection_contract.v2"',
             page,
         )
         self.assertIn(
@@ -14755,7 +14768,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-modifier-sequence-role-witness-full-generation="false"',
+            'data-modifier-sequence-role-witness-full-generation="true"',
             page,
         )
         self.assertIn(
@@ -20108,8 +20121,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("coverage_matrix", manuscript)
         self.assertIn("registered_success_cases", manuscript)
         self.assertIn("fallback_success_cases", manuscript)
-        self.assertIn("semantic_role_witness_selection_contract.v1", manuscript)
-        self.assertIn("full_witness_generation false", manuscript)
+        self.assertIn("semantic_role_witness_selection_contract.v2", manuscript)
+        self.assertIn("full_witness_generation true", manuscript)
         self.assertIn("rejected_unsupported_cases", manuscript)
         self.assertIn("semantic_snapshots", manuscript)
         self.assertIn("semantic_snapshot_count", manuscript)
