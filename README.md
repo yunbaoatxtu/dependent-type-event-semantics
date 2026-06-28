@@ -1423,14 +1423,23 @@ The same vocabulary is exposed to clients at `/api/diagnostic-contract` as a
 `diagnostic_contract.v1` manifest containing `failure_stages`,
 `required_fixture_stages`, `recovery_action_kinds`, and
 `semantic_reading_fields`.
+That manifest also nests a `json_api_route_validation.v1` object that lists the
+live JSON API routes guarded by `JsonApiRouteValidatingOpener`, including each
+route's expected statuses, JSON response modes, and any text-artifact bypass
+such as `format=patch`.
 The verifier rejects schema drift, failure-stage drift, required-fixture-stage
-drift, recovery-action drift, semantic-reading field drift, and stale selector
+drift, recovery-action drift, semantic-reading field drift, JSON route
+validation drift, and stale selector
 links to that contract endpoint.
 The ordinary HTML page now renders the same vocabulary in a `Diagnostic
 Contract` panel with `data-contract-schema`, `data-contract-api`,
 `data-contract-field`, `data-contract-count`, and `data-contract-token` hooks,
 so browser checks can read the controlled terms without scraping prose or
 fixture-selector options.
+The same panel exposes `data-json-route-validation-schema`,
+`data-json-route-validation-count`, and per-route `data-json-route-*` hooks, so
+browser automation can confirm the documented route validator table matches the
+JSON contract.
 The selector is rendered from the same manifest and carries
 `data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
 and per-option failure-stage and recovery-action metadata, so the visible
@@ -2215,7 +2224,10 @@ text-artifact validator. The local HTTP route must preserve `application/json`,
 UTF-8 charset, byte length, and handler-equivalent payloads for every ordinary
 sentence-analysis, action, diagnostic fixture, recovery, construction-draft,
 contract, certified-fragment, and lexicon-patch JSON request it opens. It
-also runs a web route smoke check that requests ordinary `/api/analyze` fallback and quantifier-scope successes plus a
+also compares the advertised `json_api_route_validation.v1` manifest with the
+actual route table passed to `JsonApiRouteValidatingOpener`, making stale smoke
+coverage visible as contract drift. It also runs a web route smoke check that
+requests ordinary `/api/analyze` fallback and quantifier-scope successes plus a
 registered perception-complement success plus registered timed-after and
 universal timed burning successes before the diagnostic fixture manifest through
 the local HTTP handler.

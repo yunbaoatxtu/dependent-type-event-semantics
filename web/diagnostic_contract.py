@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from translator.semantic_reading_contract import SEMANTIC_READING_CONTRACT_FIELDS
 
 
+JSON_API_ROUTE_VALIDATION_SCHEMA = "json_api_route_validation.v1"
 DIAGNOSTIC_FAILURE_STAGES = frozenset(
     {
         "input",
@@ -53,6 +54,129 @@ INSPECTION_ONLY_RECOVERY_ACTION_KINDS = frozenset(
         "inspect_readings",
     }
 )
+
+
+@dataclass(frozen=True)
+class JsonApiRouteValidationSpec:
+    path: str
+    label: str
+    expected_statuses: tuple[int, ...]
+    json_modes: tuple[str, ...]
+    text_bypass_modes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        path = self.path.strip()
+        label = self.label.strip()
+        expected_statuses = tuple(int(status) for status in self.expected_statuses)
+        json_modes = tuple(mode.strip() for mode in self.json_modes)
+        text_bypass_modes = tuple(mode.strip() for mode in self.text_bypass_modes)
+        if not path.startswith("/api/"):
+            raise ValueError(f"JSON route validation path must be an API route: {path!r}.")
+        if not label:
+            raise ValueError(f"JSON route validation path {path!r} needs a label.")
+        if not expected_statuses:
+            raise ValueError(f"JSON route validation path {path!r} needs statuses.")
+        if not json_modes:
+            raise ValueError(f"JSON route validation path {path!r} needs JSON modes.")
+        if any(not mode for mode in json_modes + text_bypass_modes):
+            raise ValueError(f"JSON route validation path {path!r} has an empty mode.")
+        object.__setattr__(self, "path", path)
+        object.__setattr__(self, "label", label)
+        object.__setattr__(self, "expected_statuses", expected_statuses)
+        object.__setattr__(self, "json_modes", json_modes)
+        object.__setattr__(self, "text_bypass_modes", text_bypass_modes)
+
+    def as_contract_entry(self) -> dict[str, object]:
+        return {
+            "path": self.path,
+            "label": self.label,
+            "validator": "JsonApiRouteValidatingOpener",
+            "expected_statuses": list(self.expected_statuses),
+            "json_modes": list(self.json_modes),
+            "text_bypass_modes": list(self.text_bypass_modes),
+        }
+
+
+JSON_API_ROUTE_VALIDATION_SPECS = (
+    JsonApiRouteValidationSpec(
+        "/api/analyze",
+        "ordinary analyze",
+        (200,),
+        ("ordinary_success_or_failure_json",),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/analyze-action",
+        "ordinary analyze action",
+        (200, 400),
+        ("action_export_json", "action_download_json", "invalid_index_error_json"),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/analyze-action-run",
+        "ordinary analyze inspection run",
+        (200, 400),
+        ("inspection_json", "inspection_download_json", "human_review_error_json"),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/construction-rule-draft",
+        "construction rule draft",
+        (200, 400),
+        ("draft_json", "draft_download_json", "no_draft_error_json"),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/diagnostic-contract",
+        "diagnostic contract",
+        (200,),
+        ("manifest_json",),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/certified-fragment",
+        "certified fragment",
+        (200,),
+        ("manifest_json",),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/diagnostic-fixtures",
+        "diagnostic fixtures manifest",
+        (200,),
+        ("manifest_json",),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/diagnostic-fixture",
+        "diagnostic fixture",
+        (200,),
+        ("fixture_json",),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/recovery-action",
+        "diagnostic recovery action",
+        (200, 400),
+        ("action_export_json", "action_download_json", "bad_request_json"),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/recovery-action-run",
+        "diagnostic recovery action run",
+        (200, 400),
+        ("inspection_json", "inspection_download_json", "human_review_error_json"),
+    ),
+    JsonApiRouteValidationSpec(
+        "/api/lexicon-patch-drafts",
+        "lexicon patch bundle",
+        (200, 400),
+        ("bundle_json", "unsupported_format_error_json"),
+        ("format=patch",),
+    ),
+)
+
+
+def json_api_route_validation_manifest() -> dict[str, object]:
+    return {
+        "schema_version": JSON_API_ROUTE_VALIDATION_SCHEMA,
+        "validator": "JsonApiRouteValidatingOpener",
+        "route_count": len(JSON_API_ROUTE_VALIDATION_SPECS),
+        "routes": [spec.as_contract_entry() for spec in JSON_API_ROUTE_VALIDATION_SPECS],
+    }
+
+
 def recovery_action_automation_mode(action_kind: str) -> str:
     if action_kind in INSPECTION_ONLY_RECOVERY_ACTION_KINDS:
         return "inspection_only"

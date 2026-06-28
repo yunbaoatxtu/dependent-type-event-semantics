@@ -29,12 +29,14 @@ from scripts.verify_project import (
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES as VERIFIER_REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     VALID_DIAGNOSTIC_FAILURE_STAGES,
     VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
+    VALID_JSON_API_ROUTE_VALIDATION_SPECS,
     VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     SEMANTIC_READING_CONTRACT_FIELDS as VERIFIER_SEMANTIC_READING_CONTRACT_FIELDS,
     validate_recovery_action_inspection_run_bundle,
     validate_recovery_action_inspection_run_rejection,
     validate_diagnostic_contract_html_panel,
     validate_diagnostic_contract_manifest,
+    validate_json_api_route_validation_contract,
     validate_certified_fragment_manifest,
     validate_diagnostic_fixture_routes,
     validate_analyze_action_download_artifacts,
@@ -69,8 +71,11 @@ from scripts.verify_project import (
 from web.diagnostic_contract import (
     DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
+    JSON_API_ROUTE_VALIDATION_SCHEMA,
+    JSON_API_ROUTE_VALIDATION_SPECS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     SEMANTIC_READING_CONTRACT_FIELDS,
+    json_api_route_validation_manifest,
 )
 from translator.dependent_type_event_translator import (
     INCOMPATIBLE_STATE_PAIRS,
@@ -19611,6 +19616,10 @@ class TranslatorTests(unittest.TestCase):
             VERIFIER_SEMANTIC_READING_CONTRACT_FIELDS,
             SEMANTIC_READING_CONTRACT_FIELDS,
         )
+        self.assertIs(
+            VALID_JSON_API_ROUTE_VALIDATION_SPECS,
+            JSON_API_ROUTE_VALIDATION_SPECS,
+        )
 
     def test_diagnostic_contract_api_exposes_controlled_vocabularies(self) -> None:
         handler = object.__new__(PipelineHandler)
@@ -19638,6 +19647,31 @@ class TranslatorTests(unittest.TestCase):
             contract["semantic_reading_fields"],
             sorted(SEMANTIC_READING_CONTRACT_FIELDS),
         )
+        route_validation = contract["json_api_route_validation"]
+        self.assertEqual(route_validation, json_api_route_validation_manifest())
+        self.assertEqual(
+            route_validation["schema_version"],
+            JSON_API_ROUTE_VALIDATION_SCHEMA,
+        )
+        self.assertEqual(
+            route_validation["validator"],
+            "JsonApiRouteValidatingOpener",
+        )
+        self.assertEqual(
+            route_validation["route_count"],
+            len(JSON_API_ROUTE_VALIDATION_SPECS),
+        )
+        route_paths = [route["path"] for route in route_validation["routes"]]
+        self.assertEqual(route_paths, [spec.path for spec in JSON_API_ROUTE_VALIDATION_SPECS])
+        self.assertIn("/api/analyze", route_paths)
+        self.assertIn("/api/diagnostic-contract", route_paths)
+        self.assertIn("/api/lexicon-patch-drafts", route_paths)
+        lexicon_route = next(
+            route
+            for route in route_validation["routes"]
+            if route["path"] == "/api/lexicon-patch-drafts"
+        )
+        self.assertEqual(lexicon_route["text_bypass_modes"], ["format=patch"])
         self.assertIn("semantic_readings_check", contract["failure_stages"])
         self.assertIn("add_missing_coq_definitions", contract["recovery_action_kinds"])
         self.assertIn("inspection_only", contract["repair_plan_automation_modes"])
@@ -19692,6 +19726,49 @@ class TranslatorTests(unittest.TestCase):
             "diagnostic semantic-reading field drift",
         ):
             validate_diagnostic_contract_manifest(bad_semantic_fields)
+
+        bad_route_schema = deepcopy(contract)
+        bad_route_schema["json_api_route_validation"]["schema_version"] = (
+            "json_api_route_validation.v0"
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "wrong JSON route validation schema",
+        ):
+            validate_diagnostic_contract_manifest(bad_route_schema)
+
+        bad_route_count = deepcopy(contract)
+        bad_route_count["json_api_route_validation"]["route_count"] = 0
+        with self.assertRaisesRegex(
+            SystemExit,
+            "JSON route validation route-count drift",
+        ):
+            validate_diagnostic_contract_manifest(bad_route_count)
+
+        bad_route = deepcopy(contract)
+        bad_route["json_api_route_validation"]["routes"] = []
+        with self.assertRaisesRegex(
+            SystemExit,
+            "JSON route validation route drift",
+        ):
+            validate_diagnostic_contract_manifest(bad_route)
+
+        handler = object.__new__(PipelineHandler)
+        route_expectations = json_api_route_expectations_for_handler(handler)
+        validate_json_api_route_validation_contract(
+            contract["json_api_route_validation"],
+            route_expectations,
+        )
+        stale_route_expectations = dict(route_expectations)
+        stale_route_expectations.pop("/api/certified-fragment")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "JSON route expectation coverage drift",
+        ):
+            validate_json_api_route_validation_contract(
+                contract["json_api_route_validation"],
+                stale_route_expectations,
+            )
 
     def test_diagnostic_fixture_spec_rejects_invalid_contract_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "non-empty case"):
@@ -20250,6 +20327,35 @@ class TranslatorTests(unittest.TestCase):
                 self.assertIn(f'data-contract-token="{value}"', page)
         self.assertIn("<code>semantic_readings_check</code>", page)
         self.assertIn("<code>add_missing_coq_definitions</code>", page)
+        route_validation = contract["json_api_route_validation"]
+        self.assertIn(
+            'class="diagnostic-contract-json-route-validation"',
+            page,
+        )
+        self.assertIn(
+            f'data-json-route-validation-schema="{JSON_API_ROUTE_VALIDATION_SCHEMA}"',
+            page,
+        )
+        self.assertIn(
+            f'data-json-route-validation-count="{route_validation["route_count"]}"',
+            page,
+        )
+        for route in route_validation["routes"]:
+            statuses = ",".join(str(status) for status in route["expected_statuses"])
+            modes = ",".join(route["json_modes"])
+            text_bypass = ",".join(route["text_bypass_modes"])
+            self.assertIn(
+                f'data-json-route-path="{html.escape(route["path"], quote=True)}"',
+                page,
+            )
+            self.assertIn(
+                f'data-json-route-label="{html.escape(route["label"], quote=True)}"',
+                page,
+            )
+            self.assertIn(f'data-json-route-statuses="{statuses}"', page)
+            self.assertIn(f'data-json-route-modes="{modes}"', page)
+            self.assertIn(f'data-json-route-text-bypass="{text_bypass}"', page)
+        self.assertIn("<code>/api/lexicon-patch-drafts</code>", page)
 
     def test_diagnostic_fixture_page_selects_current_fixture_case(self) -> None:
         result = diagnostic_fixture_result("coq_check_failure")

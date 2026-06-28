@@ -37,6 +37,7 @@ from web.diagnostic_contract import (
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     SEMANTIC_READING_CONTRACT_FIELDS,
+    json_api_route_validation_manifest,
     recovery_action_automation_mode,
     recovery_action_can_auto_run,
 )
@@ -635,6 +636,7 @@ def diagnostic_contract_manifest() -> dict[str, Any]:
             INSPECTION_ONLY_RECOVERY_ACTION_KINDS
         ),
         "semantic_reading_fields": sorted(SEMANTIC_READING_CONTRACT_FIELDS),
+        "json_api_route_validation": json_api_route_validation_manifest(),
     }
 
 
@@ -3282,6 +3284,40 @@ def diagnostic_contract_panel() -> str:
             f"<ul>{items}</ul>"
             "</div>"
         )
+    route_validation = contract.get("json_api_route_validation")
+    if not isinstance(route_validation, dict):
+        route_validation = {}
+    route_validation_schema = str(route_validation.get("schema_version", ""))
+    route_validation_routes = [
+        route
+        for route in route_validation.get("routes", [])
+        if isinstance(route, dict)
+    ]
+    route_items = []
+    for route in route_validation_routes:
+        path = str(route.get("path", ""))
+        label = str(route.get("label", ""))
+        statuses = ",".join(str(status) for status in route.get("expected_statuses", []))
+        modes = ",".join(str(mode) for mode in route.get("json_modes", []))
+        text_bypass = ",".join(str(mode) for mode in route.get("text_bypass_modes", []))
+        route_items.append(
+            '<li class="diagnostic-contract-json-route" '
+            f'data-json-route-path="{html.escape(path, quote=True)}" '
+            f'data-json-route-label="{html.escape(label, quote=True)}" '
+            f'data-json-route-statuses="{html.escape(statuses, quote=True)}" '
+            f'data-json-route-modes="{html.escape(modes, quote=True)}" '
+            f'data-json-route-text-bypass="{html.escape(text_bypass, quote=True)}">'
+            f"<code>{html.escape(path)}</code> {html.escape(label)}"
+            "</li>"
+        )
+    route_validation_panel = (
+        '<div class="diagnostic-contract-json-route-validation" '
+        f'data-json-route-validation-schema="{html.escape(route_validation_schema, quote=True)}" '
+        f'data-json-route-validation-count="{len(route_validation_routes)}">'
+        "<strong>JSON Route Validation</strong>"
+        f"<ul>{''.join(route_items)}</ul>"
+        "</div>"
+    )
     return (
         '<section class="panel diagnostic-contract-panel" '
         f'data-contract-schema="{html.escape(schema, quote=True)}" '
@@ -3293,6 +3329,7 @@ def diagnostic_contract_panel() -> str:
         "<dt>api</dt><dd><code>/api/diagnostic-contract</code></dd>"
         "</dl>"
         f"{''.join(vocabularies)}"
+        f"{route_validation_panel}"
         "</div>"
         "</section>"
     )

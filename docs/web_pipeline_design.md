@@ -707,14 +707,23 @@ The same vocabulary should be exposed to clients at `/api/diagnostic-contract`
 as a `diagnostic_contract.v1` manifest containing `failure_stages`,
 `required_fixture_stages`, `recovery_action_kinds`, and
 `semantic_reading_fields`.
+The manifest should also contain a `json_api_route_validation.v1` object that
+enumerates the JSON API routes guarded by `JsonApiRouteValidatingOpener`,
+including expected statuses, JSON response modes, and text-artifact bypass
+cases such as `format=patch`.
 The verifier should reject schema drift, failure-stage drift,
 required-fixture-stage drift, recovery-action drift, semantic-reading field
-drift, and stale selector links to that contract endpoint.
+drift, JSON route validation drift, and stale selector links to that contract
+endpoint.
 The ordinary HTML page should render the same contract as a `Diagnostic
 Contract` panel with stable `data-contract-schema`, `data-contract-api`,
 `data-contract-field`, `data-contract-count`, and `data-contract-token` hooks,
 so browser automation can inspect the controlled vocabulary directly instead
 of inferring it from prose or selector labels.
+The same panel should expose `data-json-route-validation-schema`,
+`data-json-route-validation-count`, and per-route `data-json-route-*` hooks so
+the browser-visible contract can be compared with the API manifest and the live
+route-validation table.
 The selector should be rendered from that same manifest and expose
 `data-fixtures-schema`, `data-fixtures-api`, `data-diagnostic-contract-api`,
 option-level failure-stage and recovery-action metadata, and the manifest label

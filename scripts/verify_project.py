@@ -32,8 +32,11 @@ from web.diagnostic_contract import (  # noqa: E402
     DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES,
     DIAGNOSTIC_RECOVERY_ACTION_KINDS,
     INSPECTION_ONLY_RECOVERY_ACTION_KINDS,
+    JSON_API_ROUTE_VALIDATION_SCHEMA,
+    JSON_API_ROUTE_VALIDATION_SPECS,
     REQUIRED_DIAGNOSTIC_FIXTURE_STAGES,
     SEMANTIC_READING_CONTRACT_FIELDS,
+    json_api_route_validation_manifest,
     recovery_action_automation_mode,
     recovery_action_can_auto_run,
 )
@@ -49,6 +52,7 @@ VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES = (
     DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES
 )
 VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS = INSPECTION_ONLY_RECOVERY_ACTION_KINDS
+VALID_JSON_API_ROUTE_VALIDATION_SPECS = JSON_API_ROUTE_VALIDATION_SPECS
 VALID_LEXICON_WARNING_KINDS = {
     "derived_result_scale",
     "source_state_used_as_target",
@@ -1409,6 +1413,7 @@ def diagnostic_contract_bundle_for_recovery_action() -> dict:
             VALID_INSPECTION_ONLY_RECOVERY_ACTION_KINDS
         ),
         "semantic_reading_fields": sorted(SEMANTIC_READING_CONTRACT_FIELDS),
+        "json_api_route_validation": json_api_route_validation_manifest(),
     }
 
 
@@ -10091,6 +10096,47 @@ def validate_diagnostic_contract_manifest(contract: dict) -> None:
         raise SystemExit(
             "web route smoke check failed: diagnostic semantic-reading field drift"
         )
+    validate_json_api_route_validation_contract(
+        contract.get("json_api_route_validation")
+    )
+
+
+def validate_json_api_route_validation_contract(
+    contract: object,
+    route_expectations: object | None = None,
+) -> None:
+    if not isinstance(contract, dict):
+        raise SystemExit(
+            "web route smoke check failed: missing JSON route validation contract"
+        )
+    if contract.get("schema_version") != JSON_API_ROUTE_VALIDATION_SCHEMA:
+        raise SystemExit(
+            "web route smoke check failed: wrong JSON route validation schema"
+        )
+    if contract.get("validator") != "JsonApiRouteValidatingOpener":
+        raise SystemExit(
+            "web route smoke check failed: JSON route validation validator drift"
+        )
+    expected = json_api_route_validation_manifest()
+    if contract.get("route_count") != expected["route_count"]:
+        raise SystemExit(
+            "web route smoke check failed: JSON route validation route-count drift"
+        )
+    if contract.get("routes") != expected["routes"]:
+        raise SystemExit(
+            "web route smoke check failed: JSON route validation route drift"
+        )
+    if route_expectations is not None:
+        if not isinstance(route_expectations, dict):
+            raise SystemExit(
+                "web route smoke check failed: JSON route expectation table drift"
+            )
+        expected_paths = sorted(route["path"] for route in expected["routes"])
+        observed_paths = sorted(route_expectations)
+        if observed_paths != expected_paths:
+            raise SystemExit(
+                "web route smoke check failed: JSON route expectation coverage drift"
+            )
 
 
 def validate_diagnostic_contract_html_panel(page: str) -> None:
@@ -10111,6 +10157,12 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
         'data-contract-schema="diagnostic_contract.v1"',
         'data-contract-api="/api/diagnostic-contract"',
         "<h2>Diagnostic Contract</h2>",
+        'class="diagnostic-contract-json-route-validation"',
+        f'data-json-route-validation-schema="{JSON_API_ROUTE_VALIDATION_SCHEMA}"',
+        (
+            'data-json-route-validation-count="'
+            f'{len(VALID_JSON_API_ROUTE_VALIDATION_SPECS)}"'
+        ),
     ]
     for field, values in expected_fields.items():
         expected_fragments.extend(
@@ -10122,6 +10174,23 @@ def validate_diagnostic_contract_html_panel(page: str) -> None:
         expected_fragments.extend(
             f'data-contract-token="{html.escape(value, quote=True)}"'
             for value in values
+        )
+    for route in json_api_route_validation_manifest()["routes"]:
+        statuses = ",".join(str(status) for status in route["expected_statuses"])
+        modes = ",".join(str(mode) for mode in route["json_modes"])
+        text_bypass = ",".join(str(mode) for mode in route["text_bypass_modes"])
+        expected_fragments.extend(
+            [
+                'class="diagnostic-contract-json-route"',
+                f'data-json-route-path="{html.escape(route["path"], quote=True)}"',
+                f'data-json-route-label="{html.escape(route["label"], quote=True)}"',
+                f'data-json-route-statuses="{html.escape(statuses, quote=True)}"',
+                f'data-json-route-modes="{html.escape(modes, quote=True)}"',
+                (
+                    'data-json-route-text-bypass="'
+                    f'{html.escape(text_bypass, quote=True)}"'
+                ),
+            ]
         )
     for fragment in expected_fragments:
         if fragment not in page:
@@ -13454,9 +13523,10 @@ def run_web_route_smoke_check() -> None:
         port = server.server_address[1]
         base_url = f"http://127.0.0.1:{port}"
         smoke_handler = object.__new__(PipelineHandler)
+        route_expectations = json_api_route_expectations_for_handler(smoke_handler)
         opener = JsonApiRouteValidatingOpener(
             build_opener(ProxyHandler({})),
-            json_api_route_expectations_for_handler(smoke_handler),
+            route_expectations,
         )
         event_counting_sentence = "John knocked twice"
         event_counting_query = urlencode(
@@ -15047,6 +15117,10 @@ def run_web_route_smoke_check() -> None:
                 ),
             )
         validate_diagnostic_contract_manifest(diagnostic_contract_payload)
+        validate_json_api_route_validation_contract(
+            diagnostic_contract_payload.get("json_api_route_validation"),
+            route_expectations,
+        )
         with opener.open(f"{base_url}/api/certified-fragment", timeout=5) as response:
             raw = response.read()
             certified_fragment_manifest = validate_json_api_response_bytes(
