@@ -13606,9 +13606,9 @@ class TranslatorTests(unittest.TestCase):
                 "semantic_role_witnesses_are_live_checked"
             ],
         )
-        surface_parser_coverage = manifest["surface_parser_coverage"][
-            "modified_transitive_adv_sequence"
-        ]
+        surface_family, surface_parser_coverage = next(
+            iter(manifest["surface_parser_coverage"].items()),
+        )
         self.assertEqual(
             surface_parser_coverage["rule_id"],
             "modified_transitive_predication",
@@ -14682,12 +14682,20 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertIn("semantic_snapshots", manifest)
-        surface_parser_coverage = manifest["surface_parser_coverage"][
-            "modified_transitive_adv_sequence"
-        ]
+        surface_family, surface_parser_coverage = next(
+            iter(manifest["surface_parser_coverage"].items()),
+        )
         type_contract_registry = surface_parser_coverage["slot_probe_examples"][
             "matrix_generation_spec"
         ]["type_contract_registry"]
+        surface_generation_spec = surface_parser_coverage["witness_generation_spec"]
+        surface_slot_probes = surface_parser_coverage["slot_probe_examples"]
+        surface_slot_probe_generation_spec = surface_slot_probes[
+            "probe_generation_spec"
+        ]
+        surface_slot_probe_matrix_generation_spec = surface_slot_probes[
+            "matrix_generation_spec"
+        ]
         self.assertEqual(
             type_contract_registry["diagnostic_schema"],
             surface_type_contracts.SURFACE_TYPE_CONTRACT_DIAGNOSTIC_SCHEMA,
@@ -14748,6 +14756,10 @@ class TranslatorTests(unittest.TestCase):
         def csv_attr(value: list[object]) -> str:
             return ",".join(str(item) for item in value)
 
+        surface_verified_counts_attr = data_attr(
+            "data-surface-verified-counts",
+            csv_attr(surface_parser_coverage["verified_modifier_counts"]),
+        )
         role_inventory_attr = data_attr(
             "data-modifier-sequence-role-inventory",
             csv_attr([item["role"] for item in modifier_role_inventory]),
@@ -14932,79 +14944,129 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-coverage-fallback-success-count="1"', page)
         self.assertIn('data-coverage-rejected-unsupported-count="2"', page)
-        self.assertIn(
-            'data-surface-parser-family="modified_transitive_adv_sequence"',
-            page,
-        )
-        self.assertIn('data-surface-type-level-open-ended="true"', page)
-        self.assertIn('data-surface-parser-claim="registered_examples_only"', page)
-        self.assertIn('data-surface-full-certification="false"', page)
-        self.assertIn('data-surface-verified-counts="1,2,3,4,5"', page)
-        self.assertIn('data-surface-timed-counts="1,2,3,4,5"', page)
-        self.assertIn('data-surface-untimed-counts="1,2,3,4,5"', page)
-        self.assertIn('data-surface-max-verified-count="5"', page)
-        self.assertIn('data-surface-verified-example-count="10"', page)
-        self.assertIn(
-            'data-surface-generator-schema="surface_witness_generation.v1"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-generator-kind="modifier_prefix_with_optional_time_suffix"',
-            page,
-        )
-        self.assertIn('data-surface-generator-modifier-count="5"', page)
-        self.assertIn('data-surface-generator-time-suffix="yesterday"', page)
-        self.assertIn('data-surface-slot-probe-schema="surface_slot_probes.v1"', page)
-        self.assertIn('data-surface-slot-probe-count="4"', page)
-        self.assertIn(
-            'data-surface-slot-probe-generation-schema="surface_slot_probe_generation.v1"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-generation-kind="lexical_slot_substitution_with_modifier_prefix"',
-            page,
-        )
-        self.assertIn('data-surface-slot-probe-matrix-count="16"', page)
-        self.assertIn(
-            'data-surface-slot-probe-matrix-generation-schema="surface_slot_probe_matrix_generation.v1"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-entry-schema="surface_type_contract_entry.v1"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-entry-count="6"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-diagnostic-schema="surface_type_contract_diagnostic.v1"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-diagnostic-count="5"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-diagnostic-categories="registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-source="translator/surface_type_contracts.py"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-slot-probe-matrix-type-contract-registry-id="modified_transitive_adv_sequence.surface_slot_matrix"',
-            page,
-        )
+        surface_attr_expectations = [
+            data_attr("data-surface-parser-family", surface_family),
+            data_attr(
+                "data-surface-type-level-open-ended",
+                str(surface_parser_coverage["type_level_open_ended"] is True).lower(),
+            ),
+            data_attr(
+                "data-surface-parser-claim",
+                surface_parser_coverage["surface_parser_claim"],
+            ),
+            data_attr(
+                "data-surface-full-certification",
+                str(surface_parser_coverage["full_surface_parser_certification"] is True).lower(),
+            ),
+            surface_verified_counts_attr,
+            data_attr(
+                "data-surface-timed-counts",
+                csv_attr(surface_parser_coverage["verified_timed_modifier_counts"]),
+            ),
+            data_attr(
+                "data-surface-untimed-counts",
+                csv_attr(surface_parser_coverage["verified_untimed_modifier_counts"]),
+            ),
+            data_attr(
+                "data-surface-max-verified-count",
+                surface_parser_coverage["max_verified_modifier_count"],
+            ),
+            data_attr(
+                "data-surface-verified-example-count",
+                surface_parser_coverage["verified_example_count"],
+            ),
+            data_attr(
+                "data-surface-generator-schema",
+                surface_generation_spec["schema_version"],
+            ),
+            data_attr(
+                "data-surface-generator-kind",
+                surface_generation_spec["generator"],
+            ),
+            data_attr(
+                "data-surface-generator-modifier-count",
+                len(surface_generation_spec["modifiers"]),
+            ),
+            data_attr(
+                "data-surface-generator-time-suffix",
+                surface_generation_spec["time_suffix"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-schema",
+                surface_slot_probes["schema_version"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-count",
+                surface_slot_probes["probe_count"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-generation-schema",
+                surface_slot_probe_generation_spec["schema_version"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-generation-kind",
+                surface_slot_probe_generation_spec["generator"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-count",
+                surface_slot_probes["matrix_example_count"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-generation-schema",
+                surface_slot_probe_matrix_generation_spec["schema_version"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-generation-kind",
+                surface_slot_probe_matrix_generation_spec["generator"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-schema",
+                type_contract_registry["schema_version"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-entry-schema",
+                type_contract_registry["entry_schema"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-entry-count",
+                type_contract_registry["entry_count"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-diagnostic-schema",
+                type_contract_registry["diagnostic_schema"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-diagnostic-count",
+                len(type_contract_registry["diagnostic_categories"]),
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-diagnostic-categories",
+                csv_attr(
+                    [
+                        item["category"]
+                        for item in type_contract_registry["diagnostic_categories"]
+                    ],
+                ),
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-source",
+                type_contract_registry["source"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-matrix-type-contract-registry-id",
+                type_contract_registry["registry_id"],
+            ),
+        ]
+        for expected_attr in surface_attr_expectations:
+            self.assertIn(expected_attr, page)
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    surface_verified_counts_attr,
+                    data_attr("data-surface-verified-counts", "stale"),
+                ),
+                manifest,
+            )
         self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
         self.assertIn('data-surface-slot-probe-slot="agent"', page)
         self.assertIn(
@@ -20152,6 +20214,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Mary laughed into a room yesterday", manuscript)
         self.assertIn("a cat sits on a mat for Location", manuscript)
         self.assertIn("no longer carries a second hard-coded role table", manuscript)
+        self.assertIn("witness-generator metadata", manuscript)
+        self.assertIn("second hard-coded surface-parser attribute table", manuscript)
         self.assertIn("protects thematic-role typing", manuscript)
         self.assertIn("unrestricted natural-language parsing as open", manuscript)
         self.assertIn(
@@ -21072,6 +21136,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-modifier-sequence-role-source-*` hooks", readme)
         self.assertIn("coverage-derived role minima", readme)
         self.assertIn("hard-coded role table", readme)
+        self.assertIn("counts, witness generator", readme)
+        self.assertIn("second hard-coded surface-parser attribute table", readme)
         self.assertIn("`registered_semantic_role_witnesses`", readme)
         self.assertIn("`data-modifier-sequence-role-witness-*` hooks", readme)
         self.assertIn("`semantic_role_witness_selection_contract`", readme)
@@ -21138,6 +21204,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-modifier-sequence-role-source-*` attributes", web_design)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", web_design)
         self.assertIn("second hard-coded webpage contract", web_design)
+        self.assertIn("counts, witness generator", web_design)
+        self.assertIn("surface-parser attribute table", web_design)
         self.assertIn("`registered_semantic_role_witnesses`", web_design)
         self.assertIn("`data-modifier-sequence-role-witness-*` attributes", web_design)
         self.assertIn("`semantic_role_witness_selection_contract`", web_design)
@@ -22707,9 +22775,18 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser slot probe matrix type drift", verifier)
         self.assertIn("surface parser slot probe matrix live translation drift", verifier)
         self.assertIn("surface parser slot probe live translation drift", verifier)
-        self.assertIn("surface_type_contract_registry.v1", verifier)
-        self.assertIn("surface_type_contract_entry.v1", verifier)
-        self.assertIn("surface_type_contract_diagnostic.v1", verifier)
+        self.assertIn(
+            'surface_slot_probe_matrix_type_contract_registry.get("schema_version"',
+            verifier,
+        )
+        self.assertIn(
+            'surface_slot_probe_matrix_type_contract_registry.get("entry_schema"',
+            verifier,
+        )
+        self.assertIn(
+            'surface_slot_probe_matrix_type_contract_registry.get("diagnostic_schema"',
+            verifier,
+        )
         self.assertIn("data-surface-slot-probe-matrix-type-contract-diagnostic-categories", verifier)
         self.assertIn("validate_surface_type_contract_registry", verifier)
         self.assertIn("from translator.surface_type_contracts import", verifier)

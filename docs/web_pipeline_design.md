@@ -179,7 +179,10 @@ expected Adv modifier and normalized constant, for example `into_room` for
 `Goal`, `on_mat` for `Location`, and `from_window` for `Source`. The HTML
 smoke check derives the role inventory, role minima, source-role summary, and
 witness summary from the manifest before matching the panel's `data-*`
-attributes, avoiding a second hard-coded webpage contract. The witness
+attributes, avoiding a second hard-coded webpage contract. It also derives the
+surface-parser counts, witness generator, slot-probe, and matrix type-contract
+`data-surface-*` attributes from the manifest, avoiding a second hard-coded
+surface-parser attribute table. The witness
 table is guarded by a `semantic_role_witness_selection_contract` and exposed
 through `data-modifier-sequence-role-witness-selection-*` attributes; the
 contract fixes the selection scope to registered primary and variant success

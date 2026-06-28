@@ -959,7 +959,10 @@ manifest; the web panel mirrors the summary through
 `data-modifier-sequence-role-witness-*` hooks. The HTML smoke check computes the
 role inventory, minima, source summary, and witness summary from the manifest
 before checking those `data-*` hooks, so the page no longer maintains a second
-hard-coded role table. A companion
+hard-coded role table. The same smoke check now derives the surface-parser
+counts, witness generator, slot-probe, and matrix type-contract `data-surface-*`
+attributes from the manifest before checking the Certified Fragment panel, so
+the page also avoids a second hard-coded surface-parser attribute table. A companion
 `semantic_role_witness_selection_contract` records that these witnesses are
 derived as one live sentence per registered `Adv` role from
 `registered_primary_success_cases` and `registered_variant_success_cases`, using

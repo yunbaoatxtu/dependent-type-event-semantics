@@ -11362,6 +11362,53 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     source_roles = csv_attribute(
         modifier_role_source_contract.get("derived_role_inventory"),
     )
+    surface_parser_coverage = manifest.get("surface_parser_coverage")
+    if not isinstance(surface_parser_coverage, dict):
+        surface_parser_coverage = {}
+    surface_family_names = [
+        family
+        for family, item in surface_parser_coverage.items()
+        if isinstance(family, str) and isinstance(item, dict)
+    ]
+    surface_family_name = surface_family_names[0] if surface_family_names else ""
+    modified_surface = surface_parser_coverage.get(surface_family_name, {})
+    if not isinstance(modified_surface, dict):
+        modified_surface = {}
+    surface_generation_spec = modified_surface.get("witness_generation_spec")
+    if not isinstance(surface_generation_spec, dict):
+        surface_generation_spec = {}
+    surface_generation_modifiers = surface_generation_spec.get("modifiers")
+    surface_slot_probes = modified_surface.get("slot_probe_examples")
+    if not isinstance(surface_slot_probes, dict):
+        surface_slot_probes = {}
+    surface_slot_probe_generation_spec = surface_slot_probes.get(
+        "probe_generation_spec",
+    )
+    if not isinstance(surface_slot_probe_generation_spec, dict):
+        surface_slot_probe_generation_spec = {}
+    surface_slot_probe_matrix_generation_spec = surface_slot_probes.get(
+        "matrix_generation_spec",
+    )
+    if not isinstance(surface_slot_probe_matrix_generation_spec, dict):
+        surface_slot_probe_matrix_generation_spec = {}
+    surface_slot_probe_matrix_type_contract_registry = (
+        surface_slot_probe_matrix_generation_spec.get("type_contract_registry")
+    )
+    if not isinstance(surface_slot_probe_matrix_type_contract_registry, dict):
+        surface_slot_probe_matrix_type_contract_registry = {}
+    diagnostic_categories = surface_slot_probe_matrix_type_contract_registry.get(
+        "diagnostic_categories",
+    )
+    if not isinstance(diagnostic_categories, list):
+        diagnostic_categories = []
+    diagnostic_category_items = [
+        item for item in diagnostic_categories if isinstance(item, dict)
+    ]
+    diagnostic_category_names = ",".join(
+        str(item.get("category", ""))
+        for item in diagnostic_category_items
+        if item.get("category")
+    )
     expected_fragments = [
         'class="panel certified-fragment-panel"',
         'data-certified-fragment-schema="certified_fragment.v1"',
@@ -11389,45 +11436,116 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             'data-coverage-rejected-unsupported-count="'
             f'{manifest.get("coverage_matrix_counts", {}).get("rejected_unsupported_cases")}"'
         ),
-        'data-surface-parser-family="modified_transitive_adv_sequence"',
-        'data-surface-type-level-open-ended="true"',
-        'data-surface-parser-claim="registered_examples_only"',
-        'data-surface-full-certification="false"',
-        'data-surface-verified-counts="1,2,3,4,5"',
-        'data-surface-timed-counts="1,2,3,4,5"',
-        'data-surface-untimed-counts="1,2,3,4,5"',
-        'data-surface-max-verified-count="5"',
-        'data-surface-verified-example-count="10"',
-        'data-surface-generator-schema="surface_witness_generation.v1"',
-        'data-surface-generator-kind="modifier_prefix_with_optional_time_suffix"',
-        'data-surface-generator-modifier-count="5"',
-        'data-surface-generator-time-suffix="yesterday"',
-        'data-surface-slot-probe-schema="surface_slot_probes.v1"',
-        'data-surface-slot-probe-count="4"',
-        'data-surface-slot-probe-generation-schema="surface_slot_probe_generation.v1"',
-        'data-surface-slot-probe-generation-kind="lexical_slot_substitution_with_modifier_prefix"',
-        'data-surface-slot-probe-matrix-count="16"',
-        'data-surface-slot-probe-matrix-generation-schema="surface_slot_probe_matrix_generation.v1"',
-        'data-surface-slot-probe-matrix-generation-kind="cartesian_lexical_frame_with_modifier_profiles"',
-        'data-surface-slot-probe-matrix-type-contract-schema="surface_type_contract_registry.v1"',
-        'data-surface-slot-probe-matrix-type-contract-entry-schema="surface_type_contract_entry.v1"',
-        'data-surface-slot-probe-matrix-type-contract-entry-count="6"',
-        (
-            'data-surface-slot-probe-matrix-type-contract-diagnostic-schema="'
-            'surface_type_contract_diagnostic.v1"'
+        data_fragment("data-surface-parser-family", surface_family_name),
+        data_fragment(
+            "data-surface-type-level-open-ended",
+            str(modified_surface.get("type_level_open_ended") is True).lower(),
         ),
-        'data-surface-slot-probe-matrix-type-contract-diagnostic-count="5"',
-        (
-            'data-surface-slot-probe-matrix-type-contract-diagnostic-categories="'
-            'registry_schema,entry_axis_sync,role_frame,modifier_type,time_type"'
+        data_fragment(
+            "data-surface-parser-claim",
+            modified_surface.get("surface_parser_claim", ""),
         ),
-        (
-            'data-surface-slot-probe-matrix-type-contract-source="'
-            'translator/surface_type_contracts.py"'
+        data_fragment(
+            "data-surface-full-certification",
+            str(modified_surface.get("full_surface_parser_certification") is True).lower(),
         ),
-        (
-            'data-surface-slot-probe-matrix-type-contract-registry-id="'
-            'modified_transitive_adv_sequence.surface_slot_matrix"'
+        data_fragment(
+            "data-surface-verified-counts",
+            csv_attribute(modified_surface.get("verified_modifier_counts")),
+        ),
+        data_fragment(
+            "data-surface-timed-counts",
+            csv_attribute(modified_surface.get("verified_timed_modifier_counts")),
+        ),
+        data_fragment(
+            "data-surface-untimed-counts",
+            csv_attribute(modified_surface.get("verified_untimed_modifier_counts")),
+        ),
+        data_fragment(
+            "data-surface-max-verified-count",
+            modified_surface.get("max_verified_modifier_count", ""),
+        ),
+        data_fragment(
+            "data-surface-verified-example-count",
+            modified_surface.get("verified_example_count", ""),
+        ),
+        data_fragment(
+            "data-surface-generator-schema",
+            surface_generation_spec.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-surface-generator-kind",
+            surface_generation_spec.get("generator", ""),
+        ),
+        data_fragment(
+            "data-surface-generator-modifier-count",
+            len(surface_generation_modifiers)
+            if isinstance(surface_generation_modifiers, list)
+            else "",
+        ),
+        data_fragment(
+            "data-surface-generator-time-suffix",
+            surface_generation_spec.get("time_suffix", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-schema",
+            surface_slot_probes.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-count",
+            surface_slot_probes.get("probe_count", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-generation-schema",
+            surface_slot_probe_generation_spec.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-generation-kind",
+            surface_slot_probe_generation_spec.get("generator", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-count",
+            surface_slot_probes.get("matrix_example_count", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-generation-schema",
+            surface_slot_probe_matrix_generation_spec.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-generation-kind",
+            surface_slot_probe_matrix_generation_spec.get("generator", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-schema",
+            surface_slot_probe_matrix_type_contract_registry.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-entry-schema",
+            surface_slot_probe_matrix_type_contract_registry.get("entry_schema", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-entry-count",
+            surface_slot_probe_matrix_type_contract_registry.get("entry_count", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-diagnostic-schema",
+            surface_slot_probe_matrix_type_contract_registry.get("diagnostic_schema", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-diagnostic-count",
+            len(diagnostic_category_items),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-diagnostic-categories",
+            diagnostic_category_names,
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-source",
+            surface_slot_probe_matrix_type_contract_registry.get("source", ""),
+        ),
+        data_fragment(
+            "data-surface-slot-probe-matrix-type-contract-registry-id",
+            surface_slot_probe_matrix_type_contract_registry.get("registry_id", ""),
         ),
         data_fragment(
             "data-modifier-sequence-contract-schema",
