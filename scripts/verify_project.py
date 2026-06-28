@@ -11815,26 +11815,67 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         )
     snapshots = manifest.get("semantic_snapshots", [])
     if isinstance(snapshots, list):
-        expected_fragments.extend(
-            f'data-semantic-snapshot-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}"'
-            for item in snapshots
-            if isinstance(item, dict)
-        )
-        expected_fragments.extend(
-            f'data-semantic-snapshot-analysis="{html.escape(str(item.get("expected_event_analysis", "")), quote=True)}"'
-            for item in snapshots
-            if isinstance(item, dict)
-        )
-        expected_fragments.extend(
-            'data-semantic-snapshot-ast-kind="{}"'.format(
-                html.escape(
-                    str((item.get("expected_ast_summary") or {}).get("kind", "")),
-                    quote=True,
-                )
+        for item in snapshots:
+            if not isinstance(item, dict):
+                continue
+            expected_ast_summary = item.get("expected_ast_summary")
+            if not isinstance(expected_ast_summary, dict):
+                expected_ast_summary = {}
+            expected_fragments.extend(
+                [
+                    data_fragment(
+                        "data-semantic-snapshot-rule-id",
+                        item.get("rule_id", ""),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-sentence",
+                        item.get("sentence", ""),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-analysis",
+                        item.get("expected_event_analysis", ""),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-ast-kind",
+                        expected_ast_summary.get("kind", ""),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-fragment-count",
+                        len(item.get("expected_dependent_type_fragments", []))
+                        if isinstance(
+                            item.get("expected_dependent_type_fragments"),
+                            list,
+                        )
+                        else 0,
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-reading-count",
+                        len(item.get("expected_reading_names", []))
+                        if isinstance(item.get("expected_reading_names"), list)
+                        else 0,
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-reading-names",
+                        csv_attribute(item.get("expected_reading_names")),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-reading-sources",
+                        csv_attribute(item.get("expected_reading_sources")),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-reading-scopes",
+                        csv_attribute(item.get("expected_reading_scopes")),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-coq-definitions",
+                        csv_attribute(item.get("expected_coq_definitions")),
+                    ),
+                    data_fragment(
+                        "data-semantic-snapshot-type-check",
+                        item.get("expected_type_check_type", ""),
+                    ),
+                ],
             )
-            for item in snapshots
-            if isinstance(item, dict)
-        )
     for fragment in expected_fragments:
         if fragment not in page:
             raise SystemExit(

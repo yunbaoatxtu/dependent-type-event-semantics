@@ -3257,6 +3257,11 @@ def certified_fragment_panel() -> str:
             return ""
         return ",".join(str(item) for item in value if isinstance(item, int))
 
+    def string_list_attribute(value: object) -> str:
+        if not isinstance(value, list):
+            return ""
+        return ",".join(str(item) for item in value if isinstance(item, str))
+
     surface_verified_counts = count_list_attribute(
         modified_surface.get("verified_modifier_counts"),
     )
@@ -3585,9 +3590,16 @@ def certified_fragment_panel() -> str:
         (
         '<li '
         f'data-semantic-snapshot-rule-id="{html.escape(str(item.get("rule_id", "")), quote=True)}" '
+        f'data-semantic-snapshot-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
         f'data-semantic-snapshot-analysis="{html.escape(str(item.get("expected_event_analysis", "")), quote=True)}" '
         f'data-semantic-snapshot-ast-kind="{html.escape(str((item.get("expected_ast_summary") or {}).get("kind", "")), quote=True)}" '
-        f'data-semantic-snapshot-reading-count="{len(item.get("expected_reading_names", [])) if isinstance(item.get("expected_reading_names"), list) else 0}">'
+        f'data-semantic-snapshot-fragment-count="{len(item.get("expected_dependent_type_fragments", [])) if isinstance(item.get("expected_dependent_type_fragments"), list) else 0}" '
+        f'data-semantic-snapshot-reading-count="{len(item.get("expected_reading_names", [])) if isinstance(item.get("expected_reading_names"), list) else 0}" '
+        f'data-semantic-snapshot-reading-names="{html.escape(string_list_attribute(item.get("expected_reading_names")), quote=True)}" '
+        f'data-semantic-snapshot-reading-sources="{html.escape(string_list_attribute(item.get("expected_reading_sources")), quote=True)}" '
+        f'data-semantic-snapshot-reading-scopes="{html.escape(string_list_attribute(item.get("expected_reading_scopes")), quote=True)}" '
+        f'data-semantic-snapshot-coq-definitions="{html.escape(string_list_attribute(item.get("expected_coq_definitions")), quote=True)}" '
+        f'data-semantic-snapshot-type-check="{html.escape(str(item.get("expected_type_check_type", "")), quote=True)}">'
         f'<code>{html.escape(str(item.get("rule_id", "")))}</code>'
         f'<span>{html.escape(str(item.get("expected_event_analysis", "")))}</span>'
         "</li>"

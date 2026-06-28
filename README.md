@@ -1211,7 +1211,10 @@ covering AST kind, predicate symbols and types, entity/state symbols, time
 binders, quantifier signatures, and core list counts. The verifier runs the
 live pipeline against those snapshots, so a parser or exporter change that
 silently alters the certified fragment's core semantics or AST shape is
-reported as snapshot drift.
+reported as snapshot drift. The Certified Fragment panel now mirrors every
+semantic snapshot row with stable hooks for the sentence, analysis, AST kind,
+translation-fragment count, reading names/sources/scopes, Coq/Rocq definitions,
+and type-check result.
 Successful registered rules must expose a passing `semantic_readings_check`.
 Rules with explicit ambiguity keep their specialized readings; otherwise the
 registered-rule boundary creates a conservative single reading from the unique
@@ -1700,7 +1703,9 @@ The certified-fragment smoke check also validates `semantic_snapshot_count`,
 the per-rule snapshot hooks in HTML, and the live analyzer output against every
 snapshot's expected analysis, readings, Coq/Rocq definitions, and translation
 fragments. It also compares each live AST against `expected_ast_summary` and
-checks the page's `data-semantic-snapshot-ast-kind` hooks.
+checks the page's derived `data-semantic-snapshot-*` row hooks, including
+`data-semantic-snapshot-ast-kind`, rather than only one representative snapshot
+field.
 It walks every fixture case listed by the manifest and checks the API payload,
 selected HTML option, API/HTML route case parameter, failure stage, and
 recovery-action metadata for each one.

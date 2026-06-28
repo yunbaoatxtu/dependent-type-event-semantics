@@ -15070,6 +15070,7 @@ class TranslatorTests(unittest.TestCase):
         surface_examples = surface_parser_coverage["verified_examples"]
         surface_probe_rows = surface_slot_probes["probes"]
         surface_matrix_rows = surface_slot_probes["matrix_examples"]
+        semantic_snapshots = manifest["semantic_snapshots"]
 
         def surface_example_attrs(example: dict[str, object]) -> list[str]:
             fragments = example.get("expected_dependent_type_fragments")
@@ -15167,6 +15168,57 @@ class TranslatorTests(unittest.TestCase):
                 ),
             ]
 
+        def semantic_snapshot_attrs(snapshot: dict[str, object]) -> list[str]:
+            ast_summary = snapshot["expected_ast_summary"]
+            fragments = snapshot["expected_dependent_type_fragments"]
+            reading_names = snapshot["expected_reading_names"]
+            return [
+                data_attr(
+                    "data-semantic-snapshot-rule-id",
+                    snapshot["rule_id"],
+                ),
+                data_attr(
+                    "data-semantic-snapshot-sentence",
+                    snapshot["sentence"],
+                ),
+                data_attr(
+                    "data-semantic-snapshot-analysis",
+                    snapshot["expected_event_analysis"],
+                ),
+                data_attr(
+                    "data-semantic-snapshot-ast-kind",
+                    ast_summary["kind"],
+                ),
+                data_attr(
+                    "data-semantic-snapshot-fragment-count",
+                    len(fragments) if isinstance(fragments, list) else 0,
+                ),
+                data_attr(
+                    "data-semantic-snapshot-reading-count",
+                    len(reading_names) if isinstance(reading_names, list) else 0,
+                ),
+                data_attr(
+                    "data-semantic-snapshot-reading-names",
+                    csv_attr(snapshot["expected_reading_names"]),
+                ),
+                data_attr(
+                    "data-semantic-snapshot-reading-sources",
+                    csv_attr(snapshot["expected_reading_sources"]),
+                ),
+                data_attr(
+                    "data-semantic-snapshot-reading-scopes",
+                    csv_attr(snapshot["expected_reading_scopes"]),
+                ),
+                data_attr(
+                    "data-semantic-snapshot-coq-definitions",
+                    csv_attr(snapshot["expected_coq_definitions"]),
+                ),
+                data_attr(
+                    "data-semantic-snapshot-type-check",
+                    snapshot["expected_type_check_type"],
+                ),
+            ]
+
         for example in surface_examples:
             for expected_attr in surface_example_attrs(example):
                 self.assertIn(expected_attr, page)
@@ -15175,6 +15227,9 @@ class TranslatorTests(unittest.TestCase):
                 self.assertIn(expected_attr, page)
         for matrix_row in surface_matrix_rows:
             for expected_attr in surface_matrix_attrs(matrix_row):
+                self.assertIn(expected_attr, page)
+        for snapshot in semantic_snapshots:
+            for expected_attr in semantic_snapshot_attrs(snapshot):
                 self.assertIn(expected_attr, page)
         stale_surface_example_attr = data_attr(
             "data-surface-example-variant-id",
@@ -15215,6 +15270,50 @@ class TranslatorTests(unittest.TestCase):
                 ),
                 manifest,
             )
+        quantifier_snapshot = next(
+            item
+            for item in semantic_snapshots
+            if item["rule_id"] == "quantifier_scope_ambiguity"
+        )
+        stale_snapshot_rule_attr = data_attr(
+            "data-semantic-snapshot-rule-id",
+            quantifier_snapshot["rule_id"],
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_snapshot_rule_attr,
+                    data_attr("data-semantic-snapshot-rule-id", "stale_rule"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_snapshot_reading_attr = data_attr(
+            "data-semantic-snapshot-reading-names",
+            csv_attr(quantifier_snapshot["expected_reading_names"]),
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_snapshot_reading_attr,
+                    data_attr("data-semantic-snapshot-reading-names", "stale_reading"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_snapshot_coq_attr = data_attr(
+            "data-semantic-snapshot-coq-definitions",
+            csv_attr(quantifier_snapshot["expected_coq_definitions"]),
+        )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_snapshot_coq_attr,
+                    data_attr("data-semantic-snapshot-coq-definitions", "stale_coq"),
+                    1,
+                ),
+                manifest,
+            )
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)
@@ -15224,6 +15323,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn('data-semantic-snapshot-analysis="quantifier-scope"', page)
         self.assertIn('data-semantic-snapshot-ast-kind="scope_ambiguity"', page)
+        self.assertIn(
+            'data-semantic-snapshot-reading-names="some_boy_wide_scope,some_girl_wide_scope"',
+            page,
+        )
+        self.assertIn(
+            'data-semantic-snapshot-coq-definitions="some_boy_wide_scope,some_girl_wide_scope"',
+            page,
+        )
         self.assertIn('data-coverage-kind="registered_variant_success"', page)
         self.assertIn('data-coverage-rule-id="event_counting"', page)
         self.assertIn('data-coverage-variant-id="temporal_event_counting"', page)
@@ -20409,6 +20516,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("semantic_snapshots", manuscript)
         self.assertIn("semantic_snapshot_count", manuscript)
         self.assertIn("expected_ast_summary", manuscript)
+        self.assertIn("row-level HTML data attributes", manuscript)
+        self.assertIn("translation-fragment count", manuscript)
         self.assertIn("parser-level drift", manuscript)
         self.assertIn("semantic drift", manuscript)
         self.assertIn("Certified Fragment panel", manuscript)
@@ -21246,6 +21355,8 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Mary laughed into a room yesterday", readme)
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
+        self.assertIn("translation-fragment count", readme)
+        self.assertIn("derived `data-semantic-snapshot-*` row hooks", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
         self.assertIn("`require_coq`: optional flag", web_design)
@@ -21723,6 +21834,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`expected_ast_summary`", web_design)
         self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`data-semantic-snapshot-ast-kind`", web_design)
+        self.assertIn("translation-fragment count", web_design)
+        self.assertIn("every manifest snapshot row", web_design)
         self.assertIn("On any failure, it must", web_design)
         self.assertIn("still return `ok: false`", web_design)
         self.assertIn("The separate `failure_stage` field distinguishes", web_design)

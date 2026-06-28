@@ -345,8 +345,11 @@ example. It also stores `expected_ast_summary`, a compact structural digest of
 AST kind, predicate symbols/types, entity and state symbols, binder and
 quantifier signatures, and core list counts. The `Certified Fragment` panel
 mirrors the snapshot count and exposes per-rule `data-semantic-snapshot-*`
-hooks, including `data-semantic-snapshot-ast-kind`, while the verifier runs the
-live pipeline against the static snapshots to catch semantic and AST drift.
+hooks for the sentence, analysis, AST kind, translation-fragment count, reading
+names/sources/scopes, Coq/Rocq definitions, and type-check result, while the
+verifier runs the live pipeline against the static snapshots to catch semantic
+and AST drift. The AST-kind field remains available as
+`data-semantic-snapshot-ast-kind` for smoke checks and browser diagnostics.
 For ordinary fallback successes, the API response and HTML panel must agree on
 the same normalized reading row: `fallback_single_reading` from
 `fallback_event_semantics`, linked to `example_1`, with a `none` attachment and
@@ -958,7 +961,9 @@ the JSON manifest.
 It should likewise validate `semantic_snapshot_count`, the page's
 `data-semantic-snapshot-*` hooks, and the live pipeline output for every
 snapshot so analysis labels, reading names, Coq/Rocq definitions, and
-dependent-type fragments cannot drift silently. It should compare
+dependent-type fragments cannot drift silently. These page hooks should be
+derived from every manifest snapshot row rather than maintained as a small
+representative list. It should compare
 `expected_ast_summary` with a freshly computed AST structure summary for the
 same sentence, so parser-level drift is caught before it is hidden by a similar
 surface rendering.
