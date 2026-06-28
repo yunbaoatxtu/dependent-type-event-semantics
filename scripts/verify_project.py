@@ -12337,17 +12337,16 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
             timeout=5,
         ) as response:
             raw = response.read()
-            if response.status != 200:
-                raise SystemExit(f"web route smoke check failed: {case} JSON status drift")
-            if response.headers.get_content_type() != "application/json":
-                raise SystemExit(f"web route smoke check failed: {case} JSON content type drift")
-            if "charset=utf-8" not in response.headers.get("Content-Type", ""):
-                raise SystemExit(f"web route smoke check failed: {case} JSON charset drift")
-            if response.headers.get("Content-Length") != str(len(raw)):
-                raise SystemExit(f"web route smoke check failed: {case} JSON length drift")
-        observed_bundle = json.loads(raw.decode("utf-8"))
-        if observed_bundle != expected_bundle:
-            raise SystemExit(f"web route smoke check failed: {case} JSON bundle drift")
+            observed_bundle = validate_json_api_response_bytes(
+                case,
+                "lexicon patch bundle",
+                status=response.status,
+                content_type=response.headers.get_content_type(),
+                content_header=response.headers.get("Content-Type", ""),
+                content_length=response.headers.get("Content-Length"),
+                raw=raw,
+                expected_payload=expected_bundle,
+            )
         validate_lexicon_patch_bundle(case, observed_bundle)
         contract_errors = contract_case.validation_errors_for(observed_bundle)
         if contract_errors:
@@ -12386,13 +12385,17 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         opener.open(unknown_format_url, timeout=5)
     except HTTPError as exc:
         raw = exc.read()
-        if exc.code != 400:
-            raise SystemExit("web route smoke check failed: unknown format status drift")
-        if exc.headers.get_content_type() != "application/json":
-            raise SystemExit("web route smoke check failed: unknown format content type drift")
-        if exc.headers.get("Content-Length") != str(len(raw)):
-            raise SystemExit("web route smoke check failed: unknown format length drift")
-        payload = json.loads(raw.decode("utf-8"))
+        payload = validate_json_api_response_bytes(
+            "unknown format",
+            "lexicon patch bundle",
+            status=exc.code,
+            expected_status=HTTPStatus.BAD_REQUEST,
+            content_type=exc.headers.get_content_type(),
+            content_header=exc.headers.get("Content-Type", ""),
+            content_length=exc.headers.get("Content-Length"),
+            raw=raw,
+            expected_payload=None,
+        )
     else:
         raise SystemExit("web route smoke check failed: unknown format was accepted")
     if payload.get("schema_version") != "lexicon_patch_drafts.v1":
@@ -12403,6 +12406,42 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         raise SystemExit("web route smoke check failed: unknown format allowed formats drift")
     if "Unsupported lexicon patch response format" not in str(payload.get("error", "")):
         raise SystemExit("web route smoke check failed: unknown format error drift")
+
+
+def validate_json_api_response_bytes(
+    case: str,
+    label: str,
+    *,
+    status: int,
+    content_type: object,
+    content_header: object,
+    content_length: object,
+    raw: bytes,
+    expected_payload: dict | None,
+    expected_status: int = HTTPStatus.OK,
+) -> dict:
+    if status != expected_status:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} JSON status drift"
+        )
+    if content_type != "application/json":
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} JSON content type drift"
+        )
+    if "charset=utf-8" not in str(content_header):
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} JSON charset drift"
+        )
+    if content_length != str(len(raw)):
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} JSON length drift"
+        )
+    observed_payload = json.loads(raw.decode("utf-8"))
+    if expected_payload is not None and observed_payload != expected_payload:
+        raise SystemExit(
+            f"web route smoke check failed: {case} {label} JSON payload drift"
+        )
+    return observed_payload
 
 
 def validate_text_artifact_response_bytes(
@@ -12858,6 +12897,41 @@ def validate_diagnostic_fixture_download_artifacts() -> None:
                     action_payload,
                     run_payload,
             )
+
+
+def validate_lexicon_patch_json_artifacts() -> None:
+    from web.app import PipelineHandler, compact_json
+
+    print("==> lexicon patch JSON artifact check")
+    handler = object.__new__(PipelineHandler)
+    for contract_case in LEXICON_PATCH_CONTRACT_CASES:
+        case = f"{contract_case.name}_bundle"
+        query = contract_case.query(require_coq=True)
+        expected_bundle = contract_case.expected_bundle(require_coq=True)
+        bundle = PipelineHandler.handle_patch_api(handler, query)
+        if bundle != expected_bundle:
+            raise SystemExit(
+                "lexicon patch JSON artifact check failed: "
+                f"{case} bundle drift"
+            )
+        validate_lexicon_patch_bundle(case, bundle)
+        contract_errors = contract_case.validation_errors_for(bundle)
+        if contract_errors:
+            raise SystemExit(
+                "lexicon patch JSON artifact check failed: "
+                f"{case} validation-error contract drift: {'; '.join(contract_errors)}"
+            )
+        raw = compact_json(bundle).encode("utf-8")
+        validate_json_api_response_bytes(
+            case,
+            "lexicon patch bundle",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_header="application/json; charset=utf-8",
+            content_length=str(len(raw)),
+            raw=raw,
+            expected_payload=bundle,
+        )
 
 
 def validate_lexicon_patch_text_artifacts() -> None:
@@ -14691,6 +14765,7 @@ def main() -> None:
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
     run_lexicon_warning_schema_check()
+    validate_lexicon_patch_json_artifacts()
     validate_lexicon_patch_text_artifacts()
     validate_construction_rule_draft_download_artifact()
     validate_analyze_action_download_artifacts()
