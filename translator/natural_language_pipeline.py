@@ -164,6 +164,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "resultative_predication": "John hammered the metal flat",
     "active_argument_omission": "John ate",
     "plain_intransitive_predication": "Mary smiled",
+    "manner_intransitive_predication": "Mary laughed loudly",
     "plain_transitive_predication": "Mary admired the painting",
     "modified_transitive_predication": "Mary admired the painting in the gallery",
     "passive_argument_omission": "the toast was buttered",
@@ -180,7 +181,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary laughed loudly yesterday",
+        "sentence": "Mary laughed loudly in the park yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -378,6 +379,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "plain-intransitive-predication",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, smile(0)(mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "manner_intransitive_predication",
+        "variant_id": "temporal_manner_intransitive_predication",
+        "sentence": "Mary laughed loudly yesterday",
+        "expected_event_analysis": "manner-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(1)(loudly, mary))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -1167,6 +1181,19 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_type_check_type": "t",
     },
     {
+        "rule_id": "manner_intransitive_predication",
+        "sentence": "Mary laughed loudly",
+        "expected_event_analysis": "manner-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "laugh(1)(loudly, mary)",
+        ],
+        "expected_reading_names": ["manner_intransitive_predication_single_reading"],
+        "expected_reading_sources": ["manner_intransitive_predication"],
+        "expected_reading_scopes": ["explicit_agent_with_manner_adv"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
         "rule_id": "plain_transitive_predication",
         "sentence": "Mary admired the painting",
         "expected_event_analysis": "plain-transitive-predication",
@@ -1500,6 +1527,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "binder_signatures": [],
         "quantifier_signatures": [],
         "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "manner_intransitive_predication": {
+        "kind": "application",
+        "predicate_symbols": ["laugh"],
+        "predicate_types": [],
+        "entity_symbols": ["mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 1,
         "top_level_time_modifier_count": 0,
         "reading_count": 0,
         "clause_count": 0,
@@ -12901,6 +12943,154 @@ def plain_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] | N
     )
 
 
+def manner_intransitive_application_details(ast: dict[str, Any]) -> dict[str, Any] | None:
+    if ast.get("kind") != "application":
+        return None
+    modifiers = ast.get("modifiers")
+    modifier_vector = ast.get("modifier_vector")
+    modifier_roles = ast.get("modifier_roles", {}).get("roles")
+    if (
+        not isinstance(modifiers, list)
+        or len(modifiers) != 1
+        or ast.get("adverb_count") != 1
+        or not isinstance(modifier_vector, dict)
+        or modifier_vector.get("length") != 1
+        or not isinstance(modifier_vector.get("items"), list)
+        or len(modifier_vector["items"]) != 1
+        or not isinstance(modifier_roles, list)
+        or len(modifier_roles) != 1
+    ):
+        return None
+    modifier = modifiers[0]
+    vector_item = modifier_vector["items"][0]
+    role_item = modifier_roles[0]
+    if (
+        vector_item.get("modifier") != modifier
+        or vector_item.get("tail_length") != 0
+        or role_item.get("modifier") != modifier
+        or role_item.get("type") != "Adv"
+        or role_item.get("semantic_role") != "Manner"
+        or role_item.get("source") != "modifier"
+    ):
+        return None
+    surface_lexicon = role_item.get("surface_lexicon")
+    if (
+        not isinstance(surface_lexicon, dict)
+        or surface_lexicon.get("type") != "Adv"
+        or surface_lexicon.get("semantic_role") != "Manner"
+    ):
+        return None
+    role_details = plain_intransitive_application_details(
+        {
+            **ast,
+            "adverb_count": 0,
+            "modifiers": [],
+            "modifier_vector": {"kind": "modifier_vector", "length": 0, "items": []},
+            "modifier_roles": {"kind": "modifier_roles", "roles": []},
+        }
+    )
+    if role_details is None:
+        return None
+    return {
+        **role_details,
+        "modifiers": [str(modifier)],
+        "modifier_roles": copy.deepcopy(modifier_roles),
+    }
+
+
+def manner_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or translation.get("omitted_arguments"):
+        return None
+
+    time_modifier = None
+    application_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        application_ast = body
+    elif ast.get("kind") != "application":
+        return None
+
+    details = manner_intransitive_application_details(application_ast)
+    if details is None:
+        return None
+
+    predicate = str(details["predicate"])
+    arguments = list(details["arguments"])
+    modifiers = [str(modifier) for modifier in details["modifiers"]]
+    modifier_roles = copy.deepcopy(details["modifier_roles"])
+    scope = (
+        "explicit_agent_with_manner_adv_at_time"
+        if time_modifier
+        else "explicit_agent_with_manner_adv"
+    )
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
+    predication_record = {
+        "predicate": predicate,
+        "agent": arguments[0],
+        "agent_type": "Entity",
+        "modifiers": modifiers,
+        "modifier_roles": modifier_roles,
+        "representation": (
+            "ModifierSeq-indexed typed unary predicate over one explicit "
+            "Agent and one Manner Adv"
+        ),
+    }
+    if time_modifier is not None:
+        predication_record["time_modifier"] = time_modifier
+    coq_code = export_module([translation], "coq")
+    return attach_single_semantic_reading(
+        {
+            "kind": "manner_intransitive_predication",
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": "manner-intransitive-predication",
+                "manner_intransitive_predication": predication_record,
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Manner intransitive predication: {predicate} is applied to "
+                f"one typed Manner Adv {modifiers[0]} and an explicit Entity "
+                f"Agent {arguments[0]} as a ModifierSeq-indexed unary "
+                f"predicate{time_summary}, without exporting Event, Agent, or "
+                "Theme predicates."
+            ),
+            "coq_code": coq_code,
+        },
+        name="manner_intransitive_predication_single_reading",
+        coq_definition="example_1",
+        source="manner_intransitive_predication",
+        scope=scope,
+    )
+
+
 def plain_transitive_application_details(ast: dict[str, Any]) -> dict[str, Any] | None:
     if ast.get("kind") != "application":
         return None
@@ -13978,6 +14168,22 @@ def construction_rules() -> list[ConstructionRule]:
                 "exists e : Event",
                 "Parameter Agent :",
                 "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="manner_intransitive_predication",
+            label="Manner intransitive predication",
+            phenomenon=(
+                "Intransitive predicate with one typed Manner Adv and optional "
+                "time wrapper without event variables"
+            ),
+            analyzer=manner_intransitive_predication_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+                "Parameter loudly : Entity.",
             ),
         ),
         ConstructionRule(

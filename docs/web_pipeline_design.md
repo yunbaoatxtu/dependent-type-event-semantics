@@ -160,7 +160,8 @@ rejected example rows with `data-coverage-kind`, `data-coverage-sentence`, and,
 for registered variants, `data-coverage-variant-id`; for rejection rows it also
 uses `data-coverage-marker`. Current registered variants include
 `temporal_event_counting`, `temporal_plain_intransitive_predication`,
-`temporal_resultative_predication`, `temporal_plain_transitive_predication`,
+`temporal_manner_intransitive_predication`, `temporal_resultative_predication`,
+`temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
 `triple_adv_modified_transitive_predication`, and
@@ -670,14 +671,22 @@ registered construction: `Mary admired the painting in the gallery with a
 telescope near a window beside a shelf under a lamp yesterday` renders
 `at_T(yesterday, admire(5)(in(gallery), with(telescope), near(window),
 beside(shelf), under(lamp), mary, painting))` with `under_lamp : Adv`.
+Meanwhile, `Mary laughed loudly` must surface as the registered
+`manner_intransitive_predication` construction with
+`manner_intransitive_predication_single_reading`; its scaffold must declare
+`loudly : Adv`, not `loudly : Entity`. The timed variant `Mary laughed loudly
+yesterday` remains registered as
+`at_T(yesterday, laugh(1)(loudly, mary))` with the
+`explicit_agent_with_manner_adv_at_time` scope and no fallback draft.
 Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
-success contract is instead exercised with `Mary laughed loudly yesterday`, a
-shallow timed intransitive scaffold
-`at_T(yesterday, laugh(1)(loudly, mary))` with `fallback_single_reading` and a
-downloadable construction-rule draft. This keeps promoted constructions and the
+success contract is instead exercised with `Mary laughed loudly in the park
+yesterday`, a shallow mixed-modifier scaffold
+`at_T(yesterday, laugh(2)(loudly, in(park), mary))` with
+`fallback_single_reading` and a downloadable construction-rule draft. This
+keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
@@ -882,9 +891,13 @@ registered too: `Mary admired the painting red yesterday` exports
 the scope `explicit_agent_theme_result_at_time`. The construction hygiene policy
 rejects hidden `Event`, `Agent`, `Theme`, and `ResultState` predicate fragments.
 
-Other simple English sentences are still handled by the fallback parser. For
-example, `Mary laughed loudly yesterday` remains a shallow timed intransitive
-scaffold, `at_T(yesterday, laugh(1)(loudly, mary))`, with a construction-rule
+The manner intransitive slice is now registered for exactly one typed manner
+adverb over an explicit Agent. `Mary laughed loudly` exports
+`laugh(1)(loudly, mary)` with `loudly : Adv`; `Mary laughed loudly yesterday`
+keeps the same registered rule under `at_T`. Other simple English sentences are
+still handled by the fallback parser. For example, `Mary laughed loudly in the
+park yesterday` remains a shallow mixed-modifier scaffold,
+`at_T(yesterday, laugh(2)(loudly, in(park), mary))`, with a construction-rule
 draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles

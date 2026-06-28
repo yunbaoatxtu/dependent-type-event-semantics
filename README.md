@@ -933,8 +933,9 @@ The same manifest now includes a `coverage_matrix` with four audited slices:
 point back to each rule's primary example, registered variants capture
 composition examples such as `John knocked twice yesterday` under
 `temporal_event_counting`, `Mary smiled yesterday` under
-`temporal_plain_intransitive_predication`, `Mary admired the painting red
-yesterday` under `temporal_resultative_predication`, plus modifier-sequence
+`temporal_plain_intransitive_predication`, `Mary laughed loudly yesterday`
+under `temporal_manner_intransitive_predication`, `Mary admired the painting
+red yesterday` under `temporal_resultative_predication`, plus modifier-sequence
 variants such as
 `multi_adv_modified_transitive_predication` and
 `temporal_multi_adv_modified_transitive_predication`,
@@ -1251,6 +1252,16 @@ no construction-rule draft. Its timed variant
 `/api/analyze?sentence=Mary+smiled+yesterday&require_coq=1` must keep the same
 registered rule while rendering `at_T(yesterday, smile(0)(mary))` with the
 `explicit_agent_at_time` scope. It then requests the registered
+manner-intransitive route
+`/api/analyze?sentence=Mary+laughed+loudly&require_coq=1`, requiring
+`manner_intransitive_predication_single_reading`, the
+`explicit_agent_with_manner_adv` scope, and `Parameter loudly : Adv.` rather
+than `Parameter loudly : Entity.`. Its timed variant
+`/api/analyze?sentence=Mary+laughed+loudly+yesterday&require_coq=1` must keep
+the same registered rule while rendering
+`at_T(yesterday, laugh(1)(loudly, mary))` with the
+`explicit_agent_with_manner_adv_at_time` scope and no construction-rule draft.
+It then requests the registered
 plain-transitive route `/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring
 `plain_transitive_predication_single_reading`, the `explicit_agent_theme` scope,
 and no construction-rule draft. It also requests the timed plain-transitive
@@ -1296,9 +1307,9 @@ surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+laughed+loudly+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+laughed+loudly+in+the+park+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed scaffold `at_T(yesterday, laugh(1)(loudly, mary))`, and the
+typed scaffold `at_T(yesterday, laugh(2)(loudly, in(park), mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
