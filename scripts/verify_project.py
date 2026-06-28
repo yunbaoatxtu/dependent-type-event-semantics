@@ -235,6 +235,10 @@ def artifact_token(value: str) -> str:
     )
 
 
+def construction_rule_draft_artifact_filename(candidate_rule_id: str) -> str:
+    return f"construction_rule_draft__{artifact_token(candidate_rule_id)}.json"
+
+
 def recovery_action_artifact_filename(case: str, action_index: int) -> str:
     return f"diagnostic_recovery_action__{artifact_token(case)}__{action_index}.json"
 
@@ -2314,6 +2318,124 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: fallback page input drift")
+
+
+def validate_construction_rule_draft_export(
+    label: str,
+    analyze_payload: dict,
+    page: str,
+    draft_payload: dict,
+    sentence: str,
+    require_coq: bool,
+) -> None:
+    draft = analyze_payload.get("construction_rule_draft")
+    if not isinstance(draft, dict):
+        raise SystemExit(f"web route smoke check failed: {label} draft missing")
+    if (
+        draft_payload.get("schema_version") != "construction_rule_draft_response.v1"
+        or draft_payload.get("ok") is not True
+        or draft_payload.get("input_sentence") != sentence
+        or draft_payload.get("draft_schema_version") != "construction_rule_draft.v1"
+        or draft_payload.get("construction_rule_draft") != draft
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft response drift"
+        )
+    if draft_payload.get("verification_scope") != analyze_payload.get("verification_scope"):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft scope drift"
+        )
+    if draft_payload.get("diagnostics") != analyze_payload.get("diagnostics"):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft diagnostics drift"
+        )
+
+    candidate_rule_id = str(draft.get("candidate_rule_id", ""))
+    if (
+        draft.get("schema_version") != "construction_rule_draft.v1"
+        or draft.get("source_verification_scope") != "fallback_shallow"
+        or not candidate_rule_id
+        or draft.get("automation_mode") != "human_review_required"
+        or draft.get("can_auto_apply") is not False
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft metadata drift"
+        )
+    accepted_examples = draft.get("accepted_examples")
+    if not isinstance(accepted_examples, list) or sentence not in accepted_examples:
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft example drift"
+        )
+
+    expected_href = "/api/construction-rule-draft?" + urlencode(
+        {
+            "sentence": sentence,
+            **({"require_coq": "1"} if require_coq else {}),
+            "download": "1",
+        }
+    )
+    raw_json = html.escape(json.dumps(draft, ensure_ascii=False, indent=2))
+    expected_fragments = [
+        'data-rule-draft-schema="construction_rule_draft.v1"',
+        f'data-rule-draft-source-scope="{html.escape(str(draft.get("source_verification_scope", "")), quote=True)}"',
+        f'data-rule-draft-id="{html.escape(candidate_rule_id, quote=True)}"',
+        f'data-rule-draft-analyzer="{html.escape(str(draft.get("candidate_analyzer", "")), quote=True)}"',
+        f'href="{html.escape(expected_href, quote=True)}"',
+        raw_json,
+    ]
+    require_text_fragments(
+        page,
+        expected_fragments,
+        f"{label} construction rule draft HTML",
+    )
+
+    readings = draft.get("semantic_reading_drafts")
+    if not isinstance(readings, list) or not readings:
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft readings drift"
+        )
+    for reading in readings:
+        if not isinstance(reading, dict):
+            raise SystemExit(
+                f"web route smoke check failed: {label} construction rule draft readings drift"
+            )
+        require_text_fragments(
+            page,
+            [
+                f'data-rule-draft-reading="{html.escape(str(reading.get("name", "")), quote=True)}"',
+                (
+                    'data-rule-draft-reading-source="'
+                    f'{html.escape(str(reading.get("source", "")), quote=True)}"'
+                ),
+            ],
+            f"{label} construction rule draft reading HTML",
+        )
+
+    hygiene = draft.get("hygiene_policy_draft")
+    forbidden_fragments = (
+        hygiene.get("forbidden_coq_fragments") if isinstance(hygiene, dict) else None
+    )
+    if not isinstance(forbidden_fragments, list) or not forbidden_fragments:
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft hygiene drift"
+        )
+    for fragment in forbidden_fragments:
+        require_text_fragments(
+            page,
+            [
+                (
+                    'data-rule-draft-forbidden-fragment="'
+                    f'{html.escape(str(fragment), quote=True)}"'
+                ),
+            ],
+            f"{label} construction rule draft hygiene HTML",
+        )
+
+    expected_filename = construction_rule_draft_artifact_filename(candidate_rule_id)
+    if expected_filename != "construction_rule_draft__fallback_time_time_candidate.json":
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft filename drift"
+        )
 
 
 def validate_analyze_active_argument_omission_success(
@@ -5666,15 +5788,14 @@ def run_web_route_smoke_check() -> None:
             timeout=5,
         ) as response:
             draft_payload = json.load(response)
-        draft = draft_payload.get("construction_rule_draft")
-        if (
-            draft_payload.get("schema_version") != "construction_rule_draft_response.v1"
-            or draft_payload.get("ok") is not True
-            or draft_payload.get("draft_schema_version") != "construction_rule_draft.v1"
-            or not isinstance(draft, dict)
-            or draft.get("candidate_rule_id") != "fallback_time_time_candidate"
-        ):
-            raise SystemExit("web route smoke check failed: rule draft API drift")
+        validate_construction_rule_draft_export(
+            "fallback",
+            fallback_payload,
+            fallback_page,
+            draft_payload,
+            fallback_sentence,
+            True,
+        )
         draft_download_query = urlencode(
             {
                 "sentence": fallback_sentence,
@@ -5687,7 +5808,10 @@ def run_web_route_smoke_check() -> None:
             timeout=5,
         ) as response:
             disposition = response.headers.get("Content-Disposition", "")
-            if "construction_rule_draft__fallback_time_time_candidate.json" not in disposition:
+            filename = construction_rule_draft_artifact_filename(
+                str(fallback_payload["construction_rule_draft"]["candidate_rule_id"])
+            )
+            if filename not in disposition:
                 raise SystemExit("web route smoke check failed: rule draft download drift")
             draft_download_payload = json.load(response)
         if draft_download_payload != draft_payload:

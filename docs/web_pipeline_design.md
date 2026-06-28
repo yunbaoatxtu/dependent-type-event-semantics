@@ -121,7 +121,12 @@ The page renders it as `Construction Rule Draft` with stable hooks such as
 `data-rule-draft-reading`, and `data-rule-draft-forbidden-fragment`. The
 parallel `/api/construction-rule-draft` route returns
 `schema_version: "construction_rule_draft_response.v1"` and can serve the same
-payload as a downloadable JSON artifact through `download=1`.
+payload as a downloadable JSON artifact through `download=1`. The route is also
+covered by a pure verifier helper: the response wrapper must preserve the
+ordinary analysis' `construction_rule_draft`, `verification_scope`, and
+`diagnostics`, and the HTML `Raw draft JSON` preview must equal the same draft
+payload. This keeps the upgrade artifact checkable even in environments that
+cannot start the local HTTP smoke-test server.
 Rejected or failed paths use
 `certification_level: none`.
 The page also exposes a project-level certified-fragment contract. The

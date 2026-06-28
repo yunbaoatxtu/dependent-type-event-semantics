@@ -117,6 +117,8 @@ class PaperDocxTests(unittest.TestCase):
         )
         self.assertIn("fix_reading_type_checks.reading_indices", manuscript)
         self.assertIn("human-review inspection rejections", manuscript)
+        self.assertIn("construction_rule_draft_response.v1 wrapper", manuscript)
+        self.assertIn("Raw draft JSON preview", manuscript)
         self.assertIn("semantic_readings_repair_details schema", manuscript)
         self.assertIn("each recovery action schema", manuscript)
         self.assertIn("action/detail drift", manuscript)

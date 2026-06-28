@@ -31,6 +31,7 @@ from scripts.verify_project import (
     validate_certified_fragment_manifest,
     validate_diagnostic_fixture_routes,
     validate_json_download_http_response,
+    validate_construction_rule_draft_export,
     validate_recovery_action_export_bundle,
     validate_analyze_failure_surface_type_contract,
     validate_analyze_action_export_bundle,
@@ -12266,6 +12267,87 @@ class TranslatorTests(unittest.TestCase):
             "modified_transitive_predication",
         )
 
+    def test_verification_rejects_construction_rule_draft_export_drift(self) -> None:
+        sentence = "Mary admired the painting red yesterday"
+        handler = object.__new__(PipelineHandler)
+        analyze_payload = analyze_sentence(sentence, require_coq=True)
+        page = render_page(sentence, require_coq=True, result=analyze_payload)
+        draft_payload, status = PipelineHandler.handle_construction_rule_draft_api(
+            handler,
+            "sentence=Mary+admired+the+painting+red+yesterday&require_coq=1",
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        validate_construction_rule_draft_export(
+            "fallback",
+            analyze_payload,
+            page,
+            draft_payload,
+            sentence,
+            True,
+        )
+
+        stale_response = deepcopy(draft_payload)
+        stale_response["construction_rule_draft"]["candidate_rule_id"] = "stale_rule"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft response drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                page,
+                stale_response,
+                sentence,
+                True,
+            )
+
+        stale_scope = deepcopy(draft_payload)
+        stale_scope["verification_scope"]["kind"] = "registered_construction"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft scope drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                page,
+                stale_scope,
+                sentence,
+                True,
+            )
+
+        stale_diagnostics = deepcopy(draft_payload)
+        stale_diagnostics["diagnostics"]["summary"] = "stale"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft diagnostics drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                page,
+                stale_diagnostics,
+                sentence,
+                True,
+            )
+
+        stale_page = page.replace(
+            'data-rule-draft-id="fallback_time_time_candidate"',
+            'data-rule-draft-id="stale_rule"',
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft HTML drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                stale_page,
+                draft_payload,
+                sentence,
+                True,
+            )
+
     def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -15406,6 +15488,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`automation_mode: \"human_review_required\"`", readme)
         self.assertIn("`can_auto_apply: false`", readme)
         self.assertIn("/api/construction-rule-draft", readme)
+        self.assertIn("`construction_rule_draft_response.v1` wrapper", readme)
+        self.assertIn("page's raw draft JSON preview", readme)
         self.assertIn("`certification_level: none`", readme)
         self.assertIn("fallback successes carry that row in JSON as well", readme)
         self.assertIn(
@@ -15927,6 +16011,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("certification_upgrade_plan", manuscript)
         self.assertIn("candidate_rule_id", manuscript)
         self.assertIn("construction_rule_draft", manuscript)
+        self.assertIn("construction_rule_draft_response.v1 wrapper", manuscript)
+        self.assertIn("Raw draft JSON preview", manuscript)
         self.assertIn("candidate analyzer", manuscript)
         self.assertIn("semantic-reading draft", manuscript)
         self.assertIn("human_review_required", manuscript)
@@ -16784,6 +16870,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-rule-draft-forbidden-fragment`", web_design)
         self.assertIn("/api/construction-rule-draft", web_design)
         self.assertIn('`schema_version: "construction_rule_draft_response.v1"`', web_design)
+        self.assertIn("pure verifier helper", web_design)
+        self.assertIn("HTML `Raw draft JSON` preview", web_design)
         self.assertIn("`data-fallback-gap-id`", web_design)
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
@@ -18027,6 +18115,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def require_text_fragments(", verifier)
         self.assertIn("def forbid_text_fragments(", verifier)
         self.assertIn("def validate_analyze_fallback_success(", verifier)
+        self.assertIn("def validate_construction_rule_draft_export(", verifier)
+        self.assertIn("construction rule draft response drift", verifier)
+        self.assertIn("construction rule draft diagnostics drift", verifier)
         self.assertIn("def validate_analyze_plain_transitive_success(", verifier)
         self.assertIn("def validate_analyze_locative_intransitive_success(", verifier)
         self.assertIn("def validate_analyze_temporal_event_counting_success(", verifier)

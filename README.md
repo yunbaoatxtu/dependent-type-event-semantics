@@ -895,7 +895,12 @@ hygiene policy draft, test draft, and patch-text preview. The draft is marked
 machine-readable promotion artifact for authors, not an automatic claim that the
 fallback sentence has become construction-level certified. The same payload is
 available from `/api/construction-rule-draft`, with `download=1` returning a
-JSON artifact for review.
+JSON artifact for review. The deterministic verifier now checks this route even
+when the local HTTP smoke test is unavailable: the
+`construction_rule_draft_response.v1` wrapper must carry the same
+`construction_rule_draft`, `verification_scope`, and `diagnostics` as the
+ordinary analysis, and the page's raw draft JSON preview must match the API
+payload exactly.
 The project-level coverage boundary is available separately at
 `/api/certified-fragment` with `schema_version: "certified_fragment.v1"`.
 That manifest is generated from the live registered construction table rather
