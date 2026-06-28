@@ -163,6 +163,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "stative_result_state": "the vase is broken",
     "resultative_predication": "John hammered the metal flat",
     "active_argument_omission": "John ate",
+    "plain_intransitive_predication": "Mary smiled",
     "plain_transitive_predication": "Mary admired the painting",
     "modified_transitive_predication": "Mary admired the painting in the gallery",
     "passive_argument_omission": "the toast was buttered",
@@ -179,7 +180,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
 
 FALLBACK_COVERAGE_EXAMPLES = (
     {
-        "sentence": "Mary smiled yesterday",
+        "sentence": "Mary laughed loudly yesterday",
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
         "boundary_status": "structurally_checked_shallow_scaffold",
@@ -364,6 +365,19 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_event_analysis": "plain-transitive-predication",
         "expected_dependent_type_fragments": [
             "at_T(yesterday, admire(0)(mary, painting))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "plain_intransitive_predication",
+        "variant_id": "temporal_plain_intransitive_predication",
+        "sentence": "Mary smiled yesterday",
+        "expected_event_analysis": "plain-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, smile(0)(mary))",
         ],
         "expected_ast_kind": "time",
         "expected_verification_scope_kind": "registered_construction",
@@ -1140,6 +1154,19 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_type_check_type": "t",
     },
     {
+        "rule_id": "plain_intransitive_predication",
+        "sentence": "Mary smiled",
+        "expected_event_analysis": "plain-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "smile(0)(mary)",
+        ],
+        "expected_reading_names": ["plain_intransitive_predication_single_reading"],
+        "expected_reading_sources": ["plain_intransitive_predication"],
+        "expected_reading_scopes": ["explicit_agent"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
         "rule_id": "plain_transitive_predication",
         "sentence": "Mary admired the painting",
         "expected_event_analysis": "plain-transitive-predication",
@@ -1454,6 +1481,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "predicate_symbols": ["admire"],
         "predicate_types": [],
         "entity_symbols": ["mary", "painting"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "plain_intransitive_predication": {
+        "kind": "application",
+        "predicate_symbols": ["smile"],
+        "predicate_types": [],
+        "entity_symbols": ["mary"],
         "state_symbols": [],
         "binder_signatures": [],
         "quantifier_signatures": [],
@@ -12744,6 +12786,121 @@ def active_argument_omission_pipeline(sentence: str) -> dict[str, Any] | None:
     )
 
 
+def plain_intransitive_application_details(ast: dict[str, Any]) -> dict[str, Any] | None:
+    if ast.get("kind") != "application":
+        return None
+    if ast.get("adverb_count") != 0 or ast.get("modifiers") != []:
+        return None
+    if ast.get("modifier_vector", {}).get("length") != 0:
+        return None
+    if ast.get("modifier_roles", {}).get("roles") != []:
+        return None
+    arguments = ast.get("arguments")
+    role_frame = ast.get("role_frame", {}).get("roles")
+    if (
+        not isinstance(arguments, list)
+        or len(arguments) != 1
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 1
+    ):
+        return None
+    agent_role = role_frame[0]
+    if (
+        not isinstance(agent_role, dict)
+        or agent_role.get("role") != "Agent"
+        or agent_role.get("value") != arguments[0]
+        or agent_role.get("type") != "Entity"
+        or agent_role.get("source") != "explicit"
+    ):
+        return None
+    return {
+        "predicate": str(ast.get("function", "predicate")),
+        "arguments": arguments,
+        "agent": arguments[0],
+    }
+
+
+def plain_intransitive_predication_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or translation.get("omitted_arguments"):
+        return None
+
+    time_modifier = None
+    application_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        application_ast = body
+    elif ast.get("kind") != "application":
+        return None
+
+    details = plain_intransitive_application_details(application_ast)
+    if details is None:
+        return None
+
+    predicate = str(details["predicate"])
+    arguments = list(details["arguments"])
+    scope = "explicit_agent_at_time" if time_modifier else "explicit_agent"
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
+    predication_record = {
+        "predicate": predicate,
+        "agent": arguments[0],
+        "agent_type": "Entity",
+        "representation": "typed unary predicate over an explicit Agent argument",
+    }
+    if time_modifier is not None:
+        predication_record["time_modifier"] = time_modifier
+    coq_code = export_module([translation], "coq")
+    return attach_single_semantic_reading(
+        {
+            "kind": "plain_intransitive_predication",
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": "plain-intransitive-predication",
+                "plain_intransitive_predication": predication_record,
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Plain intransitive predication: {predicate} is applied to an "
+                f"explicit Entity Agent {arguments[0]} as a typed unary "
+                f"predicate{time_summary}, without exporting Event, Agent, or "
+                "Theme predicates."
+            ),
+            "coq_code": coq_code,
+        },
+        name="plain_intransitive_predication_single_reading",
+        coq_definition="example_1",
+        source="plain_intransitive_predication",
+        scope=scope,
+    )
+
+
 def plain_transitive_application_details(ast: dict[str, Any]) -> dict[str, Any] | None:
     if ast.get("kind") != "application":
         return None
@@ -13809,6 +13966,18 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter Agent :",
                 "Parameter Theme :",
                 "Parameter on_mat : Entity.",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="plain_intransitive_predication",
+            label="Plain intransitive predication",
+            phenomenon="Explicit Agent predication as a typed unary predicate",
+            analyzer=plain_intransitive_predication_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
             ),
         ),
         ConstructionRule(

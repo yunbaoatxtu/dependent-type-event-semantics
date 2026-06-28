@@ -159,8 +159,8 @@ The manifest also carries a `coverage_matrix` with
 rejected example rows with `data-coverage-kind`, `data-coverage-sentence`, and,
 for registered variants, `data-coverage-variant-id`; for rejection rows it also
 uses `data-coverage-marker`. Current registered variants include
-`temporal_event_counting`, `temporal_resultative_predication`,
-`temporal_plain_transitive_predication`,
+`temporal_event_counting`, `temporal_plain_intransitive_predication`,
+`temporal_resultative_predication`, `temporal_plain_transitive_predication`,
 `multi_adv_modified_transitive_predication`,
 `temporal_multi_adv_modified_transitive_predication`,
 `triple_adv_modified_transitive_predication`, and
@@ -622,8 +622,9 @@ Successful ordinary fallback analyses should enter the same interface as
 attachment summary rather than bypassing the semantic-reading audit.
 The project-level web smoke check should exercise the promoted event-counting
 route, the promoted active argument-omission route, the promoted
-plain-transitive route, the promoted locative route, and the ordinary fallback
-route directly before it walks the diagnostic fixtures. `John knocked twice`
+plain-intransitive route, the promoted plain-transitive route, the promoted
+locative route, and the ordinary fallback route directly before it walks the
+diagnostic fixtures. `John knocked twice`
 must surface as the registered `event_counting`
 construction with
 `event_counting_single_reading`; the timed variant `John knocked twice
@@ -631,8 +632,13 @@ yesterday` must keep the same registered rule while rendering
 `at_T(yesterday, repeat(2, knock(0)(john)))`. `John ate` must surface as the
 registered `active_argument_omission` construction with
 `active_argument_omission_single_reading` and `omitted_existential_theme`,
-without exposing a fallback draft. `Mary admired the painting` must surface as
-the registered `plain_transitive_predication` construction with
+without exposing a fallback draft. `Mary smiled` must surface as the registered
+`plain_intransitive_predication` construction with
+`plain_intransitive_predication_single_reading` and `explicit_agent`, while
+`Mary smiled yesterday` must keep the same rule under
+`at_T(yesterday, smile(0)(mary))` with `explicit_agent_at_time`; neither surface
+may expose a fallback draft. `Mary admired the painting` must surface as the
+registered `plain_transitive_predication` construction with
 `plain_transitive_predication_single_reading` and `explicit_agent_theme`,
 without exposing a fallback draft. The timed variant `Mary admired the painting
 yesterday` must keep the same registered rule while rendering
@@ -668,10 +674,11 @@ Meanwhile, `a cat sits on a mat` must surface
 as the registered `locative_intransitive_predication` construction with
 `locative_intransitive_predication_single_reading`, and its Coq/Rocq scaffold
 must declare `on_mat : Adv`, not `on_mat : Entity`. The ordinary fallback
-success contract is instead exercised with `Mary smiled yesterday`, a shallow
-timed intransitive scaffold with `fallback_single_reading` and a downloadable
-construction-rule draft. This keeps promoted constructions and the remaining
-fallback success contract from drifting apart.
+success contract is instead exercised with `Mary laughed loudly yesterday`, a
+shallow timed intransitive scaffold
+`at_T(yesterday, laugh(1)(loudly, mary))` with `fallback_single_reading` and a
+downloadable construction-rule draft. This keeps promoted constructions and the
+remaining fallback success contract from drifting apart.
 It should also exercise a multi-reading quantifier-scope success path with
 `some boy loves some girl`, requiring `some_boy_wide_scope` and
 `some_girl_wide_scope` to appear as distinct JSON readings, Coq/Rocq exports,
@@ -817,6 +824,16 @@ predicate arguments; construction hygiene rejects exported `Event`, `Agent`, or
 `at_T(yesterday, admire(0)(mary, painting))` with
 `explicit_agent_theme_at_time`, rather than being exported as a fallback draft.
 
+The plain intransitive slice is now registered separately from locative
+intransitives and from the ordinary fallback path. `Mary smiled` is recognized
+as a typed unary predicate over the explicit Agent argument and exports
+`smile(0)(mary)` with the semantic reading
+`plain_intransitive_predication_single_reading`. `Mary smiled yesterday` keeps
+the same construction under the proposition-level temporal wrapper
+`at_T(yesterday, smile(0)(mary))`. The generated Coq/Rocq scaffold declares
+`smile : forall n : nat, ModifierSeq n -> Entity -> PropT` and rejects hidden
+`Event`, `Agent`, or `Theme` role-predicate declarations.
+
 The modified transitive slice now covers non-empty predicate-level `ModifierSeq`
 values on the same explicit Agent/Theme frame. For example, `Mary admired the painting in
 the gallery` translates to `admire(1)(in(gallery), mary, painting)` under the
@@ -866,9 +883,9 @@ the scope `explicit_agent_theme_result_at_time`. The construction hygiene policy
 rejects hidden `Event`, `Agent`, `Theme`, and `ResultState` predicate fragments.
 
 Other simple English sentences are still handled by the fallback parser. For
-example, `Mary smiled yesterday` remains a shallow timed intransitive scaffold,
-`at_T(yesterday, smile(0)(mary))`, with a construction-rule draft rather than
-construction-level certification.
+example, `Mary laughed loudly yesterday` remains a shallow timed intransitive
+scaffold, `at_T(yesterday, laugh(1)(loudly, mary))`, with a construction-rule
+draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles
 simple conditionals first, so `if John left, Mary cried` is certified as

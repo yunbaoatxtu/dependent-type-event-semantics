@@ -2472,7 +2472,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
         (
-            "/api/construction-rule-draft?sentence=Mary+smiled+yesterday&amp;"
+            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+yesterday&amp;"
             "require_coq=1&amp;download=1"
         ),
     ]
@@ -2867,6 +2867,155 @@ def validate_analyze_plain_transitive_success(
     require_text_fragments(page, expected_page_fragments, "plain transitive HTML")
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit("web route smoke check failed: plain transitive page input drift")
+
+
+def validate_analyze_plain_intransitive_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_plain_intransitive_success"
+    is_timed = sentence == "Mary smiled yesterday"
+    expected_translation = (
+        "at_T(yesterday, smile(0)(mary))" if is_timed else "smile(0)(mary)"
+    )
+    expected_scope = "explicit_agent_at_time" if is_timed else "explicit_agent"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "plain_intransitive_predication",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "plain_intransitive_predication",
+        "registered_construction",
+        "construction_rule",
+        "plain_intransitive_predication",
+    )
+    if payload.get("kind") != "plain_intransitive_predication":
+        raise SystemExit("web route smoke check failed: plain intransitive kind drift")
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit(
+            "web route smoke check failed: plain intransitive translation drift"
+        )
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit(
+            "web route smoke check failed: plain intransitive exposes fallback draft"
+        )
+    ast = payload.get("ast")
+    application_ast = ast
+    if is_timed and isinstance(ast, dict):
+        if (
+            ast.get("kind") != "time"
+            or ast.get("operator") != "at"
+            or ast.get("arguments") != ["yesterday"]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit(
+                "web route smoke check failed: timed plain intransitive AST drift"
+            )
+        application_ast = ast["body"]
+    role_frame = (
+        application_ast.get("role_frame", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    if (
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "smile"
+        or application_ast.get("arguments") != ["mary"]
+        or application_ast.get("modifiers") != []
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 1
+        or role_frame[0].get("role") != "Agent"
+        or role_frame[0].get("type") != "Entity"
+        or role_frame[0].get("source") != "explicit"
+    ):
+        raise SystemExit("web route smoke check failed: plain intransitive AST drift")
+    event_semantics = payload.get("event_semantics")
+    typed_predication = (
+        event_semantics.get("plain_intransitive_predication")
+        if isinstance(event_semantics, dict)
+        else None
+    )
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis") != "plain-intransitive-predication"
+        or not isinstance(typed_predication, dict)
+        or typed_predication.get("predicate") != "smile"
+        or typed_predication.get("agent") != "mary"
+        or typed_predication.get("agent_type") != "Entity"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: plain intransitive analysis drift"
+        )
+    if is_timed:
+        if typed_predication.get("time_modifier") != {
+            "operator": "at",
+            "argument": "yesterday",
+        }:
+            raise SystemExit(
+                "web route smoke check failed: timed plain intransitive time drift"
+            )
+    elif "time_modifier" in typed_predication:
+        raise SystemExit(
+            "web route smoke check failed: untimed plain intransitive time drift"
+        )
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: plain intransitive hygiene drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit(
+            "web route smoke check failed: plain intransitive reading count drift"
+        )
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "plain_intransitive_predication_single_reading",
+            "scope": expected_scope,
+            "source": "plain_intransitive_predication",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    expected_definition = (
+        "Definition example_1 : PropT := (at_T yesterday (smile 0 mods_nil mary))."
+        if is_timed
+        else "Definition example_1 : PropT := (smile 0 mods_nil mary)."
+    )
+    if (
+        not isinstance(coq_code, str)
+        or "Parameter smile : forall n : nat, ModifierSeq n -> Entity -> PropT."
+        not in coq_code
+        or expected_definition not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: plain intransitive Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>plain_intransitive_predication</dd>",
+        'data-reading-name="plain_intransitive_predication_single_reading"',
+        "<dt>source</dt><dd>plain_intransitive_predication</dd>",
+        f"<dt>scope</dt><dd>{expected_scope}</dd>",
+        expected_translation,
+        "Translation succeeded via construction rule plain_intransitive_predication.",
+    ]
+    require_text_fragments(page, expected_page_fragments, "plain intransitive HTML")
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit(
+            "web route smoke check failed: plain intransitive page input drift"
+        )
 
 
 def validate_analyze_modified_transitive_success(
@@ -5872,6 +6021,44 @@ def run_web_route_smoke_check() -> None:
             active_omission_page,
             active_omission_sentence,
         )
+        plain_intransitive_sentence = "Mary smiled"
+        plain_intransitive_query = urlencode(
+            {"sentence": plain_intransitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{plain_intransitive_query}",
+            timeout=5,
+        ) as response:
+            plain_intransitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{plain_intransitive_query}",
+            timeout=5,
+        ) as response:
+            plain_intransitive_page = response.read().decode("utf-8")
+        validate_analyze_plain_intransitive_success(
+            plain_intransitive_payload,
+            plain_intransitive_page,
+            plain_intransitive_sentence,
+        )
+        timed_plain_intransitive_sentence = "Mary smiled yesterday"
+        timed_plain_intransitive_query = urlencode(
+            {"sentence": timed_plain_intransitive_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_plain_intransitive_query}",
+            timeout=5,
+        ) as response:
+            timed_plain_intransitive_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_plain_intransitive_query}",
+            timeout=5,
+        ) as response:
+            timed_plain_intransitive_page = response.read().decode("utf-8")
+        validate_analyze_plain_intransitive_success(
+            timed_plain_intransitive_payload,
+            timed_plain_intransitive_page,
+            timed_plain_intransitive_sentence,
+        )
         locative_sentence = "a cat sits on a mat"
         locative_query = urlencode({"sentence": locative_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{locative_query}", timeout=5) as response:
@@ -6153,7 +6340,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary smiled yesterday"
+        fallback_sentence = "Mary laughed loudly yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

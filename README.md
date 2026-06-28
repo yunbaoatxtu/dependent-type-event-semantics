@@ -932,8 +932,10 @@ The same manifest now includes a `coverage_matrix` with four audited slices:
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases
 point back to each rule's primary example, registered variants capture
 composition examples such as `John knocked twice yesterday` under
-`temporal_event_counting`, `Mary admired the painting red yesterday` under
-`temporal_resultative_predication`, plus modifier-sequence variants such as
+`temporal_event_counting`, `Mary smiled yesterday` under
+`temporal_plain_intransitive_predication`, `Mary admired the painting red
+yesterday` under `temporal_resultative_predication`, plus modifier-sequence
+variants such as
 `multi_adv_modified_transitive_predication` and
 `temporal_multi_adv_modified_transitive_predication`,
 `triple_adv_modified_transitive_predication`, and
@@ -1242,8 +1244,14 @@ requiring the same construction to expose
 same smoke check now also requests the registered active argument-omission route
 `/api/analyze?sentence=John+ate&require_coq=1`, requiring both surfaces to expose
 `active_argument_omission_single_reading`, the `omitted_existential_theme` scope,
-and no construction-rule draft. It then requests the registered plain-transitive
-route `/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring
+and no construction-rule draft. It then requests the registered plain
+intransitive route `/api/analyze?sentence=Mary+smiled&require_coq=1`, requiring
+`plain_intransitive_predication_single_reading`, the `explicit_agent` scope, and
+no construction-rule draft. Its timed variant
+`/api/analyze?sentence=Mary+smiled+yesterday&require_coq=1` must keep the same
+registered rule while rendering `at_T(yesterday, smile(0)(mary))` with the
+`explicit_agent_at_time` scope. It then requests the registered
+plain-transitive route `/api/analyze?sentence=Mary+admired+the+painting&require_coq=1`, requiring
 `plain_transitive_predication_single_reading`, the `explicit_agent_theme` scope,
 and no construction-rule draft. It also requests the timed plain-transitive
 variant
@@ -1288,8 +1296,9 @@ surfaces to expose `locative_intransitive_predication_single_reading`, the
 registered `locative_intransitive_predication` rule, and `Parameter on_mat :
 Adv.` rather than `Parameter on_mat : Entity.`. The ordinary fallback success
 contract is checked separately with
-`/api/analyze?sentence=Mary+admired+the+painting+red+yesterday&require_coq=1`,
-requiring both surfaces to expose the same `fallback_single_reading` row and
+`/api/analyze?sentence=Mary+laughed+loudly+yesterday&require_coq=1`,
+requiring both surfaces to expose the same `fallback_single_reading` row, the
+typed scaffold `at_T(yesterday, laugh(1)(loudly, mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
