@@ -934,7 +934,9 @@ point back to each rule's primary example, registered variants capture
 composition examples such as `John knocked twice yesterday` under
 `temporal_event_counting`, `Mary smiled yesterday` under
 `temporal_plain_intransitive_predication`, `Mary laughed loudly yesterday`
-under `temporal_manner_intransitive_predication`, `Mary laughed loudly in the
+under `temporal_manner_intransitive_predication`, `Mary laughed loudly with a
+telescope yesterday` under `temporal_manner_instrument_intransitive_predication`,
+`Mary laughed loudly in the
 park yesterday` under `temporal_manner_locative_intransitive_predication`,
 `Mary laughed loudly in the park near a window yesterday` under
 `temporal_manner_two_location_intransitive_predication`,
@@ -1417,7 +1419,13 @@ requiring
 `explicit_agent_with_manner_mixed_location_instrument_adv_sequence_at_time`
 scope, and typed Adv declarations for `loudly`, `in_park`, `with_telescope`,
 `near_window`, and `with_camera`. The ordinary fallback success contract is
-now narrower: the live boundary also requests the registered mixed
+now narrower: the live boundary also requests the registered
+Manner/Instrument route
+`/api/analyze?sentence=Mary+laughed+loudly+with+a+telescope+yesterday&require_coq=1`,
+requiring `manner_instrument_intransitive_predication_single_reading`, the
+`explicit_agent_with_manner_and_instrument_adv_at_time` scope, and typed Adv
+declarations for `loudly` and `with_telescope` rather than Entity surrogates.
+It also requests the registered mixed
 directional/Instrument route
 `/api/analyze?sentence=Mary+laughed+loudly+in+the+park+with+a+telescope+from+a+window+with+a+camera+yesterday&require_coq=1`,
 requiring
@@ -1426,10 +1434,10 @@ the
 `explicit_agent_with_manner_mixed_directional_instrument_adv_sequence_at_time`
 scope, and typed Adv declarations for `from_window` and `with_camera` rather
 than Entity surrogates. It then checks ordinary fallback separately with
-`/api/analyze?sentence=Mary+laughed+loudly+with+a+telescope+yesterday&require_coq=1`,
+`/api/analyze?sentence=Mary+laughed+with+a+telescope+yesterday&require_coq=1`,
 requiring both surfaces to expose the same `fallback_single_reading` row, the
-typed Manner/Instrument two-modifier scaffold
-`at_T(yesterday, laugh(2)(loudly, with(telescope), mary))`, and the
+typed Instrument-only modifier scaffold
+`at_T(yesterday, laugh(1)(with(telescope), mary))`, and the
 construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
