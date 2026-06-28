@@ -195,8 +195,8 @@ CONSTRUCTION_RULE_EXAMPLES = {
 FALLBACK_COVERAGE_EXAMPLES = (
     {
         "sentence": (
-            "Mary laughed loudly in the park near a window beside a shelf under a "
-            "lamp with a telescope with a camera yesterday"
+            "Mary laughed loudly in the park with a telescope near a window "
+            "with a camera yesterday"
         ),
         "expected_verification_scope_kind": "fallback_shallow",
         "expected_certification_level": "shallow_scaffold",
@@ -562,6 +562,70 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
             ),
         ],
         "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "manner_location_instrument_intransitive_predication",
+        "variant_id": "repeated_instrument_manner_location_instrument_intransitive_predication",
+        "sentence": "Mary laughed loudly in the park with a telescope with a camera",
+        "expected_event_analysis": "manner-location-instrument-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "laugh(4)(loudly, in(park), with(telescope), with(camera), mary)",
+        ],
+        "expected_ast_kind": "application",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "manner_location_instrument_intransitive_predication",
+        "variant_id": "temporal_repeated_instrument_manner_location_instrument_intransitive_predication",
+        "sentence": "Mary laughed loudly in the park with a telescope with a camera yesterday",
+        "expected_event_analysis": "manner-location-instrument-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(4)(loudly, in(park), with(telescope), with(camera), mary))",
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "manner_location_instrument_intransitive_predication",
+        "variant_id": "temporal_extended_repeated_instrument_manner_location_instrument_intransitive_predication",
+        "sentence": (
+            "Mary laughed loudly in the park near a window beside a shelf under a "
+            "lamp with a telescope with a camera yesterday"
+        ),
+        "expected_event_analysis": "manner-location-instrument-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            (
+                "at_T(yesterday, laugh(7)(loudly, in(park), near(window), "
+                "beside(shelf), under(lamp), with(telescope), with(camera), mary))"
+            ),
+        ],
+        "expected_ast_kind": "time",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "manner_location_instrument_intransitive_predication",
+        "variant_id": "stacked_instrument_manner_location_instrument_intransitive_predication",
+        "sentence": (
+            "Mary laughed loudly in the park with a telescope with a camera "
+            "with a microphone"
+        ),
+        "expected_event_analysis": "manner-location-instrument-intransitive-predication",
+        "expected_dependent_type_fragments": [
+            (
+                "laugh(5)(loudly, in(park), with(telescope), with(camera), "
+                "with(microphone), mary)"
+            ),
+        ],
+        "expected_ast_kind": "application",
         "expected_verification_scope_kind": "registered_construction",
         "expected_certification_level": "construction_rule",
         "boundary_status": "registered_variant_example",
@@ -14062,11 +14126,22 @@ def manner_location_instrument_intransitive_application_details(
         or len(modifier_roles) != len(modifiers)
     ):
         return None
+    semantic_roles = [
+        role.get("semantic_role") if isinstance(role, dict) else None
+        for role in modifier_roles
+    ]
+    if semantic_roles[0] != "Manner" or "Instrument" not in semantic_roles[1:]:
+        return None
+    instrument_start = semantic_roles.index("Instrument", 1)
+    if instrument_start < 2:
+        return None
     expected_roles = [
         "Manner",
-        *["Location" for _ in modifiers[1:-1]],
-        "Instrument",
+        *["Location" for _ in range(1, instrument_start)],
+        *["Instrument" for _ in range(instrument_start, len(modifiers))],
     ]
+    if semantic_roles != expected_roles:
+        return None
     for index, (modifier, vector_item, role_item, expected_role) in enumerate(
         zip(modifiers, modifier_vector["items"], modifier_roles, expected_roles)
     ):
@@ -14101,6 +14176,7 @@ def manner_location_instrument_intransitive_application_details(
         **role_details,
         "modifiers": [str(modifier) for modifier in modifiers],
         "modifier_roles": copy.deepcopy(modifier_roles),
+        "instrument_start": instrument_start,
     }
 
 
@@ -14148,8 +14224,12 @@ def manner_location_instrument_intransitive_predication_pipeline(
     arguments = list(details["arguments"])
     modifiers = [str(modifier) for modifier in details["modifiers"]]
     modifier_roles = copy.deepcopy(details["modifier_roles"])
-    location_count = len(modifiers) - 2
-    instrument_modifier = modifiers[-1]
+    instrument_start = int(details["instrument_start"])
+    location_modifiers = modifiers[1:instrument_start]
+    instrument_modifiers = modifiers[instrument_start:]
+    location_count = len(location_modifiers)
+    instrument_count = len(instrument_modifiers)
+    instrument_modifier = instrument_modifiers[-1]
     scope = (
         "explicit_agent_with_manner_location_and_instrument_adv_sequence_at_time"
         if time_modifier
@@ -14167,11 +14247,14 @@ def manner_location_instrument_intransitive_predication_pipeline(
         "modifiers": modifiers,
         "modifier_roles": modifier_roles,
         "location_modifier_count": location_count,
+        "location_modifiers": location_modifiers,
+        "instrument_modifier_count": instrument_count,
+        "instrument_modifiers": instrument_modifiers,
         "instrument_modifier": instrument_modifier,
         "representation": (
             "ModifierSeq-indexed typed unary predicate over one explicit "
-            "Agent, one Manner Adv, one or more Location Advs, and one "
-            "Instrument Adv"
+            "Agent, one Manner Adv, one or more Location Advs, and one or "
+            "more Instrument Advs"
         ),
     }
     if time_modifier is not None:
@@ -14193,11 +14276,12 @@ def manner_location_instrument_intransitive_predication_pipeline(
             "construction_summary": (
                 f"Manner-location-instrument intransitive predication: {predicate} "
                 f"is applied to one typed Manner Adv {modifiers[0]}, "
-                f"{location_count} typed Location Adv modifier(s), and one "
-                f"typed Instrument Adv {instrument_modifier}, then to explicit "
-                f"Entity Agent {arguments[0]} as a ModifierSeq-indexed unary "
-                f"predicate{time_summary}, without exporting Event, Agent, or "
-                "Theme predicates."
+                f"{location_count} typed Location Adv modifier(s), and "
+                f"{instrument_count} typed Instrument Adv modifier(s) "
+                f"{', '.join(instrument_modifiers)}, then to explicit Entity "
+                f"Agent {arguments[0]} as a ModifierSeq-indexed unary predicate"
+                f"{time_summary}, without exporting Event, Agent, or Theme "
+                "predicates."
             ),
             "coq_code": coq_code,
         },
@@ -15384,7 +15468,7 @@ def construction_rules() -> list[ConstructionRule]:
             label="Manner-location-instrument intransitive predication",
             phenomenon=(
                 "Intransitive predicate with one typed Manner Adv, one or "
-                "more Location Advs, one Instrument Adv, and optional time "
+                "more Location Advs, one or more Instrument Advs, and optional time "
                 "wrapper without event variables"
             ),
             analyzer=manner_location_instrument_intransitive_predication_pipeline,
@@ -15399,6 +15483,7 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter beside_shelf : Entity.",
                 "Parameter under_lamp : Entity.",
                 "Parameter with_telescope : Entity.",
+                "Parameter with_camera : Entity.",
                 "Parameter with_microphone : Entity.",
             ),
         ),

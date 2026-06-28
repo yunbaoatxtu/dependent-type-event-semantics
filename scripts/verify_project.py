@@ -2472,8 +2472,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
         (
-            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+"
-            "beside+a+shelf+under+a+lamp+with+a+telescope+with+a+camera+yesterday&amp;require_coq=1&amp;download=1"
+            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+"
+            "with+a+telescope+near+a+window+with+a+camera+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -4046,8 +4046,21 @@ def validate_analyze_manner_location_instrument_intransitive_success(
     if "under a lamp" in sentence:
         expected_modifiers.append("under(lamp)")
         expected_constants.append("under_lamp")
-    expected_modifiers.append("with(telescope)")
-    expected_constants.append("with_telescope")
+    instrument_pairs = [
+        ("with a telescope", "with(telescope)", "with_telescope"),
+        ("with a camera", "with(camera)", "with_camera"),
+        ("with a microphone", "with(microphone)", "with_microphone"),
+    ]
+    expected_instruments: list[str] = []
+    for surface, modifier, constant in instrument_pairs:
+        if surface in sentence:
+            expected_modifiers.append(modifier)
+            expected_constants.append(constant)
+            expected_instruments.append(modifier)
+    if not expected_instruments:
+        raise SystemExit(
+            "web route smoke check failed: manner-location-instrument missing instrument expectation"
+        )
     expected_inner_translation = (
         f"laugh({len(expected_modifiers)})"
         f"({', '.join(expected_modifiers)}, mary)"
@@ -4118,8 +4131,8 @@ def validate_analyze_manner_location_instrument_intransitive_success(
     )
     expected_roles = [
         "Manner",
-        *["Location" for _ in expected_modifiers[1:-1]],
-        "Instrument",
+        *["Location" for _ in range(1, len(expected_modifiers) - len(expected_instruments))],
+        *["Instrument" for _ in expected_instruments],
     ]
     if (
         not isinstance(application_ast, dict)
@@ -4160,8 +4173,11 @@ def validate_analyze_manner_location_instrument_intransitive_success(
         or typed_predication.get("agent_type") != "Entity"
         or typed_predication.get("modifiers") != expected_modifiers
         or typed_predication.get("location_modifier_count")
-        != len(expected_modifiers) - 2
-        or typed_predication.get("instrument_modifier") != "with(telescope)"
+        != len(expected_modifiers) - len(expected_instruments) - 1
+        or typed_predication.get("instrument_modifier_count")
+        != len(expected_instruments)
+        or typed_predication.get("instrument_modifiers") != expected_instruments
+        or typed_predication.get("instrument_modifier") != expected_instruments[-1]
         or [
             role.get("semantic_role")
             for role in typed_predication.get("modifier_roles", [])
@@ -7598,6 +7614,31 @@ def run_web_route_smoke_check() -> None:
             extended_manner_location_instrument_page,
             extended_manner_location_instrument_sentence,
         )
+        repeated_instrument_sentence = (
+            "Mary laughed loudly in the park near a window beside a shelf under a "
+            "lamp with a telescope with a camera yesterday"
+        )
+        repeated_instrument_query = urlencode(
+            {
+                "sentence": repeated_instrument_sentence,
+                "require_coq": "1",
+            }
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{repeated_instrument_query}",
+            timeout=5,
+        ) as response:
+            repeated_instrument_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{repeated_instrument_query}",
+            timeout=5,
+        ) as response:
+            repeated_instrument_page = response.read().decode("utf-8")
+        validate_analyze_manner_location_instrument_intransitive_success(
+            repeated_instrument_payload,
+            repeated_instrument_page,
+            repeated_instrument_sentence,
+        )
         locative_sentence = "a cat sits on a mat"
         locative_query = urlencode({"sentence": locative_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{locative_query}", timeout=5) as response:
@@ -7880,7 +7921,8 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_sentence,
         )
         fallback_sentence = (
-            "Mary laughed loudly in the park near a window beside a shelf under a lamp with a telescope with a camera yesterday"
+            "Mary laughed loudly in the park with a telescope near a window "
+            "with a camera yesterday"
         )
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
