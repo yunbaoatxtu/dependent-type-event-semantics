@@ -36,6 +36,7 @@ from scripts.verify_project import (
     validate_analyze_action_download_artifacts,
     validate_core_json_api_artifacts,
     validate_diagnostic_fixtures_manifest_json_artifact,
+    validate_analyze_json_artifacts,
     validate_diagnostic_fixture_download_artifacts,
     validate_lexicon_patch_json_artifacts,
     validate_lexicon_patch_text_artifacts,
@@ -16789,6 +16790,83 @@ class TranslatorTests(unittest.TestCase):
                         **values,
                     )
 
+    def test_verifier_checks_ordinary_analyze_json_artifacts_without_http(self) -> None:
+        validate_analyze_json_artifacts()
+
+        handler = object.__new__(PipelineHandler)
+        success_payload = PipelineHandler.handle_api(
+            handler,
+            "sentence=John+knocked+twice&require_coq=1",
+        )
+        success_raw = compact_json(success_payload).encode("utf-8")
+        observed_success = validate_json_api_response_bytes(
+            "event_counting",
+            "ordinary analyze",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_header="application/json; charset=utf-8",
+            content_length=str(len(success_raw)),
+            raw=success_raw,
+            expected_payload=success_payload,
+        )
+        self.assertTrue(observed_success["ok"])
+        self.assertEqual(observed_success["schema_version"], ANALYZE_RESPONSE_SCHEMA)
+
+        failure_payload = PipelineHandler.handle_api(
+            handler,
+            "sentence=John&require_coq=1",
+        )
+        failure_raw = compact_json(failure_payload).encode("utf-8")
+        observed_failure = validate_json_api_response_bytes(
+            "ordinary parsing failure",
+            "ordinary analyze failure",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_header="application/json; charset=utf-8",
+            content_length=str(len(failure_raw)),
+            raw=failure_raw,
+            expected_payload=failure_payload,
+        )
+        self.assertFalse(observed_failure["ok"])
+        self.assertEqual(
+            observed_failure["diagnostics"]["failure_stage"],
+            "parsing",
+        )
+
+        stale_payload = deepcopy(success_payload)
+        stale_payload["kind"] = "stale"
+        stale_raw = compact_json(stale_payload).encode("utf-8")
+        negative_cases = [
+            ("JSON status drift", {"status": HTTPStatus.INTERNAL_SERVER_ERROR}),
+            ("JSON content type drift", {"content_type": "text/plain"}),
+            ("JSON charset drift", {"content_header": "application/json"}),
+            ("JSON length drift", {"content_length": "999"}),
+            (
+                "JSON payload drift",
+                {
+                    "content_length": str(len(stale_raw)),
+                    "raw": stale_raw,
+                },
+            ),
+        ]
+        defaults = {
+            "status": HTTPStatus.OK,
+            "content_type": "application/json",
+            "content_header": "application/json; charset=utf-8",
+            "content_length": str(len(success_raw)),
+            "raw": success_raw,
+            "expected_payload": success_payload,
+        }
+        for expected_error, overrides in negative_cases:
+            with self.subTest(expected_error=expected_error):
+                values = {**defaults, **overrides}
+                with self.assertRaisesRegex(SystemExit, expected_error):
+                    validate_json_api_response_bytes(
+                        "event_counting",
+                        "ordinary analyze",
+                        **values,
+                    )
+
     def test_verifier_checks_construction_rule_draft_download_without_http(self) -> None:
         validate_construction_rule_draft_download_artifact()
 
@@ -21382,8 +21460,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("smoke check for the lexicon patch exporter", readme)
         self.assertIn("core JSON API artifact check", readme)
         self.assertIn("diagnostic fixtures manifest JSON artifact check", readme)
+        self.assertIn("ordinary analyze JSON artifact check", readme)
         self.assertIn("replays core JSON API artifacts", manuscript)
         self.assertIn("replays the diagnostic fixtures manifest", manuscript)
+        self.assertIn("ordinary analyze success and failure JSON artifacts", manuscript)
         self.assertIn("replays lexicon patch JSON and text artifacts", manuscript)
         self.assertIn("web route smoke check", readme)
         self.assertIn("real local web route", manuscript)
@@ -21959,6 +22039,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`certification_level: none`", web_design)
         self.assertIn("/api/certified-fragment", web_design)
         self.assertIn("core JSON API artifacts", web_design)
+        self.assertIn("representative ordinary `/api/analyze`", web_design)
         self.assertIn("payload equality from the\nhandler", web_design)
         self.assertIn('"certified_fragment.v1"', web_design)
         self.assertIn("`Certified Fragment` panel", web_design)
@@ -23710,6 +23791,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("def validate_text_artifact_response_bytes(", verifier)
         self.assertIn("def validate_core_json_api_artifacts(", verifier)
         self.assertIn("def validate_diagnostic_fixtures_manifest_json_artifact(", verifier)
+        self.assertIn("def validate_analyze_json_artifacts(", verifier)
         self.assertIn("def validate_construction_rule_draft_download_artifact(", verifier)
         self.assertIn("ORDINARY_ANALYZE_FAILURE_CASES", verifier)
         self.assertIn("def validate_analyze_action_download_artifacts(", verifier)
@@ -23724,6 +23806,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction rule draft download drift", verifier)
         self.assertIn("core JSON API artifact check", verifier)
         self.assertIn("diagnostic fixtures manifest JSON artifact check", verifier)
+        self.assertIn("ordinary analyze JSON artifact check", verifier)
         self.assertIn("construction rule draft download artifact check", verifier)
         self.assertIn("ordinary analyze action download artifact check", verifier)
         self.assertIn("diagnostic fixture download artifact check", verifier)

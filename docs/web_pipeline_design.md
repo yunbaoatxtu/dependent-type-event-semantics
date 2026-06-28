@@ -983,6 +983,11 @@ The no-port verifier should replay the core JSON API artifacts for
 `/api/diagnostic-contract` and `/api/certified-fragment`, validating
 `application/json`, UTF-8 charset, byte length, and payload equality from the
 handler before the live HTTP route is exercised.
+The same no-port boundary should replay representative ordinary `/api/analyze`
+successes and failures from the handler, render their matching pages, run the
+construction-specific semantic validators, and then validate the JSON response
+envelope, byte length, and payload equality before relying on the live route
+smoke check.
 It should also validate `coverage_matrix_counts` against the actual matrix
 lists and compare the page's coverage-count attributes and example hooks with
 the JSON manifest. The page-level smoke check should derive every registered-primary

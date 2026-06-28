@@ -12621,6 +12621,94 @@ def validate_diagnostic_fixtures_manifest_json_artifact() -> None:
     )
 
 
+def validate_analyze_json_artifacts() -> None:
+    from web.app import PipelineHandler, compact_json, render_page
+
+    print("==> ordinary analyze JSON artifact check")
+    handler = object.__new__(PipelineHandler)
+    success_cases = (
+        (
+            "event_counting",
+            "John knocked twice",
+            validate_analyze_event_counting_success,
+        ),
+        (
+            "cat_on_mat",
+            "a cat sits on a mat",
+            validate_analyze_locative_intransitive_success,
+        ),
+        (
+            "quantifier_scope",
+            "some boy loves some girl",
+            validate_analyze_quantifier_scope_success,
+        ),
+        (
+            "perception_nominalization",
+            "Mary saw John leave",
+            validate_analyze_perception_success,
+        ),
+        (
+            "timed_after",
+            "after the singing of the Marseillaise, John saluted the flag",
+            validate_analyze_timed_after_success,
+        ),
+        (
+            "universal_timed_burning",
+            "In every burning, oxygen is consumed",
+            validate_analyze_universal_timed_burning_success,
+        ),
+    )
+    for case, sentence, validator in success_cases:
+        query = urlencode({"sentence": sentence, "require_coq": "1"})
+        payload = PipelineHandler.handle_api(handler, query)
+        page = render_page(sentence, require_coq=True, result=payload)
+        validator(payload, page, sentence)
+        raw = compact_json(payload).encode("utf-8")
+        validate_json_api_response_bytes(
+            case,
+            "ordinary analyze",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_header="application/json; charset=utf-8",
+            content_length=str(len(raw)),
+            raw=raw,
+            expected_payload=payload,
+        )
+
+    for (
+        failure_label,
+        surface_sentence,
+        expected_stage,
+        _expected_action_kind,
+        _expected_can_auto_run,
+        _expected_scope_kind,
+        _expected_certification_level,
+        _expected_scope_rule,
+    ) in ORDINARY_ANALYZE_FAILURE_CASES:
+        query = urlencode({"sentence": surface_sentence, "require_coq": "1"})
+        payload = PipelineHandler.handle_api(handler, query)
+        page = render_page(surface_sentence, require_coq=True, result=payload)
+        normalized_sentence = str(payload.get("input_sentence", surface_sentence))
+        validate_analyze_failure_surface_type_contract(
+            payload,
+            page,
+            normalized_sentence,
+            failure_label,
+            expected_stage,
+        )
+        raw = compact_json(payload).encode("utf-8")
+        validate_json_api_response_bytes(
+            failure_label,
+            "ordinary analyze failure",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_header="application/json; charset=utf-8",
+            content_length=str(len(raw)),
+            raw=raw,
+            expected_payload=payload,
+        )
+
+
 def validate_construction_rule_draft_download_artifact() -> None:
     from web.app import PipelineHandler, compact_json
 
@@ -14891,6 +14979,7 @@ def main() -> None:
     run_lexicon_warning_schema_check()
     validate_core_json_api_artifacts()
     validate_diagnostic_fixtures_manifest_json_artifact()
+    validate_analyze_json_artifacts()
     validate_lexicon_patch_json_artifacts()
     validate_lexicon_patch_text_artifacts()
     validate_construction_rule_draft_download_artifact()

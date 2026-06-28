@@ -2198,11 +2198,15 @@ and a core JSON API artifact check that replays `/api/diagnostic-contract` and
 `application/json`, UTF-8 charset, byte length, and payload equality. A matching
 diagnostic fixtures manifest JSON artifact check replays
 `/api/diagnostic-fixtures` from the handler before the live route is opened,
-then validates the manifest against the fixture payloads and HTML pages. It
-also runs a web route smoke check that requests ordinary `/api/analyze` fallback
-and quantifier-scope successes plus a registered perception-complement success
-plus registered timed-after and universal timed burning successes before the
-diagnostic fixture manifest through the local HTTP handler.
+then validates the manifest against the fixture payloads and HTML pages. The
+ordinary analyze JSON artifact check similarly replays representative
+`/api/analyze` success and failure responses without opening a port, validating
+the JSON response envelope, byte length, and payload equality before the live
+route smoke check runs. It also runs a web route smoke check that requests
+ordinary `/api/analyze` fallback and quantifier-scope successes plus a
+registered perception-complement success plus registered timed-after and
+universal timed burning successes before the diagnostic fixture manifest through
+the local HTTP handler.
 
 Coq/Rocq is not required to run the translator. The Python implementation is
 the core automation layer: it parses the event-semantics input, builds the
