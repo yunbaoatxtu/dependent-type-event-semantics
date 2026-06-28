@@ -16543,6 +16543,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(draft["schema_version"], CONSTRUCTION_RULE_DRAFT_SCHEMA)
         self.assertEqual(draft["candidate_rule_id"], "fallback_time_time_candidate")
         self.assertEqual(
+            payload["download_api_path"],
+            (
+                "/api/construction-rule-draft?sentence=Mary+laughed+from+a+window+"
+                "with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+"
+                "with+a+microphone+near+a+door+with+a+telescope+near+a+window+"
+                "with+a+knife+yesterday&require_coq=1&download=1"
+            ),
+        )
+        self.assertEqual(
+            payload["download_filename"],
+            "construction_rule_draft__fallback_time_time_candidate.json",
+        )
+        self.assertEqual(
             draft["semantic_reading_drafts"][0]["coq_definition"],
             "fallback_time_time_candidate_single_reading",
         )
@@ -16713,6 +16726,21 @@ class TranslatorTests(unittest.TestCase):
                 True,
             )
 
+        stale_download = deepcopy(draft_payload)
+        stale_download["download_filename"] = "construction_rule_draft__stale_rule.json"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft download drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                page,
+                stale_download,
+                sentence,
+                True,
+            )
+
         stale_page = page.replace(
             'data-rule-draft-id="fallback_time_time_candidate"',
             'data-rule-draft-id="stale_rule"',
@@ -16725,6 +16753,24 @@ class TranslatorTests(unittest.TestCase):
                 "fallback",
                 analyze_payload,
                 stale_page,
+                draft_payload,
+                sentence,
+                True,
+            )
+
+        stale_download_page = page.replace(
+            'download="construction_rule_draft__fallback_time_time_candidate.json"',
+            'download="construction_rule_draft__stale_rule.json"',
+            1,
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft HTML drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                stale_download_page,
                 draft_payload,
                 sentence,
                 True,
@@ -19934,8 +19980,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`can_auto_apply: false`", readme)
         self.assertIn("/api/construction-rule-draft", readme)
         self.assertIn("`construction_rule_draft_response.v1` wrapper", readme)
+        self.assertIn("`download_api_path`", readme)
+        self.assertIn("`download_filename`", readme)
+        self.assertIn("construction_rule_draft__fallback_time_time_candidate.json", readme)
         self.assertIn("page's raw draft JSON preview", readme)
         self.assertIn("accepted-example list", readme)
+        self.assertIn("download filename", readme)
         self.assertIn("`data-rule-draft-*` hooks", readme)
         self.assertIn("promotion contract", readme)
         self.assertIn("semantic-reading draft", readme)
@@ -21453,11 +21503,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-rule-draft-forbidden-fragment`", web_design)
         self.assertIn("/api/construction-rule-draft", web_design)
         self.assertIn('`schema_version: "construction_rule_draft_response.v1"`', web_design)
+        self.assertIn("`download_api_path`", web_design)
+        self.assertIn("`download_filename`", web_design)
         self.assertIn("pure verifier helper", web_design)
         self.assertIn("HTML `Raw draft JSON` preview", web_design)
         self.assertIn("`data-rule-draft-accepted-example-count`", web_design)
         self.assertIn("`data-rule-draft-test-scope`", web_design)
         self.assertIn("`data-rule-draft-patch-preview-present`", web_design)
+        self.assertIn("`data-rule-draft-download-filename`", web_design)
         self.assertIn("promotion-contract helper", web_design)
         self.assertIn("verification commands, and patch-text preview", web_design)
         self.assertIn("`registration_preflight`", web_design)
@@ -23215,6 +23268,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("data-rule-draft-accepted-example-count", verifier)
         self.assertIn("data-rule-draft-test-positive-sentence", verifier)
         self.assertIn("data-rule-draft-patch-preview-present", verifier)
+        self.assertIn("data-rule-draft-download-filename", verifier)
+        self.assertIn("construction rule draft download drift", verifier)
         self.assertIn('data-coq-definition="example_1"', verifier)
         self.assertIn('"fallback"', verifier)
         self.assertIn("reading_explanation HTML drift", verifier)

@@ -121,8 +121,10 @@ The page renders it as `Construction Rule Draft` with stable hooks such as
 `data-rule-draft-reading`, and `data-rule-draft-forbidden-fragment`. The
 parallel `/api/construction-rule-draft` route returns
 `schema_version: "construction_rule_draft_response.v1"` and can serve the same
-payload as a downloadable JSON artifact through `download=1`. The route is also
-covered by a pure verifier helper: the response wrapper must preserve the
+payload as a downloadable JSON artifact through `download=1`. Successful
+responses expose the same `download_api_path` and stable `download_filename`
+that the page places on its download link. The route is also covered by a pure
+verifier helper: the response wrapper must preserve the
 ordinary analysis' `construction_rule_draft`, `verification_scope`, and
 `diagnostics`, and the HTML `Raw draft JSON` preview must equal the same draft
 payload. This keeps the upgrade artifact checkable even in environments that
@@ -130,8 +132,9 @@ cannot start the local HTTP smoke-test server. The page should additionally
 mirror accepted examples, registration-test fields, patch-text preview, and
 derived counts through stable `data-rule-draft-*` hooks such as
 `data-rule-draft-accepted-example-count`, `data-rule-draft-test-scope`, and
-`data-rule-draft-patch-preview-present`, so reviewers need not inspect raw JSON
-to see the draft's registration boundary. A promotion-contract helper also
+`data-rule-draft-patch-preview-present`, and it mirrors the stable file name as
+`data-rule-draft-download-filename`, so reviewers need not inspect raw JSON to
+see the draft's registration boundary. A promotion-contract helper also
 compares `certification_upgrade_plan` with the draft: candidate rule id, source
 sentence, dependent-type translation, AST summary, semantic-reading draft, test
 draft, verification commands, and patch-text preview must agree.

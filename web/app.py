@@ -3065,6 +3065,7 @@ def construction_rule_draft_panel(
         else "<li>none</li>"
     )
     download_href = construction_rule_draft_api_path(sentence, require_coq, download=True)
+    download_filename = construction_rule_draft_artifact_filename(candidate_rule_id)
     patch_text_preview = draft.get("patch_text_preview")
     patch_text = patch_text_preview if isinstance(patch_text_preview, str) else ""
     patch_preview_present = bool(patch_text.strip())
@@ -3094,7 +3095,9 @@ def construction_rule_draft_panel(
         + "</dl>"
         '<div class="panel-action">'
         f'<a class="construction-rule-draft-link" href="{html.escape(download_href, quote=True)}" '
-        'data-rule-draft-format="json" download="construction_rule_draft.json">'
+        'data-rule-draft-format="json" '
+        f'data-rule-draft-download-filename="{html.escape(download_filename, quote=True)}" '
+        f'download="{html.escape(download_filename, quote=True)}">'
         "Download draft JSON"
         "</a>"
         "</div>"
@@ -3135,6 +3138,7 @@ def construction_rule_draft_panel(
         f'data-rule-draft-preflight-blocking-count="{preflight_blocking_count}" '
         f'data-rule-draft-preflight-review-field-count="{preflight_review_field_count}" '
         f'data-rule-draft-command-count="{command_count}" '
+        f'data-rule-draft-download-filename="{html.escape(download_filename, quote=True)}" '
         f'data-rule-draft-patch-preview-present="{str(patch_preview_present).lower()}">'
         "<h2>Construction Rule Draft</h2>"
         f'<div class="construction-rule-draft">{body}</div>'
@@ -4997,6 +5001,14 @@ class PipelineHandler(BaseHTTPRequestHandler):
                 "input_sentence": sentence,
                 "draft_schema_version": CONSTRUCTION_RULE_DRAFT_SCHEMA,
                 "construction_rule_draft": draft,
+                "download_api_path": construction_rule_draft_api_path(
+                    sentence,
+                    require_coq,
+                    download=True,
+                ),
+                "download_filename": construction_rule_draft_artifact_filename(
+                    str(draft.get("candidate_rule_id", ""))
+                ),
                 "verification_scope": result.get("verification_scope", {}),
                 "diagnostics": result.get("diagnostics", {}),
             },

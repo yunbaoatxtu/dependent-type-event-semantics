@@ -2587,6 +2587,14 @@ def validate_construction_rule_draft_export(
             "download": "1",
         }
     )
+    expected_filename = construction_rule_draft_artifact_filename(candidate_rule_id)
+    if (
+        draft_payload.get("download_api_path") != expected_href
+        or draft_payload.get("download_filename") != expected_filename
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft download drift"
+        )
     raw_json = html.escape(json.dumps(draft, ensure_ascii=False, indent=2))
     expected_fragments = [
         'data-rule-draft-schema="construction_rule_draft.v1"',
@@ -2626,6 +2634,8 @@ def validate_construction_rule_draft_export(
             f'{str(bool(patch_text.strip())).lower()}"'
         ),
         f'href="{html.escape(expected_href, quote=True)}"',
+        f'data-rule-draft-download-filename="{html.escape(expected_filename, quote=True)}"',
+        f'download="{html.escape(expected_filename, quote=True)}"',
         raw_json,
     ]
     require_text_fragments(
@@ -2716,7 +2726,6 @@ def validate_construction_rule_draft_export(
             f"{label} construction rule draft preflight HTML",
         )
 
-    expected_filename = construction_rule_draft_artifact_filename(candidate_rule_id)
     if (
         not expected_filename.startswith("construction_rule_draft__")
         or not expected_filename.endswith(".json")

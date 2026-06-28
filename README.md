@@ -895,15 +895,18 @@ hygiene policy draft, test draft, and patch-text preview. The draft is marked
 machine-readable promotion artifact for authors, not an automatic claim that the
 fallback sentence has become construction-level certified. The same payload is
 available from `/api/construction-rule-draft`, with `download=1` returning a
-JSON artifact for review. The deterministic verifier now checks this route even
-when the local HTTP smoke test is unavailable: the
+JSON artifact for review. The successful response now also carries
+`download_api_path` and a stable `download_filename` such as
+`construction_rule_draft__fallback_time_time_candidate.json`, and the page's
+download link mirrors the same filename. The deterministic verifier now checks
+this route even when the local HTTP smoke test is unavailable: the
 `construction_rule_draft_response.v1` wrapper must carry the same
 `construction_rule_draft`, `verification_scope`, and `diagnostics` as the
 ordinary analysis, and the page's raw draft JSON preview must match the API
 payload exactly. The page also mirrors the accepted-example list, registration
-test draft, patch-text preview, and their derived counts through stable
-`data-rule-draft-*` hooks, so a stale review panel cannot hide behind the raw
-JSON block. The same promotion contract also cross-checks the
+test draft, patch-text preview, download filename, and their derived counts
+through stable `data-rule-draft-*` hooks, so a stale review panel cannot hide
+behind the raw JSON block. The same promotion contract also cross-checks the
 `certification_upgrade_plan` against the draft: candidate rule id, source
 sentence, dependent-type translation, AST summary, semantic-reading draft,
 test draft, verification command, and patch-text preview must agree before the
