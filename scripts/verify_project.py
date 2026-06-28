@@ -11378,9 +11378,24 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     if not isinstance(surface_generation_spec, dict):
         surface_generation_spec = {}
     surface_generation_modifiers = surface_generation_spec.get("modifiers")
+    surface_examples = [
+        item
+        for item in modified_surface.get("verified_examples", [])
+        if isinstance(item, dict)
+    ]
     surface_slot_probes = modified_surface.get("slot_probe_examples")
     if not isinstance(surface_slot_probes, dict):
         surface_slot_probes = {}
+    surface_probe_rows = [
+        item
+        for item in surface_slot_probes.get("probes", [])
+        if isinstance(item, dict)
+    ]
+    surface_matrix_rows = [
+        item
+        for item in surface_slot_probes.get("matrix_examples", [])
+        if isinstance(item, dict)
+    ]
     surface_slot_probe_generation_spec = surface_slot_probes.get(
         "probe_generation_spec",
     )
@@ -11620,51 +11635,6 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
-        'data-surface-slot-probe-id="subject_slot_john"',
-        'data-surface-slot-probe-slot="agent"',
-        'data-surface-slot-probe-sentence="John admired the painting in the gallery"',
-        'data-surface-slot-probe-id="theme_slot_sculpture"',
-        'data-surface-slot-probe-slot="theme"',
-        'data-surface-slot-probe-sentence="Mary admired the sculpture in the gallery"',
-        'data-surface-slot-probe-id="predicate_slot_photograph"',
-        'data-surface-slot-probe-slot="predicate"',
-        'data-surface-slot-probe-id="combined_slots_timed_max_prefix"',
-        'data-surface-slot-probe-slot="agent_predicate_theme"',
-        'data-surface-slot-probe-modifier-count="5"',
-        'data-surface-slot-probe-time-wrapped="true"',
-        (
-            'data-surface-slot-matrix-id="'
-            'agent_mary__predicate_admire__theme_painting__profile_one_adv_untimed"'
-        ),
-        'data-surface-slot-matrix-profile="max_prefix_timed"',
-        'data-surface-slot-matrix-agent="john"',
-        'data-surface-slot-matrix-agent-type="Entity"',
-        'data-surface-slot-matrix-predicate="photograph"',
-        (
-            'data-surface-slot-matrix-predicate-type="forall n : nat, '
-            'ModifierSeq n -&gt; Entity -&gt; Entity -&gt; PropT"'
-        ),
-        'data-surface-slot-matrix-theme="sculpture"',
-        'data-surface-slot-matrix-theme-type="Entity"',
-        'data-surface-slot-matrix-modifier-type="Adv"',
-        'data-surface-slot-matrix-time-type="Time"',
-        'data-surface-slot-matrix-modifier-count="5"',
-        'data-surface-slot-matrix-time-wrapped="true"',
-        'data-surface-example-variant-id="primary_modified_transitive_predication"',
-        'data-surface-example-sentence="Mary admired the painting in the gallery"',
-        'data-surface-example-source="registered_primary_example"',
-        'data-surface-example-variant-id="temporal_quint_adv_modified_transitive_predication"',
-        (
-            'data-surface-example-sentence="Mary admired the painting in the gallery '
-            'with a telescope near a window beside a shelf under a lamp yesterday"'
-        ),
-        'data-surface-example-modifier-count="5"',
-        'data-surface-example-time-wrapped="true"',
-        'data-surface-example-source="registered_variant_example"',
-        'data-surface-example-analysis="modified-transitive-predication"',
-        'data-surface-example-ast-kind="application"',
-        'data-surface-example-ast-kind="time"',
-        'data-surface-example-fragment-count="1"',
         "surface parser coverage",
         "<h2>Certified Fragment</h2>",
     ]
@@ -11691,6 +11661,132 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
                 "data-modifier-sequence-role-witness-normalized",
                 witness.get("normalized_modifier", ""),
             ),
+        )
+    for example in surface_examples:
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-surface-example-variant-id",
+                    example.get("variant_id", ""),
+                ),
+                data_fragment(
+                    "data-surface-example-sentence",
+                    example.get("sentence", ""),
+                ),
+                data_fragment(
+                    "data-surface-example-modifier-count",
+                    example.get("modifier_count", ""),
+                ),
+                data_fragment(
+                    "data-surface-example-time-wrapped",
+                    str(example.get("time_wrapped") is True).lower(),
+                ),
+                data_fragment(
+                    "data-surface-example-source",
+                    example.get("source", ""),
+                ),
+                data_fragment(
+                    "data-surface-example-analysis",
+                    example.get("expected_event_analysis", ""),
+                ),
+                data_fragment(
+                    "data-surface-example-ast-kind",
+                    example.get("expected_ast_kind", ""),
+                ),
+                data_fragment(
+                    "data-surface-example-fragment-count",
+                    len(example.get("expected_dependent_type_fragments", []))
+                    if isinstance(
+                        example.get("expected_dependent_type_fragments"),
+                        list,
+                    )
+                    else 0,
+                ),
+            ],
+        )
+    for probe in surface_probe_rows:
+        expected_fragments.extend(
+            [
+                data_fragment("data-surface-slot-probe-id", probe.get("probe_id", "")),
+                data_fragment("data-surface-slot-probe-slot", probe.get("slot", "")),
+                data_fragment(
+                    "data-surface-slot-probe-sentence",
+                    probe.get("sentence", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-probe-modifier-count",
+                    probe.get("modifier_count", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-probe-time-wrapped",
+                    str(probe.get("time_wrapped") is True).lower(),
+                ),
+            ],
+        )
+    for matrix_row in surface_matrix_rows:
+        agent = matrix_row.get("agent")
+        if not isinstance(agent, dict):
+            agent = {}
+        predicate = matrix_row.get("predicate")
+        if not isinstance(predicate, dict):
+            predicate = {}
+        theme = matrix_row.get("theme")
+        if not isinstance(theme, dict):
+            theme = {}
+        type_contract = matrix_row.get("type_contract")
+        if not isinstance(type_contract, dict):
+            type_contract = {}
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-surface-slot-matrix-id",
+                    matrix_row.get("matrix_id", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-profile",
+                    matrix_row.get("profile_id", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-agent",
+                    agent.get("semantic", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-agent-type",
+                    type_contract.get("agent_dependent_type", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-predicate",
+                    predicate.get("semantic", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-predicate-type",
+                    type_contract.get("predicate_dependent_type", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-theme",
+                    theme.get("semantic", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-theme-type",
+                    type_contract.get("theme_dependent_type", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-modifier-type",
+                    type_contract.get("modifier_dependent_type", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-time-type",
+                    type_contract.get("time_argument_type", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-modifier-count",
+                    matrix_row.get("modifier_count", ""),
+                ),
+                data_fragment(
+                    "data-surface-slot-matrix-time-wrapped",
+                    str(matrix_row.get("time_wrapped") is True).lower(),
+                ),
+            ],
         )
     expected_fragments.extend(
         f'data-certified-rule-id="{html.escape(str(item.get("id", "")), quote=True)}"'

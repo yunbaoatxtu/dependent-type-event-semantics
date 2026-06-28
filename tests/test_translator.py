@@ -15067,59 +15067,154 @@ class TranslatorTests(unittest.TestCase):
                 ),
                 manifest,
             )
-        self.assertIn('data-surface-slot-probe-id="subject_slot_john"', page)
-        self.assertIn('data-surface-slot-probe-slot="agent"', page)
-        self.assertIn(
-            'data-surface-slot-probe-sentence="John admired the painting in the gallery"',
-            page,
+        surface_examples = surface_parser_coverage["verified_examples"]
+        surface_probe_rows = surface_slot_probes["probes"]
+        surface_matrix_rows = surface_slot_probes["matrix_examples"]
+
+        def surface_example_attrs(example: dict[str, object]) -> list[str]:
+            fragments = example.get("expected_dependent_type_fragments")
+            return [
+                data_attr("data-surface-example-variant-id", example["variant_id"]),
+                data_attr("data-surface-example-sentence", example["sentence"]),
+                data_attr(
+                    "data-surface-example-modifier-count",
+                    example["modifier_count"],
+                ),
+                data_attr(
+                    "data-surface-example-time-wrapped",
+                    str(example["time_wrapped"] is True).lower(),
+                ),
+                data_attr("data-surface-example-source", example["source"]),
+                data_attr(
+                    "data-surface-example-analysis",
+                    example["expected_event_analysis"],
+                ),
+                data_attr(
+                    "data-surface-example-ast-kind",
+                    example["expected_ast_kind"],
+                ),
+                data_attr(
+                    "data-surface-example-fragment-count",
+                    len(fragments) if isinstance(fragments, list) else 0,
+                ),
+            ]
+
+        def surface_probe_attrs(probe: dict[str, object]) -> list[str]:
+            return [
+                data_attr("data-surface-slot-probe-id", probe["probe_id"]),
+                data_attr("data-surface-slot-probe-slot", probe["slot"]),
+                data_attr("data-surface-slot-probe-sentence", probe["sentence"]),
+                data_attr(
+                    "data-surface-slot-probe-modifier-count",
+                    probe["modifier_count"],
+                ),
+                data_attr(
+                    "data-surface-slot-probe-time-wrapped",
+                    str(probe["time_wrapped"] is True).lower(),
+                ),
+            ]
+
+        def surface_matrix_attrs(example: dict[str, object]) -> list[str]:
+            agent = example["agent"]
+            predicate = example["predicate"]
+            theme = example["theme"]
+            type_contract = example["type_contract"]
+            return [
+                data_attr("data-surface-slot-matrix-id", example["matrix_id"]),
+                data_attr(
+                    "data-surface-slot-matrix-profile",
+                    example["profile_id"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-agent",
+                    agent["semantic"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-agent-type",
+                    type_contract["agent_dependent_type"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-predicate",
+                    predicate["semantic"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-predicate-type",
+                    type_contract["predicate_dependent_type"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-theme",
+                    theme["semantic"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-theme-type",
+                    type_contract["theme_dependent_type"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-modifier-type",
+                    type_contract["modifier_dependent_type"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-time-type",
+                    type_contract["time_argument_type"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-modifier-count",
+                    example["modifier_count"],
+                ),
+                data_attr(
+                    "data-surface-slot-matrix-time-wrapped",
+                    str(example["time_wrapped"] is True).lower(),
+                ),
+            ]
+
+        for example in surface_examples:
+            for expected_attr in surface_example_attrs(example):
+                self.assertIn(expected_attr, page)
+        for probe in surface_probe_rows:
+            for expected_attr in surface_probe_attrs(probe):
+                self.assertIn(expected_attr, page)
+        for matrix_row in surface_matrix_rows:
+            for expected_attr in surface_matrix_attrs(matrix_row):
+                self.assertIn(expected_attr, page)
+        stale_surface_example_attr = data_attr(
+            "data-surface-example-variant-id",
+            surface_examples[0]["variant_id"],
         )
-        self.assertIn('data-surface-slot-probe-id="theme_slot_sculpture"', page)
-        self.assertIn('data-surface-slot-probe-slot="theme"', page)
-        self.assertIn(
-            'data-surface-slot-probe-sentence="Mary admired the sculpture in the gallery"',
-            page,
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_surface_example_attr,
+                    data_attr("data-surface-example-variant-id", "stale"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_probe_attr = data_attr(
+            "data-surface-slot-probe-id",
+            surface_probe_rows[0]["probe_id"],
         )
-        self.assertIn('data-surface-slot-probe-id="combined_slots_timed_max_prefix"', page)
-        self.assertIn('data-surface-slot-probe-slot="agent_predicate_theme"', page)
-        self.assertIn('data-surface-slot-probe-time-wrapped="true"', page)
-        self.assertIn(
-            'data-surface-slot-matrix-id="agent_mary__predicate_admire__theme_painting__profile_one_adv_untimed"',
-            page,
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_probe_attr,
+                    data_attr("data-surface-slot-probe-id", "stale"),
+                    1,
+                ),
+                manifest,
+            )
+        stale_matrix_attr = data_attr(
+            "data-surface-slot-matrix-id",
+            surface_matrix_rows[0]["matrix_id"],
         )
-        self.assertIn('data-surface-slot-matrix-profile="max_prefix_timed"', page)
-        self.assertIn('data-surface-slot-matrix-agent="john"', page)
-        self.assertIn('data-surface-slot-matrix-agent-type="Entity"', page)
-        self.assertIn('data-surface-slot-matrix-predicate="photograph"', page)
-        self.assertIn(
-            "data-surface-slot-matrix-predicate-type=\"forall n : nat, ModifierSeq n -&gt; Entity -&gt; Entity -&gt; PropT\"",
-            page,
-        )
-        self.assertIn('data-surface-slot-matrix-theme="sculpture"', page)
-        self.assertIn('data-surface-slot-matrix-theme-type="Entity"', page)
-        self.assertIn('data-surface-slot-matrix-modifier-type="Adv"', page)
-        self.assertIn('data-surface-slot-matrix-time-type="Time"', page)
-        self.assertIn('data-surface-slot-matrix-modifier-count="5"', page)
-        self.assertIn('data-surface-slot-matrix-time-wrapped="true"', page)
-        self.assertIn(
-            'data-surface-example-variant-id="primary_modified_transitive_predication"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-example-sentence="Mary admired the painting in the gallery"',
-            page,
-        )
-        self.assertIn('data-surface-example-modifier-count="5"', page)
-        self.assertIn('data-surface-example-time-wrapped="true"', page)
-        self.assertIn(
-            'data-surface-example-source="registered_variant_example"',
-            page,
-        )
-        self.assertIn(
-            'data-surface-example-analysis="modified-transitive-predication"',
-            page,
-        )
-        self.assertIn('data-surface-example-ast-kind="time"', page)
-        self.assertIn('data-surface-example-fragment-count="1"', page)
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    stale_matrix_attr,
+                    data_attr("data-surface-slot-matrix-id", "stale"),
+                    1,
+                ),
+                manifest,
+            )
         self.assertIn('data-certified-rule-id="quantifier_scope_ambiguity"', page)
         self.assertIn('data-certified-example="some boy loves some girl"', page)
         self.assertIn('data-certified-rule-id="perception_nominalization"', page)
@@ -20216,6 +20311,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("no longer carries a second hard-coded role table", manuscript)
         self.assertIn("witness-generator metadata", manuscript)
         self.assertIn("second hard-coded surface-parser attribute table", manuscript)
+        self.assertIn("every surface witness row", manuscript)
+        self.assertIn("slot-probe row", manuscript)
         self.assertIn("protects thematic-role typing", manuscript)
         self.assertIn("unrestricted natural-language parsing as open", manuscript)
         self.assertIn(
@@ -21138,6 +21235,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("hard-coded role table", readme)
         self.assertIn("counts, witness generator", readme)
         self.assertIn("second hard-coded surface-parser attribute table", readme)
+        self.assertIn("every surface witness row", readme)
+        self.assertIn("matrix row", readme)
         self.assertIn("`registered_semantic_role_witnesses`", readme)
         self.assertIn("`data-modifier-sequence-role-witness-*` hooks", readme)
         self.assertIn("`semantic_role_witness_selection_contract`", readme)
@@ -21206,6 +21305,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("second hard-coded webpage contract", web_design)
         self.assertIn("counts, witness generator", web_design)
         self.assertIn("surface-parser attribute table", web_design)
+        self.assertIn("every surface witness row", web_design)
+        self.assertIn("slot-probe row", web_design)
         self.assertIn("`registered_semantic_role_witnesses`", web_design)
         self.assertIn("`data-modifier-sequence-role-witness-*` attributes", web_design)
         self.assertIn("`semantic_role_witness_selection_contract`", web_design)
