@@ -941,7 +941,13 @@ The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
 roles to be drawn from that inventory while preserving the current minimum
-coverage counts for each role.
+coverage counts for each role. A nested `semantic_role_source_contract` records
+that the inventory is derived from `translator/surface_lexicon.py`: prepositional
+roles come from `MODIFIER_ROLE_BY_PREDICATE`, ordinary entries in
+`COMMON_ADVERBS` contribute the `Manner` role, and the web panel mirrors the
+derived list through `data-modifier-sequence-role-source-*` hooks. The verifier
+recomputes that source contract and rejects drift between the advertised role
+inventory and the surface lexicon boundary.
 The same manifest now includes a `coverage_matrix` with four audited slices:
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases

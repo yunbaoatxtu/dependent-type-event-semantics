@@ -44,6 +44,7 @@ from translator.surface_lexicon import (
     COUNT_NOUNS,
     COMMON_ADVERBS,
     COUNT_WORDS,
+    MODIFIER_ROLE_BY_PREDICATE,
     PASSIVE_AUXILIARIES,
     PREPOSITIONS,
     SURFACE_LEXICON_SOURCE,
@@ -20383,6 +20384,22 @@ REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY = [
 ]
 
 
+def registered_modifier_role_source_contract() -> dict[str, Any]:
+    preposition_roles = sorted(set(MODIFIER_ROLE_BY_PREDICATE.values()))
+    derived_roles = sorted({*preposition_roles, "Manner"})
+    return {
+        "schema_version": "modifier_role_source_contract.v1",
+        "source_module": SURFACE_LEXICON_SOURCE,
+        "preposition_role_table": "MODIFIER_ROLE_BY_PREDICATE",
+        "preposition_roles": preposition_roles,
+        "common_adverb_source": "COMMON_ADVERBS",
+        "common_adverb_count": len(COMMON_ADVERBS),
+        "common_adverb_role": "Manner",
+        "role_type": "Adv",
+        "derived_role_inventory": derived_roles,
+    }
+
+
 def declared_application_modifier_counts(
     coverage_items: Iterable[dict[str, Any]],
 ) -> list[int]:
@@ -20529,15 +20546,18 @@ def registered_modifier_sequence_contract_payload(
             "surface_lexicon_matches_modifier_roles",
             "observed_modifier_roles_are_registered",
             "registered_modifier_role_minima_are_observed",
+            "registered_modifier_roles_are_surface_lexicon_derived",
         ],
         "registered_semantic_role_inventory": copy.deepcopy(
             REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY,
         ),
+        "semantic_role_source_contract": registered_modifier_role_source_contract(),
         "live_validation": {
             "validator": "scripts/verify_project.py::validate_registered_modifier_sequence_contract",
             "scope": "run every registered primary and variant success case",
             "max_application_modifier_count_is_recomputed": True,
             "semantic_role_inventory_is_recomputed": True,
+            "semantic_role_source_contract_is_recomputed": True,
         },
     }
 

@@ -3369,6 +3369,11 @@ def certified_fragment_panel() -> str:
         for item in modifier_sequence_contract.get("registered_semantic_role_inventory", [])
         if isinstance(item, dict)
     ]
+    modifier_role_source_contract = modifier_sequence_contract.get(
+        "semantic_role_source_contract",
+    )
+    if not isinstance(modifier_role_source_contract, dict):
+        modifier_role_source_contract = {}
     modifier_role_names = ",".join(
         str(item.get("role", ""))
         for item in modifier_role_inventory
@@ -3379,6 +3384,14 @@ def certified_fragment_panel() -> str:
         for item in modifier_role_inventory
         if isinstance(item.get("role"), str)
         and isinstance(item.get("minimum_observed_occurrences"), int)
+    )
+    derived_role_inventory = modifier_role_source_contract.get(
+        "derived_role_inventory",
+    )
+    if not isinstance(derived_role_inventory, list):
+        derived_role_inventory = []
+    modifier_role_source_roles = ",".join(
+        str(role) for role in derived_role_inventory if isinstance(role, str)
     )
     modifier_role_inventory_items = "".join(
         (
@@ -3625,6 +3638,10 @@ def certified_fragment_panel() -> str:
         f'data-modifier-sequence-role-inventory="{html.escape(modifier_role_names, quote=True)}" '
         f'data-modifier-sequence-role-count="{len(modifier_role_inventory)}" '
         f'data-modifier-sequence-role-minima="{html.escape(modifier_role_minima, quote=True)}" '
+        f'data-modifier-sequence-role-source-schema="{html.escape(str(modifier_role_source_contract.get("schema_version", "")), quote=True)}" '
+        f'data-modifier-sequence-role-source-module="{html.escape(str(modifier_role_source_contract.get("source_module", "")), quote=True)}" '
+        f'data-modifier-sequence-role-source-table="{html.escape(str(modifier_role_source_contract.get("preposition_role_table", "")), quote=True)}" '
+        f'data-modifier-sequence-role-source-derived="{html.escape(modifier_role_source_roles, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -3649,6 +3666,7 @@ def certified_fragment_panel() -> str:
         f"<dt>modifier contract</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('schema_version', '')))}</code></dd>"
         f"<dt>modifier max</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('max_declared_application_modifier_count', '')))}</code></dd>"
         f"<dt>modifier roles</dt><dd><code>{html.escape(modifier_role_names)}</code></dd>"
+        f"<dt>role source</dt><dd><code>{html.escape(str(modifier_role_source_contract.get('preposition_role_table', '')))}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"

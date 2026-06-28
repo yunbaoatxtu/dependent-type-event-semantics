@@ -10481,6 +10481,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         construction_rules,
         declared_application_modifier_counts,
         exported_prop_definition_names,
+        registered_modifier_role_source_contract,
         run_pipeline,
     )
 
@@ -10549,6 +10550,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "surface_lexicon_matches_modifier_roles",
         "observed_modifier_roles_are_registered",
         "registered_modifier_role_minima_are_observed",
+        "registered_modifier_roles_are_surface_lexicon_derived",
     ]
     expected_modifier_role_inventory = [
         {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
@@ -10560,6 +10562,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     expected_declared_modifier_counts = declared_application_modifier_counts(
         [*snapshots, *registered_variant_cases],
     )
+    expected_modifier_role_source_contract = registered_modifier_role_source_contract()
     if (
         not isinstance(modifier_contract, dict)
         or modifier_contract.get("schema_version")
@@ -10579,6 +10582,8 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or modifier_contract.get("required_invariants") != expected_modifier_invariants
         or modifier_contract.get("registered_semantic_role_inventory")
         != expected_modifier_role_inventory
+        or modifier_contract.get("semantic_role_source_contract")
+        != expected_modifier_role_source_contract
     ):
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence contract drift"
@@ -10588,6 +10593,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         not isinstance(live_validation, dict)
         or live_validation.get("max_application_modifier_count_is_recomputed") is not True
         or live_validation.get("semantic_role_inventory_is_recomputed") is not True
+        or live_validation.get("semantic_role_source_contract_is_recomputed") is not True
     ):
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence live validator drift"
@@ -10598,6 +10604,13 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     expected_modifier_role_names = {
         str(item["role"]) for item in expected_modifier_role_inventory
     }
+    if (
+        expected_modifier_role_source_contract.get("derived_role_inventory")
+        != sorted(expected_modifier_role_names)
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence role source drift"
+        )
     expected_modifier_role_minima = {
         str(item["role"]): int(item["minimum_observed_occurrences"])
         for item in expected_modifier_role_inventory
@@ -11296,6 +11309,10 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-role-inventory="Goal,Instrument,Location,Manner,Source"',
         'data-modifier-sequence-role-count="5"',
         'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
+        'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
+        'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
+        'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',
+        'data-modifier-sequence-role-source-derived="Goal,Instrument,Location,Manner,Source"',
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-modifier-sequence-role="Goal"',

@@ -13457,6 +13457,26 @@ class TranslatorTests(unittest.TestCase):
                 {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
             ],
         )
+        self.assertEqual(
+            modifier_contract["semantic_role_source_contract"],
+            {
+                "schema_version": "modifier_role_source_contract.v1",
+                "source_module": "translator/surface_lexicon.py",
+                "preposition_role_table": "MODIFIER_ROLE_BY_PREDICATE",
+                "preposition_roles": ["Goal", "Instrument", "Location", "Source"],
+                "common_adverb_source": "COMMON_ADVERBS",
+                "common_adverb_count": 7,
+                "common_adverb_role": "Manner",
+                "role_type": "Adv",
+                "derived_role_inventory": [
+                    "Goal",
+                    "Instrument",
+                    "Location",
+                    "Manner",
+                    "Source",
+                ],
+            },
+        )
         self.assertTrue(
             modifier_contract["live_validation"][
                 "max_application_modifier_count_is_recomputed"
@@ -13465,6 +13485,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(
             modifier_contract["live_validation"][
                 "semantic_role_inventory_is_recomputed"
+            ],
+        )
+        self.assertTrue(
+            modifier_contract["live_validation"][
+                "semantic_role_source_contract_is_recomputed"
             ],
         )
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -14161,6 +14186,13 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
             validate_certified_fragment_manifest(role_coverage_drift_manifest)
 
+        role_source_drift_manifest = deepcopy(construction_fragment_manifest())
+        role_source_drift_manifest["registered_modifier_sequence_contract"][
+            "semantic_role_source_contract"
+        ]["derived_role_inventory"] = ["Location"]
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(role_source_drift_manifest)
+
     def test_verification_rejects_surface_parser_generation_spec_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         generation_spec = manifest["surface_parser_coverage"][
@@ -14598,6 +14630,22 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-modifier-sequence-role-count="5"', page)
         self.assertIn(
             'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-source-schema="modifier_role_source_contract.v1"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-source-module="translator/surface_lexicon.py"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-source-table="MODIFIER_ROLE_BY_PREDICATE"',
+            page,
+        )
+        self.assertIn(
+            'data-modifier-sequence-role-source-derived="Goal,Instrument,Location,Manner,Source"',
             page,
         )
         self.assertIn(
@@ -20739,6 +20787,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("modifier-role rows must be `Adv` rather than `Entity`", readme)
         self.assertIn("registered semantic-role inventory", readme)
         self.assertIn("`Goal`, `Instrument`, `Location`, `Manner`, and `Source`", readme)
+        self.assertIn("`semantic_role_source_contract`", readme)
+        self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", readme)
+        self.assertIn("`COMMON_ADVERBS`", readme)
+        self.assertIn("`data-modifier-sequence-role-source-*` hooks", readme)
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
@@ -20793,6 +20845,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("to remain `Adv` typed rather than `Entity` typed", web_design)
         self.assertIn("`data-modifier-sequence-role-*` hooks", web_design)
         self.assertIn("minimum role-coverage counts", web_design)
+        self.assertIn("`semantic_role_source_contract`", web_design)
+        self.assertIn("`data-modifier-sequence-role-source-*` attributes", web_design)
+        self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)
