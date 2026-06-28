@@ -2472,8 +2472,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
         (
-            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+yesterday&amp;"
-            "require_coq=1&amp;download=1"
+            "/api/construction-rule-draft?sentence=Mary+laughed+loudly+in+the+park+near+a+window+"
+            "beside+a+shelf+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -3375,6 +3375,207 @@ def validate_analyze_manner_locative_intransitive_success(
     if html.escape(sentence, quote=True) not in page:
         raise SystemExit(
             "web route smoke check failed: manner-locative intransitive page input drift"
+        )
+
+
+def validate_analyze_manner_two_location_intransitive_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_manner_two_location_intransitive_success"
+    is_timed = sentence == "Mary laughed loudly in the park near a window yesterday"
+    expected_translation = (
+        "at_T(yesterday, laugh(3)(loudly, in(park), near(window), mary))"
+        if is_timed
+        else "laugh(3)(loudly, in(park), near(window), mary)"
+    )
+    expected_scope = (
+        "explicit_agent_with_manner_and_two_location_adv_at_time"
+        if is_timed
+        else "explicit_agent_with_manner_and_two_location_adv"
+    )
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "manner_two_location_intransitive_predication",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "manner_two_location_intransitive_predication",
+        "registered_construction",
+        "construction_rule",
+        "manner_two_location_intransitive_predication",
+    )
+    if payload.get("kind") != "manner_two_location_intransitive_predication":
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location intransitive kind drift"
+        )
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location intransitive translation drift"
+        )
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location exposes fallback draft"
+        )
+    ast = payload.get("ast")
+    application_ast = ast
+    if is_timed and isinstance(ast, dict):
+        if (
+            ast.get("kind") != "time"
+            or ast.get("operator") != "at"
+            or ast.get("arguments") != ["yesterday"]
+            or not isinstance(ast.get("body"), dict)
+        ):
+            raise SystemExit(
+                "web route smoke check failed: timed manner-two-location AST drift"
+            )
+        application_ast = ast["body"]
+    role_frame = (
+        application_ast.get("role_frame", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_roles = (
+        application_ast.get("modifier_roles", {}).get("roles")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    modifier_vector = (
+        application_ast.get("modifier_vector", {}).get("items")
+        if isinstance(application_ast, dict)
+        else None
+    )
+    if (
+        not isinstance(application_ast, dict)
+        or application_ast.get("kind") != "application"
+        or application_ast.get("function") != "laugh"
+        or application_ast.get("arguments") != ["mary"]
+        or application_ast.get("modifiers") != ["loudly", "in(park)", "near(window)"]
+        or application_ast.get("adverb_count") != 3
+        or not isinstance(role_frame, list)
+        or len(role_frame) != 1
+        or role_frame[0].get("role") != "Agent"
+        or role_frame[0].get("type") != "Entity"
+        or role_frame[0].get("source") != "explicit"
+        or not isinstance(modifier_roles, list)
+        or [role.get("type") for role in modifier_roles] != ["Adv", "Adv", "Adv"]
+        or [role.get("semantic_role") for role in modifier_roles]
+        != ["Manner", "Location", "Location"]
+        or not isinstance(modifier_vector, list)
+        or [item.get("tail_length") for item in modifier_vector] != [2, 1, 0]
+    ):
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location intransitive AST drift"
+        )
+    event_semantics = payload.get("event_semantics")
+    typed_predication = (
+        event_semantics.get("manner_two_location_intransitive_predication")
+        if isinstance(event_semantics, dict)
+        else None
+    )
+    if (
+        not isinstance(event_semantics, dict)
+        or event_semantics.get("analysis")
+        != "manner-two-location-intransitive-predication"
+        or not isinstance(typed_predication, dict)
+        or typed_predication.get("predicate") != "laugh"
+        or typed_predication.get("agent") != "mary"
+        or typed_predication.get("agent_type") != "Entity"
+        or typed_predication.get("modifiers") != ["loudly", "in(park)", "near(window)"]
+        or [
+            role.get("semantic_role")
+            for role in typed_predication.get("modifier_roles", [])
+            if isinstance(role, dict)
+        ]
+        != ["Manner", "Location", "Location"]
+    ):
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location intransitive analysis drift"
+        )
+    if is_timed:
+        if typed_predication.get("time_modifier") != {
+            "operator": "at",
+            "argument": "yesterday",
+        }:
+            raise SystemExit(
+                "web route smoke check failed: timed manner-two-location time drift"
+            )
+    elif "time_modifier" in typed_predication:
+        raise SystemExit(
+            "web route smoke check failed: untimed manner-two-location time drift"
+        )
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location hygiene drift"
+        )
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location reading count drift"
+        )
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "manner_two_location_intransitive_predication_single_reading",
+            "scope": expected_scope,
+            "source": "manner_two_location_intransitive_predication",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    expected_definition = (
+        "Definition example_1 : PropT := (at_T yesterday (laugh 3 (mods_cons 2 loudly (mods_cons 1 in_park (mods_cons 0 near_window mods_nil))) mary))."
+        if is_timed
+        else "Definition example_1 : PropT := (laugh 3 (mods_cons 2 loudly (mods_cons 1 in_park (mods_cons 0 near_window mods_nil))) mary)."
+    )
+    if (
+        not isinstance(coq_code, str)
+        or "Parameter loudly : Adv." not in coq_code
+        or "Parameter in_park : Adv." not in coq_code
+        or "Parameter near_window : Adv." not in coq_code
+        or "Parameter loudly : Entity." in coq_code
+        or "Parameter in_park : Entity." in coq_code
+        or "Parameter near_window : Entity." in coq_code
+        or "Parameter laugh : forall n : nat, ModifierSeq n -> Entity -> PropT."
+        not in coq_code
+        or expected_definition not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+    ):
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location Coq drift"
+        )
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>manner_two_location_intransitive_predication</dd>",
+        'data-reading-name="manner_two_location_intransitive_predication_single_reading"',
+        "<dt>source</dt><dd>manner_two_location_intransitive_predication</dd>",
+        f"<dt>scope</dt><dd>{expected_scope}</dd>",
+        expected_translation,
+        (
+            "Translation succeeded via construction rule "
+            "manner_two_location_intransitive_predication."
+        ),
+    ]
+    require_text_fragments(
+        page,
+        expected_page_fragments,
+        "manner-two-location intransitive HTML",
+    )
+    if html.escape(sentence, quote=True) not in page:
+        raise SystemExit(
+            "web route smoke check failed: manner-two-location page input drift"
         )
 
 
@@ -6495,6 +6696,46 @@ def run_web_route_smoke_check() -> None:
             timed_manner_locative_page,
             timed_manner_locative_sentence,
         )
+        manner_two_location_sentence = "Mary laughed loudly in the park near a window"
+        manner_two_location_query = urlencode(
+            {"sentence": manner_two_location_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{manner_two_location_query}",
+            timeout=5,
+        ) as response:
+            manner_two_location_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{manner_two_location_query}",
+            timeout=5,
+        ) as response:
+            manner_two_location_page = response.read().decode("utf-8")
+        validate_analyze_manner_two_location_intransitive_success(
+            manner_two_location_payload,
+            manner_two_location_page,
+            manner_two_location_sentence,
+        )
+        timed_manner_two_location_sentence = (
+            "Mary laughed loudly in the park near a window yesterday"
+        )
+        timed_manner_two_location_query = urlencode(
+            {"sentence": timed_manner_two_location_sentence, "require_coq": "1"}
+        )
+        with opener.open(
+            f"{base_url}/api/analyze?{timed_manner_two_location_query}",
+            timeout=5,
+        ) as response:
+            timed_manner_two_location_payload = json.load(response)
+        with opener.open(
+            f"{base_url}/?{timed_manner_two_location_query}",
+            timeout=5,
+        ) as response:
+            timed_manner_two_location_page = response.read().decode("utf-8")
+        validate_analyze_manner_two_location_intransitive_success(
+            timed_manner_two_location_payload,
+            timed_manner_two_location_page,
+            timed_manner_two_location_sentence,
+        )
         locative_sentence = "a cat sits on a mat"
         locative_query = urlencode({"sentence": locative_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{locative_query}", timeout=5) as response:
@@ -6776,7 +7017,9 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary laughed loudly in the park near a window yesterday"
+        fallback_sentence = (
+            "Mary laughed loudly in the park near a window beside a shelf yesterday"
+        )
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
