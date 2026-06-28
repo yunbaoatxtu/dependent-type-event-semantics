@@ -16730,6 +16730,60 @@ class TranslatorTests(unittest.TestCase):
                 True,
             )
 
+        stale_example_count_page = page.replace(
+            'data-rule-draft-accepted-example-count="1"',
+            'data-rule-draft-accepted-example-count="0"',
+            1,
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft HTML drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                stale_example_count_page,
+                draft_payload,
+                sentence,
+                True,
+            )
+
+        stale_test_page = page.replace(
+            'data-rule-draft-test-positive-sentence="Mary laughed',
+            'data-rule-draft-test-positive-sentence="Stale laughed',
+            1,
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft test HTML",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                stale_test_page,
+                draft_payload,
+                sentence,
+                True,
+            )
+
+        stale_patch_page = page.replace(
+            "rule_id = &#x27;fallback_time_time_candidate&#x27;",
+            "rule_id = &#x27;stale_rule&#x27;",
+            1,
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback construction rule draft patch HTML drift",
+        ):
+            validate_construction_rule_draft_export(
+                "fallback",
+                analyze_payload,
+                stale_patch_page,
+                draft_payload,
+                sentence,
+                True,
+            )
+
     def test_api_analyze_response_reports_coordination_type_conflict(self) -> None:
         handler = object.__new__(PipelineHandler)
         result = PipelineHandler.handle_api(
@@ -19881,6 +19935,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/construction-rule-draft", readme)
         self.assertIn("`construction_rule_draft_response.v1` wrapper", readme)
         self.assertIn("page's raw draft JSON preview", readme)
+        self.assertIn("accepted-example list", readme)
+        self.assertIn("`data-rule-draft-*` hooks", readme)
         self.assertIn("promotion contract", readme)
         self.assertIn("semantic-reading draft", readme)
         self.assertIn("`registration_preflight`", readme)
@@ -20489,6 +20545,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction_rule_draft", manuscript)
         self.assertIn("construction_rule_draft_response.v1 wrapper", manuscript)
         self.assertIn("Raw draft JSON preview", manuscript)
+        self.assertIn("data-rule-draft-accepted-example-count", manuscript)
+        self.assertIn("stale registration-test rows", manuscript)
         self.assertIn("promotion contract cross-checks", manuscript)
         self.assertIn("verification commands, and patch-text preview", manuscript)
         self.assertIn("construction_rule_registration_preflight.v1 record", manuscript)
@@ -21397,6 +21455,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('`schema_version: "construction_rule_draft_response.v1"`', web_design)
         self.assertIn("pure verifier helper", web_design)
         self.assertIn("HTML `Raw draft JSON` preview", web_design)
+        self.assertIn("`data-rule-draft-accepted-example-count`", web_design)
+        self.assertIn("`data-rule-draft-test-scope`", web_design)
+        self.assertIn("`data-rule-draft-patch-preview-present`", web_design)
         self.assertIn("promotion-contract helper", web_design)
         self.assertIn("verification commands, and patch-text preview", web_design)
         self.assertIn("`registration_preflight`", web_design)
@@ -23151,6 +23212,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("/api/construction-rule-draft?", verifier)
         self.assertIn("construction_rule_draft_response.v1", verifier)
         self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', verifier)
+        self.assertIn("data-rule-draft-accepted-example-count", verifier)
+        self.assertIn("data-rule-draft-test-positive-sentence", verifier)
+        self.assertIn("data-rule-draft-patch-preview-present", verifier)
         self.assertIn('data-coq-definition="example_1"', verifier)
         self.assertIn('"fallback"', verifier)
         self.assertIn("reading_explanation HTML drift", verifier)

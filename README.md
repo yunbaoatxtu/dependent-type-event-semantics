@@ -900,7 +900,10 @@ when the local HTTP smoke test is unavailable: the
 `construction_rule_draft_response.v1` wrapper must carry the same
 `construction_rule_draft`, `verification_scope`, and `diagnostics` as the
 ordinary analysis, and the page's raw draft JSON preview must match the API
-payload exactly. The same promotion contract also cross-checks the
+payload exactly. The page also mirrors the accepted-example list, registration
+test draft, patch-text preview, and their derived counts through stable
+`data-rule-draft-*` hooks, so a stale review panel cannot hide behind the raw
+JSON block. The same promotion contract also cross-checks the
 `certification_upgrade_plan` against the draft: candidate rule id, source
 sentence, dependent-type translation, AST summary, semantic-reading draft,
 test draft, verification command, and patch-text preview must agree before the

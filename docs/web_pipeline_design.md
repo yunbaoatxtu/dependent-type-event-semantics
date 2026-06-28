@@ -126,7 +126,12 @@ covered by a pure verifier helper: the response wrapper must preserve the
 ordinary analysis' `construction_rule_draft`, `verification_scope`, and
 `diagnostics`, and the HTML `Raw draft JSON` preview must equal the same draft
 payload. This keeps the upgrade artifact checkable even in environments that
-cannot start the local HTTP smoke-test server. A promotion-contract helper also
+cannot start the local HTTP smoke-test server. The page should additionally
+mirror accepted examples, registration-test fields, patch-text preview, and
+derived counts through stable `data-rule-draft-*` hooks such as
+`data-rule-draft-accepted-example-count`, `data-rule-draft-test-scope`, and
+`data-rule-draft-patch-preview-present`, so reviewers need not inspect raw JSON
+to see the draft's registration boundary. A promotion-contract helper also
 compares `certification_upgrade_plan` with the draft: candidate rule id, source
 sentence, dependent-type translation, AST summary, semantic-reading draft, test
 draft, verification commands, and patch-text preview must agree.

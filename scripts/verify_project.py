@@ -2532,6 +2532,53 @@ def validate_construction_rule_draft_export(
         raise SystemExit(
             f"web route smoke check failed: {label} construction rule draft example drift"
         )
+    accepted_example_rows = [
+        example for example in accepted_examples if isinstance(example, str)
+    ]
+    readings = draft.get("semantic_reading_drafts")
+    if not isinstance(readings, list) or not readings:
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft readings drift"
+        )
+    hygiene = draft.get("hygiene_policy_draft")
+    forbidden_fragments = (
+        hygiene.get("forbidden_coq_fragments") if isinstance(hygiene, dict) else None
+    )
+    if not isinstance(forbidden_fragments, list) or not forbidden_fragments:
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft hygiene drift"
+        )
+    test_draft = draft.get("test_draft")
+    if not isinstance(test_draft, dict):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft test drift"
+        )
+    preflight = draft.get("registration_preflight")
+    checks = preflight.get("checks") if isinstance(preflight, dict) else []
+    blocking_issues = preflight.get("blocking_issues") if isinstance(preflight, dict) else []
+    review_fields = (
+        preflight.get("required_human_review_fields")
+        if isinstance(preflight, dict)
+        else []
+    )
+    if (
+        not isinstance(checks, list)
+        or not isinstance(blocking_issues, list)
+        or not isinstance(review_fields, list)
+    ):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft preflight drift"
+        )
+    commands = draft.get("verification_commands")
+    if not isinstance(commands, list):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft command drift"
+        )
+    patch_text = draft.get("patch_text_preview")
+    if not isinstance(patch_text, str):
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft patch drift"
+        )
 
     expected_href = "/api/construction-rule-draft?" + urlencode(
         {
@@ -2546,9 +2593,38 @@ def validate_construction_rule_draft_export(
         f'data-rule-draft-source-scope="{html.escape(str(draft.get("source_verification_scope", "")), quote=True)}"',
         f'data-rule-draft-id="{html.escape(candidate_rule_id, quote=True)}"',
         f'data-rule-draft-analyzer="{html.escape(str(draft.get("candidate_analyzer", "")), quote=True)}"',
+        f'data-rule-draft-accepted-example-count="{len(accepted_example_rows)}"',
+        f'data-rule-draft-reading-count="{len(readings)}"',
+        f'data-rule-draft-forbidden-fragment-count="{len(forbidden_fragments)}"',
+        (
+            'data-rule-draft-test-scope="'
+            f'{html.escape(str(test_draft.get("expected_verification_scope_kind", "")), quote=True)}"'
+        ),
+        (
+            'data-rule-draft-test-level="'
+            f'{html.escape(str(test_draft.get("expected_certification_level", "")), quote=True)}"'
+        ),
+        (
+            'data-rule-draft-test-forbidden-fragment-count="'
+            f'{html.escape(str(test_draft.get("expected_forbidden_fragment_count", "")), quote=True)}"'
+        ),
         'data-rule-draft-preflight-schema="construction_rule_registration_preflight.v1"',
         'data-rule-draft-registration-status="human_review_required"',
         'data-rule-draft-can-auto-register="false"',
+        f'data-rule-draft-preflight-check-count="{len(checks)}"',
+        (
+            'data-rule-draft-preflight-blocking-count="'
+            f'{len([issue for issue in blocking_issues if isinstance(issue, str)])}"'
+        ),
+        (
+            'data-rule-draft-preflight-review-field-count="'
+            f'{len([field for field in review_fields if isinstance(field, str)])}"'
+        ),
+        f'data-rule-draft-command-count="{len(commands)}"',
+        (
+            'data-rule-draft-patch-preview-present="'
+            f'{str(bool(patch_text.strip())).lower()}"'
+        ),
         f'href="{html.escape(expected_href, quote=True)}"',
         raw_json,
     ]
@@ -2557,12 +2633,40 @@ def validate_construction_rule_draft_export(
         expected_fragments,
         f"{label} construction rule draft HTML",
     )
-
-    readings = draft.get("semantic_reading_drafts")
-    if not isinstance(readings, list) or not readings:
-        raise SystemExit(
-            f"web route smoke check failed: {label} construction rule draft readings drift"
+    for example in accepted_example_rows:
+        require_text_fragments(
+            page,
+            [
+                (
+                    'data-rule-draft-accepted-example="'
+                    f'{html.escape(example, quote=True)}"'
+                ),
+            ],
+            f"{label} construction rule draft accepted-example HTML",
         )
+    require_text_fragments(
+        page,
+        [
+            (
+                'data-rule-draft-test-positive-sentence="'
+                f'{html.escape(str(test_draft.get("positive_sentence", "")), quote=True)}"'
+            ),
+            (
+                'data-rule-draft-test-scope="'
+                f'{html.escape(str(test_draft.get("expected_verification_scope_kind", "")), quote=True)}"'
+            ),
+            (
+                'data-rule-draft-test-level="'
+                f'{html.escape(str(test_draft.get("expected_certification_level", "")), quote=True)}"'
+            ),
+        ],
+        f"{label} construction rule draft test HTML",
+    )
+    if html.escape(patch_text) not in page:
+        raise SystemExit(
+            f"web route smoke check failed: {label} construction rule draft patch HTML drift"
+        )
+
     for reading in readings:
         if not isinstance(reading, dict):
             raise SystemExit(
@@ -2580,14 +2684,6 @@ def validate_construction_rule_draft_export(
             f"{label} construction rule draft reading HTML",
         )
 
-    hygiene = draft.get("hygiene_policy_draft")
-    forbidden_fragments = (
-        hygiene.get("forbidden_coq_fragments") if isinstance(hygiene, dict) else None
-    )
-    if not isinstance(forbidden_fragments, list) or not forbidden_fragments:
-        raise SystemExit(
-            f"web route smoke check failed: {label} construction rule draft hygiene drift"
-        )
     for fragment in forbidden_fragments:
         require_text_fragments(
             page,
@@ -2600,12 +2696,6 @@ def validate_construction_rule_draft_export(
             f"{label} construction rule draft hygiene HTML",
         )
 
-    preflight = draft.get("registration_preflight")
-    checks = preflight.get("checks") if isinstance(preflight, dict) else []
-    if not isinstance(checks, list):
-        raise SystemExit(
-            f"web route smoke check failed: {label} construction rule draft preflight drift"
-        )
     for check in checks:
         if not isinstance(check, dict):
             raise SystemExit(

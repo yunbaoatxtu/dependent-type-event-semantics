@@ -2887,6 +2887,9 @@ def construction_rule_draft_panel(
     preflight_schema = ""
     registration_status = ""
     can_auto_register = False
+    preflight_check_count = 0
+    preflight_blocking_count = 0
+    preflight_review_field_count = 0
     preflight_html = ""
     if isinstance(preflight, dict):
         preflight_schema = str(preflight.get("schema_version", ""))
@@ -2895,6 +2898,7 @@ def construction_rule_draft_panel(
         preflight_checks = []
         checks = preflight.get("checks", [])
         checked_checks = checks if isinstance(checks, list) else []
+        preflight_check_count = len(checked_checks)
         for check in checked_checks:
             if not isinstance(check, dict):
                 continue
@@ -2910,8 +2914,13 @@ def construction_rule_draft_panel(
                 f'<dt>detail</dt><dd>{html.escape(str(check.get("detail", "")))}</dd>'
                 '</dl>'
                 '</li>'
-            )
+        )
         blocking_issues = preflight.get("blocking_issues", [])
+        preflight_blocking_count = (
+            len([issue for issue in blocking_issues if isinstance(issue, str)])
+            if isinstance(blocking_issues, list)
+            else 0
+        )
         blocking_items = (
             "".join(
                 f"<li>{html.escape(str(issue))}</li>"
@@ -2922,6 +2931,11 @@ def construction_rule_draft_panel(
             else "<li>none</li>"
         )
         review_fields = preflight.get("required_human_review_fields", [])
+        preflight_review_field_count = (
+            len([field for field in review_fields if isinstance(field, str)])
+            if isinstance(review_fields, list)
+            else 0
+        )
         review_items = (
             "".join(
                 f"<li>{html.escape(str(field))}</li>"
@@ -2950,6 +2964,30 @@ def construction_rule_draft_panel(
             f"<ul>{review_items}</ul></div>"
             "</div>"
         )
+    accepted_examples = draft.get("accepted_examples", [])
+    accepted_example_items = (
+        "".join(
+            '<li '
+            f'data-rule-draft-accepted-example="{html.escape(str(example), quote=True)}">'
+            f"{html.escape(str(example))}</li>"
+            for example in accepted_examples
+            if isinstance(example, str)
+        )
+        if isinstance(accepted_examples, list)
+        else ""
+    )
+    accepted_example_count = (
+        len([example for example in accepted_examples if isinstance(example, str)])
+        if isinstance(accepted_examples, list)
+        else 0
+    )
+    accepted_examples_html = (
+        '<ul class="construction-rule-draft-accepted-examples">'
+        + accepted_example_items
+        + "</ul>"
+        if accepted_example_items
+        else '<p class="construction-rule-draft-empty">No accepted examples emitted.</p>'
+    )
     readings = draft.get("semantic_reading_drafts", [])
     hygiene = draft.get("hygiene_policy_draft", {})
     forbidden_fragments = []
@@ -2958,6 +2996,35 @@ def construction_rule_draft_panel(
             str(fragment)
             for fragment in hygiene.get("forbidden_coq_fragments", [])
         ]
+    test_draft = draft.get("test_draft")
+    test_positive_sentence = ""
+    test_expected_scope = ""
+    test_expected_level = ""
+    test_expected_forbidden_count = ""
+    test_html = ""
+    if isinstance(test_draft, dict):
+        test_positive_sentence = str(test_draft.get("positive_sentence", ""))
+        test_expected_scope = str(test_draft.get("expected_verification_scope_kind", ""))
+        test_expected_level = str(test_draft.get("expected_certification_level", ""))
+        test_expected_forbidden_count = str(
+            test_draft.get("expected_forbidden_fragment_count", ""),
+        )
+        test_html = (
+            '<div class="construction-rule-draft-section construction-rule-draft-test" '
+            f'data-rule-draft-test-positive-sentence="{html.escape(test_positive_sentence, quote=True)}" '
+            f'data-rule-draft-test-scope="{html.escape(test_expected_scope, quote=True)}" '
+            f'data-rule-draft-test-level="{html.escape(test_expected_level, quote=True)}" '
+            'data-rule-draft-test-forbidden-fragment-count="'
+            f'{html.escape(test_expected_forbidden_count, quote=True)}">'
+            "<strong>registration test draft</strong>"
+            '<dl>'
+            f"<dt>positive</dt><dd>{html.escape(test_positive_sentence)}</dd>"
+            f"<dt>scope</dt><dd>{html.escape(test_expected_scope)}</dd>"
+            f"<dt>level</dt><dd>{html.escape(test_expected_level)}</dd>"
+            f"<dt>forbidden fragments</dt><dd>{html.escape(test_expected_forbidden_count)}</dd>"
+            "</dl>"
+            "</div>"
+        )
     reading_items = []
     reading_source = readings if isinstance(readings, list) else []
     for reading in reading_source:
@@ -2991,12 +3058,24 @@ def construction_rule_draft_panel(
         else "<li>none</li>"
     )
     commands = draft.get("verification_commands", [])
+    command_count = len(commands) if isinstance(commands, list) else 0
     commands_html = (
         "".join(f"<li><code>{html.escape(str(command))}</code></li>" for command in commands)
         if isinstance(commands, list) and commands
         else "<li>none</li>"
     )
     download_href = construction_rule_draft_api_path(sentence, require_coq, download=True)
+    patch_text_preview = draft.get("patch_text_preview")
+    patch_text = patch_text_preview if isinstance(patch_text_preview, str) else ""
+    patch_preview_present = bool(patch_text.strip())
+    patch_preview_html = (
+        '<details class="construction-rule-draft-patch-preview">'
+        "<summary>Patch text preview</summary>"
+        f"<pre>{html.escape(patch_text)}</pre>"
+        "</details>"
+        if patch_preview_present
+        else '<p class="construction-rule-draft-empty">No patch preview emitted.</p>'
+    )
     raw_json = html.escape(compact_json(draft))
     rows = [
         ("schema", schema),
@@ -3019,13 +3098,18 @@ def construction_rule_draft_panel(
         "Download draft JSON"
         "</a>"
         "</div>"
+        '<div class="construction-rule-draft-section"><strong>accepted examples</strong>'
+        f"{accepted_examples_html}</div>"
         '<div class="construction-rule-draft-section"><strong>reading drafts</strong>'
         f"{reading_html}</div>"
         '<div class="construction-rule-draft-section"><strong>forbidden Coq/Rocq fragments</strong>'
         f"<ul>{forbidden_html}</ul></div>"
+        f"{test_html}"
         f"{preflight_html}"
         '<div class="construction-rule-draft-section"><strong>verification commands</strong>'
         f"<ul>{commands_html}</ul></div>"
+        '<div class="construction-rule-draft-section"><strong>patch preview</strong>'
+        f"{patch_preview_html}</div>"
         '<details class="construction-rule-draft-raw"><summary>Raw draft JSON</summary>'
         f"<pre>{raw_json}</pre>"
         "</details>"
@@ -3037,9 +3121,21 @@ def construction_rule_draft_panel(
         f'data-rule-draft-id="{html.escape(candidate_rule_id, quote=True)}" '
         f'data-rule-draft-analyzer="{html.escape(analyzer, quote=True)}" '
         f'data-rule-draft-can-auto-apply="{str(can_auto_apply).lower()}" '
+        f'data-rule-draft-accepted-example-count="{accepted_example_count}" '
+        f'data-rule-draft-reading-count="{len(reading_source)}" '
+        f'data-rule-draft-forbidden-fragment-count="{len(forbidden_fragments)}" '
+        f'data-rule-draft-test-scope="{html.escape(test_expected_scope, quote=True)}" '
+        f'data-rule-draft-test-level="{html.escape(test_expected_level, quote=True)}" '
+        'data-rule-draft-test-forbidden-fragment-count="'
+        f'{html.escape(test_expected_forbidden_count, quote=True)}" '
         f'data-rule-draft-preflight-schema="{html.escape(preflight_schema, quote=True)}" '
         f'data-rule-draft-registration-status="{html.escape(registration_status, quote=True)}" '
-        f'data-rule-draft-can-auto-register="{str(can_auto_register).lower()}">'
+        f'data-rule-draft-can-auto-register="{str(can_auto_register).lower()}" '
+        f'data-rule-draft-preflight-check-count="{preflight_check_count}" '
+        f'data-rule-draft-preflight-blocking-count="{preflight_blocking_count}" '
+        f'data-rule-draft-preflight-review-field-count="{preflight_review_field_count}" '
+        f'data-rule-draft-command-count="{command_count}" '
+        f'data-rule-draft-patch-preview-present="{str(patch_preview_present).lower()}">'
         "<h2>Construction Rule Draft</h2>"
         f'<div class="construction-rule-draft">{body}</div>'
         "</section>"
