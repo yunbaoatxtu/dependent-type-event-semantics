@@ -11,6 +11,7 @@ import subprocess
 import sys
 import threading
 from collections import Counter
+from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, urlencode, urlparse
 from pathlib import Path
@@ -256,6 +257,20 @@ def analyze_action_artifact_filename(sentence: str, action_index: int) -> str:
 def analyze_action_run_artifact_filename(sentence: str, action_index: int) -> str:
     token = artifact_token(sentence.strip() or "empty-input")
     return f"analyze_inspection_run__{token}__{action_index}.json"
+
+
+def construction_rule_draft_api_path(
+    sentence: str,
+    *,
+    require_coq: bool = False,
+    download: bool = False,
+) -> str:
+    params = {"sentence": sentence}
+    if require_coq:
+        params["require_coq"] = "1"
+    if download:
+        params["download"] = "1"
+    return f"/api/construction-rule-draft?{urlencode(params)}"
 
 
 def recovery_action_api_path(
@@ -12357,28 +12372,32 @@ def validate_lexicon_patch_http_routes(port: int, opener) -> None:
         raise SystemExit("web route smoke check failed: unknown format error drift")
 
 
-def validate_json_download_http_response(
+def validate_json_download_response_bytes(
     case: str,
     label: str,
-    response,
+    *,
+    status: int,
+    content_type: object,
+    content_length: object,
+    content_disposition: object,
+    raw: bytes,
     expected_payload: dict,
     expected_filename: object,
 ) -> None:
-    raw = response.read()
-    if response.status != 200:
+    if status != 200:
         raise SystemExit(
             f"web route smoke check failed: {case} {label} download status drift"
         )
-    if response.headers.get_content_type() != "application/json":
+    if content_type != "application/json":
         raise SystemExit(
             f"web route smoke check failed: {case} {label} download content type drift"
         )
-    if response.headers.get("Content-Length") != str(len(raw)):
+    if content_length != str(len(raw)):
         raise SystemExit(
             f"web route smoke check failed: {case} {label} download length drift"
         )
     expected_disposition = f'attachment; filename="{expected_filename}"'
-    if response.headers.get("Content-Disposition") != expected_disposition:
+    if content_disposition != expected_disposition:
         raise SystemExit(
             f"web route smoke check failed: {case} {label} download filename drift"
         )
@@ -12387,6 +12406,73 @@ def validate_json_download_http_response(
         raise SystemExit(
             f"web route smoke check failed: {case} {label} download payload drift"
         )
+
+
+def validate_json_download_http_response(
+    case: str,
+    label: str,
+    response,
+    expected_payload: dict,
+    expected_filename: object,
+) -> None:
+    raw = response.read()
+    validate_json_download_response_bytes(
+        case,
+        label,
+        status=response.status,
+        content_type=response.headers.get_content_type(),
+        content_length=response.headers.get("Content-Length"),
+        content_disposition=response.headers.get("Content-Disposition"),
+        raw=raw,
+        expected_payload=expected_payload,
+        expected_filename=expected_filename,
+    )
+
+
+def validate_construction_rule_draft_download_artifact() -> None:
+    from web.app import PipelineHandler, compact_json
+
+    print("==> construction rule draft download artifact check")
+    sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
+    query = urlencode({"sentence": sentence, "require_coq": "1"})
+    handler = object.__new__(PipelineHandler)
+    payload, status = PipelineHandler.handle_construction_rule_draft_api(handler, query)
+    if status != HTTPStatus.OK:
+        raise SystemExit(
+            "construction rule draft download artifact check failed: status drift"
+        )
+    draft = payload.get("construction_rule_draft")
+    if not isinstance(draft, dict):
+        raise SystemExit(
+            "construction rule draft download artifact check failed: draft missing"
+        )
+    candidate_rule_id = str(draft.get("candidate_rule_id", ""))
+    expected_filename = construction_rule_draft_artifact_filename(candidate_rule_id)
+    expected_download_path = construction_rule_draft_api_path(
+        sentence,
+        require_coq=True,
+        download=True,
+    )
+    if payload.get("download_api_path") != expected_download_path:
+        raise SystemExit(
+            "construction rule draft download artifact check failed: path drift"
+        )
+    if payload.get("download_filename") != expected_filename:
+        raise SystemExit(
+            "construction rule draft download artifact check failed: filename drift"
+        )
+    raw = compact_json(payload).encode("utf-8")
+    validate_json_download_response_bytes(
+        "fallback",
+        "construction rule draft",
+        status=HTTPStatus.OK,
+        content_type="application/json",
+        content_length=str(len(raw)),
+        content_disposition=f'attachment; filename="{expected_filename}"',
+        raw=raw,
+        expected_payload=payload,
+        expected_filename=expected_filename,
+    )
 
 
 def run_web_route_smoke_check() -> None:
@@ -13794,15 +13880,16 @@ def run_web_route_smoke_check() -> None:
             f"{base_url}/api/construction-rule-draft?{draft_download_query}",
             timeout=5,
         ) as response:
-            disposition = response.headers.get("Content-Disposition", "")
             filename = construction_rule_draft_artifact_filename(
                 str(fallback_payload["construction_rule_draft"]["candidate_rule_id"])
             )
-            if filename not in disposition:
-                raise SystemExit("web route smoke check failed: rule draft download drift")
-            draft_download_payload = json.load(response)
-        if draft_download_payload != draft_payload:
-            raise SystemExit("web route smoke check failed: rule draft download payload drift")
+            validate_json_download_http_response(
+                "fallback",
+                "construction rule draft",
+                response,
+                draft_payload,
+                filename,
+            )
         quantifier_sentence = "some boy loves some girl"
         quantifier_query = urlencode({"sentence": quantifier_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{quantifier_query}", timeout=5) as response:
@@ -14199,6 +14286,7 @@ def main() -> None:
     run("paper DOCX sync", [sys.executable, "scripts/check_paper_docx_sync.py"])
     run_lexicon_export_smoke_check()
     run_lexicon_warning_schema_check()
+    validate_construction_rule_draft_download_artifact()
     run_web_route_smoke_check()
     if args.skip_coq:
         print("==> Coq scaffold boundary check skipped by --skip-coq")

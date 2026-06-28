@@ -123,12 +123,14 @@ parallel `/api/construction-rule-draft` route returns
 `schema_version: "construction_rule_draft_response.v1"` and can serve the same
 payload as a downloadable JSON artifact through `download=1`. Successful
 responses expose the same `download_api_path` and stable `download_filename`
-that the page places on its download link. The route is also covered by a pure
-verifier helper: the response wrapper must preserve the
+that the page places on its download link. The route is also covered by pure
+verifier helpers: the response wrapper must preserve the
 ordinary analysis' `construction_rule_draft`, `verification_scope`, and
 `diagnostics`, and the HTML `Raw draft JSON` preview must equal the same draft
-payload. This keeps the upgrade artifact checkable even in environments that
-cannot start the local HTTP smoke-test server. The page should additionally
+payload. A no-port download artifact helper also validates the would-be
+download's status, `Content-Type`, `Content-Length`, `Content-Disposition`
+filename, and parsed JSON payload. This keeps the upgrade artifact checkable
+even in environments that cannot start the local HTTP smoke-test server. The page should additionally
 mirror accepted examples, registration-test fields, patch-text preview, and
 derived counts through stable `data-rule-draft-*` hooks such as
 `data-rule-draft-accepted-example-count`, `data-rule-draft-test-scope`, and

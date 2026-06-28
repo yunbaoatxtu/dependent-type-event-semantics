@@ -31,7 +31,9 @@ from scripts.verify_project import (
     validate_diagnostic_contract_manifest,
     validate_certified_fragment_manifest,
     validate_diagnostic_fixture_routes,
+    validate_construction_rule_draft_download_artifact,
     validate_json_download_http_response,
+    validate_json_download_response_bytes,
     validate_construction_rule_draft_export,
     validate_fallback_promotion_contract,
     validate_recovery_action_export_bundle,
@@ -16659,6 +16661,84 @@ class TranslatorTests(unittest.TestCase):
             "modified_transitive_predication",
         )
 
+    def test_verifier_checks_construction_rule_draft_download_without_http(self) -> None:
+        validate_construction_rule_draft_download_artifact()
+
+        handler = object.__new__(PipelineHandler)
+        payload, status = PipelineHandler.handle_construction_rule_draft_api(
+            handler,
+            (
+                "sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+"
+                "loudly+under+a+lamp+on+a+table+with+a+microphone+near+a+door+"
+                "with+a+telescope+near+a+window+with+a+knife+yesterday&require_coq=1"
+            ),
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        filename = payload["download_filename"]
+        raw = compact_json(payload).encode("utf-8")
+        validate_json_download_response_bytes(
+            "fallback",
+            "construction rule draft",
+            status=HTTPStatus.OK,
+            content_type="application/json",
+            content_length=str(len(raw)),
+            content_disposition=f'attachment; filename="{filename}"',
+            raw=raw,
+            expected_payload=payload,
+            expected_filename=filename,
+        )
+
+        stale_raw = compact_json(
+            {**payload, "download_filename": "stale.json"}
+        ).encode("utf-8")
+        negative_cases = [
+            (
+                "download status drift",
+                {"status": HTTPStatus.INTERNAL_SERVER_ERROR},
+            ),
+            (
+                "download content type drift",
+                {"content_type": "text/plain"},
+            ),
+            (
+                "download length drift",
+                {"content_length": "999"},
+            ),
+            (
+                "download filename drift",
+                {
+                    "content_disposition": (
+                        'attachment; filename="construction_rule_draft__stale.json"'
+                    )
+                },
+            ),
+            (
+                "download payload drift",
+                {
+                    "content_length": str(len(stale_raw)),
+                    "raw": stale_raw,
+                },
+            ),
+        ]
+        defaults = {
+            "status": HTTPStatus.OK,
+            "content_type": "application/json",
+            "content_length": str(len(raw)),
+            "content_disposition": f'attachment; filename="{filename}"',
+            "raw": raw,
+        }
+        for expected_error, overrides in negative_cases:
+            with self.subTest(expected_error=expected_error):
+                values = {**defaults, **overrides}
+                with self.assertRaisesRegex(SystemExit, expected_error):
+                    validate_json_download_response_bytes(
+                        "fallback",
+                        "construction rule draft",
+                        expected_payload=payload,
+                        expected_filename=filename,
+                        **values,
+                    )
+
     def test_verification_rejects_construction_rule_draft_export_drift(self) -> None:
         sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
         handler = object.__new__(PipelineHandler)
@@ -19983,6 +20063,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`download_api_path`", readme)
         self.assertIn("`download_filename`", readme)
         self.assertIn("construction_rule_draft__fallback_time_time_candidate.json", readme)
+        self.assertIn("no-port download artifact check", readme)
+        self.assertIn("`Content-Disposition`", readme)
         self.assertIn("page's raw draft JSON preview", readme)
         self.assertIn("accepted-example list", readme)
         self.assertIn("download filename", readme)
@@ -21505,7 +21587,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('`schema_version: "construction_rule_draft_response.v1"`', web_design)
         self.assertIn("`download_api_path`", web_design)
         self.assertIn("`download_filename`", web_design)
-        self.assertIn("pure verifier helper", web_design)
+        self.assertIn("verifier helpers", web_design)
+        self.assertIn("no-port download artifact helper", web_design)
         self.assertIn("HTML `Raw draft JSON` preview", web_design)
         self.assertIn("`data-rule-draft-accepted-example-count`", web_design)
         self.assertIn("`data-rule-draft-test-scope`", web_design)
@@ -23264,12 +23347,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-reading-name="fallback_single_reading"', verifier)
         self.assertIn("/api/construction-rule-draft?", verifier)
         self.assertIn("construction_rule_draft_response.v1", verifier)
+        self.assertIn("def validate_json_download_response_bytes(", verifier)
+        self.assertIn("def validate_construction_rule_draft_download_artifact(", verifier)
         self.assertIn('data-rule-draft-schema="construction_rule_draft.v1"', verifier)
         self.assertIn("data-rule-draft-accepted-example-count", verifier)
         self.assertIn("data-rule-draft-test-positive-sentence", verifier)
         self.assertIn("data-rule-draft-patch-preview-present", verifier)
         self.assertIn("data-rule-draft-download-filename", verifier)
         self.assertIn("construction rule draft download drift", verifier)
+        self.assertIn("construction rule draft download artifact check", verifier)
         self.assertIn('data-coq-definition="example_1"', verifier)
         self.assertIn('"fallback"', verifier)
         self.assertIn("reading_explanation HTML drift", verifier)
