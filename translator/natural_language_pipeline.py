@@ -161,6 +161,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "quantifier_scope_ambiguity": "some boy loves some girl",
     "lexical_state_change": "the door opened",
     "stative_result_state": "the vase is broken",
+    "resultative_predication": "John hammered the metal flat",
     "active_argument_omission": "John ate",
     "plain_transitive_predication": "Mary admired the painting",
     "modified_transitive_predication": "Mary admired the painting in the gallery",
@@ -1100,6 +1101,19 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_type_check_type": "Prop",
     },
     {
+        "rule_id": "resultative_predication",
+        "sentence": "John hammered the metal flat",
+        "expected_event_analysis": "resultative-predication",
+        "expected_dependent_type_fragments": [
+            "Cause(john, Transition(metal, shape_scale, not_flat, flat))",
+        ],
+        "expected_reading_names": ["resultative_predication_single_reading"],
+        "expected_reading_sources": ["resultative_predication"],
+        "expected_reading_scopes": ["explicit_agent_theme_result"],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
         "rule_id": "active_argument_omission",
         "sentence": "John ate",
         "expected_event_analysis": "active-argument-omission",
@@ -1392,6 +1406,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "subject_count": 1,
         "object_count": 0,
     },
+    "resultative_predication": {
+        "kind": "cause",
+        "predicate_symbols": ["hammer"],
+        "predicate_types": [],
+        "entity_symbols": ["john", "metal"],
+        "state_symbols": ["flat", "not_flat", "shape_scale"],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
     "active_argument_omission": {
         "kind": "sigma",
         "predicate_symbols": ["eat"],
@@ -1642,7 +1671,7 @@ def ast_structure_summary(ast: dict[str, Any]) -> dict[str, Any]:
                     entity_symbols.append(value)
         if node.get("type") == "State" and isinstance(node.get("name"), str):
             state_symbols.append(node["name"])
-        for key in ("source_state", "state_scale"):
+        for key in ("source_state", "state_scale", "target_state"):
             value = node.get(key)
             if isinstance(value, str):
                 state_symbols.append(value)
@@ -12996,6 +13025,110 @@ def modified_transitive_predication_pipeline(sentence: str) -> dict[str, Any] | 
     )
 
 
+def resultative_predication_details(ast: dict[str, Any]) -> dict[str, Any] | None:
+    if ast.get("kind") != "cause":
+        return None
+    activity = ast.get("activity")
+    effect = ast.get("effect")
+    if not isinstance(activity, dict) or not isinstance(effect, dict):
+        return None
+    activity_details = plain_transitive_application_details(activity)
+    if activity_details is None:
+        return None
+    if (
+        effect.get("kind") != "transition"
+        or not isinstance(effect.get("theme"), str)
+        or not isinstance(effect.get("state_scale"), str)
+        or not isinstance(effect.get("source_state"), str)
+        or not isinstance(effect.get("target_state"), str)
+    ):
+        return None
+    if ast.get("causer") != activity_details["agent"]:
+        return None
+    if effect["theme"] != activity_details["theme"]:
+        return None
+    target_state = effect["target_state"]
+    state_scale = effect["state_scale"]
+    source_state = effect["source_state"]
+    if target_state not in STATE_SCALE_BY_STATE:
+        return None
+    if STATE_SCALE_BY_STATE[target_state] != state_scale:
+        return None
+    if source_state != "_" and STATE_SCALE_BY_STATE.get(source_state) != state_scale:
+        return None
+    return {
+        **activity_details,
+        "state_scale": state_scale,
+        "source_state": source_state,
+        "target_state": target_state,
+    }
+
+
+def resultative_predication_pipeline(sentence: str) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or translation.get("omitted_arguments"):
+        return None
+    details = resultative_predication_details(ast)
+    if details is None:
+        return None
+
+    coq_code = export_module([translation], "coq")
+    source_state = str(details["source_state"])
+    target_state = str(details["target_state"])
+    source_summary = (
+        "an underspecified source state"
+        if source_state == "_"
+        else f"source State {source_state}"
+    )
+    return attach_single_semantic_reading(
+        {
+            "kind": "resultative_predication",
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": "resultative-predication",
+                "resultative_predication": {
+                    "predicate": details["predicate"],
+                    "agent": details["agent"],
+                    "agent_type": "Entity",
+                    "theme": details["theme"],
+                    "theme_type": details["theme_type"],
+                    "state_scale": details["state_scale"],
+                    "source_state": source_state,
+                    "target_state": target_state,
+                    "representation": (
+                        "Cause over a typed Transition from source State to "
+                        "target State, without an event argument"
+                    ),
+                },
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Resultative predication: {details['predicate']} supplies an "
+                f"explicit Entity Agent {details['agent']} and Theme "
+                f"{details['theme']}; the result phrase contributes target "
+                f"State {target_state} on {details['state_scale']} from "
+                f"{source_summary}. The causal result is represented as "
+                "Cause(_, Transition(...)) rather than through an Event or "
+                "ResultState predicate."
+            ),
+            "coq_code": coq_code,
+        },
+        name="resultative_predication_single_reading",
+        coq_definition="example_1",
+        source="resultative_predication",
+        scope="explicit_agent_theme_result",
+    )
+
+
 def passive_argument_omission_ast(
     predicate: str,
     patient: str,
@@ -13493,6 +13626,19 @@ def construction_rules() -> list[ConstructionRule]:
                 "exists e : Event",
                 "Parameter Agent :",
                 "Parameter Theme :",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="resultative_predication",
+            label="Resultative predication",
+            phenomenon="Causal result transition without hidden event variables",
+            analyzer=resultative_predication_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+                "Parameter ResultState :",
             ),
         ),
         ConstructionRule(

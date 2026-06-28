@@ -3167,6 +3167,110 @@ def validate_analyze_locative_intransitive_success(
     require_text_fragments(page, expected_page_fragments, "locative HTML")
 
 
+def validate_analyze_resultative_predication_success(
+    payload: dict,
+    page: str,
+    sentence: str,
+) -> None:
+    case = "analyze_resultative_predication_success"
+    validate_analyze_success_envelope(
+        payload,
+        sentence,
+        "resultative_predication",
+        ["semantic_readings_check", "construction_hygiene"],
+    )
+    validate_verification_scope(
+        payload,
+        page,
+        "resultative_predication",
+        "registered_construction",
+        "construction_rule",
+        "resultative_predication",
+    )
+    if payload.get("kind") != "resultative_predication":
+        raise SystemExit("web route smoke check failed: resultative kind drift")
+    expected_translation = "Cause(john, Transition(metal, shape_scale, not_flat, flat))"
+    if payload.get("dependent_type_translation") != expected_translation:
+        raise SystemExit("web route smoke check failed: resultative translation drift")
+    ast = payload.get("ast")
+    activity = ast.get("activity") if isinstance(ast, dict) else None
+    effect = ast.get("effect") if isinstance(ast, dict) else None
+    if (
+        not isinstance(ast, dict)
+        or ast.get("kind") != "cause"
+        or ast.get("causer") != "john"
+        or not isinstance(activity, dict)
+        or activity.get("kind") != "application"
+        or activity.get("function") != "hammer"
+        or activity.get("arguments") != ["john", "metal"]
+        or not isinstance(effect, dict)
+        or effect.get("kind") != "transition"
+        or effect.get("theme") != "metal"
+        or effect.get("state_scale") != "shape_scale"
+        or effect.get("source_state") != "not_flat"
+        or effect.get("target_state") != "flat"
+    ):
+        raise SystemExit("web route smoke check failed: resultative AST drift")
+    if "certification_upgrade_plan" in payload or "construction_rule_draft" in payload:
+        raise SystemExit("web route smoke check failed: registered resultative exposes fallback draft")
+    if payload.get("event_semantics", {}).get("analysis") != "resultative-predication":
+        raise SystemExit("web route smoke check failed: resultative analysis drift")
+    construction_rule = payload.get("construction_rule")
+    if (
+        not isinstance(construction_rule, dict)
+        or construction_rule.get("id") != "resultative_predication"
+    ):
+        raise SystemExit("web route smoke check failed: resultative rule metadata drift")
+    hygiene = payload.get("construction_hygiene")
+    if not isinstance(hygiene, dict) or hygiene.get("ok") is not True:
+        raise SystemExit("web route smoke check failed: resultative hygiene drift")
+    readings = payload.get("semantic_readings")
+    if not isinstance(readings, list) or len(readings) != 1:
+        raise SystemExit("web route smoke check failed: resultative reading count drift")
+    validate_semantic_reading_summary(
+        readings[0],
+        {
+            "name": "resultative_predication_single_reading",
+            "scope": "explicit_agent_theme_result",
+            "source": "resultative_predication",
+            "coq_definition": "example_1",
+        },
+        "none",
+        case,
+        expected_type=None,
+    )
+    coq_code = payload.get("coq_code")
+    if (
+        not isinstance(coq_code, str)
+        or "Definition example_1" not in coq_code
+        or "Parameter metal : Entity." not in coq_code
+        or "Parameter shape_scale : StateScale." not in coq_code
+        or "Parameter not_flat : State." not in coq_code
+        or "Parameter flat : State." not in coq_code
+        or "Parameter Event : Type." in coq_code
+        or "Parameter Agent :" in coq_code
+        or "Parameter Theme :" in coq_code
+        or "Parameter ResultState :" in coq_code
+    ):
+        raise SystemExit("web route smoke check failed: resultative Coq drift")
+    validate_successful_semantic_reading_contract(case, payload, page)
+    expected_page_fragments = [
+        'data-verification-scope-kind="registered_construction"',
+        'data-verification-level="construction_rule"',
+        "<dt>rule</dt><dd>resultative_predication</dd>",
+        'data-reading-name="resultative_predication_single_reading"',
+        "<dt>source</dt><dd>resultative_predication</dd>",
+        "<dt>scope</dt><dd>explicit_agent_theme_result</dd>",
+        "Resultative predication",
+        expected_translation,
+        "Parameter metal : Entity.",
+        "Parameter shape_scale : StateScale.",
+        "Parameter not_flat : State.",
+        "Parameter flat : State.",
+    ]
+    require_text_fragments(page, expected_page_fragments, "resultative HTML")
+
+
 def validate_analyze_event_counting_success(payload: dict, page: str, sentence: str) -> None:
     case = "analyze_event_counting_success"
     validate_analyze_success_envelope(
@@ -5966,6 +6070,19 @@ def run_web_route_smoke_check() -> None:
             timed_quint_modified_transitive_payload,
             timed_quint_modified_transitive_page,
             timed_quint_modified_transitive_sentence,
+        )
+        resultative_sentence = "John hammered the metal flat"
+        resultative_query = urlencode(
+            {"sentence": resultative_sentence, "require_coq": "1"}
+        )
+        with opener.open(f"{base_url}/api/analyze?{resultative_query}", timeout=5) as response:
+            resultative_payload = json.load(response)
+        with opener.open(f"{base_url}/?{resultative_query}", timeout=5) as response:
+            resultative_page = response.read().decode("utf-8")
+        validate_analyze_resultative_predication_success(
+            resultative_payload,
+            resultative_page,
+            resultative_sentence,
         )
         fallback_sentence = "Mary admired the painting red yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})

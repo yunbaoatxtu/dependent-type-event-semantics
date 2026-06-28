@@ -1492,7 +1492,7 @@ The current prototype has small, testable rules for:
 - passive argument omission with an existential typed agent;
 - event counting with `once`/`twice`/`thrice`, word or digit `time(s)`
   phrases, or explicit `count`;
-- causal-resultative translation into a typed state transition;
+- registered causal-resultative predication into a typed state transition;
 - simple conditionals represented as implication between typed propositions,
   including typed transitive objects such as `bread : Food` and
   `water : Drinkable`, plus clause-local temporal wrappers such as
@@ -1640,9 +1640,10 @@ assigning a causative frame without a causer.
 This prevents `the door opened` and similar inchoatives from being misread as
 one-place predicates whose changing themes are Agents, while still preserving
 the same typed transition used by resultative translations.
-The fallback natural-language parser also recognizes simple result phrases
-whose final object-position word is a known result state, so `John hammered the
-metal flat` becomes
+The object-final resultative slice has also been promoted out of ordinary
+fallback. Simple result phrases whose final object-position word is a known
+result state, such as `John hammered the metal flat`, now run through the
+registered `resultative_predication` rule and become
 `Cause(john, Transition(metal, shape_scale, not_flat, flat))` rather than
 treating `metal flat` as a single entity name. When a target state has a clear
 opposite or pre-state, the translator supplies it as the transition source;
@@ -1655,6 +1656,10 @@ default source state, and whether an unknown source is explicitly allowed. The
 pipeline exposes the same audit trail in `result_state_lexicon`, so a caller can
 see, for example, that `flat` uses the lexical pre-state `not_flat`, while
 `red` keeps an unknown source.
+Successful registered resultatives expose
+`resultative_predication_single_reading` with scope
+`explicit_agent_theme_result`, and construction hygiene rejects hidden `Event`,
+`Agent`, `Theme`, and `ResultState` predicate fragments.
 The web page renders these records in a dedicated Result State Lexicon panel
 and also exposes the raw JSON for exact auditing. Entries whose source is
 licensed as unknown are also surfaced through `diagnostics.warnings`, so a

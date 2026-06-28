@@ -634,13 +634,28 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_semantic_role("to(school)"), "Goal")
         self.assertEqual(modifier_semantic_role("slowly"), "Manner")
 
-    def test_fallback_resultative_phrase_uses_state_scale_lexicon(self) -> None:
+    def test_resultative_predication_uses_state_scale_lexicon(self) -> None:
         formula = sentence_to_event_semantics("John hammered the metal flat")
         self.assertIn({"pred": "Theme", "args": ["e", "metal"]}, formula["body"]["and"])
         self.assertIn({"pred": "Result", "args": ["e", "flat"]}, formula["body"]["and"])
 
         result = run_pipeline("John hammered the metal flat", require_coq=True)
         self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "resultative_predication")
+        self.assertEqual(result["construction_rule"]["id"], "resultative_predication")
+        self.assertEqual(
+            result["verification_scope"]["kind"],
+            "registered_construction",
+        )
+        self.assertNotIn("construction_rule_draft", result)
+        self.assertEqual(
+            result["semantic_readings"][0]["name"],
+            "resultative_predication_single_reading",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["scope"],
+            "explicit_agent_theme_result",
+        )
         self.assertEqual(
             result["dependent_type_translation"],
             "Cause(john, Transition(metal, shape_scale, not_flat, flat))",
@@ -670,6 +685,12 @@ class TranslatorTests(unittest.TestCase):
 
         painted = run_pipeline("Mary painted the door red", require_coq=True)
         self.assertTrue(painted["ok"])
+        self.assertEqual(painted["kind"], "resultative_predication")
+        self.assertEqual(painted["construction_rule"]["id"], "resultative_predication")
+        self.assertEqual(
+            painted["verification_scope"]["certification_level"],
+            "construction_rule",
+        )
         self.assertEqual(
             painted["dependent_type_translation"],
             "Cause(mary, Transition(door, color_scale, _, red))",
@@ -695,10 +716,18 @@ class TranslatorTests(unittest.TestCase):
 
         flat_api = analyze_sentence("John hammered the metal flat", require_coq=True)
         self.assertTrue(flat_api["ok"])
+        self.assertEqual(
+            flat_api["verification_scope"]["kind"],
+            "registered_construction",
+        )
         self.assertEqual(flat_api["diagnostics"]["warnings"], [])
 
         painted_api = analyze_sentence("Mary painted the door red", require_coq=True)
         self.assertTrue(painted_api["ok"])
+        self.assertEqual(
+            painted_api["verification_scope"]["kind"],
+            "registered_construction",
+        )
         self.assertEqual(painted_api["diagnostics"]["summary"], "translation verified")
         self.assertEqual(
             painted_api["diagnostics"]["warnings"],
@@ -9932,6 +9961,7 @@ class TranslatorTests(unittest.TestCase):
             "passive_argument_omission",
             "lexical_state_change",
             "stative_result_state",
+            "resultative_predication",
             "timed_after",
             "causal_because",
             "perception_nominalization",
@@ -9956,6 +9986,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Parameter Agent :", rules["lexical_state_change"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["stative_result_state"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["stative_result_state"].forbidden_coq_fragments)
+        self.assertIn("Parameter Event : Type.", rules["resultative_predication"].forbidden_coq_fragments)
+        self.assertIn("Parameter Agent :", rules["resultative_predication"].forbidden_coq_fragments)
+        self.assertIn("Parameter Theme :", rules["resultative_predication"].forbidden_coq_fragments)
+        self.assertIn("Parameter ResultState :", rules["resultative_predication"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["timed_after"].forbidden_coq_fragments)
         self.assertIn("Parameter Event : Type.", rules["causal_because"].forbidden_coq_fragments)
         self.assertIn("Parameter Agent :", rules["causal_because"].forbidden_coq_fragments)
@@ -11400,6 +11434,7 @@ class TranslatorTests(unittest.TestCase):
             "passive_argument_omission": "the toast was buttered",
             "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
+            "resultative_predication": "John hammered the metal flat",
             "timed_after": "after the singing of the Marseillaise, John saluted the flag",
             "perception_nominalization": "Mary saw John leave",
             "universal_timed_burning": "In every burning, oxygen is consumed",
@@ -11433,6 +11468,7 @@ class TranslatorTests(unittest.TestCase):
             "passive_argument_omission": "the toast was buttered",
             "lexical_state_change": "the door opened",
             "stative_result_state": "the vase is broken",
+            "resultative_predication": "John hammered the metal flat",
             "timed_after": "after the singing of the Marseillaise, John saluted the flag",
             "perception_nominalization": "Mary saw John leave",
             "universal_timed_burning": "In every burning, oxygen is consumed",
@@ -16098,6 +16134,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)
         self.assertIn("`on_mat : Entity`", web_design)
+        self.assertIn("resultative_predication", web_design)
+        self.assertIn("resultative_predication_single_reading", web_design)
+        self.assertIn("explicit_agent_theme_result", web_design)
         self.assertIn("Mary admired the painting", web_design)
         self.assertIn("in the gallery with a telescope near a", web_design)
         self.assertIn("window` is checked", web_design)
@@ -16150,6 +16189,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("locative_intransitive_predication_single_reading", manuscript)
         self.assertIn("on_mat : Adv", manuscript)
         self.assertIn("on_mat : Entity", manuscript)
+        self.assertIn("registered resultative_predication", manuscript)
+        self.assertIn("resultative_predication_single_reading", manuscript)
+        self.assertIn("explicit_agent_theme_result", manuscript)
+        self.assertIn("ResultState predicate fragments", manuscript)
         self.assertIn("John ate", manuscript)
         self.assertIn("Sigma witness", manuscript)
         self.assertIn("some boy loves some girl", manuscript)
@@ -17001,6 +17044,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)
+        self.assertIn("`resultative_predication`", readme)
+        self.assertIn("`resultative_predication_single_reading`", readme)
+        self.assertIn("`explicit_agent_theme_result`", readme)
+        self.assertIn("`ResultState` predicate fragments", readme)
         self.assertIn("/api/analyze?sentence=John+ate&require_coq=1", readme)
         self.assertIn("`certification_gaps`", readme)
         self.assertIn("`semantic_snapshots`", readme)
@@ -17057,6 +17104,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)
+        self.assertIn("`resultative_predication`", web_design)
+        self.assertIn("`resultative_predication_single_reading`", web_design)
+        self.assertIn("`explicit_agent_theme_result`", web_design)
         self.assertIn("active_argument_omission", web_design)
         self.assertIn("plain_transitive_predication", web_design)
         self.assertIn("modified_transitive_predication", web_design)
@@ -18296,6 +18346,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("construction rule draft diagnostics drift", verifier)
         self.assertIn("def validate_analyze_plain_transitive_success(", verifier)
         self.assertIn("def validate_analyze_locative_intransitive_success(", verifier)
+        self.assertIn("def validate_analyze_resultative_predication_success(", verifier)
         self.assertIn("def validate_analyze_temporal_event_counting_success(", verifier)
         self.assertIn("def validate_analyze_quantifier_scope_success(", verifier)
         self.assertIn("def validate_analyze_perception_success(", verifier)
@@ -18305,6 +18356,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("analyze_plain_transitive_success", verifier)
         self.assertIn("def validate_analyze_active_argument_omission_success(", verifier)
         self.assertIn("analyze_locative_intransitive_success", verifier)
+        self.assertIn("analyze_resultative_predication_success", verifier)
         self.assertIn("analyze_temporal_event_counting_success", verifier)
         self.assertIn("analyze_quantifier_scope_success", verifier)
         self.assertIn("analyze_perception_success", verifier)
@@ -18314,6 +18366,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("John knocked twice", verifier)
         self.assertIn("John knocked twice yesterday", verifier)
         self.assertIn("a cat sits on a mat", verifier)
+        self.assertIn("John hammered the metal flat", verifier)
+        self.assertIn("resultative_predication_single_reading", verifier)
+        self.assertIn("explicit_agent_theme_result", verifier)
         self.assertIn("John ate", verifier)
         self.assertIn("Mary admired the painting", verifier)
         self.assertIn("Mary admired the painting yesterday", verifier)

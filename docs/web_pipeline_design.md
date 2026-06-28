@@ -849,6 +849,17 @@ For example, `a cat sits on a mat` becomes an event-semantics formula with
 an `Adv` item, not as an entity, and construction hygiene rejects an
 `on_mat : Entity` declaration.
 
+The object-final resultative slice is now registered as well. `John hammered
+the metal flat` is checked under `resultative_predication`, exposes
+`resultative_predication_single_reading` with scope
+`explicit_agent_theme_result`, and exports
+`Cause(john, Transition(metal, shape_scale, not_flat, flat))` with `metal` as
+an `Entity`, `flat`/`not_flat` as `State` values, and `shape_scale` as a
+`StateScale`. `Mary painted the door red` follows the same registered route,
+while still surfacing a non-fatal warning because `red` has no unique lexical
+pre-state and therefore uses `unknown_state`. The construction hygiene policy
+rejects hidden `Event`, `Agent`, `Theme`, and `ResultState` predicate fragments.
+
 Other simple English sentences are still handled by the fallback parser. For
 example, `Mary admired the painting red yesterday` remains a shallow timed
 resultative scaffold,
