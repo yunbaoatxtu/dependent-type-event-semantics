@@ -15,6 +15,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
+from urllib.parse import urlencode
 from urllib.request import ProxyHandler, build_opener
 
 import translator.natural_language_pipeline as natural_language_pipeline
@@ -16988,6 +16989,93 @@ class TranslatorTests(unittest.TestCase):
             "human_review_required",
         )
 
+    def test_live_core_patch_and_draft_routes_use_validating_json_opener(self) -> None:
+        fallback_sentence = (
+            "Mary laughed from a window with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a "
+            "telescope near a window with a knife yesterday"
+        )
+        with pipeline_server() as (base_url, base_opener):
+            handler = object.__new__(PipelineHandler)
+            opener = JsonApiRouteValidatingOpener(
+                base_opener,
+                json_api_route_expectations_for_handler(handler),
+            )
+            with opener.open(f"{base_url}/api/diagnostic-contract", timeout=5) as response:
+                contract = json.load(response)
+            with opener.open(f"{base_url}/api/certified-fragment", timeout=5) as response:
+                fragment = json.load(response)
+
+            draft_query = urlencode(
+                {"sentence": fallback_sentence, "require_coq": "1"}
+            )
+            with opener.open(
+                f"{base_url}/api/construction-rule-draft?{draft_query}",
+                timeout=5,
+            ) as response:
+                draft_payload = json.load(response)
+            with opener.open(
+                f"{base_url}/api/construction-rule-draft?{draft_query}&download=1",
+                timeout=5,
+            ) as response:
+                draft_download_payload = json.load(response)
+
+            no_draft_query = urlencode(
+                {"sentence": "Mary admired the painting", "require_coq": "1"}
+            )
+            with self.assertRaises(HTTPError) as no_draft:
+                opener.open(
+                    f"{base_url}/api/construction-rule-draft?{no_draft_query}",
+                    timeout=5,
+                )
+            no_draft_payload = json.loads(no_draft.exception.read().decode("utf-8"))
+
+            patch_query = urlencode(
+                {"sentence": "Mary painted the door red", "require_coq": "1"}
+            )
+            with opener.open(
+                f"{base_url}/api/lexicon-patch-drafts?{patch_query}",
+                timeout=5,
+            ) as response:
+                patch_payload = json.load(response)
+            with opener.open(
+                f"{base_url}/api/lexicon-patch-drafts?{patch_query}&format=patch",
+                timeout=5,
+            ) as response:
+                patch_text = response.read().decode("utf-8")
+            with self.assertRaises(HTTPError) as bad_format:
+                opener.open(
+                    f"{base_url}/api/lexicon-patch-drafts?{patch_query}&format=zip",
+                    timeout=5,
+                )
+            bad_format_payload = json.loads(
+                bad_format.exception.read().decode("utf-8")
+            )
+
+        self.assertEqual(contract["schema_version"], "diagnostic_contract.v1")
+        self.assertEqual(fragment["schema_version"], "certified_fragment.v1")
+        self.assertTrue(draft_payload["ok"])
+        self.assertEqual(
+            draft_payload["schema_version"],
+            "construction_rule_draft_response.v1",
+        )
+        self.assertEqual(draft_download_payload, draft_payload)
+        self.assertEqual(no_draft.exception.code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(no_draft_payload["ok"])
+        self.assertEqual(
+            no_draft_payload["schema_version"],
+            "construction_rule_draft_response.v1",
+        )
+        self.assertEqual(patch_payload["schema_version"], "lexicon_patch_drafts.v1")
+        self.assertEqual(patch_text, patch_payload["patch_text_preview"])
+        self.assertEqual(bad_format.exception.code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(bad_format_payload["ok"])
+        self.assertEqual(
+            bad_format_payload["schema_version"],
+            "lexicon_patch_drafts.v1",
+        )
+        self.assertEqual(bad_format_payload["allowed_formats"], ["json", "patch"])
+
     def test_json_route_validating_opener_checks_http_error_payload(self) -> None:
         query = "case=semantic_readings_missing_export&index=0"
         url = f"http://example.test/api/recovery-action-run?{query}"
@@ -23976,9 +24064,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"label": "ordinary analyze"', verifier)
         self.assertIn('"label": "ordinary analyze action"', verifier)
         self.assertIn('"label": "ordinary analyze inspection run"', verifier)
+        self.assertIn('"label": "construction rule draft"', verifier)
+        self.assertIn('"label": "diagnostic contract"', verifier)
+        self.assertIn('"label": "certified fragment"', verifier)
         self.assertIn('"label": "diagnostic fixture"', verifier)
         self.assertIn('"label": "diagnostic recovery action"', verifier)
         self.assertIn('"label": "diagnostic recovery action run"', verifier)
+        self.assertIn('"label": "lexicon patch bundle"', verifier)
+        self.assertIn('"/api/construction-rule-draft"', verifier)
+        self.assertIn('"/api/lexicon-patch-drafts"', verifier)
+        self.assertIn('response_format == "patch"', verifier)
         self.assertIn("except HTTPError as error:", verifier)
         self.assertIn("def validate_json_download_response_bytes(", verifier)
         self.assertIn("def validate_text_artifact_response_bytes(", verifier)

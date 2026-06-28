@@ -992,8 +992,13 @@ with the same JSON validator, and should use the same route-configured wrapper
 for ordinary `/api/analyze-action` exports and successful
 `/api/analyze-action-run` inspection snapshots, diagnostic fixture JSON,
 fixture recovery-action exports, and expected 400 JSON inspection-run
-rejections. Real HTTP responses are therefore checked for `application/json`,
-UTF-8 charset, byte length, and equality with the direct handler payload rather than merely being parsed with `json.load`.
+rejections. The same wrapper should cover the live diagnostic contract,
+certified-fragment manifest, construction-rule-draft JSON route including its
+download and expected no-draft 400 response, and lexicon patch JSON bundles
+including unsupported-format 400 responses; `format=patch` remains a text
+artifact and is checked by the text-response validator instead. Real HTTP
+responses are therefore checked for `application/json`, UTF-8 charset, byte
+length, and equality with the direct handler payload rather than merely being parsed with `json.load`.
 It should also validate `coverage_matrix_counts` against the actual matrix
 lists and compare the page's coverage-count attributes and example hooks with
 the JSON manifest. The page-level smoke check should derive every registered-primary

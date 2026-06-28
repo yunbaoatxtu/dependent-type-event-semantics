@@ -2207,9 +2207,14 @@ responses with the same JSON validator, and applies the same route-configured
 check to ordinary `/api/analyze-action` exports, successful
 `/api/analyze-action-run` inspection snapshots, diagnostic fixture JSON,
 fixture recovery-action exports, and expected 400 JSON inspection-run
-rejections. The local HTTP route must preserve `application/json`, UTF-8
-charset, byte length, and handler-equivalent payloads for every ordinary
-sentence-analysis, action, diagnostic fixture, and recovery request it opens. It
+rejections. It also applies that wrapper to the live diagnostic contract,
+certified-fragment manifest, construction-rule-draft JSON route, construction
+draft download JSON, lexicon patch JSON bundle, and expected 400 JSON responses
+for unsupported patch formats, while leaving `format=patch` responses under the
+text-artifact validator. The local HTTP route must preserve `application/json`,
+UTF-8 charset, byte length, and handler-equivalent payloads for every ordinary
+sentence-analysis, action, diagnostic fixture, recovery, construction-draft,
+contract, certified-fragment, and lexicon-patch JSON request it opens. It
 also runs a web route smoke check that requests ordinary `/api/analyze` fallback and quantifier-scope successes plus a
 registered perception-complement success plus registered timed-after and
 universal timed burning successes before the diagnostic fixture manifest through

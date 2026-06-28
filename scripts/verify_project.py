@@ -12619,6 +12619,31 @@ def json_api_route_expectations_for_handler(handler):
             "expected_payload": handler.handle_diagnostic_fixtures_api(),
         }
 
+    def diagnostic_contract_expectation(_parsed):
+        return {
+            "case": "live diagnostic contract",
+            "label": "diagnostic contract",
+            "expected_payload": handler.handle_diagnostic_contract_api(),
+        }
+
+    def certified_fragment_expectation(_parsed):
+        return {
+            "case": "live certified fragment",
+            "label": "certified fragment",
+            "expected_payload": handler.handle_certified_fragment_api(),
+        }
+
+    def construction_rule_draft_expectation(parsed):
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        payload, status = handler.handle_construction_rule_draft_api(parsed.query)
+        return {
+            "case": f"live construction rule draft {sentence}",
+            "label": "construction rule draft",
+            "expected_payload": payload,
+            "expected_status": status,
+        }
+
     def diagnostic_fixture_expectation(parsed):
         params = parse_qs(parsed.query)
         case = params.get("case", ["<default>"])[0].strip() or "<default>"
@@ -12652,14 +12677,47 @@ def json_api_route_expectations_for_handler(handler):
             "expected_status": status,
         }
 
+    def lexicon_patch_expectation(parsed):
+        response_format = handler.patch_response_format(parsed.query)
+        if response_format == "patch":
+            return None
+        params = parse_qs(parsed.query)
+        sentence = params.get("sentence", [""])[0].strip() or "<empty>"
+        if response_format not in {"json", ""}:
+            from web.app import LEXICON_PATCH_DRAFTS_SCHEMA
+
+            return {
+                "case": f"live lexicon patch {sentence} ({response_format})",
+                "label": "lexicon patch bundle",
+                "expected_payload": {
+                    "schema_version": LEXICON_PATCH_DRAFTS_SCHEMA,
+                    "ok": False,
+                    "error": (
+                        "Unsupported lexicon patch response format "
+                        f"{response_format!r}; expected 'json' or 'patch'."
+                    ),
+                    "allowed_formats": ["json", "patch"],
+                },
+                "expected_status": HTTPStatus.BAD_REQUEST,
+            }
+        return {
+            "case": f"live lexicon patch {sentence}",
+            "label": "lexicon patch bundle",
+            "expected_payload": handler.handle_patch_api(parsed.query),
+        }
+
     return {
         "/api/analyze": analyze_expectation,
         "/api/analyze-action": analyze_action_expectation,
         "/api/analyze-action-run": analyze_action_run_expectation,
+        "/api/construction-rule-draft": construction_rule_draft_expectation,
+        "/api/diagnostic-contract": diagnostic_contract_expectation,
+        "/api/certified-fragment": certified_fragment_expectation,
         "/api/diagnostic-fixtures": diagnostic_fixtures_expectation,
         "/api/diagnostic-fixture": diagnostic_fixture_expectation,
         "/api/recovery-action": recovery_action_expectation,
         "/api/recovery-action-run": recovery_action_run_expectation,
+        "/api/lexicon-patch-drafts": lexicon_patch_expectation,
     }
 
 
