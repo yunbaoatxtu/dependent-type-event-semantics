@@ -159,6 +159,11 @@ the verifier. Those invariants require `ModifierSeq` lengths to match the
 surface modifier list, nested vector tails to decrease to zero, modifier roles
 to remain `Adv` typed rather than `Entity` typed, and the surface lexicon audit
 to agree with the role rows.
+The panel also exposes the registered modifier semantic-role inventory through
+`data-modifier-sequence-role-*` hooks. The currently audited roles are `Goal`,
+`Instrument`, `Location`, `Manner`, and `Source`, all with type `Adv`; the smoke
+check reruns the registered cases and rejects any unregistered role or any drop
+below the current minimum role-coverage counts.
 The manifest also carries a `coverage_matrix` with
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`, plus matching

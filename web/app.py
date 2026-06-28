@@ -3364,6 +3364,34 @@ def certified_fragment_panel() -> str:
         for invariant in modifier_sequence_contract.get("required_invariants", [])
         if isinstance(invariant, str)
     )
+    modifier_role_inventory = [
+        item
+        for item in modifier_sequence_contract.get("registered_semantic_role_inventory", [])
+        if isinstance(item, dict)
+    ]
+    modifier_role_names = ",".join(
+        str(item.get("role", ""))
+        for item in modifier_role_inventory
+        if isinstance(item.get("role"), str)
+    )
+    modifier_role_minima = ",".join(
+        f"{item.get('role')}:{item.get('minimum_observed_occurrences')}"
+        for item in modifier_role_inventory
+        if isinstance(item.get("role"), str)
+        and isinstance(item.get("minimum_observed_occurrences"), int)
+    )
+    modifier_role_inventory_items = "".join(
+        (
+            '<li '
+            f'data-modifier-sequence-role="{html.escape(str(item.get("role", "")), quote=True)}" '
+            f'data-modifier-sequence-role-type="{html.escape(str(item.get("type", "")), quote=True)}" '
+            f'data-modifier-sequence-role-minimum="{html.escape(str(item.get("minimum_observed_occurrences", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('role', '')))}</code> "
+            f"<span>min {html.escape(str(item.get('minimum_observed_occurrences', '')))}</span>"
+            "</li>"
+        )
+        for item in modifier_role_inventory
+    )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
         examples = item.get("verified_examples")
@@ -3594,6 +3622,9 @@ def certified_fragment_panel() -> str:
         f'data-modifier-sequence-max-count="{html.escape(str(modifier_sequence_contract.get("max_declared_application_modifier_count", "")), quote=True)}" '
         f'data-modifier-sequence-declared-counts="{html.escape(modifier_sequence_declared_counts, quote=True)}" '
         f'data-modifier-sequence-full-certification="{str(modifier_sequence_contract.get("full_surface_parser_certification") is True).lower()}" '
+        f'data-modifier-sequence-role-inventory="{html.escape(modifier_role_names, quote=True)}" '
+        f'data-modifier-sequence-role-count="{len(modifier_role_inventory)}" '
+        f'data-modifier-sequence-role-minima="{html.escape(modifier_role_minima, quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -3617,6 +3648,7 @@ def certified_fragment_panel() -> str:
         f"<dt>type diagnostics</dt><dd><code>{html.escape(surface_slot_probe_matrix_type_contract_diagnostic_categories)}</code></dd>"
         f"<dt>modifier contract</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('schema_version', '')))}</code></dd>"
         f"<dt>modifier max</dt><dd><code>{html.escape(str(modifier_sequence_contract.get('max_declared_application_modifier_count', '')))}</code></dd>"
+        f"<dt>modifier roles</dt><dd><code>{html.escape(modifier_role_names)}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
@@ -3631,7 +3663,9 @@ def certified_fragment_panel() -> str:
         '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'
         f"<ul>{rejected_items}</ul></div>"
         '<div class="certified-fragment-modifier-contract"><strong>modifier sequence contract</strong>'
-        f"<ul>{modifier_sequence_invariant_items}</ul></div>"
+        f"<ul>{modifier_sequence_invariant_items}</ul>"
+        "<strong>registered modifier roles</strong>"
+        f"<ul>{modifier_role_inventory_items}</ul></div>"
         '<div class="certified-fragment-surface-parser"><strong>surface parser coverage</strong>'
         f"<ul>{surface_parser_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'

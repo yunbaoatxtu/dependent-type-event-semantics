@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import threading
+from collections import Counter
 from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, urlencode, urlparse
 from pathlib import Path
@@ -10546,6 +10547,15 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "modifier_roles_length_matches_modifiers",
         "modifier_roles_are_adv_not_entity",
         "surface_lexicon_matches_modifier_roles",
+        "observed_modifier_roles_are_registered",
+        "registered_modifier_role_minima_are_observed",
+    ]
+    expected_modifier_role_inventory = [
+        {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
+        {"role": "Instrument", "type": "Adv", "minimum_observed_occurrences": 108},
+        {"role": "Location", "type": "Adv", "minimum_observed_occurrences": 197},
+        {"role": "Manner", "type": "Adv", "minimum_observed_occurrences": 61},
+        {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
     ]
     expected_declared_modifier_counts = declared_application_modifier_counts(
         [*snapshots, *registered_variant_cases],
@@ -10567,6 +10577,8 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         or modifier_contract.get("max_declared_application_modifier_count")
         != (max(expected_declared_modifier_counts) if expected_declared_modifier_counts else 0)
         or modifier_contract.get("required_invariants") != expected_modifier_invariants
+        or modifier_contract.get("registered_semantic_role_inventory")
+        != expected_modifier_role_inventory
     ):
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence contract drift"
@@ -10575,12 +10587,21 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     if (
         not isinstance(live_validation, dict)
         or live_validation.get("max_application_modifier_count_is_recomputed") is not True
+        or live_validation.get("semantic_role_inventory_is_recomputed") is not True
     ):
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence live validator drift"
         )
 
     observed_application_modifier_counts: list[int] = []
+    observed_modifier_roles: Counter[str] = Counter()
+    expected_modifier_role_names = {
+        str(item["role"]) for item in expected_modifier_role_inventory
+    }
+    expected_modifier_role_minima = {
+        str(item["role"]): int(item["minimum_observed_occurrences"])
+        for item in expected_modifier_role_inventory
+    }
 
     def observe_modifier_sequences(result: dict, label: str) -> None:
         for summary in application_modifier_sequence_summaries(result.get("ast", {})):
@@ -10603,6 +10624,17 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                 raise SystemExit(
                     f"web route smoke check failed: {label} modifier sequence invariant drift"
                 )
+            role_pattern = summary.get("role_pattern")
+            if not isinstance(role_pattern, list):
+                raise SystemExit(
+                    f"web route smoke check failed: {label} modifier role pattern drift"
+                )
+            for role in role_pattern:
+                if not isinstance(role, str) or role not in expected_modifier_role_names:
+                    raise SystemExit(
+                        f"web route smoke check failed: {label} modifier role inventory drift"
+                    )
+                observed_modifier_roles[role] += 1
     surface_parser_coverage = manifest.get("surface_parser_coverage")
     if not isinstance(surface_parser_coverage, dict):
         raise SystemExit("web route smoke check failed: certified surface parser coverage missing")
@@ -11134,6 +11166,15 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit(
             "web route smoke check failed: certified modifier sequence live coverage drift"
         )
+    if set(observed_modifier_roles) != expected_modifier_role_names:
+        raise SystemExit(
+            "web route smoke check failed: certified modifier sequence role inventory drift"
+        )
+    for role, minimum in expected_modifier_role_minima.items():
+        if observed_modifier_roles[role] < minimum:
+            raise SystemExit(
+                "web route smoke check failed: certified modifier sequence role coverage drift"
+            )
     fallback = manifest.get("fallback")
     if (
         not isinstance(fallback, dict)
@@ -11252,8 +11293,16 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-max-count="11"',
         'data-modifier-sequence-declared-counts="0,1,2,3,4,5,6,7,8,9,10,11"',
         'data-modifier-sequence-full-certification="false"',
+        'data-modifier-sequence-role-inventory="Goal,Instrument,Location,Manner,Source"',
+        'data-modifier-sequence-role-count="5"',
+        'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
+        'data-modifier-sequence-role="Goal"',
+        'data-modifier-sequence-role="Instrument"',
+        'data-modifier-sequence-role="Location"',
+        'data-modifier-sequence-role="Manner"',
+        'data-modifier-sequence-role="Source"',
         'data-surface-slot-probe-id="subject_slot_john"',
         'data-surface-slot-probe-slot="agent"',
         'data-surface-slot-probe-sentence="John admired the painting in the gallery"',

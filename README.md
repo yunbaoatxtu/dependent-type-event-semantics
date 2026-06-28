@@ -937,6 +937,11 @@ the same length as the surface modifiers, nested vector tails must decrease to
 zero, modifier-role rows must be `Adv` rather than `Entity`, and the surface
 lexicon audit must match those roles. The verifier recomputes these facts from
 the live analyzer before accepting the certified-fragment manifest.
+The same contract now carries a registered semantic-role inventory for
+`Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
+The verifier reruns the registered cases and requires all observed modifier
+roles to be drawn from that inventory while preserving the current minimum
+coverage counts for each role.
 The same manifest now includes a `coverage_matrix` with four audited slices:
 `registered_success_cases`, `registered_variant_success_cases`,
 `fallback_success_cases`, and `rejected_unsupported_cases`. Registered cases

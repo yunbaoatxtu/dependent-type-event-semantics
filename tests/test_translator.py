@@ -13435,9 +13435,36 @@ class TranslatorTests(unittest.TestCase):
             "modifier_vector_tail_lengths_decrease_to_zero",
             modifier_contract["required_invariants"],
         )
+        self.assertIn(
+            "observed_modifier_roles_are_registered",
+            modifier_contract["required_invariants"],
+        )
+        self.assertEqual(
+            modifier_contract["registered_semantic_role_inventory"],
+            [
+                {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
+                {
+                    "role": "Instrument",
+                    "type": "Adv",
+                    "minimum_observed_occurrences": 108,
+                },
+                {
+                    "role": "Location",
+                    "type": "Adv",
+                    "minimum_observed_occurrences": 197,
+                },
+                {"role": "Manner", "type": "Adv", "minimum_observed_occurrences": 61},
+                {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
+            ],
+        )
         self.assertTrue(
             modifier_contract["live_validation"][
                 "max_application_modifier_count_is_recomputed"
+            ],
+        )
+        self.assertTrue(
+            modifier_contract["live_validation"][
+                "semantic_role_inventory_is_recomputed"
             ],
         )
         surface_parser_coverage = manifest["surface_parser_coverage"][
@@ -14118,6 +14145,22 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
             validate_certified_fragment_manifest(stale_manifest)
 
+        role_drift_manifest = deepcopy(construction_fragment_manifest())
+        role_drift_manifest["registered_modifier_sequence_contract"][
+            "registered_semantic_role_inventory"
+        ] = role_drift_manifest["registered_modifier_sequence_contract"][
+            "registered_semantic_role_inventory"
+        ][:-1]
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(role_drift_manifest)
+
+        role_coverage_drift_manifest = deepcopy(construction_fragment_manifest())
+        role_coverage_drift_manifest["registered_modifier_sequence_contract"][
+            "registered_semantic_role_inventory"
+        ][0]["minimum_observed_occurrences"] = 999
+        with self.assertRaisesRegex(SystemExit, "modifier sequence contract drift"):
+            validate_certified_fragment_manifest(role_coverage_drift_manifest)
+
     def test_verification_rejects_surface_parser_generation_spec_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         generation_spec = manifest["surface_parser_coverage"][
@@ -14549,9 +14592,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('data-modifier-sequence-max-count="11"', page)
         self.assertIn('data-modifier-sequence-declared-counts="0,1,2,3,4,5,6,7,8,9,10,11"', page)
         self.assertIn(
+            'data-modifier-sequence-role-inventory="Goal,Instrument,Location,Manner,Source"',
+            page,
+        )
+        self.assertIn('data-modifier-sequence-role-count="5"', page)
+        self.assertIn(
+            'data-modifier-sequence-role-minima="Goal:21,Instrument:108,Location:197,Manner:61,Source:37"',
+            page,
+        )
+        self.assertIn(
             'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
             page,
         )
+        self.assertIn('data-modifier-sequence-role="Instrument"', page)
         self.assertIn(
             f'data-semantic-snapshot-count="{len(construction_rules())}"',
             page,
@@ -19773,6 +19826,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("registered_modifier_sequence_contract.v1", manuscript)
         self.assertIn("dependent application modifier counts 0 through 11", manuscript)
         self.assertIn("ModifierSeq lengths match surface modifier lists", manuscript)
+        self.assertIn("Goal, Instrument, Location, Manner, and Source", manuscript)
+        self.assertIn("protects thematic-role typing", manuscript)
         self.assertIn("unrestricted natural-language parsing as open", manuscript)
         self.assertIn(
             "visible labels, controls, executable inspection counts, and JSON inventory cannot silently drift apart",
@@ -20682,6 +20737,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"registered_modifier_sequence_contract.v1"', readme)
         self.assertIn("the maximum declared count `11`", readme)
         self.assertIn("modifier-role rows must be `Adv` rather than `Entity`", readme)
+        self.assertIn("registered semantic-role inventory", readme)
+        self.assertIn("`Goal`, `Instrument`, `Location`, `Manner`, and `Source`", readme)
         self.assertIn("`data-semantic-snapshot-ast-kind`", readme)
         self.assertIn("## API Contract", web_design)
         self.assertIn("`sentence`: required natural-language input", web_design)
@@ -20734,6 +20791,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-modifier-sequence-*` attributes", web_design)
         self.assertIn("nested vector tails to decrease to zero", web_design)
         self.assertIn("to remain `Adv` typed rather than `Entity` typed", web_design)
+        self.assertIn("`data-modifier-sequence-role-*` hooks", web_design)
+        self.assertIn("minimum role-coverage counts", web_design)
         self.assertIn("locative_intransitive_predication", web_design)
         self.assertIn("locative_intransitive_predication_single_reading", web_design)
         self.assertIn("`on_mat : Adv`", web_design)

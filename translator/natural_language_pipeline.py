@@ -20374,6 +20374,14 @@ APPLICATION_MODIFIER_COUNT_PATTERN = re.compile(
     r"\b[A-Za-z_][A-Za-z0-9_]*\((\d+)\)\("
 )
 
+REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY = [
+    {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
+    {"role": "Instrument", "type": "Adv", "minimum_observed_occurrences": 108},
+    {"role": "Location", "type": "Adv", "minimum_observed_occurrences": 197},
+    {"role": "Manner", "type": "Adv", "minimum_observed_occurrences": 61},
+    {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
+]
+
 
 def declared_application_modifier_counts(
     coverage_items: Iterable[dict[str, Any]],
@@ -20519,11 +20527,17 @@ def registered_modifier_sequence_contract_payload(
             "modifier_roles_length_matches_modifiers",
             "modifier_roles_are_adv_not_entity",
             "surface_lexicon_matches_modifier_roles",
+            "observed_modifier_roles_are_registered",
+            "registered_modifier_role_minima_are_observed",
         ],
+        "registered_semantic_role_inventory": copy.deepcopy(
+            REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY,
+        ),
         "live_validation": {
             "validator": "scripts/verify_project.py::validate_registered_modifier_sequence_contract",
             "scope": "run every registered primary and variant success case",
             "max_application_modifier_count_is_recomputed": True,
+            "semantic_role_inventory_is_recomputed": True,
         },
     }
 
