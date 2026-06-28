@@ -10481,6 +10481,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         ast_structure_summary,
         construction_rules,
         declared_application_modifier_counts,
+        derive_registered_modifier_role_inventory,
         derive_registered_modifier_role_witnesses,
         exported_prop_definition_names,
         registered_modifier_role_source_contract,
@@ -10553,19 +10554,17 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "surface_lexicon_matches_modifier_roles",
         "observed_modifier_roles_are_registered",
         "registered_modifier_role_minima_are_observed",
+        "registered_modifier_role_inventory_is_coverage_derived",
         "registered_modifier_roles_are_surface_lexicon_derived",
         "registered_modifier_roles_have_live_witnesses",
         "registered_modifier_role_witnesses_are_coverage_derived",
     ]
-    expected_modifier_role_inventory = [
-        {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
-        {"role": "Instrument", "type": "Adv", "minimum_observed_occurrences": 108},
-        {"role": "Location", "type": "Adv", "minimum_observed_occurrences": 197},
-        {"role": "Manner", "type": "Adv", "minimum_observed_occurrences": 61},
-        {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
-    ]
     expected_declared_modifier_counts = declared_application_modifier_counts(
         [*snapshots, *registered_variant_cases],
+    )
+    expected_modifier_role_inventory = derive_registered_modifier_role_inventory(
+        snapshots,
+        registered_variant_cases,
     )
     expected_modifier_role_source_contract = registered_modifier_role_source_contract()
     expected_modifier_role_witness_selection_contract = (
@@ -10608,7 +10607,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     if (
         not isinstance(live_validation, dict)
         or live_validation.get("max_application_modifier_count_is_recomputed") is not True
-        or live_validation.get("semantic_role_inventory_is_recomputed") is not True
+        or live_validation.get("semantic_role_inventory_is_coverage_derived") is not True
         or live_validation.get("semantic_role_source_contract_is_recomputed") is not True
         or live_validation.get(
             "semantic_role_witness_selection_contract_is_recomputed",

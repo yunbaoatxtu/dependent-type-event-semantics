@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections import Counter
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -20375,14 +20376,6 @@ APPLICATION_MODIFIER_COUNT_PATTERN = re.compile(
     r"\b[A-Za-z_][A-Za-z0-9_]*\((\d+)\)\("
 )
 
-REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY = [
-    {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
-    {"role": "Instrument", "type": "Adv", "minimum_observed_occurrences": 108},
-    {"role": "Location", "type": "Adv", "minimum_observed_occurrences": 197},
-    {"role": "Manner", "type": "Adv", "minimum_observed_occurrences": 61},
-    {"role": "Source", "type": "Adv", "minimum_observed_occurrences": 37},
-]
-
 def registered_modifier_role_source_contract() -> dict[str, Any]:
     preposition_roles = sorted(set(MODIFIER_ROLE_BY_PREDICATE.values()))
     derived_roles = sorted({*preposition_roles, "Manner"})
@@ -20531,6 +20524,31 @@ def derive_registered_modifier_role_witnesses(
         if role_candidates:
             witnesses.append(copy.deepcopy(min(role_candidates, key=lambda item: item[0])[1]))
     return witnesses
+
+
+def derive_registered_modifier_role_inventory(
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    role_counts: Counter[str] = Counter()
+    coverage_items = [*semantic_snapshots, *registered_variant_success_cases]
+    for item in coverage_items:
+        fragments = item.get("expected_dependent_type_fragments")
+        if not isinstance(fragments, list):
+            continue
+        for fragment in fragments:
+            if not isinstance(fragment, str):
+                continue
+            for modifier in application_modifier_arguments_from_fragment(fragment):
+                role_counts[modifier_semantic_role(modifier)] += 1
+    return [
+        {
+            "role": str(role),
+            "type": "Adv",
+            "minimum_observed_occurrences": role_counts[str(role)],
+        }
+        for role in registered_modifier_role_source_contract()["derived_role_inventory"]
+    ]
 
 
 def declared_application_modifier_counts(
@@ -20728,12 +20746,16 @@ def registered_modifier_sequence_contract_payload(
             "surface_lexicon_matches_modifier_roles",
             "observed_modifier_roles_are_registered",
             "registered_modifier_role_minima_are_observed",
+            "registered_modifier_role_inventory_is_coverage_derived",
             "registered_modifier_roles_are_surface_lexicon_derived",
             "registered_modifier_roles_have_live_witnesses",
             "registered_modifier_role_witnesses_are_coverage_derived",
         ],
-        "registered_semantic_role_inventory": copy.deepcopy(
-            REGISTERED_MODIFIER_SEMANTIC_ROLE_INVENTORY,
+        "registered_semantic_role_inventory": (
+            derive_registered_modifier_role_inventory(
+                semantic_snapshots,
+                registered_variant_success_cases,
+            )
         ),
         "registered_semantic_role_witnesses": (
             derive_registered_modifier_role_witnesses(
@@ -20749,7 +20771,7 @@ def registered_modifier_sequence_contract_payload(
             "validator": "scripts/verify_project.py::validate_registered_modifier_sequence_contract",
             "scope": "run every registered primary and variant success case",
             "max_application_modifier_count_is_recomputed": True,
-            "semantic_role_inventory_is_recomputed": True,
+            "semantic_role_inventory_is_coverage_derived": True,
             "semantic_role_source_contract_is_recomputed": True,
             "semantic_role_witness_selection_contract_is_recomputed": True,
             "semantic_role_witnesses_are_coverage_derived": True,

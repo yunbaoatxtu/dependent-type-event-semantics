@@ -940,17 +940,19 @@ the live analyzer before accepting the certified-fragment manifest.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
-roles to be drawn from that inventory while preserving the current minimum
-coverage counts for each role. A nested `semantic_role_source_contract` records
+roles to be drawn from that inventory while preserving the minimum coverage
+counts derived from the registered primary and variant dependent-type fragments.
+A nested `semantic_role_source_contract` records
 that the inventory is derived from `translator/surface_lexicon.py`: prepositional
 roles come from `MODIFIER_ROLE_BY_PREDICATE`, ordinary entries in
 `COMMON_ADVERBS` contribute the `Manner` role, and the web panel mirrors the
 derived list through `data-modifier-sequence-role-source-*` hooks. The verifier
-recomputes that source contract and rejects drift between the advertised role
-inventory and the surface lexicon boundary. It also exposes
+recomputes both that source contract and the coverage-derived role minima, then
+rejects drift between the advertised role inventory and the surface lexicon or
+registered-fragment boundary. It also exposes
 `registered_semantic_role_witnesses`: one live registered sentence per role,
 such as `Mary laughed into a room yesterday` for `Goal`, `a cat sits on a mat`
-for `Location`, and `Mary laughed from a window yesterday` for `Source`. The
+for `Location`, and `Mary laughed from a window` for `Source`. The
 verifier reruns those witness sentences and checks the AST modifier, normalized
 Adv constant, role label, and `surface_lexicon` source before accepting the
 manifest; the web panel mirrors the summary through

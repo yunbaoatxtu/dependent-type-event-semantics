@@ -88,6 +88,7 @@ from translator.natural_language_pipeline import (
     check_universal_timed_ast,
     construction_fragment_manifest,
     construction_rules,
+    derive_registered_modifier_role_inventory,
     exported_prop_definition_names,
     fallback_candidate_rule_id,
     fallback_certification_gap_payload,
@@ -13439,8 +13440,20 @@ class TranslatorTests(unittest.TestCase):
             "observed_modifier_roles_are_registered",
             modifier_contract["required_invariants"],
         )
+        self.assertIn(
+            "registered_modifier_role_inventory_is_coverage_derived",
+            modifier_contract["required_invariants"],
+        )
+        expected_role_inventory = derive_registered_modifier_role_inventory(
+            list(snapshots.values()),
+            coverage["registered_variant_success_cases"],
+        )
         self.assertEqual(
             modifier_contract["registered_semantic_role_inventory"],
+            expected_role_inventory,
+        )
+        self.assertEqual(
+            expected_role_inventory,
             [
                 {"role": "Goal", "type": "Adv", "minimum_observed_occurrences": 21},
                 {
@@ -13569,7 +13582,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertTrue(
             modifier_contract["live_validation"][
-                "semantic_role_inventory_is_recomputed"
+                "semantic_role_inventory_is_coverage_derived"
             ],
         )
         self.assertTrue(
@@ -20949,6 +20962,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", readme)
         self.assertIn("`COMMON_ADVERBS`", readme)
         self.assertIn("`data-modifier-sequence-role-source-*` hooks", readme)
+        self.assertIn("coverage-derived role minima", readme)
         self.assertIn("`registered_semantic_role_witnesses`", readme)
         self.assertIn("`data-modifier-sequence-role-witness-*` hooks", readme)
         self.assertIn("`semantic_role_witness_selection_contract`", readme)
@@ -21010,7 +21024,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("nested vector tails to decrease to zero", web_design)
         self.assertIn("to remain `Adv` typed rather than `Entity` typed", web_design)
         self.assertIn("`data-modifier-sequence-role-*` hooks", web_design)
-        self.assertIn("minimum role-coverage counts", web_design)
+        self.assertIn("coverage-derived minima", web_design)
         self.assertIn("`semantic_role_source_contract`", web_design)
         self.assertIn("`data-modifier-sequence-role-source-*` attributes", web_design)
         self.assertIn("`MODIFIER_ROLE_BY_PREDICATE`", web_design)

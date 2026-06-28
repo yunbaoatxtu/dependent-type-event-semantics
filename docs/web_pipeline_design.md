@@ -163,12 +163,15 @@ The panel also exposes the registered modifier semantic-role inventory through
 `data-modifier-sequence-role-*` hooks. The currently audited roles are `Goal`,
 `Instrument`, `Location`, `Manner`, and `Source`, all with type `Adv`; the smoke
 check reruns the registered cases and rejects any unregistered role or any drop
-below the current minimum role-coverage counts. The same contract now includes a
+below the role-coverage counts derived from registered primary and variant
+dependent-type fragments. The same contract now includes a
 `semantic_role_source_contract` and mirrors it in
 `data-modifier-sequence-role-source-*` attributes: the prepositional role source
 is `MODIFIER_ROLE_BY_PREDICATE` in `translator/surface_lexicon.py`, common
 adverbs contribute `Manner`, and the derived role inventory must remain
-`Goal,Instrument,Location,Manner,Source`. It also exposes
+`Goal,Instrument,Location,Manner,Source`. The verifier recomputes the
+coverage-derived minima and the source-derived inventory before accepting the
+manifest. It also exposes
 `registered_semantic_role_witnesses` through
 `data-modifier-sequence-role-witness-*` attributes. The verifier reruns one
 registered witness sentence for each role and checks that the AST contains the
