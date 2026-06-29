@@ -973,6 +973,14 @@ def model_sigma_constructor(type_name: str) -> str:
     return f"model_sigma_{type_name}"
 
 
+def syntax_truth_application_constructor(function: str) -> str:
+    return f"syntax_truth_{function}_application"
+
+
+def syntax_truth_sigma_constructor(type_name: str) -> str:
+    return f"syntax_truth_sigma_{type_name}"
+
+
 def denotation_application_field(function: str) -> str:
     return f"denote_{function}_application"
 
@@ -1077,6 +1085,48 @@ def _lean_function_model_constructor(
         f"  | {model_application_constructor(name)} : "
         + " -> ".join(binders + [
             f"ModelInterpretable {result_type} ({name} {' '.join(application_args)})"
+        ])
+    )
+
+
+def _coq_function_syntax_truth_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  | {syntax_truth_application_constructor(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"SyntaxDirectedTruth {result_type} "
+        + f"({name} {' '.join(application_args)})",
+    ]
+
+
+def _lean_function_syntax_truth_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  | {syntax_truth_application_constructor(name)} : "
+        + " -> ".join(binders + [
+            f"SyntaxDirectedTruth {result_type} ({name} {' '.join(application_args)})"
         ])
     )
 
@@ -1426,6 +1476,118 @@ def model_interpretability_relation_lines(
     )
     if not constructors:
         raise ValueError("Cannot emit an empty ModelInterpretable relation")
+    constructors[-1] += "."
+    return lines + constructors
+
+
+def syntax_directed_truth_relation_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = ["inductive SyntaxDirectedTruth : (A : Type) -> A -> Prop where"]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_syntax_truth_constructor(name, arg_types, result_type)
+            )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | {syntax_truth_sigma_constructor(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> SyntaxDirectedTruth Prop (P x)) -> "
+                f"SyntaxDirectedTruth Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  | syntax_truth_repeat : (n : Nat) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (repeat n body)",
+                "  | syntax_truth_at_T : (marker : Entity) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (at_T marker body)",
+                "  | syntax_truth_during_T : (marker : Entity) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (during_T marker body)",
+                "  | syntax_truth_before_T : (marker : Entity) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (before_T marker body)",
+                "  | syntax_truth_after_T : (marker : Entity) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (after_T marker body)",
+                "  | syntax_truth_until_T : (marker : Entity) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (until_T marker body)",
+                "  | syntax_truth_since_T : (marker : Entity) -> (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (since_T marker body)",
+                "  | syntax_truth_not_T : (body : PropT) -> "
+                "SyntaxDirectedTruth PropT body -> "
+                "SyntaxDirectedTruth PropT (not_T body)",
+                "  | syntax_truth_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "SyntaxDirectedTruth TransitionT "
+                "(Transition theme scale source target)",
+                "  | syntax_truth_cause : (causer : Entity) -> (effect : TransitionT) -> "
+                "SyntaxDirectedTruth TransitionT effect -> "
+                "SyntaxDirectedTruth PropT (Cause causer effect)",
+            ]
+        )
+        return lines
+
+    lines = ["Inductive SyntaxDirectedTruth : forall A : Type, A -> Prop :="]
+    constructors: list[str] = []
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        constructors.extend(
+            _coq_function_syntax_truth_constructor(name, arg_types, result_type)
+        )
+    for type_name in declarations["types"]:
+        constructors.extend(
+            [
+                f"  | {syntax_truth_sigma_constructor(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, SyntaxDirectedTruth Prop (P x)) ->",
+                f"      SyntaxDirectedTruth Prop (exists x : {type_name}, P x)",
+            ]
+        )
+    constructors.extend(
+        [
+            "  | syntax_truth_repeat : forall n : nat, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (repeat n body)",
+            "  | syntax_truth_at_T : forall marker : Entity, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (at_T marker body)",
+            "  | syntax_truth_during_T : forall marker : Entity, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (during_T marker body)",
+            "  | syntax_truth_before_T : forall marker : Entity, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (before_T marker body)",
+            "  | syntax_truth_after_T : forall marker : Entity, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (after_T marker body)",
+            "  | syntax_truth_until_T : forall marker : Entity, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (until_T marker body)",
+            "  | syntax_truth_since_T : forall marker : Entity, forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (since_T marker body)",
+            "  | syntax_truth_not_T : forall body : PropT,",
+            "      SyntaxDirectedTruth PropT body ->",
+            "      SyntaxDirectedTruth PropT (not_T body)",
+            "  | syntax_truth_transition : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      SyntaxDirectedTruth TransitionT "
+            "(Transition theme scale source target)",
+            "  | syntax_truth_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      SyntaxDirectedTruth TransitionT effect ->",
+            "      SyntaxDirectedTruth PropT (Cause causer effect)",
+        ]
+    )
+    if not constructors:
+        raise ValueError("Cannot emit an empty SyntaxDirectedTruth relation")
     constructors[-1] += "."
     return lines + constructors
 
@@ -2054,6 +2216,198 @@ def concrete_truth_condition_kernel_instance_lines(
             "Proof.",
             "  intros A term H.",
             "  apply concrete_kernel_induces_truth_condition_soundness.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
+def syntax_directed_truth_kernel_instance_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        kernel_fields: list[tuple[str, str]] = [
+            ("kernel_denotes", "syntax_directed_truth_kernel_denotes"),
+        ]
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            binders = " ".join(["n", "mods", *ordinary_args])
+            constructor_args = " ".join(["n", "mods", *ordinary_args])
+            kernel_fields.append(
+                (
+                    concrete_kernel_application_field(name),
+                    (
+                        f"fun {binders} => "
+                        f"SyntaxDirectedTruth.{syntax_truth_application_constructor(name)} "
+                        f"{constructor_args}"
+                    ),
+                )
+            )
+        for type_name in declarations["types"]:
+            kernel_fields.append(
+                (
+                    concrete_kernel_sigma_field(type_name),
+                    f"fun P h => SyntaxDirectedTruth.{syntax_truth_sigma_constructor(type_name)} P h",
+                )
+            )
+        kernel_fields.extend(
+            [
+                (
+                    "repetition_truth",
+                    "fun n body h => SyntaxDirectedTruth.syntax_truth_repeat n body h",
+                ),
+                (
+                    "temporal_truth_at_T",
+                    "fun marker body h => SyntaxDirectedTruth.syntax_truth_at_T marker body h",
+                ),
+                (
+                    "temporal_truth_during_T",
+                    "fun marker body h => SyntaxDirectedTruth.syntax_truth_during_T marker body h",
+                ),
+                (
+                    "temporal_truth_before_T",
+                    "fun marker body h => SyntaxDirectedTruth.syntax_truth_before_T marker body h",
+                ),
+                (
+                    "temporal_truth_after_T",
+                    "fun marker body h => SyntaxDirectedTruth.syntax_truth_after_T marker body h",
+                ),
+                (
+                    "temporal_truth_until_T",
+                    "fun marker body h => SyntaxDirectedTruth.syntax_truth_until_T marker body h",
+                ),
+                (
+                    "temporal_truth_since_T",
+                    "fun marker body h => SyntaxDirectedTruth.syntax_truth_since_T marker body h",
+                ),
+                (
+                    "polarity_truth_not_T",
+                    "fun body h => SyntaxDirectedTruth.syntax_truth_not_T body h",
+                ),
+                (
+                    "transition_truth",
+                    "fun theme scale source target => "
+                    "SyntaxDirectedTruth.syntax_truth_transition theme scale source target",
+                ),
+                (
+                    "cause_truth",
+                    "fun causer effect h => SyntaxDirectedTruth.syntax_truth_cause causer effect h",
+                ),
+            ]
+        )
+        lines = [
+            "def syntax_directed_truth_kernel_denotes : (A : Type) -> A -> Prop :=",
+            "  SyntaxDirectedTruth",
+            "",
+            "def syntax_directed_truth_kernel : ConcreteTruthConditionKernel := {",
+        ]
+        for index, (field, value) in enumerate(kernel_fields):
+            suffix = "," if index < len(kernel_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def syntax_directed_truth_conditions_from_kernel : TruthConditionSpec :=",
+                "  truth_conditions_from_concrete_kernel syntax_directed_truth_kernel",
+                "",
+                "theorem syntax_directed_truth_kernel_exists :",
+                "    Exists (fun K : ConcreteTruthConditionKernel => "
+                "K = syntax_directed_truth_kernel) := by",
+                "  exact Exists.intro syntax_directed_truth_kernel rfl",
+                "",
+                "theorem syntax_directed_truth_kernel_denotes_syntax_directed_truth :",
+                "    (A : Type) -> (term : A) -> SyntaxDirectedTruth A term -> "
+                "(truth_conditions_from_concrete_kernel "
+                "syntax_directed_truth_kernel).truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    kernel_fields: list[tuple[str, str]] = [
+        ("kernel_denotes", "syntax_directed_truth_kernel_denotes"),
+    ]
+    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        binders = " ".join(["n", "mods", *ordinary_args])
+        constructor_args = " ".join(["n", "mods", *ordinary_args])
+        kernel_fields.append(
+            (
+                concrete_kernel_application_field(name),
+                f"fun {binders} => {syntax_truth_application_constructor(name)} {constructor_args}",
+            )
+        )
+    for type_name in declarations["types"]:
+        kernel_fields.append(
+            (
+                concrete_kernel_sigma_field(type_name),
+                f"fun P h => {syntax_truth_sigma_constructor(type_name)} P h",
+            )
+        )
+    kernel_fields.extend(
+        [
+            ("repetition_truth", "fun n body h => syntax_truth_repeat n body h"),
+            ("temporal_truth_at_T", "fun marker body h => syntax_truth_at_T marker body h"),
+            ("temporal_truth_during_T", "fun marker body h => syntax_truth_during_T marker body h"),
+            ("temporal_truth_before_T", "fun marker body h => syntax_truth_before_T marker body h"),
+            ("temporal_truth_after_T", "fun marker body h => syntax_truth_after_T marker body h"),
+            ("temporal_truth_until_T", "fun marker body h => syntax_truth_until_T marker body h"),
+            ("temporal_truth_since_T", "fun marker body h => syntax_truth_since_T marker body h"),
+            ("polarity_truth_not_T", "fun body h => syntax_truth_not_T body h"),
+            (
+                "transition_truth",
+                "fun theme scale source target => "
+                "syntax_truth_transition theme scale source target",
+            ),
+            ("cause_truth", "fun causer effect h => syntax_truth_cause causer effect h"),
+        ]
+    )
+    lines = [
+        "Definition syntax_directed_truth_kernel_denotes : forall A : Type, A -> Prop :=",
+        "  SyntaxDirectedTruth.",
+        "",
+        "Definition syntax_directed_truth_kernel : ConcreteTruthConditionKernel := {|",
+    ]
+    for index, (field, value) in enumerate(kernel_fields):
+        suffix = ";" if index < len(kernel_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition syntax_directed_truth_conditions_from_kernel : TruthConditionSpec :=",
+            "  truth_conditions_from_concrete_kernel syntax_directed_truth_kernel.",
+            "",
+            "Theorem syntax_directed_truth_kernel_exists :",
+            "  exists K : ConcreteTruthConditionKernel,",
+            "    K = syntax_directed_truth_kernel.",
+            "Proof.",
+            "  exists syntax_directed_truth_kernel. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem syntax_directed_truth_kernel_denotes_syntax_directed_truth :",
+            "  forall A : Type, forall term : A,",
+            "    SyntaxDirectedTruth A term ->",
+            "    truth_denotes (truth_conditions_from_concrete_kernel",
+            "      syntax_directed_truth_kernel) A term.",
+            "Proof.",
+            "  intros A term H.",
             "  exact H.",
             "Qed.",
         ]
@@ -2716,12 +3070,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(semantic_preservation_relation_lines(declarations, target))
         lines.append("")
         lines.extend(model_interpretability_relation_lines(declarations, target))
+        lines.append("")
+        lines.extend(syntax_directed_truth_relation_lines(declarations, target))
         lines.extend(
             [
                 "",
                 "theorem semantic_preservation_model_interpretable :",
                 "    (A : Type) -> (term : A) -> "
                 "SemanticPreservation A term -> ModelInterpretable A term := by",
+                "  intro A term h",
+                "  induction h <;> constructor <;> assumption",
+                "",
+                "theorem semantic_preservation_syntax_directed_truth :",
+                "    (A : Type) -> (term : A) -> "
+                "SemanticPreservation A term -> SyntaxDirectedTruth A term := by",
                 "  intro A term h",
                 "  induction h <;> constructor <;> assumption",
                 "",
@@ -2784,6 +3146,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
         lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
+        lines.append("")
+        lines.extend(syntax_directed_truth_kernel_instance_lines(declarations, target))
         lines.append("")
         lines.extend(truth_condition_instance_lines(declarations, target))
         lines.append("")
@@ -2871,6 +3235,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             annotation = export_result_type(result["ast"])
             lines.append(
                 "theorem "
+                f"example_{idx}_syntax_directed_truth : "
+                f"SyntaxDirectedTruth {annotation} example_{idx} := by"
+            )
+            lines.append("  apply semantic_preservation_syntax_directed_truth")
+            lines.append(f"  exact example_{idx}_semantic_preservation_proved")
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
                 f"example_{idx}_denotationally_sound : "
                 f"(M : SemanticModel) -> M.model_denotes {annotation} example_{idx} := by"
             )
@@ -2934,6 +3308,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append("  apply model_interpretable_truth_kernel_denotes_model_interpretable")
             lines.append(f"  exact example_{idx}_model_interpretable")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_syntax_directed_truth_kernel_sound : "
+                "(truth_conditions_from_concrete_kernel "
+                f"syntax_directed_truth_kernel).truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append("  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth")
+            lines.append(f"  exact example_{idx}_syntax_directed_truth")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -2942,12 +3328,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_semantic_preservation_target_matches")
             lines.append(f"#check example_{idx}_semantic_preservation_proved")
             lines.append(f"#check example_{idx}_model_interpretable")
+            lines.append(f"#check example_{idx}_syntax_directed_truth")
             lines.append(f"#check example_{idx}_denotationally_sound")
             lines.append(f"#check example_{idx}_truth_condition_sound")
             lines.append(f"#check example_{idx}_tautological_truth_condition_sound")
             lines.append(f"#check example_{idx}_structural_truth_condition_sound")
             lines.append(f"#check example_{idx}_concrete_kernel_truth_condition_sound")
             lines.append(f"#check example_{idx}_model_interpretable_truth_kernel_sound")
+            lines.append(f"#check example_{idx}_syntax_directed_truth_kernel_sound")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -3002,12 +3390,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(semantic_preservation_relation_lines(declarations, target))
     lines.append("")
     lines.extend(model_interpretability_relation_lines(declarations, target))
+    lines.append("")
+    lines.extend(syntax_directed_truth_relation_lines(declarations, target))
     lines.extend(
         [
             "",
             "Theorem semantic_preservation_model_interpretable :",
             "  forall A : Type, forall term : A,",
             "    SemanticPreservation A term -> ModelInterpretable A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  induction H; constructor; assumption.",
+            "Qed.",
+            "",
+            "Theorem semantic_preservation_syntax_directed_truth :",
+            "  forall A : Type, forall term : A,",
+            "    SemanticPreservation A term -> SyntaxDirectedTruth A term.",
             "Proof.",
             "  intros A term H.",
             "  induction H; constructor; assumption.",
@@ -3040,6 +3438,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
+    lines.append("")
+    lines.extend(syntax_directed_truth_kernel_instance_lines(declarations, target))
     lines.append("")
     lines.extend(truth_condition_instance_lines(declarations, target))
     lines.append("")
@@ -3125,6 +3525,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         annotation = export_result_type(result["ast"])
         lines.append(
             "Theorem "
+            f"example_{idx}_syntax_directed_truth : "
+            f"SyntaxDirectedTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply semantic_preservation_syntax_directed_truth.")
+        lines.append(f"  exact example_{idx}_semantic_preservation_proved.")
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
             f"example_{idx}_denotationally_sound : "
             f"forall M : SemanticModel, model_denotes M {annotation} example_{idx}."
         )
@@ -3199,6 +3611,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_model_interpretable.")
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_syntax_directed_truth_kernel_sound : "
+            "truth_denotes (truth_conditions_from_concrete_kernel "
+            f"syntax_directed_truth_kernel) {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth.")
+        lines.append(f"  exact example_{idx}_syntax_directed_truth.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -3207,12 +3632,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_semantic_preservation_target_matches.")
         lines.append(f"Check example_{idx}_semantic_preservation_proved.")
         lines.append(f"Check example_{idx}_model_interpretable.")
+        lines.append(f"Check example_{idx}_syntax_directed_truth.")
         lines.append(f"Check example_{idx}_denotationally_sound.")
         lines.append(f"Check example_{idx}_truth_condition_sound.")
         lines.append(f"Check example_{idx}_tautological_truth_condition_sound.")
         lines.append(f"Check example_{idx}_structural_truth_condition_sound.")
         lines.append(f"Check example_{idx}_concrete_kernel_truth_condition_sound.")
         lines.append(f"Check example_{idx}_model_interpretable_truth_kernel_sound.")
+        lines.append(f"Check example_{idx}_syntax_directed_truth_kernel_sound.")
     return "\n".join(lines) + "\n"
 
 

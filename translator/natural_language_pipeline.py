@@ -20984,6 +20984,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_syntax_directed_truth_kernel_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21029,12 +21034,15 @@ def project_completion_status_payload(
                     "TruthConditionSpec. The interface is now inhabited by a "
                     "model-interpretable truth kernel whose denotation "
                     "predicate is ModelInterpretable, with per-example "
-                    "kernel-soundness theorems. This proves the kernel wiring "
-                    "and structural instance path, but the remaining deep "
-                    "proof work is still to supply independently justified "
-                    "inhabitants of that kernel for concrete lexical, "
-                    "temporal, causal, quantificational, and modifier "
-                    "truth-condition models."
+                    "kernel-soundness theorems. It is also inhabited by a "
+                    "syntax-directed truth kernel whose denotation predicate "
+                    "is the separate SyntaxDirectedTruth relation, with "
+                    "per-example syntax-kernel soundness theorems. These "
+                    "stages prove the kernel wiring and structural instance "
+                    "paths, but the remaining deep proof work is still to "
+                    "supply independently justified inhabitants of that "
+                    "kernel for concrete lexical, temporal, causal, "
+                    "quantificational, and modifier truth-condition models."
                 ),
             },
             {

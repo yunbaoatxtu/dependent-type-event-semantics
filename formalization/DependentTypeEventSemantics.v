@@ -155,9 +155,71 @@ Inductive ModelInterpretable : forall A : Type, A -> Prop :=
       ModelInterpretable TransitionT effect ->
       ModelInterpretable PropT (Cause causer effect).
 
+Inductive SyntaxDirectedTruth : forall A : Type, A -> Prop :=
+  | syntax_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      SyntaxDirectedTruth PropT (break n mods arg1 arg2)
+  | syntax_truth_butter_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      SyntaxDirectedTruth PropT (butter n mods arg1 arg2)
+  | syntax_truth_eat_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Food,
+      SyntaxDirectedTruth Prop (eat n mods arg1 arg2)
+  | syntax_truth_knock_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity,
+      SyntaxDirectedTruth PropT (knock n mods arg1)
+  | syntax_truth_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, SyntaxDirectedTruth Prop (P x)) ->
+      SyntaxDirectedTruth Prop (exists x : Entity, P x)
+  | syntax_truth_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, SyntaxDirectedTruth Prop (P x)) ->
+      SyntaxDirectedTruth Prop (exists x : Food, P x)
+  | syntax_truth_sigma_State : forall P : State -> Prop,
+      (forall x : State, SyntaxDirectedTruth Prop (P x)) ->
+      SyntaxDirectedTruth Prop (exists x : State, P x)
+  | syntax_truth_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, SyntaxDirectedTruth Prop (P x)) ->
+      SyntaxDirectedTruth Prop (exists x : StateScale, P x)
+  | syntax_truth_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, SyntaxDirectedTruth Prop (P x)) ->
+      SyntaxDirectedTruth Prop (exists x : TransitionT, P x)
+  | syntax_truth_repeat : forall n : nat, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (repeat n body)
+  | syntax_truth_at_T : forall marker : Entity, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (at_T marker body)
+  | syntax_truth_during_T : forall marker : Entity, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (during_T marker body)
+  | syntax_truth_before_T : forall marker : Entity, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (before_T marker body)
+  | syntax_truth_after_T : forall marker : Entity, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (after_T marker body)
+  | syntax_truth_until_T : forall marker : Entity, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (until_T marker body)
+  | syntax_truth_since_T : forall marker : Entity, forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (since_T marker body)
+  | syntax_truth_not_T : forall body : PropT,
+      SyntaxDirectedTruth PropT body ->
+      SyntaxDirectedTruth PropT (not_T body)
+  | syntax_truth_transition : forall theme : Entity, forall scale : StateScale, forall source : State, forall target : State,
+      SyntaxDirectedTruth TransitionT (Transition theme scale source target)
+  | syntax_truth_cause : forall causer : Entity, forall effect : TransitionT,
+      SyntaxDirectedTruth TransitionT effect ->
+      SyntaxDirectedTruth PropT (Cause causer effect).
+
 Theorem semantic_preservation_model_interpretable :
   forall A : Type, forall term : A,
     SemanticPreservation A term -> ModelInterpretable A term.
+Proof.
+  intros A term H.
+  induction H; constructor; assumption.
+Qed.
+
+Theorem semantic_preservation_syntax_directed_truth :
+  forall A : Type, forall term : A,
+    SemanticPreservation A term -> SyntaxDirectedTruth A term.
 Proof.
   intros A term H.
   induction H; constructor; assumption.
@@ -480,6 +542,52 @@ Proof.
   exact H.
 Qed.
 
+Definition syntax_directed_truth_kernel_denotes : forall A : Type, A -> Prop :=
+  SyntaxDirectedTruth.
+
+Definition syntax_directed_truth_kernel : ConcreteTruthConditionKernel := {|
+  kernel_denotes := syntax_directed_truth_kernel_denotes;
+  lexical_truth_break_application := fun n mods arg1 arg2 => syntax_truth_break_application n mods arg1 arg2;
+  lexical_truth_butter_application := fun n mods arg1 arg2 => syntax_truth_butter_application n mods arg1 arg2;
+  lexical_truth_eat_application := fun n mods arg1 arg2 => syntax_truth_eat_application n mods arg1 arg2;
+  lexical_truth_knock_application := fun n mods arg1 => syntax_truth_knock_application n mods arg1;
+  quantifier_truth_sigma_Entity := fun P h => syntax_truth_sigma_Entity P h;
+  quantifier_truth_sigma_Food := fun P h => syntax_truth_sigma_Food P h;
+  quantifier_truth_sigma_State := fun P h => syntax_truth_sigma_State P h;
+  quantifier_truth_sigma_StateScale := fun P h => syntax_truth_sigma_StateScale P h;
+  quantifier_truth_sigma_TransitionT := fun P h => syntax_truth_sigma_TransitionT P h;
+  repetition_truth := fun n body h => syntax_truth_repeat n body h;
+  temporal_truth_at_T := fun marker body h => syntax_truth_at_T marker body h;
+  temporal_truth_during_T := fun marker body h => syntax_truth_during_T marker body h;
+  temporal_truth_before_T := fun marker body h => syntax_truth_before_T marker body h;
+  temporal_truth_after_T := fun marker body h => syntax_truth_after_T marker body h;
+  temporal_truth_until_T := fun marker body h => syntax_truth_until_T marker body h;
+  temporal_truth_since_T := fun marker body h => syntax_truth_since_T marker body h;
+  polarity_truth_not_T := fun body h => syntax_truth_not_T body h;
+  transition_truth := fun theme scale source target => syntax_truth_transition theme scale source target;
+  cause_truth := fun causer effect h => syntax_truth_cause causer effect h
+|}.
+
+Definition syntax_directed_truth_conditions_from_kernel : TruthConditionSpec :=
+  truth_conditions_from_concrete_kernel syntax_directed_truth_kernel.
+
+Theorem syntax_directed_truth_kernel_exists :
+  exists K : ConcreteTruthConditionKernel,
+    K = syntax_directed_truth_kernel.
+Proof.
+  exists syntax_directed_truth_kernel. reflexivity.
+Qed.
+
+Theorem syntax_directed_truth_kernel_denotes_syntax_directed_truth :
+  forall A : Type, forall term : A,
+    SyntaxDirectedTruth A term ->
+    truth_denotes (truth_conditions_from_concrete_kernel
+      syntax_directed_truth_kernel) A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
 Definition tautological_truth_denotes : forall A : Type, A -> Prop :=
   fun A term => True.
 
@@ -669,6 +777,27 @@ Proof.
   exact example_4_semantic_preservation_proved.
 Qed.
 
+Theorem example_1_syntax_directed_truth : SyntaxDirectedTruth PropT example_1.
+Proof.
+  apply semantic_preservation_syntax_directed_truth.
+  exact example_1_semantic_preservation_proved.
+Qed.
+Theorem example_2_syntax_directed_truth : SyntaxDirectedTruth Prop example_2.
+Proof.
+  apply semantic_preservation_syntax_directed_truth.
+  exact example_2_semantic_preservation_proved.
+Qed.
+Theorem example_3_syntax_directed_truth : SyntaxDirectedTruth PropT example_3.
+Proof.
+  apply semantic_preservation_syntax_directed_truth.
+  exact example_3_semantic_preservation_proved.
+Qed.
+Theorem example_4_syntax_directed_truth : SyntaxDirectedTruth PropT example_4.
+Proof.
+  apply semantic_preservation_syntax_directed_truth.
+  exact example_4_semantic_preservation_proved.
+Qed.
+
 Theorem example_1_denotationally_sound : forall M : SemanticModel, model_denotes M PropT example_1.
 Proof.
   intro M.
@@ -807,6 +936,27 @@ Proof.
   exact example_4_model_interpretable.
 Qed.
 
+Theorem example_1_syntax_directed_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel syntax_directed_truth_kernel) PropT example_1.
+Proof.
+  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth.
+  exact example_1_syntax_directed_truth.
+Qed.
+Theorem example_2_syntax_directed_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel syntax_directed_truth_kernel) Prop example_2.
+Proof.
+  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth.
+  exact example_2_syntax_directed_truth.
+Qed.
+Theorem example_3_syntax_directed_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel syntax_directed_truth_kernel) PropT example_3.
+Proof.
+  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth.
+  exact example_3_syntax_directed_truth.
+Qed.
+Theorem example_4_syntax_directed_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel syntax_directed_truth_kernel) PropT example_4.
+Proof.
+  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth.
+  exact example_4_syntax_directed_truth.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -814,12 +964,14 @@ Check example_1_semantic_preservation_obligation_is_prop.
 Check example_1_semantic_preservation_target_matches.
 Check example_1_semantic_preservation_proved.
 Check example_1_model_interpretable.
+Check example_1_syntax_directed_truth.
 Check example_1_denotationally_sound.
 Check example_1_truth_condition_sound.
 Check example_1_tautological_truth_condition_sound.
 Check example_1_structural_truth_condition_sound.
 Check example_1_concrete_kernel_truth_condition_sound.
 Check example_1_model_interpretable_truth_kernel_sound.
+Check example_1_syntax_directed_truth_kernel_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -827,12 +979,14 @@ Check example_2_semantic_preservation_obligation_is_prop.
 Check example_2_semantic_preservation_target_matches.
 Check example_2_semantic_preservation_proved.
 Check example_2_model_interpretable.
+Check example_2_syntax_directed_truth.
 Check example_2_denotationally_sound.
 Check example_2_truth_condition_sound.
 Check example_2_tautological_truth_condition_sound.
 Check example_2_structural_truth_condition_sound.
 Check example_2_concrete_kernel_truth_condition_sound.
 Check example_2_model_interpretable_truth_kernel_sound.
+Check example_2_syntax_directed_truth_kernel_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -840,12 +994,14 @@ Check example_3_semantic_preservation_obligation_is_prop.
 Check example_3_semantic_preservation_target_matches.
 Check example_3_semantic_preservation_proved.
 Check example_3_model_interpretable.
+Check example_3_syntax_directed_truth.
 Check example_3_denotationally_sound.
 Check example_3_truth_condition_sound.
 Check example_3_tautological_truth_condition_sound.
 Check example_3_structural_truth_condition_sound.
 Check example_3_concrete_kernel_truth_condition_sound.
 Check example_3_model_interpretable_truth_kernel_sound.
+Check example_3_syntax_directed_truth_kernel_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -853,9 +1009,11 @@ Check example_4_semantic_preservation_obligation_is_prop.
 Check example_4_semantic_preservation_target_matches.
 Check example_4_semantic_preservation_proved.
 Check example_4_model_interpretable.
+Check example_4_syntax_directed_truth.
 Check example_4_denotationally_sound.
 Check example_4_truth_condition_sound.
 Check example_4_tautological_truth_condition_sound.
 Check example_4_structural_truth_condition_sound.
 Check example_4_concrete_kernel_truth_condition_sound.
 Check example_4_model_interpretable_truth_kernel_sound.
+Check example_4_syntax_directed_truth_kernel_sound.

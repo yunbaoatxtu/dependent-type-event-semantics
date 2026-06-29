@@ -90,11 +90,16 @@ arbitrary kernel. The generated file now also inhabits that interface with
 `ModelInterpretable`, exports
 `model_interpretable_truth_conditions_from_kernel`, proves kernel existence, and
 checks `example_i_model_interpretable_truth_kernel_sound` for every exported
-example. Thus the current semantic preservation layer, the truth-condition-spec
-bridge, the inhabitation sanity instance, the structural truth-condition
-instance, the concrete-kernel bridge, and the model-interpretable kernel
-instance are proof-checked, while independently specified concrete
-truth-condition instantiation remains open.
+example. It now also introduces `SyntaxDirectedTruth` as a distinct
+syntax-directed truth relation, proves
+`semantic_preservation_syntax_directed_truth`, inhabits the kernel interface
+with `syntax_directed_truth_kernel`, and checks
+`example_i_syntax_directed_truth_kernel_sound` for every exported example. Thus
+the current semantic preservation layer, the truth-condition-spec bridge, the
+inhabitation sanity instance, the structural truth-condition instance, the
+concrete-kernel bridge, the model-interpretable kernel instance, and the
+syntax-directed kernel instance are proof-checked, while independently
+specified concrete truth-condition instantiation remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

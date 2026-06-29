@@ -206,6 +206,34 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_syntax_directed_truth_count = len(
+        re.findall(
+            r"^theorem example_\d+_syntax_directed_truth :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_syntax_directed_truth_count = len(
+        re.findall(
+            r"^Theorem example_\d+_syntax_directed_truth :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_syntax_directed_truth_kernel_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_syntax_directed_truth_kernel_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_syntax_directed_truth_kernel_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_syntax_directed_truth_kernel_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -248,6 +276,16 @@ def main() -> None:
             and "model_repeat : forall n : nat" in coq
             and "model_sigma_Food : forall P : Food -> Prop" in coq
         ),
+        "lean syntax-directed truth inductive relation": (
+            "inductive SyntaxDirectedTruth : (A : Type) -> A -> Prop where" in lean
+            and "| syntax_truth_repeat : (n : Nat)" in lean
+            and "| syntax_truth_sigma_Food : (P : Food -> Prop)" in lean
+        ),
+        "coq syntax-directed truth inductive relation": (
+            "Inductive SyntaxDirectedTruth : forall A : Type, A -> Prop :=" in coq
+            and "syntax_truth_repeat : forall n : nat" in coq
+            and "syntax_truth_sigma_Food : forall P : Food -> Prop" in coq
+        ),
         "lean preservation to model boundary theorem": (
             "theorem semantic_preservation_model_interpretable :" in lean
             and "SemanticPreservation A term -> ModelInterpretable A term" in lean
@@ -256,6 +294,15 @@ def main() -> None:
             "Theorem semantic_preservation_model_interpretable :" in coq
             and "SemanticPreservation A term -> ModelInterpretable A term." in coq
             and "induction H; constructor; assumption." in coq
+        ),
+        "lean preservation to syntax-directed truth boundary theorem": (
+            "theorem semantic_preservation_syntax_directed_truth :" in lean
+            and "SemanticPreservation A term -> SyntaxDirectedTruth A term" in lean
+        ),
+        "coq preservation to syntax-directed truth boundary theorem": (
+            "Theorem semantic_preservation_syntax_directed_truth :" in coq
+            and "SemanticPreservation A term -> SyntaxDirectedTruth A term." in coq
+            and coq.count("induction H; constructor; assumption.") >= 2
         ),
         "lean semantic model denotation record": (
             "structure SemanticModel : Type where" in lean
@@ -407,6 +454,30 @@ def main() -> None:
             and "Theorem model_interpretable_truth_kernel_denotes_model_interpretable :"
             in coq
         ),
+        "lean syntax-directed truth kernel instance": (
+            "def syntax_directed_truth_kernel_denotes : (A : Type) -> A -> Prop :="
+            in lean
+            and "def syntax_directed_truth_kernel : ConcreteTruthConditionKernel := {"
+            in lean
+            and "kernel_denotes := syntax_directed_truth_kernel_denotes" in lean
+            and "def syntax_directed_truth_conditions_from_kernel : TruthConditionSpec :="
+            in lean
+            and "theorem syntax_directed_truth_kernel_exists :" in lean
+            and "theorem syntax_directed_truth_kernel_denotes_syntax_directed_truth :"
+            in lean
+        ),
+        "coq syntax-directed truth kernel instance": (
+            "Definition syntax_directed_truth_kernel_denotes : forall A : Type, A -> Prop :="
+            in coq
+            and "Definition syntax_directed_truth_kernel : ConcreteTruthConditionKernel := {|"
+            in coq
+            and "kernel_denotes := syntax_directed_truth_kernel_denotes" in coq
+            and "Definition syntax_directed_truth_conditions_from_kernel : TruthConditionSpec :="
+            in coq
+            and "Theorem syntax_directed_truth_kernel_exists :" in coq
+            and "Theorem syntax_directed_truth_kernel_denotes_syntax_directed_truth :"
+            in coq
+        ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
             and "structure SemanticPreservationObligation : Type where" in lean
@@ -469,6 +540,16 @@ def main() -> None:
             coq_model_boundary_count == coq_example_count
             and "Check example_4_model_interpretable." in coq
             and "apply semantic_preservation_model_interpretable." in coq
+        ),
+        "lean syntax-directed truth boundary proofs": (
+            lean_syntax_directed_truth_count == lean_example_count
+            and "#check example_4_syntax_directed_truth" in lean
+            and "apply semantic_preservation_syntax_directed_truth" in lean
+        ),
+        "coq syntax-directed truth boundary proofs": (
+            coq_syntax_directed_truth_count == coq_example_count
+            and "Check example_4_syntax_directed_truth." in coq
+            and "apply semantic_preservation_syntax_directed_truth." in coq
         ),
         "lean denotational soundness boundary proofs": (
             lean_denotation_sound_count == lean_example_count
@@ -536,6 +617,18 @@ def main() -> None:
             and "apply model_interpretable_truth_kernel_denotes_model_interpretable."
             in coq
         ),
+        "lean syntax-directed truth kernel soundness proofs": (
+            lean_syntax_directed_truth_kernel_sound_count == lean_example_count
+            and "#check example_4_syntax_directed_truth_kernel_sound" in lean
+            and "apply syntax_directed_truth_kernel_denotes_syntax_directed_truth"
+            in lean
+        ),
+        "coq syntax-directed truth kernel soundness proofs": (
+            coq_syntax_directed_truth_kernel_sound_count == coq_example_count
+            and "Check example_4_syntax_directed_truth_kernel_sound." in coq
+            and "apply syntax_directed_truth_kernel_denotes_syntax_directed_truth."
+            in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -543,12 +636,14 @@ def main() -> None:
             and "#check example_4_semantic_preservation_target_matches" in lean
             and "#check example_4_semantic_preservation_proved" in lean
             and "#check example_4_model_interpretable" in lean
+            and "#check example_4_syntax_directed_truth" in lean
             and "#check example_4_denotationally_sound" in lean
             and "#check example_4_truth_condition_sound" in lean
             and "#check example_4_tautological_truth_condition_sound" in lean
             and "#check example_4_structural_truth_condition_sound" in lean
             and "#check example_4_concrete_kernel_truth_condition_sound" in lean
             and "#check example_4_model_interpretable_truth_kernel_sound" in lean
+            and "#check example_4_syntax_directed_truth_kernel_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -557,12 +652,14 @@ def main() -> None:
             and "Check example_4_semantic_preservation_target_matches." in coq
             and "Check example_4_semantic_preservation_proved." in coq
             and "Check example_4_model_interpretable." in coq
+            and "Check example_4_syntax_directed_truth." in coq
             and "Check example_4_denotationally_sound." in coq
             and "Check example_4_truth_condition_sound." in coq
             and "Check example_4_tautological_truth_condition_sound." in coq
             and "Check example_4_structural_truth_condition_sound." in coq
             and "Check example_4_concrete_kernel_truth_condition_sound." in coq
             and "Check example_4_model_interpretable_truth_kernel_sound." in coq
+            and "Check example_4_syntax_directed_truth_kernel_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"
