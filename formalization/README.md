@@ -159,7 +159,10 @@ checks `example_i_registered_lexical_truth_model_sound` plus
 `example_i_registered_lexical_truth_conditions_from_model_sound` for every
 exported example. The scaffold then separates the finite registered atom basis
 into `ConcreteRegisteredAtomicTruth` and `ConcreteRegisteredTruthBasis`, closes
-it as `ConcreteRegisteredTruth`, instantiates
+that basis through `ConcreteRegisteredAtomicModel`, proves
+`concrete_registered_atomic_model_denotes_atomic_base_truth` and
+`concrete_registered_truth_basis_denotes_atomic_base_truth`, closes it as
+`ConcreteRegisteredTruth`, instantiates
 `concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec`, and
 checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and

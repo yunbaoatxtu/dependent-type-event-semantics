@@ -1630,6 +1630,65 @@ Proof.
     assumption.
 Qed.
 
+Record ConcreteRegisteredAtomicModel : Type := {
+  concrete_registered_atom_model_denotes : forall A : Type, A -> Prop;
+  concrete_registered_atom_model_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      concrete_registered_atom_model_denotes A term;
+  concrete_registered_atom_model_transition :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      concrete_registered_atom_model_denotes TransitionT
+        (Transition theme scale source target);
+  concrete_registered_atom_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_atom_model_denotes A term ->
+      AtomicBaseTruth A term
+}.
+
+Definition concrete_registered_atomic_model :
+  ConcreteRegisteredAtomicModel := {|
+  concrete_registered_atom_model_denotes := ConcreteRegisteredAtomicTruth;
+  concrete_registered_atom_model_lexical_application :=
+    fun A term h =>
+      concrete_registered_atomic_truth_lexical_application A term h;
+  concrete_registered_atom_model_transition :=
+    fun theme scale source target h =>
+      concrete_registered_atomic_truth_transition theme scale source target h;
+  concrete_registered_atom_model_sound :=
+    concrete_registered_atomic_truth_implies_atomic_base_truth
+|}.
+
+Theorem concrete_registered_atomic_model_exists :
+  exists M : ConcreteRegisteredAtomicModel,
+    M = concrete_registered_atomic_model.
+Proof.
+  exists concrete_registered_atomic_model. reflexivity.
+Qed.
+
+Theorem concrete_registered_atomic_model_denotes_atomic_base_truth :
+  forall A : Type, forall term : A,
+    concrete_registered_atom_model_denotes
+      concrete_registered_atomic_model A term ->
+    AtomicBaseTruth A term.
+Proof.
+  intros A term H.
+  exact (concrete_registered_atom_model_sound
+    concrete_registered_atomic_model A term H).
+Qed.
+
+Theorem concrete_registered_truth_basis_denotes_atomic_base_truth :
+  forall A : Type, forall term : A,
+    concrete_registered_basis_denotes concrete_registered_truth_basis A term ->
+    AtomicBaseTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_atomic_truth_implies_atomic_base_truth.
+  exact H.
+Qed.
+
 Inductive ConcreteRegisteredTruth : forall A : Type, A -> Prop :=
   | concrete_registered_truth_atomic :
       forall A : Type, forall term : A,
@@ -3158,6 +3217,10 @@ Check registered_lexical_truth_conditions_from_model.
 Check registered_lexical_truth_conditions_from_model_exists.
 Check concrete_registered_truth_basis.
 Check concrete_registered_truth_basis_exists.
+Check concrete_registered_atomic_model.
+Check concrete_registered_atomic_model_exists.
+Check concrete_registered_atomic_model_denotes_atomic_base_truth.
+Check concrete_registered_truth_basis_denotes_atomic_base_truth.
 Check concrete_registered_truth_conditions.
 Check concrete_registered_truth_condition_spec_exists.
 Check concrete_registered_truth_kernel.

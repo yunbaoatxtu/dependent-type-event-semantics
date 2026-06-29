@@ -21044,6 +21044,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_atomic_model_bridge",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_condition_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21194,7 +21199,11 @@ def project_completion_status_payload(
                     "instantiates concrete_registered_truth_conditions as a "
                     "FullyRegisteredTruthConditionSpec, and checks "
                     "per-example concrete registered truth-condition "
-                    "soundness and atomic soundness. "
+                    "soundness and atomic soundness. The newest atomic-model "
+                    "bridge packages that finite registered atom basis as "
+                    "ConcreteRegisteredAtomicModel and proves both the model "
+                    "denotation and the ConcreteRegisteredTruthBasis "
+                    "denotation imply AtomicBaseTruth. "
                     "It now also factors that finite registered closure "
                     "through a ConcreteRegisteredTruthKernel whose lexical "
                     "and transition clauses are evidence-gated by "

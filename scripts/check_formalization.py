@@ -1029,6 +1029,49 @@ def main() -> None:
             and "Theorem registered_lexical_truth_conditions_from_model_imply_atomic_closure :"
             in coq
         ),
+        "lean concrete registered atomic model bridge": (
+            "structure ConcreteRegisteredAtomicModel : Type where" in lean
+            and "concrete_registered_atom_model_denotes : (A : Type) -> A -> Prop"
+            in lean
+            and "concrete_registered_atom_model_lexical_application : "
+            "(A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term ->" in lean
+            and "concrete_registered_atom_model_transition : "
+            "(theme : Entity) -> (scale : StateScale) ->" in lean
+            and "concrete_registered_atom_model_sound : "
+            "(A : Type) -> (term : A) ->" in lean
+            and "def concrete_registered_atomic_model : "
+            "ConcreteRegisteredAtomicModel := {" in lean
+            and "theorem concrete_registered_atomic_model_exists :" in lean
+            and "theorem concrete_registered_atomic_model_denotes_atomic_base_truth :"
+            in lean
+            and "theorem concrete_registered_truth_basis_denotes_atomic_base_truth :"
+            in lean
+            and "#check concrete_registered_atomic_model" in lean
+            and "#check concrete_registered_atomic_model_denotes_atomic_base_truth"
+            in lean
+        ),
+        "coq concrete registered atomic model bridge": (
+            "Record ConcreteRegisteredAtomicModel : Type := {" in coq
+            and "concrete_registered_atom_model_denotes : forall A : Type, A -> Prop;"
+            in coq
+            and "concrete_registered_atom_model_lexical_application :" in coq
+            and "RegisteredLexicalApplicationTruth A term ->" in coq
+            and "concrete_registered_atom_model_transition :" in coq
+            and "RegisteredStateTransitionTruth theme scale source target ->"
+            in coq
+            and "concrete_registered_atom_model_sound :" in coq
+            and "Definition concrete_registered_atomic_model :" in coq
+            and "ConcreteRegisteredAtomicModel := {|" in coq
+            and "Theorem concrete_registered_atomic_model_exists :" in coq
+            and "Theorem concrete_registered_atomic_model_denotes_atomic_base_truth :"
+            in coq
+            and "Theorem concrete_registered_truth_basis_denotes_atomic_base_truth :"
+            in coq
+            and "Check concrete_registered_atomic_model." in coq
+            and "Check concrete_registered_atomic_model_denotes_atomic_base_truth."
+            in coq
+        ),
         "lean concrete registered truth condition instance": (
             "inductive ConcreteRegisteredAtomicTruth : (A : Type) -> A -> Prop where"
             in lean
@@ -1036,6 +1079,13 @@ def main() -> None:
             and "def concrete_registered_truth_basis : ConcreteRegisteredTruthBasis := {"
             in lean
             and "theorem concrete_registered_atomic_truth_implies_atomic_base_truth :"
+            in lean
+            and "structure ConcreteRegisteredAtomicModel : Type where" in lean
+            and "def concrete_registered_atomic_model : "
+            "ConcreteRegisteredAtomicModel := {" in lean
+            and "theorem concrete_registered_atomic_model_denotes_atomic_base_truth :"
+            in lean
+            and "theorem concrete_registered_truth_basis_denotes_atomic_base_truth :"
             in lean
             and "inductive ConcreteRegisteredTruth : (A : Type) -> A -> Prop where"
             in lean
@@ -1094,6 +1144,12 @@ def main() -> None:
             and "Definition concrete_registered_truth_basis :" in coq
             and "ConcreteRegisteredTruthBasis := {|" in coq
             and "Theorem concrete_registered_atomic_truth_implies_atomic_base_truth :"
+            in coq
+            and "Record ConcreteRegisteredAtomicModel : Type := {" in coq
+            and "Definition concrete_registered_atomic_model :" in coq
+            and "Theorem concrete_registered_atomic_model_denotes_atomic_base_truth :"
+            in coq
+            and "Theorem concrete_registered_truth_basis_denotes_atomic_base_truth :"
             in coq
             and "Inductive ConcreteRegisteredTruth : forall A : Type, A -> Prop :="
             in coq

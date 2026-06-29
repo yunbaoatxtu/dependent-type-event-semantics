@@ -964,6 +964,33 @@ theorem concrete_registered_atomic_truth_implies_atomic_base_truth :
       apply registered_state_transition_atomic_base_truth
       exact hreg
 
+structure ConcreteRegisteredAtomicModel : Type where
+  concrete_registered_atom_model_denotes : (A : Type) -> A -> Prop
+  concrete_registered_atom_model_lexical_application : (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term -> concrete_registered_atom_model_denotes A term
+  concrete_registered_atom_model_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> RegisteredStateTransitionTruth theme scale source target -> concrete_registered_atom_model_denotes TransitionT (Transition theme scale source target)
+  concrete_registered_atom_model_sound : (A : Type) -> (term : A) -> concrete_registered_atom_model_denotes A term -> AtomicBaseTruth A term
+
+def concrete_registered_atomic_model : ConcreteRegisteredAtomicModel := {
+  concrete_registered_atom_model_denotes := ConcreteRegisteredAtomicTruth,
+  concrete_registered_atom_model_lexical_application := fun A term h => ConcreteRegisteredAtomicTruth.concrete_registered_atomic_truth_lexical_application A term h,
+  concrete_registered_atom_model_transition := fun theme scale source target h => ConcreteRegisteredAtomicTruth.concrete_registered_atomic_truth_transition theme scale source target h,
+  concrete_registered_atom_model_sound := concrete_registered_atomic_truth_implies_atomic_base_truth
+}
+
+theorem concrete_registered_atomic_model_exists :
+    Exists (fun M : ConcreteRegisteredAtomicModel => M = concrete_registered_atomic_model) := by
+  exact Exists.intro concrete_registered_atomic_model rfl
+
+theorem concrete_registered_atomic_model_denotes_atomic_base_truth :
+    (A : Type) -> (term : A) -> concrete_registered_atomic_model.concrete_registered_atom_model_denotes A term -> AtomicBaseTruth A term := by
+  intro A term h
+  exact concrete_registered_atomic_model.concrete_registered_atom_model_sound A term h
+
+theorem concrete_registered_truth_basis_denotes_atomic_base_truth :
+    (A : Type) -> (term : A) -> concrete_registered_truth_basis.concrete_registered_basis_denotes A term -> AtomicBaseTruth A term := by
+  intro A term h
+  exact concrete_registered_atomic_truth_implies_atomic_base_truth A term h
+
 inductive ConcreteRegisteredTruth : (A : Type) -> A -> Prop where
   | concrete_registered_truth_atomic : (A : Type) -> (term : A) -> ConcreteRegisteredAtomicTruth A term -> ConcreteRegisteredTruth A term
   | concrete_registered_truth_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> ConcreteRegisteredTruth Prop (P x)) -> ConcreteRegisteredTruth Prop (Exists fun x : Entity => P x)
@@ -2051,6 +2078,10 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check registered_lexical_truth_conditions_from_model_exists
 #check concrete_registered_truth_basis
 #check concrete_registered_truth_basis_exists
+#check concrete_registered_atomic_model
+#check concrete_registered_atomic_model_exists
+#check concrete_registered_atomic_model_denotes_atomic_base_truth
+#check concrete_registered_truth_basis_denotes_atomic_base_truth
 #check concrete_registered_truth_conditions
 #check concrete_registered_truth_condition_spec_exists
 #check concrete_registered_truth_kernel
