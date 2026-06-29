@@ -164,7 +164,15 @@ it as `ConcreteRegisteredTruth`, instantiates
 checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound` for every exported
-example. The scaffold then gathers those checked example-level proofs into
+example. The scaffold then factors the same finite closure through
+`ConcreteRegisteredTruthKernel`, whose lexical and transition clauses require
+`RegisteredLexicalApplicationTruth` and `RegisteredStateTransitionTruth`
+evidence rather than arbitrary unregistered atom facts. It derives
+`concrete_registered_truth_conditions_from_kernel` and checks
+`example_i_concrete_registered_truth_kernel_sound`,
+`example_i_concrete_registered_truth_conditions_from_kernel_sound`, and
+`example_i_concrete_registered_truth_conditions_from_kernel_atomic_sound` for
+every exported example. The scaffold then gathers those checked example-level proofs into
 `ConcreteRegisteredExampleTruthInstances`, proves
 `concrete_registered_example_truth_instances_exists`, and checks per-example
 projections such as

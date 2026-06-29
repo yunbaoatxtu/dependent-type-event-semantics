@@ -1059,6 +1059,95 @@ theorem concrete_registered_truth_conditions_imply_atomic_closure :
   apply concrete_registered_truth_implies_atomic_closure
   exact h
 
+structure ConcreteRegisteredTruthKernel : Type where
+  concrete_registered_kernel_denotes : (A : Type) -> A -> Prop
+  concrete_registered_kernel_lexical_application : (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term -> concrete_registered_kernel_denotes A term
+  concrete_registered_kernel_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> concrete_registered_kernel_denotes Prop (P x)) -> concrete_registered_kernel_denotes Prop (Exists fun x : Entity => P x)
+  concrete_registered_kernel_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> concrete_registered_kernel_denotes Prop (P x)) -> concrete_registered_kernel_denotes Prop (Exists fun x : Food => P x)
+  concrete_registered_kernel_sigma_State : (P : State -> Prop) -> ((x : State) -> concrete_registered_kernel_denotes Prop (P x)) -> concrete_registered_kernel_denotes Prop (Exists fun x : State => P x)
+  concrete_registered_kernel_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> concrete_registered_kernel_denotes Prop (P x)) -> concrete_registered_kernel_denotes Prop (Exists fun x : StateScale => P x)
+  concrete_registered_kernel_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> concrete_registered_kernel_denotes Prop (P x)) -> concrete_registered_kernel_denotes Prop (Exists fun x : TransitionT => P x)
+  concrete_registered_kernel_repeat : (n : Nat) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (repeat n body)
+  concrete_registered_kernel_at_T : (marker : Entity) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (at_T marker body)
+  concrete_registered_kernel_during_T : (marker : Entity) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (during_T marker body)
+  concrete_registered_kernel_before_T : (marker : Entity) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (before_T marker body)
+  concrete_registered_kernel_after_T : (marker : Entity) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (after_T marker body)
+  concrete_registered_kernel_until_T : (marker : Entity) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (until_T marker body)
+  concrete_registered_kernel_since_T : (marker : Entity) -> (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (since_T marker body)
+  concrete_registered_kernel_not_T : (body : PropT) -> concrete_registered_kernel_denotes PropT body -> concrete_registered_kernel_denotes PropT (not_T body)
+  concrete_registered_kernel_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> RegisteredStateTransitionTruth theme scale source target -> concrete_registered_kernel_denotes TransitionT (Transition theme scale source target)
+  concrete_registered_kernel_cause : (causer : Entity) -> (effect : TransitionT) -> concrete_registered_kernel_denotes TransitionT effect -> concrete_registered_kernel_denotes PropT (Cause causer effect)
+
+def fully_registered_truth_conditions_from_concrete_registered_kernel (K : ConcreteRegisteredTruthKernel) : FullyRegisteredTruthConditionSpec := {
+  fully_registered_truth_denotes := K.concrete_registered_kernel_denotes,
+  fully_registered_truth_lexical_application := K.concrete_registered_kernel_lexical_application,
+  fully_registered_truth_sigma_Entity := K.concrete_registered_kernel_sigma_Entity,
+  fully_registered_truth_sigma_Food := K.concrete_registered_kernel_sigma_Food,
+  fully_registered_truth_sigma_State := K.concrete_registered_kernel_sigma_State,
+  fully_registered_truth_sigma_StateScale := K.concrete_registered_kernel_sigma_StateScale,
+  fully_registered_truth_sigma_TransitionT := K.concrete_registered_kernel_sigma_TransitionT,
+  fully_registered_truth_repeat := K.concrete_registered_kernel_repeat,
+  fully_registered_truth_at_T := K.concrete_registered_kernel_at_T,
+  fully_registered_truth_during_T := K.concrete_registered_kernel_during_T,
+  fully_registered_truth_before_T := K.concrete_registered_kernel_before_T,
+  fully_registered_truth_after_T := K.concrete_registered_kernel_after_T,
+  fully_registered_truth_until_T := K.concrete_registered_kernel_until_T,
+  fully_registered_truth_since_T := K.concrete_registered_kernel_since_T,
+  fully_registered_truth_not_T := K.concrete_registered_kernel_not_T,
+  fully_registered_truth_transition := K.concrete_registered_kernel_transition,
+  fully_registered_truth_cause := K.concrete_registered_kernel_cause
+}
+
+def concrete_registered_truth_kernel_denotes : (A : Type) -> A -> Prop :=
+  ConcreteRegisteredTruth
+
+def concrete_registered_truth_kernel : ConcreteRegisteredTruthKernel := {
+  concrete_registered_kernel_denotes := concrete_registered_truth_kernel_denotes,
+  concrete_registered_kernel_lexical_application := fun A term h => ConcreteRegisteredTruth.concrete_registered_truth_atomic A term (ConcreteRegisteredAtomicTruth.concrete_registered_atomic_truth_lexical_application A term h),
+  concrete_registered_kernel_sigma_Entity := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_Entity P h,
+  concrete_registered_kernel_sigma_Food := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_Food P h,
+  concrete_registered_kernel_sigma_State := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_State P h,
+  concrete_registered_kernel_sigma_StateScale := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_StateScale P h,
+  concrete_registered_kernel_sigma_TransitionT := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_TransitionT P h,
+  concrete_registered_kernel_repeat := fun n body h => ConcreteRegisteredTruth.concrete_registered_truth_repeat n body h,
+  concrete_registered_kernel_at_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_at_T marker body h,
+  concrete_registered_kernel_during_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_during_T marker body h,
+  concrete_registered_kernel_before_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_before_T marker body h,
+  concrete_registered_kernel_after_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_after_T marker body h,
+  concrete_registered_kernel_until_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_until_T marker body h,
+  concrete_registered_kernel_since_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_since_T marker body h,
+  concrete_registered_kernel_not_T := fun body h => ConcreteRegisteredTruth.concrete_registered_truth_not_T body h,
+  concrete_registered_kernel_transition := fun theme scale source target h => ConcreteRegisteredTruth.concrete_registered_truth_atomic TransitionT (Transition theme scale source target) (ConcreteRegisteredAtomicTruth.concrete_registered_atomic_truth_transition theme scale source target h),
+  concrete_registered_kernel_cause := fun causer effect h => ConcreteRegisteredTruth.concrete_registered_truth_cause causer effect h
+}
+
+def concrete_registered_truth_conditions_from_kernel : FullyRegisteredTruthConditionSpec :=
+  fully_registered_truth_conditions_from_concrete_registered_kernel concrete_registered_truth_kernel
+
+theorem concrete_registered_truth_kernel_exists :
+    Exists (fun K : ConcreteRegisteredTruthKernel => K = concrete_registered_truth_kernel) := by
+  exact Exists.intro concrete_registered_truth_kernel rfl
+
+theorem concrete_registered_truth_conditions_from_kernel_exists :
+    Exists (fun F : FullyRegisteredTruthConditionSpec => F = concrete_registered_truth_conditions_from_kernel) := by
+  exact Exists.intro concrete_registered_truth_conditions_from_kernel rfl
+
+theorem concrete_registered_truth_kernel_denotes_concrete_registered :
+    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes A term := by
+  intro A term h
+  exact h
+
+theorem concrete_registered_truth_conditions_from_kernel_denote_concrete_registered :
+    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> concrete_registered_truth_conditions_from_kernel.fully_registered_truth_denotes A term := by
+  intro A term h
+  exact h
+
+theorem concrete_registered_truth_conditions_from_kernel_imply_atomic_closure :
+    (A : Type) -> (term : A) -> concrete_registered_truth_conditions_from_kernel.fully_registered_truth_denotes A term -> AtomicClosureTruth A term := by
+  intro A term h
+  apply concrete_registered_truth_implies_atomic_closure
+  exact h
+
 def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=
   ModelInterpretable
 
@@ -1622,6 +1711,54 @@ theorem example_4_concrete_registered_truth : ConcreteRegisteredTruth PropT exam
   apply ConcreteRegisteredTruth.concrete_registered_truth_atomic
   exact ConcreteRegisteredAtomicTruth.concrete_registered_atomic_truth_transition vase integrity_scale intact broken RegisteredStateTransitionTruth.registered_transition_vase_integrity_scale_intact_to_broken
 
+theorem example_1_concrete_registered_truth_kernel_sound : concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT example_1 := by
+  apply concrete_registered_truth_kernel_denotes_concrete_registered
+  exact example_1_concrete_registered_truth
+
+theorem example_1_concrete_registered_truth_conditions_from_kernel_sound : concrete_registered_truth_conditions_from_kernel.fully_registered_truth_denotes PropT example_1 := by
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered
+  exact example_1_concrete_registered_truth
+
+theorem example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound : AtomicClosureTruth PropT example_1 := by
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure
+  exact example_1_concrete_registered_truth_conditions_from_kernel_sound
+
+theorem example_2_concrete_registered_truth_kernel_sound : concrete_registered_truth_kernel.concrete_registered_kernel_denotes Prop example_2 := by
+  apply concrete_registered_truth_kernel_denotes_concrete_registered
+  exact example_2_concrete_registered_truth
+
+theorem example_2_concrete_registered_truth_conditions_from_kernel_sound : concrete_registered_truth_conditions_from_kernel.fully_registered_truth_denotes Prop example_2 := by
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered
+  exact example_2_concrete_registered_truth
+
+theorem example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound : AtomicClosureTruth Prop example_2 := by
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure
+  exact example_2_concrete_registered_truth_conditions_from_kernel_sound
+
+theorem example_3_concrete_registered_truth_kernel_sound : concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT example_3 := by
+  apply concrete_registered_truth_kernel_denotes_concrete_registered
+  exact example_3_concrete_registered_truth
+
+theorem example_3_concrete_registered_truth_conditions_from_kernel_sound : concrete_registered_truth_conditions_from_kernel.fully_registered_truth_denotes PropT example_3 := by
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered
+  exact example_3_concrete_registered_truth
+
+theorem example_3_concrete_registered_truth_conditions_from_kernel_atomic_sound : AtomicClosureTruth PropT example_3 := by
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure
+  exact example_3_concrete_registered_truth_conditions_from_kernel_sound
+
+theorem example_4_concrete_registered_truth_kernel_sound : concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT example_4 := by
+  apply concrete_registered_truth_kernel_denotes_concrete_registered
+  exact example_4_concrete_registered_truth
+
+theorem example_4_concrete_registered_truth_conditions_from_kernel_sound : concrete_registered_truth_conditions_from_kernel.fully_registered_truth_denotes PropT example_4 := by
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered
+  exact example_4_concrete_registered_truth
+
+theorem example_4_concrete_registered_truth_conditions_from_kernel_atomic_sound : AtomicClosureTruth PropT example_4 := by
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure
+  exact example_4_concrete_registered_truth_conditions_from_kernel_sound
+
 theorem example_1_concrete_registered_truth_condition_sound : concrete_registered_truth_conditions.fully_registered_truth_denotes PropT example_1 := by
   apply concrete_registered_truth_conditions_denote_concrete_registered
   exact example_1_concrete_registered_truth
@@ -1755,6 +1892,9 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check example_1_registered_lexical_truth_model_sound
 #check example_1_registered_lexical_truth_conditions_from_model_sound
 #check example_1_concrete_registered_truth
+#check example_1_concrete_registered_truth_kernel_sound
+#check example_1_concrete_registered_truth_conditions_from_kernel_sound
+#check example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound
 #check example_1_concrete_registered_truth_condition_sound
 #check example_1_concrete_registered_truth_condition_atomic_sound
 #check concrete_registered_example_1_truth_instance_atomic_sound
@@ -1788,6 +1928,9 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check example_2_registered_lexical_truth_model_sound
 #check example_2_registered_lexical_truth_conditions_from_model_sound
 #check example_2_concrete_registered_truth
+#check example_2_concrete_registered_truth_kernel_sound
+#check example_2_concrete_registered_truth_conditions_from_kernel_sound
+#check example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound
 #check example_2_concrete_registered_truth_condition_sound
 #check example_2_concrete_registered_truth_condition_atomic_sound
 #check concrete_registered_example_2_truth_instance_atomic_sound
@@ -1821,6 +1964,9 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check example_3_registered_lexical_truth_model_sound
 #check example_3_registered_lexical_truth_conditions_from_model_sound
 #check example_3_concrete_registered_truth
+#check example_3_concrete_registered_truth_kernel_sound
+#check example_3_concrete_registered_truth_conditions_from_kernel_sound
+#check example_3_concrete_registered_truth_conditions_from_kernel_atomic_sound
 #check example_3_concrete_registered_truth_condition_sound
 #check example_3_concrete_registered_truth_condition_atomic_sound
 #check concrete_registered_example_3_truth_instance_atomic_sound
@@ -1854,6 +2000,9 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check example_4_registered_lexical_truth_model_sound
 #check example_4_registered_lexical_truth_conditions_from_model_sound
 #check example_4_concrete_registered_truth
+#check example_4_concrete_registered_truth_kernel_sound
+#check example_4_concrete_registered_truth_conditions_from_kernel_sound
+#check example_4_concrete_registered_truth_conditions_from_kernel_atomic_sound
 #check example_4_concrete_registered_truth_condition_sound
 #check example_4_concrete_registered_truth_condition_atomic_sound
 #check concrete_registered_example_4_truth_instance_atomic_sound
@@ -1867,6 +2016,10 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_basis_exists
 #check concrete_registered_truth_conditions
 #check concrete_registered_truth_condition_spec_exists
+#check concrete_registered_truth_kernel
+#check concrete_registered_truth_kernel_exists
+#check concrete_registered_truth_conditions_from_kernel
+#check concrete_registered_truth_conditions_from_kernel_exists
 #check concrete_registered_example_truth_instances
 #check concrete_registered_example_truth_instances_exists
 #check registered_example_truth_instances

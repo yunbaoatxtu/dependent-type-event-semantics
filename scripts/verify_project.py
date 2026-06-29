@@ -10825,6 +10825,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_registered_lexical_truth_condition_spec_instance",
         "coq_registered_lexical_truth_model_bridge",
         "coq_concrete_registered_truth_condition_instance",
+        "coq_concrete_registered_truth_kernel_instance",
         "coq_concrete_registered_example_truth_instance_package",
         "coq_registered_example_truth_instance_package",
         "paper_docx_sync",

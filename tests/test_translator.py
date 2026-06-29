@@ -1683,6 +1683,30 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure ConcreteRegisteredTruthKernel : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def fully_registered_truth_conditions_from_concrete_registered_kernel",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_truth_kernel : ConcreteRegisteredTruthKernel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_truth_conditions_from_kernel : FullyRegisteredTruthConditionSpec :=",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_kernel_denotes_concrete_registered :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_conditions_from_kernel_imply_atomic_closure :",
+            lean_module,
+        )
+        self.assertIn(
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=",
             lean_module,
         )
@@ -1835,6 +1859,18 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "theorem example_2_concrete_registered_truth_kernel_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_concrete_registered_truth_conditions_from_kernel_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_concrete_registered_truth_condition_sound :",
             lean_module,
         )
@@ -1945,6 +1981,18 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "apply concrete_registered_truth_kernel_denotes_concrete_registered",
+            lean_module,
+        )
+        self.assertIn(
+            "apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered",
+            lean_module,
+        )
+        self.assertIn(
+            "apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure",
+            lean_module,
+        )
+        self.assertIn(
             "apply concrete_registered_truth_conditions_imply_atomic_closure",
             lean_module,
         )
@@ -2002,6 +2050,18 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("#check example_2_concrete_registered_truth", lean_module)
         self.assertIn(
+            "#check example_2_concrete_registered_truth_kernel_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check example_2_concrete_registered_truth_conditions_from_kernel_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
             "#check example_2_concrete_registered_truth_condition_sound",
             lean_module,
         )
@@ -2024,6 +2084,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check registered_lexical_truth_model", lean_module)
         self.assertIn("#check registered_lexical_truth_conditions_from_model", lean_module)
         self.assertIn("#check concrete_registered_truth_conditions", lean_module)
+        self.assertIn("#check concrete_registered_truth_kernel", lean_module)
+        self.assertIn("#check concrete_registered_truth_conditions_from_kernel", lean_module)
         self.assertIn("#check concrete_registered_example_truth_instances", lean_module)
         self.assertIn("#check registered_example_truth_instances", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
@@ -2469,6 +2531,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteRegisteredTruthKernel : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition fully_registered_truth_conditions_from_concrete_registered_kernel",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_truth_kernel : ConcreteRegisteredTruthKernel := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_truth_conditions_from_kernel :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_kernel_denotes_concrete_registered :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_conditions_from_kernel_imply_atomic_closure :",
+            coq_module,
+        )
+        self.assertIn(
             "Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=",
             coq_module,
         )
@@ -2640,6 +2726,26 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_2_concrete_registered_truth_kernel_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_concrete_registered_truth_conditions_from_kernel_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_2_concrete_registered_truth_condition_sound : fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_2.",
             coq_module,
         )
@@ -2766,6 +2872,18 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "  apply concrete_registered_truth_kernel_denotes_concrete_registered.",
+            coq_module,
+        )
+        self.assertIn(
+            "  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered.",
+            coq_module,
+        )
+        self.assertIn(
+            "  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.",
+            coq_module,
+        )
+        self.assertIn(
             "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
             coq_module,
         )
@@ -2825,6 +2943,18 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Check example_2_concrete_registered_truth.", coq_module)
         self.assertIn(
+            "Check example_2_concrete_registered_truth_kernel_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_2_concrete_registered_truth_conditions_from_kernel_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
             "Check example_2_concrete_registered_truth_condition_sound.",
             coq_module,
         )
@@ -2847,6 +2977,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check registered_lexical_truth_model.", coq_module)
         self.assertIn("Check registered_lexical_truth_conditions_from_model.", coq_module)
         self.assertIn("Check concrete_registered_truth_conditions.", coq_module)
+        self.assertIn("Check concrete_registered_truth_kernel.", coq_module)
+        self.assertIn("Check concrete_registered_truth_conditions_from_kernel.", coq_module)
         self.assertIn("Check concrete_registered_example_truth_instances.", coq_module)
         self.assertIn("Check registered_example_truth_instances.", coq_module)
 
@@ -2956,6 +3088,18 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_1_concrete_registered_truth_kernel_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_concrete_registered_truth_conditions_from_kernel_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_1_concrete_registered_truth_condition_sound :",
             coq_module,
         )
@@ -2985,6 +3129,15 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn("Check example_1_concrete_registered_truth.", coq_module)
+        self.assertIn("Check example_1_concrete_registered_truth_kernel_sound.", coq_module)
+        self.assertIn(
+            "Check example_1_concrete_registered_truth_conditions_from_kernel_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound.",
+            coq_module,
+        )
         self.assertIn(
             "Check example_1_concrete_registered_truth_condition_sound.",
             coq_module,
@@ -2996,6 +3149,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
         self.assertNotIn("registered_example_2_truth_instance_atomic_sound", coq_module)
+        self.assertNotIn("example_2_concrete_registered_truth_kernel_sound", coq_module)
+        self.assertNotIn(
+            "example_2_concrete_registered_truth_conditions_from_kernel_sound",
+            coq_module,
+        )
         self.assertNotIn(
             "concrete_registered_example_2_truth_instance_atomic_sound",
             coq_module,
@@ -15236,6 +15394,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_lexical_truth_condition_spec_instance",
                 "coq_registered_lexical_truth_model_bridge",
                 "coq_concrete_registered_truth_condition_instance",
+                "coq_concrete_registered_truth_kernel_instance",
                 "coq_concrete_registered_example_truth_instance_package",
                 "coq_registered_example_truth_instance_package",
                 "paper_docx_sync",

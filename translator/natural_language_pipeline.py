@@ -21049,6 +21049,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_truth_kernel_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_example_truth_instance_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21185,6 +21190,15 @@ def project_completion_status_payload(
                     "FullyRegisteredTruthConditionSpec, and checks "
                     "per-example concrete registered truth-condition "
                     "soundness and atomic soundness. "
+                    "It now also factors that finite registered closure "
+                    "through a ConcreteRegisteredTruthKernel whose lexical "
+                    "and transition clauses are evidence-gated by "
+                    "RegisteredLexicalApplicationTruth and "
+                    "RegisteredStateTransitionTruth rather than by arbitrary "
+                    "unregistered atom claims, derives "
+                    "concrete_registered_truth_conditions_from_kernel, and "
+                    "checks per-example kernel, kernel-induced "
+                    "truth-condition, and kernel-induced atomic soundness. "
                     "It also packages those per-example fully registered "
                     "truth-condition proofs into a generated "
                     "RegisteredExampleTruthInstances record, proves the "

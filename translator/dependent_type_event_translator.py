@@ -6919,6 +6919,407 @@ def concrete_registered_truth_condition_instance_lines(
     return lines
 
 
+def concrete_registered_truth_kernel_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure ConcreteRegisteredTruthKernel : Type where",
+            "  concrete_registered_kernel_denotes : (A : Type) -> A -> Prop",
+            "  concrete_registered_kernel_lexical_application : "
+            "(A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term -> "
+            "concrete_registered_kernel_denotes A term",
+        ]
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  concrete_registered_kernel_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> "
+                "concrete_registered_kernel_denotes Prop (P x)) -> "
+                "concrete_registered_kernel_denotes Prop "
+                f"(Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  concrete_registered_kernel_repeat : "
+                "(n : Nat) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (repeat n body)",
+                "  concrete_registered_kernel_at_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (at_T marker body)",
+                "  concrete_registered_kernel_during_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (during_T marker body)",
+                "  concrete_registered_kernel_before_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (before_T marker body)",
+                "  concrete_registered_kernel_after_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (after_T marker body)",
+                "  concrete_registered_kernel_until_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (until_T marker body)",
+                "  concrete_registered_kernel_since_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (since_T marker body)",
+                "  concrete_registered_kernel_not_T : (body : PropT) -> "
+                "concrete_registered_kernel_denotes PropT body -> "
+                "concrete_registered_kernel_denotes PropT (not_T body)",
+                "  concrete_registered_kernel_transition : "
+                "(theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "concrete_registered_kernel_denotes TransitionT "
+                "(Transition theme scale source target)",
+                "  concrete_registered_kernel_cause : "
+                "(causer : Entity) -> (effect : TransitionT) -> "
+                "concrete_registered_kernel_denotes TransitionT effect -> "
+                "concrete_registered_kernel_denotes PropT (Cause causer effect)",
+                "",
+                "def fully_registered_truth_conditions_from_concrete_registered_kernel "
+                "(K : ConcreteRegisteredTruthKernel) : "
+                "FullyRegisteredTruthConditionSpec := {",
+                "  fully_registered_truth_denotes := "
+                "K.concrete_registered_kernel_denotes,",
+                "  fully_registered_truth_lexical_application := "
+                "K.concrete_registered_kernel_lexical_application,",
+            ]
+        )
+        bridge_fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            bridge_fields.append(
+                (
+                    f"fully_registered_truth_sigma_{type_name}",
+                    f"K.concrete_registered_kernel_sigma_{type_name}",
+                )
+            )
+        bridge_fields.extend(
+            [
+                ("fully_registered_truth_repeat", "K.concrete_registered_kernel_repeat"),
+                ("fully_registered_truth_at_T", "K.concrete_registered_kernel_at_T"),
+                ("fully_registered_truth_during_T", "K.concrete_registered_kernel_during_T"),
+                ("fully_registered_truth_before_T", "K.concrete_registered_kernel_before_T"),
+                ("fully_registered_truth_after_T", "K.concrete_registered_kernel_after_T"),
+                ("fully_registered_truth_until_T", "K.concrete_registered_kernel_until_T"),
+                ("fully_registered_truth_since_T", "K.concrete_registered_kernel_since_T"),
+                ("fully_registered_truth_not_T", "K.concrete_registered_kernel_not_T"),
+                ("fully_registered_truth_transition", "K.concrete_registered_kernel_transition"),
+                ("fully_registered_truth_cause", "K.concrete_registered_kernel_cause"),
+            ]
+        )
+        for index, (field, value) in enumerate(bridge_fields):
+            suffix = "," if index < len(bridge_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def concrete_registered_truth_kernel_denotes : "
+                "(A : Type) -> A -> Prop :=",
+                "  ConcreteRegisteredTruth",
+                "",
+                "def concrete_registered_truth_kernel : "
+                "ConcreteRegisteredTruthKernel := {",
+                "  concrete_registered_kernel_denotes := "
+                "concrete_registered_truth_kernel_denotes,",
+                "  concrete_registered_kernel_lexical_application := "
+                "fun A term h => ConcreteRegisteredTruth."
+                "concrete_registered_truth_atomic A term "
+                "(ConcreteRegisteredAtomicTruth."
+                "concrete_registered_atomic_truth_lexical_application A term h),",
+            ]
+        )
+        model_fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            model_fields.append(
+                (
+                    f"concrete_registered_kernel_sigma_{type_name}",
+                    "fun P h => ConcreteRegisteredTruth."
+                    f"concrete_registered_truth_sigma_{type_name} P h",
+                )
+            )
+        model_fields.extend(
+            [
+                ("concrete_registered_kernel_repeat", "fun n body h => ConcreteRegisteredTruth.concrete_registered_truth_repeat n body h"),
+                ("concrete_registered_kernel_at_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_at_T marker body h"),
+                ("concrete_registered_kernel_during_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_during_T marker body h"),
+                ("concrete_registered_kernel_before_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_before_T marker body h"),
+                ("concrete_registered_kernel_after_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_after_T marker body h"),
+                ("concrete_registered_kernel_until_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_until_T marker body h"),
+                ("concrete_registered_kernel_since_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_since_T marker body h"),
+                ("concrete_registered_kernel_not_T", "fun body h => ConcreteRegisteredTruth.concrete_registered_truth_not_T body h"),
+                (
+                    "concrete_registered_kernel_transition",
+                    "fun theme scale source target h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_atomic TransitionT "
+                    "(Transition theme scale source target) "
+                    "(ConcreteRegisteredAtomicTruth."
+                    "concrete_registered_atomic_truth_transition "
+                    "theme scale source target h)",
+                ),
+                ("concrete_registered_kernel_cause", "fun causer effect h => ConcreteRegisteredTruth.concrete_registered_truth_cause causer effect h"),
+            ]
+        )
+        for index, (field, value) in enumerate(model_fields):
+            suffix = "," if index < len(model_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def concrete_registered_truth_conditions_from_kernel : "
+                "FullyRegisteredTruthConditionSpec :=",
+                "  fully_registered_truth_conditions_from_concrete_registered_kernel "
+                "concrete_registered_truth_kernel",
+                "",
+                "theorem concrete_registered_truth_kernel_exists :",
+                "    Exists (fun K : ConcreteRegisteredTruthKernel => "
+                "K = concrete_registered_truth_kernel) := by",
+                "  exact Exists.intro concrete_registered_truth_kernel rfl",
+                "",
+                "theorem concrete_registered_truth_conditions_from_kernel_exists :",
+                "    Exists (fun F : FullyRegisteredTruthConditionSpec => "
+                "F = concrete_registered_truth_conditions_from_kernel) := by",
+                "  exact Exists.intro concrete_registered_truth_conditions_from_kernel rfl",
+                "",
+                "theorem concrete_registered_truth_kernel_denotes_concrete_registered :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "concrete_registered_truth_kernel."
+                "concrete_registered_kernel_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem "
+                "concrete_registered_truth_conditions_from_kernel_denote_concrete_registered :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "concrete_registered_truth_conditions_from_kernel."
+                "fully_registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem "
+                "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_truth_conditions_from_kernel."
+                "fully_registered_truth_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply concrete_registered_truth_implies_atomic_closure",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record ConcreteRegisteredTruthKernel : Type := {",
+        "  concrete_registered_kernel_denotes : forall A : Type, A -> Prop;",
+        "  concrete_registered_kernel_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      concrete_registered_kernel_denotes A term;",
+    ]
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  concrete_registered_kernel_sigma_{type_name} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, "
+                "concrete_registered_kernel_denotes Prop (P x)) ->",
+                "      concrete_registered_kernel_denotes Prop "
+                f"(exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  concrete_registered_kernel_repeat : "
+            "forall n : nat, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (repeat n body);",
+            "  concrete_registered_kernel_at_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (at_T marker body);",
+            "  concrete_registered_kernel_during_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (during_T marker body);",
+            "  concrete_registered_kernel_before_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (before_T marker body);",
+            "  concrete_registered_kernel_after_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (after_T marker body);",
+            "  concrete_registered_kernel_until_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (until_T marker body);",
+            "  concrete_registered_kernel_since_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (since_T marker body);",
+            "  concrete_registered_kernel_not_T : forall body : PropT,",
+            "      concrete_registered_kernel_denotes PropT body ->",
+            "      concrete_registered_kernel_denotes PropT (not_T body);",
+            "  concrete_registered_kernel_transition : "
+            "forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      concrete_registered_kernel_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  concrete_registered_kernel_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      concrete_registered_kernel_denotes TransitionT effect ->",
+            "      concrete_registered_kernel_denotes PropT (Cause causer effect)",
+            "}.",
+            "",
+            "Definition fully_registered_truth_conditions_from_concrete_registered_kernel",
+            "  (K : ConcreteRegisteredTruthKernel) : FullyRegisteredTruthConditionSpec := {|",
+            "  fully_registered_truth_denotes := concrete_registered_kernel_denotes K;",
+            "  fully_registered_truth_lexical_application := "
+            "concrete_registered_kernel_lexical_application K;",
+        ]
+    )
+    bridge_fields = [
+        (
+            f"fully_registered_truth_sigma_{type_name}",
+            f"concrete_registered_kernel_sigma_{type_name} K",
+        )
+        for type_name in declarations["types"]
+    ]
+    bridge_fields.extend(
+        [
+            ("fully_registered_truth_repeat", "concrete_registered_kernel_repeat K"),
+            ("fully_registered_truth_at_T", "concrete_registered_kernel_at_T K"),
+            ("fully_registered_truth_during_T", "concrete_registered_kernel_during_T K"),
+            ("fully_registered_truth_before_T", "concrete_registered_kernel_before_T K"),
+            ("fully_registered_truth_after_T", "concrete_registered_kernel_after_T K"),
+            ("fully_registered_truth_until_T", "concrete_registered_kernel_until_T K"),
+            ("fully_registered_truth_since_T", "concrete_registered_kernel_since_T K"),
+            ("fully_registered_truth_not_T", "concrete_registered_kernel_not_T K"),
+            ("fully_registered_truth_transition", "concrete_registered_kernel_transition K"),
+            ("fully_registered_truth_cause", "concrete_registered_kernel_cause K"),
+        ]
+    )
+    for index, (field, value) in enumerate(bridge_fields):
+        suffix = ";" if index < len(bridge_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition concrete_registered_truth_kernel_denotes : "
+            "forall A : Type, A -> Prop :=",
+            "  ConcreteRegisteredTruth.",
+            "",
+            "Definition concrete_registered_truth_kernel : "
+            "ConcreteRegisteredTruthKernel := {|",
+            "  concrete_registered_kernel_denotes := "
+            "concrete_registered_truth_kernel_denotes;",
+            "  concrete_registered_kernel_lexical_application :=",
+            "    fun A term h => concrete_registered_truth_atomic A term",
+            "      (concrete_registered_atomic_truth_lexical_application A term h);",
+        ]
+    )
+    model_fields = [
+        (
+            f"concrete_registered_kernel_sigma_{type_name}",
+            f"fun P h => concrete_registered_truth_sigma_{type_name} P h",
+        )
+        for type_name in declarations["types"]
+    ]
+    model_fields.extend(
+        [
+            ("concrete_registered_kernel_repeat", "fun n body h => concrete_registered_truth_repeat n body h"),
+            ("concrete_registered_kernel_at_T", "fun marker body h => concrete_registered_truth_at_T marker body h"),
+            ("concrete_registered_kernel_during_T", "fun marker body h => concrete_registered_truth_during_T marker body h"),
+            ("concrete_registered_kernel_before_T", "fun marker body h => concrete_registered_truth_before_T marker body h"),
+            ("concrete_registered_kernel_after_T", "fun marker body h => concrete_registered_truth_after_T marker body h"),
+            ("concrete_registered_kernel_until_T", "fun marker body h => concrete_registered_truth_until_T marker body h"),
+            ("concrete_registered_kernel_since_T", "fun marker body h => concrete_registered_truth_since_T marker body h"),
+            ("concrete_registered_kernel_not_T", "fun body h => concrete_registered_truth_not_T body h"),
+            (
+                "concrete_registered_kernel_transition",
+                "fun theme scale source target h => "
+                "concrete_registered_truth_atomic TransitionT "
+                "(Transition theme scale source target) "
+                "(concrete_registered_atomic_truth_transition "
+                "theme scale source target h)",
+            ),
+            ("concrete_registered_kernel_cause", "fun causer effect h => concrete_registered_truth_cause causer effect h"),
+        ]
+    )
+    for index, (field, value) in enumerate(model_fields):
+        suffix = ";" if index < len(model_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition concrete_registered_truth_conditions_from_kernel :",
+            "  FullyRegisteredTruthConditionSpec :=",
+            "  fully_registered_truth_conditions_from_concrete_registered_kernel",
+            "    concrete_registered_truth_kernel.",
+            "",
+            "Theorem concrete_registered_truth_kernel_exists :",
+            "  exists K : ConcreteRegisteredTruthKernel,",
+            "    K = concrete_registered_truth_kernel.",
+            "Proof.",
+            "  exists concrete_registered_truth_kernel. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_conditions_from_kernel_exists :",
+            "  exists F : FullyRegisteredTruthConditionSpec,",
+            "    F = concrete_registered_truth_conditions_from_kernel.",
+            "Proof.",
+            "  exists concrete_registered_truth_conditions_from_kernel. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_kernel_denotes_concrete_registered :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term ->",
+            "    concrete_registered_kernel_denotes "
+            "concrete_registered_truth_kernel A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_conditions_from_kernel_denote_concrete_registered :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term ->",
+            "    fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions_from_kernel A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_conditions_from_kernel_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions_from_kernel A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply concrete_registered_truth_implies_atomic_closure.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_truth_proof_steps(
     term: Term,
     target: str,
@@ -7655,6 +8056,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(concrete_registered_truth_condition_instance_lines(declarations, target))
         lines.append("")
+        lines.extend(concrete_registered_truth_kernel_lines(declarations, target))
+        lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
         lines.append("")
         lines.extend(syntax_directed_truth_kernel_instance_lines(declarations, target))
@@ -7990,6 +8393,48 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             annotation = export_result_type(result["ast"])
             lines.append(
                 "theorem "
+                f"example_{idx}_concrete_registered_truth_kernel_sound : "
+                "concrete_registered_truth_kernel."
+                "concrete_registered_kernel_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "concrete_registered_truth_kernel_denotes_concrete_registered"
+            )
+            lines.append(f"  exact example_{idx}_concrete_registered_truth")
+            lines.append("")
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_registered_truth_conditions_from_kernel_sound : "
+                "concrete_registered_truth_conditions_from_kernel."
+                "fully_registered_truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "concrete_registered_truth_conditions_from_kernel_denote_concrete_registered"
+            )
+            lines.append(f"  exact example_{idx}_concrete_registered_truth")
+            lines.append("")
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_registered_truth_conditions_from_kernel_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure"
+            )
+            lines.append(
+                f"  exact "
+                f"example_{idx}_concrete_registered_truth_conditions_from_kernel_sound"
+            )
+            lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
                 f"example_{idx}_concrete_registered_truth_condition_sound : "
                 "concrete_registered_truth_conditions."
                 "fully_registered_truth_denotes "
@@ -8086,6 +8531,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
             lines.append(
                 "#check "
+                f"example_{idx}_concrete_registered_truth_kernel_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_concrete_registered_truth_conditions_from_kernel_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_concrete_registered_truth_conditions_from_kernel_atomic_sound"
+            )
+            lines.append(
+                "#check "
                 f"example_{idx}_concrete_registered_truth_condition_sound"
             )
             lines.append(
@@ -8112,6 +8569,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check concrete_registered_truth_basis_exists")
         lines.append("#check concrete_registered_truth_conditions")
         lines.append("#check concrete_registered_truth_condition_spec_exists")
+        lines.append("#check concrete_registered_truth_kernel")
+        lines.append("#check concrete_registered_truth_kernel_exists")
+        lines.append("#check concrete_registered_truth_conditions_from_kernel")
+        lines.append("#check concrete_registered_truth_conditions_from_kernel_exists")
         lines.append("#check concrete_registered_example_truth_instances")
         lines.append("#check concrete_registered_example_truth_instances_exists")
         lines.append("#check registered_example_truth_instances")
@@ -8230,6 +8691,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(registered_lexical_truth_model_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_registered_truth_condition_instance_lines(declarations, target))
+    lines.append("")
+    lines.extend(concrete_registered_truth_kernel_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
     lines.append("")
@@ -8587,6 +9050,57 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         annotation = export_result_type(result["ast"])
         lines.append(
             "Theorem "
+            f"example_{idx}_concrete_registered_truth_kernel_sound :"
+        )
+        lines.append(
+            "  concrete_registered_kernel_denotes "
+            "concrete_registered_truth_kernel "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply concrete_registered_truth_kernel_denotes_concrete_registered."
+        )
+        lines.append(f"  exact example_{idx}_concrete_registered_truth.")
+        lines.append("Qed.")
+        lines.append("")
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_registered_truth_conditions_from_kernel_sound :"
+        )
+        lines.append(
+            "  fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions_from_kernel "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "concrete_registered_truth_conditions_from_kernel_denote_concrete_registered."
+        )
+        lines.append(f"  exact example_{idx}_concrete_registered_truth.")
+        lines.append("Qed.")
+        lines.append("")
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_registered_truth_conditions_from_kernel_atomic_sound :"
+        )
+        lines.append(f"  AtomicClosureTruth {annotation} example_{idx}.")
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure."
+        )
+        lines.append(
+            f"  exact "
+            f"example_{idx}_concrete_registered_truth_conditions_from_kernel_sound."
+        )
+        lines.append("Qed.")
+        lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
             f"example_{idx}_concrete_registered_truth_condition_sound : "
             "fully_registered_truth_denotes "
             "concrete_registered_truth_conditions "
@@ -8675,6 +9189,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_concrete_registered_truth.")
         lines.append(
             "Check "
+            f"example_{idx}_concrete_registered_truth_kernel_sound."
+        )
+        lines.append(
+            "Check "
+            f"example_{idx}_concrete_registered_truth_conditions_from_kernel_sound."
+        )
+        lines.append(
+            "Check "
+            f"example_{idx}_concrete_registered_truth_conditions_from_kernel_atomic_sound."
+        )
+        lines.append(
+            "Check "
             f"example_{idx}_concrete_registered_truth_condition_sound."
         )
         lines.append(
@@ -8701,6 +9227,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_truth_basis_exists.")
     lines.append("Check concrete_registered_truth_conditions.")
     lines.append("Check concrete_registered_truth_condition_spec_exists.")
+    lines.append("Check concrete_registered_truth_kernel.")
+    lines.append("Check concrete_registered_truth_kernel_exists.")
+    lines.append("Check concrete_registered_truth_conditions_from_kernel.")
+    lines.append("Check concrete_registered_truth_conditions_from_kernel_exists.")
     lines.append("Check concrete_registered_example_truth_instances.")
     lines.append("Check concrete_registered_example_truth_instances_exists.")
     lines.append("Check registered_example_truth_instances.")

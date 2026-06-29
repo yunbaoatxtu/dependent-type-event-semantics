@@ -1783,6 +1783,153 @@ Proof.
   exact H.
 Qed.
 
+Record ConcreteRegisteredTruthKernel : Type := {
+  concrete_registered_kernel_denotes : forall A : Type, A -> Prop;
+  concrete_registered_kernel_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      concrete_registered_kernel_denotes A term;
+  concrete_registered_kernel_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, concrete_registered_kernel_denotes Prop (P x)) ->
+      concrete_registered_kernel_denotes Prop (exists x : Entity, P x);
+  concrete_registered_kernel_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, concrete_registered_kernel_denotes Prop (P x)) ->
+      concrete_registered_kernel_denotes Prop (exists x : Food, P x);
+  concrete_registered_kernel_sigma_State : forall P : State -> Prop,
+      (forall x : State, concrete_registered_kernel_denotes Prop (P x)) ->
+      concrete_registered_kernel_denotes Prop (exists x : State, P x);
+  concrete_registered_kernel_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, concrete_registered_kernel_denotes Prop (P x)) ->
+      concrete_registered_kernel_denotes Prop (exists x : StateScale, P x);
+  concrete_registered_kernel_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, concrete_registered_kernel_denotes Prop (P x)) ->
+      concrete_registered_kernel_denotes Prop (exists x : TransitionT, P x);
+  concrete_registered_kernel_repeat : forall n : nat, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (repeat n body);
+  concrete_registered_kernel_at_T : forall marker : Entity, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (at_T marker body);
+  concrete_registered_kernel_during_T : forall marker : Entity, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (during_T marker body);
+  concrete_registered_kernel_before_T : forall marker : Entity, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (before_T marker body);
+  concrete_registered_kernel_after_T : forall marker : Entity, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (after_T marker body);
+  concrete_registered_kernel_until_T : forall marker : Entity, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (until_T marker body);
+  concrete_registered_kernel_since_T : forall marker : Entity, forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (since_T marker body);
+  concrete_registered_kernel_not_T : forall body : PropT,
+      concrete_registered_kernel_denotes PropT body ->
+      concrete_registered_kernel_denotes PropT (not_T body);
+  concrete_registered_kernel_transition : forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      concrete_registered_kernel_denotes TransitionT (Transition theme scale source target);
+  concrete_registered_kernel_cause : forall causer : Entity, forall effect : TransitionT,
+      concrete_registered_kernel_denotes TransitionT effect ->
+      concrete_registered_kernel_denotes PropT (Cause causer effect)
+}.
+
+Definition fully_registered_truth_conditions_from_concrete_registered_kernel
+  (K : ConcreteRegisteredTruthKernel) : FullyRegisteredTruthConditionSpec := {|
+  fully_registered_truth_denotes := concrete_registered_kernel_denotes K;
+  fully_registered_truth_lexical_application := concrete_registered_kernel_lexical_application K;
+  fully_registered_truth_sigma_Entity := concrete_registered_kernel_sigma_Entity K;
+  fully_registered_truth_sigma_Food := concrete_registered_kernel_sigma_Food K;
+  fully_registered_truth_sigma_State := concrete_registered_kernel_sigma_State K;
+  fully_registered_truth_sigma_StateScale := concrete_registered_kernel_sigma_StateScale K;
+  fully_registered_truth_sigma_TransitionT := concrete_registered_kernel_sigma_TransitionT K;
+  fully_registered_truth_repeat := concrete_registered_kernel_repeat K;
+  fully_registered_truth_at_T := concrete_registered_kernel_at_T K;
+  fully_registered_truth_during_T := concrete_registered_kernel_during_T K;
+  fully_registered_truth_before_T := concrete_registered_kernel_before_T K;
+  fully_registered_truth_after_T := concrete_registered_kernel_after_T K;
+  fully_registered_truth_until_T := concrete_registered_kernel_until_T K;
+  fully_registered_truth_since_T := concrete_registered_kernel_since_T K;
+  fully_registered_truth_not_T := concrete_registered_kernel_not_T K;
+  fully_registered_truth_transition := concrete_registered_kernel_transition K;
+  fully_registered_truth_cause := concrete_registered_kernel_cause K
+|}.
+
+Definition concrete_registered_truth_kernel_denotes : forall A : Type, A -> Prop :=
+  ConcreteRegisteredTruth.
+
+Definition concrete_registered_truth_kernel : ConcreteRegisteredTruthKernel := {|
+  concrete_registered_kernel_denotes := concrete_registered_truth_kernel_denotes;
+  concrete_registered_kernel_lexical_application :=
+    fun A term h => concrete_registered_truth_atomic A term
+      (concrete_registered_atomic_truth_lexical_application A term h);
+  concrete_registered_kernel_sigma_Entity := fun P h => concrete_registered_truth_sigma_Entity P h;
+  concrete_registered_kernel_sigma_Food := fun P h => concrete_registered_truth_sigma_Food P h;
+  concrete_registered_kernel_sigma_State := fun P h => concrete_registered_truth_sigma_State P h;
+  concrete_registered_kernel_sigma_StateScale := fun P h => concrete_registered_truth_sigma_StateScale P h;
+  concrete_registered_kernel_sigma_TransitionT := fun P h => concrete_registered_truth_sigma_TransitionT P h;
+  concrete_registered_kernel_repeat := fun n body h => concrete_registered_truth_repeat n body h;
+  concrete_registered_kernel_at_T := fun marker body h => concrete_registered_truth_at_T marker body h;
+  concrete_registered_kernel_during_T := fun marker body h => concrete_registered_truth_during_T marker body h;
+  concrete_registered_kernel_before_T := fun marker body h => concrete_registered_truth_before_T marker body h;
+  concrete_registered_kernel_after_T := fun marker body h => concrete_registered_truth_after_T marker body h;
+  concrete_registered_kernel_until_T := fun marker body h => concrete_registered_truth_until_T marker body h;
+  concrete_registered_kernel_since_T := fun marker body h => concrete_registered_truth_since_T marker body h;
+  concrete_registered_kernel_not_T := fun body h => concrete_registered_truth_not_T body h;
+  concrete_registered_kernel_transition := fun theme scale source target h => concrete_registered_truth_atomic TransitionT (Transition theme scale source target) (concrete_registered_atomic_truth_transition theme scale source target h);
+  concrete_registered_kernel_cause := fun causer effect h => concrete_registered_truth_cause causer effect h
+|}.
+
+Definition concrete_registered_truth_conditions_from_kernel :
+  FullyRegisteredTruthConditionSpec :=
+  fully_registered_truth_conditions_from_concrete_registered_kernel
+    concrete_registered_truth_kernel.
+
+Theorem concrete_registered_truth_kernel_exists :
+  exists K : ConcreteRegisteredTruthKernel,
+    K = concrete_registered_truth_kernel.
+Proof.
+  exists concrete_registered_truth_kernel. reflexivity.
+Qed.
+
+Theorem concrete_registered_truth_conditions_from_kernel_exists :
+  exists F : FullyRegisteredTruthConditionSpec,
+    F = concrete_registered_truth_conditions_from_kernel.
+Proof.
+  exists concrete_registered_truth_conditions_from_kernel. reflexivity.
+Qed.
+
+Theorem concrete_registered_truth_kernel_denotes_concrete_registered :
+  forall A : Type, forall term : A,
+    ConcreteRegisteredTruth A term ->
+    concrete_registered_kernel_denotes concrete_registered_truth_kernel A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem concrete_registered_truth_conditions_from_kernel_denote_concrete_registered :
+  forall A : Type, forall term : A,
+    ConcreteRegisteredTruth A term ->
+    fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem concrete_registered_truth_conditions_from_kernel_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_truth_implies_atomic_closure.
+  exact H.
+Qed.
+
 Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=
   ModelInterpretable.
 
@@ -2563,6 +2710,90 @@ Proof.
   apply registered_transition_vase_integrity_scale_intact_to_broken.
 Qed.
 
+Theorem example_1_concrete_registered_truth_kernel_sound :
+  concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT example_1.
+Proof.
+  apply concrete_registered_truth_kernel_denotes_concrete_registered.
+  exact example_1_concrete_registered_truth.
+Qed.
+
+Theorem example_1_concrete_registered_truth_conditions_from_kernel_sound :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_1.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered.
+  exact example_1_concrete_registered_truth.
+Qed.
+
+Theorem example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact example_1_concrete_registered_truth_conditions_from_kernel_sound.
+Qed.
+
+Theorem example_2_concrete_registered_truth_kernel_sound :
+  concrete_registered_kernel_denotes concrete_registered_truth_kernel Prop example_2.
+Proof.
+  apply concrete_registered_truth_kernel_denotes_concrete_registered.
+  exact example_2_concrete_registered_truth.
+Qed.
+
+Theorem example_2_concrete_registered_truth_conditions_from_kernel_sound :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel Prop example_2.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered.
+  exact example_2_concrete_registered_truth.
+Qed.
+
+Theorem example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact example_2_concrete_registered_truth_conditions_from_kernel_sound.
+Qed.
+
+Theorem example_3_concrete_registered_truth_kernel_sound :
+  concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT example_3.
+Proof.
+  apply concrete_registered_truth_kernel_denotes_concrete_registered.
+  exact example_3_concrete_registered_truth.
+Qed.
+
+Theorem example_3_concrete_registered_truth_conditions_from_kernel_sound :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_3.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered.
+  exact example_3_concrete_registered_truth.
+Qed.
+
+Theorem example_3_concrete_registered_truth_conditions_from_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact example_3_concrete_registered_truth_conditions_from_kernel_sound.
+Qed.
+
+Theorem example_4_concrete_registered_truth_kernel_sound :
+  concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT example_4.
+Proof.
+  apply concrete_registered_truth_kernel_denotes_concrete_registered.
+  exact example_4_concrete_registered_truth.
+Qed.
+
+Theorem example_4_concrete_registered_truth_conditions_from_kernel_sound :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_4.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_denote_concrete_registered.
+  exact example_4_concrete_registered_truth.
+Qed.
+
+Theorem example_4_concrete_registered_truth_conditions_from_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact example_4_concrete_registered_truth_conditions_from_kernel_sound.
+Qed.
+
 Theorem example_1_concrete_registered_truth_condition_sound : fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_1.
 Proof.
   apply concrete_registered_truth_conditions_denote_concrete_registered.
@@ -2752,6 +2983,9 @@ Check example_1_fully_registered_truth_condition_sound.
 Check example_1_registered_lexical_truth_model_sound.
 Check example_1_registered_lexical_truth_conditions_from_model_sound.
 Check example_1_concrete_registered_truth.
+Check example_1_concrete_registered_truth_kernel_sound.
+Check example_1_concrete_registered_truth_conditions_from_kernel_sound.
+Check example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_1_concrete_registered_truth_condition_sound.
 Check example_1_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_1_truth_instance_atomic_sound.
@@ -2785,6 +3019,9 @@ Check example_2_fully_registered_truth_condition_sound.
 Check example_2_registered_lexical_truth_model_sound.
 Check example_2_registered_lexical_truth_conditions_from_model_sound.
 Check example_2_concrete_registered_truth.
+Check example_2_concrete_registered_truth_kernel_sound.
+Check example_2_concrete_registered_truth_conditions_from_kernel_sound.
+Check example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_2_concrete_registered_truth_condition_sound.
 Check example_2_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_2_truth_instance_atomic_sound.
@@ -2818,6 +3055,9 @@ Check example_3_fully_registered_truth_condition_sound.
 Check example_3_registered_lexical_truth_model_sound.
 Check example_3_registered_lexical_truth_conditions_from_model_sound.
 Check example_3_concrete_registered_truth.
+Check example_3_concrete_registered_truth_kernel_sound.
+Check example_3_concrete_registered_truth_conditions_from_kernel_sound.
+Check example_3_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_3_concrete_registered_truth_condition_sound.
 Check example_3_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_3_truth_instance_atomic_sound.
@@ -2851,6 +3091,9 @@ Check example_4_fully_registered_truth_condition_sound.
 Check example_4_registered_lexical_truth_model_sound.
 Check example_4_registered_lexical_truth_conditions_from_model_sound.
 Check example_4_concrete_registered_truth.
+Check example_4_concrete_registered_truth_kernel_sound.
+Check example_4_concrete_registered_truth_conditions_from_kernel_sound.
+Check example_4_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_4_concrete_registered_truth_condition_sound.
 Check example_4_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_4_truth_instance_atomic_sound.
@@ -2864,6 +3107,10 @@ Check concrete_registered_truth_basis.
 Check concrete_registered_truth_basis_exists.
 Check concrete_registered_truth_conditions.
 Check concrete_registered_truth_condition_spec_exists.
+Check concrete_registered_truth_kernel.
+Check concrete_registered_truth_kernel_exists.
+Check concrete_registered_truth_conditions_from_kernel.
+Check concrete_registered_truth_conditions_from_kernel_exists.
 Check concrete_registered_example_truth_instances.
 Check concrete_registered_example_truth_instances_exists.
 Check registered_example_truth_instances.

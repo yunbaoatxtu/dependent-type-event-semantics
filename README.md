@@ -1109,7 +1109,19 @@ and checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound`. This is the first
 concrete registered truth-condition instance for exported atoms, but it is
-still finite and registered-fragment-only. The next
+still finite and registered-fragment-only. The next verified objective
+`coq_concrete_registered_truth_kernel_instance` factors the same concrete
+registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
+the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
+lexical and transition clauses evidence-gated: lexical atoms require
+`RegisteredLexicalApplicationTruth`, and state changes require
+`RegisteredStateTransitionTruth`. It derives
+`concrete_registered_truth_conditions_from_kernel` and checks
+`example_i_concrete_registered_truth_kernel_sound`,
+`example_i_concrete_registered_truth_conditions_from_kernel_sound`, and
+`example_i_concrete_registered_truth_conditions_from_kernel_atomic_sound`. This
+adds a model-shaped registered-kernel bridge without pretending to supply
+truth clauses for arbitrary unregistered lexical applications. The next
 verified objective `coq_concrete_registered_example_truth_instance_package`
 packages those concrete registered truth-condition proofs into
 `ConcreteRegisteredExampleTruthInstances`, proves
@@ -1132,7 +1144,8 @@ conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
-concrete-registered-truth-condition, or registered-example package instances.
+concrete-registered-truth-condition, concrete-registered-truth-kernel, or
+registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
