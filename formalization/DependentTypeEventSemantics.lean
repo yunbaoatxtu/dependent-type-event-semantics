@@ -32,6 +32,7 @@ constant since_T : Entity -> PropT -> PropT
 constant not_T : PropT -> PropT
 constant Transition : Entity -> StateScale -> State -> State -> TransitionT
 constant Cause : Entity -> TransitionT -> PropT
+constant SemanticPreservation : (A : Type) -> A -> Prop
 constant break : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
 constant butter : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
 constant eat : (n : Nat) -> ModifierSeq n -> Entity -> Food -> Prop
@@ -42,7 +43,16 @@ def example_2 : Prop := (Exists fun x_theme : Food => (eat 0 mods_nil John x_the
 def example_3 : PropT := (repeat 2 (knock 0 mods_nil John))
 def example_4 : PropT := (Cause John (Transition vase integrity_scale intact broken))
 
+def example_1_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_1
+def example_2_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_2
+def example_3_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_3
+def example_4_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_4
+
 #check example_1
+#check example_1_semantic_preservation_obligation
 #check example_2
+#check example_2_semantic_preservation_obligation
 #check example_3
+#check example_3_semantic_preservation_obligation
 #check example_4
+#check example_4_semantic_preservation_obligation

@@ -5094,10 +5094,14 @@ def attach_single_semantic_reading(
 
 
 def exported_prop_definition_names(coq_code: str) -> list[str]:
-    return re.findall(
+    names = re.findall(
         r"(?m)^Definition\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(?:Prop|PropT)\b",
         coq_code,
     )
+    return [
+        name for name in names
+        if not name.endswith("_semantic_preservation_obligation")
+    ]
 
 
 def attach_default_registered_semantic_reading(
@@ -20925,6 +20929,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/verify_project.py --require-coq",
             },
             {
+                "id": "coq_named_obligation_scaffold",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -20948,8 +20957,9 @@ def project_completion_status_payload(
                 "id": "deep_coq_semantic_proofs",
                 "status": "open",
                 "reason": (
-                    "Coq/Rocq currently checks a shallow exported scaffold rather "
-                    "than a full theorem development for semantic preservation."
+                    "Coq/Rocq currently checks a shallow exported scaffold and "
+                    "named semantic-preservation obligations, but those "
+                    "obligations are not yet proved."
                 ),
             },
             {
@@ -20973,11 +20983,11 @@ def project_completion_status_payload(
             "full_natural_language_certification_false",
             "surface_parser_claim_registered_examples_only",
             "fallback_certification_level_shallow_scaffold",
-            "coq_boundary_shallow_scaffold_not_deep_proof",
+            "semantic_preservation_obligations_unproved",
         ],
         "next_recommended_stages": [
             "promote_more_fallback_successes_to_registered_constructions",
-            "replace_shallow_coq_scaffold_with_named_theorem_obligations",
+            "prove_named_semantic_preservation_obligations",
             "expand_scope_attachment_discourse_coverage",
             "separate_parser_coverage_claims_from_semantic_translation_claims",
         ],

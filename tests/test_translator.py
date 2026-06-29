@@ -1249,20 +1249,52 @@ class TranslatorTests(unittest.TestCase):
             "def example_2 : PropT := (Cause John (Transition vase integrity_scale intact broken))",
             lean_module,
         )
+        self.assertIn(
+            "constant SemanticPreservation : (A : Type) -> A -> Prop",
+            lean_module,
+        )
+        self.assertIn(
+            "def example_1_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_1",
+            lean_module,
+        )
+        self.assertIn(
+            "def example_2_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_2",
+            lean_module,
+        )
         self.assertIn("#check example_2", lean_module)
+        self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
+        self.assertIn(
+            "Parameter SemanticPreservation : forall A : Type, A -> Prop.",
+            coq_module,
+        )
         self.assertIn(
             "Definition example_1 : Prop := (exists x_theme : Food, (eat 0 mods_nil John x_theme)).",
             coq_module,
         )
+        self.assertIn(
+            "Definition example_1_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_1.",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition example_2_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_2.",
+            coq_module,
+        )
         self.assertIn("Check example_2.", coq_module)
+        self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
         coq_module = export_module([result], "coq")
         self.assertIn("Definition example_1 : Prop :=", coq_module)
         self.assertIn("Check example_1.", coq_module)
+        self.assertIn(
+            "Definition example_1_semantic_preservation_obligation : Prop :=",
+            coq_module,
+        )
+        self.assertIn("Check example_1_semantic_preservation_obligation.", coq_module)
         self.assertNotIn("Check example_2.", coq_module)
+        self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
 
     def test_packaged_cli_exports_coq_module(self) -> None:
         completed = subprocess.run(
@@ -1281,7 +1313,15 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Parameter Food : Type.", completed.stdout)
         self.assertIn("Definition example_1 : Prop :=", completed.stdout)
+        self.assertIn("SemanticPreservation Prop example_1", completed.stdout)
         self.assertIn("Check example_1.", completed.stdout)
+        self.assertIn("Check example_1_semantic_preservation_obligation.", completed.stdout)
+
+    def test_exported_prop_definition_names_ignore_proof_obligations(self) -> None:
+        result = translate(load_example("example_knock_twice.json"))
+        coq_module = export_module([result], "coq")
+        self.assertEqual(exported_prop_definition_names(coq_module), ["example_1"])
+        self.assertIn("example_1_semantic_preservation_obligation", coq_module)
 
     def test_rule_based_sentence_to_event_semantics(self) -> None:
         formula = sentence_to_event_semantics("John knocked twice.")
@@ -13462,6 +13502,7 @@ class TranslatorTests(unittest.TestCase):
                 "registered_construction_fragment",
                 "semantic_snapshot_regression",
                 "coq_shallow_scaffold_boundary",
+                "coq_named_obligation_scaffold",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -13479,11 +13520,11 @@ class TranslatorTests(unittest.TestCase):
             },
         )
         self.assertIn(
-            "coq_boundary_shallow_scaffold_not_deep_proof",
+            "semantic_preservation_obligations_unproved",
             completion_status["completion_blockers"],
         )
         self.assertIn(
-            "replace_shallow_coq_scaffold_with_named_theorem_obligations",
+            "prove_named_semantic_preservation_obligations",
             completion_status["next_recommended_stages"],
         )
         self.assertEqual(
@@ -14966,11 +15007,11 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-completion-blocker="coq_boundary_shallow_scaffold_not_deep_proof"',
+            'data-completion-blocker="semantic_preservation_obligations_unproved"',
             page,
         )
         self.assertIn(
-            'data-completion-next-stage="replace_shallow_coq_scaffold_with_named_theorem_obligations"',
+            'data-completion-next-stage="prove_named_semantic_preservation_obligations"',
             page,
         )
         self.assertIn(
@@ -22483,6 +22524,12 @@ class TranslatorTests(unittest.TestCase):
     def test_docs_explain_api_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         web_design = (ROOT / "docs" / "web_pipeline_design.md").read_text(encoding="utf-8")
+        formalization_readme = (ROOT / "formalization" / "README.md").read_text(
+            encoding="utf-8"
+        )
+        manuscript = (
+            ROOT / "paper" / "dependent_type_replacement_for_event_semantics_sci_manuscript.md"
+        ).read_text(encoding="utf-8")
         self.assertIn("/api/analyze?sentence=Mary+saw+John+leave&require_coq=1", readme)
         self.assertIn("`sentence` parameter carries the natural-language input", readme)
         self.assertIn('`schema_version: "analyze.v1"`', readme)
@@ -22510,6 +22557,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("arbitrary", readme)
         self.assertIn("natural-language semantics", readme)
         self.assertIn("deep Coq semantic proofs", readme)
+        self.assertIn("`SemanticPreservation`", readme)
+        self.assertIn("`example_1_semantic_preservation_obligation`", readme)
+        self.assertIn("named theorem-obligation", readme)
+        self.assertIn("`SemanticPreservation`", formalization_readme)
+        self.assertIn("`example_i_semantic_preservation_obligation`", formalization_readme)
+        self.assertIn("not proofs of", formalization_readme)
+        self.assertIn("semantic preservation", formalization_readme)
+        self.assertIn("SemanticPreservation", manuscript)
+        self.assertIn("semantic_preservation_obligation", manuscript)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)
@@ -24143,6 +24199,9 @@ class TranslatorTests(unittest.TestCase):
 
     def test_verification_runs_web_route_smoke_check(self) -> None:
         verifier = (ROOT / "scripts" / "verify_project.py").read_text(encoding="utf-8")
+        formalization_checker = (ROOT / "scripts" / "check_formalization.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("def run_web_route_smoke_check() -> None:", verifier)
         self.assertIn("def validate_diagnostic_contract_manifest(", verifier)
         self.assertIn("def validate_recovery_action_export_bundle(", verifier)
@@ -24193,6 +24252,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("surface parser witness live translation drift", verifier)
         self.assertIn("expected_modified_surface_witness_meta_from_spec", verifier)
         self.assertIn("surface parser generation spec drift", verifier)
+        self.assertIn("semantic_preservation_obligation", formalization_checker)
+        self.assertIn("lean_obligation_count == lean_example_count", formalization_checker)
+        self.assertIn("coq_obligation_count == coq_example_count", formalization_checker)
         self.assertIn("surface_witness_generation.v1", verifier)
         self.assertIn("surface parser slot probe schema drift", verifier)
         self.assertIn("surface parser slot probe generation spec drift", verifier)

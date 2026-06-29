@@ -40,6 +40,12 @@ to a proof-assistant type checker:
 python3 scripts/verify_project.py
 ```
 
+The scaffold also declares `SemanticPreservation` and generates one
+`example_i_semantic_preservation_obligation` statement for each exported
+example. These statements are named theorem-obligation rows and not proofs of
+semantic preservation. They make the next proof-development targets explicit
+while preserving the current shallow-boundary claim.
+
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
 when Coq/Rocq is unavailable.

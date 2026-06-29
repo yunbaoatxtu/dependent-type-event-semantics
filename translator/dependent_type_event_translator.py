@@ -1163,6 +1163,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "constant not_T : PropT -> PropT",
                 "constant Transition : Entity -> StateScale -> State -> State -> TransitionT",
                 "constant Cause : Entity -> TransitionT -> PropT",
+                "constant SemanticPreservation : (A : Type) -> A -> Prop",
             ]
         )
         for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
@@ -1174,8 +1175,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             annotation = export_result_type(result["ast"])
             lines.append(f"def example_{idx} : {annotation} := {expr}")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "def "
+                f"example_{idx}_semantic_preservation_obligation : Prop := "
+                f"SemanticPreservation {annotation} example_{idx}"
+            )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
+            lines.append(f"#check example_{idx}_semantic_preservation_obligation")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -1211,6 +1221,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Parameter not_T : PropT -> PropT.",
             "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
             "Parameter Cause : Entity -> TransitionT -> PropT.",
+            "Parameter SemanticPreservation : forall A : Type, A -> Prop.",
         ]
     )
     for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
@@ -1222,8 +1233,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         annotation = export_result_type(result["ast"])
         lines.append(f"Definition example_{idx} : {annotation} := {expr}.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Definition "
+            f"example_{idx}_semantic_preservation_obligation : Prop := "
+            f"SemanticPreservation {annotation} example_{idx}."
+        )
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
+        lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
     return "\n".join(lines) + "\n"
 
 

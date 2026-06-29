@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -22,6 +23,22 @@ def main() -> None:
 
     lean = LEAN_FILE.read_text(encoding="utf-8")
     coq = COQ_FILE.read_text(encoding="utf-8")
+    lean_example_count = len(re.findall(r"^def example_\d+ :", lean, re.MULTILINE))
+    coq_example_count = len(re.findall(r"^Definition example_\d+ :", coq, re.MULTILINE))
+    lean_obligation_count = len(
+        re.findall(
+            r"^def example_\d+_semantic_preservation_obligation : Prop :=",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_obligation_count = len(
+        re.findall(
+            r"^Definition example_\d+_semantic_preservation_obligation : Prop :=",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -44,6 +61,24 @@ def main() -> None:
         ),
         "lean check commands": "#check example_4" in lean,
         "coq check commands": "Check example_4." in coq,
+        "lean semantic preservation parameter": (
+            "constant SemanticPreservation : (A : Type) -> A -> Prop" in lean
+        ),
+        "coq semantic preservation parameter": (
+            "Parameter SemanticPreservation : forall A : Type, A -> Prop." in coq
+        ),
+        "lean semantic preservation obligations": (
+            lean_example_count > 0 and lean_obligation_count == lean_example_count
+        ),
+        "coq semantic preservation obligations": (
+            coq_example_count > 0 and coq_obligation_count == coq_example_count
+        ),
+        "lean semantic preservation obligation checks": (
+            "#check example_4_semantic_preservation_obligation" in lean
+        ),
+        "coq semantic preservation obligation checks": (
+            "Check example_4_semantic_preservation_obligation." in coq
+        ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"
             in lean

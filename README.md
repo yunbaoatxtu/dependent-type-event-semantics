@@ -951,6 +951,10 @@ verified fragment objectives, lists still-open objectives such as arbitrary
 natural-language semantics and deep Coq semantic proofs, and advertises the next
 recommended stages. The verifier rejects drift in this object, so the project
 cannot accidentally present a finite registered fragment as the finished goal.
+The verified objective list now includes `coq_named_obligation_scaffold`, while
+the open blocker remains `semantic_preservation_obligations_unproved`; the next
+Coq stage is therefore to prove the named obligations rather than merely
+generate them.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
@@ -2250,6 +2254,14 @@ compile the generated Coq scaffold as an optional boundary check:
 ```bash
 coqc formalization/DependentTypeEventSemantics.v
 ```
+
+The generated Coq and Lean scaffolds now also expose a named
+`SemanticPreservation` boundary. For each checked example, the exporter creates
+a statement such as `example_1_semantic_preservation_obligation`, and
+`scripts/check_formalization.py` verifies that these named theorem-obligation
+rows stay one-to-one with the exported examples. These rows are proof targets,
+not completed semantic-preservation proofs; they make the remaining Coq work
+auditable without overstating the current shallow embedding.
 
 Use `--skip-coq` to run only the Python and scaffold-consistency checks, or
 `--require-coq` when a local proof-assistant boundary check is mandatory:

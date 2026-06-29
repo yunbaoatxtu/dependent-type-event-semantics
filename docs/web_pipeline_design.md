@@ -166,7 +166,11 @@ The manifest and panel should also expose a `project_completion_status.v1`
 the system is a certified finite fragment, and its verified objectives,
 incomplete objectives, blockers, and next-stage rows should be mirrored through
 `data-completion-*` hooks. The verifier should reject any drift that removes
-the arbitrary-natural-language or deep-Coq-proof open objectives.
+the arbitrary-natural-language or deep-Coq-proof open objectives. After the
+named-obligation scaffold stage, `coq_named_obligation_scaffold` belongs on the
+verified side, while `semantic_preservation_obligations_unproved` remains a
+blocker and `prove_named_semantic_preservation_obligations` remains the next
+Coq-facing stage.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application
@@ -506,7 +510,8 @@ A successful response should include:
 - result-state lexicon audit records when resultatives are present;
 - the compact diagnostics summary;
 - the structured AST;
-- the generated Coq scaffold;
+- the generated Coq scaffold, including one
+  `semantic_preservation_obligation` row for each exported example;
 - the Coq/Rocq validation status;
 - a short conclusion.
 

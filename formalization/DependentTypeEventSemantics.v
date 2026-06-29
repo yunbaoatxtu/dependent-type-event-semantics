@@ -32,6 +32,7 @@ Parameter since_T : Entity -> PropT -> PropT.
 Parameter not_T : PropT -> PropT.
 Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.
 Parameter Cause : Entity -> TransitionT -> PropT.
+Parameter SemanticPreservation : forall A : Type, A -> Prop.
 Parameter break : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 Parameter eat : forall n : nat, ModifierSeq n -> Entity -> Food -> Prop.
@@ -42,7 +43,16 @@ Definition example_2 : Prop := (exists x_theme : Food, (eat 0 mods_nil John x_th
 Definition example_3 : PropT := (repeat 2 (knock 0 mods_nil John)).
 Definition example_4 : PropT := (Cause John (Transition vase integrity_scale intact broken)).
 
+Definition example_1_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_1.
+Definition example_2_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_2.
+Definition example_3_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_3.
+Definition example_4_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_4.
+
 Check example_1.
+Check example_1_semantic_preservation_obligation.
 Check example_2.
+Check example_2_semantic_preservation_obligation.
 Check example_3.
+Check example_3_semantic_preservation_obligation.
 Check example_4.
+Check example_4_semantic_preservation_obligation.
