@@ -1110,6 +1110,14 @@ and checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_atomic_sound`. This is the first
 concrete registered truth-condition instance for exported atoms, but it is
 still finite and registered-fragment-only. The next
+verified objective `coq_concrete_registered_example_truth_instance_package`
+packages those concrete registered truth-condition proofs into
+`ConcreteRegisteredExampleTruthInstances`, proves
+`concrete_registered_example_truth_instances_exists`, and checks projections
+such as `concrete_registered_example_i_truth_instance_atomic_sound` back to
+`AtomicClosureTruth` through `concrete_registered_truth_conditions`. This adds a
+separate drift guard for the concrete registered instance package before the
+pipeline falls back to the older fully registered package. The following
 verified objective `coq_registered_example_truth_instance_package` packages
 those per-example fully registered truth-condition proofs into a generated
 `RegisteredExampleTruthInstances` record, proves that the package exists, and

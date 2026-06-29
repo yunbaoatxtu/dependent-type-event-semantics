@@ -388,6 +388,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_concrete_registered_example_truth_instance_atomic_sound_count = len(
+        re.findall(
+            r"^theorem concrete_registered_example_\d+_truth_instance_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_example_truth_instance_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem concrete_registered_example_\d+_truth_instance_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -1015,6 +1029,38 @@ def main() -> None:
             in coq
             and "Check concrete_registered_truth_conditions." in coq
         ),
+        "lean concrete registered example truth instance package": (
+            "structure ConcreteRegisteredExampleTruthInstances : Type where"
+            in lean
+            and "example_4_concrete_truth_instance : "
+            "concrete_registered_truth_conditions."
+            "fully_registered_truth_denotes PropT example_4" in lean
+            and "def concrete_registered_example_truth_instances : "
+            "ConcreteRegisteredExampleTruthInstances := {" in lean
+            and "theorem concrete_registered_example_truth_instances_exists :"
+            in lean
+            and "theorem concrete_registered_example_4_truth_instance_atomic_sound :"
+            in lean
+            and "#check concrete_registered_example_4_truth_instance_atomic_sound"
+            in lean
+            and "#check concrete_registered_example_truth_instances" in lean
+        ),
+        "coq concrete registered example truth instance package": (
+            "Record ConcreteRegisteredExampleTruthInstances : Type := {" in coq
+            and "example_4_concrete_truth_instance :" in coq
+            and "fully_registered_truth_denotes concrete_registered_truth_conditions "
+            "PropT example_4" in coq
+            and "Definition concrete_registered_example_truth_instances : "
+            "ConcreteRegisteredExampleTruthInstances := {|" in coq
+            and "Theorem concrete_registered_example_truth_instances_exists :"
+            in coq
+            and "Theorem concrete_registered_example_4_truth_instance_atomic_sound :"
+            in coq
+            and "exact (example_4_concrete_truth_instance "
+            "concrete_registered_example_truth_instances)." in coq
+            and "Check concrete_registered_example_4_truth_instance_atomic_sound." in coq
+            and "Check concrete_registered_example_truth_instances." in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
@@ -1318,6 +1364,26 @@ def main() -> None:
             in coq
             and "apply concrete_registered_truth_conditions_denote_concrete_registered."
             in coq
+            and "apply concrete_registered_truth_conditions_imply_atomic_closure."
+            in coq
+        ),
+        "lean concrete registered example truth instance atomic proofs": (
+            lean_concrete_registered_example_truth_instance_atomic_sound_count
+            == lean_example_count
+            and "#check concrete_registered_example_4_truth_instance_atomic_sound"
+            in lean
+            and "exact concrete_registered_example_truth_instances."
+            "example_4_concrete_truth_instance" in lean
+            and "apply concrete_registered_truth_conditions_imply_atomic_closure"
+            in lean
+        ),
+        "coq concrete registered example truth instance atomic proofs": (
+            coq_concrete_registered_example_truth_instance_atomic_sound_count
+            == coq_example_count
+            and "Check concrete_registered_example_4_truth_instance_atomic_sound."
+            in coq
+            and "exact (example_4_concrete_truth_instance "
+            "concrete_registered_example_truth_instances)." in coq
             and "apply concrete_registered_truth_conditions_imply_atomic_closure."
             in coq
         ),

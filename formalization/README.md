@@ -165,6 +165,12 @@ checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound` for every exported
 example. The scaffold then gathers those checked example-level proofs into
+`ConcreteRegisteredExampleTruthInstances`, proves
+`concrete_registered_example_truth_instances_exists`, and checks per-example
+projections such as
+`concrete_registered_example_i_truth_instance_atomic_sound` back to
+`AtomicClosureTruth` through `concrete_registered_truth_conditions`. The
+scaffold also gathers the fully registered proof layer into
 `RegisteredExampleTruthInstances`, proves
 `registered_example_truth_instances_exists`, and checks per-example projections
 such as `registered_example_i_truth_instance_atomic_sound` back to

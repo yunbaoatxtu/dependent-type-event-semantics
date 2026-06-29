@@ -21049,6 +21049,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_example_truth_instance_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_registered_example_truth_instance_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",

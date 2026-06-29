@@ -7119,6 +7119,116 @@ def registered_example_truth_instance_lines(
     return lines
 
 
+def concrete_registered_example_truth_instance_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package the exported examples' concrete registered truth proofs."""
+
+    if target == "lean":
+        lines = ["structure ConcreteRegisteredExampleTruthInstances : Type where"]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                f"  example_{idx}_concrete_truth_instance : "
+                "concrete_registered_truth_conditions."
+                f"fully_registered_truth_denotes {annotation} example_{idx}"
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_registered_example_truth_instances : "
+                "ConcreteRegisteredExampleTruthInstances := {",
+            ]
+        )
+        for idx in range(1, len(results) + 1):
+            suffix = "," if idx < len(results) else ""
+            lines.append(
+                f"  example_{idx}_concrete_truth_instance := "
+                f"example_{idx}_concrete_registered_truth_condition_sound{suffix}"
+            )
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_registered_example_truth_instances_exists :",
+                "    Exists (fun I : ConcreteRegisteredExampleTruthInstances => "
+                "I = concrete_registered_example_truth_instances) := by",
+                "  exact Exists.intro concrete_registered_example_truth_instances rfl",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"concrete_registered_example_{idx}_truth_instance_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply concrete_registered_truth_conditions_imply_atomic_closure",
+                    "  exact concrete_registered_example_truth_instances."
+                    f"example_{idx}_concrete_truth_instance",
+                ]
+            )
+        return lines
+
+    lines = ["Record ConcreteRegisteredExampleTruthInstances : Type := {"]
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        suffix = ";" if idx < len(results) else ""
+        lines.extend(
+            [
+                f"  example_{idx}_concrete_truth_instance :",
+                "      fully_registered_truth_denotes "
+                "concrete_registered_truth_conditions "
+                f"{annotation} example_{idx}{suffix}",
+            ]
+        )
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_registered_example_truth_instances : "
+            "ConcreteRegisteredExampleTruthInstances := {|",
+        ]
+    )
+    for idx in range(1, len(results) + 1):
+        suffix = ";" if idx < len(results) else ""
+        lines.append(
+            f"  example_{idx}_concrete_truth_instance := "
+            f"example_{idx}_concrete_registered_truth_condition_sound{suffix}"
+        )
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_registered_example_truth_instances_exists :",
+            "  exists I : ConcreteRegisteredExampleTruthInstances,",
+            "    I = concrete_registered_example_truth_instances.",
+            "Proof.",
+            "  exists concrete_registered_example_truth_instances. reflexivity.",
+            "Qed.",
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"concrete_registered_example_{idx}_truth_instance_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
+                "  exact (example_"
+                f"{idx}_concrete_truth_instance "
+                "concrete_registered_example_truth_instances).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -7905,6 +8015,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"  exact example_{idx}_concrete_registered_truth_condition_sound"
             )
         lines.append("")
+        lines.extend(concrete_registered_example_truth_instance_lines(results, target))
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -7982,6 +8094,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
             lines.append(
                 "#check "
+                f"concrete_registered_example_{idx}_truth_instance_atomic_sound"
+            )
+            lines.append(
+                "#check "
                 f"example_{idx}_fully_registered_truth_condition_atomic_sound"
             )
             lines.append(
@@ -7996,6 +8112,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check concrete_registered_truth_basis_exists")
         lines.append("#check concrete_registered_truth_conditions")
         lines.append("#check concrete_registered_truth_condition_spec_exists")
+        lines.append("#check concrete_registered_example_truth_instances")
+        lines.append("#check concrete_registered_example_truth_instances_exists")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -8498,6 +8616,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append("Qed.")
     lines.append("")
+    lines.extend(concrete_registered_example_truth_instance_lines(results, target))
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -8563,6 +8683,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append(
             "Check "
+            f"concrete_registered_example_{idx}_truth_instance_atomic_sound."
+        )
+        lines.append(
+            "Check "
             f"example_{idx}_fully_registered_truth_condition_atomic_sound."
         )
         lines.append(
@@ -8577,6 +8701,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_truth_basis_exists.")
     lines.append("Check concrete_registered_truth_conditions.")
     lines.append("Check concrete_registered_truth_condition_spec_exists.")
+    lines.append("Check concrete_registered_example_truth_instances.")
+    lines.append("Check concrete_registered_example_truth_instances_exists.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"
