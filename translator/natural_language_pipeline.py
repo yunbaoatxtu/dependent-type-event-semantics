@@ -20979,6 +20979,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_model_interpretable_truth_kernel_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21021,10 +21026,15 @@ def project_completion_status_payload(
                     "that separates lexical, quantificational, repetition, "
                     "temporal, polarity, transition, and causal truth clauses "
                     "and proves that any such kernel induces a "
-                    "TruthConditionSpec. The remaining deep proof work is to "
-                    "supply independently justified inhabitants of that kernel "
-                    "for concrete lexical, temporal, causal, quantificational, "
-                    "and modifier truth-condition models."
+                    "TruthConditionSpec. The interface is now inhabited by a "
+                    "model-interpretable truth kernel whose denotation "
+                    "predicate is ModelInterpretable, with per-example "
+                    "kernel-soundness theorems. This proves the kernel wiring "
+                    "and structural instance path, but the remaining deep "
+                    "proof work is still to supply independently justified "
+                    "inhabitants of that kernel for concrete lexical, "
+                    "temporal, causal, quantificational, and modifier "
+                    "truth-condition models."
                 ),
             },
             {

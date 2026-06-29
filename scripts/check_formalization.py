@@ -192,6 +192,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_model_interpretable_truth_kernel_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_model_interpretable_truth_kernel_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_model_interpretable_truth_kernel_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_model_interpretable_truth_kernel_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -369,6 +383,30 @@ def main() -> None:
             and "Theorem concrete_kernel_induces_truth_condition_soundness :"
             in coq
         ),
+        "lean model-interpretable truth kernel instance": (
+            "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
+            in lean
+            and "def model_interpretable_truth_kernel : ConcreteTruthConditionKernel := {"
+            in lean
+            and "kernel_denotes := model_interpretable_truth_kernel_denotes" in lean
+            and "def model_interpretable_truth_conditions_from_kernel : TruthConditionSpec :="
+            in lean
+            and "theorem model_interpretable_truth_kernel_exists :" in lean
+            and "theorem model_interpretable_truth_kernel_denotes_model_interpretable :"
+            in lean
+        ),
+        "coq model-interpretable truth kernel instance": (
+            "Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :="
+            in coq
+            and "Definition model_interpretable_truth_kernel : ConcreteTruthConditionKernel := {|"
+            in coq
+            and "kernel_denotes := model_interpretable_truth_kernel_denotes" in coq
+            and "Definition model_interpretable_truth_conditions_from_kernel : TruthConditionSpec :="
+            in coq
+            and "Theorem model_interpretable_truth_kernel_exists :" in coq
+            and "Theorem model_interpretable_truth_kernel_denotes_model_interpretable :"
+            in coq
+        ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
             and "structure SemanticPreservationObligation : Type where" in lean
@@ -486,6 +524,18 @@ def main() -> None:
             and "Check example_4_concrete_kernel_truth_condition_sound." in coq
             and "apply concrete_kernel_induces_truth_condition_soundness." in coq
         ),
+        "lean model-interpretable truth kernel soundness proofs": (
+            lean_model_interpretable_truth_kernel_sound_count == lean_example_count
+            and "#check example_4_model_interpretable_truth_kernel_sound" in lean
+            and "apply model_interpretable_truth_kernel_denotes_model_interpretable"
+            in lean
+        ),
+        "coq model-interpretable truth kernel soundness proofs": (
+            coq_model_interpretable_truth_kernel_sound_count == coq_example_count
+            and "Check example_4_model_interpretable_truth_kernel_sound." in coq
+            and "apply model_interpretable_truth_kernel_denotes_model_interpretable."
+            in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -498,6 +548,7 @@ def main() -> None:
             and "#check example_4_tautological_truth_condition_sound" in lean
             and "#check example_4_structural_truth_condition_sound" in lean
             and "#check example_4_concrete_kernel_truth_condition_sound" in lean
+            and "#check example_4_model_interpretable_truth_kernel_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -511,6 +562,7 @@ def main() -> None:
             and "Check example_4_tautological_truth_condition_sound." in coq
             and "Check example_4_structural_truth_condition_sound." in coq
             and "Check example_4_concrete_kernel_truth_condition_sound." in coq
+            and "Check example_4_model_interpretable_truth_kernel_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

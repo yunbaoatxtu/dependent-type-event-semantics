@@ -996,12 +996,22 @@ clauses; a `truth_conditions_from_concrete_kernel` bridge back to
 `example_i_concrete_kernel_truth_condition_sound` checks for arbitrary kernels.
 This makes the future concrete model obligations explicit without pretending
 that the kernel has already been inhabited by independently justified semantic
-clauses. The open blocker remains
+clauses. The verified objective
+`coq_model_interpretable_truth_kernel_instance` now inhabits this interface with
+`model_interpretable_truth_kernel`, whose denotation predicate is
+`ModelInterpretable`, exports
+`model_interpretable_truth_conditions_from_kernel`, proves kernel existence and
+`model_interpretable_truth_kernel_denotes_model_interpretable`, and checks
+per-example `example_i_model_interpretable_truth_kernel_sound` theorems. This
+confirms the structural instance path through the explicit kernel interface,
+but it is still not an independently specified lexical or temporal model. The
+open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
-structural `ModelInterpretable` instance, or the concrete-kernel bridge.
+structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
+model-interpretable kernel instance.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

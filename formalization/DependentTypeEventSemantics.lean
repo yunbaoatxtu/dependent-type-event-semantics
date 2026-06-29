@@ -245,6 +245,45 @@ theorem concrete_kernel_induces_truth_condition_soundness :
   apply truth_conditions_induce_denotational_soundness
   exact h
 
+def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=
+  ModelInterpretable
+
+def model_interpretable_truth_kernel : ConcreteTruthConditionKernel := {
+  kernel_denotes := model_interpretable_truth_kernel_denotes,
+  lexical_truth_break_application := fun n mods arg1 arg2 => ModelInterpretable.model_break_application n mods arg1 arg2,
+  lexical_truth_butter_application := fun n mods arg1 arg2 => ModelInterpretable.model_butter_application n mods arg1 arg2,
+  lexical_truth_eat_application := fun n mods arg1 arg2 => ModelInterpretable.model_eat_application n mods arg1 arg2,
+  lexical_truth_knock_application := fun n mods arg1 => ModelInterpretable.model_knock_application n mods arg1,
+  quantifier_truth_sigma_Entity := fun P h => ModelInterpretable.model_sigma_Entity P h,
+  quantifier_truth_sigma_Food := fun P h => ModelInterpretable.model_sigma_Food P h,
+  quantifier_truth_sigma_State := fun P h => ModelInterpretable.model_sigma_State P h,
+  quantifier_truth_sigma_StateScale := fun P h => ModelInterpretable.model_sigma_StateScale P h,
+  quantifier_truth_sigma_TransitionT := fun P h => ModelInterpretable.model_sigma_TransitionT P h,
+  repetition_truth := fun n body h => ModelInterpretable.model_repeat n body h,
+  temporal_truth_at_T := fun marker body h => ModelInterpretable.model_at_T marker body h,
+  temporal_truth_during_T := fun marker body h => ModelInterpretable.model_during_T marker body h,
+  temporal_truth_before_T := fun marker body h => ModelInterpretable.model_before_T marker body h,
+  temporal_truth_after_T := fun marker body h => ModelInterpretable.model_after_T marker body h,
+  temporal_truth_until_T := fun marker body h => ModelInterpretable.model_until_T marker body h,
+  temporal_truth_since_T := fun marker body h => ModelInterpretable.model_since_T marker body h,
+  polarity_truth_not_T := fun body h => ModelInterpretable.model_not_T body h,
+  transition_truth := fun theme scale source target => ModelInterpretable.model_transition theme scale source target,
+  cause_truth := fun causer effect h => ModelInterpretable.model_cause causer effect h
+}
+
+def model_interpretable_truth_conditions_from_kernel : TruthConditionSpec :=
+  truth_conditions_from_concrete_kernel model_interpretable_truth_kernel
+
+theorem model_interpretable_truth_kernel_exists :
+    Exists (fun K : ConcreteTruthConditionKernel => K = model_interpretable_truth_kernel) := by
+  exact Exists.intro model_interpretable_truth_kernel rfl
+
+theorem model_interpretable_truth_kernel_denotes_model_interpretable :
+    (A : Type) -> (term : A) -> ModelInterpretable A term -> (truth_conditions_from_concrete_kernel model_interpretable_truth_kernel).truth_denotes A term := by
+  intro A term h
+  apply concrete_kernel_induces_truth_condition_soundness
+  exact h
+
 def tautological_truth_denotes : (A : Type) -> A -> Prop :=
   fun _ _ => True
 
@@ -490,6 +529,19 @@ theorem example_4_concrete_kernel_truth_condition_sound : (K : ConcreteTruthCond
   apply concrete_kernel_induces_truth_condition_soundness
   exact example_4_model_interpretable
 
+theorem example_1_model_interpretable_truth_kernel_sound : (truth_conditions_from_concrete_kernel model_interpretable_truth_kernel).truth_denotes PropT example_1 := by
+  apply model_interpretable_truth_kernel_denotes_model_interpretable
+  exact example_1_model_interpretable
+theorem example_2_model_interpretable_truth_kernel_sound : (truth_conditions_from_concrete_kernel model_interpretable_truth_kernel).truth_denotes Prop example_2 := by
+  apply model_interpretable_truth_kernel_denotes_model_interpretable
+  exact example_2_model_interpretable
+theorem example_3_model_interpretable_truth_kernel_sound : (truth_conditions_from_concrete_kernel model_interpretable_truth_kernel).truth_denotes PropT example_3 := by
+  apply model_interpretable_truth_kernel_denotes_model_interpretable
+  exact example_3_model_interpretable
+theorem example_4_model_interpretable_truth_kernel_sound : (truth_conditions_from_concrete_kernel model_interpretable_truth_kernel).truth_denotes PropT example_4 := by
+  apply model_interpretable_truth_kernel_denotes_model_interpretable
+  exact example_4_model_interpretable
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -502,6 +554,7 @@ theorem example_4_concrete_kernel_truth_condition_sound : (K : ConcreteTruthCond
 #check example_1_tautological_truth_condition_sound
 #check example_1_structural_truth_condition_sound
 #check example_1_concrete_kernel_truth_condition_sound
+#check example_1_model_interpretable_truth_kernel_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -514,6 +567,7 @@ theorem example_4_concrete_kernel_truth_condition_sound : (K : ConcreteTruthCond
 #check example_2_tautological_truth_condition_sound
 #check example_2_structural_truth_condition_sound
 #check example_2_concrete_kernel_truth_condition_sound
+#check example_2_model_interpretable_truth_kernel_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -526,6 +580,7 @@ theorem example_4_concrete_kernel_truth_condition_sound : (K : ConcreteTruthCond
 #check example_3_tautological_truth_condition_sound
 #check example_3_structural_truth_condition_sound
 #check example_3_concrete_kernel_truth_condition_sound
+#check example_3_model_interpretable_truth_kernel_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -538,3 +593,4 @@ theorem example_4_concrete_kernel_truth_condition_sound : (K : ConcreteTruthCond
 #check example_4_tautological_truth_condition_sound
 #check example_4_structural_truth_condition_sound
 #check example_4_concrete_kernel_truth_condition_sound
+#check example_4_model_interpretable_truth_kernel_sound

@@ -205,7 +205,14 @@ quantificational, or modifier truth clauses. The next verified bridge,
 repetition, temporal, polarity, transition, and causal truth clauses, builds
 `truth_conditions_from_concrete_kernel`, and checks per-example
 `example_i_concrete_kernel_truth_condition_sound` theorems for arbitrary
-kernels. The remaining blocker is
+kernels. The next verified objective,
+`coq_model_interpretable_truth_kernel_instance`, exports
+`model_interpretable_truth_kernel`, derives
+`model_interpretable_truth_conditions_from_kernel`, proves the kernel exists,
+and checks per-example `example_i_model_interpretable_truth_kernel_sound`
+theorems. This verifies the structural instance path through the explicit
+kernel interface, but still does not supply an independently specified concrete
+truth model. The remaining blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition
 interface must be filled with independently specified lexical, temporal,

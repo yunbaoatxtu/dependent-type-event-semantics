@@ -85,10 +85,16 @@ transition, and causal clauses that an independently justified concrete model
 must provide. `truth_conditions_from_concrete_kernel` turns any such kernel
 into a `TruthConditionSpec`, and every exported example receives a checked
 `example_i_concrete_kernel_truth_condition_sound` theorem parameterized by an
-arbitrary kernel. Thus the current semantic preservation layer, the
-truth-condition-spec bridge, the inhabitation sanity instance, the structural
-truth-condition instance, and the concrete-kernel bridge are proof-checked,
-while concrete truth-condition instantiation remains open.
+arbitrary kernel. The generated file now also inhabits that interface with
+`model_interpretable_truth_kernel`, whose denotation predicate is
+`ModelInterpretable`, exports
+`model_interpretable_truth_conditions_from_kernel`, proves kernel existence, and
+checks `example_i_model_interpretable_truth_kernel_sound` for every exported
+example. Thus the current semantic preservation layer, the truth-condition-spec
+bridge, the inhabitation sanity instance, the structural truth-condition
+instance, the concrete-kernel bridge, and the model-interpretable kernel
+instance are proof-checked, while independently specified concrete
+truth-condition instantiation remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
