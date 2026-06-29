@@ -125,6 +125,14 @@ additionally name the induced `TruthConditionSpec` as
 `atomic_closure_truth_conditions`,
 prove `atomic_closure_truth_conditions_exists`, and check
 `example_i_atomic_closure_truth_condition_sound` for every exported example.
+The latest layer registers only the concrete state transitions that occur in
+the exported examples. It declares `RegisteredStateTransitionTruth`, proves
+`registered_state_transition_atomic_base_truth`, defines
+`TransitionRefinedAtomicClosureTruth`, and checks both
+`example_i_transition_refined_atomic_closure_truth` and
+`example_i_transition_refined_atomic_closure_sound`. This makes the transition
+atom stricter than the generic `AtomicBaseTruth.atomic_base_truth_transition`
+constructor while leaving full lexical truth-condition instantiation open.
 This still does not claim that the lexical and transition constructors have
 been derived from a full semantic model.
 

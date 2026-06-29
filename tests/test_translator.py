@@ -1550,6 +1550,30 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "inductive RegisteredStateTransitionTruth : Entity -> StateScale -> State -> State -> Prop where",
+            lean_module,
+        )
+        self.assertIn(
+            "registered_transition_vase_integrity_scale_intact_to_broken",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem registered_state_transition_atomic_base_truth :",
+            lean_module,
+        )
+        self.assertIn(
+            "inductive TransitionRefinedAtomicClosureTruth : (A : Type) -> A -> Prop where",
+            lean_module,
+        )
+        self.assertIn(
+            "| transition_refined_truth_transition : (theme : Entity)",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem transition_refined_atomic_closure_truth_implies_atomic_closure_truth :",
+            lean_module,
+        )
+        self.assertIn(
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=",
             lean_module,
         )
@@ -1665,6 +1689,14 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_atomic_closure_truth_kernel_sound :",
             lean_module,
         )
+        self.assertIn(
+            "theorem example_2_transition_refined_atomic_closure_truth :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_transition_refined_atomic_closure_sound :",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply semantic_preservation_syntax_directed_truth", lean_module)
@@ -1699,6 +1731,10 @@ class TranslatorTests(unittest.TestCase):
             "apply atomic_closure_truth_kernel_denotes_atomic_closure_truth",
             lean_module,
         )
+        self.assertIn(
+            "apply transition_refined_atomic_closure_truth_implies_atomic_closure_truth",
+            lean_module,
+        )
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
@@ -1717,6 +1753,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check example_2_primitive_truth_kernel_sound", lean_module)
         self.assertIn("#check example_2_atomic_closure_truth", lean_module)
         self.assertIn("#check example_2_atomic_closure_truth_kernel_sound", lean_module)
+        self.assertIn(
+            "#check example_2_transition_refined_atomic_closure_truth",
+            lean_module,
+        )
+        self.assertIn(
+            "#check example_2_transition_refined_atomic_closure_sound",
+            lean_module,
+        )
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -2027,6 +2071,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Inductive RegisteredStateTransitionTruth : Entity -> StateScale -> State -> State -> Prop :=",
+            coq_module,
+        )
+        self.assertIn(
+            "registered_transition_vase_integrity_scale_intact_to_broken",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_state_transition_atomic_base_truth :",
+            coq_module,
+        )
+        self.assertIn(
+            "Inductive TransitionRefinedAtomicClosureTruth : forall A : Type, A -> Prop :=",
+            coq_module,
+        )
+        self.assertIn(
+            "transition_refined_truth_transition : forall theme : Entity",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem transition_refined_atomic_closure_truth_implies_atomic_closure_truth :",
+            coq_module,
+        )
+        self.assertIn(
             "Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=",
             coq_module,
         )
@@ -2154,6 +2222,14 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_2_transition_refined_atomic_closure_truth : TransitionRefinedAtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_transition_refined_atomic_closure_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -2227,6 +2303,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_atomic_closure_truth.", coq_module)
         self.assertIn("Check example_2_atomic_closure_truth_kernel_sound.", coq_module)
         self.assertIn("Check example_2_atomic_closure_truth_condition_sound.", coq_module)
+        self.assertIn(
+            "Check example_2_transition_refined_atomic_closure_truth.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_2_transition_refined_atomic_closure_sound.",
+            coq_module,
+        )
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -14544,6 +14628,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_atomic_valuation_spec_instance",
                 "coq_atomic_base_truth_valuation_instance",
                 "coq_atomic_closure_truth_condition_spec_instance",
+                "coq_transition_refined_atomic_closure_instance",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -23631,19 +23716,27 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`TransitionAtomTruthAssumptions`", readme)
         self.assertIn("`LexicalTransitionTruthAssumptions`", readme)
         self.assertIn("`LexicalTransitionTruthModel`", readme)
+        self.assertIn("`RegisteredStateTransitionTruth`", readme)
+        self.assertIn("`TransitionRefinedAtomicClosureTruth`", readme)
+        self.assertIn("`coq_transition_refined_atomic_closure_instance`", readme)
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`LexicalTransitionTruthAssumptions`", formalization_readme)
         self.assertIn("`LexicalTransitionTruthModel`", formalization_readme)
+        self.assertIn("`RegisteredStateTransitionTruth`", formalization_readme)
+        self.assertIn("`TransitionRefinedAtomicClosureTruth`", formalization_readme)
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
         self.assertIn("LexicalTransitionTruthAssumptions", manuscript)
         self.assertIn("LexicalTransitionTruthModel", manuscript)
+        self.assertIn("RegisteredStateTransitionTruth", manuscript)
+        self.assertIn("TransitionRefinedAtomicClosureTruth", manuscript)
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
         self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
         self.assertIn("coq_atomic_valuation_spec_instance", manuscript)
+        self.assertIn("coq_transition_refined_atomic_closure_instance", manuscript)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)

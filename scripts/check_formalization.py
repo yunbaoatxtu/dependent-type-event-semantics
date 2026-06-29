@@ -646,6 +646,46 @@ def main() -> None:
             and "Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :"
             in coq
         ),
+        "lean transition-refined atomic closure layer": (
+            "inductive RegisteredStateTransitionTruth : Entity -> StateScale -> State -> State -> Prop where"
+            in lean
+            and "registered_transition_vase_integrity_scale_intact_to_broken"
+            in lean
+            and "theorem registered_state_transition_atomic_base_truth :"
+            in lean
+            and "inductive TransitionRefinedAtomicClosureTruth : (A : Type) -> A -> Prop where"
+            in lean
+            and "| transition_refined_truth_transition : (theme : Entity)"
+            in lean
+            and "theorem transition_refined_atomic_closure_truth_implies_atomic_closure_truth :"
+            in lean
+            and "theorem example_4_transition_refined_atomic_closure_truth :"
+            in lean
+            and "theorem example_4_transition_refined_atomic_closure_sound :"
+            in lean
+            and "#check example_4_transition_refined_atomic_closure_truth"
+            in lean
+        ),
+        "coq transition-refined atomic closure layer": (
+            "Inductive RegisteredStateTransitionTruth : Entity -> StateScale -> State -> State -> Prop :="
+            in coq
+            and "registered_transition_vase_integrity_scale_intact_to_broken"
+            in coq
+            and "Theorem registered_state_transition_atomic_base_truth :"
+            in coq
+            and "Inductive TransitionRefinedAtomicClosureTruth : forall A : Type, A -> Prop :="
+            in coq
+            and "transition_refined_truth_transition : forall theme : Entity"
+            in coq
+            and "Theorem transition_refined_atomic_closure_truth_implies_atomic_closure_truth :"
+            in coq
+            and "Theorem example_4_transition_refined_atomic_closure_truth :"
+            in coq
+            and "Theorem example_4_transition_refined_atomic_closure_sound :"
+            in coq
+            and "Check example_4_transition_refined_atomic_closure_truth."
+            in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean

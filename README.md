@@ -1058,7 +1058,17 @@ fact record as an opaque parameter. The verified objective
 a named `TruthConditionSpec`, `atomic_closure_truth_conditions`, proves that
 the spec exists, and checks per-example
 `example_i_atomic_closure_truth_condition_sound` theorems directly against
-that spec rather than only against the generic kernel conversion. The open
+that spec rather than only against the generic kernel conversion. The follow-up
+verified objective `coq_transition_refined_atomic_closure_instance` now narrows
+the transition atom one step further. The generated files collect the concrete
+`Transition(theme, scale, source, target)` terms that occur in exported examples,
+declare them as constructors of `RegisteredStateTransitionTruth`, prove that a
+registered transition implies `AtomicBaseTruth`, define
+`TransitionRefinedAtomicClosureTruth`, and check per-example
+`example_i_transition_refined_atomic_closure_truth` and
+`example_i_transition_refined_atomic_closure_sound` theorems. Lexical predicate
+atoms remain open at the atomic layer, so this is a stricter transition boundary
+rather than a completed lexical truth-condition model. The open
 blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

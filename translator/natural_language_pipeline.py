@@ -21024,6 +21024,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_transition_refined_atomic_closure_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21111,7 +21116,14 @@ def project_completion_status_payload(
                     "TruthConditionSpec instance, proves that the instance "
                     "exists, and checks per-example soundness directly "
                     "against that spec rather than only through the generic "
-                    "kernel conversion. "
+                    "kernel conversion. The transition atom is now further "
+                    "refined by a generated RegisteredStateTransitionTruth "
+                    "relation whose constructors are limited to Transition "
+                    "terms observed in the exported examples; the generated "
+                    "Coq file proves that registered transitions imply "
+                    "AtomicBaseTruth, defines TransitionRefinedAtomicClosureTruth, "
+                    "and checks per-example transition-refined proofs before "
+                    "bridging them back to AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
