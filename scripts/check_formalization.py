@@ -1097,6 +1097,19 @@ def main() -> None:
             in lean
             and "theorem concrete_registered_truth_conditions_imply_atomic_closure :"
             in lean
+            and "structure ConcreteRegisteredTruthConditionModel : Type where"
+            in lean
+            and "def concrete_registered_truth_condition_model : "
+            "ConcreteRegisteredTruthConditionModel := {" in lean
+            and "theorem concrete_registered_truth_condition_model_exists :"
+            in lean
+            and "theorem concrete_registered_truth_condition_model_denote_spec :"
+            in lean
+            and "theorem concrete_registered_truth_condition_model_imply_atomic_closure :"
+            in lean
+            and "theorem "
+            "concrete_registered_truth_condition_model_spec_imply_atomic_closure :"
+            in lean
             and "structure ConcreteRegisteredTruthKernel : Type where" in lean
             and "def fully_registered_truth_conditions_from_concrete_registered_kernel"
             in lean
@@ -1134,8 +1147,38 @@ def main() -> None:
             and "#check example_4_concrete_registered_truth_condition_sound"
             in lean
             and "#check concrete_registered_truth_conditions" in lean
+            and "#check concrete_registered_truth_condition_model" in lean
+            and "#check concrete_registered_truth_condition_model_denote_spec"
+            in lean
             and "#check concrete_registered_truth_kernel" in lean
             and "#check concrete_registered_truth_conditions_from_kernel" in lean
+        ),
+        "lean concrete registered truth condition model bridge": (
+            "structure ConcreteRegisteredTruthConditionModel : Type where"
+            in lean
+            and "concrete_registered_model_denotes : (A : Type) -> A -> Prop"
+            in lean
+            and "concrete_registered_model_spec : FullyRegisteredTruthConditionSpec"
+            in lean
+            and "concrete_registered_model_denote_spec : " in lean
+            and "concrete_registered_model_sound : " in lean
+            and "def concrete_registered_truth_condition_model : "
+            "ConcreteRegisteredTruthConditionModel := {" in lean
+            and "theorem concrete_registered_truth_condition_model_exists :"
+            in lean
+            and "theorem concrete_registered_truth_condition_model_denote_spec :"
+            in lean
+            and "theorem concrete_registered_truth_condition_model_imply_atomic_closure :"
+            in lean
+            and "theorem "
+            "concrete_registered_truth_condition_model_spec_imply_atomic_closure :"
+            in lean
+            and "#check concrete_registered_truth_condition_model" in lean
+            and "#check concrete_registered_truth_condition_model_denote_spec"
+            in lean
+            and "#check "
+            "concrete_registered_truth_condition_model_spec_imply_atomic_closure"
+            in lean
         ),
         "coq concrete registered truth condition instance": (
             "Inductive ConcreteRegisteredAtomicTruth : forall A : Type, A -> Prop :="
@@ -1160,6 +1203,19 @@ def main() -> None:
             and "Theorem concrete_registered_truth_conditions_denote_concrete_registered :"
             in coq
             and "Theorem concrete_registered_truth_conditions_imply_atomic_closure :"
+            in coq
+            and "Record ConcreteRegisteredTruthConditionModel : Type := {"
+            in coq
+            and "Definition concrete_registered_truth_condition_model :"
+            in coq
+            and "ConcreteRegisteredTruthConditionModel := {|" in coq
+            and "Theorem concrete_registered_truth_condition_model_exists :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_model_denote_spec :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_model_imply_atomic_closure :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_model_spec_imply_atomic_closure :"
             in coq
             and "Record ConcreteRegisteredTruthKernel : Type := {" in coq
             and "Definition fully_registered_truth_conditions_from_concrete_registered_kernel"
@@ -1198,8 +1254,36 @@ def main() -> None:
             and "Check example_4_concrete_registered_truth_condition_sound."
             in coq
             and "Check concrete_registered_truth_conditions." in coq
+            and "Check concrete_registered_truth_condition_model." in coq
+            and "Check concrete_registered_truth_condition_model_denote_spec."
+            in coq
             and "Check concrete_registered_truth_kernel." in coq
             and "Check concrete_registered_truth_conditions_from_kernel." in coq
+        ),
+        "coq concrete registered truth condition model bridge": (
+            "Record ConcreteRegisteredTruthConditionModel : Type := {" in coq
+            and "concrete_registered_model_denotes : forall A : Type, A -> Prop;"
+            in coq
+            and "concrete_registered_model_spec : FullyRegisteredTruthConditionSpec;"
+            in coq
+            and "concrete_registered_model_denote_spec :" in coq
+            and "concrete_registered_model_sound :" in coq
+            and "Definition concrete_registered_truth_condition_model :"
+            in coq
+            and "ConcreteRegisteredTruthConditionModel := {|" in coq
+            and "Theorem concrete_registered_truth_condition_model_exists :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_model_denote_spec :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_model_imply_atomic_closure :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_model_spec_imply_atomic_closure :"
+            in coq
+            and "Check concrete_registered_truth_condition_model." in coq
+            and "Check concrete_registered_truth_condition_model_denote_spec."
+            in coq
+            and "Check concrete_registered_truth_condition_model_spec_imply_atomic_closure."
+            in coq
         ),
         "lean concrete registered example truth instance package": (
             "structure ConcreteRegisteredExampleTruthInstances : Type where"

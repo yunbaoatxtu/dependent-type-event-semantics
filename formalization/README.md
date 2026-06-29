@@ -167,7 +167,10 @@ that basis through `ConcreteRegisteredAtomicModel`, proves
 checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound` for every exported
-example. The scaffold then factors the same finite closure through
+example. The scaffold also packages the same finite truth-condition route as
+`ConcreteRegisteredTruthConditionModel`, proving that its model denotation feeds
+the generated `FullyRegisteredTruthConditionSpec` and that both routes imply
+`AtomicClosureTruth`. The scaffold then factors the same finite closure through
 `ConcreteRegisteredTruthKernel`, whose lexical and transition clauses require
 `RegisteredLexicalApplicationTruth` and `RegisteredStateTransitionTruth`
 evidence rather than arbitrary unregistered atom facts. It derives

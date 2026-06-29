@@ -1842,6 +1842,72 @@ Proof.
   exact H.
 Qed.
 
+Record ConcreteRegisteredTruthConditionModel : Type := {
+  concrete_registered_model_denotes : forall A : Type, A -> Prop;
+  concrete_registered_model_spec : FullyRegisteredTruthConditionSpec;
+  concrete_registered_model_denote_spec :
+      forall A : Type, forall term : A,
+      concrete_registered_model_denotes A term ->
+      fully_registered_truth_denotes
+        concrete_registered_model_spec A term;
+  concrete_registered_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_model_denotes A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition concrete_registered_truth_condition_model :
+  ConcreteRegisteredTruthConditionModel := {|
+  concrete_registered_model_denotes := ConcreteRegisteredTruth;
+  concrete_registered_model_spec := concrete_registered_truth_conditions;
+  concrete_registered_model_denote_spec := fun A term h => h;
+  concrete_registered_model_sound :=
+    concrete_registered_truth_implies_atomic_closure
+|}.
+
+Theorem concrete_registered_truth_condition_model_exists :
+  exists M : ConcreteRegisteredTruthConditionModel,
+    M = concrete_registered_truth_condition_model.
+Proof.
+  exists concrete_registered_truth_condition_model. reflexivity.
+Qed.
+
+Theorem concrete_registered_truth_condition_model_denote_spec :
+  forall A : Type, forall term : A,
+    concrete_registered_model_denotes
+      concrete_registered_truth_condition_model A term ->
+    fully_registered_truth_denotes
+      (concrete_registered_model_spec
+        concrete_registered_truth_condition_model) A term.
+Proof.
+  intros A term H.
+  exact (concrete_registered_model_denote_spec
+    concrete_registered_truth_condition_model A term H).
+Qed.
+
+Theorem concrete_registered_truth_condition_model_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    concrete_registered_model_denotes
+      concrete_registered_truth_condition_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  exact (concrete_registered_model_sound
+    concrete_registered_truth_condition_model A term H).
+Qed.
+
+Theorem concrete_registered_truth_condition_model_spec_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (concrete_registered_model_spec
+        concrete_registered_truth_condition_model) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact H.
+Qed.
+
 Record ConcreteRegisteredTruthKernel : Type := {
   concrete_registered_kernel_denotes : forall A : Type, A -> Prop;
   concrete_registered_kernel_lexical_application :
@@ -3223,6 +3289,11 @@ Check concrete_registered_atomic_model_denotes_atomic_base_truth.
 Check concrete_registered_truth_basis_denotes_atomic_base_truth.
 Check concrete_registered_truth_conditions.
 Check concrete_registered_truth_condition_spec_exists.
+Check concrete_registered_truth_condition_model.
+Check concrete_registered_truth_condition_model_exists.
+Check concrete_registered_truth_condition_model_denote_spec.
+Check concrete_registered_truth_condition_model_imply_atomic_closure.
+Check concrete_registered_truth_condition_model_spec_imply_atomic_closure.
 Check concrete_registered_truth_kernel.
 Check concrete_registered_truth_kernel_exists.
 Check concrete_registered_truth_conditions_from_kernel.

@@ -1086,6 +1086,39 @@ theorem concrete_registered_truth_conditions_imply_atomic_closure :
   apply concrete_registered_truth_implies_atomic_closure
   exact h
 
+structure ConcreteRegisteredTruthConditionModel : Type where
+  concrete_registered_model_denotes : (A : Type) -> A -> Prop
+  concrete_registered_model_spec : FullyRegisteredTruthConditionSpec
+  concrete_registered_model_denote_spec : (A : Type) -> (term : A) -> concrete_registered_model_denotes A term -> concrete_registered_model_spec.fully_registered_truth_denotes A term
+  concrete_registered_model_sound : (A : Type) -> (term : A) -> concrete_registered_model_denotes A term -> AtomicClosureTruth A term
+
+def concrete_registered_truth_condition_model : ConcreteRegisteredTruthConditionModel := {
+  concrete_registered_model_denotes := ConcreteRegisteredTruth,
+  concrete_registered_model_spec := concrete_registered_truth_conditions,
+  concrete_registered_model_denote_spec := fun A term h => h,
+  concrete_registered_model_sound := concrete_registered_truth_implies_atomic_closure,
+}
+
+theorem concrete_registered_truth_condition_model_exists :
+    Exists (fun M : ConcreteRegisteredTruthConditionModel => M = concrete_registered_truth_condition_model) := by
+  exact Exists.intro concrete_registered_truth_condition_model rfl
+
+theorem concrete_registered_truth_condition_model_denote_spec :
+    (A : Type) -> (term : A) -> concrete_registered_truth_condition_model.concrete_registered_model_denotes A term -> concrete_registered_truth_condition_model.concrete_registered_model_spec.fully_registered_truth_denotes A term := by
+  intro A term h
+  exact concrete_registered_truth_condition_model.concrete_registered_model_denote_spec A term h
+
+theorem concrete_registered_truth_condition_model_imply_atomic_closure :
+    (A : Type) -> (term : A) -> concrete_registered_truth_condition_model.concrete_registered_model_denotes A term -> AtomicClosureTruth A term := by
+  intro A term h
+  exact concrete_registered_truth_condition_model.concrete_registered_model_sound A term h
+
+theorem concrete_registered_truth_condition_model_spec_imply_atomic_closure :
+    (A : Type) -> (term : A) -> concrete_registered_truth_condition_model.concrete_registered_model_spec.fully_registered_truth_denotes A term -> AtomicClosureTruth A term := by
+  intro A term h
+  apply concrete_registered_truth_conditions_imply_atomic_closure
+  exact h
+
 structure ConcreteRegisteredTruthKernel : Type where
   concrete_registered_kernel_denotes : (A : Type) -> A -> Prop
   concrete_registered_kernel_lexical_application : (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term -> concrete_registered_kernel_denotes A term
@@ -2084,6 +2117,11 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_basis_denotes_atomic_base_truth
 #check concrete_registered_truth_conditions
 #check concrete_registered_truth_condition_spec_exists
+#check concrete_registered_truth_condition_model
+#check concrete_registered_truth_condition_model_exists
+#check concrete_registered_truth_condition_model_denote_spec
+#check concrete_registered_truth_condition_model_imply_atomic_closure
+#check concrete_registered_truth_condition_model_spec_imply_atomic_closure
 #check concrete_registered_truth_kernel
 #check concrete_registered_truth_kernel_exists
 #check concrete_registered_truth_conditions_from_kernel

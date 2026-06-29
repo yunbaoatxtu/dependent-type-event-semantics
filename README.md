@@ -1106,6 +1106,15 @@ registered atom basis as `ConcreteRegisteredAtomicModel`, proves
 `concrete_registered_truth_basis_denotes_atomic_base_truth`. This adds a
 reusable registered-atom bridge back to `AtomicBaseTruth` before the closure is
 lifted into a full truth-condition spec. The follow-up verified objective
+`coq_concrete_registered_truth_condition_model_bridge` packages
+`ConcreteRegisteredTruth` together with
+`concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec` as
+`ConcreteRegisteredTruthConditionModel`. It proves that the model denotation
+feeds the generated spec denotation and that both the model route and the
+spec-denotation route imply `AtomicClosureTruth`. This gives the finite
+registered truth-condition instance a named model boundary while still leaving
+independently justified general truth conditions open. The follow-up verified
+objective
 `coq_concrete_registered_truth_condition_instance` separates the finite
 registered atom basis into `ConcreteRegisteredAtomicTruth` and
 `ConcreteRegisteredTruthBasis`, closes it as `ConcreteRegisteredTruth` under
@@ -1160,7 +1169,8 @@ conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
-concrete-registered-atomic-model, concrete-registered-truth-condition,
+concrete-registered-atomic-model, concrete-registered-truth-condition-model,
+concrete-registered-truth-condition,
 concrete-registered-truth-kernel, or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.

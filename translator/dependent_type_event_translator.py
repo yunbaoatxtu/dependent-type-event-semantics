@@ -6725,6 +6725,64 @@ def concrete_registered_truth_condition_instance_lines(
                 "  intro A term h",
                 "  apply concrete_registered_truth_implies_atomic_closure",
                 "  exact h",
+                "",
+                "structure ConcreteRegisteredTruthConditionModel : Type where",
+                "  concrete_registered_model_denotes : (A : Type) -> A -> Prop",
+                "  concrete_registered_model_spec : FullyRegisteredTruthConditionSpec",
+                "  concrete_registered_model_denote_spec : "
+                "(A : Type) -> (term : A) -> "
+                "concrete_registered_model_denotes A term -> "
+                "concrete_registered_model_spec."
+                "fully_registered_truth_denotes A term",
+                "  concrete_registered_model_sound : "
+                "(A : Type) -> (term : A) -> "
+                "concrete_registered_model_denotes A term -> "
+                "AtomicClosureTruth A term",
+                "",
+                "def concrete_registered_truth_condition_model : "
+                "ConcreteRegisteredTruthConditionModel := {",
+                "  concrete_registered_model_denotes := ConcreteRegisteredTruth,",
+                "  concrete_registered_model_spec := concrete_registered_truth_conditions,",
+                "  concrete_registered_model_denote_spec := fun A term h => h,",
+                "  concrete_registered_model_sound := "
+                "concrete_registered_truth_implies_atomic_closure,",
+                "}",
+                "",
+                "theorem concrete_registered_truth_condition_model_exists :",
+                "    Exists (fun M : ConcreteRegisteredTruthConditionModel => "
+                "M = concrete_registered_truth_condition_model) := by",
+                "  exact Exists.intro concrete_registered_truth_condition_model rfl",
+                "",
+                "theorem concrete_registered_truth_condition_model_denote_spec :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_denotes A term -> "
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_spec."
+                "fully_registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact concrete_registered_truth_condition_model."
+                "concrete_registered_model_denote_spec A term h",
+                "",
+                "theorem concrete_registered_truth_condition_model_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  exact concrete_registered_truth_condition_model."
+                "concrete_registered_model_sound A term h",
+                "",
+                "theorem "
+                "concrete_registered_truth_condition_model_spec_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_spec."
+                "fully_registered_truth_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply concrete_registered_truth_conditions_imply_atomic_closure",
+                "  exact h",
             ]
         )
         return lines
@@ -7025,6 +7083,72 @@ def concrete_registered_truth_condition_instance_lines(
             "Proof.",
             "  intros A term H.",
             "  apply concrete_registered_truth_implies_atomic_closure.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Record ConcreteRegisteredTruthConditionModel : Type := {",
+            "  concrete_registered_model_denotes : forall A : Type, A -> Prop;",
+            "  concrete_registered_model_spec : FullyRegisteredTruthConditionSpec;",
+            "  concrete_registered_model_denote_spec :",
+            "      forall A : Type, forall term : A,",
+            "      concrete_registered_model_denotes A term ->",
+            "      fully_registered_truth_denotes",
+            "        concrete_registered_model_spec A term;",
+            "  concrete_registered_model_sound :",
+            "      forall A : Type, forall term : A,",
+            "      concrete_registered_model_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "}.",
+            "",
+            "Definition concrete_registered_truth_condition_model :",
+            "  ConcreteRegisteredTruthConditionModel := {|",
+            "  concrete_registered_model_denotes := ConcreteRegisteredTruth;",
+            "  concrete_registered_model_spec := concrete_registered_truth_conditions;",
+            "  concrete_registered_model_denote_spec := fun A term h => h;",
+            "  concrete_registered_model_sound :=",
+            "    concrete_registered_truth_implies_atomic_closure",
+            "|}.",
+            "",
+            "Theorem concrete_registered_truth_condition_model_exists :",
+            "  exists M : ConcreteRegisteredTruthConditionModel,",
+            "    M = concrete_registered_truth_condition_model.",
+            "Proof.",
+            "  exists concrete_registered_truth_condition_model. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_condition_model_denote_spec :",
+            "  forall A : Type, forall term : A,",
+            "    concrete_registered_model_denotes",
+            "      concrete_registered_truth_condition_model A term ->",
+            "    fully_registered_truth_denotes",
+            "      (concrete_registered_model_spec",
+            "        concrete_registered_truth_condition_model) A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact (concrete_registered_model_denote_spec",
+            "    concrete_registered_truth_condition_model A term H).",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_condition_model_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    concrete_registered_model_denotes",
+            "      concrete_registered_truth_condition_model A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact (concrete_registered_model_sound",
+            "    concrete_registered_truth_condition_model A term H).",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_condition_model_spec_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (concrete_registered_model_spec",
+            "        concrete_registered_truth_condition_model) A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
             "  exact H.",
             "Qed.",
         ]
@@ -8809,6 +8933,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check concrete_registered_truth_basis_denotes_atomic_base_truth")
         lines.append("#check concrete_registered_truth_conditions")
         lines.append("#check concrete_registered_truth_condition_spec_exists")
+        lines.append("#check concrete_registered_truth_condition_model")
+        lines.append("#check concrete_registered_truth_condition_model_exists")
+        lines.append("#check concrete_registered_truth_condition_model_denote_spec")
+        lines.append(
+            "#check concrete_registered_truth_condition_model_imply_atomic_closure"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_truth_condition_model_spec_imply_atomic_closure"
+        )
         lines.append("#check concrete_registered_truth_kernel")
         lines.append("#check concrete_registered_truth_kernel_exists")
         lines.append("#check concrete_registered_truth_conditions_from_kernel")
@@ -9481,6 +9615,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_truth_basis_denotes_atomic_base_truth.")
     lines.append("Check concrete_registered_truth_conditions.")
     lines.append("Check concrete_registered_truth_condition_spec_exists.")
+    lines.append("Check concrete_registered_truth_condition_model.")
+    lines.append("Check concrete_registered_truth_condition_model_exists.")
+    lines.append("Check concrete_registered_truth_condition_model_denote_spec.")
+    lines.append("Check concrete_registered_truth_condition_model_imply_atomic_closure.")
+    lines.append(
+        "Check concrete_registered_truth_condition_model_spec_imply_atomic_closure."
+    )
     lines.append("Check concrete_registered_truth_kernel.")
     lines.append("Check concrete_registered_truth_kernel_exists.")
     lines.append("Check concrete_registered_truth_conditions_from_kernel.")
