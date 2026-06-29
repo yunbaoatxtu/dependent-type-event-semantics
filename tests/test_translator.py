@@ -1651,6 +1651,38 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "inductive ConcreteRegisteredAtomicTruth : (A : Type) -> A -> Prop where",
+            lean_module,
+        )
+        self.assertIn(
+            "structure ConcreteRegisteredTruthBasis : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_truth_basis : ConcreteRegisteredTruthBasis := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_atomic_truth_implies_atomic_base_truth :",
+            lean_module,
+        )
+        self.assertIn(
+            "inductive ConcreteRegisteredTruth : (A : Type) -> A -> Prop where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_condition_spec_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_conditions_imply_atomic_closure :",
+            lean_module,
+        )
+        self.assertIn(
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=",
             lean_module,
         )
@@ -1799,6 +1831,18 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "theorem example_2_concrete_registered_truth :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_concrete_registered_truth_condition_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_concrete_registered_truth_condition_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
@@ -1881,6 +1925,14 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "apply concrete_registered_truth_conditions_denote_concrete_registered",
+            lean_module,
+        )
+        self.assertIn(
+            "apply concrete_registered_truth_conditions_imply_atomic_closure",
+            lean_module,
+        )
+        self.assertIn(
             "exact registered_example_truth_instances.example_2_truth_instance",
             lean_module,
         )
@@ -1928,6 +1980,15 @@ class TranslatorTests(unittest.TestCase):
             "#check example_2_registered_lexical_truth_conditions_from_model_sound",
             lean_module,
         )
+        self.assertIn("#check example_2_concrete_registered_truth", lean_module)
+        self.assertIn(
+            "#check example_2_concrete_registered_truth_condition_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check example_2_concrete_registered_truth_condition_atomic_sound",
+            lean_module,
+        )
         self.assertIn(
             "#check example_2_fully_registered_truth_condition_atomic_sound",
             lean_module,
@@ -1938,6 +1999,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("#check registered_lexical_truth_model", lean_module)
         self.assertIn("#check registered_lexical_truth_conditions_from_model", lean_module)
+        self.assertIn("#check concrete_registered_truth_conditions", lean_module)
         self.assertIn("#check registered_example_truth_instances", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
@@ -2350,6 +2412,38 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Inductive ConcreteRegisteredAtomicTruth : forall A : Type, A -> Prop :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Record ConcreteRegisteredTruthBasis : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_truth_basis :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_atomic_truth_implies_atomic_base_truth :",
+            coq_module,
+        )
+        self.assertIn(
+            "Inductive ConcreteRegisteredTruth : forall A : Type, A -> Prop :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_condition_spec_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_conditions_imply_atomic_closure :",
+            coq_module,
+        )
+        self.assertIn(
             "Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=",
             coq_module,
         )
@@ -2517,6 +2611,18 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_2_concrete_registered_truth : ConcreteRegisteredTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_concrete_registered_truth_condition_sound : fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_concrete_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_2_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_2.",
             coq_module,
         )
@@ -2615,6 +2721,14 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "  apply concrete_registered_truth_conditions_denote_concrete_registered.",
+            coq_module,
+        )
+        self.assertIn(
+            "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
+            coq_module,
+        )
+        self.assertIn(
             "  exact (example_2_truth_instance registered_example_truth_instances).",
             coq_module,
         )
@@ -2664,6 +2778,15 @@ class TranslatorTests(unittest.TestCase):
             "Check example_2_registered_lexical_truth_conditions_from_model_sound.",
             coq_module,
         )
+        self.assertIn("Check example_2_concrete_registered_truth.", coq_module)
+        self.assertIn(
+            "Check example_2_concrete_registered_truth_condition_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_2_concrete_registered_truth_condition_atomic_sound.",
+            coq_module,
+        )
         self.assertIn(
             "Check example_2_fully_registered_truth_condition_atomic_sound.",
             coq_module,
@@ -2674,6 +2797,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Check registered_lexical_truth_model.", coq_module)
         self.assertIn("Check registered_lexical_truth_conditions_from_model.", coq_module)
+        self.assertIn("Check concrete_registered_truth_conditions.", coq_module)
         self.assertIn("Check registered_example_truth_instances.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
@@ -2778,6 +2902,18 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_1_concrete_registered_truth :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_concrete_registered_truth_condition_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_concrete_registered_truth_condition_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Check registered_example_1_truth_instance_atomic_sound.",
             coq_module,
         )
@@ -2786,10 +2922,20 @@ class TranslatorTests(unittest.TestCase):
             "Check example_1_registered_lexical_truth_conditions_from_model_sound.",
             coq_module,
         )
+        self.assertIn("Check example_1_concrete_registered_truth.", coq_module)
+        self.assertIn(
+            "Check example_1_concrete_registered_truth_condition_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_1_concrete_registered_truth_condition_atomic_sound.",
+            coq_module,
+        )
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
         self.assertNotIn("registered_example_2_truth_instance_atomic_sound", coq_module)
         self.assertNotIn("example_2_registered_lexical_truth_model_sound", coq_module)
+        self.assertNotIn("example_2_concrete_registered_truth", coq_module)
 
     def test_packaged_cli_exports_coq_module(self) -> None:
         completed = subprocess.run(
@@ -15023,6 +15169,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_truth_condition_spec_instance",
                 "coq_registered_lexical_truth_condition_spec_instance",
                 "coq_registered_lexical_truth_model_bridge",
+                "coq_concrete_registered_truth_condition_instance",
                 "coq_registered_example_truth_instance_package",
                 "paper_docx_sync",
                 "web_and_api_contracts",

@@ -6429,6 +6429,587 @@ def registered_lexical_truth_model_example_lines(
     return lines
 
 
+def concrete_registered_truth_condition_instance_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "inductive ConcreteRegisteredAtomicTruth : (A : Type) -> A -> Prop where",
+            "  | concrete_registered_atomic_truth_lexical_application : "
+            "(A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term -> "
+            "ConcreteRegisteredAtomicTruth A term",
+            "  | concrete_registered_atomic_truth_transition : "
+            "(theme : Entity) -> (scale : StateScale) -> "
+            "(source : State) -> (target : State) -> "
+            "RegisteredStateTransitionTruth theme scale source target -> "
+            "ConcreteRegisteredAtomicTruth TransitionT "
+            "(Transition theme scale source target)",
+            "",
+            "structure ConcreteRegisteredTruthBasis : Type where",
+            "  concrete_registered_basis_denotes : (A : Type) -> A -> Prop",
+            "  concrete_registered_basis_lexical_application : "
+            "(A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term -> "
+            "concrete_registered_basis_denotes A term",
+            "  concrete_registered_basis_transition : "
+            "(theme : Entity) -> (scale : StateScale) -> "
+            "(source : State) -> (target : State) -> "
+            "RegisteredStateTransitionTruth theme scale source target -> "
+            "concrete_registered_basis_denotes TransitionT "
+            "(Transition theme scale source target)",
+            "",
+            "def concrete_registered_truth_basis : ConcreteRegisteredTruthBasis := {",
+            "  concrete_registered_basis_denotes := ConcreteRegisteredAtomicTruth,",
+            "  concrete_registered_basis_lexical_application := "
+            "fun A term h => ConcreteRegisteredAtomicTruth."
+            "concrete_registered_atomic_truth_lexical_application A term h,",
+            "  concrete_registered_basis_transition := "
+            "fun theme scale source target h => ConcreteRegisteredAtomicTruth."
+            "concrete_registered_atomic_truth_transition "
+            "theme scale source target h",
+            "}",
+            "",
+            "theorem concrete_registered_truth_basis_exists :",
+            "    Exists (fun B : ConcreteRegisteredTruthBasis => "
+            "B = concrete_registered_truth_basis) := by",
+            "  exact Exists.intro concrete_registered_truth_basis rfl",
+            "",
+            "theorem concrete_registered_atomic_truth_implies_atomic_base_truth :",
+            "    (A : Type) -> (term : A) -> "
+            "ConcreteRegisteredAtomicTruth A term -> AtomicBaseTruth A term := by",
+            "  intro A term h",
+            "  induction h",
+            "  | concrete_registered_atomic_truth_lexical_application A term hreg =>",
+            "      apply registered_lexical_application_atomic_base_truth",
+            "      exact hreg",
+            "  | concrete_registered_atomic_truth_transition theme scale source target hreg =>",
+            "      apply registered_state_transition_atomic_base_truth",
+            "      exact hreg",
+            "",
+            "inductive ConcreteRegisteredTruth : (A : Type) -> A -> Prop where",
+            "  | concrete_registered_truth_atomic : "
+            "(A : Type) -> (term : A) -> "
+            "ConcreteRegisteredAtomicTruth A term -> ConcreteRegisteredTruth A term",
+        ]
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | concrete_registered_truth_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> ConcreteRegisteredTruth Prop (P x)) -> "
+                f"ConcreteRegisteredTruth Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  | concrete_registered_truth_repeat : (n : Nat) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (repeat n body)",
+                "  | concrete_registered_truth_at_T : (marker : Entity) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (at_T marker body)",
+                "  | concrete_registered_truth_during_T : (marker : Entity) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (during_T marker body)",
+                "  | concrete_registered_truth_before_T : (marker : Entity) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (before_T marker body)",
+                "  | concrete_registered_truth_after_T : (marker : Entity) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (after_T marker body)",
+                "  | concrete_registered_truth_until_T : (marker : Entity) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (until_T marker body)",
+                "  | concrete_registered_truth_since_T : (marker : Entity) -> "
+                "(body : PropT) -> ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (since_T marker body)",
+                "  | concrete_registered_truth_not_T : (body : PropT) -> "
+                "ConcreteRegisteredTruth PropT body -> "
+                "ConcreteRegisteredTruth PropT (not_T body)",
+                "  | concrete_registered_truth_cause : (causer : Entity) -> "
+                "(effect : TransitionT) -> "
+                "ConcreteRegisteredTruth TransitionT effect -> "
+                "ConcreteRegisteredTruth PropT (Cause causer effect)",
+                "",
+                "theorem concrete_registered_truth_implies_fully_registered :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "FullyRegisteredAtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  induction h",
+                "  | concrete_registered_truth_atomic A term hatom =>",
+                "      induction hatom",
+                "      | concrete_registered_atomic_truth_lexical_application A term hreg =>",
+                "          apply FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_lexical_application",
+                "          exact hreg",
+                "      | concrete_registered_atomic_truth_transition theme scale source target hreg =>",
+                "          apply FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_transition",
+                "          exact hreg",
+            ]
+        )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | concrete_registered_truth_sigma_{type_name} P h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                f"fully_registered_atomic_truth_sigma_{type_name} P ih"
+            )
+        lines.extend(
+            [
+                "  | concrete_registered_truth_repeat n body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_repeat n body ih",
+                "  | concrete_registered_truth_at_T marker body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_at_T marker body ih",
+                "  | concrete_registered_truth_during_T marker body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_during_T marker body ih",
+                "  | concrete_registered_truth_before_T marker body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_before_T marker body ih",
+                "  | concrete_registered_truth_after_T marker body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_after_T marker body ih",
+                "  | concrete_registered_truth_until_T marker body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_until_T marker body ih",
+                "  | concrete_registered_truth_since_T marker body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_since_T marker body ih",
+                "  | concrete_registered_truth_not_T body h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_not_T body ih",
+                "  | concrete_registered_truth_cause causer effect h ih => "
+                "exact FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_cause causer effect ih",
+                "",
+                "theorem concrete_registered_truth_implies_atomic_closure :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth",
+                "  apply concrete_registered_truth_implies_fully_registered",
+                "  exact h",
+                "",
+                "def concrete_registered_truth_denotes : (A : Type) -> A -> Prop :=",
+                "  ConcreteRegisteredTruth",
+                "",
+                "def concrete_registered_truth_conditions : "
+                "FullyRegisteredTruthConditionSpec := {",
+                "  fully_registered_truth_denotes := concrete_registered_truth_denotes,",
+                "  fully_registered_truth_lexical_application := "
+                "fun A term h => ConcreteRegisteredTruth."
+                "concrete_registered_truth_atomic A term "
+                "(ConcreteRegisteredAtomicTruth."
+                "concrete_registered_atomic_truth_lexical_application A term h),",
+            ]
+        )
+        fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            fields.append(
+                (
+                    f"fully_registered_truth_sigma_{type_name}",
+                    "fun P h => ConcreteRegisteredTruth."
+                    f"concrete_registered_truth_sigma_{type_name} P h",
+                )
+            )
+        fields.extend(
+            [
+                ("fully_registered_truth_repeat", "fun n body h => ConcreteRegisteredTruth.concrete_registered_truth_repeat n body h"),
+                ("fully_registered_truth_at_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_at_T marker body h"),
+                ("fully_registered_truth_during_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_during_T marker body h"),
+                ("fully_registered_truth_before_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_before_T marker body h"),
+                ("fully_registered_truth_after_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_after_T marker body h"),
+                ("fully_registered_truth_until_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_until_T marker body h"),
+                ("fully_registered_truth_since_T", "fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_since_T marker body h"),
+                ("fully_registered_truth_not_T", "fun body h => ConcreteRegisteredTruth.concrete_registered_truth_not_T body h"),
+                (
+                    "fully_registered_truth_transition",
+                    "fun theme scale source target h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_atomic TransitionT "
+                    "(Transition theme scale source target) "
+                    "(ConcreteRegisteredAtomicTruth."
+                    "concrete_registered_atomic_truth_transition "
+                    "theme scale source target h)",
+                ),
+                ("fully_registered_truth_cause", "fun causer effect h => ConcreteRegisteredTruth.concrete_registered_truth_cause causer effect h"),
+            ]
+        )
+        for index, (field, value) in enumerate(fields):
+            suffix = "," if index < len(fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_registered_truth_condition_spec_exists :",
+                "    Exists (fun F : FullyRegisteredTruthConditionSpec => "
+                "F = concrete_registered_truth_conditions) := by",
+                "  exact Exists.intro concrete_registered_truth_conditions rfl",
+                "",
+                "theorem concrete_registered_truth_conditions_denote_concrete_registered :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "concrete_registered_truth_conditions."
+                "fully_registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem concrete_registered_truth_conditions_imply_fully_registered :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_truth_conditions."
+                "fully_registered_truth_denotes A term -> "
+                "FullyRegisteredAtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply concrete_registered_truth_implies_fully_registered",
+                "  exact h",
+                "",
+                "theorem concrete_registered_truth_conditions_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_truth_conditions."
+                "fully_registered_truth_denotes A term -> AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply concrete_registered_truth_implies_atomic_closure",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Inductive ConcreteRegisteredAtomicTruth : forall A : Type, A -> Prop :=",
+        "  | concrete_registered_atomic_truth_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      ConcreteRegisteredAtomicTruth A term",
+        "  | concrete_registered_atomic_truth_transition :",
+        "      forall theme : Entity, forall scale : StateScale,",
+        "      forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      ConcreteRegisteredAtomicTruth TransitionT",
+        "        (Transition theme scale source target).",
+        "",
+        "Record ConcreteRegisteredTruthBasis : Type := {",
+        "  concrete_registered_basis_denotes : forall A : Type, A -> Prop;",
+        "  concrete_registered_basis_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      concrete_registered_basis_denotes A term;",
+        "  concrete_registered_basis_transition :",
+        "      forall theme : Entity, forall scale : StateScale,",
+        "      forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      concrete_registered_basis_denotes TransitionT",
+        "        (Transition theme scale source target)",
+        "}.",
+        "",
+        "Definition concrete_registered_truth_basis :",
+        "  ConcreteRegisteredTruthBasis := {|",
+        "  concrete_registered_basis_denotes := ConcreteRegisteredAtomicTruth;",
+        "  concrete_registered_basis_lexical_application :=",
+        "    fun A term h =>",
+        "      concrete_registered_atomic_truth_lexical_application A term h;",
+        "  concrete_registered_basis_transition :=",
+        "    fun theme scale source target h =>",
+        "      concrete_registered_atomic_truth_transition theme scale source target h",
+        "|}.",
+        "",
+        "Theorem concrete_registered_truth_basis_exists :",
+        "  exists B : ConcreteRegisteredTruthBasis,",
+        "    B = concrete_registered_truth_basis.",
+        "Proof.",
+        "  exists concrete_registered_truth_basis. reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_atomic_truth_implies_atomic_base_truth :",
+        "  forall A : Type, forall term : A,",
+        "    ConcreteRegisteredAtomicTruth A term -> AtomicBaseTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  induction H.",
+        "  - apply registered_lexical_application_atomic_base_truth.",
+        "    assumption.",
+        "  - apply registered_state_transition_atomic_base_truth.",
+        "    assumption.",
+        "Qed.",
+        "",
+        "Inductive ConcreteRegisteredTruth : forall A : Type, A -> Prop :=",
+        "  | concrete_registered_truth_atomic :",
+        "      forall A : Type, forall term : A,",
+        "      ConcreteRegisteredAtomicTruth A term ->",
+        "      ConcreteRegisteredTruth A term",
+    ]
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  | concrete_registered_truth_sigma_{type_name} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, "
+                "ConcreteRegisteredTruth Prop (P x)) ->",
+                "      ConcreteRegisteredTruth Prop "
+                f"(exists x : {type_name}, P x)",
+            ]
+        )
+    lines.extend(
+        [
+            "  | concrete_registered_truth_repeat : "
+            "forall n : nat, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (repeat n body)",
+            "  | concrete_registered_truth_at_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (at_T marker body)",
+            "  | concrete_registered_truth_during_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (during_T marker body)",
+            "  | concrete_registered_truth_before_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (before_T marker body)",
+            "  | concrete_registered_truth_after_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (after_T marker body)",
+            "  | concrete_registered_truth_until_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (until_T marker body)",
+            "  | concrete_registered_truth_since_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (since_T marker body)",
+            "  | concrete_registered_truth_not_T : forall body : PropT,",
+            "      ConcreteRegisteredTruth PropT body ->",
+            "      ConcreteRegisteredTruth PropT (not_T body)",
+            "  | concrete_registered_truth_cause :",
+            "      forall causer : Entity, forall effect : TransitionT,",
+            "      ConcreteRegisteredTruth TransitionT effect ->",
+            "      ConcreteRegisteredTruth PropT (Cause causer effect).",
+            "",
+            "Theorem concrete_registered_truth_implies_fully_registered :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term ->",
+            "    FullyRegisteredAtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  induction H.",
+            "  - induction H.",
+            "    + apply fully_registered_atomic_truth_lexical_application.",
+            "      assumption.",
+            "    + apply fully_registered_atomic_truth_transition.",
+            "      assumption.",
+        ]
+    )
+    for type_name in declarations["types"]:
+        lines.append(f"  - apply fully_registered_atomic_truth_sigma_{type_name}.")
+        lines.append("    assumption.")
+    lines.extend(
+        [
+            "  - apply fully_registered_atomic_truth_repeat. assumption.",
+            "  - apply fully_registered_atomic_truth_at_T. assumption.",
+            "  - apply fully_registered_atomic_truth_during_T. assumption.",
+            "  - apply fully_registered_atomic_truth_before_T. assumption.",
+            "  - apply fully_registered_atomic_truth_after_T. assumption.",
+            "  - apply fully_registered_atomic_truth_until_T. assumption.",
+            "  - apply fully_registered_atomic_truth_since_T. assumption.",
+            "  - apply fully_registered_atomic_truth_not_T. assumption.",
+            "  - apply fully_registered_atomic_truth_cause. assumption.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_implies_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term -> AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth.",
+            "  apply concrete_registered_truth_implies_fully_registered.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Definition concrete_registered_truth_denotes : "
+            "forall A : Type, A -> Prop :=",
+            "  ConcreteRegisteredTruth.",
+            "",
+            "Definition concrete_registered_truth_conditions : "
+            "FullyRegisteredTruthConditionSpec := {|",
+            "  fully_registered_truth_denotes := "
+            "concrete_registered_truth_denotes;",
+            "  fully_registered_truth_lexical_application :=",
+            "    fun A term h => concrete_registered_truth_atomic A term",
+            "      (concrete_registered_atomic_truth_lexical_application A term h);",
+        ]
+    )
+    fields: list[tuple[str, str]] = []
+    for type_name in declarations["types"]:
+        fields.append(
+            (
+                f"fully_registered_truth_sigma_{type_name}",
+                f"fun P h => concrete_registered_truth_sigma_{type_name} P h",
+            )
+        )
+    fields.extend(
+        [
+            ("fully_registered_truth_repeat", "fun n body h => concrete_registered_truth_repeat n body h"),
+            ("fully_registered_truth_at_T", "fun marker body h => concrete_registered_truth_at_T marker body h"),
+            ("fully_registered_truth_during_T", "fun marker body h => concrete_registered_truth_during_T marker body h"),
+            ("fully_registered_truth_before_T", "fun marker body h => concrete_registered_truth_before_T marker body h"),
+            ("fully_registered_truth_after_T", "fun marker body h => concrete_registered_truth_after_T marker body h"),
+            ("fully_registered_truth_until_T", "fun marker body h => concrete_registered_truth_until_T marker body h"),
+            ("fully_registered_truth_since_T", "fun marker body h => concrete_registered_truth_since_T marker body h"),
+            ("fully_registered_truth_not_T", "fun body h => concrete_registered_truth_not_T body h"),
+            (
+                "fully_registered_truth_transition",
+                "fun theme scale source target h => "
+                "concrete_registered_truth_atomic TransitionT "
+                "(Transition theme scale source target) "
+                "(concrete_registered_atomic_truth_transition "
+                "theme scale source target h)",
+            ),
+            ("fully_registered_truth_cause", "fun causer effect h => concrete_registered_truth_cause causer effect h"),
+        ]
+    )
+    for index, (field, value) in enumerate(fields):
+        suffix = ";" if index < len(fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_registered_truth_condition_spec_exists :",
+            "  exists F : FullyRegisteredTruthConditionSpec,",
+            "    F = concrete_registered_truth_conditions.",
+            "Proof.",
+            "  exists concrete_registered_truth_conditions. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_conditions_denote_concrete_registered :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term ->",
+            "    fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_conditions_imply_fully_registered :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions A term ->",
+            "    FullyRegisteredAtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply concrete_registered_truth_implies_fully_registered.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_truth_conditions_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply concrete_registered_truth_implies_atomic_closure.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
+def concrete_registered_truth_proof_steps(
+    term: Term,
+    target: str,
+) -> list[str]:
+    prefix = "ConcreteRegisteredTruth." if target == "lean" else ""
+    atomic_prefix = "ConcreteRegisteredAtomicTruth." if target == "lean" else ""
+    suffix = "" if target == "lean" else "."
+
+    def apply_constructor(name: str) -> str:
+        return f"  apply {prefix}{name}{suffix}"
+
+    def prove(current: Term, bound_types: dict[str, str]) -> list[str]:
+        kind = current["kind"]
+        if kind == "application":
+            schema = lexical_application_schema(current, target, bound_types)
+            constructor = registered_lexical_application_constructor_from_schema(schema)
+            if target == "lean":
+                binder_args = " ".join(name for name, _type_name in schema[-1])
+                registered_term = (
+                    f"RegisteredLexicalApplicationTruth.{constructor}"
+                    + (f" {binder_args}" if binder_args else "")
+                )
+                return [
+                    apply_constructor("concrete_registered_truth_atomic"),
+                    "  exact "
+                    f"{atomic_prefix}concrete_registered_atomic_truth_lexical_application "
+                    f"_ _ {registered_term}",
+                ]
+            return [
+                apply_constructor("concrete_registered_truth_atomic"),
+                "  apply concrete_registered_atomic_truth_lexical_application.",
+                f"  apply {constructor}.",
+            ]
+        if kind == "sigma":
+            witness = export_atom(current["witness"], target)
+            witness_type = export_type_name(current["type"], target)
+            return [
+                apply_constructor(f"concrete_registered_truth_sigma_{witness_type}"),
+                f"  intro {witness}{suffix}",
+                *prove(current["body"], {**bound_types, witness: witness_type}),
+            ]
+        if kind == "repeat":
+            return [
+                apply_constructor("concrete_registered_truth_repeat"),
+                *prove(current["body"], bound_types),
+            ]
+        if kind == "time":
+            operator = export_atom(current["operator"] + "_T", target)
+            return [
+                apply_constructor(f"concrete_registered_truth_{operator}"),
+                *prove(current["body"], bound_types),
+            ]
+        if kind == "not":
+            return [
+                apply_constructor("concrete_registered_truth_not_T"),
+                *prove(current["body"], bound_types),
+            ]
+        if kind == "transition":
+            theme = export_atom(current["theme"], target)
+            scale = export_atom(current["state_scale"], target)
+            source = export_atom(current["source_state"], target)
+            target_state = export_atom(current["target_state"], target)
+            registered_constructor = registered_state_transition_constructor(
+                theme,
+                scale,
+                source,
+                target_state,
+            )
+            if target == "lean":
+                return [
+                    apply_constructor("concrete_registered_truth_atomic"),
+                    "  exact "
+                    f"{atomic_prefix}concrete_registered_atomic_truth_transition "
+                    f"{theme} {scale} {source} {target_state} "
+                    f"RegisteredStateTransitionTruth.{registered_constructor}",
+                ]
+            return [
+                apply_constructor("concrete_registered_truth_atomic"),
+                "  apply concrete_registered_atomic_truth_transition.",
+                f"  apply {registered_constructor}.",
+            ]
+        if kind == "cause":
+            return [
+                apply_constructor("concrete_registered_truth_cause"),
+                *prove(current["effect"], bound_types),
+            ]
+        raise ValueError(f"Unknown term kind: {kind!r}")
+
+    return prove(term, {})
+
+
 def registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -6962,6 +7543,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(registered_lexical_truth_model_lines(declarations, target))
         lines.append("")
+        lines.extend(concrete_registered_truth_condition_instance_lines(declarations, target))
+        lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
         lines.append("")
         lines.extend(syntax_directed_truth_kernel_instance_lines(declarations, target))
@@ -7282,6 +7865,50 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             annotation = export_result_type(result["ast"])
             lines.append(
                 "theorem "
+                f"example_{idx}_concrete_registered_truth : "
+                f"ConcreteRegisteredTruth {annotation} example_{idx} := by"
+            )
+            lines.append(f"  unfold example_{idx}")
+            lines.extend(
+                concrete_registered_truth_proof_steps(
+                    result["ast"],
+                    target,
+                )
+            )
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_registered_truth_condition_sound : "
+                "concrete_registered_truth_conditions."
+                "fully_registered_truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "concrete_registered_truth_conditions_denote_concrete_registered"
+            )
+            lines.append(f"  exact example_{idx}_concrete_registered_truth")
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_registered_truth_condition_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply concrete_registered_truth_conditions_imply_atomic_closure"
+            )
+            lines.append(
+                f"  exact example_{idx}_concrete_registered_truth_condition_sound"
+            )
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
                 f"example_{idx}_fully_registered_truth_condition_atomic_sound : "
                 f"AtomicClosureTruth {annotation} example_{idx} := by"
             )
@@ -7343,6 +7970,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"example_{idx}_registered_lexical_truth_conditions_from_model_sound"
             )
             lines.append(
+                f"#check example_{idx}_concrete_registered_truth"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_concrete_registered_truth_condition_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_concrete_registered_truth_condition_atomic_sound"
+            )
+            lines.append(
                 "#check "
                 f"example_{idx}_fully_registered_truth_condition_atomic_sound"
             )
@@ -7354,6 +7992,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check registered_lexical_truth_model_exists")
         lines.append("#check registered_lexical_truth_conditions_from_model")
         lines.append("#check registered_lexical_truth_conditions_from_model_exists")
+        lines.append("#check concrete_registered_truth_basis")
+        lines.append("#check concrete_registered_truth_basis_exists")
+        lines.append("#check concrete_registered_truth_conditions")
+        lines.append("#check concrete_registered_truth_condition_spec_exists")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -7468,6 +8110,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(registered_lexical_truth_condition_spec_lines(declarations, target))
     lines.append("")
     lines.extend(registered_lexical_truth_model_lines(declarations, target))
+    lines.append("")
+    lines.extend(concrete_registered_truth_condition_instance_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
     lines.append("")
@@ -7808,6 +8452,56 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         annotation = export_result_type(result["ast"])
         lines.append(
             "Theorem "
+            f"example_{idx}_concrete_registered_truth : "
+            f"ConcreteRegisteredTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(f"  unfold example_{idx}.")
+        lines.extend(
+            concrete_registered_truth_proof_steps(
+                result["ast"],
+                target,
+            )
+        )
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_registered_truth_condition_sound : "
+            "fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "concrete_registered_truth_conditions_denote_concrete_registered."
+        )
+        lines.append(f"  exact example_{idx}_concrete_registered_truth.")
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_registered_truth_condition_atomic_sound : "
+            f"AtomicClosureTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply concrete_registered_truth_conditions_imply_atomic_closure."
+        )
+        lines.append(
+            f"  exact example_{idx}_concrete_registered_truth_condition_sound."
+        )
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
             f"example_{idx}_fully_registered_truth_condition_atomic_sound : "
             f"AtomicClosureTruth {annotation} example_{idx}."
         )
@@ -7858,6 +8552,15 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             f"example_{idx}_registered_lexical_truth_conditions_from_model_sound."
         )
+        lines.append(f"Check example_{idx}_concrete_registered_truth.")
+        lines.append(
+            "Check "
+            f"example_{idx}_concrete_registered_truth_condition_sound."
+        )
+        lines.append(
+            "Check "
+            f"example_{idx}_concrete_registered_truth_condition_atomic_sound."
+        )
         lines.append(
             "Check "
             f"example_{idx}_fully_registered_truth_condition_atomic_sound."
@@ -7870,6 +8573,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check registered_lexical_truth_model_exists.")
     lines.append("Check registered_lexical_truth_conditions_from_model.")
     lines.append("Check registered_lexical_truth_conditions_from_model_exists.")
+    lines.append("Check concrete_registered_truth_basis.")
+    lines.append("Check concrete_registered_truth_basis_exists.")
+    lines.append("Check concrete_registered_truth_conditions.")
+    lines.append("Check concrete_registered_truth_condition_spec_exists.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

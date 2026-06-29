@@ -346,6 +346,48 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_concrete_registered_truth_count = len(
+        re.findall(
+            r"^theorem example_\d+_concrete_registered_truth :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_truth_count = len(
+        re.findall(
+            r"^Theorem example_\d+_concrete_registered_truth :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_concrete_registered_truth_condition_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_concrete_registered_truth_condition_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_truth_condition_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_concrete_registered_truth_condition_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_concrete_registered_truth_condition_atomic_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_concrete_registered_truth_condition_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_truth_condition_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_concrete_registered_truth_condition_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -917,6 +959,62 @@ def main() -> None:
             and "Theorem registered_lexical_truth_conditions_from_model_imply_atomic_closure :"
             in coq
         ),
+        "lean concrete registered truth condition instance": (
+            "inductive ConcreteRegisteredAtomicTruth : (A : Type) -> A -> Prop where"
+            in lean
+            and "structure ConcreteRegisteredTruthBasis : Type where" in lean
+            and "def concrete_registered_truth_basis : ConcreteRegisteredTruthBasis := {"
+            in lean
+            and "theorem concrete_registered_atomic_truth_implies_atomic_base_truth :"
+            in lean
+            and "inductive ConcreteRegisteredTruth : (A : Type) -> A -> Prop where"
+            in lean
+            and "def concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {"
+            in lean
+            and "theorem concrete_registered_truth_condition_spec_exists :"
+            in lean
+            and "theorem concrete_registered_truth_conditions_denote_concrete_registered :"
+            in lean
+            and "theorem concrete_registered_truth_conditions_imply_atomic_closure :"
+            in lean
+            and "theorem example_4_concrete_registered_truth :"
+            in lean
+            and "theorem example_4_concrete_registered_truth_condition_sound :"
+            in lean
+            and "theorem example_4_concrete_registered_truth_condition_atomic_sound :"
+            in lean
+            and "#check example_4_concrete_registered_truth_condition_sound"
+            in lean
+            and "#check concrete_registered_truth_conditions" in lean
+        ),
+        "coq concrete registered truth condition instance": (
+            "Inductive ConcreteRegisteredAtomicTruth : forall A : Type, A -> Prop :="
+            in coq
+            and "Record ConcreteRegisteredTruthBasis : Type := {" in coq
+            and "Definition concrete_registered_truth_basis :" in coq
+            and "ConcreteRegisteredTruthBasis := {|" in coq
+            and "Theorem concrete_registered_atomic_truth_implies_atomic_base_truth :"
+            in coq
+            and "Inductive ConcreteRegisteredTruth : forall A : Type, A -> Prop :="
+            in coq
+            and "Definition concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {|"
+            in coq
+            and "Theorem concrete_registered_truth_condition_spec_exists :"
+            in coq
+            and "Theorem concrete_registered_truth_conditions_denote_concrete_registered :"
+            in coq
+            and "Theorem concrete_registered_truth_conditions_imply_atomic_closure :"
+            in coq
+            and "Theorem example_4_concrete_registered_truth :"
+            in coq
+            and "Theorem example_4_concrete_registered_truth_condition_sound :"
+            in coq
+            and "Theorem example_4_concrete_registered_truth_condition_atomic_sound :"
+            in coq
+            and "Check example_4_concrete_registered_truth_condition_sound."
+            in coq
+            and "Check concrete_registered_truth_conditions." in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
@@ -1191,6 +1289,38 @@ def main() -> None:
             and "apply registered_lexical_truth_conditions_from_model_denote_fully_registered."
             in coq
         ),
+        "lean concrete registered truth condition soundness proofs": (
+            lean_concrete_registered_truth_count == lean_example_count
+            and lean_concrete_registered_truth_condition_sound_count
+            == lean_example_count
+            and lean_concrete_registered_truth_condition_atomic_sound_count
+            == lean_example_count
+            and "#check example_4_concrete_registered_truth" in lean
+            and "#check example_4_concrete_registered_truth_condition_sound"
+            in lean
+            and "#check example_4_concrete_registered_truth_condition_atomic_sound"
+            in lean
+            and "apply concrete_registered_truth_conditions_denote_concrete_registered"
+            in lean
+            and "apply concrete_registered_truth_conditions_imply_atomic_closure"
+            in lean
+        ),
+        "coq concrete registered truth condition soundness proofs": (
+            coq_concrete_registered_truth_count == coq_example_count
+            and coq_concrete_registered_truth_condition_sound_count
+            == coq_example_count
+            and coq_concrete_registered_truth_condition_atomic_sound_count
+            == coq_example_count
+            and "Check example_4_concrete_registered_truth." in coq
+            and "Check example_4_concrete_registered_truth_condition_sound."
+            in coq
+            and "Check example_4_concrete_registered_truth_condition_atomic_sound."
+            in coq
+            and "apply concrete_registered_truth_conditions_denote_concrete_registered."
+            in coq
+            and "apply concrete_registered_truth_conditions_imply_atomic_closure."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
@@ -1226,10 +1356,17 @@ def main() -> None:
             and "#check example_4_registered_lexical_truth_model_sound" in lean
             and "#check example_4_registered_lexical_truth_conditions_from_model_sound"
             in lean
+            and "#check example_4_concrete_registered_truth" in lean
+            and "#check example_4_concrete_registered_truth_condition_sound"
+            in lean
+            and "#check example_4_concrete_registered_truth_condition_atomic_sound"
+            in lean
             and "#check example_4_fully_registered_truth_condition_atomic_sound" in lean
             and "#check registered_example_4_truth_instance_atomic_sound" in lean
             and "#check registered_lexical_truth_model" in lean
             and "#check registered_lexical_truth_conditions_from_model" in lean
+            and "#check concrete_registered_truth_basis" in lean
+            and "#check concrete_registered_truth_conditions" in lean
             and "#check registered_example_truth_instances" in lean
         ),
         "coq semantic preservation obligation checks": (
@@ -1255,10 +1392,17 @@ def main() -> None:
             and "Check example_4_registered_lexical_truth_model_sound." in coq
             and "Check example_4_registered_lexical_truth_conditions_from_model_sound."
             in coq
+            and "Check example_4_concrete_registered_truth." in coq
+            and "Check example_4_concrete_registered_truth_condition_sound."
+            in coq
+            and "Check example_4_concrete_registered_truth_condition_atomic_sound."
+            in coq
             and "Check example_4_fully_registered_truth_condition_atomic_sound." in coq
             and "Check registered_example_4_truth_instance_atomic_sound." in coq
             and "Check registered_lexical_truth_model." in coq
             and "Check registered_lexical_truth_conditions_from_model." in coq
+            and "Check concrete_registered_truth_basis." in coq
+            and "Check concrete_registered_truth_conditions." in coq
             and "Check registered_example_truth_instances." in coq
         ),
         "lean transition state-scale signature": (

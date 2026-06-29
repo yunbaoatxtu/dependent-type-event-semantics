@@ -157,7 +157,14 @@ example. The scaffold then factors that same finite registered fragment through
 `registered_lexical_truth_model` with `FullyRegisteredAtomicClosureTruth`, and
 checks `example_i_registered_lexical_truth_model_sound` plus
 `example_i_registered_lexical_truth_conditions_from_model_sound` for every
-exported example. The scaffold then gathers those checked example-level proofs into
+exported example. The scaffold then separates the finite registered atom basis
+into `ConcreteRegisteredAtomicTruth` and `ConcreteRegisteredTruthBasis`, closes
+it as `ConcreteRegisteredTruth`, instantiates
+`concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec`, and
+checks `example_i_concrete_registered_truth`,
+`example_i_concrete_registered_truth_condition_sound`, and
+`example_i_concrete_registered_truth_condition_atomic_sound` for every exported
+example. The scaffold then gathers those checked example-level proofs into
 `RegisteredExampleTruthInstances`, proves
 `registered_example_truth_instances_exists`, and checks per-example projections
 such as `registered_example_i_truth_instance_atomic_sound` back to

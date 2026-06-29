@@ -1098,7 +1098,18 @@ per-example model-induced soundness theorems such as
 `example_i_registered_lexical_truth_model_sound` and
 `example_i_registered_lexical_truth_conditions_from_model_sound`. This is a
 registered-fragment model bridge, not a general truth-condition model for all
-lexical, temporal, causal, quantificational, or modifier meanings. The next
+lexical, temporal, causal, quantificational, or modifier meanings. The
+follow-up verified objective
+`coq_concrete_registered_truth_condition_instance` separates the finite
+registered atom basis into `ConcreteRegisteredAtomicTruth` and
+`ConcreteRegisteredTruthBasis`, closes it as `ConcreteRegisteredTruth` under
+Sigma, repetition, temporal, negation, and `Cause` constructors, instantiates
+`concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec`,
+and checks `example_i_concrete_registered_truth`,
+`example_i_concrete_registered_truth_condition_sound`, and
+`example_i_concrete_registered_truth_condition_atomic_sound`. This is the first
+concrete registered truth-condition instance for exported atoms, but it is
+still finite and registered-fragment-only. The next
 verified objective `coq_registered_example_truth_instance_package` packages
 those per-example fully registered truth-condition proofs into a generated
 `RegisteredExampleTruthInstances` record, proves that the package exists, and
@@ -1113,7 +1124,7 @@ conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
-registered-example package instances.
+concrete-registered-truth-condition, or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

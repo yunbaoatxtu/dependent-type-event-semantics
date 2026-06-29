@@ -21044,6 +21044,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_truth_condition_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_registered_example_truth_instance_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21165,6 +21170,16 @@ def project_completion_status_payload(
                     "FullyRegisteredTruthConditionSpec, instantiates the "
                     "record with FullyRegisteredAtomicClosureTruth, and "
                     "checks per-example model-induced soundness theorems. "
+                    "The newest concrete registered truth-condition layer "
+                    "separates the finite registered atom basis into "
+                    "ConcreteRegisteredAtomicTruth and "
+                    "ConcreteRegisteredTruthBasis, closes it as "
+                    "ConcreteRegisteredTruth under Sigma, repetition, "
+                    "temporal, negation, and Cause constructors, "
+                    "instantiates concrete_registered_truth_conditions as a "
+                    "FullyRegisteredTruthConditionSpec, and checks "
+                    "per-example concrete registered truth-condition "
+                    "soundness and atomic soundness. "
                     "It also packages those per-example fully registered "
                     "truth-condition proofs into a generated "
                     "RegisteredExampleTruthInstances record, proves the "
