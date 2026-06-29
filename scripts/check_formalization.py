@@ -150,6 +150,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_tautological_truth_condition_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_tautological_truth_condition_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_tautological_truth_condition_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_tautological_truth_condition_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -249,6 +263,28 @@ def main() -> None:
             and "Theorem truth_conditions_induce_denotational_soundness :" in coq
             and "ModelInterpretable A term -> truth_denotes T A term." in coq
         ),
+        "lean tautological truth condition instance": (
+            "def tautological_truth_denotes : (A : Type) -> A -> Prop :="
+            in lean
+            and "def tautological_truth_conditions : TruthConditionSpec := {"
+            in lean
+            and "def tautological_semantic_model : SemanticModel :="
+            in lean
+            and "theorem tautological_truth_condition_spec_exists :" in lean
+            and "theorem tautological_truth_conditions_denote_model_interpretable :"
+            in lean
+        ),
+        "coq tautological truth condition instance": (
+            "Definition tautological_truth_denotes : forall A : Type, A -> Prop :="
+            in coq
+            and "Definition tautological_truth_conditions : TruthConditionSpec := {|"
+            in coq
+            and "Definition tautological_semantic_model : SemanticModel :="
+            in coq
+            and "Theorem tautological_truth_condition_spec_exists :" in coq
+            and "Theorem tautological_truth_conditions_denote_model_interpretable :"
+            in coq
+        ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
             and "structure SemanticPreservationObligation : Type where" in lean
@@ -332,6 +368,18 @@ def main() -> None:
             and "Check example_4_truth_condition_sound." in coq
             and "apply truth_conditions_induce_denotational_soundness." in coq
         ),
+        "lean tautological truth condition soundness proofs": (
+            lean_tautological_truth_condition_sound_count == lean_example_count
+            and "#check example_4_tautological_truth_condition_sound" in lean
+            and "apply tautological_truth_conditions_denote_model_interpretable"
+            in lean
+        ),
+        "coq tautological truth condition soundness proofs": (
+            coq_tautological_truth_condition_sound_count == coq_example_count
+            and "Check example_4_tautological_truth_condition_sound." in coq
+            and "apply tautological_truth_conditions_denote_model_interpretable."
+            in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -341,6 +389,7 @@ def main() -> None:
             and "#check example_4_model_interpretable" in lean
             and "#check example_4_denotationally_sound" in lean
             and "#check example_4_truth_condition_sound" in lean
+            and "#check example_4_tautological_truth_condition_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -351,6 +400,7 @@ def main() -> None:
             and "Check example_4_model_interpretable." in coq
             and "Check example_4_denotationally_sound." in coq
             and "Check example_4_truth_condition_sound." in coq
+            and "Check example_4_tautological_truth_condition_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

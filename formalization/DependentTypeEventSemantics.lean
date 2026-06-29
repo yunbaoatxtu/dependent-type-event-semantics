@@ -189,6 +189,45 @@ theorem truth_conditions_induce_denotational_soundness :
   intro T A term h
   exact model_interpretable_denotational_sound (semantic_model_from_truth_conditions T) A term h
 
+def tautological_truth_denotes : (A : Type) -> A -> Prop :=
+  fun _ _ => True
+
+def tautological_truth_conditions : TruthConditionSpec := {
+  truth_denotes := tautological_truth_denotes,
+  truth_break_application := fun n mods arg1 arg2 => True.intro,
+  truth_butter_application := fun n mods arg1 arg2 => True.intro,
+  truth_eat_application := fun n mods arg1 arg2 => True.intro,
+  truth_knock_application := fun n mods arg1 => True.intro,
+  truth_sigma_Entity := fun P h => True.intro,
+  truth_sigma_Food := fun P h => True.intro,
+  truth_sigma_State := fun P h => True.intro,
+  truth_sigma_StateScale := fun P h => True.intro,
+  truth_sigma_TransitionT := fun P h => True.intro,
+  truth_repeat := fun n body h => True.intro,
+  truth_at_T := fun marker body h => True.intro,
+  truth_during_T := fun marker body h => True.intro,
+  truth_before_T := fun marker body h => True.intro,
+  truth_after_T := fun marker body h => True.intro,
+  truth_until_T := fun marker body h => True.intro,
+  truth_since_T := fun marker body h => True.intro,
+  truth_not_T := fun body h => True.intro,
+  truth_transition := fun theme scale source target => True.intro,
+  truth_cause := fun causer effect h => True.intro
+}
+
+def tautological_semantic_model : SemanticModel :=
+  semantic_model_from_truth_conditions tautological_truth_conditions
+
+theorem tautological_truth_condition_spec_exists :
+    Exists (fun T : TruthConditionSpec => T = tautological_truth_conditions) := by
+  exact Exists.intro tautological_truth_conditions rfl
+
+theorem tautological_truth_conditions_denote_model_interpretable :
+    (A : Type) -> (term : A) -> ModelInterpretable A term -> tautological_truth_conditions.truth_denotes A term := by
+  intro A term h
+  apply truth_conditions_induce_denotational_soundness
+  exact h
+
 def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   target.obligation_statement = SemanticPreservation A term
 
@@ -314,6 +353,19 @@ theorem example_4_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_de
   apply truth_conditions_induce_denotational_soundness
   exact example_4_model_interpretable
 
+theorem example_1_tautological_truth_condition_sound : tautological_truth_conditions.truth_denotes PropT example_1 := by
+  apply tautological_truth_conditions_denote_model_interpretable
+  exact example_1_model_interpretable
+theorem example_2_tautological_truth_condition_sound : tautological_truth_conditions.truth_denotes Prop example_2 := by
+  apply tautological_truth_conditions_denote_model_interpretable
+  exact example_2_model_interpretable
+theorem example_3_tautological_truth_condition_sound : tautological_truth_conditions.truth_denotes PropT example_3 := by
+  apply tautological_truth_conditions_denote_model_interpretable
+  exact example_3_model_interpretable
+theorem example_4_tautological_truth_condition_sound : tautological_truth_conditions.truth_denotes PropT example_4 := by
+  apply tautological_truth_conditions_denote_model_interpretable
+  exact example_4_model_interpretable
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -323,6 +375,7 @@ theorem example_4_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_de
 #check example_1_model_interpretable
 #check example_1_denotationally_sound
 #check example_1_truth_condition_sound
+#check example_1_tautological_truth_condition_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -332,6 +385,7 @@ theorem example_4_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_de
 #check example_2_model_interpretable
 #check example_2_denotationally_sound
 #check example_2_truth_condition_sound
+#check example_2_tautological_truth_condition_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -341,6 +395,7 @@ theorem example_4_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_de
 #check example_3_model_interpretable
 #check example_3_denotationally_sound
 #check example_3_truth_condition_sound
+#check example_3_tautological_truth_condition_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -350,3 +405,4 @@ theorem example_4_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_de
 #check example_4_model_interpretable
 #check example_4_denotationally_sound
 #check example_4_truth_condition_sound
+#check example_4_tautological_truth_condition_sound

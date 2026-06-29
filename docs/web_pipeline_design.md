@@ -187,7 +187,12 @@ stage adds `coq_semantic_model_denotation_boundary`, which exports a
 stage adds `coq_truth_condition_spec_bridge`, exports a `TruthConditionSpec`
 record, builds `semantic_model_from_truth_conditions`, proves
 `truth_conditions_induce_denotational_soundness`, and checks per-example
-`example_i_truth_condition_sound` theorems. The remaining blocker is
+`example_i_truth_condition_sound` theorems. The next stage adds
+`coq_tautological_truth_condition_instance`: a deliberately degenerate
+`tautological_truth_conditions` record, its induced `tautological_semantic_model`,
+an instance-existence theorem, and per-example
+`example_i_tautological_truth_condition_sound` checks. This stage verifies
+record inhabitation and wiring, not substantive truth conditions. The remaining blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition
 interface must be filled with independently specified lexical, temporal,

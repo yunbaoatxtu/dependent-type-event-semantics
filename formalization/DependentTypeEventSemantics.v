@@ -334,6 +334,51 @@ Proof.
     (semantic_model_from_truth_conditions T) A term H).
 Qed.
 
+Definition tautological_truth_denotes : forall A : Type, A -> Prop :=
+  fun A term => True.
+
+Definition tautological_truth_conditions : TruthConditionSpec := {|
+  truth_denotes := tautological_truth_denotes;
+  truth_break_application := fun n mods arg1 arg2 => I;
+  truth_butter_application := fun n mods arg1 arg2 => I;
+  truth_eat_application := fun n mods arg1 arg2 => I;
+  truth_knock_application := fun n mods arg1 => I;
+  truth_sigma_Entity := fun P h => I;
+  truth_sigma_Food := fun P h => I;
+  truth_sigma_State := fun P h => I;
+  truth_sigma_StateScale := fun P h => I;
+  truth_sigma_TransitionT := fun P h => I;
+  truth_repeat := fun n body h => I;
+  truth_at_T := fun marker body h => I;
+  truth_during_T := fun marker body h => I;
+  truth_before_T := fun marker body h => I;
+  truth_after_T := fun marker body h => I;
+  truth_until_T := fun marker body h => I;
+  truth_since_T := fun marker body h => I;
+  truth_not_T := fun body h => I;
+  truth_transition := fun theme scale source target => I;
+  truth_cause := fun causer effect h => I
+|}.
+
+Definition tautological_semantic_model : SemanticModel :=
+  semantic_model_from_truth_conditions tautological_truth_conditions.
+
+Theorem tautological_truth_condition_spec_exists :
+  exists T : TruthConditionSpec, T = tautological_truth_conditions.
+Proof.
+  exists tautological_truth_conditions. reflexivity.
+Qed.
+
+Theorem tautological_truth_conditions_denote_model_interpretable :
+  forall A : Type, forall term : A,
+    ModelInterpretable A term ->
+    truth_denotes tautological_truth_conditions A term.
+Proof.
+  intros A term H.
+  apply truth_conditions_induce_denotational_soundness.
+  exact H.
+Qed.
+
 Definition PreservationTargetMatches
   (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   obligation_statement target = SemanticPreservation A term.
@@ -484,6 +529,27 @@ Proof.
   exact example_4_model_interpretable.
 Qed.
 
+Theorem example_1_tautological_truth_condition_sound : truth_denotes tautological_truth_conditions PropT example_1.
+Proof.
+  apply tautological_truth_conditions_denote_model_interpretable.
+  exact example_1_model_interpretable.
+Qed.
+Theorem example_2_tautological_truth_condition_sound : truth_denotes tautological_truth_conditions Prop example_2.
+Proof.
+  apply tautological_truth_conditions_denote_model_interpretable.
+  exact example_2_model_interpretable.
+Qed.
+Theorem example_3_tautological_truth_condition_sound : truth_denotes tautological_truth_conditions PropT example_3.
+Proof.
+  apply tautological_truth_conditions_denote_model_interpretable.
+  exact example_3_model_interpretable.
+Qed.
+Theorem example_4_tautological_truth_condition_sound : truth_denotes tautological_truth_conditions PropT example_4.
+Proof.
+  apply tautological_truth_conditions_denote_model_interpretable.
+  exact example_4_model_interpretable.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -493,6 +559,7 @@ Check example_1_semantic_preservation_proved.
 Check example_1_model_interpretable.
 Check example_1_denotationally_sound.
 Check example_1_truth_condition_sound.
+Check example_1_tautological_truth_condition_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -502,6 +569,7 @@ Check example_2_semantic_preservation_proved.
 Check example_2_model_interpretable.
 Check example_2_denotationally_sound.
 Check example_2_truth_condition_sound.
+Check example_2_tautological_truth_condition_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -511,6 +579,7 @@ Check example_3_semantic_preservation_proved.
 Check example_3_model_interpretable.
 Check example_3_denotationally_sound.
 Check example_3_truth_condition_sound.
+Check example_3_tautological_truth_condition_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -520,3 +589,4 @@ Check example_4_semantic_preservation_proved.
 Check example_4_model_interpretable.
 Check example_4_denotationally_sound.
 Check example_4_truth_condition_sound.
+Check example_4_tautological_truth_condition_sound.

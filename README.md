@@ -973,7 +973,14 @@ list also includes `coq_truth_condition_spec_bridge`: the generated Lean/Coq
 interfaces export a `TruthConditionSpec` record, build
 `semantic_model_from_truth_conditions`, prove
 `truth_conditions_induce_denotational_soundness`, and check per-example
-`example_i_truth_condition_sound` theorems. The open blocker is now
+`example_i_truth_condition_sound` theorems. The next verified objective,
+`coq_tautological_truth_condition_instance`, adds a deliberately degenerate
+`tautological_truth_conditions` instance, the induced
+`tautological_semantic_model`, an existence theorem for the instance, and
+per-example `example_i_tautological_truth_condition_sound` checks. This
+sanity instance proves that the generated truth-condition interface is
+inhabitable and wired through the examples; it is not a non-vacuous lexical,
+temporal, causal, quantificational, or modifier semantics. The open blocker is now
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
