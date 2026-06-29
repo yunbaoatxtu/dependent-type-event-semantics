@@ -1086,6 +1086,98 @@ theorem concrete_registered_truth_conditions_imply_atomic_closure :
   apply concrete_registered_truth_implies_atomic_closure
   exact h
 
+structure ConcreteRegisteredCompositionalModel : Type where
+  concrete_registered_composition_denotes : (A : Type) -> A -> Prop
+  concrete_registered_composition_atomic : (A : Type) -> (term : A) -> ConcreteRegisteredAtomicTruth A term -> concrete_registered_composition_denotes A term
+  concrete_registered_composition_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_composition_denotes Prop (Exists fun x : Entity => P x)
+  concrete_registered_composition_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_composition_denotes Prop (Exists fun x : Food => P x)
+  concrete_registered_composition_sigma_State : (P : State -> Prop) -> ((x : State) -> concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_composition_denotes Prop (Exists fun x : State => P x)
+  concrete_registered_composition_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_composition_denotes Prop (Exists fun x : StateScale => P x)
+  concrete_registered_composition_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_composition_denotes Prop (Exists fun x : TransitionT => P x)
+  concrete_registered_composition_repeat : (n : Nat) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (repeat n body)
+  concrete_registered_composition_at_T : (marker : Entity) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (at_T marker body)
+  concrete_registered_composition_during_T : (marker : Entity) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (during_T marker body)
+  concrete_registered_composition_before_T : (marker : Entity) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (before_T marker body)
+  concrete_registered_composition_after_T : (marker : Entity) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (after_T marker body)
+  concrete_registered_composition_until_T : (marker : Entity) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (until_T marker body)
+  concrete_registered_composition_since_T : (marker : Entity) -> (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (since_T marker body)
+  concrete_registered_composition_not_T : (body : PropT) -> concrete_registered_composition_denotes PropT body -> concrete_registered_composition_denotes PropT (not_T body)
+  concrete_registered_composition_cause : (causer : Entity) -> (effect : TransitionT) -> concrete_registered_composition_denotes TransitionT effect -> concrete_registered_composition_denotes PropT (Cause causer effect)
+  concrete_registered_composition_sound : (A : Type) -> (term : A) -> concrete_registered_composition_denotes A term -> AtomicClosureTruth A term
+
+def concrete_registered_compositional_model : ConcreteRegisteredCompositionalModel := {
+  concrete_registered_composition_denotes := ConcreteRegisteredTruth,
+  concrete_registered_composition_atomic := fun A term h => ConcreteRegisteredTruth.concrete_registered_truth_atomic A term h,
+  concrete_registered_composition_sigma_Entity := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_Entity P h,
+  concrete_registered_composition_sigma_Food := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_Food P h,
+  concrete_registered_composition_sigma_State := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_State P h,
+  concrete_registered_composition_sigma_StateScale := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_StateScale P h,
+  concrete_registered_composition_sigma_TransitionT := fun P h => ConcreteRegisteredTruth.concrete_registered_truth_sigma_TransitionT P h,
+  concrete_registered_composition_repeat := fun n body h => ConcreteRegisteredTruth.concrete_registered_truth_repeat n body h,
+  concrete_registered_composition_at_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_at_T marker body h,
+  concrete_registered_composition_during_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_during_T marker body h,
+  concrete_registered_composition_before_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_before_T marker body h,
+  concrete_registered_composition_after_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_after_T marker body h,
+  concrete_registered_composition_until_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_until_T marker body h,
+  concrete_registered_composition_since_T := fun marker body h => ConcreteRegisteredTruth.concrete_registered_truth_since_T marker body h,
+  concrete_registered_composition_not_T := fun body h => ConcreteRegisteredTruth.concrete_registered_truth_not_T body h,
+  concrete_registered_composition_cause := fun causer effect h => ConcreteRegisteredTruth.concrete_registered_truth_cause causer effect h,
+  concrete_registered_composition_sound := concrete_registered_truth_implies_atomic_closure
+}
+
+theorem concrete_registered_compositional_model_exists :
+    Exists (fun M : ConcreteRegisteredCompositionalModel => M = concrete_registered_compositional_model) := by
+  exact Exists.intro concrete_registered_compositional_model rfl
+
+theorem concrete_registered_compositional_model_denotes_concrete_registered :
+    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> concrete_registered_compositional_model.concrete_registered_composition_denotes A term := by
+  intro A term h
+  exact h
+
+theorem concrete_registered_compositional_model_imply_atomic_closure :
+    (A : Type) -> (term : A) -> concrete_registered_compositional_model.concrete_registered_composition_denotes A term -> AtomicClosureTruth A term := by
+  intro A term h
+  exact concrete_registered_compositional_model.concrete_registered_composition_sound A term h
+
+theorem concrete_registered_compositional_model_repeat_clause :
+    (n : Nat) -> (body : PropT) -> concrete_registered_compositional_model.concrete_registered_composition_denotes PropT body -> concrete_registered_compositional_model.concrete_registered_composition_denotes PropT (repeat n body) := by
+  intro n body h
+  exact concrete_registered_compositional_model.concrete_registered_composition_repeat n body h
+
+theorem concrete_registered_compositional_model_at_T_clause :
+    (marker : Entity) -> (body : PropT) -> concrete_registered_compositional_model.concrete_registered_composition_denotes PropT body -> concrete_registered_compositional_model.concrete_registered_composition_denotes PropT (at_T marker body) := by
+  intro marker body h
+  exact concrete_registered_compositional_model.concrete_registered_composition_at_T marker body h
+
+theorem concrete_registered_compositional_model_cause_clause :
+    (causer : Entity) -> (effect : TransitionT) -> concrete_registered_compositional_model.concrete_registered_composition_denotes TransitionT effect -> concrete_registered_compositional_model.concrete_registered_composition_denotes PropT (Cause causer effect) := by
+  intro causer effect h
+  exact concrete_registered_compositional_model.concrete_registered_composition_cause causer effect h
+
+theorem concrete_registered_compositional_model_sigma_Entity_clause :
+    (P : Entity -> Prop) -> ((x : Entity) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (Exists fun x : Entity => P x) := by
+  intro P h
+  exact concrete_registered_compositional_model.concrete_registered_composition_sigma_Entity P h
+
+theorem concrete_registered_compositional_model_sigma_Food_clause :
+    (P : Food -> Prop) -> ((x : Food) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (Exists fun x : Food => P x) := by
+  intro P h
+  exact concrete_registered_compositional_model.concrete_registered_composition_sigma_Food P h
+
+theorem concrete_registered_compositional_model_sigma_State_clause :
+    (P : State -> Prop) -> ((x : State) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (Exists fun x : State => P x) := by
+  intro P h
+  exact concrete_registered_compositional_model.concrete_registered_composition_sigma_State P h
+
+theorem concrete_registered_compositional_model_sigma_StateScale_clause :
+    (P : StateScale -> Prop) -> ((x : StateScale) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (Exists fun x : StateScale => P x) := by
+  intro P h
+  exact concrete_registered_compositional_model.concrete_registered_composition_sigma_StateScale P h
+
+theorem concrete_registered_compositional_model_sigma_TransitionT_clause :
+    (P : TransitionT -> Prop) -> ((x : TransitionT) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (P x)) -> concrete_registered_compositional_model.concrete_registered_composition_denotes Prop (Exists fun x : TransitionT => P x) := by
+  intro P h
+  exact concrete_registered_compositional_model.concrete_registered_composition_sigma_TransitionT P h
 structure ConcreteRegisteredTruthConditionModel : Type where
   concrete_registered_model_denotes : (A : Type) -> A -> Prop
   concrete_registered_model_spec : FullyRegisteredTruthConditionSpec
@@ -2117,6 +2209,13 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_basis_denotes_atomic_base_truth
 #check concrete_registered_truth_conditions
 #check concrete_registered_truth_condition_spec_exists
+#check concrete_registered_compositional_model
+#check concrete_registered_compositional_model_exists
+#check concrete_registered_compositional_model_denotes_concrete_registered
+#check concrete_registered_compositional_model_imply_atomic_closure
+#check concrete_registered_compositional_model_repeat_clause
+#check concrete_registered_compositional_model_at_T_clause
+#check concrete_registered_compositional_model_cause_clause
 #check concrete_registered_truth_condition_model
 #check concrete_registered_truth_condition_model_exists
 #check concrete_registered_truth_condition_model_denote_spec

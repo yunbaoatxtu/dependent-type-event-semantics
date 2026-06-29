@@ -1106,6 +1106,23 @@ registered atom basis as `ConcreteRegisteredAtomicModel`, proves
 `concrete_registered_truth_basis_denotes_atomic_base_truth`. This adds a
 reusable registered-atom bridge back to `AtomicBaseTruth` before the closure is
 lifted into a full truth-condition spec. The follow-up verified objective
+`coq_concrete_registered_compositional_model_bridge` packages the finite
+registered closure clauses as `ConcreteRegisteredCompositionalModel`. The
+record exposes the denotation predicate together with explicit atomic,
+Sigma-projection, repetition, temporal, polarity, and `Cause` fields, then
+instantiates `concrete_registered_compositional_model` from
+`ConcreteRegisteredTruth`. The generated Lean and Coq scaffolds check
+`concrete_registered_compositional_model_exists`,
+`concrete_registered_compositional_model_denotes_concrete_registered`,
+`concrete_registered_compositional_model_imply_atomic_closure`, and projection
+theorems such as `concrete_registered_compositional_model_repeat_clause`,
+`concrete_registered_compositional_model_at_T_clause`,
+`concrete_registered_compositional_model_cause_clause`, and
+`concrete_registered_compositional_model_sigma_Entity_clause`. This is the
+middle bridge between the finite atom model and the truth-condition model: it
+makes the registered composition laws explicit without pretending that arbitrary
+lexical, temporal, causal, quantificational, or modifier denotations have been
+independently supplied. The follow-up verified objective
 `coq_concrete_registered_truth_condition_model_bridge` packages
 `ConcreteRegisteredTruth` together with
 `concrete_registered_truth_conditions : FullyRegisteredTruthConditionSpec` as
@@ -1169,8 +1186,8 @@ conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
-concrete-registered-atomic-model, concrete-registered-truth-condition-model,
-concrete-registered-truth-condition,
+concrete-registered-atomic-model, concrete-registered-compositional-model,
+concrete-registered-truth-condition-model, concrete-registered-truth-condition,
 concrete-registered-truth-kernel, or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.

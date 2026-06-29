@@ -167,7 +167,19 @@ that basis through `ConcreteRegisteredAtomicModel`, proves
 checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound` for every exported
-example. The scaffold also packages the same finite truth-condition route as
+example. The scaffold also packages the finite registered closure clauses as
+`ConcreteRegisteredCompositionalModel`: its fields expose the denotation
+predicate, the atomic inclusion clause, Sigma projection clauses for exported
+types, repetition, temporal, polarity, and Cause closure clauses, and a
+soundness bridge back to `AtomicClosureTruth`. The generated files instantiate
+`concrete_registered_compositional_model` from `ConcreteRegisteredTruth`, prove
+`concrete_registered_compositional_model_exists`, and check projection theorems
+such as `concrete_registered_compositional_model_repeat_clause`,
+`concrete_registered_compositional_model_at_T_clause`,
+`concrete_registered_compositional_model_cause_clause`, and
+`concrete_registered_compositional_model_sigma_Entity_clause`. This makes the
+compositional closure stage explicit before the scaffold packages the same
+finite truth-condition route as
 `ConcreteRegisteredTruthConditionModel`, proving that its model denotation feeds
 the generated `FullyRegisteredTruthConditionSpec` and that both routes imply
 `AtomicClosureTruth`. The scaffold then factors the same finite closure through

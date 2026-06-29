@@ -1842,6 +1842,234 @@ Proof.
   exact H.
 Qed.
 
+Record ConcreteRegisteredCompositionalModel : Type := {
+  concrete_registered_composition_denotes : forall A : Type, A -> Prop;
+  concrete_registered_composition_atomic :
+      forall A : Type, forall term : A,
+      ConcreteRegisteredAtomicTruth A term ->
+      concrete_registered_composition_denotes A term;
+  concrete_registered_composition_sigma_Entity :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        concrete_registered_composition_denotes Prop (P x)) ->
+      concrete_registered_composition_denotes Prop
+        (exists x : Entity, P x);
+  concrete_registered_composition_sigma_Food :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        concrete_registered_composition_denotes Prop (P x)) ->
+      concrete_registered_composition_denotes Prop
+        (exists x : Food, P x);
+  concrete_registered_composition_sigma_State :
+      forall P : State -> Prop,
+      (forall x : State,
+        concrete_registered_composition_denotes Prop (P x)) ->
+      concrete_registered_composition_denotes Prop
+        (exists x : State, P x);
+  concrete_registered_composition_sigma_StateScale :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        concrete_registered_composition_denotes Prop (P x)) ->
+      concrete_registered_composition_denotes Prop
+        (exists x : StateScale, P x);
+  concrete_registered_composition_sigma_TransitionT :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        concrete_registered_composition_denotes Prop (P x)) ->
+      concrete_registered_composition_denotes Prop
+        (exists x : TransitionT, P x);
+  concrete_registered_composition_repeat :
+      forall n : nat, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (repeat n body);
+  concrete_registered_composition_at_T :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (at_T marker body);
+  concrete_registered_composition_during_T :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (during_T marker body);
+  concrete_registered_composition_before_T :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (before_T marker body);
+  concrete_registered_composition_after_T :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (after_T marker body);
+  concrete_registered_composition_until_T :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (until_T marker body);
+  concrete_registered_composition_since_T :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (since_T marker body);
+  concrete_registered_composition_not_T :
+      forall body : PropT,
+      concrete_registered_composition_denotes PropT body ->
+      concrete_registered_composition_denotes PropT (not_T body);
+  concrete_registered_composition_cause :
+      forall causer : Entity, forall effect : TransitionT,
+      concrete_registered_composition_denotes TransitionT effect ->
+      concrete_registered_composition_denotes PropT (Cause causer effect);
+  concrete_registered_composition_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_composition_denotes A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition concrete_registered_compositional_model :
+  ConcreteRegisteredCompositionalModel := {|
+  concrete_registered_composition_denotes := ConcreteRegisteredTruth;
+  concrete_registered_composition_atomic :=
+    fun A term h => concrete_registered_truth_atomic A term h;
+  concrete_registered_composition_sigma_Entity := fun P h => concrete_registered_truth_sigma_Entity P h;
+  concrete_registered_composition_sigma_Food := fun P h => concrete_registered_truth_sigma_Food P h;
+  concrete_registered_composition_sigma_State := fun P h => concrete_registered_truth_sigma_State P h;
+  concrete_registered_composition_sigma_StateScale := fun P h => concrete_registered_truth_sigma_StateScale P h;
+  concrete_registered_composition_sigma_TransitionT := fun P h => concrete_registered_truth_sigma_TransitionT P h;
+  concrete_registered_composition_repeat := fun n body h => concrete_registered_truth_repeat n body h;
+  concrete_registered_composition_at_T := fun marker body h => concrete_registered_truth_at_T marker body h;
+  concrete_registered_composition_during_T := fun marker body h => concrete_registered_truth_during_T marker body h;
+  concrete_registered_composition_before_T := fun marker body h => concrete_registered_truth_before_T marker body h;
+  concrete_registered_composition_after_T := fun marker body h => concrete_registered_truth_after_T marker body h;
+  concrete_registered_composition_until_T := fun marker body h => concrete_registered_truth_until_T marker body h;
+  concrete_registered_composition_since_T := fun marker body h => concrete_registered_truth_since_T marker body h;
+  concrete_registered_composition_not_T := fun body h => concrete_registered_truth_not_T body h;
+  concrete_registered_composition_cause := fun causer effect h => concrete_registered_truth_cause causer effect h;
+  concrete_registered_composition_sound := concrete_registered_truth_implies_atomic_closure
+|}.
+
+Theorem concrete_registered_compositional_model_exists :
+  exists M : ConcreteRegisteredCompositionalModel,
+    M = concrete_registered_compositional_model.
+Proof.
+  exists concrete_registered_compositional_model. reflexivity.
+Qed.
+
+Theorem concrete_registered_compositional_model_denotes_concrete_registered :
+  forall A : Type, forall term : A,
+    ConcreteRegisteredTruth A term ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem concrete_registered_compositional_model_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  exact (concrete_registered_composition_sound
+    concrete_registered_compositional_model A term H).
+Qed.
+
+Theorem concrete_registered_compositional_model_repeat_clause :
+  forall n : nat, forall body : PropT,
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model PropT body ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model PropT (repeat n body).
+Proof.
+  intros n body H.
+  exact (concrete_registered_composition_repeat
+    concrete_registered_compositional_model n body H).
+Qed.
+
+Theorem concrete_registered_compositional_model_at_T_clause :
+  forall marker : Entity, forall body : PropT,
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model PropT body ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model PropT (at_T marker body).
+Proof.
+  intros marker body H.
+  exact (concrete_registered_composition_at_T
+    concrete_registered_compositional_model marker body H).
+Qed.
+
+Theorem concrete_registered_compositional_model_cause_clause :
+  forall causer : Entity, forall effect : TransitionT,
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model TransitionT effect ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model PropT (Cause causer effect).
+Proof.
+  intros causer effect H.
+  exact (concrete_registered_composition_cause
+    concrete_registered_compositional_model causer effect H).
+Qed.
+
+Theorem concrete_registered_compositional_model_sigma_Entity_clause :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model Prop (P x)) ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model Prop
+      (exists x : Entity, P x).
+Proof.
+  intros P H.
+  exact (concrete_registered_composition_sigma_Entity concrete_registered_compositional_model P H).
+Qed.
+
+Theorem concrete_registered_compositional_model_sigma_Food_clause :
+  forall P : Food -> Prop,
+    (forall x : Food,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model Prop (P x)) ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model Prop
+      (exists x : Food, P x).
+Proof.
+  intros P H.
+  exact (concrete_registered_composition_sigma_Food concrete_registered_compositional_model P H).
+Qed.
+
+Theorem concrete_registered_compositional_model_sigma_State_clause :
+  forall P : State -> Prop,
+    (forall x : State,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model Prop (P x)) ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model Prop
+      (exists x : State, P x).
+Proof.
+  intros P H.
+  exact (concrete_registered_composition_sigma_State concrete_registered_compositional_model P H).
+Qed.
+
+Theorem concrete_registered_compositional_model_sigma_StateScale_clause :
+  forall P : StateScale -> Prop,
+    (forall x : StateScale,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model Prop (P x)) ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model Prop
+      (exists x : StateScale, P x).
+Proof.
+  intros P H.
+  exact (concrete_registered_composition_sigma_StateScale concrete_registered_compositional_model P H).
+Qed.
+
+Theorem concrete_registered_compositional_model_sigma_TransitionT_clause :
+  forall P : TransitionT -> Prop,
+    (forall x : TransitionT,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model Prop (P x)) ->
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model Prop
+      (exists x : TransitionT, P x).
+Proof.
+  intros P H.
+  exact (concrete_registered_composition_sigma_TransitionT concrete_registered_compositional_model P H).
+Qed.
 Record ConcreteRegisteredTruthConditionModel : Type := {
   concrete_registered_model_denotes : forall A : Type, A -> Prop;
   concrete_registered_model_spec : FullyRegisteredTruthConditionSpec;
@@ -3289,6 +3517,13 @@ Check concrete_registered_atomic_model_denotes_atomic_base_truth.
 Check concrete_registered_truth_basis_denotes_atomic_base_truth.
 Check concrete_registered_truth_conditions.
 Check concrete_registered_truth_condition_spec_exists.
+Check concrete_registered_compositional_model.
+Check concrete_registered_compositional_model_exists.
+Check concrete_registered_compositional_model_denotes_concrete_registered.
+Check concrete_registered_compositional_model_imply_atomic_closure.
+Check concrete_registered_compositional_model_repeat_clause.
+Check concrete_registered_compositional_model_at_T_clause.
+Check concrete_registered_compositional_model_cause_clause.
 Check concrete_registered_truth_condition_model.
 Check concrete_registered_truth_condition_model_exists.
 Check concrete_registered_truth_condition_model_denote_spec.

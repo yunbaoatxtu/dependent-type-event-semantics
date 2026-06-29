@@ -6429,6 +6429,450 @@ def registered_lexical_truth_model_example_lines(
     return lines
 
 
+def concrete_registered_compositional_model_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure ConcreteRegisteredCompositionalModel : Type where",
+            "  concrete_registered_composition_denotes : (A : Type) -> A -> Prop",
+            "  concrete_registered_composition_atomic : "
+            "(A : Type) -> (term : A) -> "
+            "ConcreteRegisteredAtomicTruth A term -> "
+            "concrete_registered_composition_denotes A term",
+        ]
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  concrete_registered_composition_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> "
+                "concrete_registered_composition_denotes Prop (P x)) -> "
+                "concrete_registered_composition_denotes Prop "
+                f"(Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  concrete_registered_composition_repeat : "
+                "(n : Nat) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT (repeat n body)",
+                "  concrete_registered_composition_at_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT (at_T marker body)",
+                "  concrete_registered_composition_during_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT "
+                "(during_T marker body)",
+                "  concrete_registered_composition_before_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT "
+                "(before_T marker body)",
+                "  concrete_registered_composition_after_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT "
+                "(after_T marker body)",
+                "  concrete_registered_composition_until_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT "
+                "(until_T marker body)",
+                "  concrete_registered_composition_since_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT "
+                "(since_T marker body)",
+                "  concrete_registered_composition_not_T : (body : PropT) -> "
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_composition_denotes PropT (not_T body)",
+                "  concrete_registered_composition_cause : "
+                "(causer : Entity) -> (effect : TransitionT) -> "
+                "concrete_registered_composition_denotes TransitionT effect -> "
+                "concrete_registered_composition_denotes PropT "
+                "(Cause causer effect)",
+                "  concrete_registered_composition_sound : "
+                "(A : Type) -> (term : A) -> "
+                "concrete_registered_composition_denotes A term -> "
+                "AtomicClosureTruth A term",
+                "",
+                "def concrete_registered_compositional_model : "
+                "ConcreteRegisteredCompositionalModel := {",
+                "  concrete_registered_composition_denotes := ConcreteRegisteredTruth,",
+                "  concrete_registered_composition_atomic := "
+                "fun A term h => ConcreteRegisteredTruth."
+                "concrete_registered_truth_atomic A term h,",
+            ]
+        )
+        model_fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            model_fields.append(
+                (
+                    f"concrete_registered_composition_sigma_{type_name}",
+                    "fun P h => ConcreteRegisteredTruth."
+                    f"concrete_registered_truth_sigma_{type_name} P h",
+                )
+            )
+        model_fields.extend(
+            [
+                (
+                    "concrete_registered_composition_repeat",
+                    "fun n body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_repeat n body h",
+                ),
+                (
+                    "concrete_registered_composition_at_T",
+                    "fun marker body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_at_T marker body h",
+                ),
+                (
+                    "concrete_registered_composition_during_T",
+                    "fun marker body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_during_T marker body h",
+                ),
+                (
+                    "concrete_registered_composition_before_T",
+                    "fun marker body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_before_T marker body h",
+                ),
+                (
+                    "concrete_registered_composition_after_T",
+                    "fun marker body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_after_T marker body h",
+                ),
+                (
+                    "concrete_registered_composition_until_T",
+                    "fun marker body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_until_T marker body h",
+                ),
+                (
+                    "concrete_registered_composition_since_T",
+                    "fun marker body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_since_T marker body h",
+                ),
+                (
+                    "concrete_registered_composition_not_T",
+                    "fun body h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_not_T body h",
+                ),
+                (
+                    "concrete_registered_composition_cause",
+                    "fun causer effect h => ConcreteRegisteredTruth."
+                    "concrete_registered_truth_cause causer effect h",
+                ),
+                (
+                    "concrete_registered_composition_sound",
+                    "concrete_registered_truth_implies_atomic_closure",
+                ),
+            ]
+        )
+        for index, (field, value) in enumerate(model_fields):
+            suffix = "," if index < len(model_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_registered_compositional_model_exists :",
+                "    Exists (fun M : ConcreteRegisteredCompositionalModel => "
+                "M = concrete_registered_compositional_model) := by",
+                "  exact Exists.intro concrete_registered_compositional_model rfl",
+                "",
+                "theorem "
+                "concrete_registered_compositional_model_denotes_concrete_registered :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem "
+                "concrete_registered_compositional_model_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  exact concrete_registered_compositional_model."
+                "concrete_registered_composition_sound A term h",
+                "",
+                "theorem concrete_registered_compositional_model_repeat_clause :",
+                "    (n : Nat) -> (body : PropT) -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes PropT "
+                "(repeat n body) := by",
+                "  intro n body h",
+                "  exact concrete_registered_compositional_model."
+                "concrete_registered_composition_repeat n body h",
+                "",
+                "theorem concrete_registered_compositional_model_at_T_clause :",
+                "    (marker : Entity) -> (body : PropT) -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes PropT body -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes PropT "
+                "(at_T marker body) := by",
+                "  intro marker body h",
+                "  exact concrete_registered_compositional_model."
+                "concrete_registered_composition_at_T marker body h",
+                "",
+                "theorem concrete_registered_compositional_model_cause_clause :",
+                "    (causer : Entity) -> (effect : TransitionT) -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes TransitionT effect -> "
+                "concrete_registered_compositional_model."
+                "concrete_registered_composition_denotes PropT "
+                "(Cause causer effect) := by",
+                "  intro causer effect h",
+                "  exact concrete_registered_compositional_model."
+                "concrete_registered_composition_cause causer effect h",
+            ]
+        )
+        for type_name in declarations["types"]:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"concrete_registered_compositional_model_sigma_{type_name}_clause :",
+                    f"    (P : {type_name} -> Prop) -> "
+                    f"((x : {type_name}) -> "
+                    "concrete_registered_compositional_model."
+                    "concrete_registered_composition_denotes Prop (P x)) -> "
+                    "concrete_registered_compositional_model."
+                    "concrete_registered_composition_denotes Prop "
+                    f"(Exists fun x : {type_name} => P x) := by",
+                    "  intro P h",
+                    "  exact concrete_registered_compositional_model."
+                    f"concrete_registered_composition_sigma_{type_name} P h",
+                ]
+            )
+        return lines
+
+    record_fields: list[str] = [
+        "  concrete_registered_composition_denotes : forall A : Type, A -> Prop;",
+        "  concrete_registered_composition_atomic :",
+        "      forall A : Type, forall term : A,",
+        "      ConcreteRegisteredAtomicTruth A term ->",
+        "      concrete_registered_composition_denotes A term;",
+    ]
+    for type_name in declarations["types"]:
+        record_fields.extend(
+            [
+                f"  concrete_registered_composition_sigma_{type_name} :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        concrete_registered_composition_denotes Prop (P x)) ->",
+                "      concrete_registered_composition_denotes Prop",
+                f"        (exists x : {type_name}, P x);",
+            ]
+        )
+    record_fields.extend(
+        [
+            "  concrete_registered_composition_repeat :",
+            "      forall n : nat, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (repeat n body);",
+            "  concrete_registered_composition_at_T :",
+            "      forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (at_T marker body);",
+            "  concrete_registered_composition_during_T :",
+            "      forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (during_T marker body);",
+            "  concrete_registered_composition_before_T :",
+            "      forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (before_T marker body);",
+            "  concrete_registered_composition_after_T :",
+            "      forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (after_T marker body);",
+            "  concrete_registered_composition_until_T :",
+            "      forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (until_T marker body);",
+            "  concrete_registered_composition_since_T :",
+            "      forall marker : Entity, forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (since_T marker body);",
+            "  concrete_registered_composition_not_T :",
+            "      forall body : PropT,",
+            "      concrete_registered_composition_denotes PropT body ->",
+            "      concrete_registered_composition_denotes PropT (not_T body);",
+            "  concrete_registered_composition_cause :",
+            "      forall causer : Entity, forall effect : TransitionT,",
+            "      concrete_registered_composition_denotes TransitionT effect ->",
+            "      concrete_registered_composition_denotes PropT (Cause causer effect);",
+            "  concrete_registered_composition_sound :",
+            "      forall A : Type, forall term : A,",
+            "      concrete_registered_composition_denotes A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+    )
+    lines = [
+        "Record ConcreteRegisteredCompositionalModel : Type := {",
+        *record_fields,
+        "}.",
+        "",
+        "Definition concrete_registered_compositional_model :",
+        "  ConcreteRegisteredCompositionalModel := {|",
+        "  concrete_registered_composition_denotes := ConcreteRegisteredTruth;",
+        "  concrete_registered_composition_atomic :=",
+        "    fun A term h => concrete_registered_truth_atomic A term h;",
+    ]
+    model_fields = [
+        (
+            f"concrete_registered_composition_sigma_{type_name}",
+            f"fun P h => concrete_registered_truth_sigma_{type_name} P h",
+        )
+        for type_name in declarations["types"]
+    ]
+    model_fields.extend(
+        [
+            (
+                "concrete_registered_composition_repeat",
+                "fun n body h => concrete_registered_truth_repeat n body h",
+            ),
+            (
+                "concrete_registered_composition_at_T",
+                "fun marker body h => concrete_registered_truth_at_T marker body h",
+            ),
+            (
+                "concrete_registered_composition_during_T",
+                "fun marker body h => concrete_registered_truth_during_T marker body h",
+            ),
+            (
+                "concrete_registered_composition_before_T",
+                "fun marker body h => concrete_registered_truth_before_T marker body h",
+            ),
+            (
+                "concrete_registered_composition_after_T",
+                "fun marker body h => concrete_registered_truth_after_T marker body h",
+            ),
+            (
+                "concrete_registered_composition_until_T",
+                "fun marker body h => concrete_registered_truth_until_T marker body h",
+            ),
+            (
+                "concrete_registered_composition_since_T",
+                "fun marker body h => concrete_registered_truth_since_T marker body h",
+            ),
+            (
+                "concrete_registered_composition_not_T",
+                "fun body h => concrete_registered_truth_not_T body h",
+            ),
+            (
+                "concrete_registered_composition_cause",
+                "fun causer effect h => concrete_registered_truth_cause causer effect h",
+            ),
+            (
+                "concrete_registered_composition_sound",
+                "concrete_registered_truth_implies_atomic_closure",
+            ),
+        ]
+    )
+    for index, (field, value) in enumerate(model_fields):
+        suffix = ";" if index < len(model_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_registered_compositional_model_exists :",
+            "  exists M : ConcreteRegisteredCompositionalModel,",
+            "    M = concrete_registered_compositional_model.",
+            "Proof.",
+            "  exists concrete_registered_compositional_model. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_compositional_model_denotes_concrete_registered :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term ->",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_compositional_model_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact (concrete_registered_composition_sound",
+            "    concrete_registered_compositional_model A term H).",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_compositional_model_repeat_clause :",
+            "  forall n : nat, forall body : PropT,",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model PropT body ->",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model PropT (repeat n body).",
+            "Proof.",
+            "  intros n body H.",
+            "  exact (concrete_registered_composition_repeat",
+            "    concrete_registered_compositional_model n body H).",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_compositional_model_at_T_clause :",
+            "  forall marker : Entity, forall body : PropT,",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model PropT body ->",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model PropT (at_T marker body).",
+            "Proof.",
+            "  intros marker body H.",
+            "  exact (concrete_registered_composition_at_T",
+            "    concrete_registered_compositional_model marker body H).",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_compositional_model_cause_clause :",
+            "  forall causer : Entity, forall effect : TransitionT,",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model TransitionT effect ->",
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model PropT (Cause causer effect).",
+            "Proof.",
+            "  intros causer effect H.",
+            "  exact (concrete_registered_composition_cause",
+            "    concrete_registered_compositional_model causer effect H).",
+            "Qed.",
+        ]
+    )
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"concrete_registered_compositional_model_sigma_{type_name}_clause :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      concrete_registered_composition_denotes",
+                "        concrete_registered_compositional_model Prop (P x)) ->",
+                "    concrete_registered_composition_denotes",
+                "      concrete_registered_compositional_model Prop",
+                f"      (exists x : {type_name}, P x).",
+                "Proof.",
+                "  intros P H.",
+                "  exact ("
+                f"concrete_registered_composition_sigma_{type_name} "
+                "concrete_registered_compositional_model P H).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_truth_condition_instance_lines(
     declarations: dict[str, Any],
     target: str,
@@ -6726,6 +7170,11 @@ def concrete_registered_truth_condition_instance_lines(
                 "  apply concrete_registered_truth_implies_atomic_closure",
                 "  exact h",
                 "",
+            ]
+        )
+        lines.extend(concrete_registered_compositional_model_lines(declarations, target))
+        lines.extend(
+            [
                 "structure ConcreteRegisteredTruthConditionModel : Type where",
                 "  concrete_registered_model_denotes : (A : Type) -> A -> Prop",
                 "  concrete_registered_model_spec : FullyRegisteredTruthConditionSpec",
@@ -7086,6 +7535,11 @@ def concrete_registered_truth_condition_instance_lines(
             "  exact H.",
             "Qed.",
             "",
+        ]
+    )
+    lines.extend(concrete_registered_compositional_model_lines(declarations, target))
+    lines.extend(
+        [
             "Record ConcreteRegisteredTruthConditionModel : Type := {",
             "  concrete_registered_model_denotes : forall A : Type, A -> Prop;",
             "  concrete_registered_model_spec : FullyRegisteredTruthConditionSpec;",
@@ -8933,6 +9387,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check concrete_registered_truth_basis_denotes_atomic_base_truth")
         lines.append("#check concrete_registered_truth_conditions")
         lines.append("#check concrete_registered_truth_condition_spec_exists")
+        lines.append("#check concrete_registered_compositional_model")
+        lines.append("#check concrete_registered_compositional_model_exists")
+        lines.append(
+            "#check "
+            "concrete_registered_compositional_model_denotes_concrete_registered"
+        )
+        lines.append(
+            "#check concrete_registered_compositional_model_imply_atomic_closure"
+        )
+        lines.append("#check concrete_registered_compositional_model_repeat_clause")
+        lines.append("#check concrete_registered_compositional_model_at_T_clause")
+        lines.append("#check concrete_registered_compositional_model_cause_clause")
         lines.append("#check concrete_registered_truth_condition_model")
         lines.append("#check concrete_registered_truth_condition_model_exists")
         lines.append("#check concrete_registered_truth_condition_model_denote_spec")
@@ -9615,6 +10081,15 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_truth_basis_denotes_atomic_base_truth.")
     lines.append("Check concrete_registered_truth_conditions.")
     lines.append("Check concrete_registered_truth_condition_spec_exists.")
+    lines.append("Check concrete_registered_compositional_model.")
+    lines.append("Check concrete_registered_compositional_model_exists.")
+    lines.append(
+        "Check concrete_registered_compositional_model_denotes_concrete_registered."
+    )
+    lines.append("Check concrete_registered_compositional_model_imply_atomic_closure.")
+    lines.append("Check concrete_registered_compositional_model_repeat_clause.")
+    lines.append("Check concrete_registered_compositional_model_at_T_clause.")
+    lines.append("Check concrete_registered_compositional_model_cause_clause.")
     lines.append("Check concrete_registered_truth_condition_model.")
     lines.append("Check concrete_registered_truth_condition_model_exists.")
     lines.append("Check concrete_registered_truth_condition_model_denote_spec.")

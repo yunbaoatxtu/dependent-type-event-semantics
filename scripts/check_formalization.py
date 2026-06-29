@@ -1097,6 +1097,23 @@ def main() -> None:
             in lean
             and "theorem concrete_registered_truth_conditions_imply_atomic_closure :"
             in lean
+            and "structure ConcreteRegisteredCompositionalModel : Type where"
+            in lean
+            and "def concrete_registered_compositional_model : "
+            "ConcreteRegisteredCompositionalModel := {" in lean
+            and "theorem concrete_registered_compositional_model_exists :"
+            in lean
+            and "theorem "
+            "concrete_registered_compositional_model_denotes_concrete_registered :"
+            in lean
+            and "theorem concrete_registered_compositional_model_repeat_clause :"
+            in lean
+            and "theorem concrete_registered_compositional_model_at_T_clause :"
+            in lean
+            and "theorem concrete_registered_compositional_model_cause_clause :"
+            in lean
+            and "theorem concrete_registered_compositional_model_sigma_Entity_clause :"
+            in lean
             and "structure ConcreteRegisteredTruthConditionModel : Type where"
             in lean
             and "def concrete_registered_truth_condition_model : "
@@ -1147,11 +1164,49 @@ def main() -> None:
             and "#check example_4_concrete_registered_truth_condition_sound"
             in lean
             and "#check concrete_registered_truth_conditions" in lean
+            and "#check concrete_registered_compositional_model" in lean
+            and "#check concrete_registered_compositional_model_repeat_clause"
+            in lean
             and "#check concrete_registered_truth_condition_model" in lean
             and "#check concrete_registered_truth_condition_model_denote_spec"
             in lean
             and "#check concrete_registered_truth_kernel" in lean
             and "#check concrete_registered_truth_conditions_from_kernel" in lean
+        ),
+        "lean concrete registered compositional model bridge": (
+            "structure ConcreteRegisteredCompositionalModel : Type where"
+            in lean
+            and "concrete_registered_composition_denotes : (A : Type) -> A -> Prop"
+            in lean
+            and "concrete_registered_composition_atomic : " in lean
+            and "concrete_registered_composition_sigma_Entity : " in lean
+            and "concrete_registered_composition_repeat : " in lean
+            and "concrete_registered_composition_at_T : " in lean
+            and "concrete_registered_composition_cause : " in lean
+            and "concrete_registered_composition_sound : " in lean
+            and "def concrete_registered_compositional_model : "
+            "ConcreteRegisteredCompositionalModel := {" in lean
+            and "theorem concrete_registered_compositional_model_exists :"
+            in lean
+            and "theorem "
+            "concrete_registered_compositional_model_denotes_concrete_registered :"
+            in lean
+            and "theorem "
+            "concrete_registered_compositional_model_imply_atomic_closure :"
+            in lean
+            and "theorem concrete_registered_compositional_model_repeat_clause :"
+            in lean
+            and "theorem concrete_registered_compositional_model_at_T_clause :"
+            in lean
+            and "theorem concrete_registered_compositional_model_cause_clause :"
+            in lean
+            and "theorem concrete_registered_compositional_model_sigma_Entity_clause :"
+            in lean
+            and "#check concrete_registered_compositional_model" in lean
+            and "#check concrete_registered_compositional_model_repeat_clause"
+            in lean
+            and "#check concrete_registered_compositional_model_cause_clause"
+            in lean
         ),
         "lean concrete registered truth condition model bridge": (
             "structure ConcreteRegisteredTruthConditionModel : Type where"
@@ -1204,6 +1259,23 @@ def main() -> None:
             in coq
             and "Theorem concrete_registered_truth_conditions_imply_atomic_closure :"
             in coq
+            and "Record ConcreteRegisteredCompositionalModel : Type := {"
+            in coq
+            and "Definition concrete_registered_compositional_model :"
+            in coq
+            and "ConcreteRegisteredCompositionalModel := {|" in coq
+            and "Theorem concrete_registered_compositional_model_exists :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_denotes_concrete_registered :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_repeat_clause :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_at_T_clause :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_cause_clause :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_sigma_Entity_clause :"
+            in coq
             and "Record ConcreteRegisteredTruthConditionModel : Type := {"
             in coq
             and "Definition concrete_registered_truth_condition_model :"
@@ -1254,11 +1326,47 @@ def main() -> None:
             and "Check example_4_concrete_registered_truth_condition_sound."
             in coq
             and "Check concrete_registered_truth_conditions." in coq
+            and "Check concrete_registered_compositional_model." in coq
+            and "Check concrete_registered_compositional_model_repeat_clause."
+            in coq
             and "Check concrete_registered_truth_condition_model." in coq
             and "Check concrete_registered_truth_condition_model_denote_spec."
             in coq
             and "Check concrete_registered_truth_kernel." in coq
             and "Check concrete_registered_truth_conditions_from_kernel." in coq
+        ),
+        "coq concrete registered compositional model bridge": (
+            "Record ConcreteRegisteredCompositionalModel : Type := {" in coq
+            and "concrete_registered_composition_denotes : forall A : Type, A -> Prop;"
+            in coq
+            and "concrete_registered_composition_atomic :" in coq
+            and "concrete_registered_composition_sigma_Entity :" in coq
+            and "concrete_registered_composition_repeat :" in coq
+            and "concrete_registered_composition_at_T :" in coq
+            and "concrete_registered_composition_cause :" in coq
+            and "concrete_registered_composition_sound :" in coq
+            and "Definition concrete_registered_compositional_model :"
+            in coq
+            and "ConcreteRegisteredCompositionalModel := {|" in coq
+            and "Theorem concrete_registered_compositional_model_exists :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_denotes_concrete_registered :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_imply_atomic_closure :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_repeat_clause :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_at_T_clause :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_cause_clause :"
+            in coq
+            and "Theorem concrete_registered_compositional_model_sigma_Entity_clause :"
+            in coq
+            and "Check concrete_registered_compositional_model." in coq
+            and "Check concrete_registered_compositional_model_repeat_clause."
+            in coq
+            and "Check concrete_registered_compositional_model_cause_clause."
+            in coq
         ),
         "coq concrete registered truth condition model bridge": (
             "Record ConcreteRegisteredTruthConditionModel : Type := {" in coq

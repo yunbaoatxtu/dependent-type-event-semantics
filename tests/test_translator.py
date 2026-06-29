@@ -1707,6 +1707,38 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure ConcreteRegisteredCompositionalModel : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_compositional_model : ConcreteRegisteredCompositionalModel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_compositional_model_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_compositional_model_repeat_clause :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_compositional_model_at_T_clause :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_compositional_model_cause_clause :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_compositional_model_sigma_Entity_clause :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check concrete_registered_compositional_model_repeat_clause",
+            lean_module,
+        )
+        self.assertIn(
             "structure ConcreteRegisteredTruthConditionModel : Type where",
             lean_module,
         )
@@ -2632,6 +2664,38 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Theorem concrete_registered_truth_conditions_imply_atomic_closure :",
+            coq_module,
+        )
+        self.assertIn(
+            "Record ConcreteRegisteredCompositionalModel : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_compositional_model :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_compositional_model_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_compositional_model_repeat_clause :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_compositional_model_at_T_clause :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_compositional_model_cause_clause :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_compositional_model_sigma_Entity_clause :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_registered_compositional_model_repeat_clause.",
             coq_module,
         )
         self.assertIn(
@@ -15570,6 +15634,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_lexical_truth_condition_spec_instance",
                 "coq_registered_lexical_truth_model_bridge",
                 "coq_concrete_registered_atomic_model_bridge",
+                "coq_concrete_registered_compositional_model_bridge",
                 "coq_concrete_registered_truth_condition_model_bridge",
                 "coq_concrete_registered_truth_condition_instance",
                 "coq_concrete_registered_truth_kernel_instance",
@@ -24670,6 +24735,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`coq_registered_truth_condition_spec_instance`", readme)
         self.assertIn("`ConcreteRegisteredAtomicModel`", readme)
         self.assertIn("`coq_concrete_registered_atomic_model_bridge`", readme)
+        self.assertIn("`ConcreteRegisteredCompositionalModel`", readme)
+        self.assertIn(
+            "`coq_concrete_registered_compositional_model_bridge`",
+            readme,
+        )
         self.assertIn("`ConcreteRegisteredTruthConditionModel`", readme)
         self.assertIn(
             "`coq_concrete_registered_truth_condition_model_bridge`",
@@ -24685,6 +24755,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`RegisteredTruthConditionSpec`", formalization_readme)
         self.assertIn("`ConcreteRegisteredAtomicModel`", formalization_readme)
         self.assertIn(
+            "`ConcreteRegisteredCompositionalModel`",
+            formalization_readme,
+        )
+        self.assertIn(
             "`ConcreteRegisteredTruthConditionModel`",
             formalization_readme,
         )
@@ -24697,6 +24771,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("TransitionRefinedAtomicClosureTruth", manuscript)
         self.assertIn("RegisteredTruthConditionSpec", manuscript)
         self.assertIn("ConcreteRegisteredAtomicModel", manuscript)
+        self.assertIn("ConcreteRegisteredCompositionalModel", manuscript)
         self.assertIn("ConcreteRegisteredTruthConditionModel", manuscript)
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
         self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
@@ -24704,6 +24779,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("coq_transition_refined_atomic_closure_instance", manuscript)
         self.assertIn("coq_registered_truth_condition_spec_instance", manuscript)
         self.assertIn("coq_concrete_registered_atomic_model_bridge", manuscript)
+        self.assertIn(
+            "coq_concrete_registered_compositional_model_bridge",
+            manuscript,
+        )
         self.assertIn(
             "coq_concrete_registered_truth_condition_model_bridge",
             manuscript,

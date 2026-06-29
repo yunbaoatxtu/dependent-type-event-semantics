@@ -21049,6 +21049,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_compositional_model_bridge",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_condition_model_bridge",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21209,6 +21214,12 @@ def project_completion_status_payload(
                     "ConcreteRegisteredAtomicModel and proves both the model "
                     "denotation and the ConcreteRegisteredTruthBasis "
                     "denotation imply AtomicBaseTruth. "
+                    "The newest compositional-model bridge then packages "
+                    "the finite registered closure clauses as "
+                    "ConcreteRegisteredCompositionalModel, with explicit "
+                    "atomic, Sigma, repetition, temporal, polarity, and Cause "
+                    "fields, and checks repeat, at_T, Cause, and Sigma "
+                    "projection theorems back to AtomicClosureTruth. "
                     "The newest truth-condition model bridge packages "
                     "ConcreteRegisteredTruth together with the generated "
                     "FullyRegisteredTruthConditionSpec as "
