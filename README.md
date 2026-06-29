@@ -1089,15 +1089,22 @@ argument in the argument-omission example, declares them as
 `example_i_fully_registered_truth_condition_sound`, and
 `example_i_fully_registered_truth_condition_atomic_sound`. This removes the
 previous arbitrary lexical-application route for the exported examples without
-claiming a general lexical truth model for all surface predicates. The open
-blocker remains
+claiming a general lexical truth model for all surface predicates. The follow-up
+verified objective `coq_registered_example_truth_instance_package` packages
+those per-example fully registered truth-condition proofs into a generated
+`RegisteredExampleTruthInstances` record, proves that the package exists, and
+checks per-example projections such as
+`registered_example_i_truth_instance_atomic_sound` back to `AtomicClosureTruth`.
+This is a finite exported-fragment instance package, not a general lexical,
+temporal, causal, quantificational, or modifier model. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
-registered-transition, or registered-lexical kernel/spec instances.
+registered-transition, registered-lexical, or registered-example package
+instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

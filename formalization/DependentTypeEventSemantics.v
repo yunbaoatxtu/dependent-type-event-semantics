@@ -2140,6 +2140,55 @@ Proof.
   exact example_4_fully_registered_truth_condition_sound.
 Qed.
 
+Record RegisteredExampleTruthInstances : Type := {
+  example_1_truth_instance :
+      fully_registered_truth_denotes fully_registered_truth_conditions PropT example_1;
+  example_2_truth_instance :
+      fully_registered_truth_denotes fully_registered_truth_conditions Prop example_2;
+  example_3_truth_instance :
+      fully_registered_truth_denotes fully_registered_truth_conditions PropT example_3;
+  example_4_truth_instance :
+      fully_registered_truth_denotes fully_registered_truth_conditions PropT example_4
+}.
+
+Definition registered_example_truth_instances : RegisteredExampleTruthInstances := {|
+  example_1_truth_instance := example_1_fully_registered_truth_condition_sound;
+  example_2_truth_instance := example_2_fully_registered_truth_condition_sound;
+  example_3_truth_instance := example_3_fully_registered_truth_condition_sound;
+  example_4_truth_instance := example_4_fully_registered_truth_condition_sound
+|}.
+
+Theorem registered_example_truth_instances_exists :
+  exists I : RegisteredExampleTruthInstances,
+    I = registered_example_truth_instances.
+Proof.
+  exists registered_example_truth_instances. reflexivity.
+Qed.
+
+Theorem registered_example_1_truth_instance_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_1_truth_instance registered_example_truth_instances).
+Qed.
+
+Theorem registered_example_2_truth_instance_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_2_truth_instance registered_example_truth_instances).
+Qed.
+
+Theorem registered_example_3_truth_instance_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_3_truth_instance registered_example_truth_instances).
+Qed.
+
+Theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_4_truth_instance registered_example_truth_instances).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -2166,6 +2215,7 @@ Check example_1_transition_refined_registered_truth_condition_atomic_sound.
 Check example_1_fully_registered_atomic_closure_truth.
 Check example_1_fully_registered_truth_condition_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
+Check registered_example_1_truth_instance_atomic_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -2192,6 +2242,7 @@ Check example_2_transition_refined_registered_truth_condition_atomic_sound.
 Check example_2_fully_registered_atomic_closure_truth.
 Check example_2_fully_registered_truth_condition_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
+Check registered_example_2_truth_instance_atomic_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -2218,6 +2269,7 @@ Check example_3_transition_refined_registered_truth_condition_atomic_sound.
 Check example_3_fully_registered_atomic_closure_truth.
 Check example_3_fully_registered_truth_condition_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
+Check registered_example_3_truth_instance_atomic_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -2244,3 +2296,6 @@ Check example_4_transition_refined_registered_truth_condition_atomic_sound.
 Check example_4_fully_registered_atomic_closure_truth.
 Check example_4_fully_registered_truth_condition_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
+Check registered_example_4_truth_instance_atomic_sound.
+Check registered_example_truth_instances.
+Check registered_example_truth_instances_exists.

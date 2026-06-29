@@ -1770,6 +1770,22 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
+        self.assertIn(
+            "structure RegisteredExampleTruthInstances : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def registered_example_truth_instances : RegisteredExampleTruthInstances := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem registered_example_truth_instances_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem registered_example_2_truth_instance_atomic_sound :",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply semantic_preservation_syntax_directed_truth", lean_module)
@@ -1824,6 +1840,10 @@ class TranslatorTests(unittest.TestCase):
             "apply fully_registered_truth_conditions_imply_atomic_closure",
             lean_module,
         )
+        self.assertIn(
+            "exact registered_example_truth_instances.example_2_truth_instance",
+            lean_module,
+        )
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
@@ -1864,6 +1884,11 @@ class TranslatorTests(unittest.TestCase):
             "#check example_2_fully_registered_truth_condition_atomic_sound",
             lean_module,
         )
+        self.assertIn(
+            "#check registered_example_2_truth_instance_atomic_sound",
+            lean_module,
+        )
+        self.assertIn("#check registered_example_truth_instances", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -2406,6 +2431,22 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record RegisteredExampleTruthInstances : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition registered_example_truth_instances : RegisteredExampleTruthInstances := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_example_truth_instances_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_example_2_truth_instance_atomic_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -2475,6 +2516,10 @@ class TranslatorTests(unittest.TestCase):
             "  apply fully_registered_truth_conditions_imply_atomic_closure.",
             coq_module,
         )
+        self.assertIn(
+            "  exact (example_2_truth_instance registered_example_truth_instances).",
+            coq_module,
+        )
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
@@ -2517,6 +2562,11 @@ class TranslatorTests(unittest.TestCase):
             "Check example_2_fully_registered_truth_condition_atomic_sound.",
             coq_module,
         )
+        self.assertIn(
+            "Check registered_example_2_truth_instance_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn("Check registered_example_truth_instances.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -2603,8 +2653,21 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_1_primitive_truth_kernel_sound.", coq_module)
         self.assertIn("Check example_1_atomic_closure_truth.", coq_module)
         self.assertIn("Check example_1_atomic_closure_truth_kernel_sound.", coq_module)
+        self.assertIn(
+            "Record RegisteredExampleTruthInstances : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_example_1_truth_instance_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check registered_example_1_truth_instance_atomic_sound.",
+            coq_module,
+        )
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
+        self.assertNotIn("registered_example_2_truth_instance_atomic_sound", coq_module)
 
     def test_packaged_cli_exports_coq_module(self) -> None:
         completed = subprocess.run(
@@ -14837,6 +14900,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_transition_refined_atomic_closure_instance",
                 "coq_registered_truth_condition_spec_instance",
                 "coq_registered_lexical_truth_condition_spec_instance",
+                "coq_registered_example_truth_instance_package",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },

@@ -1367,6 +1367,39 @@ theorem example_4_fully_registered_truth_condition_atomic_sound : AtomicClosureT
   apply fully_registered_truth_conditions_imply_atomic_closure
   exact example_4_fully_registered_truth_condition_sound
 
+structure RegisteredExampleTruthInstances : Type where
+  example_1_truth_instance : fully_registered_truth_conditions.fully_registered_truth_denotes PropT example_1
+  example_2_truth_instance : fully_registered_truth_conditions.fully_registered_truth_denotes Prop example_2
+  example_3_truth_instance : fully_registered_truth_conditions.fully_registered_truth_denotes PropT example_3
+  example_4_truth_instance : fully_registered_truth_conditions.fully_registered_truth_denotes PropT example_4
+
+def registered_example_truth_instances : RegisteredExampleTruthInstances := {
+  example_1_truth_instance := example_1_fully_registered_truth_condition_sound,
+  example_2_truth_instance := example_2_fully_registered_truth_condition_sound,
+  example_3_truth_instance := example_3_fully_registered_truth_condition_sound,
+  example_4_truth_instance := example_4_fully_registered_truth_condition_sound
+}
+
+theorem registered_example_truth_instances_exists :
+    Exists (fun I : RegisteredExampleTruthInstances => I = registered_example_truth_instances) := by
+  exact Exists.intro registered_example_truth_instances rfl
+
+theorem registered_example_1_truth_instance_atomic_sound : AtomicClosureTruth PropT example_1 := by
+  apply fully_registered_truth_conditions_imply_atomic_closure
+  exact registered_example_truth_instances.example_1_truth_instance
+
+theorem registered_example_2_truth_instance_atomic_sound : AtomicClosureTruth Prop example_2 := by
+  apply fully_registered_truth_conditions_imply_atomic_closure
+  exact registered_example_truth_instances.example_2_truth_instance
+
+theorem registered_example_3_truth_instance_atomic_sound : AtomicClosureTruth PropT example_3 := by
+  apply fully_registered_truth_conditions_imply_atomic_closure
+  exact registered_example_truth_instances.example_3_truth_instance
+
+theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth PropT example_4 := by
+  apply fully_registered_truth_conditions_imply_atomic_closure
+  exact registered_example_truth_instances.example_4_truth_instance
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -1393,6 +1426,7 @@ theorem example_4_fully_registered_truth_condition_atomic_sound : AtomicClosureT
 #check example_1_fully_registered_atomic_closure_truth
 #check example_1_fully_registered_truth_condition_sound
 #check example_1_fully_registered_truth_condition_atomic_sound
+#check registered_example_1_truth_instance_atomic_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -1419,6 +1453,7 @@ theorem example_4_fully_registered_truth_condition_atomic_sound : AtomicClosureT
 #check example_2_fully_registered_atomic_closure_truth
 #check example_2_fully_registered_truth_condition_sound
 #check example_2_fully_registered_truth_condition_atomic_sound
+#check registered_example_2_truth_instance_atomic_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -1445,6 +1480,7 @@ theorem example_4_fully_registered_truth_condition_atomic_sound : AtomicClosureT
 #check example_3_fully_registered_atomic_closure_truth
 #check example_3_fully_registered_truth_condition_sound
 #check example_3_fully_registered_truth_condition_atomic_sound
+#check registered_example_3_truth_instance_atomic_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -1471,3 +1507,6 @@ theorem example_4_fully_registered_truth_condition_atomic_sound : AtomicClosureT
 #check example_4_fully_registered_atomic_closure_truth
 #check example_4_fully_registered_truth_condition_sound
 #check example_4_fully_registered_truth_condition_atomic_sound
+#check registered_example_4_truth_instance_atomic_sound
+#check registered_example_truth_instances
+#check registered_example_truth_instances_exists

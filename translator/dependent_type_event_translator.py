@@ -5992,6 +5992,115 @@ def fully_registered_atomic_closure_proof_steps(
     return prove(term, {})
 
 
+def registered_example_truth_instance_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package the exported examples' fully registered truth proofs."""
+
+    if target == "lean":
+        lines = ["structure RegisteredExampleTruthInstances : Type where"]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                f"  example_{idx}_truth_instance : "
+                "fully_registered_truth_conditions."
+                f"fully_registered_truth_denotes {annotation} example_{idx}"
+            )
+        lines.extend(
+            [
+                "",
+                "def registered_example_truth_instances : "
+                "RegisteredExampleTruthInstances := {",
+            ]
+        )
+        for idx in range(1, len(results) + 1):
+            suffix = "," if idx < len(results) else ""
+            lines.append(
+                f"  example_{idx}_truth_instance := "
+                f"example_{idx}_fully_registered_truth_condition_sound{suffix}"
+            )
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem registered_example_truth_instances_exists :",
+                "    Exists (fun I : RegisteredExampleTruthInstances => "
+                "I = registered_example_truth_instances) := by",
+                "  exact Exists.intro registered_example_truth_instances rfl",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"registered_example_{idx}_truth_instance_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply fully_registered_truth_conditions_imply_atomic_closure",
+                    "  exact registered_example_truth_instances."
+                    f"example_{idx}_truth_instance",
+                ]
+            )
+        return lines
+
+    lines = ["Record RegisteredExampleTruthInstances : Type := {"]
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        suffix = ";" if idx < len(results) else ""
+        lines.extend(
+            [
+                f"  example_{idx}_truth_instance :",
+                "      fully_registered_truth_denotes "
+                "fully_registered_truth_conditions "
+                f"{annotation} example_{idx}{suffix}",
+            ]
+        )
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition registered_example_truth_instances : "
+            "RegisteredExampleTruthInstances := {|",
+        ]
+    )
+    for idx in range(1, len(results) + 1):
+        suffix = ";" if idx < len(results) else ""
+        lines.append(
+            f"  example_{idx}_truth_instance := "
+            f"example_{idx}_fully_registered_truth_condition_sound{suffix}"
+        )
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem registered_example_truth_instances_exists :",
+            "  exists I : RegisteredExampleTruthInstances,",
+            "    I = registered_example_truth_instances.",
+            "Proof.",
+            "  exists registered_example_truth_instances. reflexivity.",
+            "Qed.",
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"registered_example_{idx}_truth_instance_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply fully_registered_truth_conditions_imply_atomic_closure.",
+                "  exact (example_"
+                f"{idx}_truth_instance registered_example_truth_instances).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -6742,6 +6851,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"  exact example_{idx}_fully_registered_truth_condition_sound"
             )
         lines.append("")
+        lines.extend(registered_example_truth_instance_lines(results, target))
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -6786,6 +6897,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "#check "
                 f"example_{idx}_fully_registered_truth_condition_atomic_sound"
             )
+            lines.append(
+                "#check "
+                f"registered_example_{idx}_truth_instance_atomic_sound"
+            )
+        lines.append("#check registered_example_truth_instances")
+        lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -7242,6 +7359,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_fully_registered_truth_condition_sound.")
         lines.append("Qed.")
     lines.append("")
+    lines.extend(registered_example_truth_instance_lines(results, target))
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -7278,6 +7397,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             f"example_{idx}_fully_registered_truth_condition_atomic_sound."
         )
+        lines.append(
+            "Check "
+            f"registered_example_{idx}_truth_instance_atomic_sound."
+        )
+    lines.append("Check registered_example_truth_instances.")
+    lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"
 
 

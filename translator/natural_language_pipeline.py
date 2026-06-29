@@ -21039,6 +21039,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_registered_example_truth_instance_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21149,6 +21154,11 @@ def project_completion_status_payload(
                     "requires registered lexical-application evidence rather "
                     "than arbitrary lexical atoms, with per-example fully "
                     "registered truth-condition soundness checks. "
+                    "It also packages those per-example fully registered "
+                    "truth-condition proofs into a generated "
+                    "RegisteredExampleTruthInstances record, proves the "
+                    "package exists, and checks that each packaged field "
+                    "projects back to AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

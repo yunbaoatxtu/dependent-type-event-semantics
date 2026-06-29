@@ -151,8 +151,12 @@ The file proves that these registered lexical applications imply both
 `example_i_fully_registered_atomic_closure_truth`,
 `example_i_fully_registered_truth_condition_sound`, and
 `example_i_fully_registered_truth_condition_atomic_sound` for every exported
-example. This still does not claim that the lexical and transition constructors
-have been derived from a full semantic model.
+example. The scaffold then gathers those checked example-level proofs into
+`RegisteredExampleTruthInstances`, proves
+`registered_example_truth_instances_exists`, and checks per-example projections
+such as `registered_example_i_truth_instance_atomic_sound` back to
+`AtomicClosureTruth`. This still does not claim that the lexical and transition
+constructors have been derived from a full semantic model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
