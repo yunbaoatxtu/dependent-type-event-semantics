@@ -1175,6 +1175,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "constant SemanticPreservation : (A : Type) -> A -> Prop",
             ]
         )
+        lines.append(
+            "def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
+        )
+        lines.append("  target.obligation_statement = SemanticPreservation A term")
         for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
             signature = " -> ".join(arg_types + [result_type])
             lines.append(f"constant {name} : {signature}")
@@ -1221,11 +1225,25 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"example_{idx}_semantic_preservation_obligation rfl"
             )
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_semantic_preservation_target_matches :"
+            )
+            lines.append(
+                "    PreservationTargetMatches "
+                f"{annotation} example_{idx} "
+                f"example_{idx}_semantic_preservation_obligation_record := by"
+            )
+            lines.append("  rfl")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation_record")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation_is_prop")
+            lines.append(f"#check example_{idx}_semantic_preservation_target_matches")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -1274,6 +1292,11 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Parameter SemanticPreservation : forall A : Type, A -> Prop.",
         ]
     )
+    lines.append("Definition PreservationTargetMatches")
+    lines.append(
+        "  (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
+    )
+    lines.append("  obligation_statement target = SemanticPreservation A term.")
     for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
         signature = " -> ".join(arg_types + [result_type])
         lines.append(f"Parameter {name} : {signature}.")
@@ -1316,11 +1339,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             f"example_{idx}_semantic_preservation_obligation. reflexivity. Qed."
         )
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_semantic_preservation_target_matches : "
+            f"PreservationTargetMatches {annotation} example_{idx} "
+            f"example_{idx}_semantic_preservation_obligation_record."
+        )
+        lines.append("Proof. reflexivity. Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation_record.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation_is_prop.")
+        lines.append(f"Check example_{idx}_semantic_preservation_target_matches.")
     return "\n".join(lines) + "\n"
 
 

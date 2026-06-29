@@ -170,7 +170,10 @@ the arbitrary-natural-language or deep-Coq-proof open objectives. After the
 named-obligation scaffold stage, `coq_named_obligation_scaffold` and
 `coq_obligation_wellformedness_proofs` belong on the verified side: the latter
 covers the generated Coq proofs that each named target is a `Prop`-level
-obligation. `semantic_preservation_obligations_unproved` remains a blocker and
+obligation. The following record-binding stage adds
+`coq_obligation_record_binding_proofs`, which proves that each structured
+obligation record points to its own `SemanticPreservation A example_i` target.
+`semantic_preservation_obligations_unproved` remains a blocker and
 `prove_named_semantic_preservation_obligations` remains the next Coq-facing
 stage.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
@@ -514,7 +517,7 @@ A successful response should include:
 - the structured AST;
 - the generated Coq scaffold, including one
   `semantic_preservation_obligation` row, structured obligation record, and
-  well-formedness theorem for each exported example;
+  well-formedness and record-binding theorem for each exported example;
 - the Coq/Rocq validation status;
 - a short conclusion.
 

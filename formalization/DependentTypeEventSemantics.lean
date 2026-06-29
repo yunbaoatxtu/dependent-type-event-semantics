@@ -42,6 +42,8 @@ constant not_T : PropT -> PropT
 constant Transition : Entity -> StateScale -> State -> State -> TransitionT
 constant Cause : Entity -> TransitionT -> PropT
 constant SemanticPreservation : (A : Type) -> A -> Prop
+def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
+  target.obligation_statement = SemanticPreservation A term
 constant break : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
 constant butter : (n : Nat) -> ModifierSeq n -> Entity -> Entity -> PropT
 constant eat : (n : Nat) -> ModifierSeq n -> Entity -> Food -> Prop
@@ -87,19 +89,36 @@ theorem example_4_semantic_preservation_obligation_is_prop :
     Exists (fun P : Prop => P = example_4_semantic_preservation_obligation) := by
   exact Exists.intro example_4_semantic_preservation_obligation rfl
 
+theorem example_1_semantic_preservation_target_matches :
+    PreservationTargetMatches PropT example_1 example_1_semantic_preservation_obligation_record := by
+  rfl
+theorem example_2_semantic_preservation_target_matches :
+    PreservationTargetMatches Prop example_2 example_2_semantic_preservation_obligation_record := by
+  rfl
+theorem example_3_semantic_preservation_target_matches :
+    PreservationTargetMatches PropT example_3 example_3_semantic_preservation_obligation_record := by
+  rfl
+theorem example_4_semantic_preservation_target_matches :
+    PreservationTargetMatches PropT example_4 example_4_semantic_preservation_obligation_record := by
+  rfl
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
 #check example_1_semantic_preservation_obligation_is_prop
+#check example_1_semantic_preservation_target_matches
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
 #check example_2_semantic_preservation_obligation_is_prop
+#check example_2_semantic_preservation_target_matches
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
 #check example_3_semantic_preservation_obligation_is_prop
+#check example_3_semantic_preservation_target_matches
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
 #check example_4_semantic_preservation_obligation_is_prop
+#check example_4_semantic_preservation_target_matches

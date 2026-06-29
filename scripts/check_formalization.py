@@ -77,6 +77,23 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_target_match_count = len(
+        re.findall(
+            r"^theorem example_\d+_semantic_preservation_target_matches :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_target_match_count = len(
+        re.findall(
+            r"^Theorem example_\d+_semantic_preservation_target_matches :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    coq_reflexive_proof_count = len(
+        re.findall(r"^Proof\. reflexivity\. Qed\.$", coq, re.MULTILINE)
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -113,6 +130,14 @@ def main() -> None:
             "Inductive ObligationStatus : Type :=" in coq
             and "Record SemanticPreservationObligation : Type := {" in coq
         ),
+        "lean preservation target match relation": (
+            "def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
+            in lean
+        ),
+        "coq preservation target match relation": (
+            "Definition PreservationTargetMatches" in coq
+            and "obligation_statement target = SemanticPreservation A term." in coq
+        ),
         "lean semantic preservation obligations": (
             lean_example_count > 0 and lean_obligation_count == lean_example_count
         ),
@@ -132,15 +157,24 @@ def main() -> None:
             coq_obligation_wellformed_count == coq_example_count
             and coq_obligation_wellformed_proof_count == coq_example_count
         ),
+        "lean preservation target match proofs": (
+            lean_target_match_count == lean_example_count
+        ),
+        "coq preservation target match proofs": (
+            coq_target_match_count == coq_example_count
+            and coq_reflexive_proof_count >= coq_example_count
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
             and "#check example_4_semantic_preservation_obligation_is_prop" in lean
+            and "#check example_4_semantic_preservation_target_matches" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
             and "Check example_4_semantic_preservation_obligation_record." in coq
             and "Check example_4_semantic_preservation_obligation_is_prop." in coq
+            and "Check example_4_semantic_preservation_target_matches." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

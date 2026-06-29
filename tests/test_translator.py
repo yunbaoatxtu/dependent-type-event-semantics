@@ -1269,10 +1269,19 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_semantic_preservation_obligation_is_prop :",
             lean_module,
         )
+        self.assertIn(
+            "def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_semantic_preservation_target_matches :",
+            lean_module,
+        )
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_is_prop", lean_module)
+        self.assertIn("#check example_2_semantic_preservation_target_matches", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Parameter SemanticPreservation : forall A : Type, A -> Prop.",
@@ -1280,6 +1289,11 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("Inductive ObligationStatus : Type :=", coq_module)
         self.assertIn("Record SemanticPreservationObligation : Type := {", coq_module)
+        self.assertIn("Definition PreservationTargetMatches", coq_module)
+        self.assertIn(
+            "obligation_statement target = SemanticPreservation A term.",
+            coq_module,
+        )
         self.assertIn(
             "Definition example_1 : Prop := (exists x_theme : Food, (eat 0 mods_nil John x_theme)).",
             coq_module,
@@ -1304,10 +1318,16 @@ class TranslatorTests(unittest.TestCase):
             "Proof. exists example_2_semantic_preservation_obligation. reflexivity. Qed.",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_2_semantic_preservation_target_matches : PreservationTargetMatches PropT example_2 example_2_semantic_preservation_obligation_record.",
+            coq_module,
+        )
+        self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation_record.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation_is_prop.", coq_module)
+        self.assertIn("Check example_2_semantic_preservation_target_matches.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -1326,9 +1346,14 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_1_semantic_preservation_obligation_is_prop :",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_1_semantic_preservation_target_matches :",
+            coq_module,
+        )
         self.assertIn("Check example_1_semantic_preservation_obligation.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_obligation_record.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_obligation_is_prop.", coq_module)
+        self.assertIn("Check example_1_semantic_preservation_target_matches.", coq_module)
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
 
@@ -1352,6 +1377,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("SemanticPreservation Prop example_1", completed.stdout)
         self.assertIn("SemanticPreservationObligation", completed.stdout)
         self.assertIn("example_1_semantic_preservation_obligation_is_prop", completed.stdout)
+        self.assertIn("example_1_semantic_preservation_target_matches", completed.stdout)
         self.assertIn("Check example_1.", completed.stdout)
         self.assertIn("Check example_1_semantic_preservation_obligation.", completed.stdout)
 
@@ -13542,6 +13568,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_shallow_scaffold_boundary",
                 "coq_named_obligation_scaffold",
                 "coq_obligation_wellformedness_proofs",
+                "coq_obligation_record_binding_proofs",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -22599,16 +22626,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`SemanticPreservation`", readme)
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)
+        self.assertIn("`example_i_semantic_preservation_target_matches`", readme)
         self.assertIn("well-formedness proof", readme)
+        self.assertIn("record-binding proof", readme)
         self.assertIn("named theorem-obligation", readme)
         self.assertIn("`SemanticPreservation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", formalization_readme)
+        self.assertIn("`example_i_semantic_preservation_target_matches`", formalization_readme)
         self.assertIn("not proofs of", formalization_readme)
         self.assertIn("semantic preservation", formalization_readme)
         self.assertIn("SemanticPreservation", manuscript)
         self.assertIn("semantic_preservation_obligation", manuscript)
         self.assertIn("obligation well-formedness proofs", manuscript)
+        self.assertIn("record-binding proofs", manuscript)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)
@@ -24299,6 +24330,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("lean_obligation_count == lean_example_count", formalization_checker)
         self.assertIn("coq_obligation_count == coq_example_count", formalization_checker)
         self.assertIn("coq_obligation_wellformed_proof_count == coq_example_count", formalization_checker)
+        self.assertIn("coq_target_match_count == coq_example_count", formalization_checker)
         self.assertIn("surface_witness_generation.v1", verifier)
         self.assertIn("surface parser slot probe schema drift", verifier)
         self.assertIn("surface parser slot probe generation spec drift", verifier)

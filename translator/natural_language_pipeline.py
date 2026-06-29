@@ -20939,6 +20939,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_obligation_record_binding_proofs",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -20964,9 +20969,9 @@ def project_completion_status_payload(
                 "reason": (
                     "Coq/Rocq currently checks a shallow exported scaffold and "
                     "named semantic-preservation obligations, and it now proves "
-                    "that each generated obligation is a Prop-level target; "
-                    "the preservation obligations themselves are not yet "
-                    "proved."
+                    "that each generated obligation is a Prop-level target "
+                    "whose structured record is bound to the exported example; "
+                    "the preservation obligations themselves are not yet proved."
                 ),
             },
             {

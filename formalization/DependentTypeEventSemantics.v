@@ -43,6 +43,9 @@ Parameter not_T : PropT -> PropT.
 Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.
 Parameter Cause : Entity -> TransitionT -> PropT.
 Parameter SemanticPreservation : forall A : Type, A -> Prop.
+Definition PreservationTargetMatches
+  (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
+  obligation_statement target = SemanticPreservation A term.
 Parameter break : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 Parameter butter : forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT.
 Parameter eat : forall n : nat, ModifierSeq n -> Entity -> Food -> Prop.
@@ -84,19 +87,32 @@ Proof. exists example_3_semantic_preservation_obligation. reflexivity. Qed.
 Theorem example_4_semantic_preservation_obligation_is_prop : exists P : Prop, P = example_4_semantic_preservation_obligation.
 Proof. exists example_4_semantic_preservation_obligation. reflexivity. Qed.
 
+Theorem example_1_semantic_preservation_target_matches : PreservationTargetMatches PropT example_1 example_1_semantic_preservation_obligation_record.
+Proof. reflexivity. Qed.
+Theorem example_2_semantic_preservation_target_matches : PreservationTargetMatches Prop example_2 example_2_semantic_preservation_obligation_record.
+Proof. reflexivity. Qed.
+Theorem example_3_semantic_preservation_target_matches : PreservationTargetMatches PropT example_3 example_3_semantic_preservation_obligation_record.
+Proof. reflexivity. Qed.
+Theorem example_4_semantic_preservation_target_matches : PreservationTargetMatches PropT example_4 example_4_semantic_preservation_obligation_record.
+Proof. reflexivity. Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
 Check example_1_semantic_preservation_obligation_is_prop.
+Check example_1_semantic_preservation_target_matches.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
 Check example_2_semantic_preservation_obligation_is_prop.
+Check example_2_semantic_preservation_target_matches.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
 Check example_3_semantic_preservation_obligation_is_prop.
+Check example_3_semantic_preservation_target_matches.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
 Check example_4_semantic_preservation_obligation_is_prop.
+Check example_4_semantic_preservation_target_matches.

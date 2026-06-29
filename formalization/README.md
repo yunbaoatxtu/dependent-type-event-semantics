@@ -46,6 +46,9 @@ example. It also generates a structured obligation record and a Coq theorem
 named `example_i_semantic_preservation_obligation_is_prop` for each example.
 Those theorems are well-formedness proofs: they show that the named target is a
 `Prop`-level obligation, not that semantic preservation itself has been proved.
+The generated theorem `example_i_semantic_preservation_target_matches` is a
+record-binding proof: it shows that the record's `obligation_statement` is
+exactly the `SemanticPreservation` target for the exported example.
 The statements remain named theorem-obligation rows and not proofs of semantic
 preservation. They make the next proof-development targets explicit while
 preserving the current shallow-boundary claim.

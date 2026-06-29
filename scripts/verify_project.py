@@ -10803,6 +10803,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_shallow_scaffold_boundary",
         "coq_named_obligation_scaffold",
         "coq_obligation_wellformedness_proofs",
+        "coq_obligation_record_binding_proofs",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
