@@ -524,6 +524,11 @@ def main() -> None:
             and "theorem atomic_closure_truth_kernel_exists :" in lean
             and "theorem atomic_closure_truth_kernel_denotes_atomic_closure_truth :"
             in lean
+            and "def atomic_closure_truth_conditions : TruthConditionSpec :="
+            in lean
+            and "theorem atomic_closure_truth_conditions_exists :" in lean
+            and "theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :"
+            in lean
         ),
         "coq atomic closure truth kernel instance": (
             "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=" in coq
@@ -548,6 +553,11 @@ def main() -> None:
             in coq
             and "Theorem atomic_closure_truth_kernel_exists :" in coq
             and "Theorem atomic_closure_truth_kernel_denotes_atomic_closure_truth :"
+            in coq
+            and "Definition atomic_closure_truth_conditions : TruthConditionSpec :="
+            in coq
+            and "Theorem atomic_closure_truth_conditions_exists :" in coq
+            and "Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :"
             in coq
         ),
         "lean model-interpretable truth kernel instance": (

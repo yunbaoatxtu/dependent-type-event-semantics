@@ -235,7 +235,11 @@ assumption list and leaves only atom-level lexical and transition facts as
 open assumptions. The follow-up
 `coq_atomic_base_truth_valuation_instance` makes `AtomicBaseTruth` an
 inductive base-valuation relation and defines `atomic_truth_facts` from those
-constructors instead of exposing it as an opaque parameter. The remaining
+constructors instead of exposing it as an opaque parameter. The follow-up
+`coq_atomic_closure_truth_condition_spec_instance` names the induced
+`TruthConditionSpec` as `atomic_closure_truth_conditions`, proves the spec
+exists, and checks per-example
+`example_i_atomic_closure_truth_condition_sound` theorems. The remaining
 blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition

@@ -782,6 +782,25 @@ Proof.
   exact H.
 Qed.
 
+Definition atomic_closure_truth_conditions : TruthConditionSpec :=
+  atomic_closure_truth_conditions_from_kernel.
+
+Theorem atomic_closure_truth_conditions_exists :
+  exists T : TruthConditionSpec,
+    T = atomic_closure_truth_conditions.
+Proof.
+  exists atomic_closure_truth_conditions. reflexivity.
+Qed.
+
+Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :
+  forall A : Type, forall term : A,
+    AtomicClosureTruth A term ->
+    truth_denotes atomic_closure_truth_conditions A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
 Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=
   ModelInterpretable.
 
@@ -1307,6 +1326,27 @@ Proof.
   exact example_4_atomic_closure_truth.
 Qed.
 
+Theorem example_1_atomic_closure_truth_condition_sound : truth_denotes atomic_closure_truth_conditions PropT example_1.
+Proof.
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth.
+  exact example_1_atomic_closure_truth.
+Qed.
+Theorem example_2_atomic_closure_truth_condition_sound : truth_denotes atomic_closure_truth_conditions Prop example_2.
+Proof.
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth.
+  exact example_2_atomic_closure_truth.
+Qed.
+Theorem example_3_atomic_closure_truth_condition_sound : truth_denotes atomic_closure_truth_conditions PropT example_3.
+Proof.
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth.
+  exact example_3_atomic_closure_truth.
+Qed.
+Theorem example_4_atomic_closure_truth_condition_sound : truth_denotes atomic_closure_truth_conditions PropT example_4.
+Proof.
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth.
+  exact example_4_atomic_closure_truth.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -1325,6 +1365,7 @@ Check example_1_syntax_directed_truth_kernel_sound.
 Check example_1_primitive_truth_kernel_sound.
 Check example_1_atomic_closure_truth.
 Check example_1_atomic_closure_truth_kernel_sound.
+Check example_1_atomic_closure_truth_condition_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -1343,6 +1384,7 @@ Check example_2_syntax_directed_truth_kernel_sound.
 Check example_2_primitive_truth_kernel_sound.
 Check example_2_atomic_closure_truth.
 Check example_2_atomic_closure_truth_kernel_sound.
+Check example_2_atomic_closure_truth_condition_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -1361,6 +1403,7 @@ Check example_3_syntax_directed_truth_kernel_sound.
 Check example_3_primitive_truth_kernel_sound.
 Check example_3_atomic_closure_truth.
 Check example_3_atomic_closure_truth_kernel_sound.
+Check example_3_atomic_closure_truth_condition_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -1379,3 +1422,4 @@ Check example_4_syntax_directed_truth_kernel_sound.
 Check example_4_primitive_truth_kernel_sound.
 Check example_4_atomic_closure_truth.
 Check example_4_atomic_closure_truth_kernel_sound.
+Check example_4_atomic_closure_truth_condition_sound.

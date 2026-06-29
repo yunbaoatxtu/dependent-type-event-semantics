@@ -1943,6 +1943,22 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_2_atomic_closure_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel atomic_closure_truth_kernel) PropT example_2.",
             coq_module,
         )
+        self.assertIn(
+            "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem atomic_closure_truth_conditions_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_atomic_closure_truth_condition_sound : truth_denotes atomic_closure_truth_conditions PropT example_2.",
+            coq_module,
+        )
         self.assertIn("  apply preserve_cause.", coq_module)
         self.assertIn("  apply semantic_preservation_model_interpretable.", coq_module)
         self.assertIn("  apply semantic_preservation_syntax_directed_truth.", coq_module)
@@ -1977,6 +1993,10 @@ class TranslatorTests(unittest.TestCase):
             "  apply atomic_closure_truth_kernel_denotes_atomic_closure_truth.",
             coq_module,
         )
+        self.assertIn(
+            "  apply atomic_closure_truth_conditions_denote_atomic_closure_truth.",
+            coq_module,
+        )
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
@@ -1996,6 +2016,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_primitive_truth_kernel_sound.", coq_module)
         self.assertIn("Check example_2_atomic_closure_truth.", coq_module)
         self.assertIn("Check example_2_atomic_closure_truth_kernel_sound.", coq_module)
+        self.assertIn("Check example_2_atomic_closure_truth_condition_sound.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -14309,6 +14330,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_primitive_truth_assumption_kernel_instance",
                 "coq_atomic_closure_truth_kernel_instance",
                 "coq_atomic_base_truth_valuation_instance",
+                "coq_atomic_closure_truth_condition_spec_instance",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },

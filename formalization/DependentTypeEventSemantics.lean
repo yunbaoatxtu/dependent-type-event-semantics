@@ -451,6 +451,18 @@ theorem atomic_closure_truth_kernel_denotes_atomic_closure_truth :
   intro A term h
   exact h
 
+def atomic_closure_truth_conditions : TruthConditionSpec :=
+  atomic_closure_truth_conditions_from_kernel
+
+theorem atomic_closure_truth_conditions_exists :
+    Exists (fun T : TruthConditionSpec => T = atomic_closure_truth_conditions) := by
+  exact Exists.intro atomic_closure_truth_conditions rfl
+
+theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :
+    (A : Type) -> (term : A) -> AtomicClosureTruth A term -> atomic_closure_truth_conditions.truth_denotes A term := by
+  intro A term h
+  exact h
+
 def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=
   ModelInterpretable
 
@@ -851,6 +863,19 @@ theorem example_4_atomic_closure_truth_kernel_sound : (truth_conditions_from_con
   apply atomic_closure_truth_kernel_denotes_atomic_closure_truth
   exact example_4_atomic_closure_truth
 
+theorem example_1_atomic_closure_truth_condition_sound : atomic_closure_truth_conditions.truth_denotes PropT example_1 := by
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth
+  exact example_1_atomic_closure_truth
+theorem example_2_atomic_closure_truth_condition_sound : atomic_closure_truth_conditions.truth_denotes Prop example_2 := by
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth
+  exact example_2_atomic_closure_truth
+theorem example_3_atomic_closure_truth_condition_sound : atomic_closure_truth_conditions.truth_denotes PropT example_3 := by
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth
+  exact example_3_atomic_closure_truth
+theorem example_4_atomic_closure_truth_condition_sound : atomic_closure_truth_conditions.truth_denotes PropT example_4 := by
+  apply atomic_closure_truth_conditions_denote_atomic_closure_truth
+  exact example_4_atomic_closure_truth
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -869,6 +894,7 @@ theorem example_4_atomic_closure_truth_kernel_sound : (truth_conditions_from_con
 #check example_1_primitive_truth_kernel_sound
 #check example_1_atomic_closure_truth
 #check example_1_atomic_closure_truth_kernel_sound
+#check example_1_atomic_closure_truth_condition_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -887,6 +913,7 @@ theorem example_4_atomic_closure_truth_kernel_sound : (truth_conditions_from_con
 #check example_2_primitive_truth_kernel_sound
 #check example_2_atomic_closure_truth
 #check example_2_atomic_closure_truth_kernel_sound
+#check example_2_atomic_closure_truth_condition_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -905,6 +932,7 @@ theorem example_4_atomic_closure_truth_kernel_sound : (truth_conditions_from_con
 #check example_3_primitive_truth_kernel_sound
 #check example_3_atomic_closure_truth
 #check example_3_atomic_closure_truth_kernel_sound
+#check example_3_atomic_closure_truth_condition_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -923,3 +951,4 @@ theorem example_4_atomic_closure_truth_kernel_sound : (truth_conditions_from_con
 #check example_4_primitive_truth_kernel_sound
 #check example_4_atomic_closure_truth
 #check example_4_atomic_closure_truth_kernel_sound
+#check example_4_atomic_closure_truth_condition_sound

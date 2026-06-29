@@ -2710,6 +2710,20 @@ def atomic_closure_truth_kernel_lines(
                 "atomic_closure_truth_kernel).truth_denotes A term := by",
                 "  intro A term h",
                 "  exact h",
+                "",
+                "def atomic_closure_truth_conditions : TruthConditionSpec :=",
+                "  atomic_closure_truth_conditions_from_kernel",
+                "",
+                "theorem atomic_closure_truth_conditions_exists :",
+                "    Exists (fun T : TruthConditionSpec => "
+                "T = atomic_closure_truth_conditions) := by",
+                "  exact Exists.intro atomic_closure_truth_conditions rfl",
+                "",
+                "theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :",
+                "    (A : Type) -> (term : A) -> AtomicClosureTruth A term -> "
+                "atomic_closure_truth_conditions.truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
             ]
         )
         return lines
@@ -2951,6 +2965,25 @@ def atomic_closure_truth_kernel_lines(
             "    AtomicClosureTruth A term ->",
             "    truth_denotes (truth_conditions_from_concrete_kernel",
             "      atomic_closure_truth_kernel) A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
+            "  atomic_closure_truth_conditions_from_kernel.",
+            "",
+            "Theorem atomic_closure_truth_conditions_exists :",
+            "  exists T : TruthConditionSpec,",
+            "    T = atomic_closure_truth_conditions.",
+            "Proof.",
+            "  exists atomic_closure_truth_conditions. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :",
+            "  forall A : Type, forall term : A,",
+            "    AtomicClosureTruth A term ->",
+            "    truth_denotes atomic_closure_truth_conditions A term.",
             "Proof.",
             "  intros A term H.",
             "  exact H.",
@@ -4289,6 +4322,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append("  apply atomic_closure_truth_kernel_denotes_atomic_closure_truth")
             lines.append(f"  exact example_{idx}_atomic_closure_truth")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_atomic_closure_truth_condition_sound : "
+                "atomic_closure_truth_conditions.truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append("  apply atomic_closure_truth_conditions_denote_atomic_closure_truth")
+            lines.append(f"  exact example_{idx}_atomic_closure_truth")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -4308,6 +4352,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_primitive_truth_kernel_sound")
             lines.append(f"#check example_{idx}_atomic_closure_truth")
             lines.append(f"#check example_{idx}_atomic_closure_truth_kernel_sound")
+            lines.append(f"#check example_{idx}_atomic_closure_truth_condition_sound")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -4638,6 +4683,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_atomic_closure_truth.")
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_atomic_closure_truth_condition_sound : "
+            "truth_denotes atomic_closure_truth_conditions "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply atomic_closure_truth_conditions_denote_atomic_closure_truth.")
+        lines.append(f"  exact example_{idx}_atomic_closure_truth.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -4657,6 +4715,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_primitive_truth_kernel_sound.")
         lines.append(f"Check example_{idx}_atomic_closure_truth.")
         lines.append(f"Check example_{idx}_atomic_closure_truth_kernel_sound.")
+        lines.append(f"Check example_{idx}_atomic_closure_truth_condition_sound.")
     return "\n".join(lines) + "\n"
 
 

@@ -1033,14 +1033,20 @@ receives both `example_i_atomic_closure_truth` and
 objective `coq_atomic_base_truth_valuation_instance` now makes
 `AtomicBaseTruth` an inductive base-valuation relation and defines
 `atomic_truth_facts` from its constructors, rather than leaving the atomic fact
-record as an opaque parameter. The open blocker remains
+record as an opaque parameter. The verified objective
+`coq_atomic_closure_truth_condition_spec_instance` now gives this atomic layer
+a named `TruthConditionSpec`, `atomic_closure_truth_conditions`, proves that
+the spec exists, and checks per-example
+`example_i_atomic_closure_truth_condition_sound` theorems directly against
+that spec rather than only against the generic kernel conversion. The open
+blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, and atomic-closure
-kernel instances.
+kernel/spec instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

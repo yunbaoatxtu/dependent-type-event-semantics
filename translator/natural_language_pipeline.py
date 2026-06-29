@@ -21004,6 +21004,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_atomic_closure_truth_condition_spec_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21071,6 +21076,11 @@ def project_completion_status_payload(
                     "base-valuation relation, and atomic_truth_facts is "
                     "a concrete record instance assembled from those "
                     "base constructors rather than an opaque parameter. "
+                    "The atomic-closure layer now also exposes a named "
+                    "TruthConditionSpec instance, proves that the instance "
+                    "exists, and checks per-example soundness directly "
+                    "against that spec rather than only through the generic "
+                    "kernel conversion. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
