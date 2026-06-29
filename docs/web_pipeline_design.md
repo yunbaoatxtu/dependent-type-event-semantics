@@ -225,8 +225,14 @@ specified concrete truth model. The next verified objective,
 the induced `primitive_truth_kernel`, and per-example
 `example_i_primitive_truth_kernel_sound` checks. This gives the UI and verifier
 a named typed assumption list for the future concrete model stage, while still
-making clear that those assumptions have not been discharged. The remaining
-blocker is
+making clear that those assumptions have not been discharged. The next verified
+objective, `coq_atomic_closure_truth_kernel_instance`, adds `AtomicBaseTruth`,
+`AtomicTruthFacts`, `AtomicClosureTruth`, the induced
+`atomic_closure_truth_kernel`, and per-example
+`example_i_atomic_closure_truth_kernel_sound` checks. This moves Sigma,
+repetition, temporal, polarity, and causal composition out of the primitive
+assumption list and leaves only atom-level lexical and transition facts as
+open assumptions. The remaining blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition
 interface must be filled with independently specified lexical, temporal,

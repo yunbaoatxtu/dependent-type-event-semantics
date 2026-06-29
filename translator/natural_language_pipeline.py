@@ -20994,6 +20994,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_atomic_closure_truth_kernel_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21050,7 +21055,13 @@ def project_completion_status_payload(
                     "typed list of lexical, temporal, causal, "
                     "quantificational, polarity, and modifier assumptions to "
                     "discharge rather than a single undifferentiated "
-                    "placeholder. These "
+                    "placeholder. The newest checked layer introduces "
+                    "AtomicBaseTruth, AtomicTruthFacts, AtomicClosureTruth, "
+                    "an atomic-closure truth kernel, and per-example "
+                    "atomic-closure soundness checks; this narrows the "
+                    "remaining assumptions to atom-level lexical and "
+                    "Transition facts while closing Sigma, repetition, "
+                    "time, negation, and Cause by constructors. These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
                     "supply independently justified inhabitants of that "

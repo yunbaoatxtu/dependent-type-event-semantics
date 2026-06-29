@@ -220,6 +220,34 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_atomic_closure_truth_count = len(
+        re.findall(
+            r"^theorem example_\d+_atomic_closure_truth :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_atomic_closure_truth_count = len(
+        re.findall(
+            r"^Theorem example_\d+_atomic_closure_truth :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_atomic_closure_truth_kernel_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_atomic_closure_truth_kernel_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_atomic_closure_truth_kernel_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_atomic_closure_truth_kernel_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
     lean_syntax_directed_truth_count = len(
         re.findall(
             r"^theorem example_\d+_syntax_directed_truth :",
@@ -472,6 +500,48 @@ def main() -> None:
             and "Theorem primitive_truth_kernel_denotes_primitive_assumptions :" in coq
             and "Theorem primitive_truth_kernel_denotes_model_interpretable :" in coq
         ),
+        "lean atomic closure truth kernel instance": (
+            "constant AtomicBaseTruth : (A : Type) -> A -> Prop" in lean
+            and "structure AtomicTruthFacts : Type where" in lean
+            and "atomic_lexical_truth_eat_application : (n : Nat)" in lean
+            and "AtomicBaseTruth Prop (eat n mods arg1 arg2)" in lean
+            and "constant atomic_truth_facts : AtomicTruthFacts" in lean
+            and "inductive AtomicClosureTruth : (A : Type) -> A -> Prop where"
+            in lean
+            and "| atomic_closure_truth_repeat : (n : Nat)" in lean
+            and "theorem model_interpretable_atomic_closure_truth :" in lean
+            and "def atomic_closure_truth_kernel_denotes : (A : Type) -> A -> Prop :="
+            in lean
+            and "def atomic_closure_truth_kernel : ConcreteTruthConditionKernel := {"
+            in lean
+            and "kernel_denotes := atomic_closure_truth_kernel_denotes" in lean
+            and "def atomic_closure_truth_conditions_from_kernel : TruthConditionSpec :="
+            in lean
+            and "theorem atomic_closure_truth_kernel_exists :" in lean
+            and "theorem atomic_closure_truth_kernel_denotes_atomic_closure_truth :"
+            in lean
+        ),
+        "coq atomic closure truth kernel instance": (
+            "Parameter AtomicBaseTruth : forall A : Type, A -> Prop." in coq
+            and "Record AtomicTruthFacts : Type := {" in coq
+            and "atomic_lexical_truth_eat_application : forall n : nat" in coq
+            and "AtomicBaseTruth Prop (eat n mods arg1 arg2)" in coq
+            and "Parameter atomic_truth_facts : AtomicTruthFacts." in coq
+            and "Inductive AtomicClosureTruth : forall A : Type, A -> Prop :="
+            in coq
+            and "atomic_closure_truth_repeat : forall n : nat" in coq
+            and "Theorem model_interpretable_atomic_closure_truth :" in coq
+            and "Definition atomic_closure_truth_kernel_denotes : forall A : Type, A -> Prop :="
+            in coq
+            and "Definition atomic_closure_truth_kernel : ConcreteTruthConditionKernel := {|"
+            in coq
+            and "kernel_denotes := atomic_closure_truth_kernel_denotes" in coq
+            and "Definition atomic_closure_truth_conditions_from_kernel : TruthConditionSpec :="
+            in coq
+            and "Theorem atomic_closure_truth_kernel_exists :" in coq
+            and "Theorem atomic_closure_truth_kernel_denotes_atomic_closure_truth :"
+            in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
@@ -670,6 +740,28 @@ def main() -> None:
             and "apply primitive_truth_kernel_denotes_model_interpretable."
             in coq
         ),
+        "lean atomic closure truth proofs": (
+            lean_atomic_closure_truth_count == lean_example_count
+            and "#check example_4_atomic_closure_truth" in lean
+            and "apply model_interpretable_atomic_closure_truth" in lean
+        ),
+        "coq atomic closure truth proofs": (
+            coq_atomic_closure_truth_count == coq_example_count
+            and "Check example_4_atomic_closure_truth." in coq
+            and "apply model_interpretable_atomic_closure_truth." in coq
+        ),
+        "lean atomic closure truth kernel soundness proofs": (
+            lean_atomic_closure_truth_kernel_sound_count == lean_example_count
+            and "#check example_4_atomic_closure_truth_kernel_sound" in lean
+            and "apply atomic_closure_truth_kernel_denotes_atomic_closure_truth"
+            in lean
+        ),
+        "coq atomic closure truth kernel soundness proofs": (
+            coq_atomic_closure_truth_kernel_sound_count == coq_example_count
+            and "Check example_4_atomic_closure_truth_kernel_sound." in coq
+            and "apply atomic_closure_truth_kernel_denotes_atomic_closure_truth."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
@@ -698,6 +790,8 @@ def main() -> None:
             and "#check example_4_model_interpretable_truth_kernel_sound" in lean
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
             and "#check example_4_primitive_truth_kernel_sound" in lean
+            and "#check example_4_atomic_closure_truth" in lean
+            and "#check example_4_atomic_closure_truth_kernel_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -715,6 +809,8 @@ def main() -> None:
             and "Check example_4_model_interpretable_truth_kernel_sound." in coq
             and "Check example_4_syntax_directed_truth_kernel_sound." in coq
             and "Check example_4_primitive_truth_kernel_sound." in coq
+            and "Check example_4_atomic_closure_truth." in coq
+            and "Check example_4_atomic_closure_truth_kernel_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

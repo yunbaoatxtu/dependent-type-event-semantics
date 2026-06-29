@@ -104,7 +104,15 @@ a `primitive_truth_kernel` derived from that record, and
 `example_i_primitive_truth_kernel_sound` checks. This turns the next concrete
 model stage into a typed set of primitive lexical, temporal, causal,
 quantificational, polarity, and transition obligations, while independently
-specified concrete truth-condition instantiation remains open.
+specified concrete truth-condition instantiation remains open. The next layer
+is `AtomicClosureTruth`: the generated files declare `AtomicBaseTruth` and
+`AtomicTruthFacts`, close Sigma, repetition, time, negation, transition, and
+cause through checked constructors, build `atomic_closure_truth_kernel`, and
+check both `example_i_atomic_closure_truth` and
+`example_i_atomic_closure_truth_kernel_sound` for every exported example. This
+narrows the remaining assumptions to atom-level lexical and transition facts
+without claiming that those facts have already been derived from a full
+semantic model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

@@ -336,6 +336,110 @@ theorem primitive_truth_kernel_denotes_model_interpretable :
   apply concrete_kernel_induces_truth_condition_soundness
   exact h
 
+constant AtomicBaseTruth : (A : Type) -> A -> Prop
+
+structure AtomicTruthFacts : Type where
+  atomic_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (break n mods arg1 arg2)
+  atomic_lexical_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (butter n mods arg1 arg2)
+  atomic_lexical_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> AtomicBaseTruth Prop (eat n mods arg1 arg2)
+  atomic_lexical_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> AtomicBaseTruth PropT (knock n mods arg1)
+  atomic_transition_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> AtomicBaseTruth TransitionT (Transition theme scale source target)
+
+constant atomic_truth_facts : AtomicTruthFacts
+
+inductive AtomicClosureTruth : (A : Type) -> A -> Prop where
+  | atomic_closure_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (break n mods arg1 arg2) -> AtomicClosureTruth PropT (break n mods arg1 arg2)
+  | atomic_closure_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (butter n mods arg1 arg2) -> AtomicClosureTruth PropT (butter n mods arg1 arg2)
+  | atomic_closure_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> AtomicBaseTruth Prop (eat n mods arg1 arg2) -> AtomicClosureTruth Prop (eat n mods arg1 arg2)
+  | atomic_closure_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> AtomicBaseTruth PropT (knock n mods arg1) -> AtomicClosureTruth PropT (knock n mods arg1)
+  | atomic_closure_truth_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> AtomicClosureTruth Prop (P x)) -> AtomicClosureTruth Prop (Exists fun x : Entity => P x)
+  | atomic_closure_truth_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> AtomicClosureTruth Prop (P x)) -> AtomicClosureTruth Prop (Exists fun x : Food => P x)
+  | atomic_closure_truth_sigma_State : (P : State -> Prop) -> ((x : State) -> AtomicClosureTruth Prop (P x)) -> AtomicClosureTruth Prop (Exists fun x : State => P x)
+  | atomic_closure_truth_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> AtomicClosureTruth Prop (P x)) -> AtomicClosureTruth Prop (Exists fun x : StateScale => P x)
+  | atomic_closure_truth_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> AtomicClosureTruth Prop (P x)) -> AtomicClosureTruth Prop (Exists fun x : TransitionT => P x)
+  | atomic_closure_truth_repeat : (n : Nat) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (repeat n body)
+  | atomic_closure_truth_at_T : (marker : Entity) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (at_T marker body)
+  | atomic_closure_truth_during_T : (marker : Entity) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (during_T marker body)
+  | atomic_closure_truth_before_T : (marker : Entity) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (before_T marker body)
+  | atomic_closure_truth_after_T : (marker : Entity) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (after_T marker body)
+  | atomic_closure_truth_until_T : (marker : Entity) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (until_T marker body)
+  | atomic_closure_truth_since_T : (marker : Entity) -> (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (since_T marker body)
+  | atomic_closure_truth_not_T : (body : PropT) -> AtomicClosureTruth PropT body -> AtomicClosureTruth PropT (not_T body)
+  | atomic_closure_truth_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> AtomicBaseTruth TransitionT (Transition theme scale source target) -> AtomicClosureTruth TransitionT (Transition theme scale source target)
+  | atomic_closure_truth_cause : (causer : Entity) -> (effect : TransitionT) -> AtomicClosureTruth TransitionT effect -> AtomicClosureTruth PropT (Cause causer effect)
+
+theorem model_interpretable_atomic_closure_truth :
+    (A : Type) -> (term : A) -> ModelInterpretable A term -> AtomicClosureTruth A term := by
+  intro A term h
+  induction h
+  | model_break_application n mods arg1 arg2 =>
+      apply AtomicClosureTruth.atomic_closure_truth_break_application
+      exact atomic_truth_facts.atomic_lexical_truth_break_application n mods arg1 arg2
+  | model_butter_application n mods arg1 arg2 =>
+      apply AtomicClosureTruth.atomic_closure_truth_butter_application
+      exact atomic_truth_facts.atomic_lexical_truth_butter_application n mods arg1 arg2
+  | model_eat_application n mods arg1 arg2 =>
+      apply AtomicClosureTruth.atomic_closure_truth_eat_application
+      exact atomic_truth_facts.atomic_lexical_truth_eat_application n mods arg1 arg2
+  | model_knock_application n mods arg1 =>
+      apply AtomicClosureTruth.atomic_closure_truth_knock_application
+      exact atomic_truth_facts.atomic_lexical_truth_knock_application n mods arg1
+  | model_sigma_Entity P h ih => exact AtomicClosureTruth.atomic_closure_truth_sigma_Entity P ih
+  | model_sigma_Food P h ih => exact AtomicClosureTruth.atomic_closure_truth_sigma_Food P ih
+  | model_sigma_State P h ih => exact AtomicClosureTruth.atomic_closure_truth_sigma_State P ih
+  | model_sigma_StateScale P h ih => exact AtomicClosureTruth.atomic_closure_truth_sigma_StateScale P ih
+  | model_sigma_TransitionT P h ih => exact AtomicClosureTruth.atomic_closure_truth_sigma_TransitionT P ih
+  | model_repeat n body h ih => exact AtomicClosureTruth.atomic_closure_truth_repeat n body ih
+  | model_at_T marker body h ih => exact AtomicClosureTruth.atomic_closure_truth_at_T marker body ih
+  | model_during_T marker body h ih => exact AtomicClosureTruth.atomic_closure_truth_during_T marker body ih
+  | model_before_T marker body h ih => exact AtomicClosureTruth.atomic_closure_truth_before_T marker body ih
+  | model_after_T marker body h ih => exact AtomicClosureTruth.atomic_closure_truth_after_T marker body ih
+  | model_until_T marker body h ih => exact AtomicClosureTruth.atomic_closure_truth_until_T marker body ih
+  | model_since_T marker body h ih => exact AtomicClosureTruth.atomic_closure_truth_since_T marker body ih
+  | model_not_T body h ih => exact AtomicClosureTruth.atomic_closure_truth_not_T body ih
+  | model_transition theme scale source target =>
+      apply AtomicClosureTruth.atomic_closure_truth_transition
+      exact atomic_truth_facts.atomic_transition_truth theme scale source target
+  | model_cause causer effect h ih => exact AtomicClosureTruth.atomic_closure_truth_cause causer effect ih
+
+def atomic_closure_truth_kernel_denotes : (A : Type) -> A -> Prop :=
+  AtomicClosureTruth
+
+def atomic_closure_truth_kernel : ConcreteTruthConditionKernel := {
+  kernel_denotes := atomic_closure_truth_kernel_denotes,
+  lexical_truth_break_application := fun n mods arg1 arg2 => AtomicClosureTruth.atomic_closure_truth_break_application n mods arg1 arg2 (atomic_truth_facts.atomic_lexical_truth_break_application n mods arg1 arg2),
+  lexical_truth_butter_application := fun n mods arg1 arg2 => AtomicClosureTruth.atomic_closure_truth_butter_application n mods arg1 arg2 (atomic_truth_facts.atomic_lexical_truth_butter_application n mods arg1 arg2),
+  lexical_truth_eat_application := fun n mods arg1 arg2 => AtomicClosureTruth.atomic_closure_truth_eat_application n mods arg1 arg2 (atomic_truth_facts.atomic_lexical_truth_eat_application n mods arg1 arg2),
+  lexical_truth_knock_application := fun n mods arg1 => AtomicClosureTruth.atomic_closure_truth_knock_application n mods arg1 (atomic_truth_facts.atomic_lexical_truth_knock_application n mods arg1),
+  quantifier_truth_sigma_Entity := fun P h => AtomicClosureTruth.atomic_closure_truth_sigma_Entity P h,
+  quantifier_truth_sigma_Food := fun P h => AtomicClosureTruth.atomic_closure_truth_sigma_Food P h,
+  quantifier_truth_sigma_State := fun P h => AtomicClosureTruth.atomic_closure_truth_sigma_State P h,
+  quantifier_truth_sigma_StateScale := fun P h => AtomicClosureTruth.atomic_closure_truth_sigma_StateScale P h,
+  quantifier_truth_sigma_TransitionT := fun P h => AtomicClosureTruth.atomic_closure_truth_sigma_TransitionT P h,
+  repetition_truth := fun n body h => AtomicClosureTruth.atomic_closure_truth_repeat n body h,
+  temporal_truth_at_T := fun marker body h => AtomicClosureTruth.atomic_closure_truth_at_T marker body h,
+  temporal_truth_during_T := fun marker body h => AtomicClosureTruth.atomic_closure_truth_during_T marker body h,
+  temporal_truth_before_T := fun marker body h => AtomicClosureTruth.atomic_closure_truth_before_T marker body h,
+  temporal_truth_after_T := fun marker body h => AtomicClosureTruth.atomic_closure_truth_after_T marker body h,
+  temporal_truth_until_T := fun marker body h => AtomicClosureTruth.atomic_closure_truth_until_T marker body h,
+  temporal_truth_since_T := fun marker body h => AtomicClosureTruth.atomic_closure_truth_since_T marker body h,
+  polarity_truth_not_T := fun body h => AtomicClosureTruth.atomic_closure_truth_not_T body h,
+  transition_truth := fun theme scale source target => AtomicClosureTruth.atomic_closure_truth_transition theme scale source target (atomic_truth_facts.atomic_transition_truth theme scale source target),
+  cause_truth := fun causer effect h => AtomicClosureTruth.atomic_closure_truth_cause causer effect h
+}
+
+def atomic_closure_truth_conditions_from_kernel : TruthConditionSpec :=
+  truth_conditions_from_concrete_kernel atomic_closure_truth_kernel
+
+theorem atomic_closure_truth_kernel_exists :
+    Exists (fun K : ConcreteTruthConditionKernel => K = atomic_closure_truth_kernel) := by
+  exact Exists.intro atomic_closure_truth_kernel rfl
+
+theorem atomic_closure_truth_kernel_denotes_atomic_closure_truth :
+    (A : Type) -> (term : A) -> AtomicClosureTruth A term -> (truth_conditions_from_concrete_kernel atomic_closure_truth_kernel).truth_denotes A term := by
+  intro A term h
+  exact h
+
 def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=
   ModelInterpretable
 
@@ -710,6 +814,32 @@ theorem example_4_primitive_truth_kernel_sound : (truth_conditions_from_concrete
   apply primitive_truth_kernel_denotes_model_interpretable
   exact example_4_model_interpretable
 
+theorem example_1_atomic_closure_truth : AtomicClosureTruth PropT example_1 := by
+  apply model_interpretable_atomic_closure_truth
+  exact example_1_model_interpretable
+theorem example_2_atomic_closure_truth : AtomicClosureTruth Prop example_2 := by
+  apply model_interpretable_atomic_closure_truth
+  exact example_2_model_interpretable
+theorem example_3_atomic_closure_truth : AtomicClosureTruth PropT example_3 := by
+  apply model_interpretable_atomic_closure_truth
+  exact example_3_model_interpretable
+theorem example_4_atomic_closure_truth : AtomicClosureTruth PropT example_4 := by
+  apply model_interpretable_atomic_closure_truth
+  exact example_4_model_interpretable
+
+theorem example_1_atomic_closure_truth_kernel_sound : (truth_conditions_from_concrete_kernel atomic_closure_truth_kernel).truth_denotes PropT example_1 := by
+  apply atomic_closure_truth_kernel_denotes_atomic_closure_truth
+  exact example_1_atomic_closure_truth
+theorem example_2_atomic_closure_truth_kernel_sound : (truth_conditions_from_concrete_kernel atomic_closure_truth_kernel).truth_denotes Prop example_2 := by
+  apply atomic_closure_truth_kernel_denotes_atomic_closure_truth
+  exact example_2_atomic_closure_truth
+theorem example_3_atomic_closure_truth_kernel_sound : (truth_conditions_from_concrete_kernel atomic_closure_truth_kernel).truth_denotes PropT example_3 := by
+  apply atomic_closure_truth_kernel_denotes_atomic_closure_truth
+  exact example_3_atomic_closure_truth
+theorem example_4_atomic_closure_truth_kernel_sound : (truth_conditions_from_concrete_kernel atomic_closure_truth_kernel).truth_denotes PropT example_4 := by
+  apply atomic_closure_truth_kernel_denotes_atomic_closure_truth
+  exact example_4_atomic_closure_truth
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -726,6 +856,8 @@ theorem example_4_primitive_truth_kernel_sound : (truth_conditions_from_concrete
 #check example_1_model_interpretable_truth_kernel_sound
 #check example_1_syntax_directed_truth_kernel_sound
 #check example_1_primitive_truth_kernel_sound
+#check example_1_atomic_closure_truth
+#check example_1_atomic_closure_truth_kernel_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -742,6 +874,8 @@ theorem example_4_primitive_truth_kernel_sound : (truth_conditions_from_concrete
 #check example_2_model_interpretable_truth_kernel_sound
 #check example_2_syntax_directed_truth_kernel_sound
 #check example_2_primitive_truth_kernel_sound
+#check example_2_atomic_closure_truth
+#check example_2_atomic_closure_truth_kernel_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -758,6 +892,8 @@ theorem example_4_primitive_truth_kernel_sound : (truth_conditions_from_concrete
 #check example_3_model_interpretable_truth_kernel_sound
 #check example_3_syntax_directed_truth_kernel_sound
 #check example_3_primitive_truth_kernel_sound
+#check example_3_atomic_closure_truth
+#check example_3_atomic_closure_truth_kernel_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -774,3 +910,5 @@ theorem example_4_primitive_truth_kernel_sound : (truth_conditions_from_concrete
 #check example_4_model_interpretable_truth_kernel_sound
 #check example_4_syntax_directed_truth_kernel_sound
 #check example_4_primitive_truth_kernel_sound
+#check example_4_atomic_closure_truth
+#check example_4_atomic_closure_truth_kernel_sound

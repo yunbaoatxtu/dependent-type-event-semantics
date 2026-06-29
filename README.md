@@ -1022,14 +1022,21 @@ assumption fields. The generated files declare a single
 `primitive_truth_kernel_denotes_model_interpretable`, and check per-example
 `example_i_primitive_truth_kernel_sound` theorems. This gives the next concrete
 model stage a typed assumption list to discharge, but the assumptions
-themselves are still parameters. The open blocker remains
+themselves are still parameters. The verified objective
+`coq_atomic_closure_truth_kernel_instance` narrows this boundary further. It
+introduces `AtomicBaseTruth`, `AtomicTruthFacts`, `AtomicClosureTruth`, and an
+`atomic_closure_truth_kernel`; lexical predicate applications and `Transition`
+remain atom-level facts, while Sigma, repetition, temporal operators,
+negation, and `Cause` are closed by checked constructors. Each exported example
+receives both `example_i_atomic_closure_truth` and
+`example_i_atomic_closure_truth_kernel_sound` checks. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
-model-interpretable, syntax-directed, and primitive-assumption kernel
-instances.
+model-interpretable, syntax-directed, primitive-assumption, and atomic-closure
+kernel instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
