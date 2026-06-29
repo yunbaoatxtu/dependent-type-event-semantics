@@ -504,10 +504,31 @@ def main() -> None:
             "inductive AtomicBaseTruth : (A : Type) -> A -> Prop where" in lean
             and "| atomic_base_truth_eat_application : (n : Nat)" in lean
             and "| atomic_base_truth_transition : (theme : Entity)" in lean
+            and "structure LexicalAtomTruthAssumptions (D : (A : Type) -> A -> Prop) : Type where"
+            in lean
+            and "lexical_atom_truth_eat_application : (n : Nat)" in lean
+            and "structure TransitionAtomTruthAssumptions (D : (A : Type) -> A -> Prop) : Type where"
+            in lean
+            and "transition_atom_truth : (theme : Entity)" in lean
+            and "structure LexicalTransitionTruthAssumptions : Type where" in lean
+            and "def lexical_atom_truth_assumptions_from_atomic_base :" in lean
+            and "def transition_atom_truth_assumptions_from_atomic_base :" in lean
+            and "def lexical_transition_truth_assumptions_from_atomic_base :"
+            in lean
+            and "theorem lexical_atom_truth_assumptions_from_atomic_base_exists :"
+            in lean
+            and "theorem transition_atom_truth_assumptions_from_atomic_base_exists :"
+            in lean
+            and "theorem lexical_transition_truth_assumptions_from_atomic_base_exists :"
+            in lean
             and "structure LexicalTransitionTruthModel : Type where" in lean
             and "atom_model_denotes : (A : Type) -> A -> Prop" in lean
             and "model_lexical_truth_eat_application : (n : Nat)" in lean
-            and "def lexical_transition_truth_model : LexicalTransitionTruthModel := {"
+            and "def lexical_transition_truth_model_from_assumptions"
+            in lean
+            and "def lexical_transition_truth_model : LexicalTransitionTruthModel :="
+            in lean
+            and "theorem lexical_transition_truth_model_from_assumptions_exists :"
             in lean
             and "theorem lexical_transition_truth_model_exists :" in lean
             and "theorem lexical_transition_truth_model_denotes_atomic_base_truth :"
@@ -556,10 +577,32 @@ def main() -> None:
             "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=" in coq
             and "atomic_base_truth_eat_application : forall n : nat" in coq
             and "atomic_base_truth_transition : forall theme : Entity" in coq
+            and "Record LexicalAtomTruthAssumptions (D : forall A : Type, A -> Prop) : Type := {"
+            in coq
+            and "lexical_atom_truth_eat_application : forall n : nat" in coq
+            and "Record TransitionAtomTruthAssumptions (D : forall A : Type, A -> Prop) : Type := {"
+            in coq
+            and "transition_atom_truth : forall theme : Entity" in coq
+            and "Record LexicalTransitionTruthAssumptions : Type := {" in coq
+            and "Definition lexical_atom_truth_assumptions_from_atomic_base :"
+            in coq
+            and "Definition transition_atom_truth_assumptions_from_atomic_base :"
+            in coq
+            and "Definition lexical_transition_truth_assumptions_from_atomic_base :"
+            in coq
+            and "Theorem lexical_atom_truth_assumptions_from_atomic_base_exists :"
+            in coq
+            and "Theorem transition_atom_truth_assumptions_from_atomic_base_exists :"
+            in coq
+            and "Theorem lexical_transition_truth_assumptions_from_atomic_base_exists :"
+            in coq
             and "Record LexicalTransitionTruthModel : Type := {" in coq
             and "atom_model_denotes : forall A : Type, A -> Prop;" in coq
             and "model_lexical_truth_eat_application : forall n : nat" in coq
-            and "Definition lexical_transition_truth_model : LexicalTransitionTruthModel := {|"
+            and "Definition lexical_transition_truth_model_from_assumptions" in coq
+            and "Definition lexical_transition_truth_model : LexicalTransitionTruthModel :="
+            in coq
+            and "Theorem lexical_transition_truth_model_from_assumptions_exists :"
             in coq
             and "Theorem lexical_transition_truth_model_exists :" in coq
             and "Theorem lexical_transition_truth_model_denotes_atomic_base_truth :"

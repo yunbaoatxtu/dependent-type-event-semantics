@@ -20999,6 +20999,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_lexical_transition_truth_assumption_split",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_lexical_transition_truth_model_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21095,6 +21100,13 @@ def project_completion_status_payload(
                     "whose denotation field is AtomicBaseTruth and whose "
                     "lexical and Transition fields are then re-exported as "
                     "an AtomicValuationSpec. "
+                    "That bridge is now split one layer further into "
+                    "LexicalAtomTruthAssumptions, "
+                    "TransitionAtomTruthAssumptions, and "
+                    "LexicalTransitionTruthAssumptions, so the generated "
+                    "scaffold records lexical atom assumptions separately "
+                    "from the Transition atom assumption before assembling "
+                    "the LexicalTransitionTruthModel. "
                     "The atomic-closure layer now also exposes a named "
                     "TruthConditionSpec instance, proves that the instance "
                     "exists, and checks per-example soundness directly "

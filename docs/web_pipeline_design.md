@@ -233,6 +233,11 @@ objective, `coq_atomic_closure_truth_kernel_instance`, adds `AtomicBaseTruth`,
 repetition, temporal, polarity, and causal composition out of the primitive
 assumption list and leaves only atom-level lexical and transition facts as
 open assumptions. The follow-up
+`coq_lexical_transition_truth_assumption_split` adds
+`LexicalAtomTruthAssumptions`, `TransitionAtomTruthAssumptions`, and
+`LexicalTransitionTruthAssumptions`, making the remaining lexical atom facts
+and the remaining Transition atom fact visible as separate checked interfaces
+before the model bridge is built. The follow-up
 `coq_lexical_transition_truth_model_instance` introduces
 `LexicalTransitionTruthModel`, a named model bridge whose denotation predicate
 is `AtomicBaseTruth` and whose fields keep lexical atom truth separate from

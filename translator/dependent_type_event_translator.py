@@ -1021,6 +1021,10 @@ def atomic_valuation_application_field(function: str) -> str:
     return f"valuation_lexical_truth_{function}_application"
 
 
+def lexical_atom_truth_application_field(function: str) -> str:
+    return f"lexical_atom_truth_{function}_application"
+
+
 def lexical_transition_model_application_field(function: str) -> str:
     return f"model_lexical_truth_{function}_application"
 
@@ -1421,6 +1425,52 @@ def _lean_function_atomic_valuation_field(
             binders
             + [
                 f"atomic_valuation_denotes {result_type} "
+                f"({name} {' '.join(application_args)})"
+            ]
+        )
+    )
+
+
+def _coq_function_lexical_atom_truth_assumption_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {lexical_atom_truth_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"D {result_type} "
+        + f"({name} {' '.join(application_args)});",
+    ]
+
+
+def _lean_function_lexical_atom_truth_assumption_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {lexical_atom_truth_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [
+                f"D {result_type} "
                 f"({name} {' '.join(application_args)})"
             ]
         )
@@ -2595,6 +2645,96 @@ def atomic_closure_truth_kernel_lines(
                 "(scale : StateScale) -> (source : State) -> (target : State) -> "
                 "AtomicBaseTruth TransitionT (Transition theme scale source target)",
                 "",
+                "structure LexicalAtomTruthAssumptions "
+                "(D : (A : Type) -> A -> Prop) : Type where",
+            ]
+        )
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_lexical_atom_truth_assumption_field(
+                    name, arg_types, result_type
+                )
+            )
+        lines.extend(
+            [
+                "",
+                "structure TransitionAtomTruthAssumptions "
+                "(D : (A : Type) -> A -> Prop) : Type where",
+                "  transition_atom_truth : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "D TransitionT (Transition theme scale source target)",
+                "",
+                "structure LexicalTransitionTruthAssumptions : Type where",
+                "  atom_assumption_denotes : (A : Type) -> A -> Prop",
+                "  lexical_atom_assumptions : "
+                "LexicalAtomTruthAssumptions atom_assumption_denotes",
+                "  transition_atom_assumptions : "
+                "TransitionAtomTruthAssumptions atom_assumption_denotes",
+                "",
+                "def lexical_atom_truth_assumptions_from_atomic_base : "
+                "LexicalAtomTruthAssumptions AtomicBaseTruth := {",
+            ]
+        )
+        lexical_assumption_fields: list[tuple[str, str]] = []
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            binders = " ".join(["n", "mods", *ordinary_args])
+            constructor_args = " ".join(["n", "mods", *ordinary_args])
+            lexical_assumption_fields.append(
+                (
+                    lexical_atom_truth_application_field(name),
+                    (
+                        f"fun {binders} => "
+                        f"AtomicBaseTruth.{atomic_base_truth_application_constructor(name)} "
+                        f"{constructor_args}"
+                    ),
+                )
+            )
+        for index, (field, value) in enumerate(lexical_assumption_fields):
+            suffix = "," if index < len(lexical_assumption_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def transition_atom_truth_assumptions_from_atomic_base : "
+                "TransitionAtomTruthAssumptions AtomicBaseTruth := {",
+                "  transition_atom_truth := fun theme scale source target => "
+                "AtomicBaseTruth.atomic_base_truth_transition theme scale source target",
+                "}",
+                "",
+                "def lexical_transition_truth_assumptions_from_atomic_base : "
+                "LexicalTransitionTruthAssumptions := {",
+                "  atom_assumption_denotes := AtomicBaseTruth,",
+                "  lexical_atom_assumptions := "
+                "lexical_atom_truth_assumptions_from_atomic_base,",
+                "  transition_atom_assumptions := "
+                "transition_atom_truth_assumptions_from_atomic_base",
+                "}",
+                "",
+                "theorem lexical_atom_truth_assumptions_from_atomic_base_exists :",
+                "    Exists (fun L : LexicalAtomTruthAssumptions AtomicBaseTruth => "
+                "L = lexical_atom_truth_assumptions_from_atomic_base) := by",
+                "  exact Exists.intro lexical_atom_truth_assumptions_from_atomic_base rfl",
+                "",
+                "theorem transition_atom_truth_assumptions_from_atomic_base_exists :",
+                "    Exists (fun T : TransitionAtomTruthAssumptions AtomicBaseTruth => "
+                "T = transition_atom_truth_assumptions_from_atomic_base) := by",
+                "  exact Exists.intro transition_atom_truth_assumptions_from_atomic_base rfl",
+                "",
+                "theorem lexical_transition_truth_assumptions_from_atomic_base_exists :",
+                "    Exists (fun A : LexicalTransitionTruthAssumptions => "
+                "A = lexical_transition_truth_assumptions_from_atomic_base) := by",
+                "  exact Exists.intro lexical_transition_truth_assumptions_from_atomic_base rfl",
+                "",
                 "structure LexicalTransitionTruthModel : Type where",
                 "  atom_model_denotes : (A : Type) -> A -> Prop",
             ]
@@ -2612,38 +2752,27 @@ def atomic_closure_truth_kernel_lines(
                 "atom_model_denotes TransitionT "
                 "(Transition theme scale source target)",
                 "",
-                "def lexical_transition_truth_model : LexicalTransitionTruthModel := {",
-                "  atom_model_denotes := AtomicBaseTruth,",
+                "def lexical_transition_truth_model_from_assumptions "
+                "(assumptions : LexicalTransitionTruthAssumptions) : "
+                "LexicalTransitionTruthModel := {",
+                "  atom_model_denotes := assumptions.atom_assumption_denotes,",
             ]
         )
         model_fields: list[tuple[str, str]] = []
-        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
-            remaining_arg_types = (
-                arg_types[2:]
-                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
-                else arg_types
-            )
-            ordinary_args = [
-                f"arg{index}"
-                for index, _arg_type in enumerate(remaining_arg_types, 1)
-            ]
-            binders = " ".join(["n", "mods", *ordinary_args])
-            constructor_args = " ".join(["n", "mods", *ordinary_args])
+        for name in sorted(declarations["functions"]):
             model_fields.append(
                 (
                     lexical_transition_model_application_field(name),
                     (
-                        f"fun {binders} => "
-                        f"AtomicBaseTruth.{atomic_base_truth_application_constructor(name)} "
-                        f"{constructor_args}"
+                        "assumptions.lexical_atom_assumptions."
+                        f"{lexical_atom_truth_application_field(name)}"
                     ),
                 )
             )
         model_fields.append(
             (
                 "model_transition_truth",
-                "fun theme scale source target => "
-                "AtomicBaseTruth.atomic_base_truth_transition theme scale source target",
+                "assumptions.transition_atom_assumptions.transition_atom_truth",
             )
         )
         for index, (field, value) in enumerate(model_fields):
@@ -2652,6 +2781,18 @@ def atomic_closure_truth_kernel_lines(
         lines.extend(
             [
                 "}",
+                "",
+                "def lexical_transition_truth_model : LexicalTransitionTruthModel :=",
+                "  lexical_transition_truth_model_from_assumptions "
+                "lexical_transition_truth_assumptions_from_atomic_base",
+                "",
+                "theorem lexical_transition_truth_model_from_assumptions_exists :",
+                "    Exists (fun M : LexicalTransitionTruthModel => "
+                "M = lexical_transition_truth_model_from_assumptions "
+                "lexical_transition_truth_assumptions_from_atomic_base) := by",
+                "  exact Exists.intro "
+                "(lexical_transition_truth_model_from_assumptions "
+                "lexical_transition_truth_assumptions_from_atomic_base) rfl",
                 "",
                 "theorem lexical_transition_truth_model_exists :",
                 "    Exists (fun M : LexicalTransitionTruthModel => "
@@ -2997,6 +3138,103 @@ def atomic_closure_truth_kernel_lines(
     lines.extend(
         [
             "",
+            "Record LexicalAtomTruthAssumptions "
+            "(D : forall A : Type, A -> Prop) : Type := {",
+        ]
+    )
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(
+            _coq_function_lexical_atom_truth_assumption_field(
+                name, arg_types, result_type
+            )
+        )
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Record TransitionAtomTruthAssumptions "
+            "(D : forall A : Type, A -> Prop) : Type := {",
+            "  transition_atom_truth : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      D TransitionT (Transition theme scale source target)",
+            "}.",
+            "",
+            "Record LexicalTransitionTruthAssumptions : Type := {",
+            "  atom_assumption_denotes : forall A : Type, A -> Prop;",
+            "  lexical_atom_assumptions : "
+            "LexicalAtomTruthAssumptions atom_assumption_denotes;",
+            "  transition_atom_assumptions : "
+            "TransitionAtomTruthAssumptions atom_assumption_denotes",
+            "}.",
+            "",
+            "Definition lexical_atom_truth_assumptions_from_atomic_base :",
+            "  LexicalAtomTruthAssumptions AtomicBaseTruth := {|",
+        ]
+    )
+    lexical_assumption_fields = []
+    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        binders = " ".join(["n", "mods", *ordinary_args])
+        constructor_args = " ".join(["n", "mods", *ordinary_args])
+        lexical_assumption_fields.append(
+            (
+                lexical_atom_truth_application_field(name),
+                (
+                    f"fun {binders} => "
+                    f"{atomic_base_truth_application_constructor(name)} "
+                    f"{constructor_args}"
+                ),
+            )
+        )
+    for index, (field, value) in enumerate(lexical_assumption_fields):
+        suffix = ";" if index < len(lexical_assumption_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition transition_atom_truth_assumptions_from_atomic_base :",
+            "  TransitionAtomTruthAssumptions AtomicBaseTruth := {|",
+            "  transition_atom_truth := fun theme scale source target =>",
+            "    atomic_base_truth_transition theme scale source target",
+            "|}.",
+            "",
+            "Definition lexical_transition_truth_assumptions_from_atomic_base :",
+            "  LexicalTransitionTruthAssumptions := {|",
+            "  atom_assumption_denotes := AtomicBaseTruth;",
+            "  lexical_atom_assumptions := "
+            "lexical_atom_truth_assumptions_from_atomic_base;",
+            "  transition_atom_assumptions := "
+            "transition_atom_truth_assumptions_from_atomic_base",
+            "|}.",
+            "",
+            "Theorem lexical_atom_truth_assumptions_from_atomic_base_exists :",
+            "  exists L : LexicalAtomTruthAssumptions AtomicBaseTruth,",
+            "    L = lexical_atom_truth_assumptions_from_atomic_base.",
+            "Proof.",
+            "  exists lexical_atom_truth_assumptions_from_atomic_base. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem transition_atom_truth_assumptions_from_atomic_base_exists :",
+            "  exists T : TransitionAtomTruthAssumptions AtomicBaseTruth,",
+            "    T = transition_atom_truth_assumptions_from_atomic_base.",
+            "Proof.",
+            "  exists transition_atom_truth_assumptions_from_atomic_base. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem lexical_transition_truth_assumptions_from_atomic_base_exists :",
+            "  exists A : LexicalTransitionTruthAssumptions,",
+            "    A = lexical_transition_truth_assumptions_from_atomic_base.",
+            "Proof.",
+            "  exists lexical_transition_truth_assumptions_from_atomic_base.",
+            "  reflexivity.",
+            "Qed.",
+            "",
             "Record LexicalTransitionTruthModel : Type := {",
             "  atom_model_denotes : forall A : Type, A -> Prop;",
         ]
@@ -3016,35 +3254,29 @@ def atomic_closure_truth_kernel_lines(
             "(Transition theme scale source target)",
             "}.",
             "",
-            "Definition lexical_transition_truth_model : "
-            "LexicalTransitionTruthModel := {|",
-            "  atom_model_denotes := AtomicBaseTruth;",
+            "Definition lexical_transition_truth_model_from_assumptions",
+            "  (assumptions : LexicalTransitionTruthAssumptions) :",
+            "  LexicalTransitionTruthModel := {|",
+            "  atom_model_denotes := atom_assumption_denotes assumptions;",
         ]
     )
     model_fields = []
-    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
-        remaining_arg_types = arg_types[1:] if arg_types else []
-        ordinary_args = [
-            f"arg{index}"
-            for index, _arg_type in enumerate(remaining_arg_types, 1)
-        ]
-        binders = " ".join(["n", "mods", *ordinary_args])
-        constructor_args = " ".join(["n", "mods", *ordinary_args])
+    for name in sorted(declarations["functions"]):
         model_fields.append(
             (
                 lexical_transition_model_application_field(name),
                 (
-                    f"fun {binders} => "
-                    f"{atomic_base_truth_application_constructor(name)} "
-                    f"{constructor_args}"
+                    f"@{lexical_atom_truth_application_field(name)} "
+                    "(atom_assumption_denotes assumptions) "
+                    "(lexical_atom_assumptions assumptions)"
                 ),
             )
         )
     model_fields.append(
         (
             "model_transition_truth",
-            "fun theme scale source target => "
-            "atomic_base_truth_transition theme scale source target",
+            "@transition_atom_truth (atom_assumption_denotes assumptions) "
+            "(transition_atom_assumptions assumptions)",
         )
     )
     for index, (field, value) in enumerate(model_fields):
@@ -3053,6 +3285,20 @@ def atomic_closure_truth_kernel_lines(
     lines.extend(
         [
             "|}.",
+            "",
+            "Definition lexical_transition_truth_model : LexicalTransitionTruthModel :=",
+            "  lexical_transition_truth_model_from_assumptions",
+            "    lexical_transition_truth_assumptions_from_atomic_base.",
+            "",
+            "Theorem lexical_transition_truth_model_from_assumptions_exists :",
+            "  exists M : LexicalTransitionTruthModel,",
+            "    M = lexical_transition_truth_model_from_assumptions",
+            "      lexical_transition_truth_assumptions_from_atomic_base.",
+            "Proof.",
+            "  exists (lexical_transition_truth_model_from_assumptions",
+            "    lexical_transition_truth_assumptions_from_atomic_base).",
+            "  reflexivity.",
+            "Qed.",
             "",
             "Theorem lexical_transition_truth_model_exists :",
             "  exists M : LexicalTransitionTruthModel,",

@@ -1030,6 +1030,13 @@ remain atom-level facts, while Sigma, repetition, temporal operators,
 negation, and `Cause` are closed by checked constructors. Each exported example
 receives both `example_i_atomic_closure_truth` and
 `example_i_atomic_closure_truth_kernel_sound` checks. The follow-up verified
+objective `coq_lexical_transition_truth_assumption_split` now factors the
+remaining atom-level assumptions before the model bridge is assembled. It
+introduces `LexicalAtomTruthAssumptions`,
+`TransitionAtomTruthAssumptions`, and
+`LexicalTransitionTruthAssumptions`, so lexical predicate atoms and the
+`Transition` atom are named as separate assumption interfaces rather than
+being hidden inside a single model record. The follow-up verified
 objective `coq_lexical_transition_truth_model_instance` now adds
 `LexicalTransitionTruthModel`, a named bridge whose denotation predicate is
 `AtomicBaseTruth` and whose fields separately expose lexical atom truth and

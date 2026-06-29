@@ -343,6 +343,49 @@ inductive AtomicBaseTruth : (A : Type) -> A -> Prop where
   | atomic_base_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> AtomicBaseTruth PropT (knock n mods arg1)
   | atomic_base_truth_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> AtomicBaseTruth TransitionT (Transition theme scale source target)
 
+structure LexicalAtomTruthAssumptions (D : (A : Type) -> A -> Prop) : Type where
+  lexical_atom_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> D PropT (break n mods arg1 arg2)
+  lexical_atom_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> D PropT (butter n mods arg1 arg2)
+  lexical_atom_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> D Prop (eat n mods arg1 arg2)
+  lexical_atom_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> D PropT (knock n mods arg1)
+
+structure TransitionAtomTruthAssumptions (D : (A : Type) -> A -> Prop) : Type where
+  transition_atom_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> D TransitionT (Transition theme scale source target)
+
+structure LexicalTransitionTruthAssumptions : Type where
+  atom_assumption_denotes : (A : Type) -> A -> Prop
+  lexical_atom_assumptions : LexicalAtomTruthAssumptions atom_assumption_denotes
+  transition_atom_assumptions : TransitionAtomTruthAssumptions atom_assumption_denotes
+
+def lexical_atom_truth_assumptions_from_atomic_base : LexicalAtomTruthAssumptions AtomicBaseTruth := {
+  lexical_atom_truth_break_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_break_application n mods arg1 arg2,
+  lexical_atom_truth_butter_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_butter_application n mods arg1 arg2,
+  lexical_atom_truth_eat_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_eat_application n mods arg1 arg2,
+  lexical_atom_truth_knock_application := fun n mods arg1 => AtomicBaseTruth.atomic_base_truth_knock_application n mods arg1
+}
+
+def transition_atom_truth_assumptions_from_atomic_base : TransitionAtomTruthAssumptions AtomicBaseTruth := {
+  transition_atom_truth := fun theme scale source target => AtomicBaseTruth.atomic_base_truth_transition theme scale source target
+}
+
+def lexical_transition_truth_assumptions_from_atomic_base : LexicalTransitionTruthAssumptions := {
+  atom_assumption_denotes := AtomicBaseTruth,
+  lexical_atom_assumptions := lexical_atom_truth_assumptions_from_atomic_base,
+  transition_atom_assumptions := transition_atom_truth_assumptions_from_atomic_base
+}
+
+theorem lexical_atom_truth_assumptions_from_atomic_base_exists :
+    Exists (fun L : LexicalAtomTruthAssumptions AtomicBaseTruth => L = lexical_atom_truth_assumptions_from_atomic_base) := by
+  exact Exists.intro lexical_atom_truth_assumptions_from_atomic_base rfl
+
+theorem transition_atom_truth_assumptions_from_atomic_base_exists :
+    Exists (fun T : TransitionAtomTruthAssumptions AtomicBaseTruth => T = transition_atom_truth_assumptions_from_atomic_base) := by
+  exact Exists.intro transition_atom_truth_assumptions_from_atomic_base rfl
+
+theorem lexical_transition_truth_assumptions_from_atomic_base_exists :
+    Exists (fun A : LexicalTransitionTruthAssumptions => A = lexical_transition_truth_assumptions_from_atomic_base) := by
+  exact Exists.intro lexical_transition_truth_assumptions_from_atomic_base rfl
+
 structure LexicalTransitionTruthModel : Type where
   atom_model_denotes : (A : Type) -> A -> Prop
   model_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> atom_model_denotes PropT (break n mods arg1 arg2)
@@ -351,14 +394,21 @@ structure LexicalTransitionTruthModel : Type where
   model_lexical_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> atom_model_denotes PropT (knock n mods arg1)
   model_transition_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> atom_model_denotes TransitionT (Transition theme scale source target)
 
-def lexical_transition_truth_model : LexicalTransitionTruthModel := {
-  atom_model_denotes := AtomicBaseTruth,
-  model_lexical_truth_break_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_break_application n mods arg1 arg2,
-  model_lexical_truth_butter_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_butter_application n mods arg1 arg2,
-  model_lexical_truth_eat_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_eat_application n mods arg1 arg2,
-  model_lexical_truth_knock_application := fun n mods arg1 => AtomicBaseTruth.atomic_base_truth_knock_application n mods arg1,
-  model_transition_truth := fun theme scale source target => AtomicBaseTruth.atomic_base_truth_transition theme scale source target
+def lexical_transition_truth_model_from_assumptions (assumptions : LexicalTransitionTruthAssumptions) : LexicalTransitionTruthModel := {
+  atom_model_denotes := assumptions.atom_assumption_denotes,
+  model_lexical_truth_break_application := assumptions.lexical_atom_assumptions.lexical_atom_truth_break_application,
+  model_lexical_truth_butter_application := assumptions.lexical_atom_assumptions.lexical_atom_truth_butter_application,
+  model_lexical_truth_eat_application := assumptions.lexical_atom_assumptions.lexical_atom_truth_eat_application,
+  model_lexical_truth_knock_application := assumptions.lexical_atom_assumptions.lexical_atom_truth_knock_application,
+  model_transition_truth := assumptions.transition_atom_assumptions.transition_atom_truth
 }
+
+def lexical_transition_truth_model : LexicalTransitionTruthModel :=
+  lexical_transition_truth_model_from_assumptions lexical_transition_truth_assumptions_from_atomic_base
+
+theorem lexical_transition_truth_model_from_assumptions_exists :
+    Exists (fun M : LexicalTransitionTruthModel => M = lexical_transition_truth_model_from_assumptions lexical_transition_truth_assumptions_from_atomic_base) := by
+  exact Exists.intro (lexical_transition_truth_model_from_assumptions lexical_transition_truth_assumptions_from_atomic_base) rfl
 
 theorem lexical_transition_truth_model_exists :
     Exists (fun M : LexicalTransitionTruthModel => M = lexical_transition_truth_model) := by
