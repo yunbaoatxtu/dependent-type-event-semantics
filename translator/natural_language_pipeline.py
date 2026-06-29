@@ -21029,6 +21029,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_registered_truth_condition_spec_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21123,7 +21128,12 @@ def project_completion_status_payload(
                     "Coq file proves that registered transitions imply "
                     "AtomicBaseTruth, defines TransitionRefinedAtomicClosureTruth, "
                     "and checks per-example transition-refined proofs before "
-                    "bridging them back to AtomicClosureTruth. "
+                    "bridging them back to AtomicClosureTruth. The registered "
+                    "transition layer now also induces a RegisteredTruthConditionSpec "
+                    "whose transition field is restricted to registered state-change "
+                    "facts; every exported example receives a checked "
+                    "registered-truth-condition soundness theorem and a bridge "
+                    "from that registered spec back to AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

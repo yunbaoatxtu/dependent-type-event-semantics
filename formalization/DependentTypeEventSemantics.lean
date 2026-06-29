@@ -646,6 +646,69 @@ theorem transition_refined_atomic_closure_truth_implies_atomic_closure_truth :
       exact registered_state_transition_atomic_base_truth theme scale source target hreg
   | transition_refined_truth_cause causer effect h ih => exact AtomicClosureTruth.atomic_closure_truth_cause causer effect ih
 
+structure RegisteredTruthConditionSpec : Type where
+  registered_truth_denotes : (A : Type) -> A -> Prop
+  registered_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> registered_truth_denotes PropT (break n mods arg1 arg2)
+  registered_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> registered_truth_denotes PropT (butter n mods arg1 arg2)
+  registered_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> registered_truth_denotes Prop (eat n mods arg1 arg2)
+  registered_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> registered_truth_denotes PropT (knock n mods arg1)
+  registered_truth_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> registered_truth_denotes Prop (P x)) -> registered_truth_denotes Prop (Exists fun x : Entity => P x)
+  registered_truth_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> registered_truth_denotes Prop (P x)) -> registered_truth_denotes Prop (Exists fun x : Food => P x)
+  registered_truth_sigma_State : (P : State -> Prop) -> ((x : State) -> registered_truth_denotes Prop (P x)) -> registered_truth_denotes Prop (Exists fun x : State => P x)
+  registered_truth_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> registered_truth_denotes Prop (P x)) -> registered_truth_denotes Prop (Exists fun x : StateScale => P x)
+  registered_truth_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> registered_truth_denotes Prop (P x)) -> registered_truth_denotes Prop (Exists fun x : TransitionT => P x)
+  registered_truth_repeat : (n : Nat) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (repeat n body)
+  registered_truth_at_T : (marker : Entity) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (at_T marker body)
+  registered_truth_during_T : (marker : Entity) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (during_T marker body)
+  registered_truth_before_T : (marker : Entity) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (before_T marker body)
+  registered_truth_after_T : (marker : Entity) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (after_T marker body)
+  registered_truth_until_T : (marker : Entity) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (until_T marker body)
+  registered_truth_since_T : (marker : Entity) -> (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (since_T marker body)
+  registered_truth_not_T : (body : PropT) -> registered_truth_denotes PropT body -> registered_truth_denotes PropT (not_T body)
+  registered_truth_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> RegisteredStateTransitionTruth theme scale source target -> registered_truth_denotes TransitionT (Transition theme scale source target)
+  registered_truth_cause : (causer : Entity) -> (effect : TransitionT) -> registered_truth_denotes TransitionT effect -> registered_truth_denotes PropT (Cause causer effect)
+
+def transition_refined_registered_truth_denotes : (A : Type) -> A -> Prop :=
+  TransitionRefinedAtomicClosureTruth
+
+def transition_refined_registered_truth_conditions : RegisteredTruthConditionSpec := {
+  registered_truth_denotes := transition_refined_registered_truth_denotes,
+  registered_truth_break_application := fun n mods arg1 arg2 => TransitionRefinedAtomicClosureTruth.transition_refined_truth_break_application n mods arg1 arg2 (AtomicBaseTruth.atomic_base_truth_break_application n mods arg1 arg2),
+  registered_truth_butter_application := fun n mods arg1 arg2 => TransitionRefinedAtomicClosureTruth.transition_refined_truth_butter_application n mods arg1 arg2 (AtomicBaseTruth.atomic_base_truth_butter_application n mods arg1 arg2),
+  registered_truth_eat_application := fun n mods arg1 arg2 => TransitionRefinedAtomicClosureTruth.transition_refined_truth_eat_application n mods arg1 arg2 (AtomicBaseTruth.atomic_base_truth_eat_application n mods arg1 arg2),
+  registered_truth_knock_application := fun n mods arg1 => TransitionRefinedAtomicClosureTruth.transition_refined_truth_knock_application n mods arg1 (AtomicBaseTruth.atomic_base_truth_knock_application n mods arg1),
+  registered_truth_sigma_Entity := fun P h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_sigma_Entity P h,
+  registered_truth_sigma_Food := fun P h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_sigma_Food P h,
+  registered_truth_sigma_State := fun P h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_sigma_State P h,
+  registered_truth_sigma_StateScale := fun P h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_sigma_StateScale P h,
+  registered_truth_sigma_TransitionT := fun P h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_sigma_TransitionT P h,
+  registered_truth_repeat := fun n body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_repeat n body h,
+  registered_truth_at_T := fun marker body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_at_T marker body h,
+  registered_truth_during_T := fun marker body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_during_T marker body h,
+  registered_truth_before_T := fun marker body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_before_T marker body h,
+  registered_truth_after_T := fun marker body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_after_T marker body h,
+  registered_truth_until_T := fun marker body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_until_T marker body h,
+  registered_truth_since_T := fun marker body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_since_T marker body h,
+  registered_truth_not_T := fun body h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_not_T body h,
+  registered_truth_transition := fun theme scale source target h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_transition theme scale source target h,
+  registered_truth_cause := fun causer effect h => TransitionRefinedAtomicClosureTruth.transition_refined_truth_cause causer effect h
+}
+
+theorem transition_refined_registered_truth_condition_spec_exists :
+    Exists (fun R : RegisteredTruthConditionSpec => R = transition_refined_registered_truth_conditions) := by
+  exact Exists.intro transition_refined_registered_truth_conditions rfl
+
+theorem transition_refined_registered_truth_conditions_denote_transition_refined :
+    (A : Type) -> (term : A) -> TransitionRefinedAtomicClosureTruth A term -> transition_refined_registered_truth_conditions.registered_truth_denotes A term := by
+  intro A term h
+  exact h
+
+theorem transition_refined_registered_truth_conditions_imply_atomic_closure :
+    (A : Type) -> (term : A) -> transition_refined_registered_truth_conditions.registered_truth_denotes A term -> AtomicClosureTruth A term := by
+  intro A term h
+  apply transition_refined_atomic_closure_truth_implies_atomic_closure_truth
+  exact h
+
 def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=
   ModelInterpretable
 
@@ -1094,6 +1157,32 @@ theorem example_4_transition_refined_atomic_closure_sound : AtomicClosureTruth P
   apply transition_refined_atomic_closure_truth_implies_atomic_closure_truth
   exact example_4_transition_refined_atomic_closure_truth
 
+theorem example_1_transition_refined_registered_truth_condition_sound : transition_refined_registered_truth_conditions.registered_truth_denotes PropT example_1 := by
+  apply transition_refined_registered_truth_conditions_denote_transition_refined
+  exact example_1_transition_refined_atomic_closure_truth
+theorem example_2_transition_refined_registered_truth_condition_sound : transition_refined_registered_truth_conditions.registered_truth_denotes Prop example_2 := by
+  apply transition_refined_registered_truth_conditions_denote_transition_refined
+  exact example_2_transition_refined_atomic_closure_truth
+theorem example_3_transition_refined_registered_truth_condition_sound : transition_refined_registered_truth_conditions.registered_truth_denotes PropT example_3 := by
+  apply transition_refined_registered_truth_conditions_denote_transition_refined
+  exact example_3_transition_refined_atomic_closure_truth
+theorem example_4_transition_refined_registered_truth_condition_sound : transition_refined_registered_truth_conditions.registered_truth_denotes PropT example_4 := by
+  apply transition_refined_registered_truth_conditions_denote_transition_refined
+  exact example_4_transition_refined_atomic_closure_truth
+
+theorem example_1_transition_refined_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1 := by
+  apply transition_refined_registered_truth_conditions_imply_atomic_closure
+  exact example_1_transition_refined_registered_truth_condition_sound
+theorem example_2_transition_refined_registered_truth_condition_atomic_sound : AtomicClosureTruth Prop example_2 := by
+  apply transition_refined_registered_truth_conditions_imply_atomic_closure
+  exact example_2_transition_refined_registered_truth_condition_sound
+theorem example_3_transition_refined_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_3 := by
+  apply transition_refined_registered_truth_conditions_imply_atomic_closure
+  exact example_3_transition_refined_registered_truth_condition_sound
+theorem example_4_transition_refined_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_4 := by
+  apply transition_refined_registered_truth_conditions_imply_atomic_closure
+  exact example_4_transition_refined_registered_truth_condition_sound
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -1115,6 +1204,8 @@ theorem example_4_transition_refined_atomic_closure_sound : AtomicClosureTruth P
 #check example_1_atomic_closure_truth_condition_sound
 #check example_1_transition_refined_atomic_closure_truth
 #check example_1_transition_refined_atomic_closure_sound
+#check example_1_transition_refined_registered_truth_condition_sound
+#check example_1_transition_refined_registered_truth_condition_atomic_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -1136,6 +1227,8 @@ theorem example_4_transition_refined_atomic_closure_sound : AtomicClosureTruth P
 #check example_2_atomic_closure_truth_condition_sound
 #check example_2_transition_refined_atomic_closure_truth
 #check example_2_transition_refined_atomic_closure_sound
+#check example_2_transition_refined_registered_truth_condition_sound
+#check example_2_transition_refined_registered_truth_condition_atomic_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -1157,6 +1250,8 @@ theorem example_4_transition_refined_atomic_closure_sound : AtomicClosureTruth P
 #check example_3_atomic_closure_truth_condition_sound
 #check example_3_transition_refined_atomic_closure_truth
 #check example_3_transition_refined_atomic_closure_sound
+#check example_3_transition_refined_registered_truth_condition_sound
+#check example_3_transition_refined_registered_truth_condition_atomic_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -1178,3 +1273,5 @@ theorem example_4_transition_refined_atomic_closure_sound : AtomicClosureTruth P
 #check example_4_atomic_closure_truth_condition_sound
 #check example_4_transition_refined_atomic_closure_truth
 #check example_4_transition_refined_atomic_closure_sound
+#check example_4_transition_refined_registered_truth_condition_sound
+#check example_4_transition_refined_registered_truth_condition_atomic_sound

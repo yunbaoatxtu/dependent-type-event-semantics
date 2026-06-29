@@ -1059,6 +1059,14 @@ def transition_refined_sigma_constructor(type_name: str) -> str:
     return f"transition_refined_truth_sigma_{type_name}"
 
 
+def registered_truth_application_field(function: str) -> str:
+    return f"registered_truth_{function}_application"
+
+
+def registered_truth_sigma_field(type_name: str) -> str:
+    return f"registered_truth_sigma_{type_name}"
+
+
 def _coq_function_preservation_constructor(
     name: str,
     arg_types: list[str],
@@ -1685,6 +1693,56 @@ def _lean_function_transition_refined_constructor(
                 fact,
                 "TransitionRefinedAtomicClosureTruth "
                 f"{result_type} ({name} {' '.join(application_args)})",
+            ]
+        )
+    )
+
+
+def _coq_function_registered_truth_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {registered_truth_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"registered_truth_denotes {result_type} "
+        + f"({name} {' '.join(application_args)});",
+    ]
+
+
+def _lean_function_registered_truth_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = (
+        arg_types[2:]
+        if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+        else arg_types
+    )
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {registered_truth_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [
+                "registered_truth_denotes "
+                f"{result_type} ({name} {' '.join(application_args)})"
             ]
         )
     )
@@ -4014,6 +4072,354 @@ def transition_refined_atomic_closure_truth_lines(
     return lines
 
 
+def registered_truth_condition_spec_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure RegisteredTruthConditionSpec : Type where",
+            "  registered_truth_denotes : (A : Type) -> A -> Prop",
+        ]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_registered_truth_field(name, arg_types, result_type)
+            )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  {registered_truth_sigma_field(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> registered_truth_denotes Prop (P x)) -> "
+                f"registered_truth_denotes Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  registered_truth_repeat : (n : Nat) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (repeat n body)",
+                "  registered_truth_at_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (at_T marker body)",
+                "  registered_truth_during_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (during_T marker body)",
+                "  registered_truth_before_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (before_T marker body)",
+                "  registered_truth_after_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (after_T marker body)",
+                "  registered_truth_until_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (until_T marker body)",
+                "  registered_truth_since_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (since_T marker body)",
+                "  registered_truth_not_T : (body : PropT) -> "
+                "registered_truth_denotes PropT body -> "
+                "registered_truth_denotes PropT (not_T body)",
+                "  registered_truth_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "registered_truth_denotes TransitionT "
+                "(Transition theme scale source target)",
+                "  registered_truth_cause : (causer : Entity) -> "
+                "(effect : TransitionT) -> "
+                "registered_truth_denotes TransitionT effect -> "
+                "registered_truth_denotes PropT (Cause causer effect)",
+                "",
+                "def transition_refined_registered_truth_denotes : "
+                "(A : Type) -> A -> Prop :=",
+                "  TransitionRefinedAtomicClosureTruth",
+                "",
+                "def transition_refined_registered_truth_conditions : "
+                "RegisteredTruthConditionSpec := {",
+                "  registered_truth_denotes := "
+                "transition_refined_registered_truth_denotes,",
+            ]
+        )
+        fields: list[tuple[str, str]] = []
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            binders = " ".join(["n", "mods", *ordinary_args])
+            constructor_args = " ".join(["n", "mods", *ordinary_args])
+            fields.append(
+                (
+                    registered_truth_application_field(name),
+                    (
+                        f"fun {binders} => "
+                        "TransitionRefinedAtomicClosureTruth."
+                        f"{transition_refined_application_constructor(name)} "
+                        f"{constructor_args} "
+                        f"(AtomicBaseTruth.{atomic_base_truth_application_constructor(name)} "
+                        f"{constructor_args})"
+                    ),
+                )
+            )
+        for type_name in declarations["types"]:
+            fields.append(
+                (
+                    registered_truth_sigma_field(type_name),
+                    (
+                        "fun P h => TransitionRefinedAtomicClosureTruth."
+                        f"{transition_refined_sigma_constructor(type_name)} P h"
+                    ),
+                )
+            )
+        fields.extend(
+            [
+                (
+                    "registered_truth_repeat",
+                    "fun n body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_repeat n body h",
+                ),
+                (
+                    "registered_truth_at_T",
+                    "fun marker body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_at_T marker body h",
+                ),
+                (
+                    "registered_truth_during_T",
+                    "fun marker body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_during_T marker body h",
+                ),
+                (
+                    "registered_truth_before_T",
+                    "fun marker body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_before_T marker body h",
+                ),
+                (
+                    "registered_truth_after_T",
+                    "fun marker body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_after_T marker body h",
+                ),
+                (
+                    "registered_truth_until_T",
+                    "fun marker body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_until_T marker body h",
+                ),
+                (
+                    "registered_truth_since_T",
+                    "fun marker body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_since_T marker body h",
+                ),
+                (
+                    "registered_truth_not_T",
+                    "fun body h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_not_T body h",
+                ),
+                (
+                    "registered_truth_transition",
+                    "fun theme scale source target h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_transition "
+                    "theme scale source target h",
+                ),
+                (
+                    "registered_truth_cause",
+                    "fun causer effect h => "
+                    "TransitionRefinedAtomicClosureTruth."
+                    "transition_refined_truth_cause causer effect h",
+                ),
+            ]
+        )
+        for index, (field, value) in enumerate(fields):
+            suffix = "," if index < len(fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem transition_refined_registered_truth_condition_spec_exists :",
+                "    Exists (fun R : RegisteredTruthConditionSpec => "
+                "R = transition_refined_registered_truth_conditions) := by",
+                "  exact Exists.intro transition_refined_registered_truth_conditions rfl",
+                "",
+                "theorem transition_refined_registered_truth_conditions_denote_transition_refined :",
+                "    (A : Type) -> (term : A) -> "
+                "TransitionRefinedAtomicClosureTruth A term -> "
+                "transition_refined_registered_truth_conditions."
+                "registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem transition_refined_registered_truth_conditions_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "transition_refined_registered_truth_conditions."
+                "registered_truth_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply transition_refined_atomic_closure_truth_implies_atomic_closure_truth",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record RegisteredTruthConditionSpec : Type := {",
+        "  registered_truth_denotes : forall A : Type, A -> Prop;",
+    ]
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(_coq_function_registered_truth_field(name, arg_types, result_type))
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  {registered_truth_sigma_field(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, registered_truth_denotes Prop (P x)) ->",
+                f"      registered_truth_denotes Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  registered_truth_repeat : forall n : nat, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (repeat n body);",
+            "  registered_truth_at_T : forall marker : Entity, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (at_T marker body);",
+            "  registered_truth_during_T : forall marker : Entity, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (during_T marker body);",
+            "  registered_truth_before_T : forall marker : Entity, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (before_T marker body);",
+            "  registered_truth_after_T : forall marker : Entity, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (after_T marker body);",
+            "  registered_truth_until_T : forall marker : Entity, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (until_T marker body);",
+            "  registered_truth_since_T : forall marker : Entity, forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (since_T marker body);",
+            "  registered_truth_not_T : forall body : PropT,",
+            "      registered_truth_denotes PropT body ->",
+            "      registered_truth_denotes PropT (not_T body);",
+            "  registered_truth_transition : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      registered_truth_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  registered_truth_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      registered_truth_denotes TransitionT effect ->",
+            "      registered_truth_denotes PropT (Cause causer effect)",
+            "}.",
+            "",
+            "Definition transition_refined_registered_truth_denotes : "
+            "forall A : Type, A -> Prop :=",
+            "  TransitionRefinedAtomicClosureTruth.",
+            "",
+            "Definition transition_refined_registered_truth_conditions : "
+            "RegisteredTruthConditionSpec := {|",
+            "  registered_truth_denotes := "
+            "transition_refined_registered_truth_denotes;",
+        ]
+    )
+    fields: list[tuple[str, str]] = []
+    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        binders = " ".join(["n", "mods", *ordinary_args])
+        constructor_args = " ".join(["n", "mods", *ordinary_args])
+        fields.append(
+            (
+                registered_truth_application_field(name),
+                (
+                    f"fun {binders} => "
+                    f"{transition_refined_application_constructor(name)} "
+                    f"{constructor_args} "
+                    f"({atomic_base_truth_application_constructor(name)} "
+                    f"{constructor_args})"
+                ),
+            )
+        )
+    for type_name in declarations["types"]:
+        fields.append(
+            (
+                registered_truth_sigma_field(type_name),
+                f"fun P h => {transition_refined_sigma_constructor(type_name)} P h",
+            )
+        )
+    fields.extend(
+        [
+            ("registered_truth_repeat", "fun n body h => transition_refined_truth_repeat n body h"),
+            ("registered_truth_at_T", "fun marker body h => transition_refined_truth_at_T marker body h"),
+            ("registered_truth_during_T", "fun marker body h => transition_refined_truth_during_T marker body h"),
+            ("registered_truth_before_T", "fun marker body h => transition_refined_truth_before_T marker body h"),
+            ("registered_truth_after_T", "fun marker body h => transition_refined_truth_after_T marker body h"),
+            ("registered_truth_until_T", "fun marker body h => transition_refined_truth_until_T marker body h"),
+            ("registered_truth_since_T", "fun marker body h => transition_refined_truth_since_T marker body h"),
+            ("registered_truth_not_T", "fun body h => transition_refined_truth_not_T body h"),
+            (
+                "registered_truth_transition",
+                "fun theme scale source target h => "
+                "transition_refined_truth_transition theme scale source target h",
+            ),
+            (
+                "registered_truth_cause",
+                "fun causer effect h => transition_refined_truth_cause causer effect h",
+            ),
+        ]
+    )
+    for index, (field, value) in enumerate(fields):
+        suffix = ";" if index < len(fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem transition_refined_registered_truth_condition_spec_exists :",
+            "  exists R : RegisteredTruthConditionSpec,",
+            "    R = transition_refined_registered_truth_conditions.",
+            "Proof.",
+            "  exists transition_refined_registered_truth_conditions. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem transition_refined_registered_truth_conditions_denote_transition_refined :",
+            "  forall A : Type, forall term : A,",
+            "    TransitionRefinedAtomicClosureTruth A term ->",
+            "    registered_truth_denotes transition_refined_registered_truth_conditions A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem transition_refined_registered_truth_conditions_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    registered_truth_denotes transition_refined_registered_truth_conditions A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply transition_refined_atomic_closure_truth_implies_atomic_closure_truth.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_truth_condition_kernel_instance_lines(
     declarations: dict[str, Any],
     target: str,
@@ -5275,6 +5681,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(transition_refined_atomic_closure_truth_lines(declarations, target))
         lines.append("")
+        lines.extend(registered_truth_condition_spec_lines(declarations, target))
+        lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
         lines.append("")
         lines.extend(syntax_directed_truth_kernel_instance_lines(declarations, target))
@@ -5525,6 +5933,38 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"  exact example_{idx}_transition_refined_atomic_closure_truth"
             )
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_transition_refined_registered_truth_condition_sound : "
+                "transition_refined_registered_truth_conditions."
+                "registered_truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "transition_refined_registered_truth_conditions_denote_transition_refined"
+            )
+            lines.append(
+                f"  exact example_{idx}_transition_refined_atomic_closure_truth"
+            )
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_transition_refined_registered_truth_condition_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "transition_refined_registered_truth_conditions_imply_atomic_closure"
+            )
+            lines.append(
+                f"  exact example_{idx}_transition_refined_registered_truth_condition_sound"
+            )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -5550,6 +5990,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
             lines.append(
                 f"#check example_{idx}_transition_refined_atomic_closure_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_transition_refined_registered_truth_condition_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_transition_refined_registered_truth_condition_atomic_sound"
             )
         return "\n".join(lines) + "\n"
 
@@ -5657,6 +6105,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(atomic_closure_truth_kernel_lines(declarations, target))
     lines.append("")
     lines.extend(transition_refined_atomic_closure_truth_lines(declarations, target))
+    lines.append("")
+    lines.extend(registered_truth_condition_spec_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
     lines.append("")
@@ -5927,6 +6377,40 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_transition_refined_atomic_closure_truth.")
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_transition_refined_registered_truth_condition_sound : "
+            "registered_truth_denotes "
+            "transition_refined_registered_truth_conditions "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "transition_refined_registered_truth_conditions_denote_transition_refined."
+        )
+        lines.append(f"  exact example_{idx}_transition_refined_atomic_closure_truth.")
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_transition_refined_registered_truth_condition_atomic_sound : "
+            f"AtomicClosureTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "transition_refined_registered_truth_conditions_imply_atomic_closure."
+        )
+        lines.append(
+            f"  exact example_{idx}_transition_refined_registered_truth_condition_sound."
+        )
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -5949,6 +6433,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_atomic_closure_truth_condition_sound.")
         lines.append(f"Check example_{idx}_transition_refined_atomic_closure_truth.")
         lines.append(f"Check example_{idx}_transition_refined_atomic_closure_sound.")
+        lines.append(
+            "Check "
+            f"example_{idx}_transition_refined_registered_truth_condition_sound."
+        )
+        lines.append(
+            "Check "
+            f"example_{idx}_transition_refined_registered_truth_condition_atomic_sound."
+        )
     return "\n".join(lines) + "\n"
 
 

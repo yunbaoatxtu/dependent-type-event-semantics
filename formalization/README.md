@@ -133,6 +133,13 @@ the exported examples. It declares `RegisteredStateTransitionTruth`, proves
 `example_i_transition_refined_atomic_closure_sound`. This makes the transition
 atom stricter than the generic `AtomicBaseTruth.atomic_base_truth_transition`
 constructor while leaving full lexical truth-condition instantiation open.
+The generated files now also expose this registered fragment as
+`RegisteredTruthConditionSpec`. Its transition field is explicitly restricted
+to `RegisteredStateTransitionTruth`, and the checker requires
+`transition_refined_registered_truth_conditions`,
+`example_i_transition_refined_registered_truth_condition_sound`, and
+`example_i_transition_refined_registered_truth_condition_atomic_sound` to stay
+present and type checked.
 This still does not claim that the lexical and transition constructors have
 been derived from a full semantic model.
 

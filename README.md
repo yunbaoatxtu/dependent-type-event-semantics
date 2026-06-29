@@ -1068,7 +1068,14 @@ registered transition implies `AtomicBaseTruth`, define
 `example_i_transition_refined_atomic_closure_truth` and
 `example_i_transition_refined_atomic_closure_sound` theorems. Lexical predicate
 atoms remain open at the atomic layer, so this is a stricter transition boundary
-rather than a completed lexical truth-condition model. The open
+rather than a completed lexical truth-condition model. The next verified
+objective `coq_registered_truth_condition_spec_instance` packages that
+registered transition boundary as a `RegisteredTruthConditionSpec`: its
+Transition clause takes `RegisteredStateTransitionTruth` evidence instead of
+claiming arbitrary state changes, and every exported example now receives
+`example_i_transition_refined_registered_truth_condition_sound` plus the
+atomic-closure bridge
+`example_i_transition_refined_registered_truth_condition_atomic_sound`. The open
 blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

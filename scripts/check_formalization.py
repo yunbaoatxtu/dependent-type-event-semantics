@@ -686,6 +686,47 @@ def main() -> None:
             and "Check example_4_transition_refined_atomic_closure_truth."
             in coq
         ),
+        "lean registered truth condition spec instance": (
+            "structure RegisteredTruthConditionSpec : Type where" in lean
+            and "registered_truth_denotes : (A : Type) -> A -> Prop" in lean
+            and "registered_truth_transition : (theme : Entity)" in lean
+            and "RegisteredStateTransitionTruth theme scale source target ->"
+            in lean
+            and "def transition_refined_registered_truth_conditions : RegisteredTruthConditionSpec := {"
+            in lean
+            and "theorem transition_refined_registered_truth_condition_spec_exists :"
+            in lean
+            and "theorem transition_refined_registered_truth_conditions_denote_transition_refined :"
+            in lean
+            and "theorem transition_refined_registered_truth_conditions_imply_atomic_closure :"
+            in lean
+            and "theorem example_4_transition_refined_registered_truth_condition_sound :"
+            in lean
+            and "theorem example_4_transition_refined_registered_truth_condition_atomic_sound :"
+            in lean
+            and "#check example_4_transition_refined_registered_truth_condition_sound"
+            in lean
+        ),
+        "coq registered truth condition spec instance": (
+            "Record RegisteredTruthConditionSpec : Type := {" in coq
+            and "registered_truth_denotes : forall A : Type, A -> Prop;" in coq
+            and "registered_truth_transition : forall theme : Entity" in coq
+            and "RegisteredStateTransitionTruth theme scale source target ->" in coq
+            and "Definition transition_refined_registered_truth_conditions : RegisteredTruthConditionSpec := {|"
+            in coq
+            and "Theorem transition_refined_registered_truth_condition_spec_exists :"
+            in coq
+            and "Theorem transition_refined_registered_truth_conditions_denote_transition_refined :"
+            in coq
+            and "Theorem transition_refined_registered_truth_conditions_imply_atomic_closure :"
+            in coq
+            and "Theorem example_4_transition_refined_registered_truth_condition_sound :"
+            in coq
+            and "Theorem example_4_transition_refined_registered_truth_condition_atomic_sound :"
+            in coq
+            and "Check example_4_transition_refined_registered_truth_condition_sound."
+            in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
