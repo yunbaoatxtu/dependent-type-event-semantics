@@ -1250,9 +1250,10 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
-            "constant SemanticPreservation : (A : Type) -> A -> Prop",
+            "inductive SemanticPreservation : (A : Type) -> A -> Prop where",
             lean_module,
         )
+        self.assertIn("SemanticPreservation.preserve_cause", lean_module)
         self.assertIn(
             "def example_1_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_1",
             lean_module,
@@ -1277,16 +1278,23 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_semantic_preservation_target_matches :",
             lean_module,
         )
+        self.assertIn(
+            "theorem example_2_semantic_preservation_proved :",
+            lean_module,
+        )
+        self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_is_prop", lean_module)
         self.assertIn("#check example_2_semantic_preservation_target_matches", lean_module)
+        self.assertIn("#check example_2_semantic_preservation_proved", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
-            "Parameter SemanticPreservation : forall A : Type, A -> Prop.",
+            "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
             coq_module,
         )
+        self.assertIn("preserve_cause : forall causer : Entity", coq_module)
         self.assertIn("Inductive ObligationStatus : Type :=", coq_module)
         self.assertIn("Record SemanticPreservationObligation : Type := {", coq_module)
         self.assertIn("Definition PreservationTargetMatches", coq_module)
@@ -1322,12 +1330,18 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_2_semantic_preservation_target_matches : PreservationTargetMatches PropT example_2 example_2_semantic_preservation_obligation_record.",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_2_semantic_preservation_proved : example_2_semantic_preservation_obligation.",
+            coq_module,
+        )
+        self.assertIn("  apply preserve_cause.", coq_module)
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation_record.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation_is_prop.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_target_matches.", coq_module)
+        self.assertIn("Check example_2_semantic_preservation_proved.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -1350,10 +1364,15 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_1_semantic_preservation_target_matches :",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_1_semantic_preservation_proved :",
+            coq_module,
+        )
         self.assertIn("Check example_1_semantic_preservation_obligation.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_obligation_record.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_obligation_is_prop.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_target_matches.", coq_module)
+        self.assertIn("Check example_1_semantic_preservation_proved.", coq_module)
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
 
@@ -13569,6 +13588,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_named_obligation_scaffold",
                 "coq_obligation_wellformedness_proofs",
                 "coq_obligation_record_binding_proofs",
+                "coq_structural_preservation_proofs",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -13586,11 +13606,11 @@ class TranslatorTests(unittest.TestCase):
             },
         )
         self.assertIn(
-            "semantic_preservation_obligations_unproved",
+            "semantic_preservation_model_soundness_unproved",
             completion_status["completion_blockers"],
         )
         self.assertIn(
-            "prove_named_semantic_preservation_obligations",
+            "prove_preservation_constructor_soundness",
             completion_status["next_recommended_stages"],
         )
         self.assertEqual(
@@ -15073,11 +15093,11 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-completion-blocker="semantic_preservation_obligations_unproved"',
+            'data-completion-blocker="semantic_preservation_model_soundness_unproved"',
             page,
         )
         self.assertIn(
-            'data-completion-next-stage="prove_named_semantic_preservation_obligations"',
+            'data-completion-next-stage="prove_preservation_constructor_soundness"',
             page,
         )
         self.assertIn(
@@ -22627,19 +22647,23 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", readme)
+        self.assertIn("`example_i_semantic_preservation_proved`", readme)
         self.assertIn("well-formedness proof", readme)
         self.assertIn("record-binding proof", readme)
+        self.assertIn("structural preservation proof", readme)
         self.assertIn("named theorem-obligation", readme)
         self.assertIn("`SemanticPreservation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", formalization_readme)
-        self.assertIn("not proofs of", formalization_readme)
+        self.assertIn("`example_i_semantic_preservation_proved`", formalization_readme)
+        self.assertIn("not a proof of full denotational soundness", formalization_readme)
         self.assertIn("semantic preservation", formalization_readme)
         self.assertIn("SemanticPreservation", manuscript)
         self.assertIn("semantic_preservation_obligation", manuscript)
         self.assertIn("obligation well-formedness proofs", manuscript)
         self.assertIn("record-binding proofs", manuscript)
+        self.assertIn("structural preservation proofs", manuscript)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)

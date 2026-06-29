@@ -40,18 +40,23 @@ to a proof-assistant type checker:
 python3 scripts/verify_project.py
 ```
 
-The scaffold also declares `SemanticPreservation` and generates one
+The scaffold also declares `SemanticPreservation` as an inductive structural
+proof relation and generates one
 `example_i_semantic_preservation_obligation` statement for each exported
 example. It also generates a structured obligation record and a Coq theorem
 named `example_i_semantic_preservation_obligation_is_prop` for each example.
 Those theorems are well-formedness proofs: they show that the named target is a
-`Prop`-level obligation, not that semantic preservation itself has been proved.
+`Prop`-level obligation.
 The generated theorem `example_i_semantic_preservation_target_matches` is a
 record-binding proof: it shows that the record's `obligation_statement` is
 exactly the `SemanticPreservation` target for the exported example.
-The statements remain named theorem-obligation rows and not proofs of semantic
-preservation. They make the next proof-development targets explicit while
-preserving the current shallow-boundary claim.
+The generated theorem `example_i_semantic_preservation_proved` is a structural
+preservation proof: Coq checks that the exported example can be derived from
+constructors for lexical predicate application, Sigma witnesses, repetition,
+time operators, negation, Transition, and Cause. This is not a proof of full denotational soundness; the next proof-development layer must show that those
+constructors are sound for an independently specified semantic model.
+Thus the current semantic preservation layer is structural and proof-checked,
+while model soundness remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

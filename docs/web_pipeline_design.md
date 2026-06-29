@@ -173,9 +173,13 @@ covers the generated Coq proofs that each named target is a `Prop`-level
 obligation. The following record-binding stage adds
 `coq_obligation_record_binding_proofs`, which proves that each structured
 obligation record points to its own `SemanticPreservation A example_i` target.
-`semantic_preservation_obligations_unproved` remains a blocker and
-`prove_named_semantic_preservation_obligations` remains the next Coq-facing
-stage.
+The next structural stage adds `coq_structural_preservation_proofs`, which
+proves `example_i_semantic_preservation_proved` for each generated example by
+using constructors for predicate application, Sigma witnesses, repetition, time
+operators, negation, Transition, and Cause. The remaining blocker is
+`semantic_preservation_model_soundness_unproved`, and the next Coq-facing stage
+is `prove_preservation_constructor_soundness`: the structural proof relation
+must be connected to an independently specified semantic model.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application

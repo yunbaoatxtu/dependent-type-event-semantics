@@ -94,6 +94,20 @@ def main() -> None:
     coq_reflexive_proof_count = len(
         re.findall(r"^Proof\. reflexivity\. Qed\.$", coq, re.MULTILINE)
     )
+    lean_structural_proof_count = len(
+        re.findall(
+            r"^theorem example_\d+_semantic_preservation_proved :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_structural_proof_count = len(
+        re.findall(
+            r"^Theorem example_\d+_semantic_preservation_proved :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -116,11 +130,15 @@ def main() -> None:
         ),
         "lean check commands": "#check example_4" in lean,
         "coq check commands": "Check example_4." in coq,
-        "lean semantic preservation parameter": (
-            "constant SemanticPreservation : (A : Type) -> A -> Prop" in lean
+        "lean semantic preservation inductive relation": (
+            "inductive SemanticPreservation : (A : Type) -> A -> Prop where" in lean
+            and "SemanticPreservation.preserve_repeat" in lean
+            and "SemanticPreservation.preserve_sigma_Food" in lean
         ),
-        "coq semantic preservation parameter": (
-            "Parameter SemanticPreservation : forall A : Type, A -> Prop." in coq
+        "coq semantic preservation inductive relation": (
+            "Inductive SemanticPreservation : forall A : Type, A -> Prop :=" in coq
+            and "preserve_repeat : forall n : nat" in coq
+            and "preserve_sigma_Food : forall P : Food -> Prop" in coq
         ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
@@ -164,17 +182,30 @@ def main() -> None:
             coq_target_match_count == coq_example_count
             and coq_reflexive_proof_count >= coq_example_count
         ),
+        "lean structural semantic preservation proofs": (
+            lean_structural_proof_count == lean_example_count
+            and "#check example_4_semantic_preservation_proved" in lean
+        ),
+        "coq structural semantic preservation proofs": (
+            coq_structural_proof_count == coq_example_count
+            and "Check example_4_semantic_preservation_proved." in coq
+            and "apply preserve_repeat." in coq
+            and "apply preserve_sigma_Food." in coq
+            and "apply preserve_cause." in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
             and "#check example_4_semantic_preservation_obligation_is_prop" in lean
             and "#check example_4_semantic_preservation_target_matches" in lean
+            and "#check example_4_semantic_preservation_proved" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
             and "Check example_4_semantic_preservation_obligation_record." in coq
             and "Check example_4_semantic_preservation_obligation_is_prop." in coq
             and "Check example_4_semantic_preservation_target_matches." in coq
+            and "Check example_4_semantic_preservation_proved." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

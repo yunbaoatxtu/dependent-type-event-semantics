@@ -957,6 +957,204 @@ def application_argument_types(function: str, argument_count: int) -> list[str]:
     return ["Entity"] * argument_count
 
 
+def preservation_application_constructor(function: str) -> str:
+    return f"preserve_{function}_application"
+
+
+def preservation_sigma_constructor(type_name: str) -> str:
+    return f"preserve_sigma_{type_name}"
+
+
+def _coq_function_preservation_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  | {preservation_application_constructor(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"SemanticPreservation {result_type} "
+        + f"({name} {' '.join(application_args)})",
+    ]
+
+
+def _lean_function_preservation_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  | {preservation_application_constructor(name)} : "
+        + " -> ".join(binders + [
+            f"SemanticPreservation {result_type} ({name} {' '.join(application_args)})"
+        ])
+    )
+
+
+def semantic_preservation_relation_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = ["inductive SemanticPreservation : (A : Type) -> A -> Prop where"]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_preservation_constructor(name, arg_types, result_type)
+            )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | {preservation_sigma_constructor(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> SemanticPreservation Prop (P x)) -> "
+                f"SemanticPreservation Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  | preserve_repeat : (n : Nat) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (repeat n body)",
+                "  | preserve_at_T : (marker : Entity) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (at_T marker body)",
+                "  | preserve_during_T : (marker : Entity) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (during_T marker body)",
+                "  | preserve_before_T : (marker : Entity) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (before_T marker body)",
+                "  | preserve_after_T : (marker : Entity) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (after_T marker body)",
+                "  | preserve_until_T : (marker : Entity) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (until_T marker body)",
+                "  | preserve_since_T : (marker : Entity) -> (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (since_T marker body)",
+                "  | preserve_not_T : (body : PropT) -> "
+                "SemanticPreservation PropT body -> "
+                "SemanticPreservation PropT (not_T body)",
+                "  | preserve_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "SemanticPreservation TransitionT "
+                "(Transition theme scale source target)",
+                "  | preserve_cause : (causer : Entity) -> (effect : TransitionT) -> "
+                "SemanticPreservation TransitionT effect -> "
+                "SemanticPreservation PropT (Cause causer effect)",
+            ]
+        )
+        return lines
+
+    lines = ["Inductive SemanticPreservation : forall A : Type, A -> Prop :="]
+    constructors: list[str] = []
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        constructors.extend(
+            _coq_function_preservation_constructor(name, arg_types, result_type)
+        )
+    for type_name in declarations["types"]:
+        constructors.extend(
+            [
+                f"  | {preservation_sigma_constructor(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, SemanticPreservation Prop (P x)) ->",
+                f"      SemanticPreservation Prop (exists x : {type_name}, P x)",
+            ]
+        )
+    constructors.extend(
+        [
+            "  | preserve_repeat : forall n : nat, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (repeat n body)",
+            "  | preserve_at_T : forall marker : Entity, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (at_T marker body)",
+            "  | preserve_during_T : forall marker : Entity, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (during_T marker body)",
+            "  | preserve_before_T : forall marker : Entity, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (before_T marker body)",
+            "  | preserve_after_T : forall marker : Entity, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (after_T marker body)",
+            "  | preserve_until_T : forall marker : Entity, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (until_T marker body)",
+            "  | preserve_since_T : forall marker : Entity, forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (since_T marker body)",
+            "  | preserve_not_T : forall body : PropT,",
+            "      SemanticPreservation PropT body ->",
+            "      SemanticPreservation PropT (not_T body)",
+            "  | preserve_transition : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      SemanticPreservation TransitionT "
+            "(Transition theme scale source target)",
+            "  | preserve_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      SemanticPreservation TransitionT effect ->",
+            "      SemanticPreservation PropT (Cause causer effect)",
+        ]
+    )
+    if not constructors:
+        raise ValueError("Cannot emit an empty SemanticPreservation relation")
+    constructors[-1] += "."
+    return lines + constructors
+
+
+def semantic_preservation_proof_steps(term: Term, target: str) -> list[str]:
+    prefix = "SemanticPreservation." if target == "lean" else ""
+    suffix = "" if target == "lean" else "."
+
+    def apply_constructor(name: str) -> str:
+        return f"  apply {prefix}{name}{suffix}"
+
+    def prove(current: Term) -> list[str]:
+        kind = current["kind"]
+        if kind == "application":
+            function = export_atom(current["function"], target)
+            return [apply_constructor(preservation_application_constructor(function))]
+        if kind == "sigma":
+            witness = export_atom(current["witness"], target)
+            witness_type = export_type_name(current["type"], target)
+            return [
+                apply_constructor(preservation_sigma_constructor(witness_type)),
+                f"  intro {witness}{suffix}",
+                *prove(current["body"]),
+            ]
+        if kind == "repeat":
+            return [apply_constructor("preserve_repeat"), *prove(current["body"])]
+        if kind == "time":
+            operator = export_atom(current["operator"] + "_T", target)
+            return [apply_constructor(f"preserve_{operator}"), *prove(current["body"])]
+        if kind == "not":
+            return [apply_constructor("preserve_not_T"), *prove(current["body"])]
+        if kind == "transition":
+            return [apply_constructor("preserve_transition")]
+        if kind == "cause":
+            return [apply_constructor("preserve_cause"), *prove(current["effect"])]
+        raise ValueError(f"Unknown term kind: {kind!r}")
+
+    return prove(term)
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -1172,16 +1370,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "constant not_T : PropT -> PropT",
                 "constant Transition : Entity -> StateScale -> State -> State -> TransitionT",
                 "constant Cause : Entity -> TransitionT -> PropT",
-                "constant SemanticPreservation : (A : Type) -> A -> Prop",
             ]
         )
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            signature = " -> ".join(arg_types + [result_type])
+            lines.append(f"constant {name} : {signature}")
+        lines.append("")
+        lines.extend(semantic_preservation_relation_lines(declarations, target))
         lines.append(
             "def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
         )
         lines.append("  target.obligation_statement = SemanticPreservation A term")
-        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
-            signature = " -> ".join(arg_types + [result_type])
-            lines.append(f"constant {name} : {signature}")
         lines.append("")
         for idx, result in enumerate(results, 1):
             expr = result["exports"][target]
@@ -1207,7 +1406,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"example_{idx}_semantic_preservation_obligation,"
             )
             lines.append(
-                "  obligation_status := ObligationStatus.shallow_checked"
+                "  obligation_status := ObligationStatus.proved"
             )
             lines.append("}")
         lines.append("")
@@ -1238,12 +1437,23 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
             lines.append("  rfl")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            lines.append(
+                "theorem "
+                f"example_{idx}_semantic_preservation_proved : "
+                f"example_{idx}_semantic_preservation_obligation := by"
+            )
+            lines.append(f"  unfold example_{idx}_semantic_preservation_obligation")
+            lines.append(f"  unfold example_{idx}")
+            lines.extend(semantic_preservation_proof_steps(result["ast"], target))
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation_record")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation_is_prop")
             lines.append(f"#check example_{idx}_semantic_preservation_target_matches")
+            lines.append(f"#check example_{idx}_semantic_preservation_proved")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -1289,17 +1499,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Parameter not_T : PropT -> PropT.",
             "Parameter Transition : Entity -> StateScale -> State -> State -> TransitionT.",
             "Parameter Cause : Entity -> TransitionT -> PropT.",
-            "Parameter SemanticPreservation : forall A : Type, A -> Prop.",
         ]
     )
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        signature = " -> ".join(arg_types + [result_type])
+        lines.append(f"Parameter {name} : {signature}.")
+    lines.append("")
+    lines.extend(semantic_preservation_relation_lines(declarations, target))
     lines.append("Definition PreservationTargetMatches")
     lines.append(
         "  (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
     )
     lines.append("  obligation_statement target = SemanticPreservation A term.")
-    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
-        signature = " -> ".join(arg_types + [result_type])
-        lines.append(f"Parameter {name} : {signature}.")
     lines.append("")
     for idx, result in enumerate(results, 1):
         expr = result["exports"][target]
@@ -1324,7 +1535,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "  obligation_statement := "
             f"example_{idx}_semantic_preservation_obligation;"
         )
-        lines.append("  obligation_status := shallow_checked")
+        lines.append("  obligation_status := proved")
         lines.append("|}.")
     lines.append("")
     for idx in range(1, len(results) + 1):
@@ -1349,12 +1560,25 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append("Proof. reflexivity. Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        lines.append(
+            "Theorem "
+            f"example_{idx}_semantic_preservation_proved : "
+            f"example_{idx}_semantic_preservation_obligation."
+        )
+        lines.append("Proof.")
+        lines.append(f"  unfold example_{idx}_semantic_preservation_obligation.")
+        lines.append(f"  unfold example_{idx}.")
+        lines.extend(semantic_preservation_proof_steps(result["ast"], target))
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation_record.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation_is_prop.")
         lines.append(f"Check example_{idx}_semantic_preservation_target_matches.")
+        lines.append(f"Check example_{idx}_semantic_preservation_proved.")
     return "\n".join(lines) + "\n"
 
 
