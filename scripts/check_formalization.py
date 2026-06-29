@@ -178,6 +178,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_concrete_kernel_truth_condition_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_concrete_kernel_truth_condition_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_kernel_truth_condition_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_concrete_kernel_truth_condition_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -325,6 +339,36 @@ def main() -> None:
             and "Theorem structural_truth_conditions_denote_model_interpretable :"
             in coq
         ),
+        "lean concrete truth condition kernel bridge": (
+            "structure ConcreteTruthConditionKernel : Type where" in lean
+            and "kernel_denotes : (A : Type) -> A -> Prop" in lean
+            and "lexical_truth_eat_application : (n : Nat)" in lean
+            and "quantifier_truth_sigma_Food : (P : Food -> Prop)" in lean
+            and "repetition_truth : (n : Nat)" in lean
+            and "temporal_truth_after_T : (marker : Entity)" in lean
+            and "polarity_truth_not_T : (body : PropT)" in lean
+            and "transition_truth : (theme : Entity)" in lean
+            and "cause_truth : (causer : Entity)" in lean
+            and "def truth_conditions_from_concrete_kernel " in lean
+            and "theorem concrete_kernel_truth_condition_spec_exists :" in lean
+            and "theorem concrete_kernel_induces_truth_condition_soundness :" in lean
+        ),
+        "coq concrete truth condition kernel bridge": (
+            "Record ConcreteTruthConditionKernel : Type := {" in coq
+            and "kernel_denotes : forall A : Type, A -> Prop;" in coq
+            and "lexical_truth_eat_application : forall n : nat" in coq
+            and "quantifier_truth_sigma_Food : forall P : Food -> Prop" in coq
+            and "repetition_truth : forall n : nat" in coq
+            and "temporal_truth_after_T : forall marker : Entity" in coq
+            and "polarity_truth_not_T : forall body : PropT" in coq
+            and "transition_truth : forall theme : Entity" in coq
+            and "cause_truth : forall causer : Entity" in coq
+            and "Definition truth_conditions_from_concrete_kernel "
+            in coq
+            and "Theorem concrete_kernel_truth_condition_spec_exists :" in coq
+            and "Theorem concrete_kernel_induces_truth_condition_soundness :"
+            in coq
+        ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
             and "structure SemanticPreservationObligation : Type where" in lean
@@ -432,6 +476,16 @@ def main() -> None:
             and "apply structural_truth_conditions_denote_model_interpretable."
             in coq
         ),
+        "lean concrete kernel truth condition soundness proofs": (
+            lean_concrete_kernel_truth_condition_sound_count == lean_example_count
+            and "#check example_4_concrete_kernel_truth_condition_sound" in lean
+            and "apply concrete_kernel_induces_truth_condition_soundness" in lean
+        ),
+        "coq concrete kernel truth condition soundness proofs": (
+            coq_concrete_kernel_truth_condition_sound_count == coq_example_count
+            and "Check example_4_concrete_kernel_truth_condition_sound." in coq
+            and "apply concrete_kernel_induces_truth_condition_soundness." in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -443,6 +497,7 @@ def main() -> None:
             and "#check example_4_truth_condition_sound" in lean
             and "#check example_4_tautological_truth_condition_sound" in lean
             and "#check example_4_structural_truth_condition_sound" in lean
+            and "#check example_4_concrete_kernel_truth_condition_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -455,6 +510,7 @@ def main() -> None:
             and "Check example_4_truth_condition_sound." in coq
             and "Check example_4_tautological_truth_condition_sound." in coq
             and "Check example_4_structural_truth_condition_sound." in coq
+            and "Check example_4_concrete_kernel_truth_condition_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

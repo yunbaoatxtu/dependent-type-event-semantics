@@ -199,7 +199,13 @@ verified stage adds `coq_structural_truth_condition_instance`: a
 theorem, and per-example `example_i_structural_truth_condition_sound` checks.
 This is a non-tautological structural truth-condition instance, but it still
 does not provide independently specified lexical, temporal, causal,
-quantificational, or modifier truth clauses. The remaining blocker is
+quantificational, or modifier truth clauses. The next verified bridge,
+`coq_concrete_truth_condition_kernel_bridge`, exposes
+`ConcreteTruthConditionKernel` with separate lexical, quantifier/Sigma,
+repetition, temporal, polarity, transition, and causal truth clauses, builds
+`truth_conditions_from_concrete_kernel`, and checks per-example
+`example_i_concrete_kernel_truth_condition_sound` theorems for arbitrary
+kernels. The remaining blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition
 interface must be filled with independently specified lexical, temporal,

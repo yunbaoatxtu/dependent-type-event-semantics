@@ -78,10 +78,17 @@ exported example. The generated file now also includes a stricter
 theorem, and `example_i_structural_truth_condition_sound` for every exported
 example. This is still not a proof of full denotational soundness, because the
 structural instance does not provide independently specified lexical,
-temporal, causal, quantificational, or modifier truth conditions. Thus the
-current semantic preservation layer, the truth-condition-spec bridge, the
-inhabitation sanity instance, and the structural truth-condition instance are
-proof-checked, while concrete truth-condition instantiation remains open.
+temporal, causal, quantificational, or modifier truth conditions. The generated
+file therefore adds one more bridge layer, `ConcreteTruthConditionKernel`,
+which names the lexical, quantifier/Sigma, repetition, temporal, polarity,
+transition, and causal clauses that an independently justified concrete model
+must provide. `truth_conditions_from_concrete_kernel` turns any such kernel
+into a `TruthConditionSpec`, and every exported example receives a checked
+`example_i_concrete_kernel_truth_condition_sound` theorem parameterized by an
+arbitrary kernel. Thus the current semantic preservation layer, the
+truth-condition-spec bridge, the inhabitation sanity instance, the structural
+truth-condition instance, and the concrete-kernel bridge are proof-checked,
+while concrete truth-condition instantiation remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

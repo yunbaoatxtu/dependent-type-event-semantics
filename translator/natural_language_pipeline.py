@@ -20974,6 +20974,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_truth_condition_kernel_bridge",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21012,9 +21017,14 @@ def project_completion_status_payload(
                     "inhabitation and wiring sanity check, and a structural "
                     "TruthConditionSpec instance whose denotation predicate is "
                     "ModelInterpretable rather than the trivial True predicate. "
-                    "The remaining deep proof work is to refine the structural "
-                    "instance into concrete lexical, temporal, causal, "
-                    "quantificational, and modifier truth-condition instances."
+                    "It also exports a ConcreteTruthConditionKernel interface "
+                    "that separates lexical, quantificational, repetition, "
+                    "temporal, polarity, transition, and causal truth clauses "
+                    "and proves that any such kernel induces a "
+                    "TruthConditionSpec. The remaining deep proof work is to "
+                    "supply independently justified inhabitants of that kernel "
+                    "for concrete lexical, temporal, causal, quantificational, "
+                    "and modifier truth-condition models."
                 ),
             },
             {

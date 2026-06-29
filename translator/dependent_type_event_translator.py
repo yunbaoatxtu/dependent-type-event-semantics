@@ -989,6 +989,14 @@ def truth_sigma_field(type_name: str) -> str:
     return f"truth_sigma_{type_name}"
 
 
+def concrete_kernel_application_field(function: str) -> str:
+    return f"lexical_truth_{function}_application"
+
+
+def concrete_kernel_sigma_field(type_name: str) -> str:
+    return f"quantifier_truth_sigma_{type_name}"
+
+
 def _coq_function_preservation_constructor(
     name: str,
     arg_types: list[str],
@@ -1155,6 +1163,49 @@ def _lean_function_truth_field(
         + " -> ".join(
             binders
             + [f"truth_denotes {result_type} ({name} {' '.join(application_args)})"]
+        )
+    )
+
+
+def _coq_function_concrete_kernel_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {concrete_kernel_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"kernel_denotes {result_type} "
+        + f"({name} {' '.join(application_args)});",
+    ]
+
+
+def _lean_function_concrete_kernel_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {concrete_kernel_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [f"kernel_denotes {result_type} ({name} {' '.join(application_args)})"]
         )
     )
 
@@ -1602,6 +1653,215 @@ def truth_condition_spec_record_lines(
             "      truth_denotes TransitionT effect ->",
             "      truth_denotes PropT (Cause causer effect)",
             "}.",
+        ]
+    )
+    return lines
+
+
+def concrete_truth_condition_kernel_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionKernel : Type where",
+            "  kernel_denotes : (A : Type) -> A -> Prop",
+        ]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_concrete_kernel_field(name, arg_types, result_type)
+            )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  {concrete_kernel_sigma_field(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> kernel_denotes Prop (P x)) -> "
+                f"kernel_denotes Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  repetition_truth : (n : Nat) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (repeat n body)",
+                "  temporal_truth_at_T : (marker : Entity) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (at_T marker body)",
+                "  temporal_truth_during_T : (marker : Entity) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (during_T marker body)",
+                "  temporal_truth_before_T : (marker : Entity) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (before_T marker body)",
+                "  temporal_truth_after_T : (marker : Entity) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (after_T marker body)",
+                "  temporal_truth_until_T : (marker : Entity) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (until_T marker body)",
+                "  temporal_truth_since_T : (marker : Entity) -> (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (since_T marker body)",
+                "  polarity_truth_not_T : (body : PropT) -> "
+                "kernel_denotes PropT body -> kernel_denotes PropT (not_T body)",
+                "  transition_truth : (theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "kernel_denotes TransitionT (Transition theme scale source target)",
+                "  cause_truth : (causer : Entity) -> (effect : TransitionT) -> "
+                "kernel_denotes TransitionT effect -> kernel_denotes PropT (Cause causer effect)",
+            ]
+        )
+
+        field_pairs = [
+            ("truth_denotes", "kernel_denotes"),
+            *(
+                (truth_application_field(name), concrete_kernel_application_field(name))
+                for name in sorted(declarations["functions"])
+            ),
+            *(
+                (truth_sigma_field(type_name), concrete_kernel_sigma_field(type_name))
+                for type_name in declarations["types"]
+            ),
+            ("truth_repeat", "repetition_truth"),
+            ("truth_at_T", "temporal_truth_at_T"),
+            ("truth_during_T", "temporal_truth_during_T"),
+            ("truth_before_T", "temporal_truth_before_T"),
+            ("truth_after_T", "temporal_truth_after_T"),
+            ("truth_until_T", "temporal_truth_until_T"),
+            ("truth_since_T", "temporal_truth_since_T"),
+            ("truth_not_T", "polarity_truth_not_T"),
+            ("truth_transition", "transition_truth"),
+            ("truth_cause", "cause_truth"),
+        ]
+        lines.extend(
+            [
+                "",
+                "def truth_conditions_from_concrete_kernel "
+                "(K : ConcreteTruthConditionKernel) : TruthConditionSpec := {",
+            ]
+        )
+        for index, (truth_field, kernel_field) in enumerate(field_pairs):
+            suffix = "," if index < len(field_pairs) - 1 else ""
+            lines.append(f"  {truth_field} := K.{kernel_field}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_kernel_truth_condition_spec_exists :",
+                "    (K : ConcreteTruthConditionKernel) -> "
+                "Exists (fun T : TruthConditionSpec => "
+                "T = truth_conditions_from_concrete_kernel K) := by",
+                "  intro K",
+                "  exact Exists.intro (truth_conditions_from_concrete_kernel K) rfl",
+                "",
+                "theorem concrete_kernel_induces_truth_condition_soundness :",
+                "    (K : ConcreteTruthConditionKernel) -> "
+                "(A : Type) -> (term : A) -> ModelInterpretable A term -> "
+                "(truth_conditions_from_concrete_kernel K).truth_denotes A term := by",
+                "  intro K A term h",
+                "  apply truth_conditions_induce_denotational_soundness",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionKernel : Type := {",
+        "  kernel_denotes : forall A : Type, A -> Prop;",
+    ]
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(_coq_function_concrete_kernel_field(name, arg_types, result_type))
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  {concrete_kernel_sigma_field(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, kernel_denotes Prop (P x)) ->",
+                f"      kernel_denotes Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  repetition_truth : forall n : nat, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (repeat n body);",
+            "  temporal_truth_at_T : forall marker : Entity, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (at_T marker body);",
+            "  temporal_truth_during_T : forall marker : Entity, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (during_T marker body);",
+            "  temporal_truth_before_T : forall marker : Entity, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (before_T marker body);",
+            "  temporal_truth_after_T : forall marker : Entity, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (after_T marker body);",
+            "  temporal_truth_until_T : forall marker : Entity, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (until_T marker body);",
+            "  temporal_truth_since_T : forall marker : Entity, forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (since_T marker body);",
+            "  polarity_truth_not_T : forall body : PropT,",
+            "      kernel_denotes PropT body ->",
+            "      kernel_denotes PropT (not_T body);",
+            "  transition_truth : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      kernel_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  cause_truth : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      kernel_denotes TransitionT effect ->",
+            "      kernel_denotes PropT (Cause causer effect)",
+            "}.",
+            "",
+        ]
+    )
+    field_pairs = [
+        ("truth_denotes", "kernel_denotes"),
+        *(
+            (truth_application_field(name), concrete_kernel_application_field(name))
+            for name in sorted(declarations["functions"])
+        ),
+        *(
+            (truth_sigma_field(type_name), concrete_kernel_sigma_field(type_name))
+            for type_name in declarations["types"]
+        ),
+        ("truth_repeat", "repetition_truth"),
+        ("truth_at_T", "temporal_truth_at_T"),
+        ("truth_during_T", "temporal_truth_during_T"),
+        ("truth_before_T", "temporal_truth_before_T"),
+        ("truth_after_T", "temporal_truth_after_T"),
+        ("truth_until_T", "temporal_truth_until_T"),
+        ("truth_since_T", "temporal_truth_since_T"),
+        ("truth_not_T", "polarity_truth_not_T"),
+        ("truth_transition", "transition_truth"),
+        ("truth_cause", "cause_truth"),
+    ]
+    lines.append(
+        "Definition truth_conditions_from_concrete_kernel "
+        "(K : ConcreteTruthConditionKernel) : TruthConditionSpec := {|"
+    )
+    for index, (truth_field, kernel_field) in enumerate(field_pairs):
+        suffix = ";" if index < len(field_pairs) - 1 else ""
+        lines.append(f"  {truth_field} := {kernel_field} K{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_kernel_truth_condition_spec_exists :",
+            "  forall K : ConcreteTruthConditionKernel,",
+            "    exists T : TruthConditionSpec,",
+            "      T = truth_conditions_from_concrete_kernel K.",
+            "Proof.",
+            "  intro K. exists (truth_conditions_from_concrete_kernel K).",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_kernel_induces_truth_condition_soundness :",
+            "  forall K : ConcreteTruthConditionKernel,",
+            "  forall A : Type, forall term : A,",
+            "    ModelInterpretable A term ->",
+            "    truth_denotes (truth_conditions_from_concrete_kernel K) A term.",
+            "Proof.",
+            "  intros K A term H.",
+            "  apply truth_conditions_induce_denotational_soundness.",
+            "  exact H.",
+            "Qed.",
         ]
     )
     return lines
@@ -2327,6 +2587,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(semantic_model_from_truth_conditions_lines(declarations, target))
         lines.append("")
+        lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
+        lines.append("")
         lines.extend(truth_condition_instance_lines(declarations, target))
         lines.append("")
         lines.append(
@@ -2451,6 +2713,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append("  apply structural_truth_conditions_denote_model_interpretable")
             lines.append(f"  exact example_{idx}_model_interpretable")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_kernel_truth_condition_sound : "
+                f"(K : ConcreteTruthConditionKernel) -> "
+                f"(truth_conditions_from_concrete_kernel K).truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append("  intro K")
+            lines.append("  apply concrete_kernel_induces_truth_condition_soundness")
+            lines.append(f"  exact example_{idx}_model_interpretable")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -2463,6 +2738,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_truth_condition_sound")
             lines.append(f"#check example_{idx}_tautological_truth_condition_sound")
             lines.append(f"#check example_{idx}_structural_truth_condition_sound")
+            lines.append(f"#check example_{idx}_concrete_kernel_truth_condition_sound")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -2551,6 +2827,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(truth_condition_spec_record_lines(declarations, target))
     lines.append("")
     lines.extend(semantic_model_from_truth_conditions_lines(declarations, target))
+    lines.append("")
+    lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
     lines.append("")
     lines.extend(truth_condition_instance_lines(declarations, target))
     lines.append("")
@@ -2682,6 +2960,21 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_model_interpretable.")
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_kernel_truth_condition_sound : "
+            f"forall K : ConcreteTruthConditionKernel, "
+            "truth_denotes (truth_conditions_from_concrete_kernel K) "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  intro K.")
+        lines.append("  apply concrete_kernel_induces_truth_condition_soundness.")
+        lines.append(f"  exact example_{idx}_model_interpretable.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -2694,6 +2987,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_truth_condition_sound.")
         lines.append(f"Check example_{idx}_tautological_truth_condition_sound.")
         lines.append(f"Check example_{idx}_structural_truth_condition_sound.")
+        lines.append(f"Check example_{idx}_concrete_kernel_truth_condition_sound.")
     return "\n".join(lines) + "\n"
 
 

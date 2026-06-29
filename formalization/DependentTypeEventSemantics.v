@@ -334,6 +334,105 @@ Proof.
     (semantic_model_from_truth_conditions T) A term H).
 Qed.
 
+Record ConcreteTruthConditionKernel : Type := {
+  kernel_denotes : forall A : Type, A -> Prop;
+  lexical_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      kernel_denotes PropT (break n mods arg1 arg2);
+  lexical_truth_butter_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      kernel_denotes PropT (butter n mods arg1 arg2);
+  lexical_truth_eat_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Food,
+      kernel_denotes Prop (eat n mods arg1 arg2);
+  lexical_truth_knock_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity,
+      kernel_denotes PropT (knock n mods arg1);
+  quantifier_truth_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, kernel_denotes Prop (P x)) ->
+      kernel_denotes Prop (exists x : Entity, P x);
+  quantifier_truth_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, kernel_denotes Prop (P x)) ->
+      kernel_denotes Prop (exists x : Food, P x);
+  quantifier_truth_sigma_State : forall P : State -> Prop,
+      (forall x : State, kernel_denotes Prop (P x)) ->
+      kernel_denotes Prop (exists x : State, P x);
+  quantifier_truth_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, kernel_denotes Prop (P x)) ->
+      kernel_denotes Prop (exists x : StateScale, P x);
+  quantifier_truth_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, kernel_denotes Prop (P x)) ->
+      kernel_denotes Prop (exists x : TransitionT, P x);
+  repetition_truth : forall n : nat, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (repeat n body);
+  temporal_truth_at_T : forall marker : Entity, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (at_T marker body);
+  temporal_truth_during_T : forall marker : Entity, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (during_T marker body);
+  temporal_truth_before_T : forall marker : Entity, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (before_T marker body);
+  temporal_truth_after_T : forall marker : Entity, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (after_T marker body);
+  temporal_truth_until_T : forall marker : Entity, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (until_T marker body);
+  temporal_truth_since_T : forall marker : Entity, forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (since_T marker body);
+  polarity_truth_not_T : forall body : PropT,
+      kernel_denotes PropT body ->
+      kernel_denotes PropT (not_T body);
+  transition_truth : forall theme : Entity, forall scale : StateScale, forall source : State, forall target : State,
+      kernel_denotes TransitionT (Transition theme scale source target);
+  cause_truth : forall causer : Entity, forall effect : TransitionT,
+      kernel_denotes TransitionT effect ->
+      kernel_denotes PropT (Cause causer effect)
+}.
+
+Definition truth_conditions_from_concrete_kernel (K : ConcreteTruthConditionKernel) : TruthConditionSpec := {|
+  truth_denotes := kernel_denotes K;
+  truth_break_application := lexical_truth_break_application K;
+  truth_butter_application := lexical_truth_butter_application K;
+  truth_eat_application := lexical_truth_eat_application K;
+  truth_knock_application := lexical_truth_knock_application K;
+  truth_sigma_Entity := quantifier_truth_sigma_Entity K;
+  truth_sigma_Food := quantifier_truth_sigma_Food K;
+  truth_sigma_State := quantifier_truth_sigma_State K;
+  truth_sigma_StateScale := quantifier_truth_sigma_StateScale K;
+  truth_sigma_TransitionT := quantifier_truth_sigma_TransitionT K;
+  truth_repeat := repetition_truth K;
+  truth_at_T := temporal_truth_at_T K;
+  truth_during_T := temporal_truth_during_T K;
+  truth_before_T := temporal_truth_before_T K;
+  truth_after_T := temporal_truth_after_T K;
+  truth_until_T := temporal_truth_until_T K;
+  truth_since_T := temporal_truth_since_T K;
+  truth_not_T := polarity_truth_not_T K;
+  truth_transition := transition_truth K;
+  truth_cause := cause_truth K
+|}.
+
+Theorem concrete_kernel_truth_condition_spec_exists :
+  forall K : ConcreteTruthConditionKernel,
+    exists T : TruthConditionSpec,
+      T = truth_conditions_from_concrete_kernel K.
+Proof.
+  intro K. exists (truth_conditions_from_concrete_kernel K).
+  reflexivity.
+Qed.
+
+Theorem concrete_kernel_induces_truth_condition_soundness :
+  forall K : ConcreteTruthConditionKernel,
+  forall A : Type, forall term : A,
+    ModelInterpretable A term ->
+    truth_denotes (truth_conditions_from_concrete_kernel K) A term.
+Proof.
+  intros K A term H.
+  apply truth_conditions_induce_denotational_soundness.
+  exact H.
+Qed.
+
 Definition tautological_truth_denotes : forall A : Type, A -> Prop :=
   fun A term => True.
 
@@ -615,6 +714,31 @@ Proof.
   exact example_4_model_interpretable.
 Qed.
 
+Theorem example_1_concrete_kernel_truth_condition_sound : forall K : ConcreteTruthConditionKernel, truth_denotes (truth_conditions_from_concrete_kernel K) PropT example_1.
+Proof.
+  intro K.
+  apply concrete_kernel_induces_truth_condition_soundness.
+  exact example_1_model_interpretable.
+Qed.
+Theorem example_2_concrete_kernel_truth_condition_sound : forall K : ConcreteTruthConditionKernel, truth_denotes (truth_conditions_from_concrete_kernel K) Prop example_2.
+Proof.
+  intro K.
+  apply concrete_kernel_induces_truth_condition_soundness.
+  exact example_2_model_interpretable.
+Qed.
+Theorem example_3_concrete_kernel_truth_condition_sound : forall K : ConcreteTruthConditionKernel, truth_denotes (truth_conditions_from_concrete_kernel K) PropT example_3.
+Proof.
+  intro K.
+  apply concrete_kernel_induces_truth_condition_soundness.
+  exact example_3_model_interpretable.
+Qed.
+Theorem example_4_concrete_kernel_truth_condition_sound : forall K : ConcreteTruthConditionKernel, truth_denotes (truth_conditions_from_concrete_kernel K) PropT example_4.
+Proof.
+  intro K.
+  apply concrete_kernel_induces_truth_condition_soundness.
+  exact example_4_model_interpretable.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -626,6 +750,7 @@ Check example_1_denotationally_sound.
 Check example_1_truth_condition_sound.
 Check example_1_tautological_truth_condition_sound.
 Check example_1_structural_truth_condition_sound.
+Check example_1_concrete_kernel_truth_condition_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -637,6 +762,7 @@ Check example_2_denotationally_sound.
 Check example_2_truth_condition_sound.
 Check example_2_tautological_truth_condition_sound.
 Check example_2_structural_truth_condition_sound.
+Check example_2_concrete_kernel_truth_condition_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -648,6 +774,7 @@ Check example_3_denotationally_sound.
 Check example_3_truth_condition_sound.
 Check example_3_tautological_truth_condition_sound.
 Check example_3_structural_truth_condition_sound.
+Check example_3_concrete_kernel_truth_condition_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -659,3 +786,4 @@ Check example_4_denotationally_sound.
 Check example_4_truth_condition_sound.
 Check example_4_tautological_truth_condition_sound.
 Check example_4_structural_truth_condition_sound.
+Check example_4_concrete_kernel_truth_condition_sound.

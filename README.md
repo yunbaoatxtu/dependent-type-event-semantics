@@ -987,12 +987,21 @@ objective `coq_structural_truth_condition_instance` now adds a stricter
 theorem, and per-example `example_i_structural_truth_condition_sound` checks.
 This is no longer the all-terms-are-true sanity instance, but it is still a
 structural interface instance rather than an independently specified lexical
-or temporal model. The open blocker remains
+or temporal model. The verified objective
+`coq_concrete_truth_condition_kernel_bridge` now adds the next interface layer:
+a `ConcreteTruthConditionKernel` record with separately named lexical,
+quantifier/Sigma, repetition, temporal, polarity, transition, and causal truth
+clauses; a `truth_conditions_from_concrete_kernel` bridge back to
+`TruthConditionSpec`; a kernel-existence theorem; and per-example
+`example_i_concrete_kernel_truth_condition_sound` checks for arbitrary kernels.
+This makes the future concrete model obligations explicit without pretending
+that the kernel has already been inhabited by independently justified semantic
+clauses. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
-conditions rather than only proving the generic interface bridge or the
-structural `ModelInterpretable` instance.
+conditions rather than only proving the generic interface bridge, the
+structural `ModelInterpretable` instance, or the concrete-kernel bridge.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

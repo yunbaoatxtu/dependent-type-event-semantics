@@ -1319,6 +1319,28 @@ class TranslatorTests(unittest.TestCase):
             "theorem structural_truth_conditions_denote_model_interpretable :",
             lean_module,
         )
+        self.assertIn("structure ConcreteTruthConditionKernel : Type where", lean_module)
+        self.assertIn("kernel_denotes : (A : Type) -> A -> Prop", lean_module)
+        self.assertIn("lexical_truth_eat_application : (n : Nat)", lean_module)
+        self.assertIn("quantifier_truth_sigma_Food : (P : Food -> Prop)", lean_module)
+        self.assertIn("repetition_truth : (n : Nat)", lean_module)
+        self.assertIn("temporal_truth_after_T : (marker : Entity)", lean_module)
+        self.assertIn("polarity_truth_not_T : (body : PropT)", lean_module)
+        self.assertIn("transition_truth : (theme : Entity)", lean_module)
+        self.assertIn("cause_truth : (causer : Entity)", lean_module)
+        self.assertIn(
+            "def truth_conditions_from_concrete_kernel "
+            "(K : ConcreteTruthConditionKernel) : TruthConditionSpec := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_kernel_truth_condition_spec_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_kernel_induces_truth_condition_soundness :",
+            lean_module,
+        )
         self.assertIn(
             "def example_1_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_1",
             lean_module,
@@ -1367,6 +1389,10 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_structural_truth_condition_sound :",
             lean_module,
         )
+        self.assertIn(
+            "theorem example_2_concrete_kernel_truth_condition_sound :",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply model_interpretable_denotational_sound", lean_module)
@@ -1377,6 +1403,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "apply structural_truth_conditions_denote_model_interpretable",
+            lean_module,
+        )
+        self.assertIn(
+            "apply concrete_kernel_induces_truth_condition_soundness",
             lean_module,
         )
         self.assertIn("#check example_2", lean_module)
@@ -1390,6 +1420,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check example_2_truth_condition_sound", lean_module)
         self.assertIn("#check example_2_tautological_truth_condition_sound", lean_module)
         self.assertIn("#check example_2_structural_truth_condition_sound", lean_module)
+        self.assertIn("#check example_2_concrete_kernel_truth_condition_sound", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -1466,6 +1497,31 @@ class TranslatorTests(unittest.TestCase):
             "Theorem structural_truth_conditions_denote_model_interpretable :",
             coq_module,
         )
+        self.assertIn("Record ConcreteTruthConditionKernel : Type := {", coq_module)
+        self.assertIn("kernel_denotes : forall A : Type, A -> Prop;", coq_module)
+        self.assertIn("lexical_truth_eat_application : forall n : nat", coq_module)
+        self.assertIn(
+            "quantifier_truth_sigma_Food : forall P : Food -> Prop",
+            coq_module,
+        )
+        self.assertIn("repetition_truth : forall n : nat", coq_module)
+        self.assertIn("temporal_truth_after_T : forall marker : Entity", coq_module)
+        self.assertIn("polarity_truth_not_T : forall body : PropT", coq_module)
+        self.assertIn("transition_truth : forall theme : Entity", coq_module)
+        self.assertIn("cause_truth : forall causer : Entity", coq_module)
+        self.assertIn(
+            "Definition truth_conditions_from_concrete_kernel "
+            "(K : ConcreteTruthConditionKernel) : TruthConditionSpec := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_kernel_truth_condition_spec_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_kernel_induces_truth_condition_soundness :",
+            coq_module,
+        )
         self.assertIn("Inductive ObligationStatus : Type :=", coq_module)
         self.assertIn("Record SemanticPreservationObligation : Type := {", coq_module)
         self.assertIn("Definition PreservationTargetMatches", coq_module)
@@ -1525,6 +1581,10 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_2_structural_truth_condition_sound : truth_denotes structural_truth_conditions PropT example_2.",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_2_concrete_kernel_truth_condition_sound : forall K : ConcreteTruthConditionKernel, truth_denotes (truth_conditions_from_concrete_kernel K) PropT example_2.",
+            coq_module,
+        )
         self.assertIn("  apply preserve_cause.", coq_module)
         self.assertIn("  apply semantic_preservation_model_interpretable.", coq_module)
         self.assertIn("  apply model_interpretable_denotational_sound.", coq_module)
@@ -1535,6 +1595,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "  apply structural_truth_conditions_denote_model_interpretable.",
+            coq_module,
+        )
+        self.assertIn(
+            "  apply concrete_kernel_induces_truth_condition_soundness.",
             coq_module,
         )
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
@@ -1549,6 +1613,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_truth_condition_sound.", coq_module)
         self.assertIn("Check example_2_tautological_truth_condition_sound.", coq_module)
         self.assertIn("Check example_2_structural_truth_condition_sound.", coq_module)
+        self.assertIn("Check example_2_concrete_kernel_truth_condition_sound.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -1592,6 +1657,10 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_1_concrete_kernel_truth_condition_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_1_semantic_preservation_proved :",
             coq_module,
         )
@@ -1600,6 +1669,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_1_semantic_preservation_obligation_is_prop.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_target_matches.", coq_module)
         self.assertIn("Check example_1_semantic_preservation_proved.", coq_module)
+        self.assertIn("Check example_1_concrete_kernel_truth_condition_sound.", coq_module)
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
 
@@ -13821,6 +13891,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_truth_condition_spec_bridge",
                 "coq_tautological_truth_condition_instance",
                 "coq_structural_truth_condition_instance",
+                "coq_concrete_truth_condition_kernel_bridge",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },

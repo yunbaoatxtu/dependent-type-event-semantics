@@ -10810,6 +10810,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_truth_condition_spec_bridge",
         "coq_tautological_truth_condition_instance",
         "coq_structural_truth_condition_instance",
+        "coq_concrete_truth_condition_kernel_bridge",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
