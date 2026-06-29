@@ -955,17 +955,24 @@ The verified objective list now includes `coq_named_obligation_scaffold`,
 `coq_obligation_wellformedness_proofs`,
 `coq_obligation_record_binding_proofs`, and
 `coq_structural_preservation_proofs`, and
-`coq_model_interpretability_boundary`: the generated Coq file no longer only
+`coq_model_interpretability_boundary`, and
+`coq_semantic_model_denotation_boundary`: the generated Coq file no longer only
 names each preservation target, but also proves a small well-formedness proof
 that each named target is a `Prop`-level obligation, a record-binding proof
 that the structured obligation record points back to the corresponding
 `SemanticPreservation A example_i` target, a structural preservation proof
-named `example_i_semantic_preservation_proved`, and a model interpretability
-boundary proof named `example_i_model_interpretable`. The open blocker is now
-`model_interpretability_denotation_unproved`; the next Coq stage is to prove
-that `ModelInterpretable` is sound for an independently specified denotational
-semantic model, not merely that generated examples can be certified by the
-structural relation and lifted to the model boundary.
+named `example_i_semantic_preservation_proved`, a model interpretability
+boundary proof named `example_i_model_interpretable`, and a denotational
+boundary theorem named `example_i_denotationally_sound`. The scaffold now
+exports a `SemanticModel` record with a generic `model_denotes` predicate plus
+closure fields for lexical applications, Sigma witnesses, repetition, time
+operators, negation, Transition, and Cause. The global theorem
+`model_interpretable_denotational_sound` proves that any
+`ModelInterpretable` term is denoted by any such model. The open blocker is now
+`semantic_model_truth_conditions_unproved`; the next Coq stage is to instantiate
+those model fields with independently specified truth conditions, not merely to
+show that generated examples can be certified by the structural relation and
+lifted through the model boundary.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

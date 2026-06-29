@@ -122,6 +122,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_denotation_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_denotationally_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_denotation_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_denotationally_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -172,6 +186,28 @@ def main() -> None:
             "Theorem semantic_preservation_model_interpretable :" in coq
             and "SemanticPreservation A term -> ModelInterpretable A term." in coq
             and "induction H; constructor; assumption." in coq
+        ),
+        "lean semantic model denotation record": (
+            "structure SemanticModel : Type where" in lean
+            and "model_denotes : (A : Type) -> A -> Prop" in lean
+            and "denote_repeat : (n : Nat)" in lean
+            and "denote_sigma_Food : (P : Food -> Prop)" in lean
+        ),
+        "coq semantic model denotation record": (
+            "Record SemanticModel : Type := {" in coq
+            and "model_denotes : forall A : Type, A -> Prop;" in coq
+            and "denote_repeat : forall n : nat" in coq
+            and "denote_sigma_Food : forall P : Food -> Prop" in coq
+        ),
+        "lean model to denotation soundness theorem": (
+            "theorem model_interpretable_denotational_sound :" in lean
+            and "ModelInterpretable A term -> M.model_denotes A term" in lean
+        ),
+        "coq model to denotation soundness theorem": (
+            "Theorem model_interpretable_denotational_sound :" in coq
+            and "ModelInterpretable A term -> model_denotes M A term." in coq
+            and "induction H; eauto using" in coq
+            and "denote_cause." in coq
         ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
@@ -236,6 +272,16 @@ def main() -> None:
             and "Check example_4_model_interpretable." in coq
             and "apply semantic_preservation_model_interpretable." in coq
         ),
+        "lean denotational soundness boundary proofs": (
+            lean_denotation_sound_count == lean_example_count
+            and "#check example_4_denotationally_sound" in lean
+            and "apply model_interpretable_denotational_sound" in lean
+        ),
+        "coq denotational soundness boundary proofs": (
+            coq_denotation_sound_count == coq_example_count
+            and "Check example_4_denotationally_sound." in coq
+            and "apply model_interpretable_denotational_sound." in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -243,6 +289,7 @@ def main() -> None:
             and "#check example_4_semantic_preservation_target_matches" in lean
             and "#check example_4_semantic_preservation_proved" in lean
             and "#check example_4_model_interpretable" in lean
+            and "#check example_4_denotationally_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -251,6 +298,7 @@ def main() -> None:
             and "Check example_4_semantic_preservation_target_matches." in coq
             and "Check example_4_semantic_preservation_proved." in coq
             and "Check example_4_model_interpretable." in coq
+            and "Check example_4_denotationally_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

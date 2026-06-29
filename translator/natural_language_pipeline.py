@@ -20954,6 +20954,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_semantic_model_denotation_boundary",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -20982,9 +20987,12 @@ def project_completion_status_payload(
                     "well-formedness, record binding, and structural proofs "
                     "for the generated obligations. It also proves a model "
                     "interpretability boundary theorem from structural "
-                    "preservation to ModelInterpretable. The remaining deep "
-                    "proof work is to connect ModelInterpretable to an "
-                    "independently specified denotational semantics."
+                    "preservation to ModelInterpretable and a denotational "
+                    "boundary theorem from ModelInterpretable to model_denotes "
+                    "for every SemanticModel satisfying the constructor "
+                    "closure fields. The remaining deep proof work is to "
+                    "instantiate those model fields with independently "
+                    "specified truth conditions."
                 ),
             },
             {
@@ -21008,11 +21016,11 @@ def project_completion_status_payload(
             "full_natural_language_certification_false",
             "surface_parser_claim_registered_examples_only",
             "fallback_certification_level_shallow_scaffold",
-            "model_interpretability_denotation_unproved",
+            "semantic_model_truth_conditions_unproved",
         ],
         "next_recommended_stages": [
             "promote_more_fallback_successes_to_registered_constructions",
-            "prove_model_interpretable_denotational_soundness",
+            "instantiate_semantic_model_truth_conditions",
             "expand_scope_attachment_discourse_coverage",
             "separate_parser_coverage_claims_from_semantic_translation_claims",
         ],

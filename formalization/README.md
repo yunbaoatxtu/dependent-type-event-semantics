@@ -57,11 +57,18 @@ constructors for lexical predicate application, Sigma witnesses, repetition,
 time operators, negation, Transition, and Cause. The generated theorem
 `semantic_preservation_model_interpretable` proves that every structural
 preservation derivation can be lifted to `ModelInterpretable`, and each example
-therefore receives a checked `example_i_model_interpretable` theorem. This is
-not a proof of full denotational soundness; the next proof-development layer
-must show that `ModelInterpretable` is sound for an independently specified
-semantic model. Thus the current semantic preservation layer is structural and
-proof-checked, while denotational model soundness remains open.
+therefore receives a checked `example_i_model_interpretable` theorem. The
+scaffold now also declares a `SemanticModel` record with a generic
+`model_denotes` field and closure fields for lexical applications, Sigma
+witnesses, repetition, time operators, negation, Transition, and Cause. The
+global theorem `model_interpretable_denotational_sound` proves that every
+`ModelInterpretable` term is denoted by any `SemanticModel` satisfying those
+closure fields, and each exported example receives a checked
+`example_i_denotationally_sound` theorem. This is still not a proof of full denotational soundness, because it does not yet instantiate a full
+truth-conditional model. The next proof-development layer must instantiate
+`SemanticModel` with independently specified lexical and temporal truth
+conditions. Thus the current semantic preservation layer is structural and
+proof-checked, while truth-condition instantiation remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

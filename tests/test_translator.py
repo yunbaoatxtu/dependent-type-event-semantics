@@ -1263,6 +1263,12 @@ class TranslatorTests(unittest.TestCase):
             "theorem semantic_preservation_model_interpretable :",
             lean_module,
         )
+        self.assertIn("structure SemanticModel : Type where", lean_module)
+        self.assertIn("model_denotes : (A : Type) -> A -> Prop", lean_module)
+        self.assertIn(
+            "theorem model_interpretable_denotational_sound :",
+            lean_module,
+        )
         self.assertIn(
             "def example_1_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_1",
             lean_module,
@@ -1295,8 +1301,13 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_model_interpretable :",
             lean_module,
         )
+        self.assertIn(
+            "theorem example_2_denotationally_sound :",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
+        self.assertIn("apply model_interpretable_denotational_sound", lean_module)
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
@@ -1304,6 +1315,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check example_2_semantic_preservation_target_matches", lean_module)
         self.assertIn("#check example_2_semantic_preservation_proved", lean_module)
         self.assertIn("#check example_2_model_interpretable", lean_module)
+        self.assertIn("#check example_2_denotationally_sound", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -1323,6 +1335,13 @@ class TranslatorTests(unittest.TestCase):
             "induction H; constructor; assumption.",
             coq_module,
         )
+        self.assertIn("Record SemanticModel : Type := {", coq_module)
+        self.assertIn("model_denotes : forall A : Type, A -> Prop;", coq_module)
+        self.assertIn(
+            "Theorem model_interpretable_denotational_sound :",
+            coq_module,
+        )
+        self.assertIn("induction H; eauto using", coq_module)
         self.assertIn("Inductive ObligationStatus : Type :=", coq_module)
         self.assertIn("Record SemanticPreservationObligation : Type := {", coq_module)
         self.assertIn("Definition PreservationTargetMatches", coq_module)
@@ -1366,8 +1385,13 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_2_model_interpretable : ModelInterpretable PropT example_2.",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_2_denotationally_sound : forall M : SemanticModel, model_denotes M PropT example_2.",
+            coq_module,
+        )
         self.assertIn("  apply preserve_cause.", coq_module)
         self.assertIn("  apply semantic_preservation_model_interpretable.", coq_module)
+        self.assertIn("  apply model_interpretable_denotational_sound.", coq_module)
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
@@ -1376,6 +1400,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_semantic_preservation_target_matches.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_proved.", coq_module)
         self.assertIn("Check example_2_model_interpretable.", coq_module)
+        self.assertIn("Check example_2_denotationally_sound.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -1400,6 +1425,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Theorem example_1_model_interpretable :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_denotationally_sound :",
             coq_module,
         )
         self.assertIn(
@@ -13628,6 +13657,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_obligation_record_binding_proofs",
                 "coq_structural_preservation_proofs",
                 "coq_model_interpretability_boundary",
+                "coq_semantic_model_denotation_boundary",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -13645,11 +13675,11 @@ class TranslatorTests(unittest.TestCase):
             },
         )
         self.assertIn(
-            "model_interpretability_denotation_unproved",
+            "semantic_model_truth_conditions_unproved",
             completion_status["completion_blockers"],
         )
         self.assertIn(
-            "prove_model_interpretable_denotational_soundness",
+            "instantiate_semantic_model_truth_conditions",
             completion_status["next_recommended_stages"],
         )
         self.assertEqual(
@@ -15132,11 +15162,11 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-completion-blocker="model_interpretability_denotation_unproved"',
+            'data-completion-blocker="semantic_model_truth_conditions_unproved"',
             page,
         )
         self.assertIn(
-            'data-completion-next-stage="prove_model_interpretable_denotational_soundness"',
+            'data-completion-next-stage="instantiate_semantic_model_truth_conditions"',
             page,
         )
         self.assertIn(

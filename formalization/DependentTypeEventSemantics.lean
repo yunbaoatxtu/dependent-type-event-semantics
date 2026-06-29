@@ -93,6 +93,52 @@ theorem semantic_preservation_model_interpretable :
   intro A term h
   induction h <;> constructor <;> assumption
 
+structure SemanticModel : Type where
+  model_denotes : (A : Type) -> A -> Prop
+  denote_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> model_denotes PropT (break n mods arg1 arg2)
+  denote_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> model_denotes PropT (butter n mods arg1 arg2)
+  denote_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> model_denotes Prop (eat n mods arg1 arg2)
+  denote_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> model_denotes PropT (knock n mods arg1)
+  denote_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> model_denotes Prop (P x)) -> model_denotes Prop (Exists fun x : Entity => P x)
+  denote_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> model_denotes Prop (P x)) -> model_denotes Prop (Exists fun x : Food => P x)
+  denote_sigma_State : (P : State -> Prop) -> ((x : State) -> model_denotes Prop (P x)) -> model_denotes Prop (Exists fun x : State => P x)
+  denote_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> model_denotes Prop (P x)) -> model_denotes Prop (Exists fun x : StateScale => P x)
+  denote_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> model_denotes Prop (P x)) -> model_denotes Prop (Exists fun x : TransitionT => P x)
+  denote_repeat : (n : Nat) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (repeat n body)
+  denote_at_T : (marker : Entity) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (at_T marker body)
+  denote_during_T : (marker : Entity) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (during_T marker body)
+  denote_before_T : (marker : Entity) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (before_T marker body)
+  denote_after_T : (marker : Entity) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (after_T marker body)
+  denote_until_T : (marker : Entity) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (until_T marker body)
+  denote_since_T : (marker : Entity) -> (body : PropT) -> model_denotes PropT body -> model_denotes PropT (since_T marker body)
+  denote_not_T : (body : PropT) -> model_denotes PropT body -> model_denotes PropT (not_T body)
+  denote_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> model_denotes TransitionT (Transition theme scale source target)
+  denote_cause : (causer : Entity) -> (effect : TransitionT) -> model_denotes TransitionT effect -> model_denotes PropT (Cause causer effect)
+
+theorem model_interpretable_denotational_sound :
+    (M : SemanticModel) -> (A : Type) -> (term : A) -> ModelInterpretable A term -> M.model_denotes A term := by
+  intro M A term h
+  induction h
+  | model_break_application n mods arg1 arg2 => exact M.denote_break_application n mods arg1 arg2
+  | model_butter_application n mods arg1 arg2 => exact M.denote_butter_application n mods arg1 arg2
+  | model_eat_application n mods arg1 arg2 => exact M.denote_eat_application n mods arg1 arg2
+  | model_knock_application n mods arg1 => exact M.denote_knock_application n mods arg1
+  | model_sigma_Entity P h ih => exact M.denote_sigma_Entity P ih
+  | model_sigma_Food P h ih => exact M.denote_sigma_Food P ih
+  | model_sigma_State P h ih => exact M.denote_sigma_State P ih
+  | model_sigma_StateScale P h ih => exact M.denote_sigma_StateScale P ih
+  | model_sigma_TransitionT P h ih => exact M.denote_sigma_TransitionT P ih
+  | model_repeat n body h ih => exact M.denote_repeat n body ih
+  | model_at_T marker body h ih => exact M.denote_at_T marker body ih
+  | model_during_T marker body h ih => exact M.denote_during_T marker body ih
+  | model_before_T marker body h ih => exact M.denote_before_T marker body ih
+  | model_after_T marker body h ih => exact M.denote_after_T marker body ih
+  | model_until_T marker body h ih => exact M.denote_until_T marker body ih
+  | model_since_T marker body h ih => exact M.denote_since_T marker body ih
+  | model_not_T body h ih => exact M.denote_not_T body ih
+  | model_transition theme scale source target => exact M.denote_transition theme scale source target
+  | model_cause causer effect h ih => exact M.denote_cause causer effect ih
+
 def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   target.obligation_statement = SemanticPreservation A term
 
@@ -184,6 +230,23 @@ theorem example_4_model_interpretable : ModelInterpretable PropT example_4 := by
   apply semantic_preservation_model_interpretable
   exact example_4_semantic_preservation_proved
 
+theorem example_1_denotationally_sound : (M : SemanticModel) -> M.model_denotes PropT example_1 := by
+  intro M
+  apply model_interpretable_denotational_sound
+  exact example_1_model_interpretable
+theorem example_2_denotationally_sound : (M : SemanticModel) -> M.model_denotes Prop example_2 := by
+  intro M
+  apply model_interpretable_denotational_sound
+  exact example_2_model_interpretable
+theorem example_3_denotationally_sound : (M : SemanticModel) -> M.model_denotes PropT example_3 := by
+  intro M
+  apply model_interpretable_denotational_sound
+  exact example_3_model_interpretable
+theorem example_4_denotationally_sound : (M : SemanticModel) -> M.model_denotes PropT example_4 := by
+  intro M
+  apply model_interpretable_denotational_sound
+  exact example_4_model_interpretable
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -191,6 +254,7 @@ theorem example_4_model_interpretable : ModelInterpretable PropT example_4 := by
 #check example_1_semantic_preservation_target_matches
 #check example_1_semantic_preservation_proved
 #check example_1_model_interpretable
+#check example_1_denotationally_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -198,6 +262,7 @@ theorem example_4_model_interpretable : ModelInterpretable PropT example_4 := by
 #check example_2_semantic_preservation_target_matches
 #check example_2_semantic_preservation_proved
 #check example_2_model_interpretable
+#check example_2_denotationally_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -205,6 +270,7 @@ theorem example_4_model_interpretable : ModelInterpretable PropT example_4 := by
 #check example_3_semantic_preservation_target_matches
 #check example_3_semantic_preservation_proved
 #check example_3_model_interpretable
+#check example_3_denotationally_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -212,3 +278,4 @@ theorem example_4_model_interpretable : ModelInterpretable PropT example_4 := by
 #check example_4_semantic_preservation_target_matches
 #check example_4_semantic_preservation_proved
 #check example_4_model_interpretable
+#check example_4_denotationally_sound

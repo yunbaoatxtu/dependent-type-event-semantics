@@ -973,6 +973,14 @@ def model_sigma_constructor(type_name: str) -> str:
     return f"model_sigma_{type_name}"
 
 
+def denotation_application_field(function: str) -> str:
+    return f"denote_{function}_application"
+
+
+def denotation_sigma_field(type_name: str) -> str:
+    return f"denote_sigma_{type_name}"
+
+
 def _coq_function_preservation_constructor(
     name: str,
     arg_types: list[str],
@@ -1054,6 +1062,49 @@ def _lean_function_model_constructor(
         + " -> ".join(binders + [
             f"ModelInterpretable {result_type} ({name} {' '.join(application_args)})"
         ])
+    )
+
+
+def _coq_function_denotation_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {denotation_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"model_denotes {result_type} "
+        + f"({name} {' '.join(application_args)});",
+    ]
+
+
+def _lean_function_denotation_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {denotation_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [f"model_denotes {result_type} ({name} {' '.join(application_args)})"]
+        )
     )
 
 
@@ -1275,6 +1326,133 @@ def model_interpretability_relation_lines(
         raise ValueError("Cannot emit an empty ModelInterpretable relation")
     constructors[-1] += "."
     return lines + constructors
+
+
+def semantic_model_record_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure SemanticModel : Type where",
+            "  model_denotes : (A : Type) -> A -> Prop",
+        ]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(_lean_function_denotation_field(name, arg_types, result_type))
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  {denotation_sigma_field(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> model_denotes Prop (P x)) -> "
+                f"model_denotes Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  denote_repeat : (n : Nat) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (repeat n body)",
+                "  denote_at_T : (marker : Entity) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (at_T marker body)",
+                "  denote_during_T : (marker : Entity) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (during_T marker body)",
+                "  denote_before_T : (marker : Entity) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (before_T marker body)",
+                "  denote_after_T : (marker : Entity) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (after_T marker body)",
+                "  denote_until_T : (marker : Entity) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (until_T marker body)",
+                "  denote_since_T : (marker : Entity) -> (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (since_T marker body)",
+                "  denote_not_T : (body : PropT) -> "
+                "model_denotes PropT body -> model_denotes PropT (not_T body)",
+                "  denote_transition : (theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "model_denotes TransitionT (Transition theme scale source target)",
+                "  denote_cause : (causer : Entity) -> (effect : TransitionT) -> "
+                "model_denotes TransitionT effect -> model_denotes PropT (Cause causer effect)",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record SemanticModel : Type := {",
+        "  model_denotes : forall A : Type, A -> Prop;",
+    ]
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(_coq_function_denotation_field(name, arg_types, result_type))
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  {denotation_sigma_field(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, model_denotes Prop (P x)) ->",
+                f"      model_denotes Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  denote_repeat : forall n : nat, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (repeat n body);",
+            "  denote_at_T : forall marker : Entity, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (at_T marker body);",
+            "  denote_during_T : forall marker : Entity, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (during_T marker body);",
+            "  denote_before_T : forall marker : Entity, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (before_T marker body);",
+            "  denote_after_T : forall marker : Entity, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (after_T marker body);",
+            "  denote_until_T : forall marker : Entity, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (until_T marker body);",
+            "  denote_since_T : forall marker : Entity, forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (since_T marker body);",
+            "  denote_not_T : forall body : PropT,",
+            "      model_denotes PropT body ->",
+            "      model_denotes PropT (not_T body);",
+            "  denote_transition : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      model_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  denote_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      model_denotes TransitionT effect ->",
+            "      model_denotes PropT (Cause causer effect)",
+            "}.",
+        ]
+    )
+    return lines
+
+
+def denotation_soundness_projection_names(declarations: dict[str, Any]) -> list[str]:
+    names = [
+        denotation_application_field(name)
+        for name in sorted(declarations["functions"])
+    ]
+    names.extend(
+        denotation_sigma_field(type_name)
+        for type_name in declarations["types"]
+    )
+    names.extend(
+        [
+            "denote_repeat",
+            "denote_at_T",
+            "denote_during_T",
+            "denote_before_T",
+            "denote_after_T",
+            "denote_until_T",
+            "denote_since_T",
+            "denote_not_T",
+            "denote_transition",
+            "denote_cause",
+        ]
+    )
+    return names
 
 
 def semantic_preservation_proof_steps(term: Term, target: str) -> list[str]:
@@ -1548,6 +1726,56 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "",
             ]
         )
+        lines.extend(semantic_model_record_lines(declarations, target))
+        lines.extend(
+            [
+                "",
+                "theorem model_interpretable_denotational_sound :",
+                "    (M : SemanticModel) -> (A : Type) -> (term : A) -> "
+                "ModelInterpretable A term -> M.model_denotes A term := by",
+                "  intro M A term h",
+                "  induction h",
+            ]
+        )
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            constructor = model_application_constructor(name)
+            projection = denotation_application_field(name)
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            pattern_args = " ".join(["n", "mods", *ordinary_args])
+            projection_args = " ".join(["n", "mods", *ordinary_args])
+            lines.append(
+                f"  | {constructor} {pattern_args} "
+                f"=> exact M.{projection} {projection_args}"
+            )
+        for type_name in declarations["types"]:
+            constructor = model_sigma_constructor(type_name)
+            projection = denotation_sigma_field(type_name)
+            lines.append(
+                f"  | {constructor} P h ih => exact M.{projection} P ih"
+            )
+        lines.extend(
+            [
+                "  | model_repeat n body h ih => exact M.denote_repeat n body ih",
+                "  | model_at_T marker body h ih => exact M.denote_at_T marker body ih",
+                "  | model_during_T marker body h ih => exact M.denote_during_T marker body ih",
+                "  | model_before_T marker body h ih => exact M.denote_before_T marker body ih",
+                "  | model_after_T marker body h ih => exact M.denote_after_T marker body ih",
+                "  | model_until_T marker body h ih => exact M.denote_until_T marker body ih",
+                "  | model_since_T marker body h ih => exact M.denote_since_T marker body ih",
+                "  | model_not_T body h ih => exact M.denote_not_T body ih",
+                "  | model_transition theme scale source target => exact M.denote_transition theme scale source target",
+                "  | model_cause causer effect h ih => exact M.denote_cause causer effect ih",
+                "",
+            ]
+        )
         lines.append(
             "def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
         )
@@ -1628,6 +1856,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append("  apply semantic_preservation_model_interpretable")
             lines.append(f"  exact example_{idx}_semantic_preservation_proved")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_denotationally_sound : "
+                f"(M : SemanticModel) -> M.model_denotes {annotation} example_{idx} := by"
+            )
+            lines.append("  intro M")
+            lines.append("  apply model_interpretable_denotational_sound")
+            lines.append(f"  exact example_{idx}_model_interpretable")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -1636,6 +1875,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_semantic_preservation_target_matches")
             lines.append(f"#check example_{idx}_semantic_preservation_proved")
             lines.append(f"#check example_{idx}_model_interpretable")
+            lines.append(f"#check example_{idx}_denotationally_sound")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -1702,6 +1942,24 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Qed.",
         ]
     )
+    lines.append("")
+    lines.extend(semantic_model_record_lines(declarations, target))
+    lines.extend(
+        [
+            "",
+            "Theorem model_interpretable_denotational_sound :",
+            "  forall M : SemanticModel, forall A : Type, forall term : A,",
+            "    ModelInterpretable A term -> model_denotes M A term.",
+            "Proof.",
+            "  intros M A term H.",
+            "  induction H; eauto using",
+        ]
+    )
+    projection_names = denotation_soundness_projection_names(declarations)
+    for index, projection in enumerate(projection_names):
+        suffix = "." if index == len(projection_names) - 1 else ","
+        lines.append(f"    {projection}{suffix}")
+    lines.append("Qed.")
     lines.append("Definition PreservationTargetMatches")
     lines.append(
         "  (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
@@ -1780,6 +2038,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_semantic_preservation_proved.")
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_denotationally_sound : "
+            f"forall M : SemanticModel, model_denotes M {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  intro M.")
+        lines.append("  apply model_interpretable_denotational_sound.")
+        lines.append(f"  exact example_{idx}_model_interpretable.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -1788,6 +2059,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_semantic_preservation_target_matches.")
         lines.append(f"Check example_{idx}_semantic_preservation_proved.")
         lines.append(f"Check example_{idx}_model_interpretable.")
+        lines.append(f"Check example_{idx}_denotationally_sound.")
     return "\n".join(lines) + "\n"
 
 

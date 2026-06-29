@@ -179,10 +179,15 @@ using constructors for predicate application, Sigma witnesses, repetition, time
 operators, negation, Transition, and Cause. The following model-boundary stage
 adds `coq_model_interpretability_boundary`, which proves the global bridge
 `semantic_preservation_model_interpretable` and the per-example
-`example_i_model_interpretable` theorems. The remaining blocker is
-`model_interpretability_denotation_unproved`, and the next Coq-facing stage is
-`prove_model_interpretable_denotational_soundness`: the model-interface
-relation must be connected to an independently specified semantic model.
+`example_i_model_interpretable` theorems. The following denotational-boundary
+stage adds `coq_semantic_model_denotation_boundary`, which exports a
+`SemanticModel` record, proves the global bridge
+`model_interpretable_denotational_sound`, and checks the per-example
+`example_i_denotationally_sound` theorems. The remaining blocker is
+`semantic_model_truth_conditions_unproved`, and the next Coq-facing stage is
+`instantiate_semantic_model_truth_conditions`: the generic model-interface
+record must be instantiated with independently specified lexical and temporal
+truth conditions.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application
