@@ -21054,6 +21054,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_kernel_example_truth_instance_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_example_truth_instance_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21199,6 +21204,11 @@ def project_completion_status_payload(
                     "concrete_registered_truth_conditions_from_kernel, and "
                     "checks per-example kernel, kernel-induced "
                     "truth-condition, and kernel-induced atomic soundness. "
+                    "It now also packages the kernel-induced per-example "
+                    "truth-condition proofs into "
+                    "ConcreteRegisteredKernelExampleTruthInstances, proves "
+                    "the package exists, and checks that each packaged "
+                    "kernel field projects back to AtomicClosureTruth. "
                     "It also packages those per-example fully registered "
                     "truth-condition proofs into a generated "
                     "RegisteredExampleTruthInstances record, proves the "

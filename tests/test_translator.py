@@ -1895,6 +1895,22 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure ConcreteRegisteredKernelExampleTruthInstances : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_kernel_example_truth_instances : ConcreteRegisteredKernelExampleTruthInstances := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_kernel_example_truth_instances_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_kernel_example_2_truth_instance_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
@@ -2001,6 +2017,10 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "exact concrete_registered_kernel_example_truth_instances.example_2_kernel_truth_instance",
+            lean_module,
+        )
+        self.assertIn(
             "exact registered_example_truth_instances.example_2_truth_instance",
             lean_module,
         )
@@ -2074,6 +2094,10 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "#check concrete_registered_kernel_example_2_truth_instance_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
             "#check example_2_fully_registered_truth_condition_atomic_sound",
             lean_module,
         )
@@ -2087,6 +2111,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check concrete_registered_truth_kernel", lean_module)
         self.assertIn("#check concrete_registered_truth_conditions_from_kernel", lean_module)
         self.assertIn("#check concrete_registered_example_truth_instances", lean_module)
+        self.assertIn(
+            "#check concrete_registered_kernel_example_truth_instances",
+            lean_module,
+        )
         self.assertIn("#check registered_example_truth_instances", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
@@ -2770,6 +2798,22 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteRegisteredKernelExampleTruthInstances : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_kernel_example_truth_instances : ConcreteRegisteredKernelExampleTruthInstances := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_kernel_example_truth_instances_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_kernel_example_2_truth_instance_atomic_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_2_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_2.",
             coq_module,
         )
@@ -2892,6 +2936,10 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "  exact (example_2_kernel_truth_instance concrete_registered_kernel_example_truth_instances).",
+            coq_module,
+        )
+        self.assertIn(
             "  exact (example_2_truth_instance registered_example_truth_instances).",
             coq_module,
         )
@@ -2967,6 +3015,10 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Check concrete_registered_kernel_example_2_truth_instance_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
             "Check example_2_fully_registered_truth_condition_atomic_sound.",
             coq_module,
         )
@@ -2980,6 +3032,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check concrete_registered_truth_kernel.", coq_module)
         self.assertIn("Check concrete_registered_truth_conditions_from_kernel.", coq_module)
         self.assertIn("Check concrete_registered_example_truth_instances.", coq_module)
+        self.assertIn(
+            "Check concrete_registered_kernel_example_truth_instances.",
+            coq_module,
+        )
         self.assertIn("Check registered_example_truth_instances.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
@@ -3116,11 +3172,23 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteRegisteredKernelExampleTruthInstances : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_kernel_example_1_truth_instance_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Check registered_example_1_truth_instance_atomic_sound.",
             coq_module,
         )
         self.assertIn(
             "Check concrete_registered_example_1_truth_instance_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_registered_kernel_example_1_truth_instance_atomic_sound.",
             coq_module,
         )
         self.assertIn("Check example_1_registered_lexical_truth_model_sound.", coq_module)
@@ -3156,6 +3224,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertNotIn(
             "concrete_registered_example_2_truth_instance_atomic_sound",
+            coq_module,
+        )
+        self.assertNotIn(
+            "concrete_registered_kernel_example_2_truth_instance_atomic_sound",
             coq_module,
         )
         self.assertNotIn("example_2_registered_lexical_truth_model_sound", coq_module)
@@ -15395,6 +15467,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_lexical_truth_model_bridge",
                 "coq_concrete_registered_truth_condition_instance",
                 "coq_concrete_registered_truth_kernel_instance",
+                "coq_concrete_registered_kernel_example_truth_instance_package",
                 "coq_concrete_registered_example_truth_instance_package",
                 "coq_registered_example_truth_instance_package",
                 "paper_docx_sync",

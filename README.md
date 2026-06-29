@@ -1122,7 +1122,17 @@ lexical and transition clauses evidence-gated: lexical atoms require
 `example_i_concrete_registered_truth_conditions_from_kernel_atomic_sound`. This
 adds a model-shaped registered-kernel bridge without pretending to supply
 truth clauses for arbitrary unregistered lexical applications. The next
-verified objective `coq_concrete_registered_example_truth_instance_package`
+verified objective
+`coq_concrete_registered_kernel_example_truth_instance_package` packages the
+kernel-induced truth-condition proofs into
+`ConcreteRegisteredKernelExampleTruthInstances`, proves
+`concrete_registered_kernel_example_truth_instances_exists`, and checks
+projections such as
+`concrete_registered_kernel_example_i_truth_instance_atomic_sound` back to
+`AtomicClosureTruth` through
+`concrete_registered_truth_conditions_from_kernel`. This adds a package-level
+coverage witness for the registered kernel path. The next verified objective
+`coq_concrete_registered_example_truth_instance_package`
 packages those concrete registered truth-condition proofs into
 `ConcreteRegisteredExampleTruthInstances`, proves
 `concrete_registered_example_truth_instances_exists`, and checks projections

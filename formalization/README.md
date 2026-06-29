@@ -172,7 +172,13 @@ evidence rather than arbitrary unregistered atom facts. It derives
 `example_i_concrete_registered_truth_kernel_sound`,
 `example_i_concrete_registered_truth_conditions_from_kernel_sound`, and
 `example_i_concrete_registered_truth_conditions_from_kernel_atomic_sound` for
-every exported example. The scaffold then gathers those checked example-level proofs into
+every exported example. The scaffold then gathers the kernel-induced
+truth-condition proofs into `ConcreteRegisteredKernelExampleTruthInstances`,
+proves `concrete_registered_kernel_example_truth_instances_exists`, and checks
+per-example projections such as
+`concrete_registered_kernel_example_i_truth_instance_atomic_sound` back to
+`AtomicClosureTruth` through `concrete_registered_truth_conditions_from_kernel`.
+The scaffold then gathers those checked example-level proofs into
 `ConcreteRegisteredExampleTruthInstances`, proves
 `concrete_registered_example_truth_instances_exists`, and checks per-example
 projections such as

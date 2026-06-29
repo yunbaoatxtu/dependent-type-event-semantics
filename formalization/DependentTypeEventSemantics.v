@@ -2885,6 +2885,55 @@ Proof.
   exact (example_4_concrete_truth_instance concrete_registered_example_truth_instances).
 Qed.
 
+Record ConcreteRegisteredKernelExampleTruthInstances : Type := {
+  example_1_kernel_truth_instance :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_1;
+  example_2_kernel_truth_instance :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel Prop example_2;
+  example_3_kernel_truth_instance :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_3;
+  example_4_kernel_truth_instance :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_4
+}.
+
+Definition concrete_registered_kernel_example_truth_instances : ConcreteRegisteredKernelExampleTruthInstances := {|
+  example_1_kernel_truth_instance := example_1_concrete_registered_truth_conditions_from_kernel_sound;
+  example_2_kernel_truth_instance := example_2_concrete_registered_truth_conditions_from_kernel_sound;
+  example_3_kernel_truth_instance := example_3_concrete_registered_truth_conditions_from_kernel_sound;
+  example_4_kernel_truth_instance := example_4_concrete_registered_truth_conditions_from_kernel_sound
+|}.
+
+Theorem concrete_registered_kernel_example_truth_instances_exists :
+  exists I : ConcreteRegisteredKernelExampleTruthInstances,
+    I = concrete_registered_kernel_example_truth_instances.
+Proof.
+  exists concrete_registered_kernel_example_truth_instances. reflexivity.
+Qed.
+
+Theorem concrete_registered_kernel_example_1_truth_instance_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_1_kernel_truth_instance concrete_registered_kernel_example_truth_instances).
+Qed.
+
+Theorem concrete_registered_kernel_example_2_truth_instance_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_2_kernel_truth_instance concrete_registered_kernel_example_truth_instances).
+Qed.
+
+Theorem concrete_registered_kernel_example_3_truth_instance_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_3_kernel_truth_instance concrete_registered_kernel_example_truth_instances).
+Qed.
+
+Theorem concrete_registered_kernel_example_4_truth_instance_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_4_kernel_truth_instance concrete_registered_kernel_example_truth_instances).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -2989,6 +3038,7 @@ Check example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_1_concrete_registered_truth_condition_sound.
 Check example_1_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_1_truth_instance_atomic_sound.
+Check concrete_registered_kernel_example_1_truth_instance_atomic_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
 Check registered_example_1_truth_instance_atomic_sound.
 Check example_2.
@@ -3025,6 +3075,7 @@ Check example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_2_concrete_registered_truth_condition_sound.
 Check example_2_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_2_truth_instance_atomic_sound.
+Check concrete_registered_kernel_example_2_truth_instance_atomic_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
 Check registered_example_2_truth_instance_atomic_sound.
 Check example_3.
@@ -3061,6 +3112,7 @@ Check example_3_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_3_concrete_registered_truth_condition_sound.
 Check example_3_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_3_truth_instance_atomic_sound.
+Check concrete_registered_kernel_example_3_truth_instance_atomic_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
 Check registered_example_3_truth_instance_atomic_sound.
 Check example_4.
@@ -3097,6 +3149,7 @@ Check example_4_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_4_concrete_registered_truth_condition_sound.
 Check example_4_concrete_registered_truth_condition_atomic_sound.
 Check concrete_registered_example_4_truth_instance_atomic_sound.
+Check concrete_registered_kernel_example_4_truth_instance_atomic_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
 Check registered_example_4_truth_instance_atomic_sound.
 Check registered_lexical_truth_model.
@@ -3113,5 +3166,7 @@ Check concrete_registered_truth_conditions_from_kernel.
 Check concrete_registered_truth_conditions_from_kernel_exists.
 Check concrete_registered_example_truth_instances.
 Check concrete_registered_example_truth_instances_exists.
+Check concrete_registered_kernel_example_truth_instances.
+Check concrete_registered_kernel_example_truth_instances_exists.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.
