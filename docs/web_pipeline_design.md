@@ -167,10 +167,12 @@ the system is a certified finite fragment, and its verified objectives,
 incomplete objectives, blockers, and next-stage rows should be mirrored through
 `data-completion-*` hooks. The verifier should reject any drift that removes
 the arbitrary-natural-language or deep-Coq-proof open objectives. After the
-named-obligation scaffold stage, `coq_named_obligation_scaffold` belongs on the
-verified side, while `semantic_preservation_obligations_unproved` remains a
-blocker and `prove_named_semantic_preservation_obligations` remains the next
-Coq-facing stage.
+named-obligation scaffold stage, `coq_named_obligation_scaffold` and
+`coq_obligation_wellformedness_proofs` belong on the verified side: the latter
+covers the generated Coq proofs that each named target is a `Prop`-level
+obligation. `semantic_preservation_obligations_unproved` remains a blocker and
+`prove_named_semantic_preservation_obligations` remains the next Coq-facing
+stage.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application
@@ -511,7 +513,8 @@ A successful response should include:
 - the compact diagnostics summary;
 - the structured AST;
 - the generated Coq scaffold, including one
-  `semantic_preservation_obligation` row for each exported example;
+  `semantic_preservation_obligation` row, structured obligation record, and
+  well-formedness theorem for each exported example;
 - the Coq/Rocq validation status;
 - a short conclusion.
 

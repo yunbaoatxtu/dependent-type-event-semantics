@@ -1153,6 +1153,15 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(
             [
                 "",
+                "inductive ObligationStatus : Type",
+                "  | pending",
+                "  | shallow_checked",
+                "  | proved",
+                "",
+                "structure SemanticPreservationObligation : Type where",
+                "  obligation_statement : Prop",
+                "  obligation_status : ObligationStatus",
+                "",
                 "constant repeat : Nat -> PropT -> PropT",
                 "constant at_T : Entity -> PropT -> PropT",
                 "constant during_T : Entity -> PropT -> PropT",
@@ -1184,8 +1193,39 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         lines.append("")
         for idx in range(1, len(results) + 1):
+            lines.append(
+                "def "
+                f"example_{idx}_semantic_preservation_obligation_record : "
+                "SemanticPreservationObligation := {"
+            )
+            lines.append(
+                "  obligation_statement := "
+                f"example_{idx}_semantic_preservation_obligation,"
+            )
+            lines.append(
+                "  obligation_status := ObligationStatus.shallow_checked"
+            )
+            lines.append("}")
+        lines.append("")
+        for idx in range(1, len(results) + 1):
+            lines.append(
+                "theorem "
+                f"example_{idx}_semantic_preservation_obligation_is_prop :"
+            )
+            lines.append(
+                "    Exists (fun P : Prop => "
+                f"P = example_{idx}_semantic_preservation_obligation) := by"
+            )
+            lines.append(
+                "  exact Exists.intro "
+                f"example_{idx}_semantic_preservation_obligation rfl"
+            )
+        lines.append("")
+        for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
+            lines.append(f"#check example_{idx}_semantic_preservation_obligation_record")
+            lines.append(f"#check example_{idx}_semantic_preservation_obligation_is_prop")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -1210,6 +1250,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     )
     lines.extend(
         [
+            "",
+            "Inductive ObligationStatus : Type :=",
+            "  | pending",
+            "  | shallow_checked",
+            "  | proved.",
+            "",
+            "Record SemanticPreservationObligation : Type := {",
+            "  obligation_statement : Prop;",
+            "  obligation_status : ObligationStatus",
+            "}.",
             "",
             "Parameter repeat : nat -> PropT -> PropT.",
             "Parameter at_T : Entity -> PropT -> PropT.",
@@ -1242,8 +1292,35 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     lines.append("")
     for idx in range(1, len(results) + 1):
+        lines.append(
+            "Definition "
+            f"example_{idx}_semantic_preservation_obligation_record : "
+            "SemanticPreservationObligation := {|"
+        )
+        lines.append(
+            "  obligation_statement := "
+            f"example_{idx}_semantic_preservation_obligation;"
+        )
+        lines.append("  obligation_status := shallow_checked")
+        lines.append("|}.")
+    lines.append("")
+    for idx in range(1, len(results) + 1):
+        lines.append(
+            "Theorem "
+            f"example_{idx}_semantic_preservation_obligation_is_prop : "
+            "exists P : Prop, "
+            f"P = example_{idx}_semantic_preservation_obligation."
+        )
+        lines.append(
+            "Proof. exists "
+            f"example_{idx}_semantic_preservation_obligation. reflexivity. Qed."
+        )
+    lines.append("")
+    for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
+        lines.append(f"Check example_{idx}_semantic_preservation_obligation_record.")
+        lines.append(f"Check example_{idx}_semantic_preservation_obligation_is_prop.")
     return "\n".join(lines) + "\n"
 
 

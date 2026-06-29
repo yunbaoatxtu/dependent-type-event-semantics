@@ -22,6 +22,16 @@ Parameter vase : Entity.
 Parameter in_bathroom : Adv.
 Parameter slowly : Adv.
 
+Inductive ObligationStatus : Type :=
+  | pending
+  | shallow_checked
+  | proved.
+
+Record SemanticPreservationObligation : Type := {
+  obligation_statement : Prop;
+  obligation_status : ObligationStatus
+}.
+
 Parameter repeat : nat -> PropT -> PropT.
 Parameter at_T : Entity -> PropT -> PropT.
 Parameter during_T : Entity -> PropT -> PropT.
@@ -48,11 +58,45 @@ Definition example_2_semantic_preservation_obligation : Prop := SemanticPreserva
 Definition example_3_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_3.
 Definition example_4_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_4.
 
+Definition example_1_semantic_preservation_obligation_record : SemanticPreservationObligation := {|
+  obligation_statement := example_1_semantic_preservation_obligation;
+  obligation_status := shallow_checked
+|}.
+Definition example_2_semantic_preservation_obligation_record : SemanticPreservationObligation := {|
+  obligation_statement := example_2_semantic_preservation_obligation;
+  obligation_status := shallow_checked
+|}.
+Definition example_3_semantic_preservation_obligation_record : SemanticPreservationObligation := {|
+  obligation_statement := example_3_semantic_preservation_obligation;
+  obligation_status := shallow_checked
+|}.
+Definition example_4_semantic_preservation_obligation_record : SemanticPreservationObligation := {|
+  obligation_statement := example_4_semantic_preservation_obligation;
+  obligation_status := shallow_checked
+|}.
+
+Theorem example_1_semantic_preservation_obligation_is_prop : exists P : Prop, P = example_1_semantic_preservation_obligation.
+Proof. exists example_1_semantic_preservation_obligation. reflexivity. Qed.
+Theorem example_2_semantic_preservation_obligation_is_prop : exists P : Prop, P = example_2_semantic_preservation_obligation.
+Proof. exists example_2_semantic_preservation_obligation. reflexivity. Qed.
+Theorem example_3_semantic_preservation_obligation_is_prop : exists P : Prop, P = example_3_semantic_preservation_obligation.
+Proof. exists example_3_semantic_preservation_obligation. reflexivity. Qed.
+Theorem example_4_semantic_preservation_obligation_is_prop : exists P : Prop, P = example_4_semantic_preservation_obligation.
+Proof. exists example_4_semantic_preservation_obligation. reflexivity. Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
+Check example_1_semantic_preservation_obligation_record.
+Check example_1_semantic_preservation_obligation_is_prop.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
+Check example_2_semantic_preservation_obligation_record.
+Check example_2_semantic_preservation_obligation_is_prop.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
+Check example_3_semantic_preservation_obligation_record.
+Check example_3_semantic_preservation_obligation_is_prop.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
+Check example_4_semantic_preservation_obligation_record.
+Check example_4_semantic_preservation_obligation_is_prop.

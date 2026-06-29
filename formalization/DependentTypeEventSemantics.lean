@@ -22,6 +22,15 @@ constant vase : Entity
 constant in_bathroom : Adv
 constant slowly : Adv
 
+inductive ObligationStatus : Type
+  | pending
+  | shallow_checked
+  | proved
+
+structure SemanticPreservationObligation : Type where
+  obligation_statement : Prop
+  obligation_status : ObligationStatus
+
 constant repeat : Nat -> PropT -> PropT
 constant at_T : Entity -> PropT -> PropT
 constant during_T : Entity -> PropT -> PropT
@@ -48,11 +57,49 @@ def example_2_semantic_preservation_obligation : Prop := SemanticPreservation Pr
 def example_3_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_3
 def example_4_semantic_preservation_obligation : Prop := SemanticPreservation PropT example_4
 
+def example_1_semantic_preservation_obligation_record : SemanticPreservationObligation := {
+  obligation_statement := example_1_semantic_preservation_obligation,
+  obligation_status := ObligationStatus.shallow_checked
+}
+def example_2_semantic_preservation_obligation_record : SemanticPreservationObligation := {
+  obligation_statement := example_2_semantic_preservation_obligation,
+  obligation_status := ObligationStatus.shallow_checked
+}
+def example_3_semantic_preservation_obligation_record : SemanticPreservationObligation := {
+  obligation_statement := example_3_semantic_preservation_obligation,
+  obligation_status := ObligationStatus.shallow_checked
+}
+def example_4_semantic_preservation_obligation_record : SemanticPreservationObligation := {
+  obligation_statement := example_4_semantic_preservation_obligation,
+  obligation_status := ObligationStatus.shallow_checked
+}
+
+theorem example_1_semantic_preservation_obligation_is_prop :
+    Exists (fun P : Prop => P = example_1_semantic_preservation_obligation) := by
+  exact Exists.intro example_1_semantic_preservation_obligation rfl
+theorem example_2_semantic_preservation_obligation_is_prop :
+    Exists (fun P : Prop => P = example_2_semantic_preservation_obligation) := by
+  exact Exists.intro example_2_semantic_preservation_obligation rfl
+theorem example_3_semantic_preservation_obligation_is_prop :
+    Exists (fun P : Prop => P = example_3_semantic_preservation_obligation) := by
+  exact Exists.intro example_3_semantic_preservation_obligation rfl
+theorem example_4_semantic_preservation_obligation_is_prop :
+    Exists (fun P : Prop => P = example_4_semantic_preservation_obligation) := by
+  exact Exists.intro example_4_semantic_preservation_obligation rfl
+
 #check example_1
 #check example_1_semantic_preservation_obligation
+#check example_1_semantic_preservation_obligation_record
+#check example_1_semantic_preservation_obligation_is_prop
 #check example_2
 #check example_2_semantic_preservation_obligation
+#check example_2_semantic_preservation_obligation_record
+#check example_2_semantic_preservation_obligation_is_prop
 #check example_3
 #check example_3_semantic_preservation_obligation
+#check example_3_semantic_preservation_obligation_record
+#check example_3_semantic_preservation_obligation_is_prop
 #check example_4
 #check example_4_semantic_preservation_obligation
+#check example_4_semantic_preservation_obligation_record
+#check example_4_semantic_preservation_obligation_is_prop

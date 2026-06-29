@@ -42,9 +42,13 @@ python3 scripts/verify_project.py
 
 The scaffold also declares `SemanticPreservation` and generates one
 `example_i_semantic_preservation_obligation` statement for each exported
-example. These statements are named theorem-obligation rows and not proofs of
-semantic preservation. They make the next proof-development targets explicit
-while preserving the current shallow-boundary claim.
+example. It also generates a structured obligation record and a Coq theorem
+named `example_i_semantic_preservation_obligation_is_prop` for each example.
+Those theorems are well-formedness proofs: they show that the named target is a
+`Prop`-level obligation, not that semantic preservation itself has been proved.
+The statements remain named theorem-obligation rows and not proofs of semantic
+preservation. They make the next proof-development targets explicit while
+preserving the current shallow-boundary claim.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

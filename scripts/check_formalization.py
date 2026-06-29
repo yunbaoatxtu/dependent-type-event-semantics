@@ -39,6 +39,44 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_obligation_record_count = len(
+        re.findall(
+            r"^def example_\d+_semantic_preservation_obligation_record : "
+            r"SemanticPreservationObligation :=",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_obligation_record_count = len(
+        re.findall(
+            r"^Definition example_\d+_semantic_preservation_obligation_record : "
+            r"SemanticPreservationObligation :=",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_obligation_wellformed_count = len(
+        re.findall(
+            r"^theorem example_\d+_semantic_preservation_obligation_is_prop :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_obligation_wellformed_count = len(
+        re.findall(
+            r"^Theorem example_\d+_semantic_preservation_obligation_is_prop :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    coq_obligation_wellformed_proof_count = len(
+        re.findall(
+            r"^Proof\. exists example_\d+_semantic_preservation_obligation\. "
+            r"reflexivity\. Qed\.$",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -67,17 +105,42 @@ def main() -> None:
         "coq semantic preservation parameter": (
             "Parameter SemanticPreservation : forall A : Type, A -> Prop." in coq
         ),
+        "lean semantic preservation obligation status": (
+            "inductive ObligationStatus : Type" in lean
+            and "structure SemanticPreservationObligation : Type where" in lean
+        ),
+        "coq semantic preservation obligation status": (
+            "Inductive ObligationStatus : Type :=" in coq
+            and "Record SemanticPreservationObligation : Type := {" in coq
+        ),
         "lean semantic preservation obligations": (
             lean_example_count > 0 and lean_obligation_count == lean_example_count
         ),
         "coq semantic preservation obligations": (
             coq_example_count > 0 and coq_obligation_count == coq_example_count
         ),
+        "lean semantic preservation obligation records": (
+            lean_obligation_record_count == lean_example_count
+        ),
+        "coq semantic preservation obligation records": (
+            coq_obligation_record_count == coq_example_count
+        ),
+        "lean semantic preservation wellformedness statements": (
+            lean_obligation_wellformed_count == lean_example_count
+        ),
+        "coq semantic preservation wellformedness proofs": (
+            coq_obligation_wellformed_count == coq_example_count
+            and coq_obligation_wellformed_proof_count == coq_example_count
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
+            and "#check example_4_semantic_preservation_obligation_record" in lean
+            and "#check example_4_semantic_preservation_obligation_is_prop" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
+            and "Check example_4_semantic_preservation_obligation_record." in coq
+            and "Check example_4_semantic_preservation_obligation_is_prop." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"
