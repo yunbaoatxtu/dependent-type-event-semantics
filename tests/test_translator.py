@@ -1269,6 +1269,16 @@ class TranslatorTests(unittest.TestCase):
             "theorem model_interpretable_denotational_sound :",
             lean_module,
         )
+        self.assertIn("structure TruthConditionSpec : Type where", lean_module)
+        self.assertIn("truth_denotes : (A : Type) -> A -> Prop", lean_module)
+        self.assertIn(
+            "def semantic_model_from_truth_conditions (T : TruthConditionSpec) : SemanticModel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem truth_conditions_induce_denotational_soundness :",
+            lean_module,
+        )
         self.assertIn(
             "def example_1_semantic_preservation_obligation : Prop := SemanticPreservation Prop example_1",
             lean_module,
@@ -1305,9 +1315,14 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_denotationally_sound :",
             lean_module,
         )
+        self.assertIn(
+            "theorem example_2_truth_condition_sound :",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply model_interpretable_denotational_sound", lean_module)
+        self.assertIn("apply truth_conditions_induce_denotational_soundness", lean_module)
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
@@ -1316,6 +1331,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check example_2_semantic_preservation_proved", lean_module)
         self.assertIn("#check example_2_model_interpretable", lean_module)
         self.assertIn("#check example_2_denotationally_sound", lean_module)
+        self.assertIn("#check example_2_truth_condition_sound", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -1342,6 +1358,16 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn("induction H; eauto using", coq_module)
+        self.assertIn("Record TruthConditionSpec : Type := {", coq_module)
+        self.assertIn("truth_denotes : forall A : Type, A -> Prop;", coq_module)
+        self.assertIn(
+            "Definition semantic_model_from_truth_conditions (T : TruthConditionSpec) : SemanticModel := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem truth_conditions_induce_denotational_soundness :",
+            coq_module,
+        )
         self.assertIn("Inductive ObligationStatus : Type :=", coq_module)
         self.assertIn("Record SemanticPreservationObligation : Type := {", coq_module)
         self.assertIn("Definition PreservationTargetMatches", coq_module)
@@ -1389,9 +1415,14 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_2_denotationally_sound : forall M : SemanticModel, model_denotes M PropT example_2.",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_2_truth_condition_sound : forall T : TruthConditionSpec, truth_denotes T PropT example_2.",
+            coq_module,
+        )
         self.assertIn("  apply preserve_cause.", coq_module)
         self.assertIn("  apply semantic_preservation_model_interpretable.", coq_module)
         self.assertIn("  apply model_interpretable_denotational_sound.", coq_module)
+        self.assertIn("  apply truth_conditions_induce_denotational_soundness.", coq_module)
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
@@ -1401,6 +1432,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_semantic_preservation_proved.", coq_module)
         self.assertIn("Check example_2_model_interpretable.", coq_module)
         self.assertIn("Check example_2_denotationally_sound.", coq_module)
+        self.assertIn("Check example_2_truth_condition_sound.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -1429,6 +1461,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Theorem example_1_denotationally_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_truth_condition_sound :",
             coq_module,
         )
         self.assertIn(
@@ -13658,6 +13694,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_structural_preservation_proofs",
                 "coq_model_interpretability_boundary",
                 "coq_semantic_model_denotation_boundary",
+                "coq_truth_condition_spec_bridge",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -13675,11 +13712,11 @@ class TranslatorTests(unittest.TestCase):
             },
         )
         self.assertIn(
-            "semantic_model_truth_conditions_unproved",
+            "concrete_truth_condition_instances_unproved",
             completion_status["completion_blockers"],
         )
         self.assertIn(
-            "instantiate_semantic_model_truth_conditions",
+            "provide_concrete_truth_condition_instances",
             completion_status["next_recommended_stages"],
         )
         self.assertEqual(
@@ -15162,11 +15199,11 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-completion-blocker="semantic_model_truth_conditions_unproved"',
+            'data-completion-blocker="concrete_truth_condition_instances_unproved"',
             page,
         )
         self.assertIn(
-            'data-completion-next-stage="instantiate_semantic_model_truth_conditions"',
+            'data-completion-next-stage="provide_concrete_truth_condition_instances"',
             page,
         )
         self.assertIn(

@@ -183,11 +183,15 @@ adds `coq_model_interpretability_boundary`, which proves the global bridge
 stage adds `coq_semantic_model_denotation_boundary`, which exports a
 `SemanticModel` record, proves the global bridge
 `model_interpretable_denotational_sound`, and checks the per-example
-`example_i_denotationally_sound` theorems. The remaining blocker is
-`semantic_model_truth_conditions_unproved`, and the next Coq-facing stage is
-`instantiate_semantic_model_truth_conditions`: the generic model-interface
-record must be instantiated with independently specified lexical and temporal
-truth conditions.
+`example_i_denotationally_sound` theorems. The following truth-condition-spec
+stage adds `coq_truth_condition_spec_bridge`, exports a `TruthConditionSpec`
+record, builds `semantic_model_from_truth_conditions`, proves
+`truth_conditions_induce_denotational_soundness`, and checks per-example
+`example_i_truth_condition_sound` theorems. The remaining blocker is
+`concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
+`provide_concrete_truth_condition_instances`: the generic truth-condition
+interface must be filled with independently specified lexical, temporal,
+causal, quantificational, and modifier clauses.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application

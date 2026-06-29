@@ -10807,6 +10807,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_structural_preservation_proofs",
         "coq_model_interpretability_boundary",
         "coq_semantic_model_denotation_boundary",
+        "coq_truth_condition_spec_bridge",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
@@ -10820,11 +10821,11 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "full_natural_language_certification_false",
         "surface_parser_claim_registered_examples_only",
         "fallback_certification_level_shallow_scaffold",
-        "semantic_model_truth_conditions_unproved",
+        "concrete_truth_condition_instances_unproved",
     }
     required_next_stages = {
         "promote_more_fallback_successes_to_registered_constructions",
-        "instantiate_semantic_model_truth_conditions",
+        "provide_concrete_truth_condition_instances",
         "expand_scope_attachment_discourse_coverage",
         "separate_parser_coverage_claims_from_semantic_translation_claims",
     }

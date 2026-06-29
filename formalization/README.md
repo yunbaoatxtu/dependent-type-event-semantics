@@ -64,11 +64,16 @@ witnesses, repetition, time operators, negation, Transition, and Cause. The
 global theorem `model_interpretable_denotational_sound` proves that every
 `ModelInterpretable` term is denoted by any `SemanticModel` satisfying those
 closure fields, and each exported example receives a checked
-`example_i_denotationally_sound` theorem. This is still not a proof of full denotational soundness, because it does not yet instantiate a full
-truth-conditional model. The next proof-development layer must instantiate
-`SemanticModel` with independently specified lexical and temporal truth
-conditions. Thus the current semantic preservation layer is structural and
-proof-checked, while truth-condition instantiation remains open.
+`example_i_denotationally_sound` theorem. The next interface layer declares a
+`TruthConditionSpec` record, turns any such record into a `SemanticModel` via
+`semantic_model_from_truth_conditions`, proves
+`truth_conditions_induce_denotational_soundness`, and checks
+`example_i_truth_condition_sound` for each exported example. This is still
+not a proof of full denotational soundness, because it does not yet provide
+concrete lexical, temporal, causal, quantificational, and modifier truth
+conditions. Thus the current semantic preservation layer and the
+truth-condition-spec bridge are proof-checked, while concrete truth-condition
+instantiation remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

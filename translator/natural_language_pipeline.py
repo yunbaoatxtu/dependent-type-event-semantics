@@ -20959,6 +20959,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_truth_condition_spec_bridge",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -20990,9 +20995,11 @@ def project_completion_status_payload(
                     "preservation to ModelInterpretable and a denotational "
                     "boundary theorem from ModelInterpretable to model_denotes "
                     "for every SemanticModel satisfying the constructor "
-                    "closure fields. The remaining deep proof work is to "
-                    "instantiate those model fields with independently "
-                    "specified truth conditions."
+                    "closure fields. It now also exports a TruthConditionSpec "
+                    "interface and proves that any such truth-condition spec "
+                    "induces a SemanticModel. The remaining deep proof work is "
+                    "to provide concrete lexical, temporal, and causal truth "
+                    "condition instances."
                 ),
             },
             {
@@ -21016,11 +21023,11 @@ def project_completion_status_payload(
             "full_natural_language_certification_false",
             "surface_parser_claim_registered_examples_only",
             "fallback_certification_level_shallow_scaffold",
-            "semantic_model_truth_conditions_unproved",
+            "concrete_truth_condition_instances_unproved",
         ],
         "next_recommended_stages": [
             "promote_more_fallback_successes_to_registered_constructions",
-            "instantiate_semantic_model_truth_conditions",
+            "provide_concrete_truth_condition_instances",
             "expand_scope_attachment_discourse_coverage",
             "separate_parser_coverage_claims_from_semantic_translation_claims",
         ],

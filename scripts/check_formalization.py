@@ -136,6 +136,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_truth_condition_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_truth_condition_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_truth_condition_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_truth_condition_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -208,6 +222,32 @@ def main() -> None:
             and "ModelInterpretable A term -> model_denotes M A term." in coq
             and "induction H; eauto using" in coq
             and "denote_cause." in coq
+        ),
+        "lean truth condition spec": (
+            "structure TruthConditionSpec : Type where" in lean
+            and "truth_denotes : (A : Type) -> A -> Prop" in lean
+            and "truth_repeat : (n : Nat)" in lean
+            and "truth_sigma_Food : (P : Food -> Prop)" in lean
+        ),
+        "coq truth condition spec": (
+            "Record TruthConditionSpec : Type := {" in coq
+            and "truth_denotes : forall A : Type, A -> Prop;" in coq
+            and "truth_repeat : forall n : nat" in coq
+            and "truth_sigma_Food : forall P : Food -> Prop" in coq
+        ),
+        "lean truth conditions to semantic model bridge": (
+            "def semantic_model_from_truth_conditions (T : TruthConditionSpec) : SemanticModel := {"
+            in lean
+            and "model_denotes := T.truth_denotes" in lean
+            and "theorem truth_conditions_induce_denotational_soundness :" in lean
+            and "ModelInterpretable A term -> T.truth_denotes A term" in lean
+        ),
+        "coq truth conditions to semantic model bridge": (
+            "Definition semantic_model_from_truth_conditions (T : TruthConditionSpec) : SemanticModel := {|"
+            in coq
+            and "model_denotes := truth_denotes T;" in coq
+            and "Theorem truth_conditions_induce_denotational_soundness :" in coq
+            and "ModelInterpretable A term -> truth_denotes T A term." in coq
         ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
@@ -282,6 +322,16 @@ def main() -> None:
             and "Check example_4_denotationally_sound." in coq
             and "apply model_interpretable_denotational_sound." in coq
         ),
+        "lean truth condition soundness proofs": (
+            lean_truth_condition_sound_count == lean_example_count
+            and "#check example_4_truth_condition_sound" in lean
+            and "apply truth_conditions_induce_denotational_soundness" in lean
+        ),
+        "coq truth condition soundness proofs": (
+            coq_truth_condition_sound_count == coq_example_count
+            and "Check example_4_truth_condition_sound." in coq
+            and "apply truth_conditions_induce_denotational_soundness." in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -290,6 +340,7 @@ def main() -> None:
             and "#check example_4_semantic_preservation_proved" in lean
             and "#check example_4_model_interpretable" in lean
             and "#check example_4_denotationally_sound" in lean
+            and "#check example_4_truth_condition_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -299,6 +350,7 @@ def main() -> None:
             and "Check example_4_semantic_preservation_proved." in coq
             and "Check example_4_model_interpretable." in coq
             and "Check example_4_denotationally_sound." in coq
+            and "Check example_4_truth_condition_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

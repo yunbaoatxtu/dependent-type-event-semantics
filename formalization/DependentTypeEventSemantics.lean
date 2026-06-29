@@ -139,6 +139,56 @@ theorem model_interpretable_denotational_sound :
   | model_transition theme scale source target => exact M.denote_transition theme scale source target
   | model_cause causer effect h ih => exact M.denote_cause causer effect ih
 
+structure TruthConditionSpec : Type where
+  truth_denotes : (A : Type) -> A -> Prop
+  truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> truth_denotes PropT (break n mods arg1 arg2)
+  truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> truth_denotes PropT (butter n mods arg1 arg2)
+  truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> truth_denotes Prop (eat n mods arg1 arg2)
+  truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> truth_denotes PropT (knock n mods arg1)
+  truth_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> truth_denotes Prop (P x)) -> truth_denotes Prop (Exists fun x : Entity => P x)
+  truth_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> truth_denotes Prop (P x)) -> truth_denotes Prop (Exists fun x : Food => P x)
+  truth_sigma_State : (P : State -> Prop) -> ((x : State) -> truth_denotes Prop (P x)) -> truth_denotes Prop (Exists fun x : State => P x)
+  truth_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> truth_denotes Prop (P x)) -> truth_denotes Prop (Exists fun x : StateScale => P x)
+  truth_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> truth_denotes Prop (P x)) -> truth_denotes Prop (Exists fun x : TransitionT => P x)
+  truth_repeat : (n : Nat) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (repeat n body)
+  truth_at_T : (marker : Entity) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (at_T marker body)
+  truth_during_T : (marker : Entity) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (during_T marker body)
+  truth_before_T : (marker : Entity) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (before_T marker body)
+  truth_after_T : (marker : Entity) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (after_T marker body)
+  truth_until_T : (marker : Entity) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (until_T marker body)
+  truth_since_T : (marker : Entity) -> (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (since_T marker body)
+  truth_not_T : (body : PropT) -> truth_denotes PropT body -> truth_denotes PropT (not_T body)
+  truth_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> truth_denotes TransitionT (Transition theme scale source target)
+  truth_cause : (causer : Entity) -> (effect : TransitionT) -> truth_denotes TransitionT effect -> truth_denotes PropT (Cause causer effect)
+
+def semantic_model_from_truth_conditions (T : TruthConditionSpec) : SemanticModel := {
+  model_denotes := T.truth_denotes,
+  denote_break_application := T.truth_break_application,
+  denote_butter_application := T.truth_butter_application,
+  denote_eat_application := T.truth_eat_application,
+  denote_knock_application := T.truth_knock_application,
+  denote_sigma_Entity := T.truth_sigma_Entity,
+  denote_sigma_Food := T.truth_sigma_Food,
+  denote_sigma_State := T.truth_sigma_State,
+  denote_sigma_StateScale := T.truth_sigma_StateScale,
+  denote_sigma_TransitionT := T.truth_sigma_TransitionT,
+  denote_repeat := T.truth_repeat,
+  denote_at_T := T.truth_at_T,
+  denote_during_T := T.truth_during_T,
+  denote_before_T := T.truth_before_T,
+  denote_after_T := T.truth_after_T,
+  denote_until_T := T.truth_until_T,
+  denote_since_T := T.truth_since_T,
+  denote_not_T := T.truth_not_T,
+  denote_transition := T.truth_transition,
+  denote_cause := T.truth_cause
+}
+
+theorem truth_conditions_induce_denotational_soundness :
+    (T : TruthConditionSpec) -> (A : Type) -> (term : A) -> ModelInterpretable A term -> T.truth_denotes A term := by
+  intro T A term h
+  exact model_interpretable_denotational_sound (semantic_model_from_truth_conditions T) A term h
+
 def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   target.obligation_statement = SemanticPreservation A term
 
@@ -247,6 +297,23 @@ theorem example_4_denotationally_sound : (M : SemanticModel) -> M.model_denotes 
   apply model_interpretable_denotational_sound
   exact example_4_model_interpretable
 
+theorem example_1_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_denotes PropT example_1 := by
+  intro T
+  apply truth_conditions_induce_denotational_soundness
+  exact example_1_model_interpretable
+theorem example_2_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_denotes Prop example_2 := by
+  intro T
+  apply truth_conditions_induce_denotational_soundness
+  exact example_2_model_interpretable
+theorem example_3_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_denotes PropT example_3 := by
+  intro T
+  apply truth_conditions_induce_denotational_soundness
+  exact example_3_model_interpretable
+theorem example_4_truth_condition_sound : (T : TruthConditionSpec) -> T.truth_denotes PropT example_4 := by
+  intro T
+  apply truth_conditions_induce_denotational_soundness
+  exact example_4_model_interpretable
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -255,6 +322,7 @@ theorem example_4_denotationally_sound : (M : SemanticModel) -> M.model_denotes 
 #check example_1_semantic_preservation_proved
 #check example_1_model_interpretable
 #check example_1_denotationally_sound
+#check example_1_truth_condition_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -263,6 +331,7 @@ theorem example_4_denotationally_sound : (M : SemanticModel) -> M.model_denotes 
 #check example_2_semantic_preservation_proved
 #check example_2_model_interpretable
 #check example_2_denotationally_sound
+#check example_2_truth_condition_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -271,6 +340,7 @@ theorem example_4_denotationally_sound : (M : SemanticModel) -> M.model_denotes 
 #check example_3_semantic_preservation_proved
 #check example_3_model_interpretable
 #check example_3_denotationally_sound
+#check example_3_truth_condition_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -279,3 +349,4 @@ theorem example_4_denotationally_sound : (M : SemanticModel) -> M.model_denotes 
 #check example_4_semantic_preservation_proved
 #check example_4_model_interpretable
 #check example_4_denotationally_sound
+#check example_4_truth_condition_sound

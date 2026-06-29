@@ -968,11 +968,16 @@ exports a `SemanticModel` record with a generic `model_denotes` predicate plus
 closure fields for lexical applications, Sigma witnesses, repetition, time
 operators, negation, Transition, and Cause. The global theorem
 `model_interpretable_denotational_sound` proves that any
-`ModelInterpretable` term is denoted by any such model. The open blocker is now
-`semantic_model_truth_conditions_unproved`; the next Coq stage is to instantiate
-those model fields with independently specified truth conditions, not merely to
-show that generated examples can be certified by the structural relation and
-lifted through the model boundary.
+`ModelInterpretable` term is denoted by any such model. The verified objective
+list also includes `coq_truth_condition_spec_bridge`: the generated Lean/Coq
+interfaces export a `TruthConditionSpec` record, build
+`semantic_model_from_truth_conditions`, prove
+`truth_conditions_induce_denotational_soundness`, and check per-example
+`example_i_truth_condition_sound` theorems. The open blocker is now
+`concrete_truth_condition_instances_unproved`; the next Coq stage is
+`provide_concrete_truth_condition_instances`, which must supply independently
+specified lexical, temporal, causal, quantificational, and modifier truth
+conditions rather than only proving the generic interface bridge.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
