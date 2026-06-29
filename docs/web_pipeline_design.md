@@ -219,7 +219,14 @@ kernel interface. The next verified objective,
 kernel exists, and checks per-example
 `example_i_syntax_directed_truth_kernel_sound` theorems. This verifies one more
 syntax-directed kernel path, but still does not supply an independently
-specified concrete truth model. The remaining blocker is
+specified concrete truth model. The next verified objective,
+`coq_primitive_truth_assumption_kernel_instance`, exports
+`PrimitiveTruthAssumptions`, a declared `primitive_truth_assumptions` witness,
+the induced `primitive_truth_kernel`, and per-example
+`example_i_primitive_truth_kernel_sound` checks. This gives the UI and verifier
+a named typed assumption list for the future concrete model stage, while still
+making clear that those assumptions have not been discharged. The remaining
+blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition
 interface must be filled with independently specified lexical, temporal,

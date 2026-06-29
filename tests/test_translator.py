@@ -1350,6 +1350,47 @@ class TranslatorTests(unittest.TestCase):
             "theorem concrete_kernel_induces_truth_condition_soundness :",
             lean_module,
         )
+        self.assertIn("structure PrimitiveTruthAssumptions : Type where", lean_module)
+        self.assertIn(
+            "primitive_denotes : (A : Type) -> A -> Prop",
+            lean_module,
+        )
+        self.assertIn(
+            "primitive_lexical_truth_eat_application : (n : Nat)",
+            lean_module,
+        )
+        self.assertIn(
+            "primitive_quantifier_truth_sigma_Food : (P : Food -> Prop)",
+            lean_module,
+        )
+        self.assertIn(
+            "constant primitive_truth_assumptions : PrimitiveTruthAssumptions",
+            lean_module,
+        )
+        self.assertIn(
+            "def primitive_truth_kernel : ConcreteTruthConditionKernel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "kernel_denotes := primitive_truth_assumptions.primitive_denotes",
+            lean_module,
+        )
+        self.assertIn(
+            "def primitive_truth_conditions_from_kernel : TruthConditionSpec :=",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem primitive_truth_kernel_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem primitive_truth_kernel_denotes_primitive_assumptions :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem primitive_truth_kernel_denotes_model_interpretable :",
+            lean_module,
+        )
         self.assertIn(
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=",
             lean_module,
@@ -1454,6 +1495,10 @@ class TranslatorTests(unittest.TestCase):
             "theorem example_2_syntax_directed_truth_kernel_sound :",
             lean_module,
         )
+        self.assertIn(
+            "theorem example_2_primitive_truth_kernel_sound :",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply semantic_preservation_syntax_directed_truth", lean_module)
@@ -1479,6 +1524,10 @@ class TranslatorTests(unittest.TestCase):
             "apply syntax_directed_truth_kernel_denotes_syntax_directed_truth",
             lean_module,
         )
+        self.assertIn(
+            "apply primitive_truth_kernel_denotes_model_interpretable",
+            lean_module,
+        )
         self.assertIn("#check example_2", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation", lean_module)
         self.assertIn("#check example_2_semantic_preservation_obligation_record", lean_module)
@@ -1494,6 +1543,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check example_2_concrete_kernel_truth_condition_sound", lean_module)
         self.assertIn("#check example_2_model_interpretable_truth_kernel_sound", lean_module)
         self.assertIn("#check example_2_syntax_directed_truth_kernel_sound", lean_module)
+        self.assertIn("#check example_2_primitive_truth_kernel_sound", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -1602,6 +1652,47 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Theorem concrete_kernel_induces_truth_condition_soundness :",
+            coq_module,
+        )
+        self.assertIn("Record PrimitiveTruthAssumptions : Type := {", coq_module)
+        self.assertIn(
+            "primitive_denotes : forall A : Type, A -> Prop;",
+            coq_module,
+        )
+        self.assertIn(
+            "primitive_lexical_truth_eat_application : forall n : nat",
+            coq_module,
+        )
+        self.assertIn(
+            "primitive_quantifier_truth_sigma_Food : forall P : Food -> Prop",
+            coq_module,
+        )
+        self.assertIn(
+            "Parameter primitive_truth_assumptions : PrimitiveTruthAssumptions.",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition primitive_truth_kernel : ConcreteTruthConditionKernel := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "kernel_denotes := primitive_denotes primitive_truth_assumptions",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition primitive_truth_conditions_from_kernel : TruthConditionSpec :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem primitive_truth_kernel_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem primitive_truth_kernel_denotes_primitive_assumptions :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem primitive_truth_kernel_denotes_model_interpretable :",
             coq_module,
         )
         self.assertIn(
@@ -1719,6 +1810,10 @@ class TranslatorTests(unittest.TestCase):
             "Theorem example_2_syntax_directed_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel syntax_directed_truth_kernel) PropT example_2.",
             coq_module,
         )
+        self.assertIn(
+            "Theorem example_2_primitive_truth_kernel_sound : truth_denotes (truth_conditions_from_concrete_kernel primitive_truth_kernel) PropT example_2.",
+            coq_module,
+        )
         self.assertIn("  apply preserve_cause.", coq_module)
         self.assertIn("  apply semantic_preservation_model_interpretable.", coq_module)
         self.assertIn("  apply semantic_preservation_syntax_directed_truth.", coq_module)
@@ -1744,6 +1839,10 @@ class TranslatorTests(unittest.TestCase):
             "  apply syntax_directed_truth_kernel_denotes_syntax_directed_truth.",
             coq_module,
         )
+        self.assertIn(
+            "  apply primitive_truth_kernel_denotes_model_interpretable.",
+            coq_module,
+        )
         self.assertIn("Proof. reflexivity. Qed.", coq_module)
         self.assertIn("Check example_2.", coq_module)
         self.assertIn("Check example_2_semantic_preservation_obligation.", coq_module)
@@ -1760,6 +1859,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_concrete_kernel_truth_condition_sound.", coq_module)
         self.assertIn("Check example_2_model_interpretable_truth_kernel_sound.", coq_module)
         self.assertIn("Check example_2_syntax_directed_truth_kernel_sound.", coq_module)
+        self.assertIn("Check example_2_primitive_truth_kernel_sound.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -1819,6 +1919,10 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_1_primitive_truth_kernel_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_1_semantic_preservation_proved :",
             coq_module,
         )
@@ -1831,6 +1935,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_1_model_interpretable_truth_kernel_sound.", coq_module)
         self.assertIn("Check example_1_syntax_directed_truth.", coq_module)
         self.assertIn("Check example_1_syntax_directed_truth_kernel_sound.", coq_module)
+        self.assertIn("Check example_1_primitive_truth_kernel_sound.", coq_module)
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
 
@@ -14055,6 +14160,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_kernel_bridge",
                 "coq_model_interpretable_truth_kernel_instance",
                 "coq_syntax_directed_truth_kernel_instance",
+                "coq_primitive_truth_assumption_kernel_instance",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },

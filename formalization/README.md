@@ -98,7 +98,12 @@ with `syntax_directed_truth_kernel`, and checks
 the current semantic preservation layer, the truth-condition-spec bridge, the
 inhabitation sanity instance, the structural truth-condition instance, the
 concrete-kernel bridge, the model-interpretable kernel instance, and the
-syntax-directed kernel instance are proof-checked, while independently
+syntax-directed kernel instance are proof-checked. The file now also declares a
+`PrimitiveTruthAssumptions` record, a `primitive_truth_assumptions` parameter,
+a `primitive_truth_kernel` derived from that record, and
+`example_i_primitive_truth_kernel_sound` checks. This turns the next concrete
+model stage into a typed set of primitive lexical, temporal, causal,
+quantificational, polarity, and transition obligations, while independently
 specified concrete truth-condition instantiation remains open.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional

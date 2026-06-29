@@ -206,6 +206,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_primitive_truth_kernel_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_primitive_truth_kernel_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_primitive_truth_kernel_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_primitive_truth_kernel_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
     lean_syntax_directed_truth_count = len(
         re.findall(
             r"^theorem example_\d+_syntax_directed_truth :",
@@ -430,6 +444,34 @@ def main() -> None:
             and "Theorem concrete_kernel_induces_truth_condition_soundness :"
             in coq
         ),
+        "lean primitive truth assumption kernel instance": (
+            "structure PrimitiveTruthAssumptions : Type where" in lean
+            and "primitive_denotes : (A : Type) -> A -> Prop" in lean
+            and "primitive_lexical_truth_eat_application : (n : Nat)" in lean
+            and "primitive_quantifier_truth_sigma_Food : (P : Food -> Prop)" in lean
+            and "primitive_temporal_truth_after_T : (marker : Entity)" in lean
+            and "constant primitive_truth_assumptions : PrimitiveTruthAssumptions" in lean
+            and "def primitive_truth_kernel : ConcreteTruthConditionKernel := {" in lean
+            and "kernel_denotes := primitive_truth_assumptions.primitive_denotes" in lean
+            and "def primitive_truth_conditions_from_kernel : TruthConditionSpec :=" in lean
+            and "theorem primitive_truth_kernel_exists :" in lean
+            and "theorem primitive_truth_kernel_denotes_primitive_assumptions :" in lean
+            and "theorem primitive_truth_kernel_denotes_model_interpretable :" in lean
+        ),
+        "coq primitive truth assumption kernel instance": (
+            "Record PrimitiveTruthAssumptions : Type := {" in coq
+            and "primitive_denotes : forall A : Type, A -> Prop;" in coq
+            and "primitive_lexical_truth_eat_application : forall n : nat" in coq
+            and "primitive_quantifier_truth_sigma_Food : forall P : Food -> Prop" in coq
+            and "primitive_temporal_truth_after_T : forall marker : Entity" in coq
+            and "Parameter primitive_truth_assumptions : PrimitiveTruthAssumptions." in coq
+            and "Definition primitive_truth_kernel : ConcreteTruthConditionKernel := {|" in coq
+            and "kernel_denotes := primitive_denotes primitive_truth_assumptions" in coq
+            and "Definition primitive_truth_conditions_from_kernel : TruthConditionSpec :=" in coq
+            and "Theorem primitive_truth_kernel_exists :" in coq
+            and "Theorem primitive_truth_kernel_denotes_primitive_assumptions :" in coq
+            and "Theorem primitive_truth_kernel_denotes_model_interpretable :" in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
@@ -617,6 +659,17 @@ def main() -> None:
             and "apply model_interpretable_truth_kernel_denotes_model_interpretable."
             in coq
         ),
+        "lean primitive truth kernel soundness proofs": (
+            lean_primitive_truth_kernel_sound_count == lean_example_count
+            and "#check example_4_primitive_truth_kernel_sound" in lean
+            and "apply primitive_truth_kernel_denotes_model_interpretable" in lean
+        ),
+        "coq primitive truth kernel soundness proofs": (
+            coq_primitive_truth_kernel_sound_count == coq_example_count
+            and "Check example_4_primitive_truth_kernel_sound." in coq
+            and "apply primitive_truth_kernel_denotes_model_interpretable."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
@@ -644,6 +697,7 @@ def main() -> None:
             and "#check example_4_concrete_kernel_truth_condition_sound" in lean
             and "#check example_4_model_interpretable_truth_kernel_sound" in lean
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
+            and "#check example_4_primitive_truth_kernel_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -660,6 +714,7 @@ def main() -> None:
             and "Check example_4_concrete_kernel_truth_condition_sound." in coq
             and "Check example_4_model_interpretable_truth_kernel_sound." in coq
             and "Check example_4_syntax_directed_truth_kernel_sound." in coq
+            and "Check example_4_primitive_truth_kernel_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

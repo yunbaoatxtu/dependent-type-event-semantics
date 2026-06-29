@@ -1011,13 +1011,25 @@ separate `SyntaxDirectedTruth` relation, proves
 `example_i_syntax_directed_truth_kernel_sound` theorems. This is stricter than
 the model-interpretable kernel because the denotation predicate is a distinct
 syntax-directed truth relation, but it is still not an independently specified
-lexical or temporal model. The open blocker remains
+lexical or temporal model. The verified objective
+`coq_primitive_truth_assumption_kernel_instance` now adds a
+`PrimitiveTruthAssumptions` record with independently named lexical,
+quantifier/Sigma, repetition, temporal, polarity, transition, and causal
+assumption fields. The generated files declare a single
+`primitive_truth_assumptions` value, derive `primitive_truth_kernel` and
+`primitive_truth_conditions_from_kernel` from it, prove
+`primitive_truth_kernel_denotes_primitive_assumptions` and
+`primitive_truth_kernel_denotes_model_interpretable`, and check per-example
+`example_i_primitive_truth_kernel_sound` theorems. This gives the next concrete
+model stage a typed assumption list to discharge, but the assumptions
+themselves are still parameters. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
-model-interpretable and syntax-directed kernel instances.
+model-interpretable, syntax-directed, and primitive-assumption kernel
+instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

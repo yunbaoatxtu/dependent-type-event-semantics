@@ -20989,6 +20989,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_primitive_truth_assumption_kernel_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21038,6 +21043,14 @@ def project_completion_status_payload(
                     "syntax-directed truth kernel whose denotation predicate "
                     "is the separate SyntaxDirectedTruth relation, with "
                     "per-example syntax-kernel soundness theorems. These "
+                    "stages now also include a PrimitiveTruthAssumptions "
+                    "record, a named assumption-carrying primitive truth "
+                    "kernel, and per-example primitive-kernel soundness "
+                    "checks. This gives the next concrete model stage a "
+                    "typed list of lexical, temporal, causal, "
+                    "quantificational, polarity, and modifier assumptions to "
+                    "discharge rather than a single undifferentiated "
+                    "placeholder. These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
                     "supply independently justified inhabitants of that "
