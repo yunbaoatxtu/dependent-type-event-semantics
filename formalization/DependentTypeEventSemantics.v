@@ -1429,6 +1429,151 @@ Proof.
   exact H.
 Qed.
 
+Record RegisteredLexicalTruthModel : Type := {
+  registered_lexical_model_denotes : forall A : Type, A -> Prop;
+  registered_lexical_model_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      registered_lexical_model_denotes A term;
+  registered_lexical_model_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, registered_lexical_model_denotes Prop (P x)) ->
+      registered_lexical_model_denotes Prop (exists x : Entity, P x);
+  registered_lexical_model_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, registered_lexical_model_denotes Prop (P x)) ->
+      registered_lexical_model_denotes Prop (exists x : Food, P x);
+  registered_lexical_model_sigma_State : forall P : State -> Prop,
+      (forall x : State, registered_lexical_model_denotes Prop (P x)) ->
+      registered_lexical_model_denotes Prop (exists x : State, P x);
+  registered_lexical_model_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, registered_lexical_model_denotes Prop (P x)) ->
+      registered_lexical_model_denotes Prop (exists x : StateScale, P x);
+  registered_lexical_model_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, registered_lexical_model_denotes Prop (P x)) ->
+      registered_lexical_model_denotes Prop (exists x : TransitionT, P x);
+  registered_lexical_model_repeat : forall n : nat, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (repeat n body);
+  registered_lexical_model_at_T : forall marker : Entity, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (at_T marker body);
+  registered_lexical_model_during_T : forall marker : Entity, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (during_T marker body);
+  registered_lexical_model_before_T : forall marker : Entity, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (before_T marker body);
+  registered_lexical_model_after_T : forall marker : Entity, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (after_T marker body);
+  registered_lexical_model_until_T : forall marker : Entity, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (until_T marker body);
+  registered_lexical_model_since_T : forall marker : Entity, forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (since_T marker body);
+  registered_lexical_model_not_T : forall body : PropT,
+      registered_lexical_model_denotes PropT body ->
+      registered_lexical_model_denotes PropT (not_T body);
+  registered_lexical_model_transition : forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      registered_lexical_model_denotes TransitionT (Transition theme scale source target);
+  registered_lexical_model_cause : forall causer : Entity, forall effect : TransitionT,
+      registered_lexical_model_denotes TransitionT effect ->
+      registered_lexical_model_denotes PropT (Cause causer effect)
+}.
+
+Definition fully_registered_truth_conditions_from_registered_lexical_model
+  (M : RegisteredLexicalTruthModel) : FullyRegisteredTruthConditionSpec := {|
+  fully_registered_truth_denotes := registered_lexical_model_denotes M;
+  fully_registered_truth_lexical_application := registered_lexical_model_lexical_application M;
+  fully_registered_truth_sigma_Entity := registered_lexical_model_sigma_Entity M;
+  fully_registered_truth_sigma_Food := registered_lexical_model_sigma_Food M;
+  fully_registered_truth_sigma_State := registered_lexical_model_sigma_State M;
+  fully_registered_truth_sigma_StateScale := registered_lexical_model_sigma_StateScale M;
+  fully_registered_truth_sigma_TransitionT := registered_lexical_model_sigma_TransitionT M;
+  fully_registered_truth_repeat := registered_lexical_model_repeat M;
+  fully_registered_truth_at_T := registered_lexical_model_at_T M;
+  fully_registered_truth_during_T := registered_lexical_model_during_T M;
+  fully_registered_truth_before_T := registered_lexical_model_before_T M;
+  fully_registered_truth_after_T := registered_lexical_model_after_T M;
+  fully_registered_truth_until_T := registered_lexical_model_until_T M;
+  fully_registered_truth_since_T := registered_lexical_model_since_T M;
+  fully_registered_truth_not_T := registered_lexical_model_not_T M;
+  fully_registered_truth_transition := registered_lexical_model_transition M;
+  fully_registered_truth_cause := registered_lexical_model_cause M
+|}.
+
+Definition registered_lexical_truth_model_denotes : forall A : Type, A -> Prop :=
+  FullyRegisteredAtomicClosureTruth.
+
+Definition registered_lexical_truth_model : RegisteredLexicalTruthModel := {|
+  registered_lexical_model_denotes := registered_lexical_truth_model_denotes;
+  registered_lexical_model_lexical_application := fun A term h => fully_registered_atomic_truth_lexical_application A term h;
+  registered_lexical_model_sigma_Entity := fun P h => fully_registered_atomic_truth_sigma_Entity P h;
+  registered_lexical_model_sigma_Food := fun P h => fully_registered_atomic_truth_sigma_Food P h;
+  registered_lexical_model_sigma_State := fun P h => fully_registered_atomic_truth_sigma_State P h;
+  registered_lexical_model_sigma_StateScale := fun P h => fully_registered_atomic_truth_sigma_StateScale P h;
+  registered_lexical_model_sigma_TransitionT := fun P h => fully_registered_atomic_truth_sigma_TransitionT P h;
+  registered_lexical_model_repeat := fun n body h => fully_registered_atomic_truth_repeat n body h;
+  registered_lexical_model_at_T := fun marker body h => fully_registered_atomic_truth_at_T marker body h;
+  registered_lexical_model_during_T := fun marker body h => fully_registered_atomic_truth_during_T marker body h;
+  registered_lexical_model_before_T := fun marker body h => fully_registered_atomic_truth_before_T marker body h;
+  registered_lexical_model_after_T := fun marker body h => fully_registered_atomic_truth_after_T marker body h;
+  registered_lexical_model_until_T := fun marker body h => fully_registered_atomic_truth_until_T marker body h;
+  registered_lexical_model_since_T := fun marker body h => fully_registered_atomic_truth_since_T marker body h;
+  registered_lexical_model_not_T := fun body h => fully_registered_atomic_truth_not_T body h;
+  registered_lexical_model_transition := fun theme scale source target h => fully_registered_atomic_truth_transition theme scale source target h;
+  registered_lexical_model_cause := fun causer effect h => fully_registered_atomic_truth_cause causer effect h
+|}.
+
+Definition registered_lexical_truth_conditions_from_model :
+  FullyRegisteredTruthConditionSpec :=
+  fully_registered_truth_conditions_from_registered_lexical_model
+    registered_lexical_truth_model.
+
+Theorem registered_lexical_truth_model_exists :
+  exists M : RegisteredLexicalTruthModel,
+    M = registered_lexical_truth_model.
+Proof.
+  exists registered_lexical_truth_model. reflexivity.
+Qed.
+
+Theorem registered_lexical_truth_conditions_from_model_exists :
+  exists F : FullyRegisteredTruthConditionSpec,
+    F = registered_lexical_truth_conditions_from_model.
+Proof.
+  exists registered_lexical_truth_conditions_from_model. reflexivity.
+Qed.
+
+Theorem registered_lexical_truth_model_denotes_fully_registered :
+  forall A : Type, forall term : A,
+    FullyRegisteredAtomicClosureTruth A term ->
+    registered_lexical_model_denotes registered_lexical_truth_model A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem registered_lexical_truth_conditions_from_model_denote_fully_registered :
+  forall A : Type, forall term : A,
+    FullyRegisteredAtomicClosureTruth A term ->
+    fully_registered_truth_denotes registered_lexical_truth_conditions_from_model A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem registered_lexical_truth_conditions_from_model_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes registered_lexical_truth_conditions_from_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth.
+  exact H.
+Qed.
+
 Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=
   ModelInterpretable.
 
@@ -2119,6 +2264,62 @@ Proof.
   exact example_4_fully_registered_atomic_closure_truth.
 Qed.
 
+Theorem example_1_registered_lexical_truth_model_sound :
+  registered_lexical_model_denotes registered_lexical_truth_model PropT example_1.
+Proof.
+  apply registered_lexical_truth_model_denotes_fully_registered.
+  exact example_1_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_1_registered_lexical_truth_conditions_from_model_sound :
+  fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT example_1.
+Proof.
+  apply registered_lexical_truth_conditions_from_model_denote_fully_registered.
+  exact example_1_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_2_registered_lexical_truth_model_sound :
+  registered_lexical_model_denotes registered_lexical_truth_model Prop example_2.
+Proof.
+  apply registered_lexical_truth_model_denotes_fully_registered.
+  exact example_2_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_2_registered_lexical_truth_conditions_from_model_sound :
+  fully_registered_truth_denotes registered_lexical_truth_conditions_from_model Prop example_2.
+Proof.
+  apply registered_lexical_truth_conditions_from_model_denote_fully_registered.
+  exact example_2_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_3_registered_lexical_truth_model_sound :
+  registered_lexical_model_denotes registered_lexical_truth_model PropT example_3.
+Proof.
+  apply registered_lexical_truth_model_denotes_fully_registered.
+  exact example_3_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_3_registered_lexical_truth_conditions_from_model_sound :
+  fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT example_3.
+Proof.
+  apply registered_lexical_truth_conditions_from_model_denote_fully_registered.
+  exact example_3_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_4_registered_lexical_truth_model_sound :
+  registered_lexical_model_denotes registered_lexical_truth_model PropT example_4.
+Proof.
+  apply registered_lexical_truth_model_denotes_fully_registered.
+  exact example_4_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_4_registered_lexical_truth_conditions_from_model_sound :
+  fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT example_4.
+Proof.
+  apply registered_lexical_truth_conditions_from_model_denote_fully_registered.
+  exact example_4_fully_registered_atomic_closure_truth.
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -2214,6 +2415,8 @@ Check example_1_transition_refined_registered_truth_condition_sound.
 Check example_1_transition_refined_registered_truth_condition_atomic_sound.
 Check example_1_fully_registered_atomic_closure_truth.
 Check example_1_fully_registered_truth_condition_sound.
+Check example_1_registered_lexical_truth_model_sound.
+Check example_1_registered_lexical_truth_conditions_from_model_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
 Check registered_example_1_truth_instance_atomic_sound.
 Check example_2.
@@ -2241,6 +2444,8 @@ Check example_2_transition_refined_registered_truth_condition_sound.
 Check example_2_transition_refined_registered_truth_condition_atomic_sound.
 Check example_2_fully_registered_atomic_closure_truth.
 Check example_2_fully_registered_truth_condition_sound.
+Check example_2_registered_lexical_truth_model_sound.
+Check example_2_registered_lexical_truth_conditions_from_model_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
 Check registered_example_2_truth_instance_atomic_sound.
 Check example_3.
@@ -2268,6 +2473,8 @@ Check example_3_transition_refined_registered_truth_condition_sound.
 Check example_3_transition_refined_registered_truth_condition_atomic_sound.
 Check example_3_fully_registered_atomic_closure_truth.
 Check example_3_fully_registered_truth_condition_sound.
+Check example_3_registered_lexical_truth_model_sound.
+Check example_3_registered_lexical_truth_conditions_from_model_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
 Check registered_example_3_truth_instance_atomic_sound.
 Check example_4.
@@ -2295,7 +2502,13 @@ Check example_4_transition_refined_registered_truth_condition_sound.
 Check example_4_transition_refined_registered_truth_condition_atomic_sound.
 Check example_4_fully_registered_atomic_closure_truth.
 Check example_4_fully_registered_truth_condition_sound.
+Check example_4_registered_lexical_truth_model_sound.
+Check example_4_registered_lexical_truth_conditions_from_model_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
 Check registered_example_4_truth_instance_atomic_sound.
+Check registered_lexical_truth_model.
+Check registered_lexical_truth_model_exists.
+Check registered_lexical_truth_conditions_from_model.
+Check registered_lexical_truth_conditions_from_model_exists.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

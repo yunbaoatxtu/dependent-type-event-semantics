@@ -1627,6 +1627,30 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure RegisteredLexicalTruthModel : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def fully_registered_truth_conditions_from_registered_lexical_model",
+            lean_module,
+        )
+        self.assertIn(
+            "def registered_lexical_truth_model : RegisteredLexicalTruthModel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "def registered_lexical_truth_conditions_from_model : FullyRegisteredTruthConditionSpec :=",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem registered_lexical_truth_model_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem registered_lexical_truth_conditions_from_model_denote_fully_registered :",
+            lean_module,
+        )
+        self.assertIn(
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :=",
             lean_module,
         )
@@ -1767,6 +1791,14 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "theorem example_2_registered_lexical_truth_model_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem example_2_registered_lexical_truth_conditions_from_model_sound :",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
@@ -1841,6 +1873,14 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "apply registered_lexical_truth_model_denotes_fully_registered",
+            lean_module,
+        )
+        self.assertIn(
+            "apply registered_lexical_truth_conditions_from_model_denote_fully_registered",
+            lean_module,
+        )
+        self.assertIn(
             "exact registered_example_truth_instances.example_2_truth_instance",
             lean_module,
         )
@@ -1881,6 +1921,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("#check example_2_fully_registered_atomic_closure_truth", lean_module)
         self.assertIn("#check example_2_fully_registered_truth_condition_sound", lean_module)
         self.assertIn(
+            "#check example_2_registered_lexical_truth_model_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check example_2_registered_lexical_truth_conditions_from_model_sound",
+            lean_module,
+        )
+        self.assertIn(
             "#check example_2_fully_registered_truth_condition_atomic_sound",
             lean_module,
         )
@@ -1888,6 +1936,8 @@ class TranslatorTests(unittest.TestCase):
             "#check registered_example_2_truth_instance_atomic_sound",
             lean_module,
         )
+        self.assertIn("#check registered_lexical_truth_model", lean_module)
+        self.assertIn("#check registered_lexical_truth_conditions_from_model", lean_module)
         self.assertIn("#check registered_example_truth_instances", lean_module)
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
@@ -2276,6 +2326,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record RegisteredLexicalTruthModel : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition fully_registered_truth_conditions_from_registered_lexical_model",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition registered_lexical_truth_model : RegisteredLexicalTruthModel := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition registered_lexical_truth_conditions_from_model :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_lexical_truth_model_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_lexical_truth_conditions_from_model_denote_fully_registered :",
+            coq_module,
+        )
+        self.assertIn(
             "Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=",
             coq_module,
         )
@@ -2427,6 +2501,22 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_2_registered_lexical_truth_model_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "registered_lexical_model_denotes registered_lexical_truth_model PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_2_registered_lexical_truth_conditions_from_model_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_2_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_2.",
             coq_module,
         )
@@ -2517,6 +2607,14 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "  apply registered_lexical_truth_model_denotes_fully_registered.",
+            coq_module,
+        )
+        self.assertIn(
+            "  apply registered_lexical_truth_conditions_from_model_denote_fully_registered.",
+            coq_module,
+        )
+        self.assertIn(
             "  exact (example_2_truth_instance registered_example_truth_instances).",
             coq_module,
         )
@@ -2559,6 +2657,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("Check example_2_fully_registered_atomic_closure_truth.", coq_module)
         self.assertIn("Check example_2_fully_registered_truth_condition_sound.", coq_module)
         self.assertIn(
+            "Check example_2_registered_lexical_truth_model_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check example_2_registered_lexical_truth_conditions_from_model_sound.",
+            coq_module,
+        )
+        self.assertIn(
             "Check example_2_fully_registered_truth_condition_atomic_sound.",
             coq_module,
         )
@@ -2566,6 +2672,8 @@ class TranslatorTests(unittest.TestCase):
             "Check registered_example_2_truth_instance_atomic_sound.",
             coq_module,
         )
+        self.assertIn("Check registered_lexical_truth_model.", coq_module)
+        self.assertIn("Check registered_lexical_truth_conditions_from_model.", coq_module)
         self.assertIn("Check registered_example_truth_instances.", coq_module)
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
@@ -2662,12 +2770,26 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Theorem example_1_registered_lexical_truth_model_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem example_1_registered_lexical_truth_conditions_from_model_sound :",
+            coq_module,
+        )
+        self.assertIn(
             "Check registered_example_1_truth_instance_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn("Check example_1_registered_lexical_truth_model_sound.", coq_module)
+        self.assertIn(
+            "Check example_1_registered_lexical_truth_conditions_from_model_sound.",
             coq_module,
         )
         self.assertNotIn("Check example_2.", coq_module)
         self.assertNotIn("example_2_semantic_preservation_obligation", coq_module)
         self.assertNotIn("registered_example_2_truth_instance_atomic_sound", coq_module)
+        self.assertNotIn("example_2_registered_lexical_truth_model_sound", coq_module)
 
     def test_packaged_cli_exports_coq_module(self) -> None:
         completed = subprocess.run(
@@ -14900,6 +15022,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_transition_refined_atomic_closure_instance",
                 "coq_registered_truth_condition_spec_instance",
                 "coq_registered_lexical_truth_condition_spec_instance",
+                "coq_registered_lexical_truth_model_bridge",
                 "coq_registered_example_truth_instance_package",
                 "paper_docx_sync",
                 "web_and_api_contracts",

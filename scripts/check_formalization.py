@@ -318,6 +318,34 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_registered_lexical_truth_model_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_registered_lexical_truth_model_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_registered_lexical_truth_model_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_registered_lexical_truth_model_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_registered_lexical_truth_conditions_from_model_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_registered_lexical_truth_conditions_from_model_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_registered_lexical_truth_conditions_from_model_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_registered_lexical_truth_conditions_from_model_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -849,6 +877,46 @@ def main() -> None:
             and "Check registered_example_4_truth_instance_atomic_sound." in coq
             and "Check registered_example_truth_instances." in coq
         ),
+        "lean registered lexical truth model bridge": (
+            "structure RegisteredLexicalTruthModel : Type where" in lean
+            and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
+            in lean
+            and "def fully_registered_truth_conditions_from_registered_lexical_model"
+            in lean
+            and "def registered_lexical_truth_model : RegisteredLexicalTruthModel := {"
+            in lean
+            and "def registered_lexical_truth_conditions_from_model : "
+            "FullyRegisteredTruthConditionSpec :=" in lean
+            and "theorem registered_lexical_truth_model_exists :" in lean
+            and "theorem registered_lexical_truth_conditions_from_model_exists :"
+            in lean
+            and "theorem registered_lexical_truth_model_denotes_fully_registered :"
+            in lean
+            and "theorem registered_lexical_truth_conditions_from_model_denote_fully_registered :"
+            in lean
+            and "theorem registered_lexical_truth_conditions_from_model_imply_atomic_closure :"
+            in lean
+        ),
+        "coq registered lexical truth model bridge": (
+            "Record RegisteredLexicalTruthModel : Type := {" in coq
+            and "registered_lexical_model_denotes : forall A : Type, A -> Prop;"
+            in coq
+            and "Definition fully_registered_truth_conditions_from_registered_lexical_model"
+            in coq
+            and "Definition registered_lexical_truth_model : "
+            "RegisteredLexicalTruthModel := {|" in coq
+            and "Definition registered_lexical_truth_conditions_from_model :"
+            in coq
+            and "Theorem registered_lexical_truth_model_exists :" in coq
+            and "Theorem registered_lexical_truth_conditions_from_model_exists :"
+            in coq
+            and "Theorem registered_lexical_truth_model_denotes_fully_registered :"
+            in coq
+            and "Theorem registered_lexical_truth_conditions_from_model_denote_fully_registered :"
+            in coq
+            and "Theorem registered_lexical_truth_conditions_from_model_imply_atomic_closure :"
+            in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
@@ -1099,6 +1167,30 @@ def main() -> None:
             and "apply fully_registered_truth_conditions_imply_atomic_closure."
             in coq
         ),
+        "lean registered lexical truth model soundness proofs": (
+            lean_registered_lexical_truth_model_sound_count == lean_example_count
+            and lean_registered_lexical_truth_conditions_from_model_sound_count
+            == lean_example_count
+            and "#check example_4_registered_lexical_truth_model_sound" in lean
+            and "#check example_4_registered_lexical_truth_conditions_from_model_sound"
+            in lean
+            and "apply registered_lexical_truth_model_denotes_fully_registered"
+            in lean
+            and "apply registered_lexical_truth_conditions_from_model_denote_fully_registered"
+            in lean
+        ),
+        "coq registered lexical truth model soundness proofs": (
+            coq_registered_lexical_truth_model_sound_count == coq_example_count
+            and coq_registered_lexical_truth_conditions_from_model_sound_count
+            == coq_example_count
+            and "Check example_4_registered_lexical_truth_model_sound." in coq
+            and "Check example_4_registered_lexical_truth_conditions_from_model_sound."
+            in coq
+            and "apply registered_lexical_truth_model_denotes_fully_registered."
+            in coq
+            and "apply registered_lexical_truth_conditions_from_model_denote_fully_registered."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
@@ -1131,8 +1223,13 @@ def main() -> None:
             and "#check example_4_atomic_closure_truth_kernel_sound" in lean
             and "#check example_4_fully_registered_atomic_closure_truth" in lean
             and "#check example_4_fully_registered_truth_condition_sound" in lean
+            and "#check example_4_registered_lexical_truth_model_sound" in lean
+            and "#check example_4_registered_lexical_truth_conditions_from_model_sound"
+            in lean
             and "#check example_4_fully_registered_truth_condition_atomic_sound" in lean
             and "#check registered_example_4_truth_instance_atomic_sound" in lean
+            and "#check registered_lexical_truth_model" in lean
+            and "#check registered_lexical_truth_conditions_from_model" in lean
             and "#check registered_example_truth_instances" in lean
         ),
         "coq semantic preservation obligation checks": (
@@ -1155,8 +1252,13 @@ def main() -> None:
             and "Check example_4_atomic_closure_truth_kernel_sound." in coq
             and "Check example_4_fully_registered_atomic_closure_truth." in coq
             and "Check example_4_fully_registered_truth_condition_sound." in coq
+            and "Check example_4_registered_lexical_truth_model_sound." in coq
+            and "Check example_4_registered_lexical_truth_conditions_from_model_sound."
+            in coq
             and "Check example_4_fully_registered_truth_condition_atomic_sound." in coq
             and "Check registered_example_4_truth_instance_atomic_sound." in coq
+            and "Check registered_lexical_truth_model." in coq
+            and "Check registered_lexical_truth_conditions_from_model." in coq
             and "Check registered_example_truth_instances." in coq
         ),
         "lean transition state-scale signature": (

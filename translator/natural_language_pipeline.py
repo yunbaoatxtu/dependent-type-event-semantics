@@ -21039,6 +21039,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_registered_lexical_truth_model_bridge",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_registered_example_truth_instance_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21154,6 +21159,12 @@ def project_completion_status_payload(
                     "requires registered lexical-application evidence rather "
                     "than arbitrary lexical atoms, with per-example fully "
                     "registered truth-condition soundness checks. "
+                    "The newest model bridge factors that same registered "
+                    "fragment through a RegisteredLexicalTruthModel record, "
+                    "converts any such model into a "
+                    "FullyRegisteredTruthConditionSpec, instantiates the "
+                    "record with FullyRegisteredAtomicClosureTruth, and "
+                    "checks per-example model-induced soundness theorems. "
                     "It also packages those per-example fully registered "
                     "truth-condition proofs into a generated "
                     "RegisteredExampleTruthInstances record, proves the "

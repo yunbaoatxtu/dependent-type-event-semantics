@@ -5992,6 +5992,443 @@ def fully_registered_atomic_closure_proof_steps(
     return prove(term, {})
 
 
+def registered_lexical_truth_model_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure RegisteredLexicalTruthModel : Type where",
+            "  registered_lexical_model_denotes : (A : Type) -> A -> Prop",
+            "  registered_lexical_model_lexical_application : "
+            "(A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term -> "
+            "registered_lexical_model_denotes A term",
+        ]
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  registered_lexical_model_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> "
+                "registered_lexical_model_denotes Prop (P x)) -> "
+                f"registered_lexical_model_denotes Prop "
+                f"(Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  registered_lexical_model_repeat : (n : Nat) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (repeat n body)",
+                "  registered_lexical_model_at_T : (marker : Entity) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (at_T marker body)",
+                "  registered_lexical_model_during_T : (marker : Entity) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (during_T marker body)",
+                "  registered_lexical_model_before_T : (marker : Entity) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (before_T marker body)",
+                "  registered_lexical_model_after_T : (marker : Entity) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (after_T marker body)",
+                "  registered_lexical_model_until_T : (marker : Entity) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (until_T marker body)",
+                "  registered_lexical_model_since_T : (marker : Entity) -> "
+                "(body : PropT) -> registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (since_T marker body)",
+                "  registered_lexical_model_not_T : (body : PropT) -> "
+                "registered_lexical_model_denotes PropT body -> "
+                "registered_lexical_model_denotes PropT (not_T body)",
+                "  registered_lexical_model_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "registered_lexical_model_denotes TransitionT "
+                "(Transition theme scale source target)",
+                "  registered_lexical_model_cause : (causer : Entity) -> "
+                "(effect : TransitionT) -> "
+                "registered_lexical_model_denotes TransitionT effect -> "
+                "registered_lexical_model_denotes PropT (Cause causer effect)",
+                "",
+                "def fully_registered_truth_conditions_from_registered_lexical_model "
+                "(M : RegisteredLexicalTruthModel) : "
+                "FullyRegisteredTruthConditionSpec := {",
+                "  fully_registered_truth_denotes := "
+                "M.registered_lexical_model_denotes,",
+                "  fully_registered_truth_lexical_application := "
+                "M.registered_lexical_model_lexical_application,",
+            ]
+        )
+        bridge_fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            bridge_fields.append(
+                (
+                    f"fully_registered_truth_sigma_{type_name}",
+                    f"M.registered_lexical_model_sigma_{type_name}",
+                )
+            )
+        bridge_fields.extend(
+            [
+                ("fully_registered_truth_repeat", "M.registered_lexical_model_repeat"),
+                ("fully_registered_truth_at_T", "M.registered_lexical_model_at_T"),
+                ("fully_registered_truth_during_T", "M.registered_lexical_model_during_T"),
+                ("fully_registered_truth_before_T", "M.registered_lexical_model_before_T"),
+                ("fully_registered_truth_after_T", "M.registered_lexical_model_after_T"),
+                ("fully_registered_truth_until_T", "M.registered_lexical_model_until_T"),
+                ("fully_registered_truth_since_T", "M.registered_lexical_model_since_T"),
+                ("fully_registered_truth_not_T", "M.registered_lexical_model_not_T"),
+                ("fully_registered_truth_transition", "M.registered_lexical_model_transition"),
+                ("fully_registered_truth_cause", "M.registered_lexical_model_cause"),
+            ]
+        )
+        for index, (field, value) in enumerate(bridge_fields):
+            suffix = "," if index < len(bridge_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def registered_lexical_truth_model_denotes : "
+                "(A : Type) -> A -> Prop :=",
+                "  FullyRegisteredAtomicClosureTruth",
+                "",
+                "def registered_lexical_truth_model : "
+                "RegisteredLexicalTruthModel := {",
+                "  registered_lexical_model_denotes := "
+                "registered_lexical_truth_model_denotes,",
+                "  registered_lexical_model_lexical_application := "
+                "fun A term h => FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_lexical_application A term h,",
+            ]
+        )
+        model_fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            model_fields.append(
+                (
+                    f"registered_lexical_model_sigma_{type_name}",
+                    "fun P h => FullyRegisteredAtomicClosureTruth."
+                    f"fully_registered_atomic_truth_sigma_{type_name} P h",
+                )
+            )
+        model_fields.extend(
+            [
+                ("registered_lexical_model_repeat", "fun n body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_repeat n body h"),
+                ("registered_lexical_model_at_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_at_T marker body h"),
+                ("registered_lexical_model_during_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_during_T marker body h"),
+                ("registered_lexical_model_before_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_before_T marker body h"),
+                ("registered_lexical_model_after_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_after_T marker body h"),
+                ("registered_lexical_model_until_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_until_T marker body h"),
+                ("registered_lexical_model_since_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_since_T marker body h"),
+                ("registered_lexical_model_not_T", "fun body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_not_T body h"),
+                ("registered_lexical_model_transition", "fun theme scale source target h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_transition theme scale source target h"),
+                ("registered_lexical_model_cause", "fun causer effect h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_cause causer effect h"),
+            ]
+        )
+        for index, (field, value) in enumerate(model_fields):
+            suffix = "," if index < len(model_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def registered_lexical_truth_conditions_from_model : "
+                "FullyRegisteredTruthConditionSpec :=",
+                "  fully_registered_truth_conditions_from_registered_lexical_model "
+                "registered_lexical_truth_model",
+                "",
+                "theorem registered_lexical_truth_model_exists :",
+                "    Exists (fun M : RegisteredLexicalTruthModel => "
+                "M = registered_lexical_truth_model) := by",
+                "  exact Exists.intro registered_lexical_truth_model rfl",
+                "",
+                "theorem registered_lexical_truth_conditions_from_model_exists :",
+                "    Exists (fun F : FullyRegisteredTruthConditionSpec => "
+                "F = registered_lexical_truth_conditions_from_model) := by",
+                "  exact Exists.intro registered_lexical_truth_conditions_from_model rfl",
+                "",
+                "theorem registered_lexical_truth_model_denotes_fully_registered :",
+                "    (A : Type) -> (term : A) -> "
+                "FullyRegisteredAtomicClosureTruth A term -> "
+                "registered_lexical_truth_model."
+                "registered_lexical_model_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem "
+                "registered_lexical_truth_conditions_from_model_denote_fully_registered :",
+                "    (A : Type) -> (term : A) -> "
+                "FullyRegisteredAtomicClosureTruth A term -> "
+                "registered_lexical_truth_conditions_from_model."
+                "fully_registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem "
+                "registered_lexical_truth_conditions_from_model_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "registered_lexical_truth_conditions_from_model."
+                "fully_registered_truth_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record RegisteredLexicalTruthModel : Type := {",
+        "  registered_lexical_model_denotes : forall A : Type, A -> Prop;",
+        "  registered_lexical_model_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      registered_lexical_model_denotes A term;",
+    ]
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  registered_lexical_model_sigma_{type_name} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, "
+                "registered_lexical_model_denotes Prop (P x)) ->",
+                "      registered_lexical_model_denotes Prop "
+                f"(exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  registered_lexical_model_repeat : "
+            "forall n : nat, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (repeat n body);",
+            "  registered_lexical_model_at_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (at_T marker body);",
+            "  registered_lexical_model_during_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (during_T marker body);",
+            "  registered_lexical_model_before_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (before_T marker body);",
+            "  registered_lexical_model_after_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (after_T marker body);",
+            "  registered_lexical_model_until_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (until_T marker body);",
+            "  registered_lexical_model_since_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (since_T marker body);",
+            "  registered_lexical_model_not_T : forall body : PropT,",
+            "      registered_lexical_model_denotes PropT body ->",
+            "      registered_lexical_model_denotes PropT (not_T body);",
+            "  registered_lexical_model_transition : "
+            "forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      registered_lexical_model_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  registered_lexical_model_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      registered_lexical_model_denotes TransitionT effect ->",
+            "      registered_lexical_model_denotes PropT (Cause causer effect)",
+            "}.",
+            "",
+            "Definition fully_registered_truth_conditions_from_registered_lexical_model",
+            "  (M : RegisteredLexicalTruthModel) : FullyRegisteredTruthConditionSpec := {|",
+            "  fully_registered_truth_denotes := registered_lexical_model_denotes M;",
+            "  fully_registered_truth_lexical_application := "
+            "registered_lexical_model_lexical_application M;",
+        ]
+    )
+    bridge_fields = [
+        (f"fully_registered_truth_sigma_{type_name}", f"registered_lexical_model_sigma_{type_name} M")
+        for type_name in declarations["types"]
+    ]
+    bridge_fields.extend(
+        [
+            ("fully_registered_truth_repeat", "registered_lexical_model_repeat M"),
+            ("fully_registered_truth_at_T", "registered_lexical_model_at_T M"),
+            ("fully_registered_truth_during_T", "registered_lexical_model_during_T M"),
+            ("fully_registered_truth_before_T", "registered_lexical_model_before_T M"),
+            ("fully_registered_truth_after_T", "registered_lexical_model_after_T M"),
+            ("fully_registered_truth_until_T", "registered_lexical_model_until_T M"),
+            ("fully_registered_truth_since_T", "registered_lexical_model_since_T M"),
+            ("fully_registered_truth_not_T", "registered_lexical_model_not_T M"),
+            ("fully_registered_truth_transition", "registered_lexical_model_transition M"),
+            ("fully_registered_truth_cause", "registered_lexical_model_cause M"),
+        ]
+    )
+    for index, (field, value) in enumerate(bridge_fields):
+        suffix = ";" if index < len(bridge_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition registered_lexical_truth_model_denotes : "
+            "forall A : Type, A -> Prop :=",
+            "  FullyRegisteredAtomicClosureTruth.",
+            "",
+            "Definition registered_lexical_truth_model : "
+            "RegisteredLexicalTruthModel := {|",
+            "  registered_lexical_model_denotes := "
+            "registered_lexical_truth_model_denotes;",
+            "  registered_lexical_model_lexical_application := "
+            "fun A term h => "
+            "fully_registered_atomic_truth_lexical_application A term h;",
+        ]
+    )
+    model_fields = [
+        (
+            f"registered_lexical_model_sigma_{type_name}",
+            f"fun P h => fully_registered_atomic_truth_sigma_{type_name} P h",
+        )
+        for type_name in declarations["types"]
+    ]
+    model_fields.extend(
+        [
+            ("registered_lexical_model_repeat", "fun n body h => fully_registered_atomic_truth_repeat n body h"),
+            ("registered_lexical_model_at_T", "fun marker body h => fully_registered_atomic_truth_at_T marker body h"),
+            ("registered_lexical_model_during_T", "fun marker body h => fully_registered_atomic_truth_during_T marker body h"),
+            ("registered_lexical_model_before_T", "fun marker body h => fully_registered_atomic_truth_before_T marker body h"),
+            ("registered_lexical_model_after_T", "fun marker body h => fully_registered_atomic_truth_after_T marker body h"),
+            ("registered_lexical_model_until_T", "fun marker body h => fully_registered_atomic_truth_until_T marker body h"),
+            ("registered_lexical_model_since_T", "fun marker body h => fully_registered_atomic_truth_since_T marker body h"),
+            ("registered_lexical_model_not_T", "fun body h => fully_registered_atomic_truth_not_T body h"),
+            ("registered_lexical_model_transition", "fun theme scale source target h => fully_registered_atomic_truth_transition theme scale source target h"),
+            ("registered_lexical_model_cause", "fun causer effect h => fully_registered_atomic_truth_cause causer effect h"),
+        ]
+    )
+    for index, (field, value) in enumerate(model_fields):
+        suffix = ";" if index < len(model_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition registered_lexical_truth_conditions_from_model :",
+            "  FullyRegisteredTruthConditionSpec :=",
+            "  fully_registered_truth_conditions_from_registered_lexical_model",
+            "    registered_lexical_truth_model.",
+            "",
+            "Theorem registered_lexical_truth_model_exists :",
+            "  exists M : RegisteredLexicalTruthModel,",
+            "    M = registered_lexical_truth_model.",
+            "Proof.",
+            "  exists registered_lexical_truth_model. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem registered_lexical_truth_conditions_from_model_exists :",
+            "  exists F : FullyRegisteredTruthConditionSpec,",
+            "    F = registered_lexical_truth_conditions_from_model.",
+            "Proof.",
+            "  exists registered_lexical_truth_conditions_from_model. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem registered_lexical_truth_model_denotes_fully_registered :",
+            "  forall A : Type, forall term : A,",
+            "    FullyRegisteredAtomicClosureTruth A term ->",
+            "    registered_lexical_model_denotes registered_lexical_truth_model A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem registered_lexical_truth_conditions_from_model_denote_fully_registered :",
+            "  forall A : Type, forall term : A,",
+            "    FullyRegisteredAtomicClosureTruth A term ->",
+            "    fully_registered_truth_denotes "
+            "registered_lexical_truth_conditions_from_model A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem registered_lexical_truth_conditions_from_model_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes "
+            "registered_lexical_truth_conditions_from_model A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
+def registered_lexical_truth_model_example_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    lines: list[str] = []
+    if target == "lean":
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "theorem "
+                    f"example_{idx}_registered_lexical_truth_model_sound : "
+                    "registered_lexical_truth_model."
+                    "registered_lexical_model_denotes "
+                    f"{annotation} example_{idx} := by",
+                    "  apply registered_lexical_truth_model_denotes_fully_registered",
+                    f"  exact example_{idx}_fully_registered_atomic_closure_truth",
+                    "",
+                    "theorem "
+                    f"example_{idx}_registered_lexical_truth_conditions_from_model_sound : "
+                    "registered_lexical_truth_conditions_from_model."
+                    "fully_registered_truth_denotes "
+                    f"{annotation} example_{idx} := by",
+                    "  apply "
+                    "registered_lexical_truth_conditions_from_model_denote_fully_registered",
+                    f"  exact example_{idx}_fully_registered_atomic_closure_truth",
+                    "",
+                ]
+            )
+        if lines:
+            lines.pop()
+        return lines
+
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "Theorem "
+                f"example_{idx}_registered_lexical_truth_model_sound :",
+                "  registered_lexical_model_denotes registered_lexical_truth_model "
+                f"{annotation} example_{idx}.",
+                "Proof.",
+                "  apply registered_lexical_truth_model_denotes_fully_registered.",
+                f"  exact example_{idx}_fully_registered_atomic_closure_truth.",
+                "Qed.",
+                "",
+                "Theorem "
+                f"example_{idx}_registered_lexical_truth_conditions_from_model_sound :",
+                "  fully_registered_truth_denotes "
+                "registered_lexical_truth_conditions_from_model "
+                f"{annotation} example_{idx}.",
+                "Proof.",
+                "  apply registered_lexical_truth_conditions_from_model_denote_fully_registered.",
+                f"  exact example_{idx}_fully_registered_atomic_closure_truth.",
+                "Qed.",
+                "",
+            ]
+        )
+    if lines:
+        lines.pop()
+    return lines
+
+
 def registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -6523,6 +6960,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(registered_lexical_truth_condition_spec_lines(declarations, target))
         lines.append("")
+        lines.extend(registered_lexical_truth_model_lines(declarations, target))
+        lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
         lines.append("")
         lines.extend(syntax_directed_truth_kernel_instance_lines(declarations, target))
@@ -6837,6 +7276,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"  exact example_{idx}_fully_registered_atomic_closure_truth"
             )
         lines.append("")
+        lines.extend(registered_lexical_truth_model_example_lines(results, target))
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -6895,12 +7336,24 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
             lines.append(
                 "#check "
+                f"example_{idx}_registered_lexical_truth_model_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_registered_lexical_truth_conditions_from_model_sound"
+            )
+            lines.append(
+                "#check "
                 f"example_{idx}_fully_registered_truth_condition_atomic_sound"
             )
             lines.append(
                 "#check "
                 f"registered_example_{idx}_truth_instance_atomic_sound"
             )
+        lines.append("#check registered_lexical_truth_model")
+        lines.append("#check registered_lexical_truth_model_exists")
+        lines.append("#check registered_lexical_truth_conditions_from_model")
+        lines.append("#check registered_lexical_truth_conditions_from_model_exists")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -7013,6 +7466,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(registered_truth_condition_spec_lines(declarations, target))
     lines.append("")
     lines.extend(registered_lexical_truth_condition_spec_lines(declarations, target))
+    lines.append("")
+    lines.extend(registered_lexical_truth_model_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
     lines.append("")
@@ -7347,6 +7802,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_fully_registered_atomic_closure_truth.")
         lines.append("Qed.")
     lines.append("")
+    lines.extend(registered_lexical_truth_model_example_lines(results, target))
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -7395,12 +7852,24 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_fully_registered_truth_condition_sound.")
         lines.append(
             "Check "
+            f"example_{idx}_registered_lexical_truth_model_sound."
+        )
+        lines.append(
+            "Check "
+            f"example_{idx}_registered_lexical_truth_conditions_from_model_sound."
+        )
+        lines.append(
+            "Check "
             f"example_{idx}_fully_registered_truth_condition_atomic_sound."
         )
         lines.append(
             "Check "
             f"registered_example_{idx}_truth_instance_atomic_sound."
         )
+    lines.append("Check registered_lexical_truth_model.")
+    lines.append("Check registered_lexical_truth_model_exists.")
+    lines.append("Check registered_lexical_truth_conditions_from_model.")
+    lines.append("Check registered_lexical_truth_conditions_from_model_exists.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"
