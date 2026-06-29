@@ -192,7 +192,14 @@ record, builds `semantic_model_from_truth_conditions`, proves
 `tautological_truth_conditions` record, its induced `tautological_semantic_model`,
 an instance-existence theorem, and per-example
 `example_i_tautological_truth_condition_sound` checks. This stage verifies
-record inhabitation and wiring, not substantive truth conditions. The remaining blocker is
+record inhabitation and wiring, not substantive truth conditions. The next
+verified stage adds `coq_structural_truth_condition_instance`: a
+`structural_truth_conditions` record whose `truth_denotes` predicate is
+`ModelInterpretable`, its induced `structural_semantic_model`, an existence
+theorem, and per-example `example_i_structural_truth_condition_sound` checks.
+This is a non-tautological structural truth-condition instance, but it still
+does not provide independently specified lexical, temporal, causal,
+quantificational, or modifier truth clauses. The remaining blocker is
 `concrete_truth_condition_instances_unproved`, and the next Coq-facing stage is
 `provide_concrete_truth_condition_instances`: the generic truth-condition
 interface must be filled with independently specified lexical, temporal,

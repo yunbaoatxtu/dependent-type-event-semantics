@@ -980,11 +980,19 @@ interfaces export a `TruthConditionSpec` record, build
 per-example `example_i_tautological_truth_condition_sound` checks. This
 sanity instance proves that the generated truth-condition interface is
 inhabitable and wired through the examples; it is not a non-vacuous lexical,
-temporal, causal, quantificational, or modifier semantics. The open blocker is now
+temporal, causal, quantificational, or modifier semantics. The verified
+objective `coq_structural_truth_condition_instance` now adds a stricter
+`structural_truth_conditions` instance whose denotation predicate is
+`ModelInterpretable`, the induced `structural_semantic_model`, an existence
+theorem, and per-example `example_i_structural_truth_condition_sound` checks.
+This is no longer the all-terms-are-true sanity instance, but it is still a
+structural interface instance rather than an independently specified lexical
+or temporal model. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
-conditions rather than only proving the generic interface bridge.
+conditions rather than only proving the generic interface bridge or the
+structural `ModelInterpretable` instance.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

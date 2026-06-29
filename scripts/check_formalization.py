@@ -164,6 +164,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_structural_truth_condition_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_structural_truth_condition_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_structural_truth_condition_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_structural_truth_condition_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -285,6 +299,32 @@ def main() -> None:
             and "Theorem tautological_truth_conditions_denote_model_interpretable :"
             in coq
         ),
+        "lean structural truth condition instance": (
+            "def structural_truth_denotes : (A : Type) -> A -> Prop :="
+            in lean
+            and "  ModelInterpretable" in lean
+            and "def structural_truth_conditions : TruthConditionSpec := {"
+            in lean
+            and "truth_denotes := structural_truth_denotes" in lean
+            and "def structural_semantic_model : SemanticModel :="
+            in lean
+            and "theorem structural_truth_condition_spec_exists :" in lean
+            and "theorem structural_truth_conditions_denote_model_interpretable :"
+            in lean
+        ),
+        "coq structural truth condition instance": (
+            "Definition structural_truth_denotes : forall A : Type, A -> Prop :="
+            in coq
+            and "  ModelInterpretable." in coq
+            and "Definition structural_truth_conditions : TruthConditionSpec := {|"
+            in coq
+            and "truth_denotes := structural_truth_denotes" in coq
+            and "Definition structural_semantic_model : SemanticModel :="
+            in coq
+            and "Theorem structural_truth_condition_spec_exists :" in coq
+            and "Theorem structural_truth_conditions_denote_model_interpretable :"
+            in coq
+        ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
             and "structure SemanticPreservationObligation : Type where" in lean
@@ -380,6 +420,18 @@ def main() -> None:
             and "apply tautological_truth_conditions_denote_model_interpretable."
             in coq
         ),
+        "lean structural truth condition soundness proofs": (
+            lean_structural_truth_condition_sound_count == lean_example_count
+            and "#check example_4_structural_truth_condition_sound" in lean
+            and "apply structural_truth_conditions_denote_model_interpretable"
+            in lean
+        ),
+        "coq structural truth condition soundness proofs": (
+            coq_structural_truth_condition_sound_count == coq_example_count
+            and "Check example_4_structural_truth_condition_sound." in coq
+            and "apply structural_truth_conditions_denote_model_interpretable."
+            in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
@@ -390,6 +442,7 @@ def main() -> None:
             and "#check example_4_denotationally_sound" in lean
             and "#check example_4_truth_condition_sound" in lean
             and "#check example_4_tautological_truth_condition_sound" in lean
+            and "#check example_4_structural_truth_condition_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -401,6 +454,7 @@ def main() -> None:
             and "Check example_4_denotationally_sound." in coq
             and "Check example_4_truth_condition_sound." in coq
             and "Check example_4_tautological_truth_condition_sound." in coq
+            and "Check example_4_structural_truth_condition_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

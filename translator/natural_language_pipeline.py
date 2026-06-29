@@ -20969,6 +20969,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_structural_truth_condition_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21004,10 +21009,12 @@ def project_completion_status_payload(
                     "interface and proves that any such truth-condition spec "
                     "induces a SemanticModel. The scaffold now includes a "
                     "tautological TruthConditionSpec instance as a checked "
-                    "inhabitation and wiring sanity check. The remaining deep "
-                    "proof work is to replace that degenerate instance with "
-                    "concrete lexical, temporal, causal, quantificational, "
-                    "and modifier truth-condition instances."
+                    "inhabitation and wiring sanity check, and a structural "
+                    "TruthConditionSpec instance whose denotation predicate is "
+                    "ModelInterpretable rather than the trivial True predicate. "
+                    "The remaining deep proof work is to refine the structural "
+                    "instance into concrete lexical, temporal, causal, "
+                    "quantificational, and modifier truth-condition instances."
                 ),
             },
             {

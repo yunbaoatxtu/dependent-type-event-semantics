@@ -1752,6 +1752,114 @@ def truth_condition_instance_lines(
                 "  exact h",
             ]
         )
+        lines.append("")
+        structural_fields: list[tuple[str, str]] = [
+            ("truth_denotes", "structural_truth_denotes"),
+        ]
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            binders = " ".join(["n", "mods", *ordinary_args])
+            constructor_args = " ".join(["n", "mods", *ordinary_args])
+            structural_fields.append(
+                (
+                    truth_application_field(name),
+                    (
+                        f"fun {binders} => "
+                        f"ModelInterpretable.{model_application_constructor(name)} "
+                        f"{constructor_args}"
+                    ),
+                )
+            )
+        for type_name in declarations["types"]:
+            structural_fields.append(
+                (
+                    truth_sigma_field(type_name),
+                    f"fun P h => ModelInterpretable.{model_sigma_constructor(type_name)} P h",
+                )
+            )
+        structural_fields.extend(
+            [
+                (
+                    "truth_repeat",
+                    "fun n body h => ModelInterpretable.model_repeat n body h",
+                ),
+                (
+                    "truth_at_T",
+                    "fun marker body h => ModelInterpretable.model_at_T marker body h",
+                ),
+                (
+                    "truth_during_T",
+                    "fun marker body h => ModelInterpretable.model_during_T marker body h",
+                ),
+                (
+                    "truth_before_T",
+                    "fun marker body h => ModelInterpretable.model_before_T marker body h",
+                ),
+                (
+                    "truth_after_T",
+                    "fun marker body h => ModelInterpretable.model_after_T marker body h",
+                ),
+                (
+                    "truth_until_T",
+                    "fun marker body h => ModelInterpretable.model_until_T marker body h",
+                ),
+                (
+                    "truth_since_T",
+                    "fun marker body h => ModelInterpretable.model_since_T marker body h",
+                ),
+                (
+                    "truth_not_T",
+                    "fun body h => ModelInterpretable.model_not_T body h",
+                ),
+                (
+                    "truth_transition",
+                    "fun theme scale source target => "
+                    "ModelInterpretable.model_transition theme scale source target",
+                ),
+                (
+                    "truth_cause",
+                    "fun causer effect h => ModelInterpretable.model_cause causer effect h",
+                ),
+            ]
+        )
+        lines.extend(
+            [
+                "def structural_truth_denotes : (A : Type) -> A -> Prop :=",
+                "  ModelInterpretable",
+                "",
+                "def structural_truth_conditions : TruthConditionSpec := {",
+            ]
+        )
+        for index, (field, value) in enumerate(structural_fields):
+            suffix = "," if index < len(structural_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "def structural_semantic_model : SemanticModel :=",
+                "  semantic_model_from_truth_conditions structural_truth_conditions",
+                "",
+                "theorem structural_truth_condition_spec_exists :",
+                "    Exists (fun T : TruthConditionSpec => T = structural_truth_conditions) := by",
+                "  exact Exists.intro structural_truth_conditions rfl",
+                "",
+                "theorem structural_truth_conditions_denote_model_interpretable :",
+                "    (A : Type) -> (term : A) -> "
+                "ModelInterpretable A term -> "
+                "structural_truth_conditions.truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+            ]
+        )
         return lines
 
     fields: list[tuple[str, str]] = [
@@ -1810,6 +1918,83 @@ def truth_condition_instance_lines(
             "Proof.",
             "  intros A term H.",
             "  apply truth_conditions_induce_denotational_soundness.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    lines.append("")
+    structural_fields: list[tuple[str, str]] = [
+        ("truth_denotes", "structural_truth_denotes"),
+    ]
+    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        binders = " ".join(["n", "mods", *ordinary_args])
+        constructor_args = " ".join(["n", "mods", *ordinary_args])
+        structural_fields.append(
+            (
+                truth_application_field(name),
+                f"fun {binders} => {model_application_constructor(name)} {constructor_args}",
+            )
+        )
+    for type_name in declarations["types"]:
+        structural_fields.append(
+            (
+                truth_sigma_field(type_name),
+                f"fun P h => {model_sigma_constructor(type_name)} P h",
+            )
+        )
+    structural_fields.extend(
+        [
+            ("truth_repeat", "fun n body h => model_repeat n body h"),
+            ("truth_at_T", "fun marker body h => model_at_T marker body h"),
+            ("truth_during_T", "fun marker body h => model_during_T marker body h"),
+            ("truth_before_T", "fun marker body h => model_before_T marker body h"),
+            ("truth_after_T", "fun marker body h => model_after_T marker body h"),
+            ("truth_until_T", "fun marker body h => model_until_T marker body h"),
+            ("truth_since_T", "fun marker body h => model_since_T marker body h"),
+            ("truth_not_T", "fun body h => model_not_T body h"),
+            (
+                "truth_transition",
+                "fun theme scale source target => "
+                "model_transition theme scale source target",
+            ),
+            ("truth_cause", "fun causer effect h => model_cause causer effect h"),
+        ]
+    )
+    lines.extend(
+        [
+            "Definition structural_truth_denotes : forall A : Type, A -> Prop :=",
+            "  ModelInterpretable.",
+            "",
+            "Definition structural_truth_conditions : TruthConditionSpec := {|",
+        ]
+    )
+    for index, (field, value) in enumerate(structural_fields):
+        suffix = ";" if index < len(structural_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition structural_semantic_model : SemanticModel :=",
+            "  semantic_model_from_truth_conditions structural_truth_conditions.",
+            "",
+            "Theorem structural_truth_condition_spec_exists :",
+            "  exists T : TruthConditionSpec, T = structural_truth_conditions.",
+            "Proof.",
+            "  exists structural_truth_conditions. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem structural_truth_conditions_denote_model_interpretable :",
+            "  forall A : Type, forall term : A,",
+            "    ModelInterpretable A term ->",
+            "    truth_denotes structural_truth_conditions A term.",
+            "Proof.",
+            "  intros A term H.",
             "  exact H.",
             "Qed.",
         ]
@@ -2256,6 +2441,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append("  apply tautological_truth_conditions_denote_model_interpretable")
             lines.append(f"  exact example_{idx}_model_interpretable")
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_structural_truth_condition_sound : "
+                f"structural_truth_conditions.truth_denotes {annotation} example_{idx} := by"
+            )
+            lines.append("  apply structural_truth_conditions_denote_model_interpretable")
+            lines.append(f"  exact example_{idx}_model_interpretable")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -2267,6 +2462,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_denotationally_sound")
             lines.append(f"#check example_{idx}_truth_condition_sound")
             lines.append(f"#check example_{idx}_tautological_truth_condition_sound")
+            lines.append(f"#check example_{idx}_structural_truth_condition_sound")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -2474,6 +2670,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"  exact example_{idx}_model_interpretable.")
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_structural_truth_condition_sound : "
+            f"truth_denotes structural_truth_conditions {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply structural_truth_conditions_denote_model_interpretable.")
+        lines.append(f"  exact example_{idx}_model_interpretable.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -2485,6 +2693,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_denotationally_sound.")
         lines.append(f"Check example_{idx}_truth_condition_sound.")
         lines.append(f"Check example_{idx}_tautological_truth_condition_sound.")
+        lines.append(f"Check example_{idx}_structural_truth_condition_sound.")
     return "\n".join(lines) + "\n"
 
 

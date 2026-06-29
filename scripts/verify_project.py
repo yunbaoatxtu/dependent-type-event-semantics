@@ -10809,6 +10809,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_semantic_model_denotation_boundary",
         "coq_truth_condition_spec_bridge",
         "coq_tautological_truth_condition_instance",
+        "coq_structural_truth_condition_instance",
         "paper_docx_sync",
         "web_and_api_contracts",
     }

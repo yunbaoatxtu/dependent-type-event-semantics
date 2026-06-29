@@ -379,6 +379,50 @@ Proof.
   exact H.
 Qed.
 
+Definition structural_truth_denotes : forall A : Type, A -> Prop :=
+  ModelInterpretable.
+
+Definition structural_truth_conditions : TruthConditionSpec := {|
+  truth_denotes := structural_truth_denotes;
+  truth_break_application := fun n mods arg1 arg2 => model_break_application n mods arg1 arg2;
+  truth_butter_application := fun n mods arg1 arg2 => model_butter_application n mods arg1 arg2;
+  truth_eat_application := fun n mods arg1 arg2 => model_eat_application n mods arg1 arg2;
+  truth_knock_application := fun n mods arg1 => model_knock_application n mods arg1;
+  truth_sigma_Entity := fun P h => model_sigma_Entity P h;
+  truth_sigma_Food := fun P h => model_sigma_Food P h;
+  truth_sigma_State := fun P h => model_sigma_State P h;
+  truth_sigma_StateScale := fun P h => model_sigma_StateScale P h;
+  truth_sigma_TransitionT := fun P h => model_sigma_TransitionT P h;
+  truth_repeat := fun n body h => model_repeat n body h;
+  truth_at_T := fun marker body h => model_at_T marker body h;
+  truth_during_T := fun marker body h => model_during_T marker body h;
+  truth_before_T := fun marker body h => model_before_T marker body h;
+  truth_after_T := fun marker body h => model_after_T marker body h;
+  truth_until_T := fun marker body h => model_until_T marker body h;
+  truth_since_T := fun marker body h => model_since_T marker body h;
+  truth_not_T := fun body h => model_not_T body h;
+  truth_transition := fun theme scale source target => model_transition theme scale source target;
+  truth_cause := fun causer effect h => model_cause causer effect h
+|}.
+
+Definition structural_semantic_model : SemanticModel :=
+  semantic_model_from_truth_conditions structural_truth_conditions.
+
+Theorem structural_truth_condition_spec_exists :
+  exists T : TruthConditionSpec, T = structural_truth_conditions.
+Proof.
+  exists structural_truth_conditions. reflexivity.
+Qed.
+
+Theorem structural_truth_conditions_denote_model_interpretable :
+  forall A : Type, forall term : A,
+    ModelInterpretable A term ->
+    truth_denotes structural_truth_conditions A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
 Definition PreservationTargetMatches
   (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   obligation_statement target = SemanticPreservation A term.
@@ -550,6 +594,27 @@ Proof.
   exact example_4_model_interpretable.
 Qed.
 
+Theorem example_1_structural_truth_condition_sound : truth_denotes structural_truth_conditions PropT example_1.
+Proof.
+  apply structural_truth_conditions_denote_model_interpretable.
+  exact example_1_model_interpretable.
+Qed.
+Theorem example_2_structural_truth_condition_sound : truth_denotes structural_truth_conditions Prop example_2.
+Proof.
+  apply structural_truth_conditions_denote_model_interpretable.
+  exact example_2_model_interpretable.
+Qed.
+Theorem example_3_structural_truth_condition_sound : truth_denotes structural_truth_conditions PropT example_3.
+Proof.
+  apply structural_truth_conditions_denote_model_interpretable.
+  exact example_3_model_interpretable.
+Qed.
+Theorem example_4_structural_truth_condition_sound : truth_denotes structural_truth_conditions PropT example_4.
+Proof.
+  apply structural_truth_conditions_denote_model_interpretable.
+  exact example_4_model_interpretable.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -560,6 +625,7 @@ Check example_1_model_interpretable.
 Check example_1_denotationally_sound.
 Check example_1_truth_condition_sound.
 Check example_1_tautological_truth_condition_sound.
+Check example_1_structural_truth_condition_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -570,6 +636,7 @@ Check example_2_model_interpretable.
 Check example_2_denotationally_sound.
 Check example_2_truth_condition_sound.
 Check example_2_tautological_truth_condition_sound.
+Check example_2_structural_truth_condition_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -580,6 +647,7 @@ Check example_3_model_interpretable.
 Check example_3_denotationally_sound.
 Check example_3_truth_condition_sound.
 Check example_3_tautological_truth_condition_sound.
+Check example_3_structural_truth_condition_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -590,3 +658,4 @@ Check example_4_model_interpretable.
 Check example_4_denotationally_sound.
 Check example_4_truth_condition_sound.
 Check example_4_tautological_truth_condition_sound.
+Check example_4_structural_truth_condition_sound.
