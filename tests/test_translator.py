@@ -13442,6 +13442,58 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(counts["registered_variant_success_cases"], 79)
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
+        completion_status = manifest["completion_status"]
+        self.assertEqual(
+            completion_status["schema_version"],
+            "project_completion_status.v1",
+        )
+        self.assertFalse(completion_status["is_complete"])
+        self.assertEqual(
+            completion_status["completion_basis"],
+            "verified_fragment_not_full_goal",
+        )
+        self.assertEqual(completion_status["coverage_summary"], counts)
+        self.assertEqual(
+            {
+                item["id"]
+                for item in completion_status["verified_objectives"]
+            },
+            {
+                "registered_construction_fragment",
+                "semantic_snapshot_regression",
+                "coq_shallow_scaffold_boundary",
+                "paper_docx_sync",
+                "web_and_api_contracts",
+            },
+        )
+        self.assertEqual(
+            {
+                item["id"]
+                for item in completion_status["incomplete_objectives"]
+            },
+            {
+                "arbitrary_natural_language_semantics",
+                "deep_coq_semantic_proofs",
+                "unregistered_scope_attachment_discourse",
+                "complete_front_end_lexical_replacement",
+            },
+        )
+        self.assertIn(
+            "coq_boundary_shallow_scaffold_not_deep_proof",
+            completion_status["completion_blockers"],
+        )
+        self.assertIn(
+            "replace_shallow_coq_scaffold_with_named_theorem_obligations",
+            completion_status["next_recommended_stages"],
+        )
+        self.assertEqual(
+            next(
+                item
+                for item in completion_status["verified_objectives"]
+                if item["id"] == "registered_construction_fragment"
+            )["count"],
+            len(rules),
+        )
         modifier_contract = manifest["registered_modifier_sequence_contract"]
         self.assertEqual(
             modifier_contract["schema_version"],
@@ -14296,6 +14348,29 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "certified fallback gap drift"):
             validate_certified_fragment_manifest(manifest)
 
+    def test_verification_rejects_project_completion_status_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["is_complete"] = True
+        with self.assertRaisesRegex(SystemExit, "project completion boundary drift"):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["incomplete_objectives"] = []
+        with self.assertRaisesRegex(SystemExit, "incomplete objective drift"):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["completion_blockers"] = []
+        with self.assertRaisesRegex(SystemExit, "completion blocker drift"):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["coverage_summary"][
+            "registered_success_cases"
+        ] = -1
+        with self.assertRaisesRegex(SystemExit, "completion coverage summary drift"):
+            validate_certified_fragment_manifest(manifest)
+
     def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
         manifest = construction_fragment_manifest()
         fallback_sentence = manifest["coverage_matrix"]["fallback_success_cases"][0][
@@ -14847,6 +14922,7 @@ class TranslatorTests(unittest.TestCase):
             "data-modifier-sequence-role-source-derived",
             csv_attr(role_source_contract["derived_role_inventory"]),
         )
+        completion_status = manifest["completion_status"]
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -14862,6 +14938,41 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn('data-coverage-registered-variant-success-count="79"', page)
+        self.assertIn("completion status", page)
+        self.assertIn(
+            data_attr(
+                "data-completion-schema",
+                completion_status["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(data_attr("data-project-complete", "false"), page)
+        self.assertIn(
+            data_attr(
+                "data-completion-basis",
+                completion_status["completion_basis"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-completion-incomplete-count",
+                len(completion_status["incomplete_objectives"]),
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-completion-incomplete-objective="arbitrary_natural_language_semantics"',
+            page,
+        )
+        self.assertIn(
+            'data-completion-blocker="coq_boundary_shallow_scaffold_not_deep_proof"',
+            page,
+        )
+        self.assertIn(
+            'data-completion-next-stage="replace_shallow_coq_scaffold_with_named_theorem_obligations"',
+            page,
+        )
         self.assertIn(
             data_attr(
                 "data-modifier-sequence-contract-schema",
@@ -21444,7 +21555,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("after the singing of the Marseillaise", web_design)
         self.assertIn("registered universal timed burning success path", web_design)
         self.assertIn("In every burning, oxygen is consumed", web_design)
+        self.assertIn("`project_completion_status.v1`", web_design)
+        self.assertIn("`data-completion-*` hooks", web_design)
+        self.assertIn("arbitrary-natural-language", web_design)
+        self.assertIn("deep-Coq-proof", web_design)
         self.assertIn("registered_modifier_sequence_contract.v1", manuscript)
+        self.assertIn("project_completion_status.v1", manuscript)
+        self.assertIn("is_complete false", manuscript)
+        self.assertIn("incomplete_objectives for arbitrary natural-language semantics", manuscript)
+        self.assertIn("project-completion drift", manuscript)
         self.assertIn("dependent application modifier counts 0 through 11", manuscript)
         self.assertIn("ModifierSeq lengths match surface modifier lists", manuscript)
         self.assertIn("Goal, Instrument, Location, Manner, and Source", manuscript)
@@ -22385,6 +22504,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`registered_variant_success_cases`", readme)
         self.assertIn("`fallback_success_cases`", readme)
         self.assertIn("`rejected_unsupported_cases`", readme)
+        self.assertIn("`completion_status`", readme)
+        self.assertIn('"project_completion_status.v1"', readme)
+        self.assertIn("`is_complete: false`", readme)
+        self.assertIn("arbitrary", readme)
+        self.assertIn("natural-language semantics", readme)
+        self.assertIn("deep Coq semantic proofs", readme)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)

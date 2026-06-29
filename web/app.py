@@ -3351,6 +3351,29 @@ def certified_fragment_panel() -> str:
     )
     coverage = manifest.get("coverage_matrix", {})
     counts = manifest.get("coverage_matrix_counts", {})
+    completion_status = manifest.get("completion_status", {})
+    if not isinstance(completion_status, dict):
+        completion_status = {}
+    verified_objectives = [
+        item
+        for item in completion_status.get("verified_objectives", [])
+        if isinstance(item, dict)
+    ]
+    incomplete_objectives = [
+        item
+        for item in completion_status.get("incomplete_objectives", [])
+        if isinstance(item, dict)
+    ]
+    completion_blockers = [
+        item
+        for item in completion_status.get("completion_blockers", [])
+        if isinstance(item, str)
+    ]
+    next_recommended_stages = [
+        item
+        for item in completion_status.get("next_recommended_stages", [])
+        if isinstance(item, str)
+    ]
     semantic_snapshots = [
         item
         for item in manifest.get("semantic_snapshots", [])
@@ -3764,6 +3787,45 @@ def certified_fragment_panel() -> str:
         )
         for item in semantic_snapshots
     )
+    verified_objective_items = "".join(
+        (
+            '<li '
+            f'data-completion-verified-objective="{html.escape(str(item.get("id", "")), quote=True)}" '
+            f'data-completion-verified-status="{html.escape(str(item.get("status", "")), quote=True)}" '
+            f'data-completion-verified-evidence="{html.escape(str(item.get("evidence", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('id', '')))}</code>"
+            "</li>"
+        )
+        for item in verified_objectives
+    )
+    incomplete_objective_items = "".join(
+        (
+            '<li '
+            f'data-completion-incomplete-objective="{html.escape(str(item.get("id", "")), quote=True)}" '
+            f'data-completion-incomplete-status="{html.escape(str(item.get("status", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('id', '')))}</code>"
+            "</li>"
+        )
+        for item in incomplete_objectives
+    )
+    completion_blocker_items = "".join(
+        (
+            '<li '
+            f'data-completion-blocker="{html.escape(str(blocker), quote=True)}">'
+            f"<code>{html.escape(str(blocker))}</code>"
+            "</li>"
+        )
+        for blocker in completion_blockers
+    )
+    next_stage_items = "".join(
+        (
+            '<li '
+            f'data-completion-next-stage="{html.escape(str(stage), quote=True)}">'
+            f"<code>{html.escape(str(stage))}</code>"
+            "</li>"
+        )
+        for stage in next_recommended_stages
+    )
     surface_parser_items = "".join(
         (
             '<li '
@@ -3809,6 +3871,13 @@ def certified_fragment_panel() -> str:
         f'data-coverage-registered-variant-success-count="{html.escape(registered_variant_case_count, quote=True)}" '
         f'data-coverage-fallback-success-count="{html.escape(fallback_case_count, quote=True)}" '
         f'data-coverage-rejected-unsupported-count="{html.escape(rejected_case_count, quote=True)}" '
+        f'data-completion-schema="{html.escape(str(completion_status.get("schema_version", "")), quote=True)}" '
+        f'data-project-complete="{str(completion_status.get("is_complete") is True).lower()}" '
+        f'data-completion-basis="{html.escape(str(completion_status.get("completion_basis", "")), quote=True)}" '
+        f'data-completion-verified-count="{len(verified_objectives)}" '
+        f'data-completion-incomplete-count="{len(incomplete_objectives)}" '
+        f'data-completion-blocker-count="{len(completion_blockers)}" '
+        f'data-completion-next-stage-count="{len(next_recommended_stages)}" '
         'data-surface-parser-family="modified_transitive_adv_sequence" '
         f'data-surface-type-level-open-ended="{str(modified_surface.get("type_level_open_ended") is True).lower()}" '
         f'data-surface-parser-claim="{html.escape(str(modified_surface.get("surface_parser_claim", "")), quote=True)}" '
@@ -3871,6 +3940,8 @@ def certified_fragment_panel() -> str:
         f"<dt>registered variants</dt><dd>{html.escape(registered_variant_case_count)}</dd>"
         f"<dt>fallback cases</dt><dd>{html.escape(fallback_case_count)}</dd>"
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
+        f"<dt>project complete</dt><dd>{str(completion_status.get('is_complete') is True).lower()}</dd>"
+        f"<dt>completion basis</dt><dd><code>{html.escape(str(completion_status.get('completion_basis', '')))}</code></dd>"
         f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
         f"<dt>verified Adv counts</dt><dd><code>{html.escape(surface_verified_counts)}</code></dd>"
         f"<dt>surface generator</dt><dd><code>{html.escape(surface_generator_kind)}</code></dd>"
@@ -3909,6 +3980,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{surface_parser_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
         f"<ul>{semantic_snapshot_items}</ul></div>"
+        '<div class="certified-fragment-completion"><strong>completion status</strong>'
+        f"<ul>{verified_objective_items}{incomplete_objective_items}{completion_blocker_items}{next_stage_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'
         f"<ul>{marker_items}</ul></div>"
         "</div>"
@@ -4733,6 +4806,7 @@ def render_page(
     .certified-fragment-coverage,
     .certified-fragment-modifier-contract,
     .certified-fragment-snapshots,
+    .certified-fragment-completion,
     .certified-fragment-markers {{
       border-top: 1px solid var(--line);
       padding-top: 10px;
@@ -4746,6 +4820,7 @@ def render_page(
     .certified-fragment-coverage strong,
     .certified-fragment-modifier-contract strong,
     .certified-fragment-snapshots strong,
+    .certified-fragment-completion strong,
     .certified-fragment-markers strong {{
       display: block;
       margin-bottom: 8px;
@@ -4763,6 +4838,7 @@ def render_page(
     .certified-fragment-coverage ul,
     .certified-fragment-modifier-contract ul,
     .certified-fragment-snapshots ul,
+    .certified-fragment-completion ul,
     .certified-fragment-markers ul {{
       display: flex;
       flex-wrap: wrap;
@@ -4782,6 +4858,7 @@ def render_page(
     .certified-fragment-coverage li,
     .certified-fragment-modifier-contract li,
     .certified-fragment-snapshots li,
+    .certified-fragment-completion li,
     .certified-fragment-markers li {{
       border: 1px solid var(--line);
       border-radius: 6px;

@@ -945,6 +945,12 @@ the same length as the surface modifiers, nested vector tails must decrease to
 zero, modifier-role rows must be `Adv` rather than `Entity`, and the surface
 lexicon audit must match those roles. The verifier recomputes these facts from
 the live analyzer before accepting the certified-fragment manifest.
+The same manifest now carries `completion_status` with `schema_version:
+"project_completion_status.v1"`. It keeps `is_complete: false`, records the
+verified fragment objectives, lists still-open objectives such as arbitrary
+natural-language semantics and deep Coq semantic proofs, and advertises the next
+recommended stages. The verifier rejects drift in this object, so the project
+cannot accidentally present a finite registered fragment as the finished goal.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

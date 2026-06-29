@@ -10763,6 +10763,79 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: certified fallback coverage count drift")
     if counts.get("rejected_unsupported_cases") != len(rejected_cases):
         raise SystemExit("web route smoke check failed: certified rejected coverage count drift")
+    completion_status = manifest.get("completion_status")
+    if not isinstance(completion_status, dict):
+        raise SystemExit("web route smoke check failed: completion status missing")
+    if completion_status.get("schema_version") != "project_completion_status.v1":
+        raise SystemExit("web route smoke check failed: completion status schema drift")
+    if completion_status.get("is_complete") is not False:
+        raise SystemExit("web route smoke check failed: project completion boundary drift")
+    if completion_status.get("completion_basis") != "verified_fragment_not_full_goal":
+        raise SystemExit("web route smoke check failed: completion basis drift")
+    verified_objectives = completion_status.get("verified_objectives")
+    incomplete_objectives = completion_status.get("incomplete_objectives")
+    completion_blockers = completion_status.get("completion_blockers")
+    next_recommended_stages = completion_status.get("next_recommended_stages")
+    if (
+        not isinstance(verified_objectives, list)
+        or not isinstance(incomplete_objectives, list)
+        or not isinstance(completion_blockers, list)
+        or not isinstance(next_recommended_stages, list)
+    ):
+        raise SystemExit("web route smoke check failed: completion status shape drift")
+    if any(not isinstance(item, str) for item in completion_blockers):
+        raise SystemExit("web route smoke check failed: completion blocker shape drift")
+    if any(not isinstance(item, str) for item in next_recommended_stages):
+        raise SystemExit("web route smoke check failed: next completion stage shape drift")
+    verified_by_id = {
+        item.get("id"): item
+        for item in verified_objectives
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    incomplete_by_id = {
+        item.get("id"): item
+        for item in incomplete_objectives
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    required_verified_ids = {
+        "registered_construction_fragment",
+        "semantic_snapshot_regression",
+        "coq_shallow_scaffold_boundary",
+        "paper_docx_sync",
+        "web_and_api_contracts",
+    }
+    required_incomplete_ids = {
+        "arbitrary_natural_language_semantics",
+        "deep_coq_semantic_proofs",
+        "unregistered_scope_attachment_discourse",
+        "complete_front_end_lexical_replacement",
+    }
+    required_blockers = {
+        "full_natural_language_certification_false",
+        "surface_parser_claim_registered_examples_only",
+        "fallback_certification_level_shallow_scaffold",
+        "coq_boundary_shallow_scaffold_not_deep_proof",
+    }
+    required_next_stages = {
+        "promote_more_fallback_successes_to_registered_constructions",
+        "replace_shallow_coq_scaffold_with_named_theorem_obligations",
+        "expand_scope_attachment_discourse_coverage",
+        "separate_parser_coverage_claims_from_semantic_translation_claims",
+    }
+    if set(verified_by_id) != required_verified_ids:
+        raise SystemExit("web route smoke check failed: verified objective drift")
+    if set(incomplete_by_id) != required_incomplete_ids:
+        raise SystemExit("web route smoke check failed: incomplete objective drift")
+    if set(completion_blockers) != required_blockers:
+        raise SystemExit("web route smoke check failed: completion blocker drift")
+    if set(next_recommended_stages) != required_next_stages:
+        raise SystemExit("web route smoke check failed: next completion stage drift")
+    if verified_by_id["registered_construction_fragment"].get("count") != len(rules):
+        raise SystemExit("web route smoke check failed: registered completion evidence drift")
+    if verified_by_id["semantic_snapshot_regression"].get("count") != len(snapshots):
+        raise SystemExit("web route smoke check failed: semantic snapshot completion evidence drift")
+    if completion_status.get("coverage_summary") != counts:
+        raise SystemExit("web route smoke check failed: completion coverage summary drift")
     modifier_contract = manifest.get("registered_modifier_sequence_contract")
     expected_modifier_invariants = [
         "modifier_vector_length_matches_modifiers",
@@ -11630,6 +11703,29 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     surface_parser_coverage = manifest.get("surface_parser_coverage")
     if not isinstance(surface_parser_coverage, dict):
         surface_parser_coverage = {}
+    completion_status = manifest.get("completion_status")
+    if not isinstance(completion_status, dict):
+        completion_status = {}
+    verified_objectives = [
+        item
+        for item in completion_status.get("verified_objectives", [])
+        if isinstance(item, dict)
+    ]
+    incomplete_objectives = [
+        item
+        for item in completion_status.get("incomplete_objectives", [])
+        if isinstance(item, dict)
+    ]
+    completion_blockers = [
+        item
+        for item in completion_status.get("completion_blockers", [])
+        if isinstance(item, str)
+    ]
+    next_recommended_stages = [
+        item
+        for item in completion_status.get("next_recommended_stages", [])
+        if isinstance(item, str)
+    ]
     surface_family_names = [
         family
         for family, item in surface_parser_coverage.items()
@@ -11716,6 +11812,22 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             'data-coverage-rejected-unsupported-count="'
             f'{manifest.get("coverage_matrix_counts", {}).get("rejected_unsupported_cases")}"'
         ),
+        data_fragment(
+            "data-completion-schema",
+            completion_status.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-project-complete",
+            str(completion_status.get("is_complete") is True).lower(),
+        ),
+        data_fragment(
+            "data-completion-basis",
+            completion_status.get("completion_basis", ""),
+        ),
+        data_fragment("data-completion-verified-count", len(verified_objectives)),
+        data_fragment("data-completion-incomplete-count", len(incomplete_objectives)),
+        data_fragment("data-completion-blocker-count", len(completion_blockers)),
+        data_fragment("data-completion-next-stage-count", len(next_recommended_stages)),
         data_fragment("data-surface-parser-family", surface_family_name),
         data_fragment(
             "data-surface-type-level-open-ended",
@@ -11901,8 +12013,25 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
         "surface parser coverage",
+        "completion status",
         "<h2>Certified Fragment</h2>",
     ]
+    expected_fragments.extend(
+        data_fragment("data-completion-verified-objective", item.get("id", ""))
+        for item in verified_objectives
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-incomplete-objective", item.get("id", ""))
+        for item in incomplete_objectives
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-blocker", blocker)
+        for blocker in completion_blockers
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-next-stage", stage)
+        for stage in next_recommended_stages
+    )
     expected_fragments.extend(
         data_fragment("data-modifier-sequence-role", item.get("role", ""))
         for item in modifier_role_inventory

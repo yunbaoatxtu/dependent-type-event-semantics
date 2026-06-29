@@ -161,6 +161,12 @@ each registered rule id through `data-certified-rule-id`. It also exposes each
 fallback gap through `data-fallback-gap-id`, which gives smoke tests a stable
 hook for checking that shallow fallback success is not presented as a completed
 certification result.
+The manifest and panel should also expose a `project_completion_status.v1`
+`completion_status` object. Its `is_complete` flag should remain false while
+the system is a certified finite fragment, and its verified objectives,
+incomplete objectives, blockers, and next-stage rows should be mirrored through
+`data-completion-*` hooks. The verifier should reject any drift that removes
+the arbitrary-natural-language or deep-Coq-proof open objectives.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application

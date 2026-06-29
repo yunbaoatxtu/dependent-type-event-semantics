@@ -20826,6 +20826,12 @@ def construction_fragment_manifest() -> dict[str, Any]:
     rejected_unsupported_cases = [
         dict(example) for example in UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES
     ]
+    coverage_matrix_counts = {
+        "registered_success_cases": len(registered_success_cases),
+        "registered_variant_success_cases": len(registered_variant_success_cases),
+        "fallback_success_cases": len(fallback_success_cases),
+        "rejected_unsupported_cases": len(rejected_unsupported_cases),
+    }
     semantic_snapshots = []
     for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS:
         snapshot_copy = copy.deepcopy(snapshot)
@@ -20871,12 +20877,12 @@ def construction_fragment_manifest() -> dict[str, Any]:
             "fallback_success_cases": fallback_success_cases,
             "rejected_unsupported_cases": rejected_unsupported_cases,
         },
-        "coverage_matrix_counts": {
-            "registered_success_cases": len(registered_success_cases),
-            "registered_variant_success_cases": len(registered_variant_success_cases),
-            "fallback_success_cases": len(fallback_success_cases),
-            "rejected_unsupported_cases": len(rejected_unsupported_cases),
-        },
+        "coverage_matrix_counts": coverage_matrix_counts,
+        "completion_status": project_completion_status_payload(
+            registered_rule_count=len(registered),
+            semantic_snapshot_count=len(semantic_snapshots),
+            coverage_matrix_counts=coverage_matrix_counts,
+        ),
         "rejected_fragment_markers": sorted(UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS),
         "scope_determiners": {
             "existential": sorted(EXISTENTIAL_SCOPE_DETERMINERS),
@@ -20887,6 +20893,95 @@ def construction_fragment_manifest() -> dict[str, Any]:
             "A successful fallback analysis is intentionally weaker than a "
             "registered construction-rule success."
         ),
+    }
+
+
+def project_completion_status_payload(
+    *,
+    registered_rule_count: int,
+    semantic_snapshot_count: int,
+    coverage_matrix_counts: dict[str, int],
+) -> dict[str, Any]:
+    return {
+        "schema_version": "project_completion_status.v1",
+        "is_complete": False,
+        "completion_basis": "verified_fragment_not_full_goal",
+        "verified_objectives": [
+            {
+                "id": "registered_construction_fragment",
+                "status": "verified",
+                "evidence": "registered_construction_count",
+                "count": registered_rule_count,
+            },
+            {
+                "id": "semantic_snapshot_regression",
+                "status": "verified",
+                "evidence": "semantic_snapshot_count",
+                "count": semantic_snapshot_count,
+            },
+            {
+                "id": "coq_shallow_scaffold_boundary",
+                "status": "verified_when_toolchain_available",
+                "evidence": "scripts/verify_project.py --require-coq",
+            },
+            {
+                "id": "paper_docx_sync",
+                "status": "verified",
+                "evidence": "scripts/check_paper_docx_sync.py",
+            },
+            {
+                "id": "web_and_api_contracts",
+                "status": "verified",
+                "evidence": "web_route_smoke_check",
+            },
+        ],
+        "incomplete_objectives": [
+            {
+                "id": "arbitrary_natural_language_semantics",
+                "status": "open",
+                "reason": (
+                    "The certified parser claim remains registered_examples_only, "
+                    "not arbitrary English coverage."
+                ),
+            },
+            {
+                "id": "deep_coq_semantic_proofs",
+                "status": "open",
+                "reason": (
+                    "Coq/Rocq currently checks a shallow exported scaffold rather "
+                    "than a full theorem development for semantic preservation."
+                ),
+            },
+            {
+                "id": "unregistered_scope_attachment_discourse",
+                "status": "open",
+                "reason": (
+                    "Fallback analyses explicitly do not certify unregistered "
+                    "scope, attachment, or discourse ambiguities."
+                ),
+            },
+            {
+                "id": "complete_front_end_lexical_replacement",
+                "status": "open",
+                "reason": (
+                    "Surface slot and matrix probes are finite audited witnesses, "
+                    "not proof of arbitrary lexical replacement."
+                ),
+            },
+        ],
+        "completion_blockers": [
+            "full_natural_language_certification_false",
+            "surface_parser_claim_registered_examples_only",
+            "fallback_certification_level_shallow_scaffold",
+            "coq_boundary_shallow_scaffold_not_deep_proof",
+        ],
+        "next_recommended_stages": [
+            "promote_more_fallback_successes_to_registered_constructions",
+            "replace_shallow_coq_scaffold_with_named_theorem_obligations",
+            "expand_scope_attachment_discourse_coverage",
+            "separate_parser_coverage_claims_from_semantic_translation_claims",
+        ],
+        "coverage_summary": dict(coverage_matrix_counts),
     }
 
 
