@@ -1392,7 +1392,15 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
-            "constant AtomicBaseTruth : (A : Type) -> A -> Prop",
+            "inductive AtomicBaseTruth : (A : Type) -> A -> Prop where",
+            lean_module,
+        )
+        self.assertIn(
+            "| atomic_base_truth_eat_application : (n : Nat)",
+            lean_module,
+        )
+        self.assertIn(
+            "| atomic_base_truth_transition : (theme : Entity)",
             lean_module,
         )
         self.assertIn("structure AtomicTruthFacts : Type where", lean_module)
@@ -1401,7 +1409,15 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
-            "constant atomic_truth_facts : AtomicTruthFacts",
+            "def atomic_truth_facts : AtomicTruthFacts := {",
+            lean_module,
+        )
+        self.assertIn(
+            "AtomicBaseTruth.atomic_base_truth_eat_application",
+            lean_module,
+        )
+        self.assertIn(
+            "AtomicBaseTruth.atomic_base_truth_transition",
             lean_module,
         )
         self.assertIn(
@@ -1748,7 +1764,15 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
-            "Parameter AtomicBaseTruth : forall A : Type, A -> Prop.",
+            "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=",
+            coq_module,
+        )
+        self.assertIn(
+            "atomic_base_truth_eat_application : forall n : nat",
+            coq_module,
+        )
+        self.assertIn(
+            "atomic_base_truth_transition : forall theme : Entity",
             coq_module,
         )
         self.assertIn("Record AtomicTruthFacts : Type := {", coq_module)
@@ -1757,7 +1781,15 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
-            "Parameter atomic_truth_facts : AtomicTruthFacts.",
+            "Definition atomic_truth_facts : AtomicTruthFacts := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "atomic_base_truth_eat_application n mods arg1 arg2",
+            coq_module,
+        )
+        self.assertIn(
+            "atomic_base_truth_transition theme scale source target",
             coq_module,
         )
         self.assertIn(
@@ -14276,6 +14308,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_syntax_directed_truth_kernel_instance",
                 "coq_primitive_truth_assumption_kernel_instance",
                 "coq_atomic_closure_truth_kernel_instance",
+                "coq_atomic_base_truth_valuation_instance",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },

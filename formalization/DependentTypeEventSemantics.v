@@ -607,7 +607,17 @@ Proof.
   exact H.
 Qed.
 
-Parameter AtomicBaseTruth : forall A : Type, A -> Prop.
+Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=
+  | atomic_base_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      AtomicBaseTruth PropT (break n mods arg1 arg2)
+  | atomic_base_truth_butter_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      AtomicBaseTruth PropT (butter n mods arg1 arg2)
+  | atomic_base_truth_eat_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Food,
+      AtomicBaseTruth Prop (eat n mods arg1 arg2)
+  | atomic_base_truth_knock_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity,
+      AtomicBaseTruth PropT (knock n mods arg1)
+  | atomic_base_truth_transition : forall theme : Entity, forall scale : StateScale, forall source : State, forall target : State,
+      AtomicBaseTruth TransitionT (Transition theme scale source target).
 
 Record AtomicTruthFacts : Type := {
   atomic_lexical_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
@@ -622,7 +632,13 @@ Record AtomicTruthFacts : Type := {
       AtomicBaseTruth TransitionT (Transition theme scale source target)
 }.
 
-Parameter atomic_truth_facts : AtomicTruthFacts.
+Definition atomic_truth_facts : AtomicTruthFacts := {|
+  atomic_lexical_truth_break_application := fun n mods arg1 arg2 => atomic_base_truth_break_application n mods arg1 arg2;
+  atomic_lexical_truth_butter_application := fun n mods arg1 arg2 => atomic_base_truth_butter_application n mods arg1 arg2;
+  atomic_lexical_truth_eat_application := fun n mods arg1 arg2 => atomic_base_truth_eat_application n mods arg1 arg2;
+  atomic_lexical_truth_knock_application := fun n mods arg1 => atomic_base_truth_knock_application n mods arg1;
+  atomic_transition_truth := fun theme scale source target => atomic_base_truth_transition theme scale source target
+|}.
 
 Inductive AtomicClosureTruth : forall A : Type, A -> Prop :=
   | atomic_closure_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,

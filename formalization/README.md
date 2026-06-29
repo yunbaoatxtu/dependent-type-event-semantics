@@ -110,9 +110,12 @@ is `AtomicClosureTruth`: the generated files declare `AtomicBaseTruth` and
 cause through checked constructors, build `atomic_closure_truth_kernel`, and
 check both `example_i_atomic_closure_truth` and
 `example_i_atomic_closure_truth_kernel_sound` for every exported example. This
-narrows the remaining assumptions to atom-level lexical and transition facts
-without claiming that those facts have already been derived from a full
-semantic model.
+narrows the remaining assumptions to atom-level lexical and transition facts.
+The atom layer is now also less opaque: `AtomicBaseTruth` is generated as an
+inductive base-valuation relation, and `atomic_truth_facts` is a concrete
+record assembled from its constructors. This still does not claim that the
+lexical and transition constructors have been derived from a full semantic
+model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

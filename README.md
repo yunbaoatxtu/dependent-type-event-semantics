@@ -1029,7 +1029,11 @@ introduces `AtomicBaseTruth`, `AtomicTruthFacts`, `AtomicClosureTruth`, and an
 remain atom-level facts, while Sigma, repetition, temporal operators,
 negation, and `Cause` are closed by checked constructors. Each exported example
 receives both `example_i_atomic_closure_truth` and
-`example_i_atomic_closure_truth_kernel_sound` checks. The open blocker remains
+`example_i_atomic_closure_truth_kernel_sound` checks. The follow-up verified
+objective `coq_atomic_base_truth_valuation_instance` now makes
+`AtomicBaseTruth` an inductive base-valuation relation and defines
+`atomic_truth_facts` from its constructors, rather than leaving the atomic fact
+record as an opaque parameter. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth

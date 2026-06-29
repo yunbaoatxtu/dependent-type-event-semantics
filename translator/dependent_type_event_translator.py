@@ -1017,6 +1017,10 @@ def atomic_truth_application_field(function: str) -> str:
     return f"atomic_lexical_truth_{function}_application"
 
 
+def atomic_base_truth_application_constructor(function: str) -> str:
+    return f"atomic_base_truth_{function}_application"
+
+
 def atomic_closure_application_constructor(function: str) -> str:
     return f"atomic_closure_truth_{function}_application"
 
@@ -1359,6 +1363,52 @@ def _lean_function_atomic_truth_field(
         application_args.append(arg_name)
     return (
         f"  {atomic_truth_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [
+                f"AtomicBaseTruth {result_type} "
+                f"({name} {' '.join(application_args)})"
+            ]
+        )
+    )
+
+
+def _coq_function_atomic_base_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  | {atomic_base_truth_application_constructor(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"AtomicBaseTruth {result_type} "
+        + f"({name} {' '.join(application_args)})",
+    ]
+
+
+def _lean_function_atomic_base_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  | {atomic_base_truth_application_constructor(name)} : "
         + " -> ".join(
             binders
             + [
@@ -2433,10 +2483,21 @@ def atomic_closure_truth_kernel_lines(
 ) -> list[str]:
     if target == "lean":
         lines = [
-            "constant AtomicBaseTruth : (A : Type) -> A -> Prop",
-            "",
-            "structure AtomicTruthFacts : Type where",
+            "inductive AtomicBaseTruth : (A : Type) -> A -> Prop where",
         ]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_atomic_base_constructor(name, arg_types, result_type)
+            )
+        lines.extend(
+            [
+                "  | atomic_base_truth_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "AtomicBaseTruth TransitionT (Transition theme scale source target)",
+                "",
+                "structure AtomicTruthFacts : Type where",
+            ]
+        )
         for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
             lines.append(_lean_function_atomic_truth_field(name, arg_types, result_type))
         lines.extend(
@@ -2445,8 +2506,46 @@ def atomic_closure_truth_kernel_lines(
                 "(scale : StateScale) -> (source : State) -> (target : State) -> "
                 "AtomicBaseTruth TransitionT (Transition theme scale source target)",
                 "",
-                "constant atomic_truth_facts : AtomicTruthFacts",
-                "",
+                "def atomic_truth_facts : AtomicTruthFacts := {",
+            ]
+        )
+        atomic_fact_fields: list[tuple[str, str]] = []
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            binders = " ".join(["n", "mods", *ordinary_args])
+            constructor_args = " ".join(["n", "mods", *ordinary_args])
+            atomic_fact_fields.append(
+                (
+                    atomic_truth_application_field(name),
+                    (
+                        f"fun {binders} => "
+                        f"AtomicBaseTruth.{atomic_base_truth_application_constructor(name)} "
+                        f"{constructor_args}"
+                    ),
+                )
+            )
+        atomic_fact_fields.append(
+            (
+                "atomic_transition_truth",
+                "fun theme scale source target => "
+                "AtomicBaseTruth.atomic_base_truth_transition theme scale source target",
+            )
+        )
+        for index, (field, value) in enumerate(atomic_fact_fields):
+            suffix = "," if index < len(atomic_fact_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+            "",
                 "inductive AtomicClosureTruth : (A : Type) -> A -> Prop where",
             ]
         )
@@ -2616,10 +2715,32 @@ def atomic_closure_truth_kernel_lines(
         return lines
 
     lines = [
-        "Parameter AtomicBaseTruth : forall A : Type, A -> Prop.",
-        "",
-        "Record AtomicTruthFacts : Type := {",
+        "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=",
     ]
+    atomic_base_constructors: list[str] = []
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        atomic_base_constructors.extend(
+            _coq_function_atomic_base_constructor(name, arg_types, result_type)
+        )
+    atomic_base_constructors.extend(
+        [
+            "  | atomic_base_truth_transition : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      AtomicBaseTruth TransitionT "
+            "(Transition theme scale source target)",
+        ]
+    )
+    if not atomic_base_constructors:
+        raise ValueError("Cannot emit an empty AtomicBaseTruth relation")
+    atomic_base_constructors[-1] += "."
+    lines.extend(atomic_base_constructors)
+    lines.extend(
+        [
+            "",
+        "Record AtomicTruthFacts : Type := {",
+        ]
+    )
     for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
         lines.extend(_coq_function_atomic_truth_field(name, arg_types, result_type))
     lines.extend(
@@ -2631,7 +2752,41 @@ def atomic_closure_truth_kernel_lines(
             "(Transition theme scale source target)",
             "}.",
             "",
-            "Parameter atomic_truth_facts : AtomicTruthFacts.",
+            "Definition atomic_truth_facts : AtomicTruthFacts := {|",
+        ]
+    )
+    atomic_fact_fields = []
+    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        binders = " ".join(["n", "mods", *ordinary_args])
+        constructor_args = " ".join(["n", "mods", *ordinary_args])
+        atomic_fact_fields.append(
+            (
+                atomic_truth_application_field(name),
+                (
+                    f"fun {binders} => "
+                    f"{atomic_base_truth_application_constructor(name)} "
+                    f"{constructor_args}"
+                ),
+            )
+        )
+    atomic_fact_fields.append(
+        (
+            "atomic_transition_truth",
+            "fun theme scale source target => "
+            "atomic_base_truth_transition theme scale source target",
+        )
+    )
+    for index, (field, value) in enumerate(atomic_fact_fields):
+        suffix = ";" if index < len(atomic_fact_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
             "",
             "Inductive AtomicClosureTruth : forall A : Type, A -> Prop :=",
         ]

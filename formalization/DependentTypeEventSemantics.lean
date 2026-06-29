@@ -336,7 +336,12 @@ theorem primitive_truth_kernel_denotes_model_interpretable :
   apply concrete_kernel_induces_truth_condition_soundness
   exact h
 
-constant AtomicBaseTruth : (A : Type) -> A -> Prop
+inductive AtomicBaseTruth : (A : Type) -> A -> Prop where
+  | atomic_base_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (break n mods arg1 arg2)
+  | atomic_base_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (butter n mods arg1 arg2)
+  | atomic_base_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> AtomicBaseTruth Prop (eat n mods arg1 arg2)
+  | atomic_base_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> AtomicBaseTruth PropT (knock n mods arg1)
+  | atomic_base_truth_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> AtomicBaseTruth TransitionT (Transition theme scale source target)
 
 structure AtomicTruthFacts : Type where
   atomic_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (break n mods arg1 arg2)
@@ -345,7 +350,13 @@ structure AtomicTruthFacts : Type where
   atomic_lexical_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> AtomicBaseTruth PropT (knock n mods arg1)
   atomic_transition_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> AtomicBaseTruth TransitionT (Transition theme scale source target)
 
-constant atomic_truth_facts : AtomicTruthFacts
+def atomic_truth_facts : AtomicTruthFacts := {
+  atomic_lexical_truth_break_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_break_application n mods arg1 arg2,
+  atomic_lexical_truth_butter_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_butter_application n mods arg1 arg2,
+  atomic_lexical_truth_eat_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_eat_application n mods arg1 arg2,
+  atomic_lexical_truth_knock_application := fun n mods arg1 => AtomicBaseTruth.atomic_base_truth_knock_application n mods arg1,
+  atomic_transition_truth := fun theme scale source target => AtomicBaseTruth.atomic_base_truth_transition theme scale source target
+}
 
 inductive AtomicClosureTruth : (A : Type) -> A -> Prop where
   | atomic_closure_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> AtomicBaseTruth PropT (break n mods arg1 arg2) -> AtomicClosureTruth PropT (break n mods arg1 arg2)

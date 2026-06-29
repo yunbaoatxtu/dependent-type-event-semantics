@@ -501,11 +501,15 @@ def main() -> None:
             and "Theorem primitive_truth_kernel_denotes_model_interpretable :" in coq
         ),
         "lean atomic closure truth kernel instance": (
-            "constant AtomicBaseTruth : (A : Type) -> A -> Prop" in lean
+            "inductive AtomicBaseTruth : (A : Type) -> A -> Prop where" in lean
+            and "| atomic_base_truth_eat_application : (n : Nat)" in lean
+            and "| atomic_base_truth_transition : (theme : Entity)" in lean
             and "structure AtomicTruthFacts : Type where" in lean
             and "atomic_lexical_truth_eat_application : (n : Nat)" in lean
             and "AtomicBaseTruth Prop (eat n mods arg1 arg2)" in lean
-            and "constant atomic_truth_facts : AtomicTruthFacts" in lean
+            and "def atomic_truth_facts : AtomicTruthFacts := {" in lean
+            and "AtomicBaseTruth.atomic_base_truth_eat_application" in lean
+            and "AtomicBaseTruth.atomic_base_truth_transition" in lean
             and "inductive AtomicClosureTruth : (A : Type) -> A -> Prop where"
             in lean
             and "| atomic_closure_truth_repeat : (n : Nat)" in lean
@@ -522,11 +526,15 @@ def main() -> None:
             in lean
         ),
         "coq atomic closure truth kernel instance": (
-            "Parameter AtomicBaseTruth : forall A : Type, A -> Prop." in coq
+            "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=" in coq
+            and "atomic_base_truth_eat_application : forall n : nat" in coq
+            and "atomic_base_truth_transition : forall theme : Entity" in coq
             and "Record AtomicTruthFacts : Type := {" in coq
             and "atomic_lexical_truth_eat_application : forall n : nat" in coq
             and "AtomicBaseTruth Prop (eat n mods arg1 arg2)" in coq
-            and "Parameter atomic_truth_facts : AtomicTruthFacts." in coq
+            and "Definition atomic_truth_facts : AtomicTruthFacts := {|" in coq
+            and "atomic_base_truth_eat_application n mods arg1 arg2" in coq
+            and "atomic_base_truth_transition theme scale source target" in coq
             and "Inductive AtomicClosureTruth : forall A : Type, A -> Prop :="
             in coq
             and "atomic_closure_truth_repeat : forall n : nat" in coq

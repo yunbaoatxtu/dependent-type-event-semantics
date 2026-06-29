@@ -20999,6 +20999,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_atomic_base_truth_valuation_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21061,7 +21066,12 @@ def project_completion_status_payload(
                     "atomic-closure soundness checks; this narrows the "
                     "remaining assumptions to atom-level lexical and "
                     "Transition facts while closing Sigma, repetition, "
-                    "time, negation, and Cause by constructors. These "
+                    "time, negation, and Cause by constructors. The "
+                    "AtomicBaseTruth layer is now itself an inductive "
+                    "base-valuation relation, and atomic_truth_facts is "
+                    "a concrete record instance assembled from those "
+                    "base constructors rather than an opaque parameter. "
+                    "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
                     "supply independently justified inhabitants of that "
