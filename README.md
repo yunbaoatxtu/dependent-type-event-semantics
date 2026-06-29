@@ -1075,15 +1075,29 @@ Transition clause takes `RegisteredStateTransitionTruth` evidence instead of
 claiming arbitrary state changes, and every exported example now receives
 `example_i_transition_refined_registered_truth_condition_sound` plus the
 atomic-closure bridge
-`example_i_transition_refined_registered_truth_condition_atomic_sound`. The open
+`example_i_transition_refined_registered_truth_condition_atomic_sound`. The
+follow-up verified objective
+`coq_registered_lexical_truth_condition_spec_instance` narrows the lexical
+atom side as well. The generator collects the concrete lexical applications
+that occur in the exported examples, including the Sigma-bound `x_theme : Food`
+argument in the argument-omission example, declares them as
+`RegisteredLexicalApplicationTruth` constructors, proves bridges to
+`AtomicBaseTruth` and `AtomicClosureTruth`, defines
+`FullyRegisteredAtomicClosureTruth`, and packages that relation as
+`FullyRegisteredTruthConditionSpec`. Each exported example now receives
+`example_i_fully_registered_atomic_closure_truth`,
+`example_i_fully_registered_truth_condition_sound`, and
+`example_i_fully_registered_truth_condition_atomic_sound`. This removes the
+previous arbitrary lexical-application route for the exported examples without
+claiming a general lexical truth model for all surface predicates. The open
 blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
-model-interpretable, syntax-directed, primitive-assumption, and atomic-closure
-kernel/spec instances.
+model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
+registered-transition, or registered-lexical kernel/spec instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

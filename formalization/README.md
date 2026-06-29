@@ -140,8 +140,19 @@ to `RegisteredStateTransitionTruth`, and the checker requires
 `example_i_transition_refined_registered_truth_condition_sound`, and
 `example_i_transition_refined_registered_truth_condition_atomic_sound` to stay
 present and type checked.
-This still does not claim that the lexical and transition constructors have
-been derived from a full semantic model.
+The next generated layer also registers the lexical applications observed in
+the exported examples. `RegisteredLexicalApplicationTruth` contains one
+constructor per concrete exported lexical application shape, including the
+Sigma-bound `x_theme : Food` application in the argument-omission example.
+The file proves that these registered lexical applications imply both
+`AtomicBaseTruth` and `AtomicClosureTruth`, defines
+`FullyRegisteredAtomicClosureTruth`, packages it as
+`FullyRegisteredTruthConditionSpec`, and checks
+`example_i_fully_registered_atomic_closure_truth`,
+`example_i_fully_registered_truth_condition_sound`, and
+`example_i_fully_registered_truth_condition_atomic_sound` for every exported
+example. This still does not claim that the lexical and transition constructors
+have been derived from a full semantic model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

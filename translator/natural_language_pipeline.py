@@ -21034,6 +21034,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_registered_lexical_truth_condition_spec_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21134,6 +21139,16 @@ def project_completion_status_payload(
                     "facts; every exported example receives a checked "
                     "registered-truth-condition soundness theorem and a bridge "
                     "from that registered spec back to AtomicClosureTruth. "
+                    "The newest layer also registers the lexical applications "
+                    "observed in the exported examples as "
+                    "RegisteredLexicalApplicationTruth constructors, including "
+                    "the Sigma-bound Food witness in the argument-omission "
+                    "example. It then defines "
+                    "FullyRegisteredAtomicClosureTruth and a "
+                    "FullyRegisteredTruthConditionSpec whose lexical clause "
+                    "requires registered lexical-application evidence rather "
+                    "than arbitrary lexical atoms, with per-example fully "
+                    "registered truth-condition soundness checks. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

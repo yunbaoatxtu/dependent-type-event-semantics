@@ -276,6 +276,34 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_fully_registered_atomic_closure_truth_count = len(
+        re.findall(
+            r"^theorem example_\d+_fully_registered_atomic_closure_truth :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_fully_registered_atomic_closure_truth_count = len(
+        re.findall(
+            r"^Theorem example_\d+_fully_registered_atomic_closure_truth :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_fully_registered_truth_condition_sound_count = len(
+        re.findall(
+            r"^theorem example_\d+_fully_registered_truth_condition_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_fully_registered_truth_condition_sound_count = len(
+        re.findall(
+            r"^Theorem example_\d+_fully_registered_truth_condition_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -727,6 +755,59 @@ def main() -> None:
             and "Check example_4_transition_refined_registered_truth_condition_sound."
             in coq
         ),
+        "lean registered lexical truth condition spec instance": (
+            "inductive RegisteredLexicalApplicationTruth : (A : Type) -> A -> Prop where"
+            in lean
+            and "registered_lexical_eat_0_John_x_theme" in lean
+            and "(x_theme : Food) -> RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme)"
+            in lean
+            and "theorem registered_lexical_application_atomic_base_truth :"
+            in lean
+            and "theorem registered_lexical_application_atomic_closure_truth :"
+            in lean
+            and "inductive FullyRegisteredAtomicClosureTruth : (A : Type) -> A -> Prop where"
+            in lean
+            and "structure FullyRegisteredTruthConditionSpec : Type where" in lean
+            and "def fully_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {"
+            in lean
+            and "theorem fully_registered_truth_conditions_denote_fully_registered :"
+            in lean
+            and "theorem fully_registered_truth_conditions_imply_atomic_closure :"
+            in lean
+            and "theorem example_4_fully_registered_atomic_closure_truth :"
+            in lean
+            and "theorem example_4_fully_registered_truth_condition_sound :"
+            in lean
+            and "#check example_4_fully_registered_truth_condition_sound"
+            in lean
+        ),
+        "coq registered lexical truth condition spec instance": (
+            "Inductive RegisteredLexicalApplicationTruth : forall A : Type, A -> Prop :="
+            in coq
+            and "registered_lexical_eat_0_John_x_theme" in coq
+            and "forall x_theme : Food" in coq
+            and "RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme)"
+            in coq
+            and "Theorem registered_lexical_application_atomic_base_truth :"
+            in coq
+            and "Theorem registered_lexical_application_atomic_closure_truth :"
+            in coq
+            and "Inductive FullyRegisteredAtomicClosureTruth : forall A : Type, A -> Prop :="
+            in coq
+            and "Record FullyRegisteredTruthConditionSpec : Type := {" in coq
+            and "Definition fully_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {|"
+            in coq
+            and "Theorem fully_registered_truth_conditions_denote_fully_registered :"
+            in coq
+            and "Theorem fully_registered_truth_conditions_imply_atomic_closure :"
+            in coq
+            and "Theorem example_4_fully_registered_atomic_closure_truth :"
+            in coq
+            and "Theorem example_4_fully_registered_truth_condition_sound :"
+            in coq
+            and "Check example_4_fully_registered_truth_condition_sound."
+            in coq
+        ),
         "lean model-interpretable truth kernel instance": (
             "def model_interpretable_truth_kernel_denotes : (A : Type) -> A -> Prop :="
             in lean
@@ -947,6 +1028,22 @@ def main() -> None:
             and "apply atomic_closure_truth_kernel_denotes_atomic_closure_truth."
             in coq
         ),
+        "lean fully registered truth condition soundness proofs": (
+            lean_fully_registered_atomic_closure_truth_count == lean_example_count
+            and lean_fully_registered_truth_condition_sound_count == lean_example_count
+            and "#check example_4_fully_registered_atomic_closure_truth" in lean
+            and "#check example_4_fully_registered_truth_condition_sound" in lean
+            and "apply fully_registered_truth_conditions_denote_fully_registered"
+            in lean
+        ),
+        "coq fully registered truth condition soundness proofs": (
+            coq_fully_registered_atomic_closure_truth_count == coq_example_count
+            and coq_fully_registered_truth_condition_sound_count == coq_example_count
+            and "Check example_4_fully_registered_atomic_closure_truth." in coq
+            and "Check example_4_fully_registered_truth_condition_sound." in coq
+            and "apply fully_registered_truth_conditions_denote_fully_registered."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean
@@ -977,6 +1074,9 @@ def main() -> None:
             and "#check example_4_primitive_truth_kernel_sound" in lean
             and "#check example_4_atomic_closure_truth" in lean
             and "#check example_4_atomic_closure_truth_kernel_sound" in lean
+            and "#check example_4_fully_registered_atomic_closure_truth" in lean
+            and "#check example_4_fully_registered_truth_condition_sound" in lean
+            and "#check example_4_fully_registered_truth_condition_atomic_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -996,6 +1096,9 @@ def main() -> None:
             and "Check example_4_primitive_truth_kernel_sound." in coq
             and "Check example_4_atomic_closure_truth." in coq
             and "Check example_4_atomic_closure_truth_kernel_sound." in coq
+            and "Check example_4_fully_registered_atomic_closure_truth." in coq
+            and "Check example_4_fully_registered_truth_condition_sound." in coq
+            and "Check example_4_fully_registered_truth_condition_atomic_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

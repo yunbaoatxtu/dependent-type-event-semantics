@@ -116,6 +116,15 @@ class EventAnalysis:
 Term = dict[str, Any]
 TypeCheck = dict[str, Any]
 EXPORT_TARGETS = ("lean", "coq")
+LexicalApplicationSchema = tuple[
+    str,
+    str,
+    int,
+    str,
+    tuple[str, ...],
+    tuple[str, ...],
+    tuple[tuple[str, str], ...],
+]
 
 
 def flatten_conjunction(expr: dict[str, Any]) -> list[Atom]:
@@ -4420,6 +4429,576 @@ def registered_truth_condition_spec_lines(
     return lines
 
 
+def registered_lexical_truth_condition_spec_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    if target == "lean":
+        lines = [
+            "inductive RegisteredLexicalApplicationTruth : "
+            "(A : Type) -> A -> Prop where",
+        ]
+        if not schemas:
+            lines.append("")
+            return lines
+        for schema in schemas:
+            constructor = registered_lexical_application_constructor_from_schema(schema)
+            _function, result_type, _adverb_count, _modifier_term, _modifiers, _arguments, binders = schema
+            application = lexical_application_term(schema)
+            binder_prefix = " -> ".join(
+                f"({name} : {type_name})" for name, type_name in binders
+            )
+            conclusion = (
+                f"RegisteredLexicalApplicationTruth {result_type} "
+                f"({application})"
+            )
+            if binder_prefix:
+                lines.append(f"  | {constructor} : {binder_prefix} -> {conclusion}")
+            else:
+                lines.append(f"  | {constructor} : {conclusion}")
+        lines.extend(
+            [
+                "",
+                "theorem registered_lexical_application_atomic_base_truth :",
+                "    (A : Type) -> (term : A) -> "
+                "RegisteredLexicalApplicationTruth A term -> "
+                "AtomicBaseTruth A term := by",
+                "  intro A term h",
+                "  induction h",
+            ]
+        )
+        for schema in schemas:
+            constructor = registered_lexical_application_constructor_from_schema(schema)
+            function, _result_type, _adverb_count, _modifier_term, _modifiers, _arguments, binders = schema
+            pattern_args = " ".join(name for name, _type_name in binders)
+            pattern = f"{constructor} {pattern_args}".rstrip()
+            lines.append(f"  | {pattern} =>")
+            lines.append(
+                "      apply AtomicBaseTruth."
+                f"{atomic_base_truth_application_constructor(function)}"
+            )
+        lines.extend(
+            [
+                "",
+                "theorem registered_lexical_application_atomic_closure_truth :",
+                "    (A : Type) -> (term : A) -> "
+                "RegisteredLexicalApplicationTruth A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  induction h",
+            ]
+        )
+        for schema in schemas:
+            constructor = registered_lexical_application_constructor_from_schema(schema)
+            function, _result_type, _adverb_count, _modifier_term, _modifiers, _arguments, binders = schema
+            pattern_args = " ".join(name for name, _type_name in binders)
+            pattern = f"{constructor} {pattern_args}".rstrip()
+            lines.append(f"  | {pattern} =>")
+            lines.append(
+                "      apply AtomicClosureTruth."
+                f"{atomic_closure_application_constructor(function)}"
+            )
+            lines.append(
+                "      apply AtomicBaseTruth."
+                f"{atomic_base_truth_application_constructor(function)}"
+            )
+        lines.extend(
+            [
+                "",
+                "inductive FullyRegisteredAtomicClosureTruth : "
+                "(A : Type) -> A -> Prop where",
+                "  | fully_registered_atomic_truth_lexical_application : "
+                "(A : Type) -> (term : A) -> "
+                "RegisteredLexicalApplicationTruth A term -> "
+                "FullyRegisteredAtomicClosureTruth A term",
+            ]
+        )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | fully_registered_atomic_truth_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> FullyRegisteredAtomicClosureTruth Prop (P x)) -> "
+                f"FullyRegisteredAtomicClosureTruth Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  | fully_registered_atomic_truth_repeat : (n : Nat) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (repeat n body)",
+                "  | fully_registered_atomic_truth_at_T : (marker : Entity) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (at_T marker body)",
+                "  | fully_registered_atomic_truth_during_T : (marker : Entity) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (during_T marker body)",
+                "  | fully_registered_atomic_truth_before_T : (marker : Entity) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (before_T marker body)",
+                "  | fully_registered_atomic_truth_after_T : (marker : Entity) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (after_T marker body)",
+                "  | fully_registered_atomic_truth_until_T : (marker : Entity) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (until_T marker body)",
+                "  | fully_registered_atomic_truth_since_T : (marker : Entity) -> "
+                "(body : PropT) -> FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (since_T marker body)",
+                "  | fully_registered_atomic_truth_not_T : (body : PropT) -> "
+                "FullyRegisteredAtomicClosureTruth PropT body -> "
+                "FullyRegisteredAtomicClosureTruth PropT (not_T body)",
+                "  | fully_registered_atomic_truth_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "FullyRegisteredAtomicClosureTruth TransitionT "
+                "(Transition theme scale source target)",
+                "  | fully_registered_atomic_truth_cause : (causer : Entity) -> "
+                "(effect : TransitionT) -> "
+                "FullyRegisteredAtomicClosureTruth TransitionT effect -> "
+                "FullyRegisteredAtomicClosureTruth PropT (Cause causer effect)",
+                "",
+                "theorem fully_registered_atomic_closure_truth_implies_atomic_closure_truth :",
+                "    (A : Type) -> (term : A) -> "
+                "FullyRegisteredAtomicClosureTruth A term -> AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  induction h",
+                "  | fully_registered_atomic_truth_lexical_application A term hreg =>",
+                "      apply registered_lexical_application_atomic_closure_truth",
+                "      exact hreg",
+            ]
+        )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | fully_registered_atomic_truth_sigma_{type_name} P h ih => "
+                f"exact AtomicClosureTruth.{atomic_closure_sigma_constructor(type_name)} P ih"
+            )
+        lines.extend(
+            [
+                "  | fully_registered_atomic_truth_repeat n body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_repeat n body ih",
+                "  | fully_registered_atomic_truth_at_T marker body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_at_T marker body ih",
+                "  | fully_registered_atomic_truth_during_T marker body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_during_T marker body ih",
+                "  | fully_registered_atomic_truth_before_T marker body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_before_T marker body ih",
+                "  | fully_registered_atomic_truth_after_T marker body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_after_T marker body ih",
+                "  | fully_registered_atomic_truth_until_T marker body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_until_T marker body ih",
+                "  | fully_registered_atomic_truth_since_T marker body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_since_T marker body ih",
+                "  | fully_registered_atomic_truth_not_T body h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_not_T body ih",
+                "  | fully_registered_atomic_truth_transition theme scale source target hreg =>",
+                "      apply AtomicClosureTruth.atomic_closure_truth_transition",
+                "      exact registered_state_transition_atomic_base_truth "
+                "theme scale source target hreg",
+                "  | fully_registered_atomic_truth_cause causer effect h ih => "
+                "exact AtomicClosureTruth.atomic_closure_truth_cause causer effect ih",
+                "",
+                "structure FullyRegisteredTruthConditionSpec : Type where",
+                "  fully_registered_truth_denotes : (A : Type) -> A -> Prop",
+                "  fully_registered_truth_lexical_application : "
+                "(A : Type) -> (term : A) -> "
+                "RegisteredLexicalApplicationTruth A term -> "
+                "fully_registered_truth_denotes A term",
+            ]
+        )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  fully_registered_truth_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> fully_registered_truth_denotes Prop (P x)) -> "
+                f"fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  fully_registered_truth_repeat : (n : Nat) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (repeat n body)",
+                "  fully_registered_truth_at_T : (marker : Entity) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (at_T marker body)",
+                "  fully_registered_truth_during_T : (marker : Entity) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (during_T marker body)",
+                "  fully_registered_truth_before_T : (marker : Entity) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (before_T marker body)",
+                "  fully_registered_truth_after_T : (marker : Entity) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (after_T marker body)",
+                "  fully_registered_truth_until_T : (marker : Entity) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (until_T marker body)",
+                "  fully_registered_truth_since_T : (marker : Entity) -> (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (since_T marker body)",
+                "  fully_registered_truth_not_T : (body : PropT) -> "
+                "fully_registered_truth_denotes PropT body -> "
+                "fully_registered_truth_denotes PropT (not_T body)",
+                "  fully_registered_truth_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "fully_registered_truth_denotes TransitionT "
+                "(Transition theme scale source target)",
+                "  fully_registered_truth_cause : (causer : Entity) -> "
+                "(effect : TransitionT) -> "
+                "fully_registered_truth_denotes TransitionT effect -> "
+                "fully_registered_truth_denotes PropT (Cause causer effect)",
+                "",
+                "def fully_registered_atomic_truth_denotes : (A : Type) -> A -> Prop :=",
+                "  FullyRegisteredAtomicClosureTruth",
+                "",
+                "def fully_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {",
+                "  fully_registered_truth_denotes := fully_registered_atomic_truth_denotes,",
+                "  fully_registered_truth_lexical_application := "
+                "fun A term h => FullyRegisteredAtomicClosureTruth."
+                "fully_registered_atomic_truth_lexical_application A term h,",
+            ]
+        )
+        fields: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            fields.append(
+                (
+                    f"fully_registered_truth_sigma_{type_name}",
+                    "fun P h => FullyRegisteredAtomicClosureTruth."
+                    f"fully_registered_atomic_truth_sigma_{type_name} P h",
+                )
+            )
+        fields.extend(
+            [
+                ("fully_registered_truth_repeat", "fun n body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_repeat n body h"),
+                ("fully_registered_truth_at_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_at_T marker body h"),
+                ("fully_registered_truth_during_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_during_T marker body h"),
+                ("fully_registered_truth_before_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_before_T marker body h"),
+                ("fully_registered_truth_after_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_after_T marker body h"),
+                ("fully_registered_truth_until_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_until_T marker body h"),
+                ("fully_registered_truth_since_T", "fun marker body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_since_T marker body h"),
+                ("fully_registered_truth_not_T", "fun body h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_not_T body h"),
+                ("fully_registered_truth_transition", "fun theme scale source target h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_transition theme scale source target h"),
+                ("fully_registered_truth_cause", "fun causer effect h => FullyRegisteredAtomicClosureTruth.fully_registered_atomic_truth_cause causer effect h"),
+            ]
+        )
+        for index, (field, value) in enumerate(fields):
+            suffix = "," if index < len(fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem fully_registered_truth_condition_spec_exists :",
+                "    Exists (fun F : FullyRegisteredTruthConditionSpec => "
+                "F = fully_registered_truth_conditions) := by",
+                "  exact Exists.intro fully_registered_truth_conditions rfl",
+                "",
+                "theorem fully_registered_truth_conditions_denote_fully_registered :",
+                "    (A : Type) -> (term : A) -> "
+                "FullyRegisteredAtomicClosureTruth A term -> "
+                "fully_registered_truth_conditions."
+                "fully_registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem fully_registered_truth_conditions_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "fully_registered_truth_conditions."
+                "fully_registered_truth_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = ["Inductive RegisteredLexicalApplicationTruth : forall A : Type, A -> Prop :="]
+    if not schemas:
+        lines[-1] += " ."
+        return lines
+    constructors: list[str] = []
+    for schema in schemas:
+        constructor = registered_lexical_application_constructor_from_schema(schema)
+        _function, result_type, _adverb_count, _modifier_term, _modifiers, _arguments, binders = schema
+        application = lexical_application_term(schema)
+        if binders:
+            binder_text = ", ".join(
+                f"forall {name} : {type_name}" for name, type_name in binders
+            )
+            constructors.extend(
+                [
+                    f"  | {constructor} : {binder_text},",
+                    "      RegisteredLexicalApplicationTruth "
+                    f"{result_type} ({application})",
+                ]
+            )
+        else:
+            constructors.extend(
+                [
+                    f"  | {constructor} :",
+                    "      RegisteredLexicalApplicationTruth "
+                    f"{result_type} ({application})",
+                ]
+            )
+    constructors[-1] += "."
+    lines.extend(constructors)
+    lines.extend(
+        [
+            "",
+            "Theorem registered_lexical_application_atomic_base_truth :",
+            "  forall A : Type, forall term : A,",
+            "    RegisteredLexicalApplicationTruth A term -> AtomicBaseTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  induction H.",
+        ]
+    )
+    for schema in schemas:
+        function = schema[0]
+        lines.append(
+            f"  - apply {atomic_base_truth_application_constructor(function)}."
+        )
+    lines.extend(
+        [
+            "Qed.",
+            "",
+            "Theorem registered_lexical_application_atomic_closure_truth :",
+            "  forall A : Type, forall term : A,",
+            "    RegisteredLexicalApplicationTruth A term -> AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  induction H.",
+        ]
+    )
+    for schema in schemas:
+        function = schema[0]
+        lines.append(
+            f"  - apply {atomic_closure_application_constructor(function)}."
+        )
+        lines.append(
+            f"    apply {atomic_base_truth_application_constructor(function)}."
+        )
+    lines.extend(
+        [
+            "Qed.",
+            "",
+            "Inductive FullyRegisteredAtomicClosureTruth : forall A : Type, A -> Prop :=",
+            "  | fully_registered_atomic_truth_lexical_application :",
+            "      forall A : Type, forall term : A,",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      FullyRegisteredAtomicClosureTruth A term",
+        ]
+    )
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  | fully_registered_atomic_truth_sigma_{type_name} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, "
+                "FullyRegisteredAtomicClosureTruth Prop (P x)) ->",
+                "      FullyRegisteredAtomicClosureTruth Prop "
+                f"(exists x : {type_name}, P x)",
+            ]
+        )
+    lines.extend(
+        [
+            "  | fully_registered_atomic_truth_repeat : "
+            "forall n : nat, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (repeat n body)",
+            "  | fully_registered_atomic_truth_at_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (at_T marker body)",
+            "  | fully_registered_atomic_truth_during_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (during_T marker body)",
+            "  | fully_registered_atomic_truth_before_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (before_T marker body)",
+            "  | fully_registered_atomic_truth_after_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (after_T marker body)",
+            "  | fully_registered_atomic_truth_until_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (until_T marker body)",
+            "  | fully_registered_atomic_truth_since_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (since_T marker body)",
+            "  | fully_registered_atomic_truth_not_T : forall body : PropT,",
+            "      FullyRegisteredAtomicClosureTruth PropT body ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (not_T body)",
+            "  | fully_registered_atomic_truth_transition : "
+            "forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      FullyRegisteredAtomicClosureTruth TransitionT "
+            "(Transition theme scale source target)",
+            "  | fully_registered_atomic_truth_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      FullyRegisteredAtomicClosureTruth TransitionT effect ->",
+            "      FullyRegisteredAtomicClosureTruth PropT (Cause causer effect).",
+            "",
+            "Theorem fully_registered_atomic_closure_truth_implies_atomic_closure_truth :",
+            "  forall A : Type, forall term : A,",
+            "    FullyRegisteredAtomicClosureTruth A term -> AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  induction H.",
+            "  - apply registered_lexical_application_atomic_closure_truth.",
+            "    assumption.",
+        ]
+    )
+    for type_name in declarations["types"]:
+        lines.append(f"  - apply {atomic_closure_sigma_constructor(type_name)}.")
+        lines.append("    assumption.")
+    lines.extend(
+        [
+            "  - apply atomic_closure_truth_repeat. assumption.",
+            "  - apply atomic_closure_truth_at_T. assumption.",
+            "  - apply atomic_closure_truth_during_T. assumption.",
+            "  - apply atomic_closure_truth_before_T. assumption.",
+            "  - apply atomic_closure_truth_after_T. assumption.",
+            "  - apply atomic_closure_truth_until_T. assumption.",
+            "  - apply atomic_closure_truth_since_T. assumption.",
+            "  - apply atomic_closure_truth_not_T. assumption.",
+            "  - apply atomic_closure_truth_transition.",
+            "    apply registered_state_transition_atomic_base_truth.",
+            "    assumption.",
+            "  - apply atomic_closure_truth_cause. assumption.",
+            "Qed.",
+            "",
+            "Record FullyRegisteredTruthConditionSpec : Type := {",
+            "  fully_registered_truth_denotes : forall A : Type, A -> Prop;",
+            "  fully_registered_truth_lexical_application :",
+            "      forall A : Type, forall term : A,",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      fully_registered_truth_denotes A term;",
+        ]
+    )
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  fully_registered_truth_sigma_{type_name} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, "
+                "fully_registered_truth_denotes Prop (P x)) ->",
+                "      fully_registered_truth_denotes Prop "
+                f"(exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  fully_registered_truth_repeat : forall n : nat, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (repeat n body);",
+            "  fully_registered_truth_at_T : forall marker : Entity, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (at_T marker body);",
+            "  fully_registered_truth_during_T : forall marker : Entity, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (during_T marker body);",
+            "  fully_registered_truth_before_T : forall marker : Entity, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (before_T marker body);",
+            "  fully_registered_truth_after_T : forall marker : Entity, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (after_T marker body);",
+            "  fully_registered_truth_until_T : forall marker : Entity, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (until_T marker body);",
+            "  fully_registered_truth_since_T : forall marker : Entity, forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (since_T marker body);",
+            "  fully_registered_truth_not_T : forall body : PropT,",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      fully_registered_truth_denotes PropT (not_T body);",
+            "  fully_registered_truth_transition : "
+            "forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      fully_registered_truth_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  fully_registered_truth_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      fully_registered_truth_denotes TransitionT effect ->",
+            "      fully_registered_truth_denotes PropT (Cause causer effect)",
+            "}.",
+            "",
+            "Definition fully_registered_atomic_truth_denotes : forall A : Type, A -> Prop :=",
+            "  FullyRegisteredAtomicClosureTruth.",
+            "",
+            "Definition fully_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {|",
+            "  fully_registered_truth_denotes := fully_registered_atomic_truth_denotes;",
+            "  fully_registered_truth_lexical_application := "
+            "fun A term h => fully_registered_atomic_truth_lexical_application A term h;",
+        ]
+    )
+    fields: list[tuple[str, str]] = []
+    for type_name in declarations["types"]:
+        fields.append(
+            (
+                f"fully_registered_truth_sigma_{type_name}",
+                f"fun P h => fully_registered_atomic_truth_sigma_{type_name} P h",
+            )
+        )
+    fields.extend(
+        [
+            ("fully_registered_truth_repeat", "fun n body h => fully_registered_atomic_truth_repeat n body h"),
+            ("fully_registered_truth_at_T", "fun marker body h => fully_registered_atomic_truth_at_T marker body h"),
+            ("fully_registered_truth_during_T", "fun marker body h => fully_registered_atomic_truth_during_T marker body h"),
+            ("fully_registered_truth_before_T", "fun marker body h => fully_registered_atomic_truth_before_T marker body h"),
+            ("fully_registered_truth_after_T", "fun marker body h => fully_registered_atomic_truth_after_T marker body h"),
+            ("fully_registered_truth_until_T", "fun marker body h => fully_registered_atomic_truth_until_T marker body h"),
+            ("fully_registered_truth_since_T", "fun marker body h => fully_registered_atomic_truth_since_T marker body h"),
+            ("fully_registered_truth_not_T", "fun body h => fully_registered_atomic_truth_not_T body h"),
+            ("fully_registered_truth_transition", "fun theme scale source target h => fully_registered_atomic_truth_transition theme scale source target h"),
+            ("fully_registered_truth_cause", "fun causer effect h => fully_registered_atomic_truth_cause causer effect h"),
+        ]
+    )
+    for index, (field, value) in enumerate(fields):
+        suffix = ";" if index < len(fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem fully_registered_truth_condition_spec_exists :",
+            "  exists F : FullyRegisteredTruthConditionSpec,",
+            "    F = fully_registered_truth_conditions.",
+            "Proof.",
+            "  exists fully_registered_truth_conditions. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem fully_registered_truth_conditions_denote_fully_registered :",
+            "  forall A : Type, forall term : A,",
+            "    FullyRegisteredAtomicClosureTruth A term ->",
+            "    fully_registered_truth_denotes fully_registered_truth_conditions A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem fully_registered_truth_conditions_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes fully_registered_truth_conditions A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_truth_condition_kernel_instance_lines(
     declarations: dict[str, Any],
     target: str,
@@ -5323,6 +5902,96 @@ def transition_refined_atomic_closure_proof_steps(
     return prove(term)
 
 
+def fully_registered_atomic_closure_proof_steps(
+    term: Term,
+    target: str,
+) -> list[str]:
+    prefix = "FullyRegisteredAtomicClosureTruth." if target == "lean" else ""
+    suffix = "" if target == "lean" else "."
+
+    def apply_constructor(name: str) -> str:
+        return f"  apply {prefix}{name}{suffix}"
+
+    def prove(current: Term, bound_types: dict[str, str]) -> list[str]:
+        kind = current["kind"]
+        if kind == "application":
+            schema = lexical_application_schema(current, target, bound_types)
+            constructor = registered_lexical_application_constructor_from_schema(schema)
+            if target == "lean":
+                binder_args = " ".join(name for name, _type_name in schema[-1])
+                constructor_term = (
+                    f"RegisteredLexicalApplicationTruth.{constructor}"
+                    + (f" {binder_args}" if binder_args else "")
+                )
+                return [
+                    apply_constructor(
+                        "fully_registered_atomic_truth_lexical_application"
+                    ),
+                    f"  exact {constructor_term}",
+                ]
+            return [
+                apply_constructor(
+                    "fully_registered_atomic_truth_lexical_application"
+                ),
+                f"  apply {constructor}.",
+            ]
+        if kind == "sigma":
+            witness = export_atom(current["witness"], target)
+            witness_type = export_type_name(current["type"], target)
+            return [
+                apply_constructor(
+                    f"fully_registered_atomic_truth_sigma_{witness_type}"
+                ),
+                f"  intro {witness}{suffix}",
+                *prove(current["body"], {**bound_types, witness: witness_type}),
+            ]
+        if kind == "repeat":
+            return [
+                apply_constructor("fully_registered_atomic_truth_repeat"),
+                *prove(current["body"], bound_types),
+            ]
+        if kind == "time":
+            operator = export_atom(current["operator"] + "_T", target)
+            return [
+                apply_constructor(f"fully_registered_atomic_truth_{operator}"),
+                *prove(current["body"], bound_types),
+            ]
+        if kind == "not":
+            return [
+                apply_constructor("fully_registered_atomic_truth_not_T"),
+                *prove(current["body"], bound_types),
+            ]
+        if kind == "transition":
+            theme = export_atom(current["theme"], target)
+            scale = export_atom(current["state_scale"], target)
+            source = export_atom(current["source_state"], target)
+            target_state = export_atom(current["target_state"], target)
+            registered_constructor = registered_state_transition_constructor(
+                theme,
+                scale,
+                source,
+                target_state,
+            )
+            if target == "lean":
+                return [
+                    apply_constructor("fully_registered_atomic_truth_transition"),
+                    "  exact RegisteredStateTransitionTruth."
+                    f"{registered_constructor}",
+                ]
+            return [
+                apply_constructor("fully_registered_atomic_truth_transition"),
+                f"  apply {registered_constructor}.",
+            ]
+        if kind == "cause":
+            return [
+                apply_constructor("fully_registered_atomic_truth_cause"),
+                *prove(current["effect"], bound_types),
+            ]
+        raise ValueError(f"Unknown term kind: {kind!r}")
+
+    return prove(term, {})
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -5366,6 +6035,53 @@ def add_function_declaration(
     functions[name] = signature
 
 
+def _identifier_fragment(value: str) -> str:
+    fragment = re.sub(r"[^0-9A-Za-z_]+", "_", value).strip("_")
+    if not fragment:
+        fragment = "anon"
+    return fragment
+
+
+def registered_lexical_application_constructor_from_schema(
+    schema: LexicalApplicationSchema,
+) -> str:
+    function, _result_type, adverb_count, _modifier_term, modifiers, arguments, _binders = schema
+    fragments = [function, str(adverb_count), *modifiers, *arguments]
+    return "registered_lexical_" + "_".join(
+        _identifier_fragment(fragment) for fragment in fragments
+    )
+
+
+def lexical_application_term(schema: LexicalApplicationSchema) -> str:
+    function, _result_type, adverb_count, modifier_term, _modifiers, arguments, _binders = schema
+    return " ".join([function, str(adverb_count), modifier_term, *arguments])
+
+
+def lexical_application_schema(
+    term: Term,
+    target: str,
+    bound_types: dict[str, str],
+) -> LexicalApplicationSchema:
+    function = export_atom(term["function"], target)
+    modifiers = tuple(export_atom(value, target) for value in term["modifiers"])
+    arguments = tuple(export_atom(value, target) for value in term["arguments"])
+    binders: list[tuple[str, str]] = []
+    seen_binders: set[str] = set()
+    for argument in arguments:
+        if argument in bound_types and argument not in seen_binders:
+            binders.append((argument, bound_types[argument]))
+            seen_binders.add(argument)
+    return (
+        function,
+        application_result_type(function),
+        int(term["adverb_count"]),
+        export_modifier_sequence(term["modifier_vector"], target),
+        modifiers,
+        arguments,
+        tuple(binders),
+    )
+
+
 def collect_term_declarations(
     term: Term,
     target: str,
@@ -5374,6 +6090,7 @@ def collect_term_declarations(
     modifiers: set[str],
     types: set[str],
     transitions: set[tuple[str, str, str, str]],
+    lexical_applications: set[LexicalApplicationSchema],
     bound_types: dict[str, str] | None = None,
 ) -> None:
     bound_types = {} if bound_types is None else bound_types
@@ -5408,6 +6125,9 @@ def collect_term_declarations(
             exported = export_atom(value, target)
             if exported not in bound_types:
                 add_constant_declaration(constants, exported, argument_type)
+        lexical_applications.add(
+            lexical_application_schema(term, target, bound_types)
+        )
         return
     if kind == "sigma":
         witness = export_atom(term["witness"], target)
@@ -5421,6 +6141,7 @@ def collect_term_declarations(
             modifiers,
             types,
             transitions,
+            lexical_applications,
             {**bound_types, witness: witness_type},
         )
         return
@@ -5433,6 +6154,7 @@ def collect_term_declarations(
             modifiers,
             types,
             transitions,
+            lexical_applications,
             bound_types,
         )
         return
@@ -5449,6 +6171,7 @@ def collect_term_declarations(
             modifiers,
             types,
             transitions,
+            lexical_applications,
             bound_types,
         )
         return
@@ -5461,6 +6184,7 @@ def collect_term_declarations(
             modifiers,
             types,
             transitions,
+            lexical_applications,
             bound_types,
         )
         return
@@ -5496,6 +6220,7 @@ def collect_term_declarations(
             modifiers,
             types,
             transitions,
+            lexical_applications,
             bound_types,
         )
         activity = term.get("activity")
@@ -5508,6 +6233,7 @@ def collect_term_declarations(
                 modifiers,
                 types,
                 transitions,
+                lexical_applications,
                 bound_types,
             )
         return
@@ -5519,6 +6245,7 @@ def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str,
     constants: dict[str, str] = {}
     modifiers: set[str] = set()
     transitions: set[tuple[str, str, str, str]] = set()
+    lexical_applications: set[LexicalApplicationSchema] = set()
     types = {"Entity", "Food", "State", "StateScale", "TransitionT"}
     for result in results:
         collect_term_declarations(
@@ -5529,6 +6256,7 @@ def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str,
             modifiers,
             types,
             transitions,
+            lexical_applications,
         )
     return {
         "types": sorted(types),
@@ -5536,6 +6264,7 @@ def module_declarations(results: list[dict[str, Any]], target: str) -> dict[str,
         "modifiers": sorted(modifiers),
         "functions": functions,
         "transitions": sorted(transitions),
+        "lexical_applications": sorted(lexical_applications),
     }
 
 
@@ -5682,6 +6411,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(transition_refined_atomic_closure_truth_lines(declarations, target))
         lines.append("")
         lines.extend(registered_truth_condition_spec_lines(declarations, target))
+        lines.append("")
+        lines.extend(registered_lexical_truth_condition_spec_lines(declarations, target))
         lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
         lines.append("")
@@ -5965,6 +6696,52 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"  exact example_{idx}_transition_refined_registered_truth_condition_sound"
             )
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_fully_registered_atomic_closure_truth : "
+                f"FullyRegisteredAtomicClosureTruth {annotation} example_{idx} := by"
+            )
+            lines.append(f"  unfold example_{idx}")
+            lines.extend(
+                fully_registered_atomic_closure_proof_steps(
+                    result["ast"],
+                    target,
+                )
+            )
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_fully_registered_truth_condition_sound : "
+                "fully_registered_truth_conditions."
+                "fully_registered_truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "fully_registered_truth_conditions_denote_fully_registered"
+            )
+            lines.append(
+                f"  exact example_{idx}_fully_registered_atomic_closure_truth"
+            )
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_fully_registered_truth_condition_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply fully_registered_truth_conditions_imply_atomic_closure"
+            )
+            lines.append(
+                f"  exact example_{idx}_fully_registered_truth_condition_sound"
+            )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -5998,6 +6775,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"example_{idx}_transition_refined_registered_truth_condition_atomic_sound"
+            )
+            lines.append(
+                f"#check example_{idx}_fully_registered_atomic_closure_truth"
+            )
+            lines.append(
+                f"#check example_{idx}_fully_registered_truth_condition_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_fully_registered_truth_condition_atomic_sound"
             )
         return "\n".join(lines) + "\n"
 
@@ -6107,6 +6894,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(transition_refined_atomic_closure_truth_lines(declarations, target))
     lines.append("")
     lines.extend(registered_truth_condition_spec_lines(declarations, target))
+    lines.append("")
+    lines.extend(registered_lexical_truth_condition_spec_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
     lines.append("")
@@ -6411,6 +7200,48 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_fully_registered_atomic_closure_truth : "
+            f"FullyRegisteredAtomicClosureTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(f"  unfold example_{idx}.")
+        lines.extend(
+            fully_registered_atomic_closure_proof_steps(
+                result["ast"],
+                target,
+            )
+        )
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_fully_registered_truth_condition_sound : "
+            "fully_registered_truth_denotes fully_registered_truth_conditions "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply fully_registered_truth_conditions_denote_fully_registered.")
+        lines.append(f"  exact example_{idx}_fully_registered_atomic_closure_truth.")
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_fully_registered_truth_condition_atomic_sound : "
+            f"AtomicClosureTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply fully_registered_truth_conditions_imply_atomic_closure.")
+        lines.append(f"  exact example_{idx}_fully_registered_truth_condition_sound.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -6440,6 +7271,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"example_{idx}_transition_refined_registered_truth_condition_atomic_sound."
+        )
+        lines.append(f"Check example_{idx}_fully_registered_atomic_closure_truth.")
+        lines.append(f"Check example_{idx}_fully_registered_truth_condition_sound.")
+        lines.append(
+            "Check "
+            f"example_{idx}_fully_registered_truth_condition_atomic_sound."
         )
     return "\n".join(lines) + "\n"
 

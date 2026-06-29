@@ -1204,6 +1204,231 @@ Proof.
   exact H.
 Qed.
 
+Inductive RegisteredLexicalApplicationTruth : forall A : Type, A -> Prop :=
+  | registered_lexical_break_0_John_vase :
+      RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase)
+  | registered_lexical_butter_2_slowly_in_bathroom_John_toast :
+      RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)
+  | registered_lexical_eat_0_John_x_theme : forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme)
+  | registered_lexical_knock_0_John :
+      RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John).
+
+Theorem registered_lexical_application_atomic_base_truth :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term -> AtomicBaseTruth A term.
+Proof.
+  intros A term H.
+  induction H.
+  - apply atomic_base_truth_break_application.
+  - apply atomic_base_truth_butter_application.
+  - apply atomic_base_truth_eat_application.
+  - apply atomic_base_truth_knock_application.
+Qed.
+
+Theorem registered_lexical_application_atomic_closure_truth :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term -> AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  induction H.
+  - apply atomic_closure_truth_break_application.
+    apply atomic_base_truth_break_application.
+  - apply atomic_closure_truth_butter_application.
+    apply atomic_base_truth_butter_application.
+  - apply atomic_closure_truth_eat_application.
+    apply atomic_base_truth_eat_application.
+  - apply atomic_closure_truth_knock_application.
+    apply atomic_base_truth_knock_application.
+Qed.
+
+Inductive FullyRegisteredAtomicClosureTruth : forall A : Type, A -> Prop :=
+  | fully_registered_atomic_truth_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      FullyRegisteredAtomicClosureTruth A term
+  | fully_registered_atomic_truth_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, FullyRegisteredAtomicClosureTruth Prop (P x)) ->
+      FullyRegisteredAtomicClosureTruth Prop (exists x : Entity, P x)
+  | fully_registered_atomic_truth_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, FullyRegisteredAtomicClosureTruth Prop (P x)) ->
+      FullyRegisteredAtomicClosureTruth Prop (exists x : Food, P x)
+  | fully_registered_atomic_truth_sigma_State : forall P : State -> Prop,
+      (forall x : State, FullyRegisteredAtomicClosureTruth Prop (P x)) ->
+      FullyRegisteredAtomicClosureTruth Prop (exists x : State, P x)
+  | fully_registered_atomic_truth_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, FullyRegisteredAtomicClosureTruth Prop (P x)) ->
+      FullyRegisteredAtomicClosureTruth Prop (exists x : StateScale, P x)
+  | fully_registered_atomic_truth_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, FullyRegisteredAtomicClosureTruth Prop (P x)) ->
+      FullyRegisteredAtomicClosureTruth Prop (exists x : TransitionT, P x)
+  | fully_registered_atomic_truth_repeat : forall n : nat, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (repeat n body)
+  | fully_registered_atomic_truth_at_T : forall marker : Entity, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (at_T marker body)
+  | fully_registered_atomic_truth_during_T : forall marker : Entity, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (during_T marker body)
+  | fully_registered_atomic_truth_before_T : forall marker : Entity, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (before_T marker body)
+  | fully_registered_atomic_truth_after_T : forall marker : Entity, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (after_T marker body)
+  | fully_registered_atomic_truth_until_T : forall marker : Entity, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (until_T marker body)
+  | fully_registered_atomic_truth_since_T : forall marker : Entity, forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (since_T marker body)
+  | fully_registered_atomic_truth_not_T : forall body : PropT,
+      FullyRegisteredAtomicClosureTruth PropT body ->
+      FullyRegisteredAtomicClosureTruth PropT (not_T body)
+  | fully_registered_atomic_truth_transition : forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      FullyRegisteredAtomicClosureTruth TransitionT (Transition theme scale source target)
+  | fully_registered_atomic_truth_cause : forall causer : Entity, forall effect : TransitionT,
+      FullyRegisteredAtomicClosureTruth TransitionT effect ->
+      FullyRegisteredAtomicClosureTruth PropT (Cause causer effect).
+
+Theorem fully_registered_atomic_closure_truth_implies_atomic_closure_truth :
+  forall A : Type, forall term : A,
+    FullyRegisteredAtomicClosureTruth A term -> AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  induction H.
+  - apply registered_lexical_application_atomic_closure_truth.
+    assumption.
+  - apply atomic_closure_truth_sigma_Entity.
+    assumption.
+  - apply atomic_closure_truth_sigma_Food.
+    assumption.
+  - apply atomic_closure_truth_sigma_State.
+    assumption.
+  - apply atomic_closure_truth_sigma_StateScale.
+    assumption.
+  - apply atomic_closure_truth_sigma_TransitionT.
+    assumption.
+  - apply atomic_closure_truth_repeat. assumption.
+  - apply atomic_closure_truth_at_T. assumption.
+  - apply atomic_closure_truth_during_T. assumption.
+  - apply atomic_closure_truth_before_T. assumption.
+  - apply atomic_closure_truth_after_T. assumption.
+  - apply atomic_closure_truth_until_T. assumption.
+  - apply atomic_closure_truth_since_T. assumption.
+  - apply atomic_closure_truth_not_T. assumption.
+  - apply atomic_closure_truth_transition.
+    apply registered_state_transition_atomic_base_truth.
+    assumption.
+  - apply atomic_closure_truth_cause. assumption.
+Qed.
+
+Record FullyRegisteredTruthConditionSpec : Type := {
+  fully_registered_truth_denotes : forall A : Type, A -> Prop;
+  fully_registered_truth_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes A term;
+  fully_registered_truth_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, fully_registered_truth_denotes Prop (P x)) ->
+      fully_registered_truth_denotes Prop (exists x : Entity, P x);
+  fully_registered_truth_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, fully_registered_truth_denotes Prop (P x)) ->
+      fully_registered_truth_denotes Prop (exists x : Food, P x);
+  fully_registered_truth_sigma_State : forall P : State -> Prop,
+      (forall x : State, fully_registered_truth_denotes Prop (P x)) ->
+      fully_registered_truth_denotes Prop (exists x : State, P x);
+  fully_registered_truth_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, fully_registered_truth_denotes Prop (P x)) ->
+      fully_registered_truth_denotes Prop (exists x : StateScale, P x);
+  fully_registered_truth_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, fully_registered_truth_denotes Prop (P x)) ->
+      fully_registered_truth_denotes Prop (exists x : TransitionT, P x);
+  fully_registered_truth_repeat : forall n : nat, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (repeat n body);
+  fully_registered_truth_at_T : forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (at_T marker body);
+  fully_registered_truth_during_T : forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (during_T marker body);
+  fully_registered_truth_before_T : forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (before_T marker body);
+  fully_registered_truth_after_T : forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (after_T marker body);
+  fully_registered_truth_until_T : forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (until_T marker body);
+  fully_registered_truth_since_T : forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (since_T marker body);
+  fully_registered_truth_not_T : forall body : PropT,
+      fully_registered_truth_denotes PropT body ->
+      fully_registered_truth_denotes PropT (not_T body);
+  fully_registered_truth_transition : forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes TransitionT (Transition theme scale source target);
+  fully_registered_truth_cause : forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes TransitionT effect ->
+      fully_registered_truth_denotes PropT (Cause causer effect)
+}.
+
+Definition fully_registered_atomic_truth_denotes : forall A : Type, A -> Prop :=
+  FullyRegisteredAtomicClosureTruth.
+
+Definition fully_registered_truth_conditions : FullyRegisteredTruthConditionSpec := {|
+  fully_registered_truth_denotes := fully_registered_atomic_truth_denotes;
+  fully_registered_truth_lexical_application := fun A term h => fully_registered_atomic_truth_lexical_application A term h;
+  fully_registered_truth_sigma_Entity := fun P h => fully_registered_atomic_truth_sigma_Entity P h;
+  fully_registered_truth_sigma_Food := fun P h => fully_registered_atomic_truth_sigma_Food P h;
+  fully_registered_truth_sigma_State := fun P h => fully_registered_atomic_truth_sigma_State P h;
+  fully_registered_truth_sigma_StateScale := fun P h => fully_registered_atomic_truth_sigma_StateScale P h;
+  fully_registered_truth_sigma_TransitionT := fun P h => fully_registered_atomic_truth_sigma_TransitionT P h;
+  fully_registered_truth_repeat := fun n body h => fully_registered_atomic_truth_repeat n body h;
+  fully_registered_truth_at_T := fun marker body h => fully_registered_atomic_truth_at_T marker body h;
+  fully_registered_truth_during_T := fun marker body h => fully_registered_atomic_truth_during_T marker body h;
+  fully_registered_truth_before_T := fun marker body h => fully_registered_atomic_truth_before_T marker body h;
+  fully_registered_truth_after_T := fun marker body h => fully_registered_atomic_truth_after_T marker body h;
+  fully_registered_truth_until_T := fun marker body h => fully_registered_atomic_truth_until_T marker body h;
+  fully_registered_truth_since_T := fun marker body h => fully_registered_atomic_truth_since_T marker body h;
+  fully_registered_truth_not_T := fun body h => fully_registered_atomic_truth_not_T body h;
+  fully_registered_truth_transition := fun theme scale source target h => fully_registered_atomic_truth_transition theme scale source target h;
+  fully_registered_truth_cause := fun causer effect h => fully_registered_atomic_truth_cause causer effect h
+|}.
+
+Theorem fully_registered_truth_condition_spec_exists :
+  exists F : FullyRegisteredTruthConditionSpec,
+    F = fully_registered_truth_conditions.
+Proof.
+  exists fully_registered_truth_conditions. reflexivity.
+Qed.
+
+Theorem fully_registered_truth_conditions_denote_fully_registered :
+  forall A : Type, forall term : A,
+    FullyRegisteredAtomicClosureTruth A term ->
+    fully_registered_truth_denotes fully_registered_truth_conditions A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem fully_registered_truth_conditions_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes fully_registered_truth_conditions A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply fully_registered_atomic_closure_truth_implies_atomic_closure_truth.
+  exact H.
+Qed.
+
 Definition model_interpretable_truth_kernel_denotes : forall A : Type, A -> Prop :=
   ModelInterpretable.
 
@@ -1843,6 +2068,78 @@ Proof.
   exact example_4_transition_refined_registered_truth_condition_sound.
 Qed.
 
+Theorem example_1_fully_registered_atomic_closure_truth : FullyRegisteredAtomicClosureTruth PropT example_1.
+Proof.
+  unfold example_1.
+  apply fully_registered_atomic_truth_at_T.
+  apply fully_registered_atomic_truth_lexical_application.
+  apply registered_lexical_butter_2_slowly_in_bathroom_John_toast.
+Qed.
+Theorem example_2_fully_registered_atomic_closure_truth : FullyRegisteredAtomicClosureTruth Prop example_2.
+Proof.
+  unfold example_2.
+  apply fully_registered_atomic_truth_sigma_Food.
+  intro x_theme.
+  apply fully_registered_atomic_truth_lexical_application.
+  apply registered_lexical_eat_0_John_x_theme.
+Qed.
+Theorem example_3_fully_registered_atomic_closure_truth : FullyRegisteredAtomicClosureTruth PropT example_3.
+Proof.
+  unfold example_3.
+  apply fully_registered_atomic_truth_repeat.
+  apply fully_registered_atomic_truth_lexical_application.
+  apply registered_lexical_knock_0_John.
+Qed.
+Theorem example_4_fully_registered_atomic_closure_truth : FullyRegisteredAtomicClosureTruth PropT example_4.
+Proof.
+  unfold example_4.
+  apply fully_registered_atomic_truth_cause.
+  apply fully_registered_atomic_truth_transition.
+  apply registered_transition_vase_integrity_scale_intact_to_broken.
+Qed.
+
+Theorem example_1_fully_registered_truth_condition_sound : fully_registered_truth_denotes fully_registered_truth_conditions PropT example_1.
+Proof.
+  apply fully_registered_truth_conditions_denote_fully_registered.
+  exact example_1_fully_registered_atomic_closure_truth.
+Qed.
+Theorem example_2_fully_registered_truth_condition_sound : fully_registered_truth_denotes fully_registered_truth_conditions Prop example_2.
+Proof.
+  apply fully_registered_truth_conditions_denote_fully_registered.
+  exact example_2_fully_registered_atomic_closure_truth.
+Qed.
+Theorem example_3_fully_registered_truth_condition_sound : fully_registered_truth_denotes fully_registered_truth_conditions PropT example_3.
+Proof.
+  apply fully_registered_truth_conditions_denote_fully_registered.
+  exact example_3_fully_registered_atomic_closure_truth.
+Qed.
+Theorem example_4_fully_registered_truth_condition_sound : fully_registered_truth_denotes fully_registered_truth_conditions PropT example_4.
+Proof.
+  apply fully_registered_truth_conditions_denote_fully_registered.
+  exact example_4_fully_registered_atomic_closure_truth.
+Qed.
+
+Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact example_1_fully_registered_truth_condition_sound.
+Qed.
+Theorem example_2_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact example_2_fully_registered_truth_condition_sound.
+Qed.
+Theorem example_3_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact example_3_fully_registered_truth_condition_sound.
+Qed.
+Theorem example_4_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact example_4_fully_registered_truth_condition_sound.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -1866,6 +2163,9 @@ Check example_1_transition_refined_atomic_closure_truth.
 Check example_1_transition_refined_atomic_closure_sound.
 Check example_1_transition_refined_registered_truth_condition_sound.
 Check example_1_transition_refined_registered_truth_condition_atomic_sound.
+Check example_1_fully_registered_atomic_closure_truth.
+Check example_1_fully_registered_truth_condition_sound.
+Check example_1_fully_registered_truth_condition_atomic_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -1889,6 +2189,9 @@ Check example_2_transition_refined_atomic_closure_truth.
 Check example_2_transition_refined_atomic_closure_sound.
 Check example_2_transition_refined_registered_truth_condition_sound.
 Check example_2_transition_refined_registered_truth_condition_atomic_sound.
+Check example_2_fully_registered_atomic_closure_truth.
+Check example_2_fully_registered_truth_condition_sound.
+Check example_2_fully_registered_truth_condition_atomic_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -1912,6 +2215,9 @@ Check example_3_transition_refined_atomic_closure_truth.
 Check example_3_transition_refined_atomic_closure_sound.
 Check example_3_transition_refined_registered_truth_condition_sound.
 Check example_3_transition_refined_registered_truth_condition_atomic_sound.
+Check example_3_fully_registered_atomic_closure_truth.
+Check example_3_fully_registered_truth_condition_sound.
+Check example_3_fully_registered_truth_condition_atomic_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -1935,3 +2241,6 @@ Check example_4_transition_refined_atomic_closure_truth.
 Check example_4_transition_refined_atomic_closure_sound.
 Check example_4_transition_refined_registered_truth_condition_sound.
 Check example_4_transition_refined_registered_truth_condition_atomic_sound.
+Check example_4_fully_registered_atomic_closure_truth.
+Check example_4_fully_registered_truth_condition_sound.
+Check example_4_fully_registered_truth_condition_atomic_sound.
