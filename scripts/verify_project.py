@@ -10815,6 +10815,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_syntax_directed_truth_kernel_instance",
         "coq_primitive_truth_assumption_kernel_instance",
         "coq_atomic_closure_truth_kernel_instance",
+        "coq_lexical_transition_truth_model_instance",
         "coq_atomic_valuation_spec_instance",
         "coq_atomic_base_truth_valuation_instance",
         "coq_atomic_closure_truth_condition_spec_instance",

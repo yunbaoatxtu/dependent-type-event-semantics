@@ -504,10 +504,22 @@ def main() -> None:
             "inductive AtomicBaseTruth : (A : Type) -> A -> Prop where" in lean
             and "| atomic_base_truth_eat_application : (n : Nat)" in lean
             and "| atomic_base_truth_transition : (theme : Entity)" in lean
+            and "structure LexicalTransitionTruthModel : Type where" in lean
+            and "atom_model_denotes : (A : Type) -> A -> Prop" in lean
+            and "model_lexical_truth_eat_application : (n : Nat)" in lean
+            and "def lexical_transition_truth_model : LexicalTransitionTruthModel := {"
+            in lean
+            and "theorem lexical_transition_truth_model_exists :" in lean
+            and "theorem lexical_transition_truth_model_denotes_atomic_base_truth :"
+            in lean
             and "structure AtomicValuationSpec : Type where" in lean
             and "atomic_valuation_denotes : (A : Type) -> A -> Prop" in lean
             and "valuation_lexical_truth_eat_application : (n : Nat)" in lean
-            and "def atomic_base_valuation_spec : AtomicValuationSpec := {" in lean
+            and "def atomic_valuation_spec_from_lexical_transition_model : AtomicValuationSpec := {"
+            in lean
+            and "def atomic_base_valuation_spec : AtomicValuationSpec :=" in lean
+            and "theorem atomic_valuation_spec_from_lexical_transition_model_exists :"
+            in lean
             and "theorem atomic_base_valuation_spec_exists :" in lean
             and "theorem atomic_base_valuation_denotes_atomic_base_truth :" in lean
             and "structure AtomicTruthFacts : Type where" in lean
@@ -544,10 +556,21 @@ def main() -> None:
             "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=" in coq
             and "atomic_base_truth_eat_application : forall n : nat" in coq
             and "atomic_base_truth_transition : forall theme : Entity" in coq
+            and "Record LexicalTransitionTruthModel : Type := {" in coq
+            and "atom_model_denotes : forall A : Type, A -> Prop;" in coq
+            and "model_lexical_truth_eat_application : forall n : nat" in coq
+            and "Definition lexical_transition_truth_model : LexicalTransitionTruthModel := {|"
+            in coq
+            and "Theorem lexical_transition_truth_model_exists :" in coq
+            and "Theorem lexical_transition_truth_model_denotes_atomic_base_truth :"
+            in coq
             and "Record AtomicValuationSpec : Type := {" in coq
             and "atomic_valuation_denotes : forall A : Type, A -> Prop;" in coq
             and "valuation_lexical_truth_eat_application : forall n : nat" in coq
-            and "Definition atomic_base_valuation_spec : AtomicValuationSpec := {|"
+            and "Definition atomic_valuation_spec_from_lexical_transition_model : AtomicValuationSpec := {|"
+            in coq
+            and "Definition atomic_base_valuation_spec : AtomicValuationSpec :=" in coq
+            and "Theorem atomic_valuation_spec_from_lexical_transition_model_exists :"
             in coq
             and "Theorem atomic_base_valuation_spec_exists :" in coq
             and "Theorem atomic_base_valuation_denotes_atomic_base_truth :" in coq

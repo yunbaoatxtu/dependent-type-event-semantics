@@ -343,6 +343,32 @@ inductive AtomicBaseTruth : (A : Type) -> A -> Prop where
   | atomic_base_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> AtomicBaseTruth PropT (knock n mods arg1)
   | atomic_base_truth_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> AtomicBaseTruth TransitionT (Transition theme scale source target)
 
+structure LexicalTransitionTruthModel : Type where
+  atom_model_denotes : (A : Type) -> A -> Prop
+  model_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> atom_model_denotes PropT (break n mods arg1 arg2)
+  model_lexical_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> atom_model_denotes PropT (butter n mods arg1 arg2)
+  model_lexical_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> atom_model_denotes Prop (eat n mods arg1 arg2)
+  model_lexical_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> atom_model_denotes PropT (knock n mods arg1)
+  model_transition_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> atom_model_denotes TransitionT (Transition theme scale source target)
+
+def lexical_transition_truth_model : LexicalTransitionTruthModel := {
+  atom_model_denotes := AtomicBaseTruth,
+  model_lexical_truth_break_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_break_application n mods arg1 arg2,
+  model_lexical_truth_butter_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_butter_application n mods arg1 arg2,
+  model_lexical_truth_eat_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_eat_application n mods arg1 arg2,
+  model_lexical_truth_knock_application := fun n mods arg1 => AtomicBaseTruth.atomic_base_truth_knock_application n mods arg1,
+  model_transition_truth := fun theme scale source target => AtomicBaseTruth.atomic_base_truth_transition theme scale source target
+}
+
+theorem lexical_transition_truth_model_exists :
+    Exists (fun M : LexicalTransitionTruthModel => M = lexical_transition_truth_model) := by
+  exact Exists.intro lexical_transition_truth_model rfl
+
+theorem lexical_transition_truth_model_denotes_atomic_base_truth :
+    (A : Type) -> (term : A) -> AtomicBaseTruth A term -> lexical_transition_truth_model.atom_model_denotes A term := by
+  intro A term h
+  exact h
+
 structure AtomicValuationSpec : Type where
   atomic_valuation_denotes : (A : Type) -> A -> Prop
   valuation_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> atomic_valuation_denotes PropT (break n mods arg1 arg2)
@@ -351,14 +377,21 @@ structure AtomicValuationSpec : Type where
   valuation_lexical_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> atomic_valuation_denotes PropT (knock n mods arg1)
   valuation_transition_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> atomic_valuation_denotes TransitionT (Transition theme scale source target)
 
-def atomic_base_valuation_spec : AtomicValuationSpec := {
-  atomic_valuation_denotes := AtomicBaseTruth,
-  valuation_lexical_truth_break_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_break_application n mods arg1 arg2,
-  valuation_lexical_truth_butter_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_butter_application n mods arg1 arg2,
-  valuation_lexical_truth_eat_application := fun n mods arg1 arg2 => AtomicBaseTruth.atomic_base_truth_eat_application n mods arg1 arg2,
-  valuation_lexical_truth_knock_application := fun n mods arg1 => AtomicBaseTruth.atomic_base_truth_knock_application n mods arg1,
-  valuation_transition_truth := fun theme scale source target => AtomicBaseTruth.atomic_base_truth_transition theme scale source target
+def atomic_valuation_spec_from_lexical_transition_model : AtomicValuationSpec := {
+  atomic_valuation_denotes := lexical_transition_truth_model.atom_model_denotes,
+  valuation_lexical_truth_break_application := lexical_transition_truth_model.model_lexical_truth_break_application,
+  valuation_lexical_truth_butter_application := lexical_transition_truth_model.model_lexical_truth_butter_application,
+  valuation_lexical_truth_eat_application := lexical_transition_truth_model.model_lexical_truth_eat_application,
+  valuation_lexical_truth_knock_application := lexical_transition_truth_model.model_lexical_truth_knock_application,
+  valuation_transition_truth := lexical_transition_truth_model.model_transition_truth
 }
+
+def atomic_base_valuation_spec : AtomicValuationSpec :=
+  atomic_valuation_spec_from_lexical_transition_model
+
+theorem atomic_valuation_spec_from_lexical_transition_model_exists :
+    Exists (fun V : AtomicValuationSpec => V = atomic_valuation_spec_from_lexical_transition_model) := by
+  exact Exists.intro atomic_valuation_spec_from_lexical_transition_model rfl
 
 theorem atomic_base_valuation_spec_exists :
     Exists (fun V : AtomicValuationSpec => V = atomic_base_valuation_spec) := by

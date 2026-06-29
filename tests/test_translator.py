@@ -1403,6 +1403,30 @@ class TranslatorTests(unittest.TestCase):
             "| atomic_base_truth_transition : (theme : Entity)",
             lean_module,
         )
+        self.assertIn(
+            "structure LexicalTransitionTruthModel : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "atom_model_denotes : (A : Type) -> A -> Prop",
+            lean_module,
+        )
+        self.assertIn(
+            "model_lexical_truth_eat_application : (n : Nat)",
+            lean_module,
+        )
+        self.assertIn(
+            "def lexical_transition_truth_model : LexicalTransitionTruthModel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem lexical_transition_truth_model_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem lexical_transition_truth_model_denotes_atomic_base_truth :",
+            lean_module,
+        )
         self.assertIn("structure AtomicValuationSpec : Type where", lean_module)
         self.assertIn(
             "atomic_valuation_denotes : (A : Type) -> A -> Prop",
@@ -1413,7 +1437,15 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
-            "def atomic_base_valuation_spec : AtomicValuationSpec := {",
+            "def atomic_valuation_spec_from_lexical_transition_model : AtomicValuationSpec := {",
+            lean_module,
+        )
+        self.assertIn(
+            "def atomic_base_valuation_spec : AtomicValuationSpec :=",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem atomic_valuation_spec_from_lexical_transition_model_exists :",
             lean_module,
         )
         self.assertIn(
@@ -1804,6 +1836,30 @@ class TranslatorTests(unittest.TestCase):
             "atomic_base_truth_transition : forall theme : Entity",
             coq_module,
         )
+        self.assertIn(
+            "Record LexicalTransitionTruthModel : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "atom_model_denotes : forall A : Type, A -> Prop;",
+            coq_module,
+        )
+        self.assertIn(
+            "model_lexical_truth_eat_application : forall n : nat",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition lexical_transition_truth_model : LexicalTransitionTruthModel := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem lexical_transition_truth_model_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem lexical_transition_truth_model_denotes_atomic_base_truth :",
+            coq_module,
+        )
         self.assertIn("Record AtomicValuationSpec : Type := {", coq_module)
         self.assertIn(
             "atomic_valuation_denotes : forall A : Type, A -> Prop;",
@@ -1814,7 +1870,15 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
-            "Definition atomic_base_valuation_spec : AtomicValuationSpec := {|",
+            "Definition atomic_valuation_spec_from_lexical_transition_model : AtomicValuationSpec := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition atomic_base_valuation_spec : AtomicValuationSpec :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem atomic_valuation_spec_from_lexical_transition_model_exists :",
             coq_module,
         )
         self.assertIn(
@@ -14387,6 +14451,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_syntax_directed_truth_kernel_instance",
                 "coq_primitive_truth_assumption_kernel_instance",
                 "coq_atomic_closure_truth_kernel_instance",
+                "coq_lexical_transition_truth_model_instance",
                 "coq_atomic_valuation_spec_instance",
                 "coq_atomic_base_truth_valuation_instance",
                 "coq_atomic_closure_truth_condition_spec_instance",
@@ -23473,8 +23538,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("structural preservation proofs", manuscript)
         self.assertIn("model interpretability boundary", manuscript)
         self.assertIn("`AtomicValuationSpec`", readme)
+        self.assertIn("`LexicalTransitionTruthModel`", readme)
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
+        self.assertIn("`LexicalTransitionTruthModel`", formalization_readme)
         self.assertIn("AtomicValuationSpec", manuscript)
+        self.assertIn("LexicalTransitionTruthModel", manuscript)
+        self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
         self.assertIn("coq_atomic_valuation_spec_instance", manuscript)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)

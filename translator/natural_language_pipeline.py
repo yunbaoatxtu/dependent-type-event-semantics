@@ -20999,6 +20999,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_lexical_transition_truth_model_instance",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_atomic_valuation_spec_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21085,6 +21090,11 @@ def project_completion_status_payload(
                     "AtomicValuationSpec, a named interface separating "
                     "lexical atom valuation fields from the Transition "
                     "atom valuation field before producing AtomicTruthFacts. "
+                    "This bridge is now factored through "
+                    "LexicalTransitionTruthModel, a named model interface "
+                    "whose denotation field is AtomicBaseTruth and whose "
+                    "lexical and Transition fields are then re-exported as "
+                    "an AtomicValuationSpec. "
                     "The atomic-closure layer now also exposes a named "
                     "TruthConditionSpec instance, proves that the instance "
                     "exists, and checks per-example soundness directly "

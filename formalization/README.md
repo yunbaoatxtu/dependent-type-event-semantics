@@ -112,8 +112,10 @@ check both `example_i_atomic_closure_truth` and
 `example_i_atomic_closure_truth_kernel_sound` for every exported example. This
 narrows the remaining assumptions to atom-level lexical and transition facts.
 The atom layer is now also less opaque: `AtomicBaseTruth` is generated as an
-inductive base-valuation relation, `AtomicValuationSpec` names the lexical
-atom valuation fields separately from `valuation_transition_truth`, and
+inductive base-valuation relation, `LexicalTransitionTruthModel` names a
+model bridge whose denotation predicate is `AtomicBaseTruth` while its fields
+separate lexical atom truth from transition atom truth, `AtomicValuationSpec`
+then re-exports those fields as valuation evidence, and
 `atomic_truth_facts` is a concrete record assembled through
 `atomic_truth_facts_from_atomic_base_valuation`. The generated files now
 additionally name the induced `TruthConditionSpec` as
