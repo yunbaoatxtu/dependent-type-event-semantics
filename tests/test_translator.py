@@ -1403,13 +1403,42 @@ class TranslatorTests(unittest.TestCase):
             "| atomic_base_truth_transition : (theme : Entity)",
             lean_module,
         )
+        self.assertIn("structure AtomicValuationSpec : Type where", lean_module)
+        self.assertIn(
+            "atomic_valuation_denotes : (A : Type) -> A -> Prop",
+            lean_module,
+        )
+        self.assertIn(
+            "valuation_lexical_truth_eat_application : (n : Nat)",
+            lean_module,
+        )
+        self.assertIn(
+            "def atomic_base_valuation_spec : AtomicValuationSpec := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem atomic_base_valuation_spec_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem atomic_base_valuation_denotes_atomic_base_truth :",
+            lean_module,
+        )
         self.assertIn("structure AtomicTruthFacts : Type where", lean_module)
         self.assertIn(
             "atomic_lexical_truth_eat_application : (n : Nat)",
             lean_module,
         )
         self.assertIn(
-            "def atomic_truth_facts : AtomicTruthFacts := {",
+            "def atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {",
+            lean_module,
+        )
+        self.assertIn(
+            "def atomic_truth_facts : AtomicTruthFacts :=",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem atomic_truth_facts_from_atomic_base_valuation_exists :",
             lean_module,
         )
         self.assertIn(
@@ -1775,13 +1804,42 @@ class TranslatorTests(unittest.TestCase):
             "atomic_base_truth_transition : forall theme : Entity",
             coq_module,
         )
+        self.assertIn("Record AtomicValuationSpec : Type := {", coq_module)
+        self.assertIn(
+            "atomic_valuation_denotes : forall A : Type, A -> Prop;",
+            coq_module,
+        )
+        self.assertIn(
+            "valuation_lexical_truth_eat_application : forall n : nat",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition atomic_base_valuation_spec : AtomicValuationSpec := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem atomic_base_valuation_spec_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem atomic_base_valuation_denotes_atomic_base_truth :",
+            coq_module,
+        )
         self.assertIn("Record AtomicTruthFacts : Type := {", coq_module)
         self.assertIn(
             "atomic_lexical_truth_eat_application : forall n : nat",
             coq_module,
         )
         self.assertIn(
-            "Definition atomic_truth_facts : AtomicTruthFacts := {|",
+            "Definition atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition atomic_truth_facts : AtomicTruthFacts :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem atomic_truth_facts_from_atomic_base_valuation_exists :",
             coq_module,
         )
         self.assertIn(
@@ -14329,6 +14387,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_syntax_directed_truth_kernel_instance",
                 "coq_primitive_truth_assumption_kernel_instance",
                 "coq_atomic_closure_truth_kernel_instance",
+                "coq_atomic_valuation_spec_instance",
                 "coq_atomic_base_truth_valuation_instance",
                 "coq_atomic_closure_truth_condition_spec_instance",
                 "paper_docx_sync",
@@ -23413,6 +23472,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("record-binding proofs", manuscript)
         self.assertIn("structural preservation proofs", manuscript)
         self.assertIn("model interpretability boundary", manuscript)
+        self.assertIn("`AtomicValuationSpec`", readme)
+        self.assertIn("`AtomicValuationSpec`", formalization_readme)
+        self.assertIn("AtomicValuationSpec", manuscript)
+        self.assertIn("coq_atomic_valuation_spec_instance", manuscript)
         self.assertIn("locative_intransitive_predication", readme)
         self.assertIn("locative_intransitive_predication_single_reading", readme)
         self.assertIn("Parameter on_mat :", readme)

@@ -1017,6 +1017,10 @@ def atomic_truth_application_field(function: str) -> str:
     return f"atomic_lexical_truth_{function}_application"
 
 
+def atomic_valuation_application_field(function: str) -> str:
+    return f"valuation_lexical_truth_{function}_application"
+
+
 def atomic_base_truth_application_constructor(function: str) -> str:
     return f"atomic_base_truth_{function}_application"
 
@@ -1367,6 +1371,52 @@ def _lean_function_atomic_truth_field(
             binders
             + [
                 f"AtomicBaseTruth {result_type} "
+                f"({name} {' '.join(application_args)})"
+            ]
+        )
+    )
+
+
+def _coq_function_atomic_valuation_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {atomic_valuation_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"atomic_valuation_denotes {result_type} "
+        + f"({name} {' '.join(application_args)});",
+    ]
+
+
+def _lean_function_atomic_valuation_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {atomic_valuation_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [
+                f"atomic_valuation_denotes {result_type} "
                 f"({name} {' '.join(application_args)})"
             ]
         )
@@ -2495,6 +2545,73 @@ def atomic_closure_truth_kernel_lines(
                 "(scale : StateScale) -> (source : State) -> (target : State) -> "
                 "AtomicBaseTruth TransitionT (Transition theme scale source target)",
                 "",
+                "structure AtomicValuationSpec : Type where",
+                "  atomic_valuation_denotes : (A : Type) -> A -> Prop",
+            ]
+        )
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_atomic_valuation_field(name, arg_types, result_type)
+            )
+        lines.extend(
+            [
+                "  valuation_transition_truth : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "atomic_valuation_denotes TransitionT "
+                "(Transition theme scale source target)",
+                "",
+                "def atomic_base_valuation_spec : AtomicValuationSpec := {",
+                "  atomic_valuation_denotes := AtomicBaseTruth,",
+            ]
+        )
+        valuation_fields: list[tuple[str, str]] = []
+        for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            binders = " ".join(["n", "mods", *ordinary_args])
+            constructor_args = " ".join(["n", "mods", *ordinary_args])
+            valuation_fields.append(
+                (
+                    atomic_valuation_application_field(name),
+                    (
+                        f"fun {binders} => "
+                        f"AtomicBaseTruth.{atomic_base_truth_application_constructor(name)} "
+                        f"{constructor_args}"
+                    ),
+                )
+            )
+        valuation_fields.append(
+            (
+                "valuation_transition_truth",
+                "fun theme scale source target => "
+                "AtomicBaseTruth.atomic_base_truth_transition theme scale source target",
+            )
+        )
+        for index, (field, value) in enumerate(valuation_fields):
+            suffix = "," if index < len(valuation_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem atomic_base_valuation_spec_exists :",
+                "    Exists (fun V : AtomicValuationSpec => "
+                "V = atomic_base_valuation_spec) := by",
+                "  exact Exists.intro atomic_base_valuation_spec rfl",
+                "",
+                "theorem atomic_base_valuation_denotes_atomic_base_truth :",
+                "    (A : Type) -> (term : A) -> AtomicBaseTruth A term -> "
+                "atomic_base_valuation_spec.atomic_valuation_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
                 "structure AtomicTruthFacts : Type where",
             ]
         )
@@ -2506,7 +2623,7 @@ def atomic_closure_truth_kernel_lines(
                 "(scale : StateScale) -> (source : State) -> (target : State) -> "
                 "AtomicBaseTruth TransitionT (Transition theme scale source target)",
                 "",
-                "def atomic_truth_facts : AtomicTruthFacts := {",
+                "def atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {",
             ]
         )
         atomic_fact_fields: list[tuple[str, str]] = []
@@ -2527,7 +2644,7 @@ def atomic_closure_truth_kernel_lines(
                     atomic_truth_application_field(name),
                     (
                         f"fun {binders} => "
-                        f"AtomicBaseTruth.{atomic_base_truth_application_constructor(name)} "
+                        f"atomic_base_valuation_spec.{atomic_valuation_application_field(name)} "
                         f"{constructor_args}"
                     ),
                 )
@@ -2536,7 +2653,7 @@ def atomic_closure_truth_kernel_lines(
             (
                 "atomic_transition_truth",
                 "fun theme scale source target => "
-                "AtomicBaseTruth.atomic_base_truth_transition theme scale source target",
+                "atomic_base_valuation_spec.valuation_transition_truth theme scale source target",
             )
         )
         for index, (field, value) in enumerate(atomic_fact_fields):
@@ -2545,6 +2662,14 @@ def atomic_closure_truth_kernel_lines(
         lines.extend(
             [
                 "}",
+                "",
+                "def atomic_truth_facts : AtomicTruthFacts :=",
+                "  atomic_truth_facts_from_atomic_base_valuation",
+                "",
+                "theorem atomic_truth_facts_from_atomic_base_valuation_exists :",
+                "    Exists (fun F : AtomicTruthFacts => "
+                "F = atomic_truth_facts_from_atomic_base_valuation) := by",
+                "  exact Exists.intro atomic_truth_facts_from_atomic_base_valuation rfl",
             "",
                 "inductive AtomicClosureTruth : (A : Type) -> A -> Prop where",
             ]
@@ -2752,6 +2877,74 @@ def atomic_closure_truth_kernel_lines(
     lines.extend(
         [
             "",
+        "Record AtomicValuationSpec : Type := {",
+        "  atomic_valuation_denotes : forall A : Type, A -> Prop;",
+        ]
+    )
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(_coq_function_atomic_valuation_field(name, arg_types, result_type))
+    lines.extend(
+        [
+            "  valuation_transition_truth : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      atomic_valuation_denotes TransitionT "
+            "(Transition theme scale source target)",
+            "}.",
+            "",
+            "Definition atomic_base_valuation_spec : AtomicValuationSpec := {|",
+            "  atomic_valuation_denotes := AtomicBaseTruth;",
+        ]
+    )
+    valuation_fields = []
+    for name, (arg_types, _result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        binders = " ".join(["n", "mods", *ordinary_args])
+        constructor_args = " ".join(["n", "mods", *ordinary_args])
+        valuation_fields.append(
+            (
+                atomic_valuation_application_field(name),
+                (
+                    f"fun {binders} => "
+                    f"{atomic_base_truth_application_constructor(name)} "
+                    f"{constructor_args}"
+                ),
+            )
+        )
+    valuation_fields.append(
+        (
+            "valuation_transition_truth",
+            "fun theme scale source target => "
+            "atomic_base_truth_transition theme scale source target",
+        )
+    )
+    for index, (field, value) in enumerate(valuation_fields):
+        suffix = ";" if index < len(valuation_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem atomic_base_valuation_spec_exists :",
+            "  exists V : AtomicValuationSpec,",
+            "    V = atomic_base_valuation_spec.",
+            "Proof.",
+            "  exists atomic_base_valuation_spec. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem atomic_base_valuation_denotes_atomic_base_truth :",
+            "  forall A : Type, forall term : A,",
+            "    AtomicBaseTruth A term ->",
+            "    atomic_valuation_denotes atomic_base_valuation_spec A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
         "Record AtomicTruthFacts : Type := {",
         ]
     )
@@ -2766,7 +2959,7 @@ def atomic_closure_truth_kernel_lines(
             "(Transition theme scale source target)",
             "}.",
             "",
-            "Definition atomic_truth_facts : AtomicTruthFacts := {|",
+            "Definition atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {|",
         ]
     )
     atomic_fact_fields = []
@@ -2783,24 +2976,34 @@ def atomic_closure_truth_kernel_lines(
                 atomic_truth_application_field(name),
                 (
                     f"fun {binders} => "
-                    f"{atomic_base_truth_application_constructor(name)} "
+                    f"{atomic_valuation_application_field(name)} atomic_base_valuation_spec "
                     f"{constructor_args}"
                 ),
             )
         )
     atomic_fact_fields.append(
-        (
-            "atomic_transition_truth",
-            "fun theme scale source target => "
-            "atomic_base_truth_transition theme scale source target",
+            (
+                "atomic_transition_truth",
+                "fun theme scale source target => "
+                "valuation_transition_truth atomic_base_valuation_spec theme scale source target",
+            )
         )
-    )
     for index, (field, value) in enumerate(atomic_fact_fields):
         suffix = ";" if index < len(atomic_fact_fields) - 1 else ""
         lines.append(f"  {field} := {value}{suffix}")
     lines.extend(
         [
             "|}.",
+            "",
+            "Definition atomic_truth_facts : AtomicTruthFacts :=",
+            "  atomic_truth_facts_from_atomic_base_valuation.",
+            "",
+            "Theorem atomic_truth_facts_from_atomic_base_valuation_exists :",
+            "  exists F : AtomicTruthFacts,",
+            "    F = atomic_truth_facts_from_atomic_base_valuation.",
+            "Proof.",
+            "  exists atomic_truth_facts_from_atomic_base_valuation. reflexivity.",
+            "Qed.",
             "",
             "Inductive AtomicClosureTruth : forall A : Type, A -> Prop :=",
         ]

@@ -1030,10 +1030,18 @@ remain atom-level facts, while Sigma, repetition, temporal operators,
 negation, and `Cause` are closed by checked constructors. Each exported example
 receives both `example_i_atomic_closure_truth` and
 `example_i_atomic_closure_truth_kernel_sound` checks. The follow-up verified
+objective `coq_atomic_valuation_spec_instance` inserts an
+`AtomicValuationSpec` interface between the raw atom constructors and the
+`AtomicTruthFacts` record. Its fields separately name lexical atom valuations
+such as `valuation_lexical_truth_eat_application` and the transition atom
+valuation `valuation_transition_truth`, then prove
+`atomic_base_valuation_spec_exists` and
+`atomic_base_valuation_denotes_atomic_base_truth`. The follow-up verified
 objective `coq_atomic_base_truth_valuation_instance` now makes
 `AtomicBaseTruth` an inductive base-valuation relation and defines
-`atomic_truth_facts` from its constructors, rather than leaving the atomic fact
-record as an opaque parameter. The verified objective
+`atomic_truth_facts` from
+`atomic_truth_facts_from_atomic_base_valuation`, rather than leaving the atomic
+fact record as an opaque parameter. The verified objective
 `coq_atomic_closure_truth_condition_spec_instance` now gives this atomic layer
 a named `TruthConditionSpec`, `atomic_closure_truth_conditions`, proves that
 the spec exists, and checks per-example

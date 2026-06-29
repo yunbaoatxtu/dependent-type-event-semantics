@@ -233,9 +233,14 @@ objective, `coq_atomic_closure_truth_kernel_instance`, adds `AtomicBaseTruth`,
 repetition, temporal, polarity, and causal composition out of the primitive
 assumption list and leaves only atom-level lexical and transition facts as
 open assumptions. The follow-up
+`coq_atomic_valuation_spec_instance` adds `AtomicValuationSpec`, a named
+valuation interface that separates lexical atom valuation fields from the
+`valuation_transition_truth` field before producing `AtomicTruthFacts`. The
+follow-up
 `coq_atomic_base_truth_valuation_instance` makes `AtomicBaseTruth` an
 inductive base-valuation relation and defines `atomic_truth_facts` from those
-constructors instead of exposing it as an opaque parameter. The follow-up
+constructors via `atomic_truth_facts_from_atomic_base_valuation` instead of
+exposing it as an opaque parameter. The follow-up
 `coq_atomic_closure_truth_condition_spec_instance` names the induced
 `TruthConditionSpec` as `atomic_closure_truth_conditions`, proves the spec
 exists, and checks per-example

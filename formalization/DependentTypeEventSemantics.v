@@ -619,6 +619,45 @@ Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=
   | atomic_base_truth_transition : forall theme : Entity, forall scale : StateScale, forall source : State, forall target : State,
       AtomicBaseTruth TransitionT (Transition theme scale source target).
 
+Record AtomicValuationSpec : Type := {
+  atomic_valuation_denotes : forall A : Type, A -> Prop;
+  valuation_lexical_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      atomic_valuation_denotes PropT (break n mods arg1 arg2);
+  valuation_lexical_truth_butter_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      atomic_valuation_denotes PropT (butter n mods arg1 arg2);
+  valuation_lexical_truth_eat_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Food,
+      atomic_valuation_denotes Prop (eat n mods arg1 arg2);
+  valuation_lexical_truth_knock_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity,
+      atomic_valuation_denotes PropT (knock n mods arg1);
+  valuation_transition_truth : forall theme : Entity, forall scale : StateScale, forall source : State, forall target : State,
+      atomic_valuation_denotes TransitionT (Transition theme scale source target)
+}.
+
+Definition atomic_base_valuation_spec : AtomicValuationSpec := {|
+  atomic_valuation_denotes := AtomicBaseTruth;
+  valuation_lexical_truth_break_application := fun n mods arg1 arg2 => atomic_base_truth_break_application n mods arg1 arg2;
+  valuation_lexical_truth_butter_application := fun n mods arg1 arg2 => atomic_base_truth_butter_application n mods arg1 arg2;
+  valuation_lexical_truth_eat_application := fun n mods arg1 arg2 => atomic_base_truth_eat_application n mods arg1 arg2;
+  valuation_lexical_truth_knock_application := fun n mods arg1 => atomic_base_truth_knock_application n mods arg1;
+  valuation_transition_truth := fun theme scale source target => atomic_base_truth_transition theme scale source target
+|}.
+
+Theorem atomic_base_valuation_spec_exists :
+  exists V : AtomicValuationSpec,
+    V = atomic_base_valuation_spec.
+Proof.
+  exists atomic_base_valuation_spec. reflexivity.
+Qed.
+
+Theorem atomic_base_valuation_denotes_atomic_base_truth :
+  forall A : Type, forall term : A,
+    AtomicBaseTruth A term ->
+    atomic_valuation_denotes atomic_base_valuation_spec A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
 Record AtomicTruthFacts : Type := {
   atomic_lexical_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
       AtomicBaseTruth PropT (break n mods arg1 arg2);
@@ -632,13 +671,23 @@ Record AtomicTruthFacts : Type := {
       AtomicBaseTruth TransitionT (Transition theme scale source target)
 }.
 
-Definition atomic_truth_facts : AtomicTruthFacts := {|
-  atomic_lexical_truth_break_application := fun n mods arg1 arg2 => atomic_base_truth_break_application n mods arg1 arg2;
-  atomic_lexical_truth_butter_application := fun n mods arg1 arg2 => atomic_base_truth_butter_application n mods arg1 arg2;
-  atomic_lexical_truth_eat_application := fun n mods arg1 arg2 => atomic_base_truth_eat_application n mods arg1 arg2;
-  atomic_lexical_truth_knock_application := fun n mods arg1 => atomic_base_truth_knock_application n mods arg1;
-  atomic_transition_truth := fun theme scale source target => atomic_base_truth_transition theme scale source target
+Definition atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {|
+  atomic_lexical_truth_break_application := fun n mods arg1 arg2 => valuation_lexical_truth_break_application atomic_base_valuation_spec n mods arg1 arg2;
+  atomic_lexical_truth_butter_application := fun n mods arg1 arg2 => valuation_lexical_truth_butter_application atomic_base_valuation_spec n mods arg1 arg2;
+  atomic_lexical_truth_eat_application := fun n mods arg1 arg2 => valuation_lexical_truth_eat_application atomic_base_valuation_spec n mods arg1 arg2;
+  atomic_lexical_truth_knock_application := fun n mods arg1 => valuation_lexical_truth_knock_application atomic_base_valuation_spec n mods arg1;
+  atomic_transition_truth := fun theme scale source target => valuation_transition_truth atomic_base_valuation_spec theme scale source target
 |}.
+
+Definition atomic_truth_facts : AtomicTruthFacts :=
+  atomic_truth_facts_from_atomic_base_valuation.
+
+Theorem atomic_truth_facts_from_atomic_base_valuation_exists :
+  exists F : AtomicTruthFacts,
+    F = atomic_truth_facts_from_atomic_base_valuation.
+Proof.
+  exists atomic_truth_facts_from_atomic_base_valuation. reflexivity.
+Qed.
 
 Inductive AtomicClosureTruth : forall A : Type, A -> Prop :=
   | atomic_closure_truth_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,

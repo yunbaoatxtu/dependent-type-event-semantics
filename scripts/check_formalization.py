@@ -504,10 +504,20 @@ def main() -> None:
             "inductive AtomicBaseTruth : (A : Type) -> A -> Prop where" in lean
             and "| atomic_base_truth_eat_application : (n : Nat)" in lean
             and "| atomic_base_truth_transition : (theme : Entity)" in lean
+            and "structure AtomicValuationSpec : Type where" in lean
+            and "atomic_valuation_denotes : (A : Type) -> A -> Prop" in lean
+            and "valuation_lexical_truth_eat_application : (n : Nat)" in lean
+            and "def atomic_base_valuation_spec : AtomicValuationSpec := {" in lean
+            and "theorem atomic_base_valuation_spec_exists :" in lean
+            and "theorem atomic_base_valuation_denotes_atomic_base_truth :" in lean
             and "structure AtomicTruthFacts : Type where" in lean
             and "atomic_lexical_truth_eat_application : (n : Nat)" in lean
             and "AtomicBaseTruth Prop (eat n mods arg1 arg2)" in lean
-            and "def atomic_truth_facts : AtomicTruthFacts := {" in lean
+            and "def atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {"
+            in lean
+            and "def atomic_truth_facts : AtomicTruthFacts :=" in lean
+            and "theorem atomic_truth_facts_from_atomic_base_valuation_exists :"
+            in lean
             and "AtomicBaseTruth.atomic_base_truth_eat_application" in lean
             and "AtomicBaseTruth.atomic_base_truth_transition" in lean
             and "inductive AtomicClosureTruth : (A : Type) -> A -> Prop where"
@@ -534,10 +544,20 @@ def main() -> None:
             "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=" in coq
             and "atomic_base_truth_eat_application : forall n : nat" in coq
             and "atomic_base_truth_transition : forall theme : Entity" in coq
+            and "Record AtomicValuationSpec : Type := {" in coq
+            and "atomic_valuation_denotes : forall A : Type, A -> Prop;" in coq
+            and "valuation_lexical_truth_eat_application : forall n : nat" in coq
+            and "Definition atomic_base_valuation_spec : AtomicValuationSpec := {|"
+            in coq
+            and "Theorem atomic_base_valuation_spec_exists :" in coq
+            and "Theorem atomic_base_valuation_denotes_atomic_base_truth :" in coq
             and "Record AtomicTruthFacts : Type := {" in coq
             and "atomic_lexical_truth_eat_application : forall n : nat" in coq
             and "AtomicBaseTruth Prop (eat n mods arg1 arg2)" in coq
-            and "Definition atomic_truth_facts : AtomicTruthFacts := {|" in coq
+            and "Definition atomic_truth_facts_from_atomic_base_valuation : AtomicTruthFacts := {|"
+            in coq
+            and "Definition atomic_truth_facts : AtomicTruthFacts :=" in coq
+            and "Theorem atomic_truth_facts_from_atomic_base_valuation_exists :" in coq
             and "atomic_base_truth_eat_application n mods arg1 arg2" in coq
             and "atomic_base_truth_transition theme scale source target" in coq
             and "Inductive AtomicClosureTruth : forall A : Type, A -> Prop :="
