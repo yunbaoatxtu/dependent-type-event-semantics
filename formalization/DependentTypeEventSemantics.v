@@ -100,6 +100,68 @@ Inductive SemanticPreservation : forall A : Type, A -> Prop :=
   | preserve_cause : forall causer : Entity, forall effect : TransitionT,
       SemanticPreservation TransitionT effect ->
       SemanticPreservation PropT (Cause causer effect).
+
+Inductive ModelInterpretable : forall A : Type, A -> Prop :=
+  | model_break_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      ModelInterpretable PropT (break n mods arg1 arg2)
+  | model_butter_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Entity,
+      ModelInterpretable PropT (butter n mods arg1 arg2)
+  | model_eat_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity, forall arg2 : Food,
+      ModelInterpretable Prop (eat n mods arg1 arg2)
+  | model_knock_application : forall n : nat, forall mods : ModifierSeq n, forall arg1 : Entity,
+      ModelInterpretable PropT (knock n mods arg1)
+  | model_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, ModelInterpretable Prop (P x)) ->
+      ModelInterpretable Prop (exists x : Entity, P x)
+  | model_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, ModelInterpretable Prop (P x)) ->
+      ModelInterpretable Prop (exists x : Food, P x)
+  | model_sigma_State : forall P : State -> Prop,
+      (forall x : State, ModelInterpretable Prop (P x)) ->
+      ModelInterpretable Prop (exists x : State, P x)
+  | model_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, ModelInterpretable Prop (P x)) ->
+      ModelInterpretable Prop (exists x : StateScale, P x)
+  | model_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, ModelInterpretable Prop (P x)) ->
+      ModelInterpretable Prop (exists x : TransitionT, P x)
+  | model_repeat : forall n : nat, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (repeat n body)
+  | model_at_T : forall marker : Entity, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (at_T marker body)
+  | model_during_T : forall marker : Entity, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (during_T marker body)
+  | model_before_T : forall marker : Entity, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (before_T marker body)
+  | model_after_T : forall marker : Entity, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (after_T marker body)
+  | model_until_T : forall marker : Entity, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (until_T marker body)
+  | model_since_T : forall marker : Entity, forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (since_T marker body)
+  | model_not_T : forall body : PropT,
+      ModelInterpretable PropT body ->
+      ModelInterpretable PropT (not_T body)
+  | model_transition : forall theme : Entity, forall scale : StateScale, forall source : State, forall target : State,
+      ModelInterpretable TransitionT (Transition theme scale source target)
+  | model_cause : forall causer : Entity, forall effect : TransitionT,
+      ModelInterpretable TransitionT effect ->
+      ModelInterpretable PropT (Cause causer effect).
+
+Theorem semantic_preservation_model_interpretable :
+  forall A : Type, forall term : A,
+    SemanticPreservation A term -> ModelInterpretable A term.
+Proof.
+  intros A term H.
+  induction H; constructor; assumption.
+Qed.
 Definition PreservationTargetMatches
   (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   obligation_statement target = SemanticPreservation A term.
@@ -179,27 +241,52 @@ Proof.
   apply preserve_transition.
 Qed.
 
+Theorem example_1_model_interpretable : ModelInterpretable PropT example_1.
+Proof.
+  apply semantic_preservation_model_interpretable.
+  exact example_1_semantic_preservation_proved.
+Qed.
+Theorem example_2_model_interpretable : ModelInterpretable Prop example_2.
+Proof.
+  apply semantic_preservation_model_interpretable.
+  exact example_2_semantic_preservation_proved.
+Qed.
+Theorem example_3_model_interpretable : ModelInterpretable PropT example_3.
+Proof.
+  apply semantic_preservation_model_interpretable.
+  exact example_3_semantic_preservation_proved.
+Qed.
+Theorem example_4_model_interpretable : ModelInterpretable PropT example_4.
+Proof.
+  apply semantic_preservation_model_interpretable.
+  exact example_4_semantic_preservation_proved.
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
 Check example_1_semantic_preservation_obligation_is_prop.
 Check example_1_semantic_preservation_target_matches.
 Check example_1_semantic_preservation_proved.
+Check example_1_model_interpretable.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
 Check example_2_semantic_preservation_obligation_is_prop.
 Check example_2_semantic_preservation_target_matches.
 Check example_2_semantic_preservation_proved.
+Check example_2_model_interpretable.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
 Check example_3_semantic_preservation_obligation_is_prop.
 Check example_3_semantic_preservation_target_matches.
 Check example_3_semantic_preservation_proved.
+Check example_3_model_interpretable.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
 Check example_4_semantic_preservation_obligation_is_prop.
 Check example_4_semantic_preservation_target_matches.
 Check example_4_semantic_preservation_proved.
+Check example_4_model_interpretable.

@@ -20949,6 +20949,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_model_interpretability_boundary",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -20975,9 +20980,11 @@ def project_completion_status_payload(
                     "Coq/Rocq now checks a shallow exported scaffold, named "
                     "semantic-preservation obligations, Prop-level "
                     "well-formedness, record binding, and structural proofs "
-                    "for the generated obligations. The remaining deep proof "
-                    "work is to connect the structural preservation relation "
-                    "to an independently specified denotational semantics."
+                    "for the generated obligations. It also proves a model "
+                    "interpretability boundary theorem from structural "
+                    "preservation to ModelInterpretable. The remaining deep "
+                    "proof work is to connect ModelInterpretable to an "
+                    "independently specified denotational semantics."
                 ),
             },
             {
@@ -21001,11 +21008,11 @@ def project_completion_status_payload(
             "full_natural_language_certification_false",
             "surface_parser_claim_registered_examples_only",
             "fallback_certification_level_shallow_scaffold",
-            "semantic_preservation_model_soundness_unproved",
+            "model_interpretability_denotation_unproved",
         ],
         "next_recommended_stages": [
             "promote_more_fallback_successes_to_registered_constructions",
-            "prove_preservation_constructor_soundness",
+            "prove_model_interpretable_denotational_soundness",
             "expand_scope_attachment_discourse_coverage",
             "separate_parser_coverage_claims_from_semantic_translation_claims",
         ],

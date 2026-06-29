@@ -66,6 +66,33 @@ inductive SemanticPreservation : (A : Type) -> A -> Prop where
   | preserve_not_T : (body : PropT) -> SemanticPreservation PropT body -> SemanticPreservation PropT (not_T body)
   | preserve_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> SemanticPreservation TransitionT (Transition theme scale source target)
   | preserve_cause : (causer : Entity) -> (effect : TransitionT) -> SemanticPreservation TransitionT effect -> SemanticPreservation PropT (Cause causer effect)
+
+inductive ModelInterpretable : (A : Type) -> A -> Prop where
+  | model_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> ModelInterpretable PropT (break n mods arg1 arg2)
+  | model_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> ModelInterpretable PropT (butter n mods arg1 arg2)
+  | model_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> ModelInterpretable Prop (eat n mods arg1 arg2)
+  | model_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> ModelInterpretable PropT (knock n mods arg1)
+  | model_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> ModelInterpretable Prop (P x)) -> ModelInterpretable Prop (Exists fun x : Entity => P x)
+  | model_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> ModelInterpretable Prop (P x)) -> ModelInterpretable Prop (Exists fun x : Food => P x)
+  | model_sigma_State : (P : State -> Prop) -> ((x : State) -> ModelInterpretable Prop (P x)) -> ModelInterpretable Prop (Exists fun x : State => P x)
+  | model_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> ModelInterpretable Prop (P x)) -> ModelInterpretable Prop (Exists fun x : StateScale => P x)
+  | model_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> ModelInterpretable Prop (P x)) -> ModelInterpretable Prop (Exists fun x : TransitionT => P x)
+  | model_repeat : (n : Nat) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (repeat n body)
+  | model_at_T : (marker : Entity) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (at_T marker body)
+  | model_during_T : (marker : Entity) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (during_T marker body)
+  | model_before_T : (marker : Entity) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (before_T marker body)
+  | model_after_T : (marker : Entity) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (after_T marker body)
+  | model_until_T : (marker : Entity) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (until_T marker body)
+  | model_since_T : (marker : Entity) -> (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (since_T marker body)
+  | model_not_T : (body : PropT) -> ModelInterpretable PropT body -> ModelInterpretable PropT (not_T body)
+  | model_transition : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> ModelInterpretable TransitionT (Transition theme scale source target)
+  | model_cause : (causer : Entity) -> (effect : TransitionT) -> ModelInterpretable TransitionT effect -> ModelInterpretable PropT (Cause causer effect)
+
+theorem semantic_preservation_model_interpretable :
+    (A : Type) -> (term : A) -> SemanticPreservation A term -> ModelInterpretable A term := by
+  intro A term h
+  induction h <;> constructor <;> assumption
+
 def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :=
   target.obligation_statement = SemanticPreservation A term
 
@@ -144,27 +171,44 @@ theorem example_4_semantic_preservation_proved : example_4_semantic_preservation
   apply SemanticPreservation.preserve_cause
   apply SemanticPreservation.preserve_transition
 
+theorem example_1_model_interpretable : ModelInterpretable PropT example_1 := by
+  apply semantic_preservation_model_interpretable
+  exact example_1_semantic_preservation_proved
+theorem example_2_model_interpretable : ModelInterpretable Prop example_2 := by
+  apply semantic_preservation_model_interpretable
+  exact example_2_semantic_preservation_proved
+theorem example_3_model_interpretable : ModelInterpretable PropT example_3 := by
+  apply semantic_preservation_model_interpretable
+  exact example_3_semantic_preservation_proved
+theorem example_4_model_interpretable : ModelInterpretable PropT example_4 := by
+  apply semantic_preservation_model_interpretable
+  exact example_4_semantic_preservation_proved
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
 #check example_1_semantic_preservation_obligation_is_prop
 #check example_1_semantic_preservation_target_matches
 #check example_1_semantic_preservation_proved
+#check example_1_model_interpretable
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
 #check example_2_semantic_preservation_obligation_is_prop
 #check example_2_semantic_preservation_target_matches
 #check example_2_semantic_preservation_proved
+#check example_2_model_interpretable
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
 #check example_3_semantic_preservation_obligation_is_prop
 #check example_3_semantic_preservation_target_matches
 #check example_3_semantic_preservation_proved
+#check example_3_model_interpretable
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
 #check example_4_semantic_preservation_obligation_is_prop
 #check example_4_semantic_preservation_target_matches
 #check example_4_semantic_preservation_proved
+#check example_4_model_interpretable

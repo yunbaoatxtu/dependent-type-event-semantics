@@ -965,6 +965,14 @@ def preservation_sigma_constructor(type_name: str) -> str:
     return f"preserve_sigma_{type_name}"
 
 
+def model_application_constructor(function: str) -> str:
+    return f"model_{function}_application"
+
+
+def model_sigma_constructor(type_name: str) -> str:
+    return f"model_sigma_{type_name}"
+
+
 def _coq_function_preservation_constructor(
     name: str,
     arg_types: list[str],
@@ -1003,6 +1011,48 @@ def _lean_function_preservation_constructor(
         f"  | {preservation_application_constructor(name)} : "
         + " -> ".join(binders + [
             f"SemanticPreservation {result_type} ({name} {' '.join(application_args)})"
+        ])
+    )
+
+
+def _coq_function_model_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  | {model_application_constructor(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"ModelInterpretable {result_type} "
+        + f"({name} {' '.join(application_args)})",
+    ]
+
+
+def _lean_function_model_constructor(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  | {model_application_constructor(name)} : "
+        + " -> ".join(binders + [
+            f"ModelInterpretable {result_type} ({name} {' '.join(application_args)})"
         ])
     )
 
@@ -1115,6 +1165,114 @@ def semantic_preservation_relation_lines(
     )
     if not constructors:
         raise ValueError("Cannot emit an empty SemanticPreservation relation")
+    constructors[-1] += "."
+    return lines + constructors
+
+
+def model_interpretability_relation_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = ["inductive ModelInterpretable : (A : Type) -> A -> Prop where"]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(_lean_function_model_constructor(name, arg_types, result_type))
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  | {model_sigma_constructor(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> ModelInterpretable Prop (P x)) -> "
+                f"ModelInterpretable Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  | model_repeat : (n : Nat) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (repeat n body)",
+                "  | model_at_T : (marker : Entity) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (at_T marker body)",
+                "  | model_during_T : (marker : Entity) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (during_T marker body)",
+                "  | model_before_T : (marker : Entity) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (before_T marker body)",
+                "  | model_after_T : (marker : Entity) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (after_T marker body)",
+                "  | model_until_T : (marker : Entity) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (until_T marker body)",
+                "  | model_since_T : (marker : Entity) -> (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (since_T marker body)",
+                "  | model_not_T : (body : PropT) -> "
+                "ModelInterpretable PropT body -> "
+                "ModelInterpretable PropT (not_T body)",
+                "  | model_transition : (theme : Entity) -> "
+                "(scale : StateScale) -> (source : State) -> (target : State) -> "
+                "ModelInterpretable TransitionT "
+                "(Transition theme scale source target)",
+                "  | model_cause : (causer : Entity) -> (effect : TransitionT) -> "
+                "ModelInterpretable TransitionT effect -> "
+                "ModelInterpretable PropT (Cause causer effect)",
+            ]
+        )
+        return lines
+
+    lines = ["Inductive ModelInterpretable : forall A : Type, A -> Prop :="]
+    constructors: list[str] = []
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        constructors.extend(_coq_function_model_constructor(name, arg_types, result_type))
+    for type_name in declarations["types"]:
+        constructors.extend(
+            [
+                f"  | {model_sigma_constructor(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, ModelInterpretable Prop (P x)) ->",
+                f"      ModelInterpretable Prop (exists x : {type_name}, P x)",
+            ]
+        )
+    constructors.extend(
+        [
+            "  | model_repeat : forall n : nat, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (repeat n body)",
+            "  | model_at_T : forall marker : Entity, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (at_T marker body)",
+            "  | model_during_T : forall marker : Entity, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (during_T marker body)",
+            "  | model_before_T : forall marker : Entity, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (before_T marker body)",
+            "  | model_after_T : forall marker : Entity, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (after_T marker body)",
+            "  | model_until_T : forall marker : Entity, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (until_T marker body)",
+            "  | model_since_T : forall marker : Entity, forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (since_T marker body)",
+            "  | model_not_T : forall body : PropT,",
+            "      ModelInterpretable PropT body ->",
+            "      ModelInterpretable PropT (not_T body)",
+            "  | model_transition : "
+            "forall theme : Entity, forall scale : StateScale, "
+            "forall source : State, forall target : State,",
+            "      ModelInterpretable TransitionT "
+            "(Transition theme scale source target)",
+            "  | model_cause : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      ModelInterpretable TransitionT effect ->",
+            "      ModelInterpretable PropT (Cause causer effect)",
+        ]
+    )
+    if not constructors:
+        raise ValueError("Cannot emit an empty ModelInterpretable relation")
     constructors[-1] += "."
     return lines + constructors
 
@@ -1377,6 +1535,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"constant {name} : {signature}")
         lines.append("")
         lines.extend(semantic_preservation_relation_lines(declarations, target))
+        lines.append("")
+        lines.extend(model_interpretability_relation_lines(declarations, target))
+        lines.extend(
+            [
+                "",
+                "theorem semantic_preservation_model_interpretable :",
+                "    (A : Type) -> (term : A) -> "
+                "SemanticPreservation A term -> ModelInterpretable A term := by",
+                "  intro A term h",
+                "  induction h <;> constructor <;> assumption",
+                "",
+            ]
+        )
         lines.append(
             "def PreservationTargetMatches (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
         )
@@ -1447,6 +1618,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"  unfold example_{idx}")
             lines.extend(semantic_preservation_proof_steps(result["ast"], target))
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_model_interpretable : "
+                f"ModelInterpretable {annotation} example_{idx} := by"
+            )
+            lines.append("  apply semantic_preservation_model_interpretable")
+            lines.append(f"  exact example_{idx}_semantic_preservation_proved")
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -1454,6 +1635,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_semantic_preservation_obligation_is_prop")
             lines.append(f"#check example_{idx}_semantic_preservation_target_matches")
             lines.append(f"#check example_{idx}_semantic_preservation_proved")
+            lines.append(f"#check example_{idx}_model_interpretable")
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -1506,6 +1688,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Parameter {name} : {signature}.")
     lines.append("")
     lines.extend(semantic_preservation_relation_lines(declarations, target))
+    lines.append("")
+    lines.extend(model_interpretability_relation_lines(declarations, target))
+    lines.extend(
+        [
+            "",
+            "Theorem semantic_preservation_model_interpretable :",
+            "  forall A : Type, forall term : A,",
+            "    SemanticPreservation A term -> ModelInterpretable A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  induction H; constructor; assumption.",
+            "Qed.",
+        ]
+    )
     lines.append("Definition PreservationTargetMatches")
     lines.append(
         "  (A : Type) (term : A) (target : SemanticPreservationObligation) : Prop :="
@@ -1572,6 +1768,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.extend(semantic_preservation_proof_steps(result["ast"], target))
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_model_interpretable : "
+            f"ModelInterpretable {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply semantic_preservation_model_interpretable.")
+        lines.append(f"  exact example_{idx}_semantic_preservation_proved.")
+        lines.append("Qed.")
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -1579,6 +1787,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_semantic_preservation_obligation_is_prop.")
         lines.append(f"Check example_{idx}_semantic_preservation_target_matches.")
         lines.append(f"Check example_{idx}_semantic_preservation_proved.")
+        lines.append(f"Check example_{idx}_model_interpretable.")
     return "\n".join(lines) + "\n"
 
 

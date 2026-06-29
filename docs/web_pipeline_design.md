@@ -176,10 +176,13 @@ obligation record points to its own `SemanticPreservation A example_i` target.
 The next structural stage adds `coq_structural_preservation_proofs`, which
 proves `example_i_semantic_preservation_proved` for each generated example by
 using constructors for predicate application, Sigma witnesses, repetition, time
-operators, negation, Transition, and Cause. The remaining blocker is
-`semantic_preservation_model_soundness_unproved`, and the next Coq-facing stage
-is `prove_preservation_constructor_soundness`: the structural proof relation
-must be connected to an independently specified semantic model.
+operators, negation, Transition, and Cause. The following model-boundary stage
+adds `coq_model_interpretability_boundary`, which proves the global bridge
+`semantic_preservation_model_interpretable` and the per-example
+`example_i_model_interpretable` theorems. The remaining blocker is
+`model_interpretability_denotation_unproved`, and the next Coq-facing stage is
+`prove_model_interpretable_denotational_soundness`: the model-interface
+relation must be connected to an independently specified semantic model.
 The same panel exposes `registered_modifier_sequence_contract.v1` through
 `data-modifier-sequence-*` attributes. The contract remains scoped to
 `registered_examples_only`: it publishes the declared dependent application

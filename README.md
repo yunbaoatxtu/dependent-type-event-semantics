@@ -954,16 +954,18 @@ cannot accidentally present a finite registered fragment as the finished goal.
 The verified objective list now includes `coq_named_obligation_scaffold`,
 `coq_obligation_wellformedness_proofs`,
 `coq_obligation_record_binding_proofs`, and
-`coq_structural_preservation_proofs`: the generated Coq file no longer only
+`coq_structural_preservation_proofs`, and
+`coq_model_interpretability_boundary`: the generated Coq file no longer only
 names each preservation target, but also proves a small well-formedness proof
 that each named target is a `Prop`-level obligation, a record-binding proof
 that the structured obligation record points back to the corresponding
-`SemanticPreservation A example_i` target, and a structural preservation proof
-named `example_i_semantic_preservation_proved`. The open blocker is now
-`semantic_preservation_model_soundness_unproved`; the next Coq stage is to
-prove that the preservation constructors are sound for an independently
-specified semantic model, not merely that generated examples can be certified
-by the structural relation.
+`SemanticPreservation A example_i` target, a structural preservation proof
+named `example_i_semantic_preservation_proved`, and a model interpretability
+boundary proof named `example_i_model_interpretable`. The open blocker is now
+`model_interpretability_denotation_unproved`; the next Coq stage is to prove
+that `ModelInterpretable` is sound for an independently specified denotational
+semantic model, not merely that generated examples can be certified by the
+structural relation and lifted to the model boundary.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier
@@ -2265,8 +2267,9 @@ coqc formalization/DependentTypeEventSemantics.v
 ```
 
 The generated Coq and Lean scaffolds now also expose a named
-`SemanticPreservation` boundary as an inductive structural proof relation. For
-each checked example, the exporter creates a statement such as
+`SemanticPreservation` boundary as an inductive structural proof relation and a
+`ModelInterpretable` boundary as a separate inductive model-interface relation.
+For each checked example, the exporter creates a statement such as
 `example_1_semantic_preservation_obligation`, a structured obligation record,
 and a Coq theorem such as
 `example_i_semantic_preservation_obligation_is_prop`. The latter is a
@@ -2276,12 +2279,16 @@ record-binding proof that the structured record's `obligation_statement` is
 exactly the preservation target for the exported example. Finally it generates
 `example_i_semantic_preservation_proved`, a structural preservation proof built
 from constructors for predicate application, Sigma witnesses, repetition, time
-operators, negation, Transition, and Cause. `scripts/check_formalization.py`
-requires these named theorem-obligation rows, records, well-formedness proofs,
-record-binding proofs, and structural preservation proofs to stay one-to-one
-with the exported examples. This is still not a proof of full denotational
-soundness: the remaining Coq work is to prove that the structural constructors
-are sound with respect to a semantic interpretation.
+operators, negation, Transition, and Cause. The generated theorem
+`semantic_preservation_model_interpretable` proves that any structurally
+preserved term is `ModelInterpretable`, and each exported example receives a
+checked `example_i_model_interpretable` theorem by applying that bridge to its
+structural proof. `scripts/check_formalization.py` requires these named theorem-obligation
+rows, records, well-formedness proofs, record-binding
+proofs, structural preservation proofs, and model interpretability boundary
+proofs to stay one-to-one with the exported examples. This is still not a proof
+of full denotational soundness: the remaining Coq work is to prove that
+`ModelInterpretable` itself is sound with respect to a semantic interpretation.
 
 Use `--skip-coq` to run only the Python and scaffold-consistency checks, or
 `--require-coq` when a local proof-assistant boundary check is mandatory:

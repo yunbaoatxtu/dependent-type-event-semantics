@@ -108,6 +108,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_model_boundary_count = len(
+        re.findall(
+            r"^theorem example_\d+_model_interpretable :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_model_boundary_count = len(
+        re.findall(
+            r"^Theorem example_\d+_model_interpretable :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -139,6 +153,25 @@ def main() -> None:
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=" in coq
             and "preserve_repeat : forall n : nat" in coq
             and "preserve_sigma_Food : forall P : Food -> Prop" in coq
+        ),
+        "lean model interpretability inductive relation": (
+            "inductive ModelInterpretable : (A : Type) -> A -> Prop where" in lean
+            and "| model_repeat : (n : Nat)" in lean
+            and "| model_sigma_Food : (P : Food -> Prop)" in lean
+        ),
+        "coq model interpretability inductive relation": (
+            "Inductive ModelInterpretable : forall A : Type, A -> Prop :=" in coq
+            and "model_repeat : forall n : nat" in coq
+            and "model_sigma_Food : forall P : Food -> Prop" in coq
+        ),
+        "lean preservation to model boundary theorem": (
+            "theorem semantic_preservation_model_interpretable :" in lean
+            and "SemanticPreservation A term -> ModelInterpretable A term" in lean
+        ),
+        "coq preservation to model boundary theorem": (
+            "Theorem semantic_preservation_model_interpretable :" in coq
+            and "SemanticPreservation A term -> ModelInterpretable A term." in coq
+            and "induction H; constructor; assumption." in coq
         ),
         "lean semantic preservation obligation status": (
             "inductive ObligationStatus : Type" in lean
@@ -193,12 +226,23 @@ def main() -> None:
             and "apply preserve_sigma_Food." in coq
             and "apply preserve_cause." in coq
         ),
+        "lean model interpretability boundary proofs": (
+            lean_model_boundary_count == lean_example_count
+            and "#check example_4_model_interpretable" in lean
+            and "apply semantic_preservation_model_interpretable" in lean
+        ),
+        "coq model interpretability boundary proofs": (
+            coq_model_boundary_count == coq_example_count
+            and "Check example_4_model_interpretable." in coq
+            and "apply semantic_preservation_model_interpretable." in coq
+        ),
         "lean semantic preservation obligation checks": (
             "#check example_4_semantic_preservation_obligation" in lean
             and "#check example_4_semantic_preservation_obligation_record" in lean
             and "#check example_4_semantic_preservation_obligation_is_prop" in lean
             and "#check example_4_semantic_preservation_target_matches" in lean
             and "#check example_4_semantic_preservation_proved" in lean
+            and "#check example_4_model_interpretable" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -206,6 +250,7 @@ def main() -> None:
             and "Check example_4_semantic_preservation_obligation_is_prop." in coq
             and "Check example_4_semantic_preservation_target_matches." in coq
             and "Check example_4_semantic_preservation_proved." in coq
+            and "Check example_4_model_interpretable." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"
