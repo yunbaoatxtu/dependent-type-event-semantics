@@ -1350,6 +1350,36 @@ class TranslatorTests(unittest.TestCase):
             "theorem concrete_kernel_induces_truth_condition_soundness :",
             lean_module,
         )
+        self.assertIn(
+            "structure IndependentTruthConditionObligationLedger : Type where",
+            lean_module,
+        )
+        self.assertIn("ledger_kernel : ConcreteTruthConditionKernel", lean_module)
+        self.assertIn("ledger_truth_conditions : TruthConditionSpec", lean_module)
+        self.assertIn(
+            "ledger_lexical_truth_eat_obligation : (n : Nat)",
+            lean_module,
+        )
+        self.assertIn(
+            "ledger_quantifier_truth_sigma_Food_obligation : (P : Food -> Prop)",
+            lean_module,
+        )
+        self.assertIn(
+            "ledger_temporal_truth_after_T_obligation : (marker : Entity)",
+            lean_module,
+        )
+        self.assertIn(
+            "def independent_truth_condition_obligation_ledger ",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_truth_condition_obligation_ledger_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :",
+            lean_module,
+        )
         self.assertIn("structure PrimitiveTruthAssumptions : Type where", lean_module)
         self.assertIn(
             "primitive_denotes : (A : Type) -> A -> Prop",
@@ -2200,6 +2230,11 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn("#check registered_example_truth_instances", lean_module)
+        self.assertIn("#check independent_truth_condition_obligation_ledger", lean_module)
+        self.assertIn(
+            "#check independent_truth_condition_obligation_ledger_truth_conditions_sound",
+            lean_module,
+        )
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -2308,6 +2343,36 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Theorem concrete_kernel_induces_truth_condition_soundness :",
+            coq_module,
+        )
+        self.assertIn(
+            "Record IndependentTruthConditionObligationLedger : Type := {",
+            coq_module,
+        )
+        self.assertIn("ledger_kernel : ConcreteTruthConditionKernel;", coq_module)
+        self.assertIn("ledger_truth_conditions : TruthConditionSpec;", coq_module)
+        self.assertIn(
+            "ledger_lexical_truth_eat_obligation : forall n : nat",
+            coq_module,
+        )
+        self.assertIn(
+            "ledger_quantifier_truth_sigma_Food_obligation : forall P : Food -> Prop",
+            coq_module,
+        )
+        self.assertIn(
+            "ledger_temporal_truth_after_T_obligation : forall marker : Entity",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition independent_truth_condition_obligation_ledger",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_truth_condition_obligation_ledger_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :",
             coq_module,
         )
         self.assertIn("Record PrimitiveTruthAssumptions : Type := {", coq_module)
@@ -3205,6 +3270,14 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn("Check registered_example_truth_instances.", coq_module)
+        self.assertIn(
+            "Check independent_truth_condition_obligation_ledger.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check independent_truth_condition_obligation_ledger_truth_conditions_sound.",
+            coq_module,
+        )
 
     def test_single_example_module_checks_only_defined_example(self) -> None:
         result = translate(load_example("example_eat_omission.json"))
@@ -15620,6 +15693,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_tautological_truth_condition_instance",
                 "coq_structural_truth_condition_instance",
                 "coq_concrete_truth_condition_kernel_bridge",
+                "coq_independent_truth_condition_obligation_ledger",
                 "coq_model_interpretable_truth_kernel_instance",
                 "coq_syntax_directed_truth_kernel_instance",
                 "coq_primitive_truth_assumption_kernel_instance",
@@ -24697,6 +24771,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("deep Coq semantic proofs", readme)
         self.assertIn("`SemanticPreservation`", readme)
         self.assertIn("`ModelInterpretable`", readme)
+        self.assertIn("`IndependentTruthConditionObligationLedger`", readme)
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", readme)
@@ -24709,6 +24784,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("named theorem-obligation", readme)
         self.assertIn("`SemanticPreservation`", formalization_readme)
         self.assertIn("`ModelInterpretable`", formalization_readme)
+        self.assertIn("`IndependentTruthConditionObligationLedger`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", formalization_readme)
@@ -24718,6 +24794,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("semantic preservation", formalization_readme)
         self.assertIn("SemanticPreservation", manuscript)
         self.assertIn("ModelInterpretable", manuscript)
+        self.assertIn("IndependentTruthConditionObligationLedger", manuscript)
         self.assertIn("semantic_preservation_obligation", manuscript)
         self.assertIn("obligation well-formedness proofs", manuscript)
         self.assertIn("record-binding proofs", manuscript)

@@ -271,6 +271,75 @@ theorem concrete_kernel_induces_truth_condition_soundness :
   apply truth_conditions_induce_denotational_soundness
   exact h
 
+structure IndependentTruthConditionObligationLedger : Type where
+  ledger_denotes : (A : Type) -> A -> Prop
+  ledger_kernel : ConcreteTruthConditionKernel
+  ledger_denotes_matches_kernel : (A : Type) -> (term : A) -> ledger_denotes A term = ledger_kernel.kernel_denotes A term
+  ledger_truth_conditions : TruthConditionSpec
+  ledger_truth_conditions_match_kernel : ledger_truth_conditions = truth_conditions_from_concrete_kernel ledger_kernel
+  ledger_lexical_truth_break_obligation : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> ledger_denotes PropT (break n mods arg1 arg2)
+  ledger_lexical_truth_butter_obligation : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> ledger_denotes PropT (butter n mods arg1 arg2)
+  ledger_lexical_truth_eat_obligation : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> ledger_denotes Prop (eat n mods arg1 arg2)
+  ledger_lexical_truth_knock_obligation : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> ledger_denotes PropT (knock n mods arg1)
+  ledger_quantifier_truth_sigma_Entity_obligation : (P : Entity -> Prop) -> ((x : Entity) -> ledger_denotes Prop (P x)) -> ledger_denotes Prop (Exists fun x : Entity => P x)
+  ledger_quantifier_truth_sigma_Food_obligation : (P : Food -> Prop) -> ((x : Food) -> ledger_denotes Prop (P x)) -> ledger_denotes Prop (Exists fun x : Food => P x)
+  ledger_quantifier_truth_sigma_State_obligation : (P : State -> Prop) -> ((x : State) -> ledger_denotes Prop (P x)) -> ledger_denotes Prop (Exists fun x : State => P x)
+  ledger_quantifier_truth_sigma_StateScale_obligation : (P : StateScale -> Prop) -> ((x : StateScale) -> ledger_denotes Prop (P x)) -> ledger_denotes Prop (Exists fun x : StateScale => P x)
+  ledger_quantifier_truth_sigma_TransitionT_obligation : (P : TransitionT -> Prop) -> ((x : TransitionT) -> ledger_denotes Prop (P x)) -> ledger_denotes Prop (Exists fun x : TransitionT => P x)
+  ledger_repetition_truth_obligation : (n : Nat) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (repeat n body)
+  ledger_temporal_truth_at_T_obligation : (marker : Entity) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (at_T marker body)
+  ledger_temporal_truth_during_T_obligation : (marker : Entity) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (during_T marker body)
+  ledger_temporal_truth_before_T_obligation : (marker : Entity) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (before_T marker body)
+  ledger_temporal_truth_after_T_obligation : (marker : Entity) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (after_T marker body)
+  ledger_temporal_truth_until_T_obligation : (marker : Entity) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (until_T marker body)
+  ledger_temporal_truth_since_T_obligation : (marker : Entity) -> (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (since_T marker body)
+  ledger_polarity_truth_not_T_obligation : (body : PropT) -> ledger_denotes PropT body -> ledger_denotes PropT (not_T body)
+  ledger_transition_truth_obligation : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> ledger_denotes TransitionT (Transition theme scale source target)
+  ledger_cause_truth_obligation : (causer : Entity) -> (effect : TransitionT) -> ledger_denotes TransitionT effect -> ledger_denotes PropT (Cause causer effect)
+
+def independent_truth_condition_obligation_ledger (K : ConcreteTruthConditionKernel) : IndependentTruthConditionObligationLedger := {
+  ledger_denotes := K.kernel_denotes,
+  ledger_kernel := K,
+  ledger_denotes_matches_kernel := fun A term => rfl,
+  ledger_truth_conditions := truth_conditions_from_concrete_kernel K,
+  ledger_truth_conditions_match_kernel := rfl,
+  ledger_lexical_truth_break_obligation := K.lexical_truth_break_application,
+  ledger_lexical_truth_butter_obligation := K.lexical_truth_butter_application,
+  ledger_lexical_truth_eat_obligation := K.lexical_truth_eat_application,
+  ledger_lexical_truth_knock_obligation := K.lexical_truth_knock_application,
+  ledger_quantifier_truth_sigma_Entity_obligation := K.quantifier_truth_sigma_Entity,
+  ledger_quantifier_truth_sigma_Food_obligation := K.quantifier_truth_sigma_Food,
+  ledger_quantifier_truth_sigma_State_obligation := K.quantifier_truth_sigma_State,
+  ledger_quantifier_truth_sigma_StateScale_obligation := K.quantifier_truth_sigma_StateScale,
+  ledger_quantifier_truth_sigma_TransitionT_obligation := K.quantifier_truth_sigma_TransitionT,
+  ledger_repetition_truth_obligation := K.repetition_truth,
+  ledger_temporal_truth_at_T_obligation := K.temporal_truth_at_T,
+  ledger_temporal_truth_during_T_obligation := K.temporal_truth_during_T,
+  ledger_temporal_truth_before_T_obligation := K.temporal_truth_before_T,
+  ledger_temporal_truth_after_T_obligation := K.temporal_truth_after_T,
+  ledger_temporal_truth_until_T_obligation := K.temporal_truth_until_T,
+  ledger_temporal_truth_since_T_obligation := K.temporal_truth_since_T,
+  ledger_polarity_truth_not_T_obligation := K.polarity_truth_not_T,
+  ledger_transition_truth_obligation := K.transition_truth,
+  ledger_cause_truth_obligation := K.cause_truth
+}
+
+theorem independent_truth_condition_obligation_ledger_exists :
+    (K : ConcreteTruthConditionKernel) -> Exists (fun L : IndependentTruthConditionObligationLedger => L.ledger_kernel = K) := by
+  intro K
+  exact Exists.intro (independent_truth_condition_obligation_ledger K) rfl
+
+theorem independent_truth_condition_obligation_ledger_induces_truth_conditions :
+    (K : ConcreteTruthConditionKernel) -> (independent_truth_condition_obligation_ledger K).ledger_truth_conditions = truth_conditions_from_concrete_kernel K := by
+  intro K
+  rfl
+
+theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :
+    (K : ConcreteTruthConditionKernel) -> (A : Type) -> (term : A) -> ModelInterpretable A term -> (independent_truth_condition_obligation_ledger K).ledger_truth_conditions.truth_denotes A term := by
+  intro K A term h
+  apply concrete_kernel_induces_truth_condition_soundness
+  exact h
+
 structure PrimitiveTruthAssumptions : Type where
   primitive_denotes : (A : Type) -> A -> Prop
   primitive_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> primitive_denotes PropT (break n mods arg1 arg2)
@@ -2197,6 +2266,10 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_kernel_example_4_truth_instance_atomic_sound
 #check example_4_fully_registered_truth_condition_atomic_sound
 #check registered_example_4_truth_instance_atomic_sound
+#check independent_truth_condition_obligation_ledger
+#check independent_truth_condition_obligation_ledger_exists
+#check independent_truth_condition_obligation_ledger_induces_truth_conditions
+#check independent_truth_condition_obligation_ledger_truth_conditions_sound
 #check registered_lexical_truth_model
 #check registered_lexical_truth_model_exists
 #check registered_lexical_truth_conditions_from_model

@@ -85,7 +85,14 @@ transition, and causal clauses that an independently justified concrete model
 must provide. `truth_conditions_from_concrete_kernel` turns any such kernel
 into a `TruthConditionSpec`, and every exported example receives a checked
 `example_i_concrete_kernel_truth_condition_sound` theorem parameterized by an
-arbitrary kernel. The generated file now also inhabits that interface with
+arbitrary kernel. The generated file now also packages any such kernel as an
+`IndependentTruthConditionObligationLedger`, whose fields expose the remaining
+independently supplied lexical, quantifier/Sigma, repetition, temporal,
+polarity, transition, and causal truth-condition obligations. The checked
+ledger theorems prove that this package records the kernel-derived
+`TruthConditionSpec` and that the induced truth conditions preserve the
+existing model-interpretable boundary. This is a bookkeeping layer, not yet an
+independently justified concrete model. The generated file now also inhabits that interface with
 `model_interpretable_truth_kernel`, whose denotation predicate is
 `ModelInterpretable`, exports
 `model_interpretable_truth_conditions_from_kernel`, proves kernel existence, and

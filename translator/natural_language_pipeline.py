@@ -20979,6 +20979,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_independent_truth_condition_obligation_ledger",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_model_interpretable_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21126,7 +21131,13 @@ def project_completion_status_payload(
                     "that separates lexical, quantificational, repetition, "
                     "temporal, polarity, transition, and causal truth clauses "
                     "and proves that any such kernel induces a "
-                    "TruthConditionSpec. The interface is now inhabited by a "
+                    "TruthConditionSpec. It now packages any such kernel as "
+                    "an IndependentTruthConditionObligationLedger, whose "
+                    "fields explicitly list the remaining independently "
+                    "supplied lexical, Sigma, repetition, temporal, polarity, "
+                    "transition, and Cause obligations and prove that the "
+                    "ledger induces the kernel-derived TruthConditionSpec. "
+                    "The interface is now inhabited by a "
                     "model-interpretable truth kernel whose denotation "
                     "predicate is ModelInterpretable, with per-example "
                     "kernel-soundness theorems. It is also inhabited by a "

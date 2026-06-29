@@ -997,6 +997,15 @@ clauses; a `truth_conditions_from_concrete_kernel` bridge back to
 This makes the future concrete model obligations explicit without pretending
 that the kernel has already been inhabited by independently justified semantic
 clauses. The verified objective
+`coq_independent_truth_condition_obligation_ledger` now packages any such
+kernel as an `IndependentTruthConditionObligationLedger`. The ledger repeats
+the lexical, quantifier/Sigma, repetition, temporal, polarity, transition, and
+causal obligations as named fields, records the induced
+`TruthConditionSpec`, proves the ledger/kernel match, and exports
+`independent_truth_condition_obligation_ledger_truth_conditions_sound`. This is
+a bookkeeping and proof-interface stage: it makes the independently supplied
+truth-condition obligations auditable without claiming that those obligations
+have already been discharged for arbitrary natural language. The verified objective
 `coq_model_interpretable_truth_kernel_instance` now inhabits this interface with
 `model_interpretable_truth_kernel`, whose denotation predicate is
 `ModelInterpretable`, exports
@@ -1183,7 +1192,8 @@ temporal, causal, quantificational, or modifier model. The open blocker remains
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
-structural `ModelInterpretable` instance, the concrete-kernel bridge, or the
+structural `ModelInterpretable` instance, the concrete-kernel bridge, the
+independent truth-condition obligation ledger, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
 concrete-registered-atomic-model, concrete-registered-compositional-model,

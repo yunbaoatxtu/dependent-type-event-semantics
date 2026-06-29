@@ -654,6 +654,56 @@ def main() -> None:
             and "Theorem concrete_kernel_induces_truth_condition_soundness :"
             in coq
         ),
+        "lean independent truth-condition obligation ledger": (
+            "structure IndependentTruthConditionObligationLedger : Type where"
+            in lean
+            and "ledger_denotes : (A : Type) -> A -> Prop" in lean
+            and "ledger_kernel : ConcreteTruthConditionKernel" in lean
+            and "ledger_truth_conditions : TruthConditionSpec" in lean
+            and "ledger_lexical_truth_eat_obligation : (n : Nat)" in lean
+            and "ledger_quantifier_truth_sigma_Food_obligation : (P : Food -> Prop)"
+            in lean
+            and "ledger_repetition_truth_obligation : (n : Nat)" in lean
+            and "ledger_temporal_truth_after_T_obligation : (marker : Entity)"
+            in lean
+            and "ledger_polarity_truth_not_T_obligation : (body : PropT)"
+            in lean
+            and "ledger_transition_truth_obligation : (theme : Entity)" in lean
+            and "ledger_cause_truth_obligation : (causer : Entity)" in lean
+            and "def independent_truth_condition_obligation_ledger "
+            in lean
+            and "theorem independent_truth_condition_obligation_ledger_exists :"
+            in lean
+            and "theorem independent_truth_condition_obligation_ledger_induces_truth_conditions :"
+            in lean
+            and "theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :"
+            in lean
+        ),
+        "coq independent truth-condition obligation ledger": (
+            "Record IndependentTruthConditionObligationLedger : Type := {"
+            in coq
+            and "ledger_denotes : forall A : Type, A -> Prop;" in coq
+            and "ledger_kernel : ConcreteTruthConditionKernel;" in coq
+            and "ledger_truth_conditions : TruthConditionSpec;" in coq
+            and "ledger_lexical_truth_eat_obligation : forall n : nat" in coq
+            and "ledger_quantifier_truth_sigma_Food_obligation : forall P : Food -> Prop"
+            in coq
+            and "ledger_repetition_truth_obligation : forall n : nat" in coq
+            and "ledger_temporal_truth_after_T_obligation : forall marker : Entity"
+            in coq
+            and "ledger_polarity_truth_not_T_obligation : forall body : PropT"
+            in coq
+            and "ledger_transition_truth_obligation : forall theme : Entity" in coq
+            and "ledger_cause_truth_obligation : forall causer : Entity" in coq
+            and "Definition independent_truth_condition_obligation_ledger"
+            in coq
+            and "Theorem independent_truth_condition_obligation_ledger_exists :"
+            in coq
+            and "Theorem independent_truth_condition_obligation_ledger_induces_truth_conditions :"
+            in coq
+            and "Theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :"
+            in coq
+        ),
         "lean primitive truth assumption kernel instance": (
             "structure PrimitiveTruthAssumptions : Type where" in lean
             and "primitive_denotes : (A : Type) -> A -> Prop" in lean
@@ -1901,6 +1951,9 @@ def main() -> None:
             and "#check concrete_registered_truth_conditions_from_kernel" in lean
             and "#check concrete_registered_kernel_example_truth_instances" in lean
             and "#check registered_example_truth_instances" in lean
+            and "#check independent_truth_condition_obligation_ledger" in lean
+            and "#check independent_truth_condition_obligation_ledger_truth_conditions_sound"
+            in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -1947,6 +2000,9 @@ def main() -> None:
             and "Check concrete_registered_truth_conditions_from_kernel." in coq
             and "Check concrete_registered_kernel_example_truth_instances." in coq
             and "Check registered_example_truth_instances." in coq
+            and "Check independent_truth_condition_obligation_ledger." in coq
+            and "Check independent_truth_condition_obligation_ledger_truth_conditions_sound."
+            in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

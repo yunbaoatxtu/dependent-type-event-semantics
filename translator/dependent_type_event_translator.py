@@ -1015,6 +1015,14 @@ def concrete_kernel_sigma_field(type_name: str) -> str:
     return f"quantifier_truth_sigma_{type_name}"
 
 
+def independent_obligation_application_field(function: str) -> str:
+    return f"ledger_lexical_truth_{function}_obligation"
+
+
+def independent_obligation_sigma_field(type_name: str) -> str:
+    return f"ledger_quantifier_truth_sigma_{type_name}_obligation"
+
+
 def primitive_truth_application_field(function: str) -> str:
     return f"primitive_lexical_truth_{function}_application"
 
@@ -1327,6 +1335,49 @@ def _lean_function_concrete_kernel_field(
         + " -> ".join(
             binders
             + [f"kernel_denotes {result_type} ({name} {' '.join(application_args)})"]
+        )
+    )
+
+
+def _coq_function_independent_obligation_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {independent_obligation_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      "
+        + f"ledger_denotes {result_type} "
+        + f"({name} {' '.join(application_args)});",
+    ]
+
+
+def _lean_function_independent_obligation_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[2:] if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"] else arg_types
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {independent_obligation_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [f"ledger_denotes {result_type} ({name} {' '.join(application_args)})"]
         )
     )
 
@@ -2519,6 +2570,319 @@ def concrete_truth_condition_kernel_lines(
             "Proof.",
             "  intros K A term H.",
             "  apply truth_conditions_induce_denotational_soundness.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
+def independent_truth_condition_obligation_ledger_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure IndependentTruthConditionObligationLedger : Type where",
+            "  ledger_denotes : (A : Type) -> A -> Prop",
+            "  ledger_kernel : ConcreteTruthConditionKernel",
+            "  ledger_denotes_matches_kernel : "
+            "(A : Type) -> (term : A) -> "
+            "ledger_denotes A term = ledger_kernel.kernel_denotes A term",
+            "  ledger_truth_conditions : TruthConditionSpec",
+            "  ledger_truth_conditions_match_kernel : "
+            "ledger_truth_conditions = "
+            "truth_conditions_from_concrete_kernel ledger_kernel",
+        ]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_independent_obligation_field(
+                    name,
+                    arg_types,
+                    result_type,
+                )
+            )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  {independent_obligation_sigma_field(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> ledger_denotes Prop (P x)) -> "
+                f"ledger_denotes Prop (Exists fun x : {type_name} => P x)"
+            )
+        lines.extend(
+            [
+                "  ledger_repetition_truth_obligation : "
+                "(n : Nat) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (repeat n body)",
+                "  ledger_temporal_truth_at_T_obligation : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (at_T marker body)",
+                "  ledger_temporal_truth_during_T_obligation : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (during_T marker body)",
+                "  ledger_temporal_truth_before_T_obligation : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (before_T marker body)",
+                "  ledger_temporal_truth_after_T_obligation : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (after_T marker body)",
+                "  ledger_temporal_truth_until_T_obligation : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (until_T marker body)",
+                "  ledger_temporal_truth_since_T_obligation : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (since_T marker body)",
+                "  ledger_polarity_truth_not_T_obligation : (body : PropT) -> "
+                "ledger_denotes PropT body -> ledger_denotes PropT (not_T body)",
+                "  ledger_transition_truth_obligation : "
+                "(theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "ledger_denotes TransitionT (Transition theme scale source target)",
+                "  ledger_cause_truth_obligation : "
+                "(causer : Entity) -> (effect : TransitionT) -> "
+                "ledger_denotes TransitionT effect -> "
+                "ledger_denotes PropT (Cause causer effect)",
+                "",
+                "def independent_truth_condition_obligation_ledger "
+                "(K : ConcreteTruthConditionKernel) : "
+                "IndependentTruthConditionObligationLedger := {",
+                "  ledger_denotes := K.kernel_denotes,",
+                "  ledger_kernel := K,",
+                "  ledger_denotes_matches_kernel := fun A term => rfl,",
+                "  ledger_truth_conditions := "
+                "truth_conditions_from_concrete_kernel K,",
+                "  ledger_truth_conditions_match_kernel := rfl,",
+            ]
+        )
+        ledger_fields: list[tuple[str, str]] = []
+        for name in sorted(declarations["functions"]):
+            ledger_fields.append(
+                (
+                    independent_obligation_application_field(name),
+                    f"K.{concrete_kernel_application_field(name)}",
+                )
+            )
+        for type_name in declarations["types"]:
+            ledger_fields.append(
+                (
+                    independent_obligation_sigma_field(type_name),
+                    f"K.{concrete_kernel_sigma_field(type_name)}",
+                )
+            )
+        ledger_fields.extend(
+            [
+                ("ledger_repetition_truth_obligation", "K.repetition_truth"),
+                ("ledger_temporal_truth_at_T_obligation", "K.temporal_truth_at_T"),
+                (
+                    "ledger_temporal_truth_during_T_obligation",
+                    "K.temporal_truth_during_T",
+                ),
+                (
+                    "ledger_temporal_truth_before_T_obligation",
+                    "K.temporal_truth_before_T",
+                ),
+                (
+                    "ledger_temporal_truth_after_T_obligation",
+                    "K.temporal_truth_after_T",
+                ),
+                (
+                    "ledger_temporal_truth_until_T_obligation",
+                    "K.temporal_truth_until_T",
+                ),
+                (
+                    "ledger_temporal_truth_since_T_obligation",
+                    "K.temporal_truth_since_T",
+                ),
+                ("ledger_polarity_truth_not_T_obligation", "K.polarity_truth_not_T"),
+                ("ledger_transition_truth_obligation", "K.transition_truth"),
+                ("ledger_cause_truth_obligation", "K.cause_truth"),
+            ]
+        )
+        for index, (field, value) in enumerate(ledger_fields):
+            suffix = "," if index < len(ledger_fields) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem independent_truth_condition_obligation_ledger_exists :",
+                "    (K : ConcreteTruthConditionKernel) -> "
+                "Exists (fun L : IndependentTruthConditionObligationLedger => "
+                "L.ledger_kernel = K) := by",
+                "  intro K",
+                "  exact Exists.intro "
+                "(independent_truth_condition_obligation_ledger K) rfl",
+                "",
+                "theorem "
+                "independent_truth_condition_obligation_ledger_induces_truth_conditions :",
+                "    (K : ConcreteTruthConditionKernel) -> "
+                "(independent_truth_condition_obligation_ledger K)."
+                "ledger_truth_conditions = "
+                "truth_conditions_from_concrete_kernel K := by",
+                "  intro K",
+                "  rfl",
+                "",
+                "theorem "
+                "independent_truth_condition_obligation_ledger_truth_conditions_sound :",
+                "    (K : ConcreteTruthConditionKernel) -> "
+                "(A : Type) -> (term : A) -> ModelInterpretable A term -> "
+                "(independent_truth_condition_obligation_ledger K)."
+                "ledger_truth_conditions.truth_denotes A term := by",
+                "  intro K A term h",
+                "  apply concrete_kernel_induces_truth_condition_soundness",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record IndependentTruthConditionObligationLedger : Type := {",
+        "  ledger_denotes : forall A : Type, A -> Prop;",
+        "  ledger_kernel : ConcreteTruthConditionKernel;",
+        "  ledger_denotes_matches_kernel : "
+        "forall A : Type, forall term : A,",
+        "      ledger_denotes A term = "
+        "kernel_denotes ledger_kernel A term;",
+        "  ledger_truth_conditions : TruthConditionSpec;",
+        "  ledger_truth_conditions_match_kernel :",
+        "      ledger_truth_conditions = "
+        "truth_conditions_from_concrete_kernel ledger_kernel;",
+    ]
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(
+            _coq_function_independent_obligation_field(name, arg_types, result_type)
+        )
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  {independent_obligation_sigma_field(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, ledger_denotes Prop (P x)) ->",
+                f"      ledger_denotes Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    lines.extend(
+        [
+            "  ledger_repetition_truth_obligation : "
+            "forall n : nat, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (repeat n body);",
+            "  ledger_temporal_truth_at_T_obligation : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (at_T marker body);",
+            "  ledger_temporal_truth_during_T_obligation : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (during_T marker body);",
+            "  ledger_temporal_truth_before_T_obligation : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (before_T marker body);",
+            "  ledger_temporal_truth_after_T_obligation : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (after_T marker body);",
+            "  ledger_temporal_truth_until_T_obligation : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (until_T marker body);",
+            "  ledger_temporal_truth_since_T_obligation : "
+            "forall marker : Entity, forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (since_T marker body);",
+            "  ledger_polarity_truth_not_T_obligation : forall body : PropT,",
+            "      ledger_denotes PropT body ->",
+            "      ledger_denotes PropT (not_T body);",
+            "  ledger_transition_truth_obligation : "
+            "forall theme : Entity, forall scale : StateScale,",
+            "forall source : State, forall target : State,",
+            "      ledger_denotes TransitionT "
+            "(Transition theme scale source target);",
+            "  ledger_cause_truth_obligation : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      ledger_denotes TransitionT effect ->",
+            "      ledger_denotes PropT (Cause causer effect)",
+            "}.",
+            "",
+            "Definition independent_truth_condition_obligation_ledger",
+            "  (K : ConcreteTruthConditionKernel) :",
+            "  IndependentTruthConditionObligationLedger := {|",
+            "  ledger_denotes := kernel_denotes K;",
+            "  ledger_kernel := K;",
+            "  ledger_denotes_matches_kernel := fun A term => eq_refl;",
+            "  ledger_truth_conditions := truth_conditions_from_concrete_kernel K;",
+            "  ledger_truth_conditions_match_kernel := eq_refl;",
+        ]
+    )
+    ledger_fields: list[tuple[str, str]] = []
+    for name in sorted(declarations["functions"]):
+        ledger_fields.append(
+            (
+                independent_obligation_application_field(name),
+                f"{concrete_kernel_application_field(name)} K",
+            )
+        )
+    for type_name in declarations["types"]:
+        ledger_fields.append(
+            (
+                independent_obligation_sigma_field(type_name),
+                f"{concrete_kernel_sigma_field(type_name)} K",
+            )
+        )
+    ledger_fields.extend(
+        [
+            ("ledger_repetition_truth_obligation", "repetition_truth K"),
+            ("ledger_temporal_truth_at_T_obligation", "temporal_truth_at_T K"),
+            ("ledger_temporal_truth_during_T_obligation", "temporal_truth_during_T K"),
+            ("ledger_temporal_truth_before_T_obligation", "temporal_truth_before_T K"),
+            ("ledger_temporal_truth_after_T_obligation", "temporal_truth_after_T K"),
+            ("ledger_temporal_truth_until_T_obligation", "temporal_truth_until_T K"),
+            ("ledger_temporal_truth_since_T_obligation", "temporal_truth_since_T K"),
+            ("ledger_polarity_truth_not_T_obligation", "polarity_truth_not_T K"),
+            ("ledger_transition_truth_obligation", "transition_truth K"),
+            ("ledger_cause_truth_obligation", "cause_truth K"),
+        ]
+    )
+    for index, (field, value) in enumerate(ledger_fields):
+        suffix = ";" if index < len(ledger_fields) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem independent_truth_condition_obligation_ledger_exists :",
+            "  forall K : ConcreteTruthConditionKernel,",
+            "    exists L : IndependentTruthConditionObligationLedger,",
+            "      ledger_kernel L = K.",
+            "Proof.",
+            "  intro K.",
+            "  exists (independent_truth_condition_obligation_ledger K).",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "independent_truth_condition_obligation_ledger_induces_truth_conditions :",
+            "  forall K : ConcreteTruthConditionKernel,",
+            "    ledger_truth_conditions",
+            "      (independent_truth_condition_obligation_ledger K) =",
+            "    truth_conditions_from_concrete_kernel K.",
+            "Proof.",
+            "  intro K. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "independent_truth_condition_obligation_ledger_truth_conditions_sound :",
+            "  forall K : ConcreteTruthConditionKernel,",
+            "  forall A : Type, forall term : A,",
+            "    ModelInterpretable A term ->",
+            "    truth_denotes",
+            "      (ledger_truth_conditions",
+            "        (independent_truth_condition_obligation_ledger K))",
+            "      A term.",
+            "Proof.",
+            "  intros K A term H.",
+            "  apply concrete_kernel_induces_truth_condition_soundness.",
             "  exact H.",
             "Qed.",
         ]
@@ -8848,6 +9212,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
         lines.append("")
+        lines.extend(
+            independent_truth_condition_obligation_ledger_lines(declarations, target)
+        )
+        lines.append("")
         lines.extend(primitive_truth_assumption_kernel_lines(declarations, target))
         lines.append("")
         lines.extend(atomic_closure_truth_kernel_lines(declarations, target))
@@ -9375,6 +9743,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "#check "
                 f"registered_example_{idx}_truth_instance_atomic_sound"
             )
+        lines.append("#check independent_truth_condition_obligation_ledger")
+        lines.append("#check independent_truth_condition_obligation_ledger_exists")
+        lines.append(
+            "#check "
+            "independent_truth_condition_obligation_ledger_induces_truth_conditions"
+        )
+        lines.append(
+            "#check "
+            "independent_truth_condition_obligation_ledger_truth_conditions_sound"
+        )
         lines.append("#check registered_lexical_truth_model")
         lines.append("#check registered_lexical_truth_model_exists")
         lines.append("#check registered_lexical_truth_conditions_from_model")
@@ -9521,6 +9899,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(semantic_model_from_truth_conditions_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
+    lines.append("")
+    lines.extend(independent_truth_condition_obligation_ledger_lines(declarations, target))
     lines.append("")
     lines.extend(primitive_truth_assumption_kernel_lines(declarations, target))
     lines.append("")
@@ -10069,6 +10449,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             f"registered_example_{idx}_truth_instance_atomic_sound."
         )
+    lines.append("Check independent_truth_condition_obligation_ledger.")
+    lines.append("Check independent_truth_condition_obligation_ledger_exists.")
+    lines.append(
+        "Check "
+        "independent_truth_condition_obligation_ledger_induces_truth_conditions."
+    )
+    lines.append(
+        "Check "
+        "independent_truth_condition_obligation_ledger_truth_conditions_sound."
+    )
     lines.append("Check registered_lexical_truth_model.")
     lines.append("Check registered_lexical_truth_model_exists.")
     lines.append("Check registered_lexical_truth_conditions_from_model.")
