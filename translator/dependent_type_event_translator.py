@@ -10896,6 +10896,198 @@ def concrete_registered_truth_condition_route_lines(
     return lines
 
 
+def concrete_registered_truth_condition_route_example_agreement_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package per-example agreement among the concrete registered routes."""
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteRegisteredTruthConditionRouteExampleAgreement : "
+            "Type where",
+            "  concrete_registered_route_agreement_route : "
+            "ConcreteRegisteredTruthConditionRoute",
+        ]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    f"  concrete_registered_route_agreement_example_{idx}_direct_atomic : "
+                    f"AtomicClosureTruth {annotation} example_{idx}",
+                    f"  concrete_registered_route_agreement_example_{idx}_evidence_atomic : "
+                    f"AtomicClosureTruth {annotation} example_{idx}",
+                    f"  concrete_registered_route_agreement_example_{idx}_kernel_atomic : "
+                    f"AtomicClosureTruth {annotation} example_{idx}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_registered_truth_condition_route_example_agreement : "
+                "ConcreteRegisteredTruthConditionRouteExampleAgreement := {",
+                "  concrete_registered_route_agreement_route := "
+                "concrete_registered_truth_condition_route,",
+            ]
+        )
+        for idx in range(1, len(results) + 1):
+            suffix = "," if idx < len(results) else ""
+            lines.extend(
+                [
+                    f"  concrete_registered_route_agreement_example_{idx}_direct_atomic := "
+                    f"concrete_registered_truth_condition_route_example_{idx}_direct_atomic_sound,",
+                    f"  concrete_registered_route_agreement_example_{idx}_evidence_atomic := "
+                    f"concrete_registered_truth_condition_route_example_{idx}_evidence_atomic_sound,",
+                    f"  concrete_registered_route_agreement_example_{idx}_kernel_atomic := "
+                    f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound"
+                    f"{suffix}",
+                ]
+            )
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_registered_truth_condition_route_example_agreement_exists :",
+                "    Exists (fun A : "
+                "ConcreteRegisteredTruthConditionRouteExampleAgreement => "
+                "A = concrete_registered_truth_condition_route_example_agreement) := by",
+                "  exact Exists.intro "
+                "concrete_registered_truth_condition_route_example_agreement rfl",
+                "",
+                "theorem "
+                "concrete_registered_truth_condition_route_example_agreement_route_matches :",
+                "    concrete_registered_truth_condition_route_example_agreement."
+                "concrete_registered_route_agreement_route = "
+                "concrete_registered_truth_condition_route := by",
+                "  rfl",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"concrete_registered_truth_condition_route_example_{idx}_agreement_direct_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact "
+                    "concrete_registered_truth_condition_route_example_agreement."
+                    f"concrete_registered_route_agreement_example_{idx}_direct_atomic",
+                    "",
+                    "theorem "
+                    f"concrete_registered_truth_condition_route_example_{idx}_agreement_evidence_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact "
+                    "concrete_registered_truth_condition_route_example_agreement."
+                    f"concrete_registered_route_agreement_example_{idx}_evidence_atomic",
+                    "",
+                    "theorem "
+                    f"concrete_registered_truth_condition_route_example_{idx}_agreement_kernel_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact "
+                    "concrete_registered_truth_condition_route_example_agreement."
+                    f"concrete_registered_route_agreement_example_{idx}_kernel_atomic",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record ConcreteRegisteredTruthConditionRouteExampleAgreement : Type := {",
+        "  concrete_registered_route_agreement_route : "
+        "ConcreteRegisteredTruthConditionRoute;",
+    ]
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        suffix = ";" if idx < len(results) else ""
+        lines.extend(
+            [
+                f"  concrete_registered_route_agreement_example_{idx}_direct_atomic :",
+                f"      AtomicClosureTruth {annotation} example_{idx};",
+                f"  concrete_registered_route_agreement_example_{idx}_evidence_atomic :",
+                f"      AtomicClosureTruth {annotation} example_{idx};",
+                f"  concrete_registered_route_agreement_example_{idx}_kernel_atomic :",
+                f"      AtomicClosureTruth {annotation} example_{idx}{suffix}",
+            ]
+        )
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_registered_truth_condition_route_example_agreement :",
+            "  ConcreteRegisteredTruthConditionRouteExampleAgreement := {|",
+            "  concrete_registered_route_agreement_route := "
+            "concrete_registered_truth_condition_route;",
+        ]
+    )
+    for idx in range(1, len(results) + 1):
+        suffix = ";" if idx < len(results) else ""
+        lines.extend(
+            [
+                f"  concrete_registered_route_agreement_example_{idx}_direct_atomic := "
+                f"concrete_registered_truth_condition_route_example_{idx}_direct_atomic_sound;",
+                f"  concrete_registered_route_agreement_example_{idx}_evidence_atomic := "
+                f"concrete_registered_truth_condition_route_example_{idx}_evidence_atomic_sound;",
+                f"  concrete_registered_route_agreement_example_{idx}_kernel_atomic := "
+                f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound"
+                f"{suffix}",
+            ]
+        )
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_registered_truth_condition_route_example_agreement_exists :",
+            "  exists A : ConcreteRegisteredTruthConditionRouteExampleAgreement,",
+            "    A = concrete_registered_truth_condition_route_example_agreement.",
+            "Proof.",
+            "  exists concrete_registered_truth_condition_route_example_agreement.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "concrete_registered_truth_condition_route_example_agreement_route_matches :",
+            "  concrete_registered_route_agreement_route",
+            "    concrete_registered_truth_condition_route_example_agreement =",
+            "  concrete_registered_truth_condition_route.",
+            "Proof. reflexivity. Qed.",
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"concrete_registered_truth_condition_route_example_{idx}_agreement_direct_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  exact (concrete_registered_route_agreement_example_"
+                f"{idx}_direct_atomic "
+                "concrete_registered_truth_condition_route_example_agreement).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"concrete_registered_truth_condition_route_example_{idx}_agreement_evidence_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  exact (concrete_registered_route_agreement_example_"
+                f"{idx}_evidence_atomic "
+                "concrete_registered_truth_condition_route_example_agreement).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"concrete_registered_truth_condition_route_example_{idx}_agreement_kernel_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  exact (concrete_registered_route_agreement_example_"
+                f"{idx}_kernel_atomic "
+                "concrete_registered_truth_condition_route_example_agreement).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -11807,6 +11999,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             concrete_registered_truth_condition_route_lines(results, target)
         )
         lines.append("")
+        lines.extend(
+            concrete_registered_truth_condition_route_example_agreement_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -11929,6 +12128,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"concrete_registered_truth_condition_route_example_{idx}_agreement_direct_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"concrete_registered_truth_condition_route_example_{idx}_agreement_evidence_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"concrete_registered_truth_condition_route_example_{idx}_agreement_kernel_atomic_sound"
             )
             lines.append(
                 "#check "
@@ -12069,6 +12280,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check concrete_registered_truth_condition_route_direct_spec_sound")
         lines.append("#check concrete_registered_truth_condition_route_evidence_spec_sound")
         lines.append("#check concrete_registered_truth_condition_route_kernel_spec_sound")
+        lines.append(
+            "#check concrete_registered_truth_condition_route_example_agreement"
+        )
+        lines.append(
+            "#check concrete_registered_truth_condition_route_example_agreement_exists"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_truth_condition_route_example_agreement_route_matches"
+        )
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -12701,6 +12922,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(concrete_registered_truth_condition_route_lines(results, target))
     lines.append("")
+    lines.extend(
+        concrete_registered_truth_condition_route_example_agreement_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -12811,6 +13039,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"concrete_registered_truth_condition_route_example_{idx}_agreement_direct_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"concrete_registered_truth_condition_route_example_{idx}_agreement_evidence_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"concrete_registered_truth_condition_route_example_{idx}_agreement_kernel_atomic_sound."
         )
         lines.append(
             "Check "
@@ -12933,6 +13173,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_truth_condition_route_direct_spec_sound.")
     lines.append("Check concrete_registered_truth_condition_route_evidence_spec_sound.")
     lines.append("Check concrete_registered_truth_condition_route_kernel_spec_sound.")
+    lines.append("Check concrete_registered_truth_condition_route_example_agreement.")
+    lines.append("Check concrete_registered_truth_condition_route_example_agreement_exists.")
+    lines.append(
+        "Check "
+        "concrete_registered_truth_condition_route_example_agreement_route_matches."
+    )
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

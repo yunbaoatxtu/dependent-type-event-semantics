@@ -232,7 +232,14 @@ exists, proves the direct/evidence/kernel spec-coherence theorems, and checks
 route-level direct, evidence-backed, and kernel atomic soundness for every
 exported example. This makes the finite registered truth-condition routes
 auditable as one object before any broader independently supplied truth model
-is claimed. The scaffold also
+is claimed. The scaffold then packages those three route projections for every
+exported example as
+`ConcreteRegisteredTruthConditionRouteExampleAgreement`, instantiates
+`concrete_registered_truth_condition_route_example_agreement`, proves that the
+agreement exists and points back to `concrete_registered_truth_condition_route`,
+and rechecks the packaged direct, evidence-backed, and kernel projections back
+to `AtomicClosureTruth`. This is still finite route agreement, not a proof of a
+general independently supplied truth-condition model. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

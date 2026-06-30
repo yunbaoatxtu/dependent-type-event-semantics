@@ -1219,6 +1219,15 @@ checks route-level direct, evidence-backed, and kernel atomic soundness for
 each exported example. This aligns the finite registered routes before any
 future independently supplied truth-condition instance is claimed. The next
 verified objective
+`coq_concrete_registered_truth_condition_route_example_agreement_package`
+packages those three per-example route projections into
+`ConcreteRegisteredTruthConditionRouteExampleAgreement`, instantiates
+`concrete_registered_truth_condition_route_example_agreement`, proves the
+agreement package exists, proves that its route field is
+`concrete_registered_truth_condition_route`, and rechecks the direct,
+evidence-backed, and kernel projections for every exported example. This is a
+finite route-agreement witness, not a general truth-condition model. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

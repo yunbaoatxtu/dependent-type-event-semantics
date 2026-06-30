@@ -2188,6 +2188,37 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure ConcreteRegisteredTruthConditionRouteExampleAgreement : "
+            "Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_truth_condition_route_example_agreement : "
+            "ConcreteRegisteredTruthConditionRouteExampleAgreement := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_condition_route_example_agreement_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem "
+            "concrete_registered_truth_condition_route_example_agreement_route_matches :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_condition_route_example_2_agreement_direct_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
@@ -2421,6 +2452,30 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "#check concrete_registered_truth_condition_route_example_2_kernel_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check concrete_registered_truth_condition_route_example_agreement",
+            lean_module,
+        )
+        self.assertIn(
+            "#check "
+            "concrete_registered_truth_condition_route_example_agreement_route_matches",
+            lean_module,
+        )
+        self.assertIn(
+            "#check "
+            "concrete_registered_truth_condition_route_example_2_agreement_direct_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check "
+            "concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check "
+            "concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound",
             lean_module,
         )
         self.assertIn(
@@ -3454,6 +3509,39 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteRegisteredTruthConditionRouteExampleAgreement : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_truth_condition_route_example_agreement :",
+            coq_module,
+        )
+        self.assertIn(
+            "ConcreteRegisteredTruthConditionRouteExampleAgreement := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_condition_route_example_agreement_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem "
+            "concrete_registered_truth_condition_route_example_agreement_route_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_condition_route_example_2_agreement_direct_atomic_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound : AtomicClosureTruth PropT example_2.",
+            coq_module,
+        )
+        self.assertIn(
             "Theorem example_2_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_2.",
             coq_module,
         )
@@ -3696,6 +3784,30 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check concrete_registered_truth_condition_route_example_2_kernel_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_registered_truth_condition_route_example_agreement.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check "
+            "concrete_registered_truth_condition_route_example_agreement_route_matches.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check "
+            "concrete_registered_truth_condition_route_example_2_agreement_direct_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check "
+            "concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check "
+            "concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound.",
             coq_module,
         )
         self.assertIn(
@@ -16211,6 +16323,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_registered_evidence_backed_truth_condition_model_bridge",
                 "coq_concrete_registered_evidence_backed_example_truth_instance_package",
                 "coq_concrete_registered_truth_condition_route_package",
+                "coq_concrete_registered_truth_condition_route_example_agreement_package",
                 "coq_concrete_registered_truth_kernel_instance",
                 "coq_concrete_registered_kernel_example_truth_instance_package",
                 "coq_concrete_registered_example_truth_instance_package",
@@ -25377,6 +25490,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_concrete_registered_truth_condition_route_package`",
             readme,
         )
+        self.assertIn(
+            "`ConcreteRegisteredTruthConditionRouteExampleAgreement`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_concrete_registered_truth_condition_route_example_agreement_package`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -25426,6 +25547,14 @@ class TranslatorTests(unittest.TestCase):
             "`concrete_registered_truth_condition_route`",
             formalization_readme,
         )
+        self.assertIn(
+            "`ConcreteRegisteredTruthConditionRouteExampleAgreement`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_registered_truth_condition_route_example_agreement`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -25455,6 +25584,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("ConcreteRegisteredTruthConditionRoute", manuscript)
         self.assertIn(
             "coq_concrete_registered_truth_condition_route_package",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteRegisteredTruthConditionRouteExampleAgreement",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_registered_truth_condition_route_example_agreement_package",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
