@@ -20989,6 +20989,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_atomic_closure_evidence_backed_truth_sources",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_model_interpretable_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21151,6 +21156,13 @@ def project_completion_status_payload(
                     "source of future truth-condition inhabitants explicit "
                     "without treating those inhabitants as already supplied "
                     "for arbitrary natural language. "
+                    "The newest checked stage then instantiates that "
+                    "evidence-source interface with AtomicClosureTruth: "
+                    "atomic-closure proofs are wrapped by truth_evidence_intro "
+                    "as atomic_closure_evidence_backed_truth_sources, converted "
+                    "back into a ConcreteTruthConditionKernel, and checked "
+                    "through an evidence-backed ledger with per-example "
+                    "soundness theorems. "
                     "The interface is now inhabited by a "
                     "model-interpretable truth kernel whose denotation "
                     "predicate is ModelInterpretable, with per-example "

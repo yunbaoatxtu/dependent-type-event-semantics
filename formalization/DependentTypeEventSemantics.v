@@ -622,6 +622,7 @@ Qed.
 
 Parameter TruthEvidence : Prop -> Type.
 Parameter truth_evidence_sound : forall P : Prop, TruthEvidence P -> P.
+Parameter truth_evidence_intro : forall P : Prop, P -> TruthEvidence P.
 
 Record EvidenceBackedTruthConditionSources : Type := {
   evidence_denotes : forall A : Type, A -> Prop;
@@ -1287,6 +1288,135 @@ Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :
 Proof.
   intros A term H.
   exact H.
+Qed.
+
+Definition atomic_closure_evidence_backed_truth_sources :
+  EvidenceBackedTruthConditionSources := {|
+  evidence_denotes := AtomicClosureTruth;
+  evidence_lexical_truth_break_application := fun n mods arg1 arg2 =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (break n mods arg1 arg2))
+        (atomic_closure_truth_break_application n mods arg1 arg2 (atomic_lexical_truth_break_application atomic_truth_facts n mods arg1 arg2));
+  evidence_lexical_truth_butter_application := fun n mods arg1 arg2 =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (butter n mods arg1 arg2))
+        (atomic_closure_truth_butter_application n mods arg1 arg2 (atomic_lexical_truth_butter_application atomic_truth_facts n mods arg1 arg2));
+  evidence_lexical_truth_eat_application := fun n mods arg1 arg2 =>
+      truth_evidence_intro
+        (AtomicClosureTruth Prop (eat n mods arg1 arg2))
+        (atomic_closure_truth_eat_application n mods arg1 arg2 (atomic_lexical_truth_eat_application atomic_truth_facts n mods arg1 arg2));
+  evidence_lexical_truth_knock_application := fun n mods arg1 =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (knock n mods arg1))
+        (atomic_closure_truth_knock_application n mods arg1 (atomic_lexical_truth_knock_application atomic_truth_facts n mods arg1));
+  evidence_quantifier_truth_sigma_Entity := fun P h =>
+      truth_evidence_intro
+        (AtomicClosureTruth Prop (exists x : Entity, P x))
+        (atomic_closure_truth_sigma_Entity P h);
+  evidence_quantifier_truth_sigma_Food := fun P h =>
+      truth_evidence_intro
+        (AtomicClosureTruth Prop (exists x : Food, P x))
+        (atomic_closure_truth_sigma_Food P h);
+  evidence_quantifier_truth_sigma_State := fun P h =>
+      truth_evidence_intro
+        (AtomicClosureTruth Prop (exists x : State, P x))
+        (atomic_closure_truth_sigma_State P h);
+  evidence_quantifier_truth_sigma_StateScale := fun P h =>
+      truth_evidence_intro
+        (AtomicClosureTruth Prop (exists x : StateScale, P x))
+        (atomic_closure_truth_sigma_StateScale P h);
+  evidence_quantifier_truth_sigma_TransitionT := fun P h =>
+      truth_evidence_intro
+        (AtomicClosureTruth Prop (exists x : TransitionT, P x))
+        (atomic_closure_truth_sigma_TransitionT P h);
+  evidence_repetition_truth := fun n body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (repeat n body))
+        (atomic_closure_truth_repeat n body h);
+  evidence_temporal_truth_at_T := fun marker body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (at_T marker body))
+        (atomic_closure_truth_at_T marker body h);
+  evidence_temporal_truth_during_T := fun marker body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (during_T marker body))
+        (atomic_closure_truth_during_T marker body h);
+  evidence_temporal_truth_before_T := fun marker body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (before_T marker body))
+        (atomic_closure_truth_before_T marker body h);
+  evidence_temporal_truth_after_T := fun marker body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (after_T marker body))
+        (atomic_closure_truth_after_T marker body h);
+  evidence_temporal_truth_until_T := fun marker body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (until_T marker body))
+        (atomic_closure_truth_until_T marker body h);
+  evidence_temporal_truth_since_T := fun marker body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (since_T marker body))
+        (atomic_closure_truth_since_T marker body h);
+  evidence_polarity_truth_not_T := fun body h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (not_T body))
+        (atomic_closure_truth_not_T body h);
+  evidence_transition_truth := fun theme scale source target =>
+      truth_evidence_intro
+        (AtomicClosureTruth TransitionT (Transition theme scale source target))
+        (atomic_closure_truth_transition theme scale source target (atomic_transition_truth atomic_truth_facts theme scale source target));
+  evidence_cause_truth := fun causer effect h =>
+      truth_evidence_intro
+        (AtomicClosureTruth PropT (Cause causer effect))
+        (atomic_closure_truth_cause causer effect h)
+|}.
+
+Definition atomic_closure_evidence_backed_truth_kernel :
+  ConcreteTruthConditionKernel :=
+  concrete_kernel_from_evidence_sources
+    atomic_closure_evidence_backed_truth_sources.
+
+Definition atomic_closure_evidence_backed_truth_ledger :
+  IndependentTruthConditionObligationLedger :=
+  evidence_backed_truth_condition_ledger
+    atomic_closure_evidence_backed_truth_sources.
+
+Theorem atomic_closure_evidence_backed_truth_sources_exist :
+  exists S : EvidenceBackedTruthConditionSources,
+    S = atomic_closure_evidence_backed_truth_sources.
+Proof.
+  exists atomic_closure_evidence_backed_truth_sources.
+  reflexivity.
+Qed.
+
+Theorem atomic_closure_evidence_backed_truth_kernel_exists :
+  exists K : ConcreteTruthConditionKernel,
+    K = atomic_closure_evidence_backed_truth_kernel.
+Proof.
+  exists atomic_closure_evidence_backed_truth_kernel.
+  reflexivity.
+Qed.
+
+Theorem atomic_closure_evidence_backed_truth_ledger_exists :
+  exists L : IndependentTruthConditionObligationLedger,
+    L = atomic_closure_evidence_backed_truth_ledger.
+Proof.
+  exists atomic_closure_evidence_backed_truth_ledger.
+  reflexivity.
+Qed.
+
+Theorem atomic_closure_evidence_backed_truth_sources_sound :
+  forall A : Type, forall term : A,
+    ModelInterpretable A term ->
+    truth_denotes
+      (ledger_truth_conditions
+        atomic_closure_evidence_backed_truth_ledger)
+      A term.
+Proof.
+  intros A term H.
+  exact
+    (evidence_backed_truth_condition_sources_sound
+      atomic_closure_evidence_backed_truth_sources A term H).
 Qed.
 
 Inductive RegisteredStateTransitionTruth : Entity -> StateScale -> State -> State -> Prop :=
@@ -3137,6 +3267,31 @@ Proof.
   exact example_4_atomic_closure_truth.
 Qed.
 
+Theorem example_1_atomic_closure_evidence_backed_truth_condition_sound :
+  truth_denotes (ledger_truth_conditions atomic_closure_evidence_backed_truth_ledger) PropT example_1.
+Proof.
+  apply atomic_closure_evidence_backed_truth_sources_sound.
+  exact example_1_model_interpretable.
+Qed.
+Theorem example_2_atomic_closure_evidence_backed_truth_condition_sound :
+  truth_denotes (ledger_truth_conditions atomic_closure_evidence_backed_truth_ledger) Prop example_2.
+Proof.
+  apply atomic_closure_evidence_backed_truth_sources_sound.
+  exact example_2_model_interpretable.
+Qed.
+Theorem example_3_atomic_closure_evidence_backed_truth_condition_sound :
+  truth_denotes (ledger_truth_conditions atomic_closure_evidence_backed_truth_ledger) PropT example_3.
+Proof.
+  apply atomic_closure_evidence_backed_truth_sources_sound.
+  exact example_3_model_interpretable.
+Qed.
+Theorem example_4_atomic_closure_evidence_backed_truth_condition_sound :
+  truth_denotes (ledger_truth_conditions atomic_closure_evidence_backed_truth_ledger) PropT example_4.
+Proof.
+  apply atomic_closure_evidence_backed_truth_sources_sound.
+  exact example_4_model_interpretable.
+Qed.
+
 Theorem example_1_transition_refined_atomic_closure_truth : TransitionRefinedAtomicClosureTruth PropT example_1.
 Proof.
   unfold example_1.
@@ -3684,6 +3839,7 @@ Check example_1_primitive_truth_kernel_sound.
 Check example_1_atomic_closure_truth.
 Check example_1_atomic_closure_truth_kernel_sound.
 Check example_1_atomic_closure_truth_condition_sound.
+Check example_1_atomic_closure_evidence_backed_truth_condition_sound.
 Check example_1_transition_refined_atomic_closure_truth.
 Check example_1_transition_refined_atomic_closure_sound.
 Check example_1_transition_refined_registered_truth_condition_sound.
@@ -3721,6 +3877,7 @@ Check example_2_primitive_truth_kernel_sound.
 Check example_2_atomic_closure_truth.
 Check example_2_atomic_closure_truth_kernel_sound.
 Check example_2_atomic_closure_truth_condition_sound.
+Check example_2_atomic_closure_evidence_backed_truth_condition_sound.
 Check example_2_transition_refined_atomic_closure_truth.
 Check example_2_transition_refined_atomic_closure_sound.
 Check example_2_transition_refined_registered_truth_condition_sound.
@@ -3758,6 +3915,7 @@ Check example_3_primitive_truth_kernel_sound.
 Check example_3_atomic_closure_truth.
 Check example_3_atomic_closure_truth_kernel_sound.
 Check example_3_atomic_closure_truth_condition_sound.
+Check example_3_atomic_closure_evidence_backed_truth_condition_sound.
 Check example_3_transition_refined_atomic_closure_truth.
 Check example_3_transition_refined_atomic_closure_sound.
 Check example_3_transition_refined_registered_truth_condition_sound.
@@ -3795,6 +3953,7 @@ Check example_4_primitive_truth_kernel_sound.
 Check example_4_atomic_closure_truth.
 Check example_4_atomic_closure_truth_kernel_sound.
 Check example_4_atomic_closure_truth_condition_sound.
+Check example_4_atomic_closure_evidence_backed_truth_condition_sound.
 Check example_4_transition_refined_atomic_closure_truth.
 Check example_4_transition_refined_atomic_closure_sound.
 Check example_4_transition_refined_registered_truth_condition_sound.
@@ -3819,12 +3978,20 @@ Check independent_truth_condition_obligation_ledger_induces_truth_conditions.
 Check independent_truth_condition_obligation_ledger_truth_conditions_sound.
 Check TruthEvidence.
 Check truth_evidence_sound.
+Check truth_evidence_intro.
 Check EvidenceBackedTruthConditionSources.
 Check concrete_kernel_from_evidence_sources.
 Check evidence_backed_truth_condition_ledger.
 Check evidence_backed_truth_condition_sources_induce_kernel.
 Check evidence_backed_truth_condition_sources_induce_truth_conditions.
 Check evidence_backed_truth_condition_sources_sound.
+Check atomic_closure_evidence_backed_truth_sources.
+Check atomic_closure_evidence_backed_truth_kernel.
+Check atomic_closure_evidence_backed_truth_ledger.
+Check atomic_closure_evidence_backed_truth_sources_exist.
+Check atomic_closure_evidence_backed_truth_kernel_exists.
+Check atomic_closure_evidence_backed_truth_ledger_exists.
+Check atomic_closure_evidence_backed_truth_sources_sound.
 Check registered_lexical_truth_model.
 Check registered_lexical_truth_model_exists.
 Check registered_lexical_truth_conditions_from_model.

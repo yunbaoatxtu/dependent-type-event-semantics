@@ -3003,6 +3003,8 @@ def evidence_backed_truth_condition_source_lines(
             "constant TruthEvidence : Prop -> Type",
             "constant truth_evidence_sound : "
             "(P : Prop) -> TruthEvidence P -> P",
+            "constant truth_evidence_intro : "
+            "(P : Prop) -> P -> TruthEvidence P",
             "",
             "structure EvidenceBackedTruthConditionSources : Type where",
             "  evidence_denotes : (A : Type) -> A -> Prop",
@@ -3203,6 +3205,8 @@ def evidence_backed_truth_condition_source_lines(
         "Parameter TruthEvidence : Prop -> Type.",
         "Parameter truth_evidence_sound : "
         "forall P : Prop, TruthEvidence P -> P.",
+        "Parameter truth_evidence_intro : "
+        "forall P : Prop, P -> TruthEvidence P.",
         "",
         "Record EvidenceBackedTruthConditionSources : Type := {",
         "  evidence_denotes : forall A : Type, A -> Prop;",
@@ -4657,6 +4661,346 @@ def atomic_closure_truth_kernel_lines(
             "Proof.",
             "  intros A term H.",
             "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
+def atomic_closure_evidence_backed_truth_source_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "def atomic_closure_evidence_backed_truth_sources : "
+            "EvidenceBackedTruthConditionSources := {",
+            "  evidence_denotes := AtomicClosureTruth,",
+        ]
+        assignment_groups: list[list[str]] = []
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            remaining_arg_types = (
+                arg_types[2:]
+                if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+                else arg_types
+            )
+            ordinary_args = [
+                f"arg{index}"
+                for index, _arg_type in enumerate(remaining_arg_types, 1)
+            ]
+            lambda_args = ["n", "mods", *ordinary_args]
+            application_args = " ".join(lambda_args)
+            term = f"{name} {application_args}"
+            proof = (
+                f"AtomicClosureTruth.{atomic_closure_application_constructor(name)} "
+                f"{application_args} "
+                f"(atomic_truth_facts.{atomic_truth_application_field(name)} "
+                f"{application_args})"
+            )
+            assignment_groups.append(
+                [
+                    f"  {evidence_source_application_field(name)} := "
+                    f"fun {' '.join(lambda_args)} =>",
+                    "      truth_evidence_intro",
+                    f"        (AtomicClosureTruth {result_type} ({term}))",
+                    f"        ({proof})",
+                ]
+            )
+        for type_name in declarations["types"]:
+            assignment_groups.append(
+                [
+                    f"  {evidence_source_sigma_field(type_name)} := fun P h =>",
+                    "      truth_evidence_intro",
+                    "        "
+                    f"(AtomicClosureTruth Prop "
+                    f"(Exists fun x : {type_name} => P x))",
+                    "        "
+                    f"(AtomicClosureTruth.{atomic_closure_sigma_constructor(type_name)} "
+                    "P h)",
+                ]
+            )
+        assignment_groups.extend(
+            [
+                [
+                    "  evidence_repetition_truth := fun n body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (repeat n body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_repeat n body h)",
+                ],
+                [
+                    "  evidence_temporal_truth_at_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (at_T marker body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_at_T marker body h)",
+                ],
+                [
+                    "  evidence_temporal_truth_during_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (during_T marker body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_during_T marker body h)",
+                ],
+                [
+                    "  evidence_temporal_truth_before_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (before_T marker body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_before_T marker body h)",
+                ],
+                [
+                    "  evidence_temporal_truth_after_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (after_T marker body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_after_T marker body h)",
+                ],
+                [
+                    "  evidence_temporal_truth_until_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (until_T marker body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_until_T marker body h)",
+                ],
+                [
+                    "  evidence_temporal_truth_since_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (since_T marker body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_since_T marker body h)",
+                ],
+                [
+                    "  evidence_polarity_truth_not_T := fun body h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (not_T body))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_not_T body h)",
+                ],
+                [
+                    "  evidence_transition_truth := fun theme scale source target =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth TransitionT "
+                    "(Transition theme scale source target))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_transition "
+                    "theme scale source target "
+                    "(atomic_truth_facts.atomic_transition_truth "
+                    "theme scale source target))",
+                ],
+                [
+                    "  evidence_cause_truth := fun causer effect h =>",
+                    "      truth_evidence_intro",
+                    "        (AtomicClosureTruth PropT (Cause causer effect))",
+                    "        (AtomicClosureTruth.atomic_closure_truth_cause causer effect h)",
+                ],
+            ]
+        )
+        for index, group in enumerate(assignment_groups):
+            suffix = "," if index < len(assignment_groups) - 1 else ""
+            for line_index, line in enumerate(group):
+                if line_index == len(group) - 1:
+                    lines.append(line + suffix)
+                else:
+                    lines.append(line)
+        lines.extend(
+            [
+                "}",
+                "",
+                "def atomic_closure_evidence_backed_truth_kernel : "
+                "ConcreteTruthConditionKernel :=",
+                "  concrete_kernel_from_evidence_sources "
+                "atomic_closure_evidence_backed_truth_sources",
+                "",
+                "def atomic_closure_evidence_backed_truth_ledger : "
+                "IndependentTruthConditionObligationLedger :=",
+                "  evidence_backed_truth_condition_ledger "
+                "atomic_closure_evidence_backed_truth_sources",
+                "",
+                "theorem atomic_closure_evidence_backed_truth_sources_exist :",
+                "    Exists (fun S : EvidenceBackedTruthConditionSources => "
+                "S = atomic_closure_evidence_backed_truth_sources) := by",
+                "  exact Exists.intro "
+                "atomic_closure_evidence_backed_truth_sources rfl",
+                "",
+                "theorem atomic_closure_evidence_backed_truth_kernel_exists :",
+                "    Exists (fun K : ConcreteTruthConditionKernel => "
+                "K = atomic_closure_evidence_backed_truth_kernel) := by",
+                "  exact Exists.intro "
+                "atomic_closure_evidence_backed_truth_kernel rfl",
+                "",
+                "theorem atomic_closure_evidence_backed_truth_ledger_exists :",
+                "    Exists (fun L : IndependentTruthConditionObligationLedger => "
+                "L = atomic_closure_evidence_backed_truth_ledger) := by",
+                "  exact Exists.intro "
+                "atomic_closure_evidence_backed_truth_ledger rfl",
+                "",
+                "theorem atomic_closure_evidence_backed_truth_sources_sound :",
+                "    (A : Type) -> (term : A) -> ModelInterpretable A term -> "
+                "atomic_closure_evidence_backed_truth_ledger."
+                "ledger_truth_conditions.truth_denotes A term := by",
+                "  intro A term h",
+                "  exact evidence_backed_truth_condition_sources_sound "
+                "atomic_closure_evidence_backed_truth_sources A term h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Definition atomic_closure_evidence_backed_truth_sources :",
+        "  EvidenceBackedTruthConditionSources := {|",
+        "  evidence_denotes := AtomicClosureTruth;",
+    ]
+    assignment_groups: list[list[str]] = []
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        remaining_arg_types = arg_types[1:] if arg_types else []
+        ordinary_args = [
+            f"arg{index}"
+            for index, _arg_type in enumerate(remaining_arg_types, 1)
+        ]
+        lambda_args = ["n", "mods", *ordinary_args]
+        application_args = " ".join(lambda_args)
+        term = f"{name} {application_args}"
+        proof = (
+            f"{atomic_closure_application_constructor(name)} "
+            f"{application_args} "
+            f"({atomic_truth_application_field(name)} atomic_truth_facts "
+            f"{application_args})"
+        )
+        assignment_groups.append(
+            [
+                f"  {evidence_source_application_field(name)} := "
+                f"fun {' '.join(lambda_args)} =>",
+                "      truth_evidence_intro",
+                f"        (AtomicClosureTruth {result_type} ({term}))",
+                f"        ({proof})",
+            ]
+        )
+    for type_name in declarations["types"]:
+        assignment_groups.append(
+            [
+                f"  {evidence_source_sigma_field(type_name)} := fun P h =>",
+                "      truth_evidence_intro",
+                f"        (AtomicClosureTruth Prop (exists x : {type_name}, P x))",
+                f"        ({atomic_closure_sigma_constructor(type_name)} P h)",
+            ]
+        )
+    assignment_groups.extend(
+        [
+            [
+                "  evidence_repetition_truth := fun n body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (repeat n body))",
+                "        (atomic_closure_truth_repeat n body h)",
+            ],
+            [
+                "  evidence_temporal_truth_at_T := fun marker body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (at_T marker body))",
+                "        (atomic_closure_truth_at_T marker body h)",
+            ],
+            [
+                "  evidence_temporal_truth_during_T := fun marker body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (during_T marker body))",
+                "        (atomic_closure_truth_during_T marker body h)",
+            ],
+            [
+                "  evidence_temporal_truth_before_T := fun marker body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (before_T marker body))",
+                "        (atomic_closure_truth_before_T marker body h)",
+            ],
+            [
+                "  evidence_temporal_truth_after_T := fun marker body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (after_T marker body))",
+                "        (atomic_closure_truth_after_T marker body h)",
+            ],
+            [
+                "  evidence_temporal_truth_until_T := fun marker body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (until_T marker body))",
+                "        (atomic_closure_truth_until_T marker body h)",
+            ],
+            [
+                "  evidence_temporal_truth_since_T := fun marker body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (since_T marker body))",
+                "        (atomic_closure_truth_since_T marker body h)",
+            ],
+            [
+                "  evidence_polarity_truth_not_T := fun body h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (not_T body))",
+                "        (atomic_closure_truth_not_T body h)",
+            ],
+            [
+                "  evidence_transition_truth := fun theme scale source target =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth TransitionT "
+                "(Transition theme scale source target))",
+                "        (atomic_closure_truth_transition "
+                "theme scale source target "
+                "(atomic_transition_truth atomic_truth_facts "
+                "theme scale source target))",
+            ],
+            [
+                "  evidence_cause_truth := fun causer effect h =>",
+                "      truth_evidence_intro",
+                "        (AtomicClosureTruth PropT (Cause causer effect))",
+                "        (atomic_closure_truth_cause causer effect h)",
+            ],
+        ]
+    )
+    for index, group in enumerate(assignment_groups):
+        suffix = ";" if index < len(assignment_groups) - 1 else ""
+        for line_index, line in enumerate(group):
+            if line_index == len(group) - 1:
+                lines.append(line + suffix)
+            else:
+                lines.append(line)
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition atomic_closure_evidence_backed_truth_kernel :",
+            "  ConcreteTruthConditionKernel :=",
+            "  concrete_kernel_from_evidence_sources",
+            "    atomic_closure_evidence_backed_truth_sources.",
+            "",
+            "Definition atomic_closure_evidence_backed_truth_ledger :",
+            "  IndependentTruthConditionObligationLedger :=",
+            "  evidence_backed_truth_condition_ledger",
+            "    atomic_closure_evidence_backed_truth_sources.",
+            "",
+            "Theorem atomic_closure_evidence_backed_truth_sources_exist :",
+            "  exists S : EvidenceBackedTruthConditionSources,",
+            "    S = atomic_closure_evidence_backed_truth_sources.",
+            "Proof.",
+            "  exists atomic_closure_evidence_backed_truth_sources.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem atomic_closure_evidence_backed_truth_kernel_exists :",
+            "  exists K : ConcreteTruthConditionKernel,",
+            "    K = atomic_closure_evidence_backed_truth_kernel.",
+            "Proof.",
+            "  exists atomic_closure_evidence_backed_truth_kernel.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem atomic_closure_evidence_backed_truth_ledger_exists :",
+            "  exists L : IndependentTruthConditionObligationLedger,",
+            "    L = atomic_closure_evidence_backed_truth_ledger.",
+            "Proof.",
+            "  exists atomic_closure_evidence_backed_truth_ledger.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem atomic_closure_evidence_backed_truth_sources_sound :",
+            "  forall A : Type, forall term : A,",
+            "    ModelInterpretable A term ->",
+            "    truth_denotes",
+            "      (ledger_truth_conditions",
+            "        atomic_closure_evidence_backed_truth_ledger)",
+            "      A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact",
+            "    (evidence_backed_truth_condition_sources_sound",
+            "      atomic_closure_evidence_backed_truth_sources A term H).",
             "Qed.",
         ]
     )
@@ -9745,6 +10089,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(atomic_closure_truth_kernel_lines(declarations, target))
         lines.append("")
+        lines.extend(
+            atomic_closure_evidence_backed_truth_source_lines(declarations, target)
+        )
+        lines.append("")
         lines.extend(transition_refined_atomic_closure_truth_lines(declarations, target))
         lines.append("")
         lines.extend(registered_truth_condition_spec_lines(declarations, target))
@@ -9981,6 +10329,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             annotation = export_result_type(result["ast"])
             lines.append(
                 "theorem "
+                f"example_{idx}_atomic_closure_evidence_backed_truth_condition_sound : "
+                "atomic_closure_evidence_backed_truth_ledger."
+                "ledger_truth_conditions.truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply atomic_closure_evidence_backed_truth_sources_sound"
+            )
+            lines.append(f"  exact example_{idx}_model_interpretable")
+        lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
                 f"example_{idx}_transition_refined_atomic_closure_truth : "
                 f"TransitionRefinedAtomicClosureTruth {annotation} example_{idx} := by"
             )
@@ -10202,6 +10564,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(f"#check example_{idx}_atomic_closure_truth_kernel_sound")
             lines.append(f"#check example_{idx}_atomic_closure_truth_condition_sound")
             lines.append(
+                "#check "
+                f"example_{idx}_atomic_closure_evidence_backed_truth_condition_sound"
+            )
+            lines.append(
                 f"#check example_{idx}_transition_refined_atomic_closure_truth"
             )
             lines.append(
@@ -10280,6 +10646,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append("#check TruthEvidence")
         lines.append("#check truth_evidence_sound")
+        lines.append("#check truth_evidence_intro")
         lines.append("#check EvidenceBackedTruthConditionSources")
         lines.append("#check concrete_kernel_from_evidence_sources")
         lines.append("#check evidence_backed_truth_condition_ledger")
@@ -10289,6 +10656,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "evidence_backed_truth_condition_sources_induce_truth_conditions"
         )
         lines.append("#check evidence_backed_truth_condition_sources_sound")
+        lines.append("#check atomic_closure_evidence_backed_truth_sources")
+        lines.append("#check atomic_closure_evidence_backed_truth_kernel")
+        lines.append("#check atomic_closure_evidence_backed_truth_ledger")
+        lines.append("#check atomic_closure_evidence_backed_truth_sources_exist")
+        lines.append("#check atomic_closure_evidence_backed_truth_kernel_exists")
+        lines.append("#check atomic_closure_evidence_backed_truth_ledger_exists")
+        lines.append("#check atomic_closure_evidence_backed_truth_sources_sound")
         lines.append("#check registered_lexical_truth_model")
         lines.append("#check registered_lexical_truth_model_exists")
         lines.append("#check registered_lexical_truth_conditions_from_model")
@@ -10443,6 +10817,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(primitive_truth_assumption_kernel_lines(declarations, target))
     lines.append("")
     lines.extend(atomic_closure_truth_kernel_lines(declarations, target))
+    lines.append("")
+    lines.extend(atomic_closure_evidence_backed_truth_source_lines(declarations, target))
     lines.append("")
     lines.extend(transition_refined_atomic_closure_truth_lines(declarations, target))
     lines.append("")
@@ -10698,6 +11074,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         annotation = export_result_type(result["ast"])
         lines.append(
             "Theorem "
+            f"example_{idx}_atomic_closure_evidence_backed_truth_condition_sound :"
+        )
+        lines.append(
+            "  truth_denotes"
+            " (ledger_truth_conditions atomic_closure_evidence_backed_truth_ledger)"
+            f" {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append("  apply atomic_closure_evidence_backed_truth_sources_sound.")
+        lines.append(f"  exact example_{idx}_model_interpretable.")
+        lines.append("Qed.")
+    lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
             f"example_{idx}_transition_refined_atomic_closure_truth : "
             f"TransitionRefinedAtomicClosureTruth {annotation} example_{idx}."
         )
@@ -10930,6 +11322,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(f"Check example_{idx}_atomic_closure_truth.")
         lines.append(f"Check example_{idx}_atomic_closure_truth_kernel_sound.")
         lines.append(f"Check example_{idx}_atomic_closure_truth_condition_sound.")
+        lines.append(
+            "Check "
+            f"example_{idx}_atomic_closure_evidence_backed_truth_condition_sound."
+        )
         lines.append(f"Check example_{idx}_transition_refined_atomic_closure_truth.")
         lines.append(f"Check example_{idx}_transition_refined_atomic_closure_sound.")
         lines.append(
@@ -10999,6 +11395,7 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     )
     lines.append("Check TruthEvidence.")
     lines.append("Check truth_evidence_sound.")
+    lines.append("Check truth_evidence_intro.")
     lines.append("Check EvidenceBackedTruthConditionSources.")
     lines.append("Check concrete_kernel_from_evidence_sources.")
     lines.append("Check evidence_backed_truth_condition_ledger.")
@@ -11007,6 +11404,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "Check evidence_backed_truth_condition_sources_induce_truth_conditions."
     )
     lines.append("Check evidence_backed_truth_condition_sources_sound.")
+    lines.append("Check atomic_closure_evidence_backed_truth_sources.")
+    lines.append("Check atomic_closure_evidence_backed_truth_kernel.")
+    lines.append("Check atomic_closure_evidence_backed_truth_ledger.")
+    lines.append("Check atomic_closure_evidence_backed_truth_sources_exist.")
+    lines.append("Check atomic_closure_evidence_backed_truth_kernel_exists.")
+    lines.append("Check atomic_closure_evidence_backed_truth_ledger_exists.")
+    lines.append("Check atomic_closure_evidence_backed_truth_sources_sound.")
     lines.append("Check registered_lexical_truth_model.")
     lines.append("Check registered_lexical_truth_model_exists.")
     lines.append("Check registered_lexical_truth_conditions_from_model.")

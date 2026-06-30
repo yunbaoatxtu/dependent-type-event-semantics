@@ -1018,6 +1018,16 @@ Cause evidence fields. The generated bridge
 stage makes future concrete truth-condition inhabitants inspectable at their
 source boundary, while still leaving full independent semantic instantiation
 open. The verified objective
+`coq_atomic_closure_evidence_backed_truth_sources` then instantiates that
+source boundary with the existing `AtomicClosureTruth` layer:
+`truth_evidence_intro` wraps each atomic-closure lexical, Sigma, repetition,
+temporal, polarity, transition, and Cause proof as evidence,
+`atomic_closure_evidence_backed_truth_sources` collects those fields, and
+`atomic_closure_evidence_backed_truth_ledger` checks per-example truth-condition
+soundness through the evidence-backed ledger route. This is a real checked
+source instance for the atomic-closure fragment, but it remains a generated
+closure model rather than an independently justified semantics for arbitrary
+natural language. The verified objective
 `coq_model_interpretable_truth_kernel_instance` now inhabits this interface with
 `model_interpretable_truth_kernel`, whose denotation predicate is
 `ModelInterpretable`, exports
@@ -1206,7 +1216,7 @@ specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, the
 independent truth-condition obligation ledger, the evidence-backed source
-bridge, or the
+bridge, the atomic-closure evidence-backed source instance, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
 concrete-registered-atomic-model, concrete-registered-compositional-model,

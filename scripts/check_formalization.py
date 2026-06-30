@@ -708,6 +708,8 @@ def main() -> None:
             "constant TruthEvidence : Prop -> Type" in lean
             and "constant truth_evidence_sound : (P : Prop) -> TruthEvidence P -> P"
             in lean
+            and "constant truth_evidence_intro : (P : Prop) -> P -> TruthEvidence P"
+            in lean
             and "structure EvidenceBackedTruthConditionSources : Type where"
             in lean
             and "evidence_denotes : (A : Type) -> A -> Prop" in lean
@@ -732,6 +734,8 @@ def main() -> None:
         "coq evidence-backed truth-condition sources": (
             "Parameter TruthEvidence : Prop -> Type." in coq
             and "Parameter truth_evidence_sound : forall P : Prop, TruthEvidence P -> P."
+            in coq
+            and "Parameter truth_evidence_intro : forall P : Prop, P -> TruthEvidence P."
             in coq
             and "Record EvidenceBackedTruthConditionSources : Type := {"
             in coq
@@ -854,6 +858,25 @@ def main() -> None:
             and "theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :"
             in lean
         ),
+        "lean atomic closure evidence-backed source instance": (
+            "def atomic_closure_evidence_backed_truth_sources : "
+            "EvidenceBackedTruthConditionSources := {" in lean
+            and "evidence_denotes := AtomicClosureTruth" in lean
+            and "def atomic_closure_evidence_backed_truth_kernel : "
+            "ConcreteTruthConditionKernel :=" in lean
+            and "def atomic_closure_evidence_backed_truth_ledger : "
+            "IndependentTruthConditionObligationLedger :=" in lean
+            and "theorem atomic_closure_evidence_backed_truth_sources_exist :"
+            in lean
+            and "theorem atomic_closure_evidence_backed_truth_kernel_exists :"
+            in lean
+            and "theorem atomic_closure_evidence_backed_truth_ledger_exists :"
+            in lean
+            and "theorem atomic_closure_evidence_backed_truth_sources_sound :"
+            in lean
+            and "theorem example_4_atomic_closure_evidence_backed_truth_condition_sound :"
+            in lean
+        ),
         "coq atomic closure truth kernel instance": (
             "Inductive AtomicBaseTruth : forall A : Type, A -> Prop :=" in coq
             and "atomic_base_truth_eat_application : forall n : nat" in coq
@@ -925,6 +948,26 @@ def main() -> None:
             in coq
             and "Theorem atomic_closure_truth_conditions_exists :" in coq
             and "Theorem atomic_closure_truth_conditions_denote_atomic_closure_truth :"
+            in coq
+        ),
+        "coq atomic closure evidence-backed source instance": (
+            "Definition atomic_closure_evidence_backed_truth_sources :"
+            in coq
+            and "EvidenceBackedTruthConditionSources := {|" in coq
+            and "evidence_denotes := AtomicClosureTruth;" in coq
+            and "Definition atomic_closure_evidence_backed_truth_kernel :"
+            in coq
+            and "Definition atomic_closure_evidence_backed_truth_ledger :"
+            in coq
+            and "Theorem atomic_closure_evidence_backed_truth_sources_exist :"
+            in coq
+            and "Theorem atomic_closure_evidence_backed_truth_kernel_exists :"
+            in coq
+            and "Theorem atomic_closure_evidence_backed_truth_ledger_exists :"
+            in coq
+            and "Theorem atomic_closure_evidence_backed_truth_sources_sound :"
+            in coq
+            and "Theorem example_4_atomic_closure_evidence_backed_truth_condition_sound :"
             in coq
         ),
         "lean transition-refined atomic closure layer": (
@@ -1972,6 +2015,8 @@ def main() -> None:
             and "#check example_4_primitive_truth_kernel_sound" in lean
             and "#check example_4_atomic_closure_truth" in lean
             and "#check example_4_atomic_closure_truth_kernel_sound" in lean
+            and "#check example_4_atomic_closure_evidence_backed_truth_condition_sound"
+            in lean
             and "#check example_4_fully_registered_atomic_closure_truth" in lean
             and "#check example_4_fully_registered_truth_condition_sound" in lean
             and "#check example_4_registered_lexical_truth_model_sound" in lean
@@ -2005,6 +2050,7 @@ def main() -> None:
             in lean
             and "#check TruthEvidence" in lean
             and "#check truth_evidence_sound" in lean
+            and "#check truth_evidence_intro" in lean
             and "#check EvidenceBackedTruthConditionSources" in lean
             and "#check concrete_kernel_from_evidence_sources" in lean
             and "#check evidence_backed_truth_condition_ledger" in lean
@@ -2013,6 +2059,11 @@ def main() -> None:
             and "#check evidence_backed_truth_condition_sources_induce_truth_conditions"
             in lean
             and "#check evidence_backed_truth_condition_sources_sound" in lean
+            and "#check atomic_closure_evidence_backed_truth_sources" in lean
+            and "#check atomic_closure_evidence_backed_truth_kernel" in lean
+            and "#check atomic_closure_evidence_backed_truth_ledger" in lean
+            and "#check atomic_closure_evidence_backed_truth_sources_sound"
+            in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -2032,6 +2083,8 @@ def main() -> None:
             and "Check example_4_primitive_truth_kernel_sound." in coq
             and "Check example_4_atomic_closure_truth." in coq
             and "Check example_4_atomic_closure_truth_kernel_sound." in coq
+            and "Check example_4_atomic_closure_evidence_backed_truth_condition_sound."
+            in coq
             and "Check example_4_fully_registered_atomic_closure_truth." in coq
             and "Check example_4_fully_registered_truth_condition_sound." in coq
             and "Check example_4_registered_lexical_truth_model_sound." in coq
@@ -2064,6 +2117,7 @@ def main() -> None:
             in coq
             and "Check TruthEvidence." in coq
             and "Check truth_evidence_sound." in coq
+            and "Check truth_evidence_intro." in coq
             and "Check EvidenceBackedTruthConditionSources." in coq
             and "Check concrete_kernel_from_evidence_sources." in coq
             and "Check evidence_backed_truth_condition_ledger." in coq
@@ -2072,6 +2126,10 @@ def main() -> None:
             and "Check evidence_backed_truth_condition_sources_induce_truth_conditions."
             in coq
             and "Check evidence_backed_truth_condition_sources_sound." in coq
+            and "Check atomic_closure_evidence_backed_truth_sources." in coq
+            and "Check atomic_closure_evidence_backed_truth_kernel." in coq
+            and "Check atomic_closure_evidence_backed_truth_ledger." in coq
+            and "Check atomic_closure_evidence_backed_truth_sources_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

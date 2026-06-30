@@ -10813,6 +10813,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_concrete_truth_condition_kernel_bridge",
         "coq_independent_truth_condition_obligation_ledger",
         "coq_evidence_backed_truth_condition_sources",
+        "coq_atomic_closure_evidence_backed_truth_sources",
         "coq_model_interpretable_truth_kernel_instance",
         "coq_syntax_directed_truth_kernel_instance",
         "coq_primitive_truth_assumption_kernel_instance",
