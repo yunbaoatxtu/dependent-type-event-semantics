@@ -1316,6 +1316,18 @@ package exists, proves that its stored coverage object is
 inspectable without claiming a complete theory of natural-language polarity,
 focus, or discourse-sensitive negation. The next
 verified objective
+`coq_independent_registered_transition_cause_truth_condition_instances_package`
+extracts the state-transition and causal-result fragment as
+`IndependentRegisteredTransitionCauseTruthConditionInstances`. It instantiates
+`independent_registered_transition_cause_truth_condition_instances`, proves the
+package exists, proves that its stored coverage object is
+`independent_registered_truth_condition_clause_coverage`, and exposes both
+`independent_registered_transition_cause_truth_condition_transition_instance`
+and `independent_registered_transition_cause_truth_condition_cause_instance`.
+This gives result-state and causal replacement clauses their own checked
+interface while still leaving general causal semantics and arbitrary lexical
+truth-condition models outside the completed fragment. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

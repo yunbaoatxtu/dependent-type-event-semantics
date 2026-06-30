@@ -300,7 +300,16 @@ proves that the polarity package exists, proves that it still points to
 `independent_registered_polarity_truth_condition_not_T_instance` for
 `not_T body`. This keeps registered truth-functional negation evidence
 separate from temporal, quantifier, repetition, transition, causal, and lexical
-evidence. The scaffold also
+evidence. The scaffold then extracts the state-transition and causal-result
+fragment as `IndependentRegisteredTransitionCauseTruthConditionInstances`,
+instantiates `independent_registered_transition_cause_truth_condition_instances`,
+proves that the Transition/Cause package exists, proves that it still points
+to `independent_registered_truth_condition_clause_coverage`, and checks both
+`independent_registered_transition_cause_truth_condition_transition_instance`
+and `independent_registered_transition_cause_truth_condition_cause_instance`.
+This gives registered result-state and causal clauses their own proof
+interface without treating arbitrary causal semantics as completed. The
+scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

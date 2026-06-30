@@ -13001,6 +13001,213 @@ def independent_registered_polarity_truth_condition_instance_lines(
     ]
 
 
+def independent_registered_transition_cause_truth_condition_instance_lines(
+    target: str,
+) -> list[str]:
+    """Expose registered state-transition and Cause clauses as a subpackage."""
+
+    if target == "lean":
+        return [
+            "structure IndependentRegisteredTransitionCauseTruthConditionInstances : Type where",
+            "  independent_registered_transition_cause_clause_coverage :",
+            "      IndependentRegisteredTruthConditionClauseCoverage",
+            "  independent_registered_transition_cause_clause_coverage_eq :",
+            "      independent_registered_transition_cause_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage",
+            "  independent_registered_transition_cause_transition_instance :",
+            "      (theme : Entity) -> (scale : StateScale) ->",
+            "      (source : State) -> (target : State) ->",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes TransitionT",
+            "        (Transition theme scale source target)",
+            "  independent_registered_transition_cause_cause_instance :",
+            "      (causer : Entity) -> (effect : TransitionT) ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes TransitionT effect ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes PropT (Cause causer effect)",
+            "  independent_registered_transition_cause_spec_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "",
+            "def independent_registered_transition_cause_truth_condition_instances :",
+            "    IndependentRegisteredTransitionCauseTruthConditionInstances := {",
+            "  independent_registered_transition_cause_clause_coverage :=",
+            "    independent_registered_truth_condition_clause_coverage,",
+            "  independent_registered_transition_cause_clause_coverage_eq := rfl,",
+            "  independent_registered_transition_cause_transition_instance :=",
+            "    independent_registered_truth_condition_clause_transition_instance,",
+            "  independent_registered_transition_cause_cause_instance :=",
+            "    independent_registered_truth_condition_clause_cause_instance,",
+            "  independent_registered_transition_cause_spec_sound :=",
+            "    independent_registered_truth_condition_clause_coverage."
+            "independent_registered_clause_coverage_spec_sound",
+            "}",
+            "",
+            "theorem "
+            "independent_registered_transition_cause_truth_condition_instances_exists :",
+            "    Exists (fun TC : "
+            "IndependentRegisteredTransitionCauseTruthConditionInstances => "
+            "TC = independent_registered_transition_cause_truth_condition_instances) "
+            ":= by",
+            "  exact Exists.intro "
+            "independent_registered_transition_cause_truth_condition_instances rfl",
+            "",
+            "theorem "
+            "independent_registered_transition_cause_truth_condition_coverage_matches :",
+            "    independent_registered_transition_cause_truth_condition_instances.",
+            "      independent_registered_transition_cause_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage := by",
+            "  exact independent_registered_transition_cause_truth_condition_instances.",
+            "    independent_registered_transition_cause_clause_coverage_eq",
+            "",
+            "theorem "
+            "independent_registered_transition_cause_truth_condition_transition_instance :",
+            "    (theme : Entity) -> (scale : StateScale) ->",
+            "    (source : State) -> (target : State) ->",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes TransitionT",
+            "      (Transition theme scale source target) := by",
+            "  exact independent_registered_transition_cause_truth_condition_instances.",
+            "    independent_registered_transition_cause_transition_instance",
+            "",
+            "theorem "
+            "independent_registered_transition_cause_truth_condition_cause_instance :",
+            "    (causer : Entity) -> (effect : TransitionT) ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes TransitionT effect ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes PropT (Cause causer effect) := by",
+            "  exact independent_registered_transition_cause_truth_condition_instances.",
+            "    independent_registered_transition_cause_cause_instance",
+            "",
+            "theorem "
+            "independent_registered_transition_cause_truth_condition_spec_sound :",
+            "    (A : Type) -> (term : A) ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact independent_registered_transition_cause_truth_condition_instances.",
+            "    independent_registered_transition_cause_spec_sound",
+        ]
+
+    return [
+        "Record IndependentRegisteredTransitionCauseTruthConditionInstances : Type := {",
+        "  independent_registered_transition_cause_clause_coverage :",
+        "      IndependentRegisteredTruthConditionClauseCoverage;",
+        "  independent_registered_transition_cause_clause_coverage_eq :",
+        "      independent_registered_transition_cause_clause_coverage =",
+        "        independent_registered_truth_condition_clause_coverage;",
+        "  independent_registered_transition_cause_transition_instance :",
+        "    forall theme : Entity, forall scale : StateScale,",
+        "    forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        TransitionT (Transition theme scale source target);",
+        "  independent_registered_transition_cause_cause_instance :",
+        "    forall causer : Entity, forall effect : TransitionT,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        TransitionT effect ->",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        PropT (Cause causer effect);",
+        "  independent_registered_transition_cause_spec_sound :",
+        "    forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances) A term ->",
+        "      AtomicClosureTruth A term",
+        "}.",
+        "",
+        "Definition independent_registered_transition_cause_truth_condition_instances :",
+        "  IndependentRegisteredTransitionCauseTruthConditionInstances := {|",
+        "  independent_registered_transition_cause_clause_coverage :=",
+        "    independent_registered_truth_condition_clause_coverage;",
+        "  independent_registered_transition_cause_clause_coverage_eq := eq_refl;",
+        "  independent_registered_transition_cause_transition_instance :=",
+        "    independent_registered_truth_condition_clause_transition_instance;",
+        "  independent_registered_transition_cause_cause_instance :=",
+        "    independent_registered_truth_condition_clause_cause_instance;",
+        "  independent_registered_transition_cause_spec_sound :=",
+        "    independent_registered_clause_coverage_spec_sound",
+        "      independent_registered_truth_condition_clause_coverage",
+        "|}.",
+        "",
+        "Theorem independent_registered_transition_cause_truth_condition_instances_exists :",
+        "  exists TC : IndependentRegisteredTransitionCauseTruthConditionInstances,",
+        "    TC = independent_registered_transition_cause_truth_condition_instances.",
+        "Proof.",
+        "  exists independent_registered_transition_cause_truth_condition_instances.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem independent_registered_transition_cause_truth_condition_coverage_matches :",
+        "  independent_registered_transition_cause_clause_coverage",
+        "    independent_registered_transition_cause_truth_condition_instances =",
+        "  independent_registered_truth_condition_clause_coverage.",
+        "Proof.",
+        "  exact (independent_registered_transition_cause_clause_coverage_eq",
+        "    independent_registered_transition_cause_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_transition_cause_truth_condition_transition_instance :",
+        "  forall theme : Entity, forall scale : StateScale,",
+        "  forall source : State, forall target : State,",
+        "    RegisteredStateTransitionTruth theme scale source target ->",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances)",
+        "      TransitionT (Transition theme scale source target).",
+        "Proof.",
+        "  exact (independent_registered_transition_cause_transition_instance",
+        "    independent_registered_transition_cause_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_transition_cause_truth_condition_cause_instance :",
+        "  forall causer : Entity, forall effect : TransitionT,",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances)",
+        "      TransitionT effect ->",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances)",
+        "      PropT (Cause causer effect).",
+        "Proof.",
+        "  exact (independent_registered_transition_cause_cause_instance",
+        "    independent_registered_transition_cause_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_transition_cause_truth_condition_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (independent_registered_transition_cause_spec_sound",
+        "    independent_registered_transition_cause_truth_condition_instances).",
+        "Qed.",
+    ]
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -13952,6 +14159,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(independent_registered_polarity_truth_condition_instance_lines(target))
         lines.append("")
+        lines.extend(
+            independent_registered_transition_cause_truth_condition_instance_lines(target)
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -14365,6 +14576,27 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check independent_registered_polarity_truth_condition_not_T_instance"
         )
         lines.append("#check independent_registered_polarity_truth_condition_spec_sound")
+        lines.append(
+            "#check IndependentRegisteredTransitionCauseTruthConditionInstances"
+        )
+        lines.append(
+            "#check independent_registered_transition_cause_truth_condition_instances"
+        )
+        lines.append(
+            "#check independent_registered_transition_cause_truth_condition_instances_exists"
+        )
+        lines.append(
+            "#check independent_registered_transition_cause_truth_condition_coverage_matches"
+        )
+        lines.append(
+            "#check independent_registered_transition_cause_truth_condition_transition_instance"
+        )
+        lines.append(
+            "#check independent_registered_transition_cause_truth_condition_cause_instance"
+        )
+        lines.append(
+            "#check independent_registered_transition_cause_truth_condition_spec_sound"
+        )
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -15035,6 +15267,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(independent_registered_polarity_truth_condition_instance_lines(target))
     lines.append("")
+    lines.extend(
+        independent_registered_transition_cause_truth_condition_instance_lines(target)
+    )
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -15369,6 +15605,21 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check independent_registered_polarity_truth_condition_coverage_matches.")
     lines.append("Check independent_registered_polarity_truth_condition_not_T_instance.")
     lines.append("Check independent_registered_polarity_truth_condition_spec_sound.")
+    lines.append("Check IndependentRegisteredTransitionCauseTruthConditionInstances.")
+    lines.append("Check independent_registered_transition_cause_truth_condition_instances.")
+    lines.append(
+        "Check independent_registered_transition_cause_truth_condition_instances_exists."
+    )
+    lines.append(
+        "Check independent_registered_transition_cause_truth_condition_coverage_matches."
+    )
+    lines.append(
+        "Check independent_registered_transition_cause_truth_condition_transition_instance."
+    )
+    lines.append(
+        "Check independent_registered_transition_cause_truth_condition_cause_instance."
+    )
+    lines.append("Check independent_registered_transition_cause_truth_condition_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"
