@@ -2853,6 +2853,71 @@ def main() -> None:
             and "Check independent_registered_temporal_truth_condition_spec_sound."
             in coq
         ),
+        "lean independent registered sigma truth-condition instances package": (
+            "structure IndependentRegisteredSigmaTruthConditionInstances : Type where"
+            in lean
+            and "independent_registered_sigma_clause_coverage :"
+            in lean
+            and "IndependentRegisteredTruthConditionClauseCoverage" in lean
+            and "def independent_registered_sigma_truth_condition_instances :"
+            in lean
+            and "IndependentRegisteredSigmaTruthConditionInstances := {"
+            in lean
+            and "theorem "
+            "independent_registered_sigma_truth_condition_instances_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_sigma_truth_condition_coverage_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_sigma_truth_condition_sigma_Entity_instance :"
+            in lean
+            and "theorem independent_registered_sigma_truth_condition_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredSigmaTruthConditionInstances"
+            in lean
+            and "#check independent_registered_sigma_truth_condition_instances"
+            in lean
+            and "#check independent_registered_sigma_truth_condition_coverage_matches"
+            in lean
+            and "#check "
+            "independent_registered_sigma_truth_condition_sigma_Entity_instance"
+            in lean
+            and "#check independent_registered_sigma_truth_condition_spec_sound"
+            in lean
+        ),
+        "coq independent registered sigma truth-condition instances package": (
+            "Record IndependentRegisteredSigmaTruthConditionInstances : Type := {"
+            in coq
+            and "independent_registered_sigma_clause_coverage :" in coq
+            and "IndependentRegisteredTruthConditionClauseCoverage" in coq
+            and "Definition independent_registered_sigma_truth_condition_instances :"
+            in coq
+            and "IndependentRegisteredSigmaTruthConditionInstances := {|"
+            in coq
+            and "Theorem "
+            "independent_registered_sigma_truth_condition_instances_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_sigma_truth_condition_coverage_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_sigma_truth_condition_sigma_Entity_instance :"
+            in coq
+            and "Theorem independent_registered_sigma_truth_condition_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredSigmaTruthConditionInstances."
+            in coq
+            and "Check independent_registered_sigma_truth_condition_instances."
+            in coq
+            and "Check independent_registered_sigma_truth_condition_coverage_matches."
+            in coq
+            and "Check "
+            "independent_registered_sigma_truth_condition_sigma_Entity_instance."
+            in coq
+            and "Check independent_registered_sigma_truth_condition_spec_sound."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean

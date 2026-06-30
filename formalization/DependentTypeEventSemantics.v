@@ -5411,6 +5411,198 @@ Proof.
     independent_registered_temporal_truth_condition_instances).
 Qed.
 
+Record IndependentRegisteredSigmaTruthConditionInstances : Type := {
+  independent_registered_sigma_clause_coverage :
+      IndependentRegisteredTruthConditionClauseCoverage;
+  independent_registered_sigma_clause_coverage_eq :
+      independent_registered_sigma_clause_coverage =
+        independent_registered_truth_condition_clause_coverage;
+  independent_registered_sigma_Entity_instance :
+    forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : Entity, P x);
+  independent_registered_sigma_Food_instance :
+    forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : Food, P x);
+  independent_registered_sigma_State_instance :
+    forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : State, P x);
+  independent_registered_sigma_StateScale_instance :
+    forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : StateScale, P x);
+  independent_registered_sigma_TransitionT_instance :
+    forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : TransitionT, P x);
+  independent_registered_sigma_spec_sound :
+    forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition independent_registered_sigma_truth_condition_instances :
+  IndependentRegisteredSigmaTruthConditionInstances := {|
+  independent_registered_sigma_clause_coverage :=
+    independent_registered_truth_condition_clause_coverage;
+  independent_registered_sigma_clause_coverage_eq := eq_refl;
+  independent_registered_sigma_Entity_instance := independent_registered_truth_condition_clause_sigma_Entity_instance;
+  independent_registered_sigma_Food_instance := independent_registered_truth_condition_clause_sigma_Food_instance;
+  independent_registered_sigma_State_instance := independent_registered_truth_condition_clause_sigma_State_instance;
+  independent_registered_sigma_StateScale_instance := independent_registered_truth_condition_clause_sigma_StateScale_instance;
+  independent_registered_sigma_TransitionT_instance := independent_registered_truth_condition_clause_sigma_TransitionT_instance;
+  independent_registered_sigma_spec_sound :=
+    independent_registered_clause_coverage_spec_sound
+      independent_registered_truth_condition_clause_coverage
+|}.
+
+Theorem independent_registered_sigma_truth_condition_instances_exists :
+  exists S : IndependentRegisteredSigmaTruthConditionInstances,
+    S = independent_registered_sigma_truth_condition_instances.
+Proof.
+  exists independent_registered_sigma_truth_condition_instances.
+  reflexivity.
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_coverage_matches :
+  independent_registered_sigma_clause_coverage
+    independent_registered_sigma_truth_condition_instances =
+  independent_registered_truth_condition_clause_coverage.
+Proof.
+  exact (independent_registered_sigma_clause_coverage_eq
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_sigma_Entity_instance :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (P x)) ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      Prop (exists x : Entity, P x).
+Proof.
+  exact (independent_registered_sigma_Entity_instance
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_sigma_Food_instance :
+  forall P : Food -> Prop,
+    (forall x : Food,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (P x)) ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      Prop (exists x : Food, P x).
+Proof.
+  exact (independent_registered_sigma_Food_instance
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_sigma_State_instance :
+  forall P : State -> Prop,
+    (forall x : State,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (P x)) ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      Prop (exists x : State, P x).
+Proof.
+  exact (independent_registered_sigma_State_instance
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_sigma_StateScale_instance :
+  forall P : StateScale -> Prop,
+    (forall x : StateScale,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (P x)) ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      Prop (exists x : StateScale, P x).
+Proof.
+  exact (independent_registered_sigma_StateScale_instance
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_sigma_TransitionT_instance :
+  forall P : TransitionT -> Prop,
+    (forall x : TransitionT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (P x)) ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      Prop (exists x : TransitionT, P x).
+Proof.
+  exact (independent_registered_sigma_TransitionT_instance
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_sigma_truth_condition_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (independent_registered_sigma_spec_sound
+    independent_registered_sigma_truth_condition_instances).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -5793,5 +5985,11 @@ Check independent_registered_temporal_truth_condition_after_T_instance.
 Check independent_registered_temporal_truth_condition_until_T_instance.
 Check independent_registered_temporal_truth_condition_since_T_instance.
 Check independent_registered_temporal_truth_condition_spec_sound.
+Check IndependentRegisteredSigmaTruthConditionInstances.
+Check independent_registered_sigma_truth_condition_instances.
+Check independent_registered_sigma_truth_condition_instances_exists.
+Check independent_registered_sigma_truth_condition_coverage_matches.
+Check independent_registered_sigma_truth_condition_sigma_Entity_instance.
+Check independent_registered_sigma_truth_condition_spec_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

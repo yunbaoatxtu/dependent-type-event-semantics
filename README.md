@@ -1282,6 +1282,18 @@ first constructor-class subpackage carved out of the full ledger, so future
 work can strengthen temporal truth clauses without disturbing lexical,
 quantifier, repetition, polarity, transition, or causal clauses. The next
 verified objective
+`coq_independent_registered_sigma_truth_condition_instances_package` extracts
+the dependent-existential fragment as
+`IndependentRegisteredSigmaTruthConditionInstances`. It instantiates
+`independent_registered_sigma_truth_condition_instances`, proves the package
+exists, proves that its stored coverage object is
+`independent_registered_truth_condition_clause_coverage`, and exposes typed
+Sigma projections such as
+`independent_registered_sigma_truth_condition_sigma_Entity_instance`. This
+separates the registered quantifier/Sigma replacement surface from temporal
+and lexical clauses while still leaving full scope, discourse, and arbitrary
+lexical truth conditions outside the completed fragment. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

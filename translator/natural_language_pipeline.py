@@ -21127,6 +21127,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_independent_registered_sigma_truth_condition_instances_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",

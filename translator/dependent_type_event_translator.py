@@ -12444,6 +12444,247 @@ def independent_registered_temporal_truth_condition_instance_lines(
     return lines
 
 
+def independent_registered_sigma_truth_condition_instance_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Expose registered dependent existential clauses as a subpackage."""
+
+    sigma_types = declarations["types"]
+
+    if target == "lean":
+        lines = [
+            "structure IndependentRegisteredSigmaTruthConditionInstances : Type where",
+            "  independent_registered_sigma_clause_coverage :",
+            "      IndependentRegisteredTruthConditionClauseCoverage",
+            "  independent_registered_sigma_clause_coverage_eq :",
+            "      independent_registered_sigma_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage",
+        ]
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    f"  independent_registered_sigma_{type_name}_instance :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) ->",
+                    "        independent_registered_truth_condition_clause_instances.",
+                    "        independent_registered_clause_spec.",
+                    "        fully_registered_truth_denotes Prop (P x)) ->",
+                    "      independent_registered_truth_condition_clause_instances.",
+                    "      independent_registered_clause_spec.",
+                    "      fully_registered_truth_denotes Prop",
+                    f"        (Exists fun x : {type_name} => P x)",
+                ]
+            )
+        lines.extend(
+            [
+                "  independent_registered_sigma_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "",
+                "def independent_registered_sigma_truth_condition_instances :",
+                "    IndependentRegisteredSigmaTruthConditionInstances := {",
+                "  independent_registered_sigma_clause_coverage :=",
+                "    independent_registered_truth_condition_clause_coverage,",
+                "  independent_registered_sigma_clause_coverage_eq := rfl,",
+            ]
+        )
+        for type_name in sigma_types:
+            lines.append(
+                f"  independent_registered_sigma_{type_name}_instance := "
+                "independent_registered_truth_condition_clause_sigma_"
+                f"{type_name}_instance,"
+            )
+        lines.extend(
+            [
+                "  independent_registered_sigma_spec_sound :=",
+                "    independent_registered_truth_condition_clause_coverage."
+                "independent_registered_clause_coverage_spec_sound",
+                "}",
+                "",
+                "theorem independent_registered_sigma_truth_condition_instances_exists :",
+                "    Exists (fun S : "
+                "IndependentRegisteredSigmaTruthConditionInstances => "
+                "S = independent_registered_sigma_truth_condition_instances) := by",
+                "  exact Exists.intro "
+                "independent_registered_sigma_truth_condition_instances rfl",
+                "",
+                "theorem "
+                "independent_registered_sigma_truth_condition_coverage_matches :",
+                "    independent_registered_sigma_truth_condition_instances.",
+                "      independent_registered_sigma_clause_coverage =",
+                "        independent_registered_truth_condition_clause_coverage := by",
+                "  exact independent_registered_sigma_truth_condition_instances.",
+                "    independent_registered_sigma_clause_coverage_eq",
+            ]
+        )
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_sigma_truth_condition_sigma_{type_name}_instance :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) ->",
+                    "      independent_registered_truth_condition_clause_instances.",
+                    "      independent_registered_clause_spec.",
+                    "      fully_registered_truth_denotes Prop (P x)) ->",
+                    "    independent_registered_truth_condition_clause_instances.",
+                    "    independent_registered_clause_spec.",
+                    "    fully_registered_truth_denotes Prop",
+                    f"      (Exists fun x : {type_name} => P x) := by",
+                    "  exact independent_registered_sigma_truth_condition_instances.",
+                    f"    independent_registered_sigma_{type_name}_instance",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem "
+                "independent_registered_sigma_truth_condition_spec_sound :",
+                "    (A : Type) -> (term : A) ->",
+                "    independent_registered_truth_condition_clause_instances.",
+                "    independent_registered_clause_spec.",
+                "    fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact independent_registered_sigma_truth_condition_instances.",
+                "    independent_registered_sigma_spec_sound",
+            ]
+        )
+        return lines
+
+    fields: list[list[str]] = [
+        [
+            "  independent_registered_sigma_clause_coverage :",
+            "      IndependentRegisteredTruthConditionClauseCoverage",
+        ],
+        [
+            "  independent_registered_sigma_clause_coverage_eq :",
+            "      independent_registered_sigma_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage",
+        ],
+    ]
+    for type_name in sigma_types:
+        fields.append(
+            [
+                f"  independent_registered_sigma_{type_name}_instance :",
+                f"    forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                "          (independent_registered_clause_spec",
+                "            independent_registered_truth_condition_clause_instances)",
+                "          Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                f"        Prop (exists x : {type_name}, P x)",
+            ]
+        )
+    fields.append(
+        [
+            "  independent_registered_sigma_spec_sound :",
+            "    forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        (independent_registered_clause_spec",
+            "          independent_registered_truth_condition_clause_instances) A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+    )
+
+    lines = ["Record IndependentRegisteredSigmaTruthConditionInstances : Type := {"]
+    for idx, field_lines in enumerate(fields):
+        is_last = idx == len(fields) - 1
+        for field_idx, field_line in enumerate(field_lines):
+            if field_idx == len(field_lines) - 1 and not is_last:
+                lines.append(f"{field_line};")
+            else:
+                lines.append(field_line)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition independent_registered_sigma_truth_condition_instances :",
+            "  IndependentRegisteredSigmaTruthConditionInstances := {|",
+            "  independent_registered_sigma_clause_coverage :=",
+            "    independent_registered_truth_condition_clause_coverage;",
+            "  independent_registered_sigma_clause_coverage_eq := eq_refl;",
+        ]
+    )
+    for type_name in sigma_types:
+        lines.append(
+            f"  independent_registered_sigma_{type_name}_instance := "
+            "independent_registered_truth_condition_clause_sigma_"
+            f"{type_name}_instance;"
+        )
+    lines.extend(
+        [
+            "  independent_registered_sigma_spec_sound :=",
+            "    independent_registered_clause_coverage_spec_sound",
+            "      independent_registered_truth_condition_clause_coverage",
+            "|}.",
+            "",
+            "Theorem independent_registered_sigma_truth_condition_instances_exists :",
+            "  exists S : IndependentRegisteredSigmaTruthConditionInstances,",
+            "    S = independent_registered_sigma_truth_condition_instances.",
+            "Proof.",
+            "  exists independent_registered_sigma_truth_condition_instances.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem independent_registered_sigma_truth_condition_coverage_matches :",
+            "  independent_registered_sigma_clause_coverage",
+            "    independent_registered_sigma_truth_condition_instances =",
+            "  independent_registered_truth_condition_clause_coverage.",
+            "Proof.",
+            "  exact (independent_registered_sigma_clause_coverage_eq",
+            "    independent_registered_sigma_truth_condition_instances).",
+            "Qed.",
+        ]
+    )
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_sigma_truth_condition_sigma_{type_name}_instance :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                "        Prop (P x)) ->",
+                "    fully_registered_truth_denotes",
+                "      (independent_registered_clause_spec",
+                "        independent_registered_truth_condition_clause_instances)",
+                f"      Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                "  exact (independent_registered_sigma_"
+                f"{type_name}_instance",
+                "    independent_registered_sigma_truth_condition_instances).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem independent_registered_sigma_truth_condition_spec_sound :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances) A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (independent_registered_sigma_spec_sound",
+            "    independent_registered_sigma_truth_condition_instances).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -13384,6 +13625,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(independent_registered_temporal_truth_condition_instance_lines(target))
         lines.append("")
+        lines.extend(
+            independent_registered_sigma_truth_condition_instance_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -13761,6 +14009,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check independent_registered_temporal_truth_condition_since_T_instance"
         )
         lines.append("#check independent_registered_temporal_truth_condition_spec_sound")
+        lines.append("#check IndependentRegisteredSigmaTruthConditionInstances")
+        lines.append("#check independent_registered_sigma_truth_condition_instances")
+        lines.append(
+            "#check independent_registered_sigma_truth_condition_instances_exists"
+        )
+        lines.append(
+            "#check independent_registered_sigma_truth_condition_coverage_matches"
+        )
+        lines.append(
+            "#check independent_registered_sigma_truth_condition_sigma_Entity_instance"
+        )
+        lines.append("#check independent_registered_sigma_truth_condition_spec_sound")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -14420,6 +14680,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(independent_registered_temporal_truth_condition_instance_lines(target))
     lines.append("")
+    lines.extend(
+        independent_registered_sigma_truth_condition_instance_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -14736,6 +15003,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check independent_registered_temporal_truth_condition_until_T_instance.")
     lines.append("Check independent_registered_temporal_truth_condition_since_T_instance.")
     lines.append("Check independent_registered_temporal_truth_condition_spec_sound.")
+    lines.append("Check IndependentRegisteredSigmaTruthConditionInstances.")
+    lines.append("Check independent_registered_sigma_truth_condition_instances.")
+    lines.append("Check independent_registered_sigma_truth_condition_instances_exists.")
+    lines.append("Check independent_registered_sigma_truth_condition_coverage_matches.")
+    lines.append("Check independent_registered_sigma_truth_condition_sigma_Entity_instance.")
+    lines.append("Check independent_registered_sigma_truth_condition_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

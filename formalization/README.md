@@ -276,7 +276,15 @@ temporal package exists, proves that it still points to
 projections for `at_T`, `during_T`, `before_T`, `after_T`, `until_T`, and
 `since_T`. This gives the Parsons/Luo-Shi time-operator replacement route a
 separate proof interface while keeping the broader truth-condition completion
-blocker in place. The scaffold also
+blocker in place. The scaffold then extracts the dependent-existential fragment
+as `IndependentRegisteredSigmaTruthConditionInstances`, instantiates
+`independent_registered_sigma_truth_condition_instances`, proves that the
+Sigma package exists, proves that it still points to
+`independent_registered_truth_condition_clause_coverage`, and checks typed
+projections such as
+`independent_registered_sigma_truth_condition_sigma_Entity_instance`. This
+keeps registered Sigma and quantifier-scope evidence inspectable without
+claiming a complete natural-language quantifier theory. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported
