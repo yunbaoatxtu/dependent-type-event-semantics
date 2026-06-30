@@ -2752,6 +2752,70 @@ def main() -> None:
             "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound."
             in coq
         ),
+        "lean independent registered lexical truth-condition instances package": (
+            "structure IndependentRegisteredLexicalTruthConditionInstances : Type where"
+            in lean
+            and "independent_registered_lexical_clause_coverage :" in lean
+            and "IndependentRegisteredTruthConditionClauseCoverage" in lean
+            and "def independent_registered_lexical_truth_condition_instances :"
+            in lean
+            and "IndependentRegisteredLexicalTruthConditionInstances := {"
+            in lean
+            and "theorem "
+            "independent_registered_lexical_truth_condition_instances_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_lexical_truth_condition_coverage_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_lexical_truth_condition_application_instance :"
+            in lean
+            and "RegisteredLexicalApplicationTruth A term ->" in lean
+            and "theorem independent_registered_lexical_truth_condition_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredLexicalTruthConditionInstances"
+            in lean
+            and "#check independent_registered_lexical_truth_condition_instances"
+            in lean
+            and "#check independent_registered_lexical_truth_condition_coverage_matches"
+            in lean
+            and "#check independent_registered_lexical_truth_condition_application_instance"
+            in lean
+            and "#check independent_registered_lexical_truth_condition_spec_sound"
+            in lean
+        ),
+        "coq independent registered lexical truth-condition instances package": (
+            "Record IndependentRegisteredLexicalTruthConditionInstances : Type := {"
+            in coq
+            and "independent_registered_lexical_clause_coverage :" in coq
+            and "IndependentRegisteredTruthConditionClauseCoverage" in coq
+            and "Definition independent_registered_lexical_truth_condition_instances :"
+            in coq
+            and "IndependentRegisteredLexicalTruthConditionInstances := {|"
+            in coq
+            and "Theorem "
+            "independent_registered_lexical_truth_condition_instances_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_lexical_truth_condition_coverage_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_lexical_truth_condition_application_instance :"
+            in coq
+            and "RegisteredLexicalApplicationTruth A term ->" in coq
+            and "Theorem independent_registered_lexical_truth_condition_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredLexicalTruthConditionInstances."
+            in coq
+            and "Check independent_registered_lexical_truth_condition_instances."
+            in coq
+            and "Check independent_registered_lexical_truth_condition_coverage_matches."
+            in coq
+            and "Check independent_registered_lexical_truth_condition_application_instance."
+            in coq
+            and "Check independent_registered_lexical_truth_condition_spec_sound."
+            in coq
+        ),
         "lean independent registered temporal truth-condition instances package": (
             "structure IndependentRegisteredTemporalTruthConditionInstances : Type where"
             in lean

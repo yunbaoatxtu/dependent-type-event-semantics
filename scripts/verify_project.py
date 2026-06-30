@@ -10839,6 +10839,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_independent_registered_truth_condition_source_package",
         "coq_independent_registered_truth_condition_clause_instances_package",
         "coq_independent_registered_truth_condition_clause_coverage_package",
+        "coq_independent_registered_lexical_truth_condition_instances_package",
         "coq_independent_registered_temporal_truth_condition_instances_package",
         "coq_independent_registered_sigma_truth_condition_instances_package",
         "coq_independent_registered_repeat_truth_condition_instances_package",

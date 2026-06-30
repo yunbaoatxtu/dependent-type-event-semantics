@@ -5203,6 +5203,77 @@ Proof.
     independent_registered_truth_condition_clause_coverage).
 Qed.
 
+Record IndependentRegisteredLexicalTruthConditionInstances : Type := {
+  independent_registered_lexical_clause_coverage :
+      IndependentRegisteredTruthConditionClauseCoverage;
+  independent_registered_lexical_clause_coverage_eq :
+      independent_registered_lexical_clause_coverage =
+        independent_registered_truth_condition_clause_coverage;
+  independent_registered_lexical_application_instance :
+    forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term;
+  independent_registered_lexical_spec_sound :
+    forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition independent_registered_lexical_truth_condition_instances :
+  IndependentRegisteredLexicalTruthConditionInstances := {|
+  independent_registered_lexical_clause_coverage :=
+    independent_registered_truth_condition_clause_coverage;
+  independent_registered_lexical_clause_coverage_eq := eq_refl;
+  independent_registered_lexical_application_instance :=
+    independent_registered_truth_condition_clause_lexical_application_instance;
+  independent_registered_lexical_spec_sound :=
+    independent_registered_clause_coverage_spec_sound
+      independent_registered_truth_condition_clause_coverage
+|}.
+
+Theorem independent_registered_lexical_truth_condition_instances_exists :
+  exists L : IndependentRegisteredLexicalTruthConditionInstances,
+    L = independent_registered_lexical_truth_condition_instances.
+Proof.
+  exists independent_registered_lexical_truth_condition_instances.
+  reflexivity.
+Qed.
+
+Theorem independent_registered_lexical_truth_condition_coverage_matches :
+  independent_registered_lexical_clause_coverage
+    independent_registered_lexical_truth_condition_instances =
+  independent_registered_truth_condition_clause_coverage.
+Proof.
+  exact (independent_registered_lexical_clause_coverage_eq
+    independent_registered_lexical_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_lexical_truth_condition_application_instance :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances) A term.
+Proof.
+  exact (independent_registered_lexical_application_instance
+    independent_registered_lexical_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_lexical_truth_condition_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (independent_registered_lexical_spec_sound
+    independent_registered_lexical_truth_condition_instances).
+Qed.
+
 Record IndependentRegisteredTemporalTruthConditionInstances : Type := {
   independent_registered_temporal_clause_coverage :
       IndependentRegisteredTruthConditionClauseCoverage;
@@ -6234,6 +6305,12 @@ Check independent_registered_truth_condition_clause_coverage.
 Check independent_registered_truth_condition_clause_coverage_exists.
 Check independent_registered_truth_condition_clause_coverage_instances_match.
 Check independent_registered_truth_condition_clause_coverage_spec_sound.
+Check IndependentRegisteredLexicalTruthConditionInstances.
+Check independent_registered_lexical_truth_condition_instances.
+Check independent_registered_lexical_truth_condition_instances_exists.
+Check independent_registered_lexical_truth_condition_coverage_matches.
+Check independent_registered_lexical_truth_condition_application_instance.
+Check independent_registered_lexical_truth_condition_spec_sound.
 Check IndependentRegisteredTemporalTruthConditionInstances.
 Check independent_registered_temporal_truth_condition_instances.
 Check independent_registered_temporal_truth_condition_instances_exists.

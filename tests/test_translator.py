@@ -2305,6 +2305,26 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure IndependentRegisteredLexicalTruthConditionInstances : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def independent_registered_lexical_truth_condition_instances :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_lexical_truth_condition_coverage_matches :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_lexical_truth_condition_application_instance :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check independent_registered_lexical_truth_condition_spec_sound",
+            lean_module,
+        )
+        self.assertIn(
             "structure IndependentRegisteredTemporalTruthConditionInstances : Type where",
             lean_module,
         )
@@ -3825,6 +3845,26 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check independent_registered_truth_condition_clause_coverage_example_2_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record IndependentRegisteredLexicalTruthConditionInstances : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition independent_registered_lexical_truth_condition_instances :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_lexical_truth_condition_coverage_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_lexical_truth_condition_application_instance :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check independent_registered_lexical_truth_condition_spec_sound.",
             coq_module,
         )
         self.assertIn(
@@ -16721,6 +16761,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_independent_registered_truth_condition_source_package",
                 "coq_independent_registered_truth_condition_clause_instances_package",
                 "coq_independent_registered_truth_condition_clause_coverage_package",
+                "coq_independent_registered_lexical_truth_condition_instances_package",
                 "coq_independent_registered_temporal_truth_condition_instances_package",
                 "coq_independent_registered_sigma_truth_condition_instances_package",
                 "coq_independent_registered_repeat_truth_condition_instances_package",
@@ -25922,6 +25963,14 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn(
+            "`IndependentRegisteredLexicalTruthConditionInstances`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_independent_registered_lexical_truth_condition_instances_package`",
+            readme,
+        )
+        self.assertIn(
             "`IndependentRegisteredTemporalTruthConditionInstances`",
             readme,
         )
@@ -26043,6 +26092,14 @@ class TranslatorTests(unittest.TestCase):
             formalization_readme,
         )
         self.assertIn(
+            "`IndependentRegisteredLexicalTruthConditionInstances`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`independent_registered_lexical_truth_condition_instances`",
+            formalization_readme,
+        )
+        self.assertIn(
             "`IndependentRegisteredTemporalTruthConditionInstances`",
             formalization_readme,
         )
@@ -26140,6 +26197,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_independent_registered_truth_condition_clause_coverage_package",
+            manuscript,
+        )
+        self.assertIn(
+            "IndependentRegisteredLexicalTruthConditionInstances",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_independent_registered_lexical_truth_condition_instances_package",
             manuscript,
         )
         self.assertIn(

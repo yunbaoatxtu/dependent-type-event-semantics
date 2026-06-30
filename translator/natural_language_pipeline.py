@@ -21122,6 +21122,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_independent_registered_lexical_truth_condition_instances_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_independent_registered_temporal_truth_condition_instances_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",

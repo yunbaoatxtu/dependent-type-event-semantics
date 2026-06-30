@@ -3157,6 +3157,65 @@ theorem independent_registered_truth_condition_clause_coverage_example_3_atomic_
 theorem independent_registered_truth_condition_clause_coverage_example_4_atomic_sound : AtomicClosureTruth PropT example_4 := by
   exact independent_registered_truth_condition_clause_coverage.independent_registered_clause_coverage_example_4
 
+structure IndependentRegisteredLexicalTruthConditionInstances : Type where
+  independent_registered_lexical_clause_coverage :
+      IndependentRegisteredTruthConditionClauseCoverage
+  independent_registered_lexical_clause_coverage_eq :
+      independent_registered_lexical_clause_coverage =
+        independent_registered_truth_condition_clause_coverage
+  independent_registered_lexical_application_instance :
+      (A : Type) -> (term : A) ->
+      RegisteredLexicalApplicationTruth A term ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term
+  independent_registered_lexical_spec_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def independent_registered_lexical_truth_condition_instances :
+    IndependentRegisteredLexicalTruthConditionInstances := {
+  independent_registered_lexical_clause_coverage :=
+    independent_registered_truth_condition_clause_coverage,
+  independent_registered_lexical_clause_coverage_eq := rfl,
+  independent_registered_lexical_application_instance :=
+    independent_registered_truth_condition_clause_lexical_application_instance,
+  independent_registered_lexical_spec_sound :=
+    independent_registered_truth_condition_clause_coverage.independent_registered_clause_coverage_spec_sound
+}
+
+theorem independent_registered_lexical_truth_condition_instances_exists :
+    Exists (fun L : IndependentRegisteredLexicalTruthConditionInstances => L = independent_registered_lexical_truth_condition_instances) := by
+  exact Exists.intro independent_registered_lexical_truth_condition_instances rfl
+
+theorem independent_registered_lexical_truth_condition_coverage_matches :
+    independent_registered_lexical_truth_condition_instances.
+      independent_registered_lexical_clause_coverage =
+        independent_registered_truth_condition_clause_coverage := by
+  exact independent_registered_lexical_truth_condition_instances.
+    independent_registered_lexical_clause_coverage_eq
+
+theorem independent_registered_lexical_truth_condition_application_instance :
+    (A : Type) -> (term : A) ->
+    RegisteredLexicalApplicationTruth A term ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term := by
+  exact independent_registered_lexical_truth_condition_instances.
+    independent_registered_lexical_application_instance
+
+theorem independent_registered_lexical_truth_condition_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact independent_registered_lexical_truth_condition_instances.
+    independent_registered_lexical_spec_sound
+
 structure IndependentRegisteredTemporalTruthConditionInstances : Type where
   independent_registered_temporal_clause_coverage :
       IndependentRegisteredTruthConditionClauseCoverage
@@ -4038,6 +4097,12 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check independent_registered_truth_condition_clause_coverage_exists
 #check independent_registered_truth_condition_clause_coverage_instances_match
 #check independent_registered_truth_condition_clause_coverage_spec_sound
+#check IndependentRegisteredLexicalTruthConditionInstances
+#check independent_registered_lexical_truth_condition_instances
+#check independent_registered_lexical_truth_condition_instances_exists
+#check independent_registered_lexical_truth_condition_coverage_matches
+#check independent_registered_lexical_truth_condition_application_instance
+#check independent_registered_lexical_truth_condition_spec_sound
 #check IndependentRegisteredTemporalTruthConditionInstances
 #check independent_registered_temporal_truth_condition_instances
 #check independent_registered_temporal_truth_condition_instances_exists

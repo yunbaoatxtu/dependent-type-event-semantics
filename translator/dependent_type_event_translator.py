@@ -12204,6 +12204,153 @@ def independent_registered_truth_condition_clause_coverage_lines(
     return lines
 
 
+def independent_registered_lexical_truth_condition_instance_lines(
+    target: str,
+) -> list[str]:
+    """Expose registered lexical-application clauses as a subpackage."""
+
+    if target == "lean":
+        return [
+            "structure IndependentRegisteredLexicalTruthConditionInstances : Type where",
+            "  independent_registered_lexical_clause_coverage :",
+            "      IndependentRegisteredTruthConditionClauseCoverage",
+            "  independent_registered_lexical_clause_coverage_eq :",
+            "      independent_registered_lexical_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage",
+            "  independent_registered_lexical_application_instance :",
+            "      (A : Type) -> (term : A) ->",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes A term",
+            "  independent_registered_lexical_spec_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "",
+            "def independent_registered_lexical_truth_condition_instances :",
+            "    IndependentRegisteredLexicalTruthConditionInstances := {",
+            "  independent_registered_lexical_clause_coverage :=",
+            "    independent_registered_truth_condition_clause_coverage,",
+            "  independent_registered_lexical_clause_coverage_eq := rfl,",
+            "  independent_registered_lexical_application_instance :=",
+            "    independent_registered_truth_condition_clause_lexical_application_instance,",
+            "  independent_registered_lexical_spec_sound :=",
+            "    independent_registered_truth_condition_clause_coverage."
+            "independent_registered_clause_coverage_spec_sound",
+            "}",
+            "",
+            "theorem independent_registered_lexical_truth_condition_instances_exists :",
+            "    Exists (fun L : "
+            "IndependentRegisteredLexicalTruthConditionInstances => "
+            "L = independent_registered_lexical_truth_condition_instances) := by",
+            "  exact Exists.intro "
+            "independent_registered_lexical_truth_condition_instances rfl",
+            "",
+            "theorem "
+            "independent_registered_lexical_truth_condition_coverage_matches :",
+            "    independent_registered_lexical_truth_condition_instances.",
+            "      independent_registered_lexical_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage := by",
+            "  exact independent_registered_lexical_truth_condition_instances.",
+            "    independent_registered_lexical_clause_coverage_eq",
+            "",
+            "theorem "
+            "independent_registered_lexical_truth_condition_application_instance :",
+            "    (A : Type) -> (term : A) ->",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes A term := by",
+            "  exact independent_registered_lexical_truth_condition_instances.",
+            "    independent_registered_lexical_application_instance",
+            "",
+            "theorem independent_registered_lexical_truth_condition_spec_sound :",
+            "    (A : Type) -> (term : A) ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact independent_registered_lexical_truth_condition_instances.",
+            "    independent_registered_lexical_spec_sound",
+        ]
+
+    return [
+        "Record IndependentRegisteredLexicalTruthConditionInstances : Type := {",
+        "  independent_registered_lexical_clause_coverage :",
+        "      IndependentRegisteredTruthConditionClauseCoverage;",
+        "  independent_registered_lexical_clause_coverage_eq :",
+        "      independent_registered_lexical_clause_coverage =",
+        "        independent_registered_truth_condition_clause_coverage;",
+        "  independent_registered_lexical_application_instance :",
+        "    forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances) A term;",
+        "  independent_registered_lexical_spec_sound :",
+        "    forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances) A term ->",
+        "      AtomicClosureTruth A term",
+        "}.",
+        "",
+        "Definition independent_registered_lexical_truth_condition_instances :",
+        "  IndependentRegisteredLexicalTruthConditionInstances := {|",
+        "  independent_registered_lexical_clause_coverage :=",
+        "    independent_registered_truth_condition_clause_coverage;",
+        "  independent_registered_lexical_clause_coverage_eq := eq_refl;",
+        "  independent_registered_lexical_application_instance :=",
+        "    independent_registered_truth_condition_clause_lexical_application_instance;",
+        "  independent_registered_lexical_spec_sound :=",
+        "    independent_registered_clause_coverage_spec_sound",
+        "      independent_registered_truth_condition_clause_coverage",
+        "|}.",
+        "",
+        "Theorem independent_registered_lexical_truth_condition_instances_exists :",
+        "  exists L : IndependentRegisteredLexicalTruthConditionInstances,",
+        "    L = independent_registered_lexical_truth_condition_instances.",
+        "Proof.",
+        "  exists independent_registered_lexical_truth_condition_instances.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem independent_registered_lexical_truth_condition_coverage_matches :",
+        "  independent_registered_lexical_clause_coverage",
+        "    independent_registered_lexical_truth_condition_instances =",
+        "  independent_registered_truth_condition_clause_coverage.",
+        "Proof.",
+        "  exact (independent_registered_lexical_clause_coverage_eq",
+        "    independent_registered_lexical_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_lexical_truth_condition_application_instance :",
+        "  forall A : Type, forall term : A,",
+        "    RegisteredLexicalApplicationTruth A term ->",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances) A term.",
+        "Proof.",
+        "  exact (independent_registered_lexical_application_instance",
+        "    independent_registered_lexical_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_lexical_truth_condition_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (independent_registered_lexical_spec_sound",
+        "    independent_registered_lexical_truth_condition_instances).",
+        "Qed.",
+    ]
+
+
 def independent_registered_temporal_truth_condition_instance_lines(
     target: str,
 ) -> list[str]:
@@ -14146,6 +14293,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(independent_registered_lexical_truth_condition_instance_lines(target))
+        lines.append("")
         lines.extend(independent_registered_temporal_truth_condition_instance_lines(target))
         lines.append("")
         lines.extend(
@@ -14515,6 +14664,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check independent_registered_truth_condition_clause_coverage_spec_sound"
         )
+        lines.append("#check IndependentRegisteredLexicalTruthConditionInstances")
+        lines.append("#check independent_registered_lexical_truth_condition_instances")
+        lines.append(
+            "#check independent_registered_lexical_truth_condition_instances_exists"
+        )
+        lines.append(
+            "#check independent_registered_lexical_truth_condition_coverage_matches"
+        )
+        lines.append(
+            "#check independent_registered_lexical_truth_condition_application_instance"
+        )
+        lines.append("#check independent_registered_lexical_truth_condition_spec_sound")
         lines.append("#check IndependentRegisteredTemporalTruthConditionInstances")
         lines.append("#check independent_registered_temporal_truth_condition_instances")
         lines.append(
@@ -15254,6 +15415,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(independent_registered_lexical_truth_condition_instance_lines(target))
+    lines.append("")
     lines.extend(independent_registered_temporal_truth_condition_instance_lines(target))
     lines.append("")
     lines.extend(
@@ -15576,6 +15739,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "independent_registered_truth_condition_clause_coverage_instances_match."
     )
     lines.append("Check independent_registered_truth_condition_clause_coverage_spec_sound.")
+    lines.append("Check IndependentRegisteredLexicalTruthConditionInstances.")
+    lines.append("Check independent_registered_lexical_truth_condition_instances.")
+    lines.append("Check independent_registered_lexical_truth_condition_instances_exists.")
+    lines.append("Check independent_registered_lexical_truth_condition_coverage_matches.")
+    lines.append(
+        "Check independent_registered_lexical_truth_condition_application_instance."
+    )
+    lines.append("Check independent_registered_lexical_truth_condition_spec_sound.")
     lines.append("Check IndependentRegisteredTemporalTruthConditionInstances.")
     lines.append("Check independent_registered_temporal_truth_condition_instances.")
     lines.append("Check independent_registered_temporal_truth_condition_instances_exists.")

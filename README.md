@@ -1266,7 +1266,18 @@ soundness projection as
 `independent_registered_truth_condition_clause_coverage_example_i_atomic_sound`
 for every exported example. This is a coverage ledger for the registered
 constructor classes, not a full independent lexical or temporal semantics. The
-next
+next verified objective
+`coq_independent_registered_lexical_truth_condition_instances_package` extracts
+the registered lexical-application fragment as
+`IndependentRegisteredLexicalTruthConditionInstances`. It instantiates
+`independent_registered_lexical_truth_condition_instances`, proves the package
+exists, proves that its stored coverage object is
+`independent_registered_truth_condition_clause_coverage`, and exposes
+`independent_registered_lexical_truth_condition_application_instance` for
+terms backed by `RegisteredLexicalApplicationTruth`. This gives the most
+lexicon-sensitive part of the finite route its own checked interface while
+still leaving arbitrary lexical semantics and front-end lexical replacement
+outside the completed fragment. The next
 verified objective
 `coq_independent_registered_temporal_truth_condition_instances_package`
 extracts the temporal operator fragment from that ledger as

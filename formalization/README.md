@@ -268,6 +268,15 @@ coverage package exists, proves that it still points to
 for every exported example. This is a finite coverage ledger for the registered
 constructor classes, not a proof that arbitrary lexical, temporal, causal, or
 quantificational clauses have independent truth conditions. The scaffold then
+extracts the registered lexical-application fragment as
+`IndependentRegisteredLexicalTruthConditionInstances`, instantiates
+`independent_registered_lexical_truth_condition_instances`, proves that the
+lexical package exists, proves that it still points to
+`independent_registered_truth_condition_clause_coverage`, and checks
+`independent_registered_lexical_truth_condition_application_instance` for
+`RegisteredLexicalApplicationTruth` evidence. This makes lexical truth-condition
+evidence separately inspectable while keeping arbitrary lexical semantics as an
+open completion blocker. The scaffold then
 extracts the temporal fragment as
 `IndependentRegisteredTemporalTruthConditionInstances`, instantiates
 `independent_registered_temporal_truth_condition_instances`, proves that the
