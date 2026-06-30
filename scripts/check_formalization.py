@@ -458,6 +458,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_concrete_registered_evidence_backed_example_truth_instance_atomic_sound_count = len(
+        re.findall(
+            r"^theorem concrete_registered_evidence_backed_example_\d+_truth_instance_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_evidence_backed_example_truth_instance_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem concrete_registered_evidence_backed_example_\d+_truth_instance_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
     lean_concrete_registered_example_truth_instance_atomic_sound_count = len(
         re.findall(
             r"^theorem concrete_registered_example_\d+_truth_instance_atomic_sound :",
@@ -2055,6 +2069,47 @@ def main() -> None:
             and "apply concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered."
             in coq
             and "apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
+            in coq
+        ),
+        "lean concrete registered evidence-backed example truth instance package": (
+            lean_concrete_registered_evidence_backed_example_truth_instance_atomic_sound_count
+            == lean_example_count
+            and "structure ConcreteRegisteredEvidenceBackedExampleTruthInstances : Type where"
+            in lean
+            and "def concrete_registered_evidence_backed_example_truth_instances : "
+            "ConcreteRegisteredEvidenceBackedExampleTruthInstances := {" in lean
+            and "theorem concrete_registered_evidence_backed_example_truth_instances_exists :"
+            in lean
+            and "#check concrete_registered_evidence_backed_example_truth_instances"
+            in lean
+            and "#check concrete_registered_evidence_backed_example_truth_instances_exists"
+            in lean
+            and "#check concrete_registered_evidence_backed_example_4_truth_instance_atomic_sound"
+            in lean
+            and "exact concrete_registered_evidence_backed_example_truth_instances."
+            "example_4_evidence_backed_truth_instance" in lean
+            and "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure"
+            in lean
+        ),
+        "coq concrete registered evidence-backed example truth instance package": (
+            coq_concrete_registered_evidence_backed_example_truth_instance_atomic_sound_count
+            == coq_example_count
+            and "Record ConcreteRegisteredEvidenceBackedExampleTruthInstances : Type := {"
+            in coq
+            and "Definition concrete_registered_evidence_backed_example_truth_instances : "
+            "ConcreteRegisteredEvidenceBackedExampleTruthInstances := {|" in coq
+            and "Theorem concrete_registered_evidence_backed_example_truth_instances_exists :"
+            in coq
+            and "Check concrete_registered_evidence_backed_example_truth_instances."
+            in coq
+            and "Check concrete_registered_evidence_backed_example_truth_instances_exists."
+            in coq
+            and "Check concrete_registered_evidence_backed_example_4_truth_instance_atomic_sound."
+            in coq
+            and "exact (example_4_evidence_backed_truth_instance "
+            "concrete_registered_evidence_backed_example_truth_instances)."
+            in coq
+            and "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
             in coq
         ),
         "lean concrete registered example truth instance atomic proofs": (

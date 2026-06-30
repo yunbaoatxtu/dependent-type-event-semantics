@@ -2083,6 +2083,23 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure ConcreteRegisteredEvidenceBackedExampleTruthInstances : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_evidence_backed_example_truth_instances : "
+            "ConcreteRegisteredEvidenceBackedExampleTruthInstances := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_evidence_backed_example_truth_instances_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_evidence_backed_example_2_truth_instance_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
             "structure ConcreteRegisteredExampleTruthInstances : Type where",
             lean_module,
         )
@@ -2225,6 +2242,11 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "exact concrete_registered_evidence_backed_example_truth_instances."
+            "example_2_evidence_backed_truth_instance",
+            lean_module,
+        )
+        self.assertIn(
             "exact concrete_registered_example_truth_instances.example_2_concrete_truth_instance",
             lean_module,
         )
@@ -2310,6 +2332,10 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "#check concrete_registered_evidence_backed_example_2_truth_instance_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
             "#check concrete_registered_example_2_truth_instance_atomic_sound",
             lean_module,
         )
@@ -2335,6 +2361,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "#check concrete_registered_evidence_backed_truth_conditions",
+            lean_module,
+        )
+        self.assertIn(
+            "#check concrete_registered_evidence_backed_example_truth_instances",
+            lean_module,
+        )
+        self.assertIn(
+            "#check concrete_registered_evidence_backed_example_truth_instances_exists",
             lean_module,
         )
         self.assertIn("#check concrete_registered_truth_kernel", lean_module)
@@ -16010,6 +16044,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_registered_truth_condition_model_bridge",
                 "coq_concrete_registered_truth_condition_instance",
                 "coq_concrete_registered_evidence_backed_truth_sources",
+                "coq_concrete_registered_evidence_backed_example_truth_instance_package",
                 "coq_concrete_registered_truth_kernel_instance",
                 "coq_concrete_registered_kernel_example_truth_instance_package",
                 "coq_concrete_registered_example_truth_instance_package",
@@ -25155,6 +25190,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_concrete_registered_evidence_backed_truth_sources`",
             readme,
         )
+        self.assertIn(
+            "`ConcreteRegisteredEvidenceBackedExampleTruthInstances`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_concrete_registered_evidence_backed_example_truth_instance_package`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -25180,6 +25223,14 @@ class TranslatorTests(unittest.TestCase):
             "`concrete_registered_evidence_backed_truth_sources`",
             formalization_readme,
         )
+        self.assertIn(
+            "`ConcreteRegisteredEvidenceBackedExampleTruthInstances`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_registered_evidence_backed_example_truth_instances`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -25193,6 +25244,14 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("ConcreteRegisteredTruthConditionModel", manuscript)
         self.assertIn("RegisteredEvidenceBackedTruthConditionSources", manuscript)
         self.assertIn("concrete_registered_evidence_backed_truth_sources", manuscript)
+        self.assertIn(
+            "ConcreteRegisteredEvidenceBackedExampleTruthInstances",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_registered_evidence_backed_example_truth_instance_package",
+            manuscript,
+        )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
         self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
         self.assertIn("coq_atomic_valuation_spec_instance", manuscript)

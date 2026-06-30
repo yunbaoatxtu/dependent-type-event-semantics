@@ -1184,6 +1184,16 @@ generated bridge decodes the source's `TruthEvidence` fields into
 This is a registered evidence source for exported atoms only, not an
 independently justified source for arbitrary lexical applications. The next
 verified objective
+`coq_concrete_registered_evidence_backed_example_truth_instance_package`
+packages those evidence-backed per-example truth-condition proofs into
+`ConcreteRegisteredEvidenceBackedExampleTruthInstances`, instantiates
+`concrete_registered_evidence_backed_example_truth_instances`, proves
+`concrete_registered_evidence_backed_example_truth_instances_exists`, and
+checks projections such as
+`concrete_registered_evidence_backed_example_i_truth_instance_atomic_sound` back
+to `AtomicClosureTruth`. This is a package-level coverage witness for the
+registered evidence-backed route, not a broader semantic model. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
@@ -1232,6 +1242,7 @@ model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
 concrete-registered-atomic-model, concrete-registered-compositional-model,
 concrete-registered-truth-condition-model, concrete-registered-truth-condition,
+concrete-registered-evidence-backed-example-package,
 concrete-registered-truth-kernel, or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.

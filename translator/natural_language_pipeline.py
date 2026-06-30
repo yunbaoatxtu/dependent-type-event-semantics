@@ -21084,6 +21084,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_evidence_backed_example_truth_instance_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21279,6 +21284,11 @@ def project_completion_status_payload(
                     "and atomic soundness. This remains finite and "
                     "registered-fragment-only rather than an independently "
                     "justified source for arbitrary lexical applications. "
+                    "The newest bookkeeping layer packages those "
+                    "evidence-backed per-example truth-condition proofs into "
+                    "ConcreteRegisteredEvidenceBackedExampleTruthInstances, "
+                    "proves the package exists, and checks that each packaged "
+                    "field projects back to AtomicClosureTruth. "
                     "It now also factors that finite registered closure "
                     "through a ConcreteRegisteredTruthKernel whose lexical "
                     "and transition clauses are evidence-gated by "
