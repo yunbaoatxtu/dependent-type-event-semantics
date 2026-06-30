@@ -660,6 +660,28 @@ def main() -> None:
         )
         for key, pattern in finite_ledger_atomic_patterns.items()
     }
+    finite_completion_atomic_patterns = {
+        "registered": r"^theorem finite_registered_truth_condition_completion_example_\d+_registered_atomic_sound :",
+        "direct": r"^theorem finite_registered_truth_condition_completion_example_\d+_direct_atomic_sound :",
+        "evidence": r"^theorem finite_registered_truth_condition_completion_example_\d+_evidence_atomic_sound :",
+        "kernel": r"^theorem finite_registered_truth_condition_completion_example_\d+_kernel_atomic_sound :",
+        "source": r"^theorem finite_registered_truth_condition_completion_example_\d+_source_atomic_sound :",
+        "suite": r"^theorem finite_registered_truth_condition_completion_example_\d+_suite_atomic_sound :",
+    }
+    lean_finite_registered_truth_condition_completion_atomic_counts = {
+        key: len(re.findall(pattern, lean, re.MULTILINE))
+        for key, pattern in finite_completion_atomic_patterns.items()
+    }
+    coq_finite_registered_truth_condition_completion_atomic_counts = {
+        key: len(
+            re.findall(
+                pattern.replace("^theorem", "^Theorem"),
+                coq,
+                re.MULTILINE,
+            )
+        )
+        for key, pattern in finite_completion_atomic_patterns.items()
+    }
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -1465,6 +1487,152 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound."
+            in coq
+        ),
+        "lean finite registered truth-condition completion certificate": (
+            all(
+                count == lean_example_count
+                for count in lean_finite_registered_truth_condition_completion_atomic_counts.values()
+            )
+            and "structure FiniteRegisteredTruthConditionCompletionCertificate : "
+            "Type where" in lean
+            and "finite_registered_completion_ledger : "
+            "FiniteRegisteredTruthConditionInstanceLedger" in lean
+            and "finite_registered_completion_registered_sound :" in lean
+            and "finite_registered_completion_direct_sound :" in lean
+            and "finite_registered_completion_evidence_sound :" in lean
+            and "finite_registered_completion_kernel_sound :" in lean
+            and "finite_registered_completion_source_sound :" in lean
+            and "finite_registered_completion_suite_sound :" in lean
+            and "def finite_registered_truth_condition_completion_certificate :"
+            in lean
+            and "theorem finite_registered_truth_condition_completion_certificate_exists :"
+            in lean
+            and "theorem finite_registered_truth_condition_completion_ledger_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_registered_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_direct_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_evidence_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_kernel_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_source_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_suite_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_example_4_registered_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_example_4_direct_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_example_4_evidence_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_example_4_kernel_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_example_4_source_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_completion_example_4_suite_atomic_sound :"
+            in lean
+            and "finite_registered_completion_ledger."
+            "finite_registered_ledger_route."
+            "concrete_registered_route_evidence_examples."
+            "example_4_evidence_backed_truth_instance" in lean
+            and "finite_registered_completion_ledger."
+            "finite_registered_ledger_sources."
+            "independent_registered_truth_condition_examples."
+            "example_4_concrete_truth_instance" in lean
+            and "#check FiniteRegisteredTruthConditionCompletionCertificate"
+            in lean
+            and "#check finite_registered_truth_condition_completion_certificate"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_completion_direct_spec_sound"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_completion_example_4_source_atomic_sound"
+            in lean
+        ),
+        "coq finite registered truth-condition completion certificate": (
+            all(
+                count == coq_example_count
+                for count in coq_finite_registered_truth_condition_completion_atomic_counts.values()
+            )
+            and "Record FiniteRegisteredTruthConditionCompletionCertificate : Type := {"
+            in coq
+            and "finite_registered_completion_ledger : "
+            "FiniteRegisteredTruthConditionInstanceLedger;" in coq
+            and "finite_registered_completion_registered_sound :" in coq
+            and "finite_registered_completion_direct_sound :" in coq
+            and "finite_registered_completion_evidence_sound :" in coq
+            and "finite_registered_completion_kernel_sound :" in coq
+            and "finite_registered_completion_source_sound :" in coq
+            and "finite_registered_completion_suite_sound :" in coq
+            and "Definition finite_registered_truth_condition_completion_certificate :"
+            in coq
+            and "Theorem finite_registered_truth_condition_completion_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_truth_condition_completion_ledger_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_registered_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_direct_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_evidence_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_kernel_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_source_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_suite_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_example_4_registered_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_example_4_direct_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_example_4_evidence_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_example_4_kernel_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_example_4_source_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_completion_example_4_suite_atomic_sound :"
+            in coq
+            and "concrete_registered_route_evidence_examples" in coq
+            and "independent_registered_truth_condition_examples" in coq
+            and "Check FiniteRegisteredTruthConditionCompletionCertificate."
+            in coq
+            and "Check finite_registered_truth_condition_completion_certificate."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_completion_direct_spec_sound."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_completion_example_4_source_atomic_sound."
             in coq
         ),
         "lean registered lexical truth model bridge": (

@@ -381,9 +381,13 @@ and all registered example packages into
 route, independent sources, constructor-class suite, suite/example package,
 registered examples, concrete examples, and kernel examples are the generated
 ones, and checks suite-level, registered, concrete, and kernel-induced atomic
-soundness for every exported example. This still does not claim that the
-lexical and transition constructors have been derived from a full semantic
-model.
+soundness for every exported example. It then packages the same finite boundary
+as `FiniteRegisteredTruthConditionCompletionCertificate`, instantiates
+`finite_registered_truth_condition_completion_certificate`, proves that it is
+attached to the generated ledger, and checks registered, direct concrete,
+evidence-backed, kernel-induced, source, and suite atomic projections for every
+exported example. This still does not claim that the lexical and transition
+constructors have been derived from a full semantic model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

@@ -4126,6 +4126,231 @@ theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
   apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure
   exact finite_registered_truth_condition_instance_ledger.finite_registered_ledger_kernel_examples.example_4_kernel_truth_instance
 
+structure FiniteRegisteredTruthConditionCompletionCertificate : Type where
+  finite_registered_completion_ledger : FiniteRegisteredTruthConditionInstanceLedger
+  finite_registered_completion_ledger_eq :
+      finite_registered_completion_ledger = finite_registered_truth_condition_instance_ledger
+  finite_registered_completion_registered_sound :
+      (A : Type) -> (term : A) ->
+      fully_registered_truth_conditions.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_completion_direct_sound :
+      (A : Type) -> (term : A) ->
+      finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_direct_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_completion_evidence_sound :
+      (A : Type) -> (term : A) ->
+      finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_evidence_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_completion_kernel_sound :
+      (A : Type) -> (term : A) ->
+      finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_kernel_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_completion_source_sound :
+      (A : Type) -> (term : A) ->
+      finite_registered_completion_ledger.finite_registered_ledger_sources.independent_registered_truth_condition_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_completion_suite_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def finite_registered_truth_condition_completion_certificate :
+    FiniteRegisteredTruthConditionCompletionCertificate := {
+  finite_registered_completion_ledger := finite_registered_truth_condition_instance_ledger,
+  finite_registered_completion_ledger_eq := rfl,
+  finite_registered_completion_registered_sound := by
+    intro A term h
+    apply fully_registered_truth_conditions_imply_atomic_closure
+    exact h,
+  finite_registered_completion_direct_sound := by
+    intro A term h
+    apply concrete_registered_truth_condition_route_direct_spec_sound
+    exact h,
+  finite_registered_completion_evidence_sound := by
+    intro A term h
+    apply concrete_registered_truth_condition_route_evidence_spec_sound
+    exact h,
+  finite_registered_completion_kernel_sound := by
+    intro A term h
+    apply concrete_registered_truth_condition_route_kernel_spec_sound
+    exact h,
+  finite_registered_completion_source_sound := by
+    intro A term h
+    apply independent_registered_truth_condition_sources_spec_sound
+    exact h,
+  finite_registered_completion_suite_sound := by
+    intro A term h
+    exact finite_registered_truth_condition_instance_ledger.finite_registered_ledger_suite.independent_registered_suite_spec_sound A term h
+}
+
+theorem finite_registered_truth_condition_completion_certificate_exists :
+    Exists (fun C : FiniteRegisteredTruthConditionCompletionCertificate => C = finite_registered_truth_condition_completion_certificate) := by
+  exact Exists.intro finite_registered_truth_condition_completion_certificate rfl
+
+theorem finite_registered_truth_condition_completion_ledger_matches :
+    finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger =
+      finite_registered_truth_condition_instance_ledger := by
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger_eq
+
+theorem finite_registered_truth_condition_completion_registered_spec_sound :
+    (A : Type) -> (term : A) ->
+    fully_registered_truth_conditions.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_registered_sound A term h
+
+theorem finite_registered_truth_condition_completion_direct_spec_sound :
+    (A : Type) -> (term : A) ->
+    finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_direct_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_direct_sound A term h
+
+theorem finite_registered_truth_condition_completion_evidence_spec_sound :
+    (A : Type) -> (term : A) ->
+    finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_evidence_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_evidence_sound A term h
+
+theorem finite_registered_truth_condition_completion_kernel_spec_sound :
+    (A : Type) -> (term : A) ->
+    finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_kernel_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_kernel_sound A term h
+
+theorem finite_registered_truth_condition_completion_source_spec_sound :
+    (A : Type) -> (term : A) ->
+    finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_sources.independent_registered_truth_condition_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_source_sound A term h
+
+theorem finite_registered_truth_condition_completion_suite_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_suite_sound A term h
+
+theorem finite_registered_truth_condition_completion_example_1_registered_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  apply finite_registered_truth_condition_completion_registered_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_registered_examples.example_1_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_1_direct_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  apply finite_registered_truth_condition_completion_direct_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_direct_examples.example_1_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_1_evidence_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  apply finite_registered_truth_condition_completion_evidence_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_evidence_examples.example_1_evidence_backed_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_1_kernel_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  apply finite_registered_truth_condition_completion_kernel_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_kernel_examples.example_1_kernel_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_1_source_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  apply finite_registered_truth_condition_completion_source_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_sources.independent_registered_truth_condition_examples.example_1_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_1_suite_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_1_suite_atomic_sound
+
+theorem finite_registered_truth_condition_completion_example_2_registered_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  apply finite_registered_truth_condition_completion_registered_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_registered_examples.example_2_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_2_direct_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  apply finite_registered_truth_condition_completion_direct_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_direct_examples.example_2_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_2_evidence_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  apply finite_registered_truth_condition_completion_evidence_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_evidence_examples.example_2_evidence_backed_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_2_kernel_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  apply finite_registered_truth_condition_completion_kernel_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_kernel_examples.example_2_kernel_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_2_source_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  apply finite_registered_truth_condition_completion_source_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_sources.independent_registered_truth_condition_examples.example_2_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_2_suite_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_2_suite_atomic_sound
+
+theorem finite_registered_truth_condition_completion_example_3_registered_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  apply finite_registered_truth_condition_completion_registered_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_registered_examples.example_3_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_3_direct_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  apply finite_registered_truth_condition_completion_direct_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_direct_examples.example_3_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_3_evidence_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  apply finite_registered_truth_condition_completion_evidence_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_evidence_examples.example_3_evidence_backed_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_3_kernel_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  apply finite_registered_truth_condition_completion_kernel_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_kernel_examples.example_3_kernel_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_3_source_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  apply finite_registered_truth_condition_completion_source_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_sources.independent_registered_truth_condition_examples.example_3_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_3_suite_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_3_suite_atomic_sound
+
+theorem finite_registered_truth_condition_completion_example_4_registered_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  apply finite_registered_truth_condition_completion_registered_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_registered_examples.example_4_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_4_direct_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  apply finite_registered_truth_condition_completion_direct_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_direct_examples.example_4_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_4_evidence_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  apply finite_registered_truth_condition_completion_evidence_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_evidence_examples.example_4_evidence_backed_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_4_kernel_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  apply finite_registered_truth_condition_completion_kernel_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_route.concrete_registered_route_kernel_examples.example_4_kernel_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_4_source_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  apply finite_registered_truth_condition_completion_source_spec_sound
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_sources.independent_registered_truth_condition_examples.example_4_concrete_truth_instance
+
+theorem finite_registered_truth_condition_completion_example_4_suite_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_4_suite_atomic_sound
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -4180,6 +4405,12 @@ theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
 #check finite_registered_truth_condition_ledger_example_1_registered_atomic_sound
 #check finite_registered_truth_condition_ledger_example_1_concrete_atomic_sound
 #check finite_registered_truth_condition_ledger_example_1_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_1_registered_atomic_sound
+#check finite_registered_truth_condition_completion_example_1_direct_atomic_sound
+#check finite_registered_truth_condition_completion_example_1_evidence_atomic_sound
+#check finite_registered_truth_condition_completion_example_1_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_1_source_atomic_sound
+#check finite_registered_truth_condition_completion_example_1_suite_atomic_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -4234,6 +4465,12 @@ theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
 #check finite_registered_truth_condition_ledger_example_2_registered_atomic_sound
 #check finite_registered_truth_condition_ledger_example_2_concrete_atomic_sound
 #check finite_registered_truth_condition_ledger_example_2_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_2_registered_atomic_sound
+#check finite_registered_truth_condition_completion_example_2_direct_atomic_sound
+#check finite_registered_truth_condition_completion_example_2_evidence_atomic_sound
+#check finite_registered_truth_condition_completion_example_2_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_2_source_atomic_sound
+#check finite_registered_truth_condition_completion_example_2_suite_atomic_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -4288,6 +4525,12 @@ theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
 #check finite_registered_truth_condition_ledger_example_3_registered_atomic_sound
 #check finite_registered_truth_condition_ledger_example_3_concrete_atomic_sound
 #check finite_registered_truth_condition_ledger_example_3_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_3_registered_atomic_sound
+#check finite_registered_truth_condition_completion_example_3_direct_atomic_sound
+#check finite_registered_truth_condition_completion_example_3_evidence_atomic_sound
+#check finite_registered_truth_condition_completion_example_3_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_3_source_atomic_sound
+#check finite_registered_truth_condition_completion_example_3_suite_atomic_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -4342,6 +4585,12 @@ theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
 #check finite_registered_truth_condition_ledger_example_4_registered_atomic_sound
 #check finite_registered_truth_condition_ledger_example_4_concrete_atomic_sound
 #check finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_4_registered_atomic_sound
+#check finite_registered_truth_condition_completion_example_4_direct_atomic_sound
+#check finite_registered_truth_condition_completion_example_4_evidence_atomic_sound
+#check finite_registered_truth_condition_completion_example_4_kernel_atomic_sound
+#check finite_registered_truth_condition_completion_example_4_source_atomic_sound
+#check finite_registered_truth_condition_completion_example_4_suite_atomic_sound
 #check independent_truth_condition_obligation_ledger
 #check independent_truth_condition_obligation_ledger_exists
 #check independent_truth_condition_obligation_ledger_induces_truth_conditions
@@ -4515,3 +4764,13 @@ theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
 #check finite_registered_truth_condition_instance_ledger_registered_examples_matches
 #check finite_registered_truth_condition_instance_ledger_concrete_examples_matches
 #check finite_registered_truth_condition_instance_ledger_kernel_examples_matches
+#check FiniteRegisteredTruthConditionCompletionCertificate
+#check finite_registered_truth_condition_completion_certificate
+#check finite_registered_truth_condition_completion_certificate_exists
+#check finite_registered_truth_condition_completion_ledger_matches
+#check finite_registered_truth_condition_completion_registered_spec_sound
+#check finite_registered_truth_condition_completion_direct_spec_sound
+#check finite_registered_truth_condition_completion_evidence_spec_sound
+#check finite_registered_truth_condition_completion_kernel_spec_sound
+#check finite_registered_truth_condition_completion_source_spec_sound
+#check finite_registered_truth_condition_completion_suite_spec_sound

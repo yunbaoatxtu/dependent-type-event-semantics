@@ -1409,7 +1409,13 @@ component is the generated one and checks four per-example projections:
 suite-level, fully registered, concrete registered, and kernel-induced atomic
 soundness. This creates a single drift guard for the finite registered
 truth-condition instance before any independently justified general truth model
-is supplied. The open blocker remains
+is supplied. The follow-on verified objective
+`coq_finite_registered_truth_condition_completion_certificate` packages that
+ledger as `FiniteRegisteredTruthConditionCompletionCertificate`. The certificate
+checks registered, direct concrete, evidence-backed, kernel-induced, source, and
+suite projections for every exported example, so the finite registered fragment
+has one Coq/Rocq-checked completion boundary before the project attempts a
+broader truth-condition instance. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth

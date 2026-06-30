@@ -10521,6 +10521,506 @@ def finite_registered_truth_condition_instance_ledger_lines(
     return lines
 
 
+def finite_registered_truth_condition_completion_certificate_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Certify that the finite registered routes share atomic closure."""
+
+    if target == "lean":
+        lines = [
+            "structure FiniteRegisteredTruthConditionCompletionCertificate : "
+            "Type where",
+            "  finite_registered_completion_ledger : "
+            "FiniteRegisteredTruthConditionInstanceLedger",
+            "  finite_registered_completion_ledger_eq :",
+            "      finite_registered_completion_ledger = "
+            "finite_registered_truth_condition_instance_ledger",
+            "  finite_registered_completion_registered_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      fully_registered_truth_conditions."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  finite_registered_completion_direct_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      finite_registered_completion_ledger."
+            "finite_registered_ledger_route."
+            "concrete_registered_route_direct_spec."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  finite_registered_completion_evidence_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      finite_registered_completion_ledger."
+            "finite_registered_ledger_route."
+            "concrete_registered_route_evidence_spec."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  finite_registered_completion_kernel_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      finite_registered_completion_ledger."
+            "finite_registered_ledger_route."
+            "concrete_registered_route_kernel_spec."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  finite_registered_completion_source_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      finite_registered_completion_ledger."
+            "finite_registered_ledger_sources."
+            "independent_registered_truth_condition_spec."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  finite_registered_completion_suite_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "",
+            "def finite_registered_truth_condition_completion_certificate :",
+            "    FiniteRegisteredTruthConditionCompletionCertificate := {",
+            "  finite_registered_completion_ledger := "
+            "finite_registered_truth_condition_instance_ledger,",
+            "  finite_registered_completion_ledger_eq := rfl,",
+            "  finite_registered_completion_registered_sound := by",
+            "    intro A term h",
+            "    apply fully_registered_truth_conditions_imply_atomic_closure",
+            "    exact h,",
+            "  finite_registered_completion_direct_sound := by",
+            "    intro A term h",
+            "    apply concrete_registered_truth_condition_route_direct_spec_sound",
+            "    exact h,",
+            "  finite_registered_completion_evidence_sound := by",
+            "    intro A term h",
+            "    apply concrete_registered_truth_condition_route_evidence_spec_sound",
+            "    exact h,",
+            "  finite_registered_completion_kernel_sound := by",
+            "    intro A term h",
+            "    apply concrete_registered_truth_condition_route_kernel_spec_sound",
+            "    exact h,",
+            "  finite_registered_completion_source_sound := by",
+            "    intro A term h",
+            "    apply independent_registered_truth_condition_sources_spec_sound",
+            "    exact h,",
+            "  finite_registered_completion_suite_sound := by",
+            "    intro A term h",
+            "    exact finite_registered_truth_condition_instance_ledger."
+            "finite_registered_ledger_suite."
+            "independent_registered_suite_spec_sound A term h",
+            "}",
+            "",
+            "theorem finite_registered_truth_condition_completion_certificate_exists :",
+            "    Exists (fun C : "
+            "FiniteRegisteredTruthConditionCompletionCertificate => "
+            "C = finite_registered_truth_condition_completion_certificate) := by",
+            "  exact Exists.intro "
+            "finite_registered_truth_condition_completion_certificate rfl",
+            "",
+            "theorem finite_registered_truth_condition_completion_ledger_matches :",
+            "    finite_registered_truth_condition_completion_certificate."
+            "finite_registered_completion_ledger =",
+            "      finite_registered_truth_condition_instance_ledger := by",
+            "  exact finite_registered_truth_condition_completion_certificate."
+            "finite_registered_completion_ledger_eq",
+        ]
+        sound_theorems = [
+            (
+                "registered_spec",
+                "fully_registered_truth_conditions."
+                "fully_registered_truth_denotes A term",
+                "finite_registered_completion_registered_sound",
+            ),
+            (
+                "direct_spec",
+                "finite_registered_truth_condition_completion_certificate."
+                "finite_registered_completion_ledger."
+                "finite_registered_ledger_route."
+                "concrete_registered_route_direct_spec."
+                "fully_registered_truth_denotes A term",
+                "finite_registered_completion_direct_sound",
+            ),
+            (
+                "evidence_spec",
+                "finite_registered_truth_condition_completion_certificate."
+                "finite_registered_completion_ledger."
+                "finite_registered_ledger_route."
+                "concrete_registered_route_evidence_spec."
+                "fully_registered_truth_denotes A term",
+                "finite_registered_completion_evidence_sound",
+            ),
+            (
+                "kernel_spec",
+                "finite_registered_truth_condition_completion_certificate."
+                "finite_registered_completion_ledger."
+                "finite_registered_ledger_route."
+                "concrete_registered_route_kernel_spec."
+                "fully_registered_truth_denotes A term",
+                "finite_registered_completion_kernel_sound",
+            ),
+            (
+                "source_spec",
+                "finite_registered_truth_condition_completion_certificate."
+                "finite_registered_completion_ledger."
+                "finite_registered_ledger_sources."
+                "independent_registered_truth_condition_spec."
+                "fully_registered_truth_denotes A term",
+                "finite_registered_completion_source_sound",
+            ),
+            (
+                "suite_spec",
+                "independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_denotes A term",
+                "finite_registered_completion_suite_sound",
+            ),
+        ]
+        for name, premise, field_name in sound_theorems:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_{name}_sound :",
+                    "    (A : Type) -> (term : A) ->",
+                    f"    {premise} ->",
+                    "    AtomicClosureTruth A term := by",
+                    "  intro A term h",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    f"{field_name} A term h",
+                ]
+            )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_example_{idx}_registered_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply "
+                    "finite_registered_truth_condition_completion_registered_spec_sound",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_registered_examples."
+                    f"example_{idx}_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_example_{idx}_direct_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply "
+                    "finite_registered_truth_condition_completion_direct_spec_sound",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_route."
+                    "concrete_registered_route_direct_examples."
+                    f"example_{idx}_concrete_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_example_{idx}_evidence_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply "
+                    "finite_registered_truth_condition_completion_evidence_spec_sound",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_route."
+                    "concrete_registered_route_evidence_examples."
+                    f"example_{idx}_evidence_backed_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_example_{idx}_kernel_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply "
+                    "finite_registered_truth_condition_completion_kernel_spec_sound",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_route."
+                    "concrete_registered_route_kernel_examples."
+                    f"example_{idx}_kernel_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_example_{idx}_source_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply "
+                    "finite_registered_truth_condition_completion_source_spec_sound",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_sources."
+                    "independent_registered_truth_condition_examples."
+                    f"example_{idx}_concrete_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_completion_example_{idx}_suite_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact finite_registered_truth_condition_completion_certificate."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_suite_examples."
+                    f"example_{idx}_suite_atomic_sound",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record FiniteRegisteredTruthConditionCompletionCertificate : Type := {",
+        "  finite_registered_completion_ledger : "
+        "FiniteRegisteredTruthConditionInstanceLedger;",
+        "  finite_registered_completion_ledger_eq :",
+        "      finite_registered_completion_ledger = "
+        "finite_registered_truth_condition_instance_ledger;",
+        "  finite_registered_completion_registered_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes fully_registered_truth_conditions A term ->",
+        "      AtomicClosureTruth A term;",
+        "  finite_registered_completion_direct_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (concrete_registered_route_direct_spec",
+        "          (finite_registered_ledger_route finite_registered_completion_ledger))",
+        "        A term ->",
+        "      AtomicClosureTruth A term;",
+        "  finite_registered_completion_evidence_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (concrete_registered_route_evidence_spec",
+        "          (finite_registered_ledger_route finite_registered_completion_ledger))",
+        "        A term ->",
+        "      AtomicClosureTruth A term;",
+        "  finite_registered_completion_kernel_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (concrete_registered_route_kernel_spec",
+        "          (finite_registered_ledger_route finite_registered_completion_ledger))",
+        "        A term ->",
+        "      AtomicClosureTruth A term;",
+        "  finite_registered_completion_source_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_truth_condition_spec",
+        "          (finite_registered_ledger_sources finite_registered_completion_ledger))",
+        "        A term ->",
+        "      AtomicClosureTruth A term;",
+        "  finite_registered_completion_suite_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances) A term ->",
+        "      AtomicClosureTruth A term",
+        "}.",
+        "",
+        "Definition finite_registered_truth_condition_completion_certificate :",
+        "  FiniteRegisteredTruthConditionCompletionCertificate := {|",
+        "  finite_registered_completion_ledger := "
+        "finite_registered_truth_condition_instance_ledger;",
+        "  finite_registered_completion_ledger_eq := eq_refl;",
+        "  finite_registered_completion_registered_sound :=",
+        "    fun A term H =>",
+        "      fully_registered_truth_conditions_imply_atomic_closure A term H;",
+        "  finite_registered_completion_direct_sound :=",
+        "    fun A term H =>",
+        "      concrete_registered_truth_condition_route_direct_spec_sound A term H;",
+        "  finite_registered_completion_evidence_sound :=",
+        "    fun A term H =>",
+        "      concrete_registered_truth_condition_route_evidence_spec_sound A term H;",
+        "  finite_registered_completion_kernel_sound :=",
+        "    fun A term H =>",
+        "      concrete_registered_truth_condition_route_kernel_spec_sound A term H;",
+        "  finite_registered_completion_source_sound :=",
+        "    fun A term H =>",
+        "      independent_registered_truth_condition_sources_spec_sound A term H;",
+        "  finite_registered_completion_suite_sound :=",
+        "    fun A term H =>",
+        "      independent_registered_suite_spec_sound",
+        "        (finite_registered_ledger_suite",
+        "          finite_registered_truth_condition_instance_ledger) A term H",
+        "|}.",
+        "",
+        "Theorem finite_registered_truth_condition_completion_certificate_exists :",
+        "  exists C : FiniteRegisteredTruthConditionCompletionCertificate,",
+        "    C = finite_registered_truth_condition_completion_certificate.",
+        "Proof.",
+        "  exists finite_registered_truth_condition_completion_certificate.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem finite_registered_truth_condition_completion_ledger_matches :",
+        "  finite_registered_completion_ledger",
+        "    finite_registered_truth_condition_completion_certificate =",
+        "  finite_registered_truth_condition_instance_ledger.",
+        "Proof.",
+        "  exact (finite_registered_completion_ledger_eq",
+        "    finite_registered_truth_condition_completion_certificate).",
+        "Qed.",
+    ]
+    sound_theorems = [
+        (
+            "registered_spec",
+            [
+                "fully_registered_truth_denotes "
+                "fully_registered_truth_conditions A term",
+            ],
+            "finite_registered_completion_registered_sound",
+        ),
+        (
+            "direct_spec",
+            [
+                "fully_registered_truth_denotes",
+                "      (concrete_registered_route_direct_spec",
+                "        (finite_registered_ledger_route",
+                "          (finite_registered_completion_ledger",
+                "            finite_registered_truth_condition_completion_certificate)))",
+                "      A term",
+            ],
+            "finite_registered_completion_direct_sound",
+        ),
+        (
+            "evidence_spec",
+            [
+                "fully_registered_truth_denotes",
+                "      (concrete_registered_route_evidence_spec",
+                "        (finite_registered_ledger_route",
+                "          (finite_registered_completion_ledger",
+                "            finite_registered_truth_condition_completion_certificate)))",
+                "      A term",
+            ],
+            "finite_registered_completion_evidence_sound",
+        ),
+        (
+            "kernel_spec",
+            [
+                "fully_registered_truth_denotes",
+                "      (concrete_registered_route_kernel_spec",
+                "        (finite_registered_ledger_route",
+                "          (finite_registered_completion_ledger",
+                "            finite_registered_truth_condition_completion_certificate)))",
+                "      A term",
+            ],
+            "finite_registered_completion_kernel_sound",
+        ),
+        (
+            "source_spec",
+            [
+                "fully_registered_truth_denotes",
+                "      (independent_registered_truth_condition_spec",
+                "        (finite_registered_ledger_sources",
+                "          (finite_registered_completion_ledger",
+                "            finite_registered_truth_condition_completion_certificate)))",
+                "      A term",
+            ],
+            "finite_registered_completion_source_sound",
+        ),
+        (
+            "suite_spec",
+            [
+                "fully_registered_truth_denotes",
+                "      (independent_registered_clause_spec",
+                "        independent_registered_truth_condition_clause_instances)",
+                "      A term",
+            ],
+            "finite_registered_completion_suite_sound",
+        ),
+    ]
+    for name, premise_lines, field_name in sound_theorems:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_{name}_sound :",
+                "  forall A : Type, forall term : A,",
+            ]
+        )
+        for line_index, line in enumerate(premise_lines):
+            suffix = " ->" if line_index == len(premise_lines) - 1 else ""
+            lines.append(f"    {line}{suffix}")
+        lines.extend(
+            [
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                "  intros A term H.",
+                f"  exact ({field_name}",
+                "    finite_registered_truth_condition_completion_certificate A term H).",
+                "Qed.",
+            ]
+        )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_example_{idx}_registered_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply "
+                "finite_registered_truth_condition_completion_registered_spec_sound.",
+                f"  exact (example_{idx}_truth_instance",
+                "    (finite_registered_ledger_registered_examples",
+                "      (finite_registered_completion_ledger",
+                "        finite_registered_truth_condition_completion_certificate))).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_example_{idx}_direct_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply "
+                "finite_registered_truth_condition_completion_direct_spec_sound.",
+                f"  exact (example_{idx}_concrete_truth_instance",
+                "    (concrete_registered_route_direct_examples",
+                "      (finite_registered_ledger_route",
+                "        (finite_registered_completion_ledger",
+                "          finite_registered_truth_condition_completion_certificate)))).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_example_{idx}_evidence_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply "
+                "finite_registered_truth_condition_completion_evidence_spec_sound.",
+                f"  exact (example_{idx}_evidence_backed_truth_instance",
+                "    (concrete_registered_route_evidence_examples",
+                "      (finite_registered_ledger_route",
+                "        (finite_registered_completion_ledger",
+                "          finite_registered_truth_condition_completion_certificate)))).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_example_{idx}_kernel_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply "
+                "finite_registered_truth_condition_completion_kernel_spec_sound.",
+                f"  exact (example_{idx}_kernel_truth_instance",
+                "    (concrete_registered_route_kernel_examples",
+                "      (finite_registered_ledger_route",
+                "        (finite_registered_completion_ledger",
+                "          finite_registered_truth_condition_completion_certificate)))).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_example_{idx}_source_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply "
+                "finite_registered_truth_condition_completion_source_spec_sound.",
+                f"  exact (example_{idx}_concrete_truth_instance",
+                "    (independent_registered_truth_condition_examples",
+                "      (finite_registered_ledger_sources",
+                "        (finite_registered_completion_ledger",
+                "          finite_registered_truth_condition_completion_certificate)))).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_completion_example_{idx}_suite_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                f"  exact (example_{idx}_suite_atomic_sound",
+                "    (finite_registered_ledger_suite_examples",
+                "      (finite_registered_completion_ledger",
+                "        finite_registered_truth_condition_completion_certificate))).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -14998,6 +15498,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             finite_registered_truth_condition_instance_ledger_lines(results, target)
         )
         lines.append("")
+        lines.extend(
+            finite_registered_truth_condition_completion_certificate_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -15153,6 +15660,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "#check "
                 f"finite_registered_truth_condition_ledger_example_{idx}_kernel_atomic_sound"
             )
+            for route in (
+                "registered",
+                "direct",
+                "evidence",
+                "kernel",
+                "source",
+                "suite",
+            ):
+                lines.append(
+                    "#check "
+                    "finite_registered_truth_condition_completion_example_"
+                    f"{idx}_{route}_atomic_sound"
+                )
         lines.append("#check independent_truth_condition_obligation_ledger")
         lines.append("#check independent_truth_condition_obligation_ledger_exists")
         lines.append(
@@ -15504,6 +16024,26 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"finite_registered_truth_condition_instance_ledger_{field}_matches"
+            )
+        lines.append("#check FiniteRegisteredTruthConditionCompletionCertificate")
+        lines.append(
+            "#check finite_registered_truth_condition_completion_certificate"
+        )
+        lines.append(
+            "#check finite_registered_truth_condition_completion_certificate_exists"
+        )
+        lines.append("#check finite_registered_truth_condition_completion_ledger_matches")
+        for route in (
+            "registered_spec",
+            "direct_spec",
+            "evidence_spec",
+            "kernel_spec",
+            "source_spec",
+            "suite_spec",
+        ):
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_completion_{route}_sound"
             )
         return "\n".join(lines) + "\n"
 
@@ -16206,6 +16746,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         finite_registered_truth_condition_instance_ledger_lines(results, target)
     )
     lines.append("")
+    lines.extend(
+        finite_registered_truth_condition_completion_certificate_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -16351,6 +16898,19 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             f"finite_registered_truth_condition_ledger_example_{idx}_kernel_atomic_sound."
         )
+        for route in (
+            "registered",
+            "direct",
+            "evidence",
+            "kernel",
+            "source",
+            "suite",
+        ):
+            lines.append(
+                "Check "
+                "finite_registered_truth_condition_completion_example_"
+                f"{idx}_{route}_atomic_sound."
+            )
     lines.append("Check independent_truth_condition_obligation_ledger.")
     lines.append("Check independent_truth_condition_obligation_ledger_exists.")
     lines.append(
@@ -16616,6 +17176,24 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"finite_registered_truth_condition_instance_ledger_{field}_matches."
+        )
+    lines.append("Check FiniteRegisteredTruthConditionCompletionCertificate.")
+    lines.append("Check finite_registered_truth_condition_completion_certificate.")
+    lines.append(
+        "Check finite_registered_truth_condition_completion_certificate_exists."
+    )
+    lines.append("Check finite_registered_truth_condition_completion_ledger_matches.")
+    for route in (
+        "registered_spec",
+        "direct_spec",
+        "evidence_spec",
+        "kernel_spec",
+        "source_spec",
+        "suite_spec",
+    ):
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_completion_{route}_sound."
         )
     return "\n".join(lines) + "\n"
 
