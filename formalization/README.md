@@ -374,8 +374,16 @@ scaffold also gathers the fully registered proof layer into
 `RegisteredExampleTruthInstances`, proves
 `registered_example_truth_instances_exists`, and checks per-example projections
 such as `registered_example_i_truth_instance_atomic_sound` back to
-`AtomicClosureTruth`. This still does not claim that the lexical and transition
-constructors have been derived from a full semantic model.
+`AtomicClosureTruth`. The scaffold now also gathers the finite registered route
+and all registered example packages into
+`FiniteRegisteredTruthConditionInstanceLedger`, instantiates
+`finite_registered_truth_condition_instance_ledger`, proves that its stored
+route, independent sources, constructor-class suite, suite/example package,
+registered examples, concrete examples, and kernel examples are the generated
+ones, and checks suite-level, registered, concrete, and kernel-induced atomic
+soundness for every exported example. This still does not claim that the
+lexical and transition constructors have been derived from a full semantic
+model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

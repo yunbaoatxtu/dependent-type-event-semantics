@@ -1399,7 +1399,17 @@ those per-example fully registered truth-condition proofs into a generated
 checks per-example projections such as
 `registered_example_i_truth_instance_atomic_sound` back to `AtomicClosureTruth`.
 This is a finite exported-fragment instance package, not a general lexical,
-temporal, causal, quantificational, or modifier model. The open blocker remains
+temporal, causal, quantificational, or modifier model. The next verified
+objective `coq_finite_registered_truth_condition_instance_ledger` gathers the
+route package, independent source package, constructor-class suite, suite/example
+package, registered example package, concrete registered example package, and
+kernel-induced example package into
+`FiniteRegisteredTruthConditionInstanceLedger`. It proves that each stored
+component is the generated one and checks four per-example projections:
+suite-level, fully registered, concrete registered, and kernel-induced atomic
+soundness. This creates a single drift guard for the finite registered
+truth-condition instance before any independently justified general truth model
+is supplied. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth

@@ -640,6 +640,26 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    finite_ledger_atomic_patterns = {
+        "suite": r"^theorem finite_registered_truth_condition_ledger_example_\d+_suite_atomic_sound :",
+        "registered": r"^theorem finite_registered_truth_condition_ledger_example_\d+_registered_atomic_sound :",
+        "concrete": r"^theorem finite_registered_truth_condition_ledger_example_\d+_concrete_atomic_sound :",
+        "kernel": r"^theorem finite_registered_truth_condition_ledger_example_\d+_kernel_atomic_sound :",
+    }
+    lean_finite_registered_truth_condition_ledger_atomic_counts = {
+        key: len(re.findall(pattern, lean, re.MULTILINE))
+        for key, pattern in finite_ledger_atomic_patterns.items()
+    }
+    coq_finite_registered_truth_condition_ledger_atomic_counts = {
+        key: len(
+            re.findall(
+                pattern.replace("^theorem", "^Theorem"),
+                coq,
+                re.MULTILINE,
+            )
+        )
+        for key, pattern in finite_ledger_atomic_patterns.items()
+    }
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -1312,6 +1332,140 @@ def main() -> None:
             in coq
             and "Check registered_example_4_truth_instance_atomic_sound." in coq
             and "Check registered_example_truth_instances." in coq
+        ),
+        "lean finite registered truth-condition instance ledger": (
+            all(
+                count == lean_example_count
+                for count in lean_finite_registered_truth_condition_ledger_atomic_counts.values()
+            )
+            and "structure FiniteRegisteredTruthConditionInstanceLedger : Type where"
+            in lean
+            and "finite_registered_ledger_route : ConcreteRegisteredTruthConditionRoute"
+            in lean
+            and "finite_registered_ledger_sources : IndependentRegisteredTruthConditionSources"
+            in lean
+            and "finite_registered_ledger_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite"
+            in lean
+            and "finite_registered_ledger_suite_examples :" in lean
+            and "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage"
+            in lean
+            and "finite_registered_ledger_registered_examples : "
+            "RegisteredExampleTruthInstances"
+            in lean
+            and "finite_registered_ledger_concrete_examples : "
+            "ConcreteRegisteredExampleTruthInstances"
+            in lean
+            and "finite_registered_ledger_kernel_examples : "
+            "ConcreteRegisteredKernelExampleTruthInstances"
+            in lean
+            and "def finite_registered_truth_condition_instance_ledger :"
+            in lean
+            and "theorem finite_registered_truth_condition_instance_ledger_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_instance_ledger_route_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_instance_ledger_suite_examples_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_instance_ledger_kernel_examples_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_ledger_example_4_suite_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_ledger_example_4_registered_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_ledger_example_4_concrete_atomic_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :"
+            in lean
+            and "finite_registered_ledger_suite_examples.example_4_suite_atomic_sound"
+            in lean
+            and "finite_registered_ledger_registered_examples.example_4_truth_instance"
+            in lean
+            and "finite_registered_ledger_concrete_examples.example_4_concrete_truth_instance"
+            in lean
+            and "finite_registered_ledger_kernel_examples.example_4_kernel_truth_instance"
+            in lean
+            and "#check FiniteRegisteredTruthConditionInstanceLedger" in lean
+            and "#check finite_registered_truth_condition_instance_ledger"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_instance_ledger_kernel_examples_matches"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound"
+            in lean
+        ),
+        "coq finite registered truth-condition instance ledger": (
+            all(
+                count == coq_example_count
+                for count in coq_finite_registered_truth_condition_ledger_atomic_counts.values()
+            )
+            and "Record FiniteRegisteredTruthConditionInstanceLedger : Type := {"
+            in coq
+            and "finite_registered_ledger_route : ConcreteRegisteredTruthConditionRoute;"
+            in coq
+            and "finite_registered_ledger_sources : IndependentRegisteredTruthConditionSources;"
+            in coq
+            and "finite_registered_ledger_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite;"
+            in coq
+            and "finite_registered_ledger_suite_examples :" in coq
+            and "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage;"
+            in coq
+            and "finite_registered_ledger_registered_examples : "
+            "RegisteredExampleTruthInstances;"
+            in coq
+            and "finite_registered_ledger_concrete_examples : "
+            "ConcreteRegisteredExampleTruthInstances;"
+            in coq
+            and "finite_registered_ledger_kernel_examples : "
+            "ConcreteRegisteredKernelExampleTruthInstances;"
+            in coq
+            and "Definition finite_registered_truth_condition_instance_ledger :"
+            in coq
+            and "Theorem finite_registered_truth_condition_instance_ledger_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_instance_ledger_route_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_instance_ledger_suite_examples_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_instance_ledger_kernel_examples_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_ledger_example_4_suite_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_ledger_example_4_registered_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_ledger_example_4_concrete_atomic_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :"
+            in coq
+            and "finite_registered_ledger_suite_examples" in coq
+            and "finite_registered_ledger_registered_examples" in coq
+            and "finite_registered_ledger_concrete_examples" in coq
+            and "finite_registered_ledger_kernel_examples" in coq
+            and "Check FiniteRegisteredTruthConditionInstanceLedger." in coq
+            and "Check finite_registered_truth_condition_instance_ledger."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_instance_ledger_kernel_examples_matches."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound."
+            in coq
         ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean

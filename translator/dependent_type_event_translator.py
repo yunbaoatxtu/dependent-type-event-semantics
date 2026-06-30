@@ -10246,6 +10246,281 @@ def registered_example_truth_instance_lines(
     return lines
 
 
+def finite_registered_truth_condition_instance_ledger_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Gather the finite registered truth-condition routes in one ledger."""
+
+    if target == "lean":
+        lines = [
+            "structure FiniteRegisteredTruthConditionInstanceLedger : Type where",
+            "  finite_registered_ledger_route : ConcreteRegisteredTruthConditionRoute",
+            "  finite_registered_ledger_route_eq :",
+            "      finite_registered_ledger_route = concrete_registered_truth_condition_route",
+            "  finite_registered_ledger_sources : IndependentRegisteredTruthConditionSources",
+            "  finite_registered_ledger_sources_eq :",
+            "      finite_registered_ledger_sources = "
+            "independent_registered_truth_condition_sources",
+            "  finite_registered_ledger_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite",
+            "  finite_registered_ledger_suite_eq :",
+            "      finite_registered_ledger_suite = "
+            "independent_registered_truth_condition_instance_suite",
+            "  finite_registered_ledger_suite_examples :",
+            "      IndependentRegisteredTruthConditionInstanceSuiteExamplePackage",
+            "  finite_registered_ledger_suite_examples_eq :",
+            "      finite_registered_ledger_suite_examples =",
+            "        independent_registered_truth_condition_instance_suite_example_package",
+            "  finite_registered_ledger_registered_examples : "
+            "RegisteredExampleTruthInstances",
+            "  finite_registered_ledger_registered_examples_eq :",
+            "      finite_registered_ledger_registered_examples = "
+            "registered_example_truth_instances",
+            "  finite_registered_ledger_concrete_examples : "
+            "ConcreteRegisteredExampleTruthInstances",
+            "  finite_registered_ledger_concrete_examples_eq :",
+            "      finite_registered_ledger_concrete_examples = "
+            "concrete_registered_example_truth_instances",
+            "  finite_registered_ledger_kernel_examples : "
+            "ConcreteRegisteredKernelExampleTruthInstances",
+            "  finite_registered_ledger_kernel_examples_eq :",
+            "      finite_registered_ledger_kernel_examples = "
+            "concrete_registered_kernel_example_truth_instances",
+            "",
+            "def finite_registered_truth_condition_instance_ledger :",
+            "    FiniteRegisteredTruthConditionInstanceLedger := {",
+            "  finite_registered_ledger_route := "
+            "concrete_registered_truth_condition_route,",
+            "  finite_registered_ledger_route_eq := rfl,",
+            "  finite_registered_ledger_sources := "
+            "independent_registered_truth_condition_sources,",
+            "  finite_registered_ledger_sources_eq := rfl,",
+            "  finite_registered_ledger_suite := "
+            "independent_registered_truth_condition_instance_suite,",
+            "  finite_registered_ledger_suite_eq := rfl,",
+            "  finite_registered_ledger_suite_examples :=",
+            "    independent_registered_truth_condition_instance_suite_example_package,",
+            "  finite_registered_ledger_suite_examples_eq := rfl,",
+            "  finite_registered_ledger_registered_examples := "
+            "registered_example_truth_instances,",
+            "  finite_registered_ledger_registered_examples_eq := rfl,",
+            "  finite_registered_ledger_concrete_examples := "
+            "concrete_registered_example_truth_instances,",
+            "  finite_registered_ledger_concrete_examples_eq := rfl,",
+            "  finite_registered_ledger_kernel_examples := "
+            "concrete_registered_kernel_example_truth_instances,",
+            "  finite_registered_ledger_kernel_examples_eq := rfl",
+            "}",
+            "",
+            "theorem finite_registered_truth_condition_instance_ledger_exists :",
+            "    Exists (fun L : FiniteRegisteredTruthConditionInstanceLedger => "
+            "L = finite_registered_truth_condition_instance_ledger) := by",
+            "  exact Exists.intro finite_registered_truth_condition_instance_ledger rfl",
+        ]
+        for field, target_name in (
+            ("route", "concrete_registered_truth_condition_route"),
+            ("sources", "independent_registered_truth_condition_sources"),
+            ("suite", "independent_registered_truth_condition_instance_suite"),
+            (
+                "suite_examples",
+                "independent_registered_truth_condition_instance_suite_example_package",
+            ),
+            ("registered_examples", "registered_example_truth_instances"),
+            ("concrete_examples", "concrete_registered_example_truth_instances"),
+            ("kernel_examples", "concrete_registered_kernel_example_truth_instances"),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_instance_ledger_{field}_matches :",
+                    "    finite_registered_truth_condition_instance_ledger."
+                    f"finite_registered_ledger_{field} =",
+                    f"      {target_name} := by",
+                    "  exact finite_registered_truth_condition_instance_ledger."
+                    f"finite_registered_ledger_{field}_eq",
+                ]
+            )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_ledger_example_{idx}_suite_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact finite_registered_truth_condition_instance_ledger."
+                    "finite_registered_ledger_suite_examples."
+                    f"example_{idx}_suite_atomic_sound",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_ledger_example_{idx}_registered_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply fully_registered_truth_conditions_imply_atomic_closure",
+                    "  exact finite_registered_truth_condition_instance_ledger."
+                    "finite_registered_ledger_registered_examples."
+                    f"example_{idx}_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_ledger_example_{idx}_concrete_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply concrete_registered_truth_conditions_imply_atomic_closure",
+                    "  exact finite_registered_truth_condition_instance_ledger."
+                    "finite_registered_ledger_concrete_examples."
+                    f"example_{idx}_concrete_truth_instance",
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_ledger_example_{idx}_kernel_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply "
+                    "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure",
+                    "  exact finite_registered_truth_condition_instance_ledger."
+                    "finite_registered_ledger_kernel_examples."
+                    f"example_{idx}_kernel_truth_instance",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record FiniteRegisteredTruthConditionInstanceLedger : Type := {",
+        "  finite_registered_ledger_route : ConcreteRegisteredTruthConditionRoute;",
+        "  finite_registered_ledger_route_eq :",
+        "      finite_registered_ledger_route = concrete_registered_truth_condition_route;",
+        "  finite_registered_ledger_sources : IndependentRegisteredTruthConditionSources;",
+        "  finite_registered_ledger_sources_eq :",
+        "      finite_registered_ledger_sources = "
+        "independent_registered_truth_condition_sources;",
+        "  finite_registered_ledger_suite : "
+        "IndependentRegisteredTruthConditionInstanceSuite;",
+        "  finite_registered_ledger_suite_eq :",
+        "      finite_registered_ledger_suite = "
+        "independent_registered_truth_condition_instance_suite;",
+        "  finite_registered_ledger_suite_examples :",
+        "      IndependentRegisteredTruthConditionInstanceSuiteExamplePackage;",
+        "  finite_registered_ledger_suite_examples_eq :",
+        "      finite_registered_ledger_suite_examples =",
+        "        independent_registered_truth_condition_instance_suite_example_package;",
+        "  finite_registered_ledger_registered_examples : "
+        "RegisteredExampleTruthInstances;",
+        "  finite_registered_ledger_registered_examples_eq :",
+        "      finite_registered_ledger_registered_examples = "
+        "registered_example_truth_instances;",
+        "  finite_registered_ledger_concrete_examples : "
+        "ConcreteRegisteredExampleTruthInstances;",
+        "  finite_registered_ledger_concrete_examples_eq :",
+        "      finite_registered_ledger_concrete_examples = "
+        "concrete_registered_example_truth_instances;",
+        "  finite_registered_ledger_kernel_examples : "
+        "ConcreteRegisteredKernelExampleTruthInstances;",
+        "  finite_registered_ledger_kernel_examples_eq :",
+        "      finite_registered_ledger_kernel_examples = "
+        "concrete_registered_kernel_example_truth_instances",
+        "}.",
+        "",
+        "Definition finite_registered_truth_condition_instance_ledger :",
+        "  FiniteRegisteredTruthConditionInstanceLedger := {|",
+        "  finite_registered_ledger_route := concrete_registered_truth_condition_route;",
+        "  finite_registered_ledger_route_eq := eq_refl;",
+        "  finite_registered_ledger_sources := independent_registered_truth_condition_sources;",
+        "  finite_registered_ledger_sources_eq := eq_refl;",
+        "  finite_registered_ledger_suite := "
+        "independent_registered_truth_condition_instance_suite;",
+        "  finite_registered_ledger_suite_eq := eq_refl;",
+        "  finite_registered_ledger_suite_examples :=",
+        "    independent_registered_truth_condition_instance_suite_example_package;",
+        "  finite_registered_ledger_suite_examples_eq := eq_refl;",
+        "  finite_registered_ledger_registered_examples := registered_example_truth_instances;",
+        "  finite_registered_ledger_registered_examples_eq := eq_refl;",
+        "  finite_registered_ledger_concrete_examples := concrete_registered_example_truth_instances;",
+        "  finite_registered_ledger_concrete_examples_eq := eq_refl;",
+        "  finite_registered_ledger_kernel_examples := concrete_registered_kernel_example_truth_instances;",
+        "  finite_registered_ledger_kernel_examples_eq := eq_refl",
+        "|}.",
+        "",
+        "Theorem finite_registered_truth_condition_instance_ledger_exists :",
+        "  exists L : FiniteRegisteredTruthConditionInstanceLedger,",
+        "    L = finite_registered_truth_condition_instance_ledger.",
+        "Proof.",
+        "  exists finite_registered_truth_condition_instance_ledger.",
+        "  reflexivity.",
+        "Qed.",
+    ]
+    for field, target_name in (
+        ("route", "concrete_registered_truth_condition_route"),
+        ("sources", "independent_registered_truth_condition_sources"),
+        ("suite", "independent_registered_truth_condition_instance_suite"),
+        (
+            "suite_examples",
+            "independent_registered_truth_condition_instance_suite_example_package",
+        ),
+        ("registered_examples", "registered_example_truth_instances"),
+        ("concrete_examples", "concrete_registered_example_truth_instances"),
+        ("kernel_examples", "concrete_registered_kernel_example_truth_instances"),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_instance_ledger_{field}_matches :",
+                f"  finite_registered_ledger_{field}",
+                "    finite_registered_truth_condition_instance_ledger =",
+                f"  {target_name}.",
+                "Proof.",
+                f"  exact (finite_registered_ledger_{field}_eq",
+                "    finite_registered_truth_condition_instance_ledger).",
+                "Qed.",
+            ]
+        )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_ledger_example_{idx}_suite_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                f"  exact (example_{idx}_suite_atomic_sound",
+                "    (finite_registered_ledger_suite_examples",
+                "      finite_registered_truth_condition_instance_ledger)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_ledger_example_{idx}_registered_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply fully_registered_truth_conditions_imply_atomic_closure.",
+                f"  exact (example_{idx}_truth_instance",
+                "    (finite_registered_ledger_registered_examples",
+                "      finite_registered_truth_condition_instance_ledger)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_ledger_example_{idx}_concrete_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
+                f"  exact (example_{idx}_concrete_truth_instance",
+                "    (finite_registered_ledger_concrete_examples",
+                "      finite_registered_truth_condition_instance_ledger)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_ledger_example_{idx}_kernel_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply "
+                "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.",
+                f"  exact (example_{idx}_kernel_truth_instance",
+                "    (finite_registered_ledger_kernel_examples",
+                "      finite_registered_truth_condition_instance_ledger)).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -14719,6 +14994,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(registered_example_truth_instance_lines(results, target))
         lines.append("")
+        lines.extend(
+            finite_registered_truth_condition_instance_ledger_lines(results, target)
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -14857,6 +15136,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"registered_example_{idx}_truth_instance_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_ledger_example_{idx}_suite_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_ledger_example_{idx}_registered_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_ledger_example_{idx}_concrete_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_ledger_example_{idx}_kernel_atomic_sound"
             )
         lines.append("#check independent_truth_condition_obligation_ledger")
         lines.append("#check independent_truth_condition_obligation_ledger_exists")
@@ -15192,6 +15487,24 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
+        lines.append("#check FiniteRegisteredTruthConditionInstanceLedger")
+        lines.append("#check finite_registered_truth_condition_instance_ledger")
+        lines.append(
+            "#check finite_registered_truth_condition_instance_ledger_exists"
+        )
+        for field in (
+            "route",
+            "sources",
+            "suite",
+            "suite_examples",
+            "registered_examples",
+            "concrete_examples",
+            "kernel_examples",
+        ):
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_instance_ledger_{field}_matches"
+            )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -15889,6 +16202,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(registered_example_truth_instance_lines(results, target))
     lines.append("")
+    lines.extend(
+        finite_registered_truth_condition_instance_ledger_lines(results, target)
+    )
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -16017,6 +16334,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"registered_example_{idx}_truth_instance_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_ledger_example_{idx}_suite_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_ledger_example_{idx}_registered_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_ledger_example_{idx}_concrete_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_ledger_example_{idx}_kernel_atomic_sound."
         )
     lines.append("Check independent_truth_condition_obligation_ledger.")
     lines.append("Check independent_truth_condition_obligation_ledger_exists.")
@@ -16268,6 +16601,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
+    lines.append("Check FiniteRegisteredTruthConditionInstanceLedger.")
+    lines.append("Check finite_registered_truth_condition_instance_ledger.")
+    lines.append("Check finite_registered_truth_condition_instance_ledger_exists.")
+    for field in (
+        "route",
+        "sources",
+        "suite",
+        "suite_examples",
+        "registered_examples",
+        "concrete_examples",
+        "kernel_examples",
+    ):
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_instance_ledger_{field}_matches."
+        )
     return "\n".join(lines) + "\n"
 
 

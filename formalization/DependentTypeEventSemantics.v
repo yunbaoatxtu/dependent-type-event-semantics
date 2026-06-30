@@ -6213,6 +6213,262 @@ Proof.
   exact (example_4_truth_instance registered_example_truth_instances).
 Qed.
 
+Record FiniteRegisteredTruthConditionInstanceLedger : Type := {
+  finite_registered_ledger_route : ConcreteRegisteredTruthConditionRoute;
+  finite_registered_ledger_route_eq :
+      finite_registered_ledger_route = concrete_registered_truth_condition_route;
+  finite_registered_ledger_sources : IndependentRegisteredTruthConditionSources;
+  finite_registered_ledger_sources_eq :
+      finite_registered_ledger_sources = independent_registered_truth_condition_sources;
+  finite_registered_ledger_suite : IndependentRegisteredTruthConditionInstanceSuite;
+  finite_registered_ledger_suite_eq :
+      finite_registered_ledger_suite = independent_registered_truth_condition_instance_suite;
+  finite_registered_ledger_suite_examples :
+      IndependentRegisteredTruthConditionInstanceSuiteExamplePackage;
+  finite_registered_ledger_suite_examples_eq :
+      finite_registered_ledger_suite_examples =
+        independent_registered_truth_condition_instance_suite_example_package;
+  finite_registered_ledger_registered_examples : RegisteredExampleTruthInstances;
+  finite_registered_ledger_registered_examples_eq :
+      finite_registered_ledger_registered_examples = registered_example_truth_instances;
+  finite_registered_ledger_concrete_examples : ConcreteRegisteredExampleTruthInstances;
+  finite_registered_ledger_concrete_examples_eq :
+      finite_registered_ledger_concrete_examples = concrete_registered_example_truth_instances;
+  finite_registered_ledger_kernel_examples : ConcreteRegisteredKernelExampleTruthInstances;
+  finite_registered_ledger_kernel_examples_eq :
+      finite_registered_ledger_kernel_examples = concrete_registered_kernel_example_truth_instances
+}.
+
+Definition finite_registered_truth_condition_instance_ledger :
+  FiniteRegisteredTruthConditionInstanceLedger := {|
+  finite_registered_ledger_route := concrete_registered_truth_condition_route;
+  finite_registered_ledger_route_eq := eq_refl;
+  finite_registered_ledger_sources := independent_registered_truth_condition_sources;
+  finite_registered_ledger_sources_eq := eq_refl;
+  finite_registered_ledger_suite := independent_registered_truth_condition_instance_suite;
+  finite_registered_ledger_suite_eq := eq_refl;
+  finite_registered_ledger_suite_examples :=
+    independent_registered_truth_condition_instance_suite_example_package;
+  finite_registered_ledger_suite_examples_eq := eq_refl;
+  finite_registered_ledger_registered_examples := registered_example_truth_instances;
+  finite_registered_ledger_registered_examples_eq := eq_refl;
+  finite_registered_ledger_concrete_examples := concrete_registered_example_truth_instances;
+  finite_registered_ledger_concrete_examples_eq := eq_refl;
+  finite_registered_ledger_kernel_examples := concrete_registered_kernel_example_truth_instances;
+  finite_registered_ledger_kernel_examples_eq := eq_refl
+|}.
+
+Theorem finite_registered_truth_condition_instance_ledger_exists :
+  exists L : FiniteRegisteredTruthConditionInstanceLedger,
+    L = finite_registered_truth_condition_instance_ledger.
+Proof.
+  exists finite_registered_truth_condition_instance_ledger.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_route_matches :
+  finite_registered_ledger_route
+    finite_registered_truth_condition_instance_ledger =
+  concrete_registered_truth_condition_route.
+Proof.
+  exact (finite_registered_ledger_route_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_sources_matches :
+  finite_registered_ledger_sources
+    finite_registered_truth_condition_instance_ledger =
+  independent_registered_truth_condition_sources.
+Proof.
+  exact (finite_registered_ledger_sources_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_suite_matches :
+  finite_registered_ledger_suite
+    finite_registered_truth_condition_instance_ledger =
+  independent_registered_truth_condition_instance_suite.
+Proof.
+  exact (finite_registered_ledger_suite_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_suite_examples_matches :
+  finite_registered_ledger_suite_examples
+    finite_registered_truth_condition_instance_ledger =
+  independent_registered_truth_condition_instance_suite_example_package.
+Proof.
+  exact (finite_registered_ledger_suite_examples_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_registered_examples_matches :
+  finite_registered_ledger_registered_examples
+    finite_registered_truth_condition_instance_ledger =
+  registered_example_truth_instances.
+Proof.
+  exact (finite_registered_ledger_registered_examples_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_concrete_examples_matches :
+  finite_registered_ledger_concrete_examples
+    finite_registered_truth_condition_instance_ledger =
+  concrete_registered_example_truth_instances.
+Proof.
+  exact (finite_registered_ledger_concrete_examples_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_instance_ledger_kernel_examples_matches :
+  finite_registered_ledger_kernel_examples
+    finite_registered_truth_condition_instance_ledger =
+  concrete_registered_kernel_example_truth_instances.
+Proof.
+  exact (finite_registered_ledger_kernel_examples_eq
+    finite_registered_truth_condition_instance_ledger).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_1_suite_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (example_1_suite_atomic_sound
+    (finite_registered_ledger_suite_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_1_registered_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_1_truth_instance
+    (finite_registered_ledger_registered_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_1_concrete_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (example_1_concrete_truth_instance
+    (finite_registered_ledger_concrete_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_1_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_1_kernel_truth_instance
+    (finite_registered_ledger_kernel_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_2_suite_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (example_2_suite_atomic_sound
+    (finite_registered_ledger_suite_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_2_registered_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_2_truth_instance
+    (finite_registered_ledger_registered_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_2_concrete_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (example_2_concrete_truth_instance
+    (finite_registered_ledger_concrete_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_2_kernel_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_2_kernel_truth_instance
+    (finite_registered_ledger_kernel_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_3_suite_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (example_3_suite_atomic_sound
+    (finite_registered_ledger_suite_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_3_registered_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_3_truth_instance
+    (finite_registered_ledger_registered_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_3_concrete_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (example_3_concrete_truth_instance
+    (finite_registered_ledger_concrete_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_3_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_3_kernel_truth_instance
+    (finite_registered_ledger_kernel_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_4_suite_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (example_4_suite_atomic_sound
+    (finite_registered_ledger_suite_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_4_registered_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  apply fully_registered_truth_conditions_imply_atomic_closure.
+  exact (example_4_truth_instance
+    (finite_registered_ledger_registered_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_4_concrete_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (example_4_concrete_truth_instance
+    (finite_registered_ledger_concrete_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
+Theorem finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact (example_4_kernel_truth_instance
+    (finite_registered_ledger_kernel_examples
+      finite_registered_truth_condition_instance_ledger)).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -6263,6 +6519,10 @@ Check independent_registered_truth_condition_clause_example_1_atomic_sound.
 Check independent_registered_truth_condition_clause_coverage_example_1_atomic_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
 Check registered_example_1_truth_instance_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_1_suite_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_1_registered_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_1_concrete_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_1_kernel_atomic_sound.
 Check example_2.
 Check example_2_semantic_preservation_obligation.
 Check example_2_semantic_preservation_obligation_record.
@@ -6313,6 +6573,10 @@ Check independent_registered_truth_condition_clause_example_2_atomic_sound.
 Check independent_registered_truth_condition_clause_coverage_example_2_atomic_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
 Check registered_example_2_truth_instance_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_2_suite_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_2_registered_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_2_concrete_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_2_kernel_atomic_sound.
 Check example_3.
 Check example_3_semantic_preservation_obligation.
 Check example_3_semantic_preservation_obligation_record.
@@ -6363,6 +6627,10 @@ Check independent_registered_truth_condition_clause_example_3_atomic_sound.
 Check independent_registered_truth_condition_clause_coverage_example_3_atomic_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
 Check registered_example_3_truth_instance_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_3_suite_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_3_registered_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_3_concrete_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_3_kernel_atomic_sound.
 Check example_4.
 Check example_4_semantic_preservation_obligation.
 Check example_4_semantic_preservation_obligation_record.
@@ -6413,6 +6681,10 @@ Check independent_registered_truth_condition_clause_example_4_atomic_sound.
 Check independent_registered_truth_condition_clause_coverage_example_4_atomic_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
 Check registered_example_4_truth_instance_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_4_suite_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_4_registered_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_4_concrete_atomic_sound.
+Check finite_registered_truth_condition_ledger_example_4_kernel_atomic_sound.
 Check independent_truth_condition_obligation_ledger.
 Check independent_truth_condition_obligation_ledger_exists.
 Check independent_truth_condition_obligation_ledger_induces_truth_conditions.
@@ -6576,3 +6848,13 @@ Check independent_registered_truth_condition_instance_suite_example_3_atomic_sou
 Check independent_registered_truth_condition_instance_suite_example_4_atomic_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.
+Check FiniteRegisteredTruthConditionInstanceLedger.
+Check finite_registered_truth_condition_instance_ledger.
+Check finite_registered_truth_condition_instance_ledger_exists.
+Check finite_registered_truth_condition_instance_ledger_route_matches.
+Check finite_registered_truth_condition_instance_ledger_sources_matches.
+Check finite_registered_truth_condition_instance_ledger_suite_matches.
+Check finite_registered_truth_condition_instance_ledger_suite_examples_matches.
+Check finite_registered_truth_condition_instance_ledger_registered_examples_matches.
+Check finite_registered_truth_condition_instance_ledger_concrete_examples_matches.
+Check finite_registered_truth_condition_instance_ledger_kernel_examples_matches.
