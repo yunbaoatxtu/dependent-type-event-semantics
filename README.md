@@ -1005,7 +1005,19 @@ causal obligations as named fields, records the induced
 `independent_truth_condition_obligation_ledger_truth_conditions_sound`. This is
 a bookkeeping and proof-interface stage: it makes the independently supplied
 truth-condition obligations auditable without claiming that those obligations
-have already been discharged for arbitrary natural language. The verified objective
+have already been discharged for arbitrary natural language. The verified
+objective `coq_evidence_backed_truth_condition_sources` adds the next
+source-facing interface: `TruthEvidence` packages proof-carrying evidence for
+truth-condition clauses, `truth_evidence_sound` decodes that evidence into
+ordinary propositions, and `EvidenceBackedTruthConditionSources` collects
+lexical, quantifier/Sigma, repetition, temporal, polarity, transition, and
+Cause evidence fields. The generated bridge
+`concrete_kernel_from_evidence_sources` turns such evidence sources into a
+`ConcreteTruthConditionKernel`, and
+`evidence_backed_truth_condition_ledger` records the resulting ledger. This
+stage makes future concrete truth-condition inhabitants inspectable at their
+source boundary, while still leaving full independent semantic instantiation
+open. The verified objective
 `coq_model_interpretable_truth_kernel_instance` now inhabits this interface with
 `model_interpretable_truth_kernel`, whose denotation predicate is
 `ModelInterpretable`, exports
@@ -1193,7 +1205,8 @@ temporal, causal, quantificational, or modifier model. The open blocker remains
 specified lexical, temporal, causal, quantificational, and modifier truth
 conditions rather than only proving the generic interface bridge, the
 structural `ModelInterpretable` instance, the concrete-kernel bridge, the
-independent truth-condition obligation ledger, or the
+independent truth-condition obligation ledger, the evidence-backed source
+bridge, or the
 model-interpretable, syntax-directed, primitive-assumption, atomic-closure,
 registered-transition, registered-lexical, registered-lexical-truth-model, or
 concrete-registered-atomic-model, concrete-registered-compositional-model,

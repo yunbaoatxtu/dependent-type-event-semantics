@@ -20984,6 +20984,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_evidence_backed_truth_condition_sources",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_model_interpretable_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21137,6 +21142,15 @@ def project_completion_status_payload(
                     "supplied lexical, Sigma, repetition, temporal, polarity, "
                     "transition, and Cause obligations and prove that the "
                     "ledger induces the kernel-derived TruthConditionSpec. "
+                    "It now also introduces a TruthEvidence interface and "
+                    "an EvidenceBackedTruthConditionSources record. "
+                    "The generated bridge decodes evidence objects through "
+                    "truth_evidence_sound into a ConcreteTruthConditionKernel "
+                    "and packages the result as an evidence-backed "
+                    "IndependentTruthConditionObligationLedger, making the "
+                    "source of future truth-condition inhabitants explicit "
+                    "without treating those inhabitants as already supplied "
+                    "for arbitrary natural language. "
                     "The interface is now inhabited by a "
                     "model-interpretable truth kernel whose denotation "
                     "predicate is ModelInterpretable, with per-example "

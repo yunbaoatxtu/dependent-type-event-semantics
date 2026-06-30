@@ -340,6 +340,129 @@ theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :
   apply concrete_kernel_induces_truth_condition_soundness
   exact h
 
+constant TruthEvidence : Prop -> Type
+constant truth_evidence_sound : (P : Prop) -> TruthEvidence P -> P
+
+structure EvidenceBackedTruthConditionSources : Type where
+  evidence_denotes : (A : Type) -> A -> Prop
+  evidence_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> TruthEvidence (evidence_denotes PropT (break n mods arg1 arg2))
+  evidence_lexical_truth_butter_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> TruthEvidence (evidence_denotes PropT (butter n mods arg1 arg2))
+  evidence_lexical_truth_eat_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Food) -> TruthEvidence (evidence_denotes Prop (eat n mods arg1 arg2))
+  evidence_lexical_truth_knock_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> TruthEvidence (evidence_denotes PropT (knock n mods arg1))
+  evidence_quantifier_truth_sigma_Entity : (P : Entity -> Prop) -> ((x : Entity) -> evidence_denotes Prop (P x)) -> TruthEvidence (evidence_denotes Prop (Exists fun x : Entity => P x))
+  evidence_quantifier_truth_sigma_Food : (P : Food -> Prop) -> ((x : Food) -> evidence_denotes Prop (P x)) -> TruthEvidence (evidence_denotes Prop (Exists fun x : Food => P x))
+  evidence_quantifier_truth_sigma_State : (P : State -> Prop) -> ((x : State) -> evidence_denotes Prop (P x)) -> TruthEvidence (evidence_denotes Prop (Exists fun x : State => P x))
+  evidence_quantifier_truth_sigma_StateScale : (P : StateScale -> Prop) -> ((x : StateScale) -> evidence_denotes Prop (P x)) -> TruthEvidence (evidence_denotes Prop (Exists fun x : StateScale => P x))
+  evidence_quantifier_truth_sigma_TransitionT : (P : TransitionT -> Prop) -> ((x : TransitionT) -> evidence_denotes Prop (P x)) -> TruthEvidence (evidence_denotes Prop (Exists fun x : TransitionT => P x))
+  evidence_repetition_truth : (n : Nat) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (repeat n body))
+  evidence_temporal_truth_at_T : (marker : Entity) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (at_T marker body))
+  evidence_temporal_truth_during_T : (marker : Entity) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (during_T marker body))
+  evidence_temporal_truth_before_T : (marker : Entity) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (before_T marker body))
+  evidence_temporal_truth_after_T : (marker : Entity) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (after_T marker body))
+  evidence_temporal_truth_until_T : (marker : Entity) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (until_T marker body))
+  evidence_temporal_truth_since_T : (marker : Entity) -> (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (since_T marker body))
+  evidence_polarity_truth_not_T : (body : PropT) -> evidence_denotes PropT body -> TruthEvidence (evidence_denotes PropT (not_T body))
+  evidence_transition_truth : (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> TruthEvidence (evidence_denotes TransitionT (Transition theme scale source target))
+  evidence_cause_truth : (causer : Entity) -> (effect : TransitionT) -> evidence_denotes TransitionT effect -> TruthEvidence (evidence_denotes PropT (Cause causer effect))
+
+def concrete_kernel_from_evidence_sources (S : EvidenceBackedTruthConditionSources) : ConcreteTruthConditionKernel := {
+  kernel_denotes := S.evidence_denotes,
+  lexical_truth_break_application := fun n mods arg1 arg2 =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (break n mods arg1 arg2))
+        (S.evidence_lexical_truth_break_application n mods arg1 arg2),
+  lexical_truth_butter_application := fun n mods arg1 arg2 =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (butter n mods arg1 arg2))
+        (S.evidence_lexical_truth_butter_application n mods arg1 arg2),
+  lexical_truth_eat_application := fun n mods arg1 arg2 =>
+      truth_evidence_sound
+        (S.evidence_denotes Prop (eat n mods arg1 arg2))
+        (S.evidence_lexical_truth_eat_application n mods arg1 arg2),
+  lexical_truth_knock_application := fun n mods arg1 =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (knock n mods arg1))
+        (S.evidence_lexical_truth_knock_application n mods arg1),
+  quantifier_truth_sigma_Entity := fun P h =>
+      truth_evidence_sound
+        (S.evidence_denotes Prop (Exists fun x : Entity => P x))
+        (S.evidence_quantifier_truth_sigma_Entity P h),
+  quantifier_truth_sigma_Food := fun P h =>
+      truth_evidence_sound
+        (S.evidence_denotes Prop (Exists fun x : Food => P x))
+        (S.evidence_quantifier_truth_sigma_Food P h),
+  quantifier_truth_sigma_State := fun P h =>
+      truth_evidence_sound
+        (S.evidence_denotes Prop (Exists fun x : State => P x))
+        (S.evidence_quantifier_truth_sigma_State P h),
+  quantifier_truth_sigma_StateScale := fun P h =>
+      truth_evidence_sound
+        (S.evidence_denotes Prop (Exists fun x : StateScale => P x))
+        (S.evidence_quantifier_truth_sigma_StateScale P h),
+  quantifier_truth_sigma_TransitionT := fun P h =>
+      truth_evidence_sound
+        (S.evidence_denotes Prop (Exists fun x : TransitionT => P x))
+        (S.evidence_quantifier_truth_sigma_TransitionT P h),
+  repetition_truth := fun n body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (repeat n body))
+        (S.evidence_repetition_truth n body h),
+  temporal_truth_at_T := fun marker body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (at_T marker body))
+        (S.evidence_temporal_truth_at_T marker body h),
+  temporal_truth_during_T := fun marker body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (during_T marker body))
+        (S.evidence_temporal_truth_during_T marker body h),
+  temporal_truth_before_T := fun marker body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (before_T marker body))
+        (S.evidence_temporal_truth_before_T marker body h),
+  temporal_truth_after_T := fun marker body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (after_T marker body))
+        (S.evidence_temporal_truth_after_T marker body h),
+  temporal_truth_until_T := fun marker body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (until_T marker body))
+        (S.evidence_temporal_truth_until_T marker body h),
+  temporal_truth_since_T := fun marker body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (since_T marker body))
+        (S.evidence_temporal_truth_since_T marker body h),
+  polarity_truth_not_T := fun body h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (not_T body))
+        (S.evidence_polarity_truth_not_T body h),
+  transition_truth := fun theme scale source target =>
+      truth_evidence_sound
+        (S.evidence_denotes TransitionT (Transition theme scale source target))
+        (S.evidence_transition_truth theme scale source target),
+  cause_truth := fun causer effect h =>
+      truth_evidence_sound
+        (S.evidence_denotes PropT (Cause causer effect))
+        (S.evidence_cause_truth causer effect h)
+}
+
+def evidence_backed_truth_condition_ledger (S : EvidenceBackedTruthConditionSources) : IndependentTruthConditionObligationLedger :=
+  independent_truth_condition_obligation_ledger (concrete_kernel_from_evidence_sources S)
+
+theorem evidence_backed_truth_condition_sources_induce_kernel :
+    (S : EvidenceBackedTruthConditionSources) -> Exists (fun K : ConcreteTruthConditionKernel => K = concrete_kernel_from_evidence_sources S) := by
+  intro S
+  exact Exists.intro (concrete_kernel_from_evidence_sources S) rfl
+
+theorem evidence_backed_truth_condition_sources_induce_truth_conditions :
+    (S : EvidenceBackedTruthConditionSources) -> (evidence_backed_truth_condition_ledger S).ledger_truth_conditions = truth_conditions_from_concrete_kernel (concrete_kernel_from_evidence_sources S) := by
+  intro S
+  rfl
+
+theorem evidence_backed_truth_condition_sources_sound :
+    (S : EvidenceBackedTruthConditionSources) -> (A : Type) -> (term : A) -> ModelInterpretable A term -> (evidence_backed_truth_condition_ledger S).ledger_truth_conditions.truth_denotes A term := by
+  intro S A term h
+  exact independent_truth_condition_obligation_ledger_truth_conditions_sound (concrete_kernel_from_evidence_sources S) A term h
+
 structure PrimitiveTruthAssumptions : Type where
   primitive_denotes : (A : Type) -> A -> Prop
   primitive_lexical_truth_break_application : (n : Nat) -> (mods : ModifierSeq n) -> (arg1 : Entity) -> (arg2 : Entity) -> primitive_denotes PropT (break n mods arg1 arg2)
@@ -2270,6 +2393,14 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check independent_truth_condition_obligation_ledger_exists
 #check independent_truth_condition_obligation_ledger_induces_truth_conditions
 #check independent_truth_condition_obligation_ledger_truth_conditions_sound
+#check TruthEvidence
+#check truth_evidence_sound
+#check EvidenceBackedTruthConditionSources
+#check concrete_kernel_from_evidence_sources
+#check evidence_backed_truth_condition_ledger
+#check evidence_backed_truth_condition_sources_induce_kernel
+#check evidence_backed_truth_condition_sources_induce_truth_conditions
+#check evidence_backed_truth_condition_sources_sound
 #check registered_lexical_truth_model
 #check registered_lexical_truth_model_exists
 #check registered_lexical_truth_conditions_from_model

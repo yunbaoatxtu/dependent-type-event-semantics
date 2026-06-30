@@ -704,6 +704,55 @@ def main() -> None:
             and "Theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :"
             in coq
         ),
+        "lean evidence-backed truth-condition sources": (
+            "constant TruthEvidence : Prop -> Type" in lean
+            and "constant truth_evidence_sound : (P : Prop) -> TruthEvidence P -> P"
+            in lean
+            and "structure EvidenceBackedTruthConditionSources : Type where"
+            in lean
+            and "evidence_denotes : (A : Type) -> A -> Prop" in lean
+            and "evidence_lexical_truth_eat_application : (n : Nat)" in lean
+            and "evidence_quantifier_truth_sigma_Food : (P : Food -> Prop)"
+            in lean
+            and "evidence_repetition_truth : (n : Nat)" in lean
+            and "evidence_temporal_truth_after_T : (marker : Entity)"
+            in lean
+            and "evidence_polarity_truth_not_T : (body : PropT)" in lean
+            and "evidence_transition_truth : (theme : Entity)" in lean
+            and "evidence_cause_truth : (causer : Entity)" in lean
+            and "def concrete_kernel_from_evidence_sources " in lean
+            and "def evidence_backed_truth_condition_ledger " in lean
+            and "theorem evidence_backed_truth_condition_sources_induce_kernel :"
+            in lean
+            and "theorem evidence_backed_truth_condition_sources_induce_truth_conditions :"
+            in lean
+            and "theorem evidence_backed_truth_condition_sources_sound :"
+            in lean
+        ),
+        "coq evidence-backed truth-condition sources": (
+            "Parameter TruthEvidence : Prop -> Type." in coq
+            and "Parameter truth_evidence_sound : forall P : Prop, TruthEvidence P -> P."
+            in coq
+            and "Record EvidenceBackedTruthConditionSources : Type := {"
+            in coq
+            and "evidence_denotes : forall A : Type, A -> Prop;" in coq
+            and "evidence_lexical_truth_eat_application : forall n : nat" in coq
+            and "evidence_quantifier_truth_sigma_Food : forall P : Food -> Prop"
+            in coq
+            and "evidence_repetition_truth : forall n : nat" in coq
+            and "evidence_temporal_truth_after_T : forall marker : Entity"
+            in coq
+            and "evidence_polarity_truth_not_T : forall body : PropT" in coq
+            and "evidence_transition_truth : forall theme : Entity" in coq
+            and "evidence_cause_truth : forall causer : Entity" in coq
+            and "Definition concrete_kernel_from_evidence_sources" in coq
+            and "Definition evidence_backed_truth_condition_ledger" in coq
+            and "Theorem evidence_backed_truth_condition_sources_induce_kernel :"
+            in coq
+            and "Theorem evidence_backed_truth_condition_sources_induce_truth_conditions :"
+            in coq
+            and "Theorem evidence_backed_truth_condition_sources_sound :" in coq
+        ),
         "lean primitive truth assumption kernel instance": (
             "structure PrimitiveTruthAssumptions : Type where" in lean
             and "primitive_denotes : (A : Type) -> A -> Prop" in lean
@@ -1954,6 +2003,16 @@ def main() -> None:
             and "#check independent_truth_condition_obligation_ledger" in lean
             and "#check independent_truth_condition_obligation_ledger_truth_conditions_sound"
             in lean
+            and "#check TruthEvidence" in lean
+            and "#check truth_evidence_sound" in lean
+            and "#check EvidenceBackedTruthConditionSources" in lean
+            and "#check concrete_kernel_from_evidence_sources" in lean
+            and "#check evidence_backed_truth_condition_ledger" in lean
+            and "#check evidence_backed_truth_condition_sources_induce_kernel"
+            in lean
+            and "#check evidence_backed_truth_condition_sources_induce_truth_conditions"
+            in lean
+            and "#check evidence_backed_truth_condition_sources_sound" in lean
         ),
         "coq semantic preservation obligation checks": (
             "Check example_4_semantic_preservation_obligation." in coq
@@ -2003,6 +2062,16 @@ def main() -> None:
             and "Check independent_truth_condition_obligation_ledger." in coq
             and "Check independent_truth_condition_obligation_ledger_truth_conditions_sound."
             in coq
+            and "Check TruthEvidence." in coq
+            and "Check truth_evidence_sound." in coq
+            and "Check EvidenceBackedTruthConditionSources." in coq
+            and "Check concrete_kernel_from_evidence_sources." in coq
+            and "Check evidence_backed_truth_condition_ledger." in coq
+            and "Check evidence_backed_truth_condition_sources_induce_kernel."
+            in coq
+            and "Check evidence_backed_truth_condition_sources_induce_truth_conditions."
+            in coq
+            and "Check evidence_backed_truth_condition_sources_sound." in coq
         ),
         "lean transition state-scale signature": (
             "constant Transition : Entity -> StateScale -> State -> State -> TransitionT"

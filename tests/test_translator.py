@@ -1380,6 +1380,43 @@ class TranslatorTests(unittest.TestCase):
             "theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :",
             lean_module,
         )
+        self.assertIn("constant TruthEvidence : Prop -> Type", lean_module)
+        self.assertIn(
+            "constant truth_evidence_sound : (P : Prop) -> TruthEvidence P -> P",
+            lean_module,
+        )
+        self.assertIn(
+            "structure EvidenceBackedTruthConditionSources : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "evidence_lexical_truth_eat_application : (n : Nat)",
+            lean_module,
+        )
+        self.assertIn(
+            "evidence_quantifier_truth_sigma_Food : (P : Food -> Prop)",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_kernel_from_evidence_sources ",
+            lean_module,
+        )
+        self.assertIn(
+            "def evidence_backed_truth_condition_ledger ",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem evidence_backed_truth_condition_sources_induce_kernel :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem evidence_backed_truth_condition_sources_induce_truth_conditions :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem evidence_backed_truth_condition_sources_sound :",
+            lean_module,
+        )
         self.assertIn("structure PrimitiveTruthAssumptions : Type where", lean_module)
         self.assertIn(
             "primitive_denotes : (A : Type) -> A -> Prop",
@@ -2235,6 +2272,23 @@ class TranslatorTests(unittest.TestCase):
             "#check independent_truth_condition_obligation_ledger_truth_conditions_sound",
             lean_module,
         )
+        self.assertIn("#check TruthEvidence", lean_module)
+        self.assertIn("#check truth_evidence_sound", lean_module)
+        self.assertIn("#check EvidenceBackedTruthConditionSources", lean_module)
+        self.assertIn("#check concrete_kernel_from_evidence_sources", lean_module)
+        self.assertIn("#check evidence_backed_truth_condition_ledger", lean_module)
+        self.assertIn(
+            "#check evidence_backed_truth_condition_sources_induce_kernel",
+            lean_module,
+        )
+        self.assertIn(
+            "#check evidence_backed_truth_condition_sources_induce_truth_conditions",
+            lean_module,
+        )
+        self.assertIn(
+            "#check evidence_backed_truth_condition_sources_sound",
+            lean_module,
+        )
         self.assertIn("Parameter Entity : Type.", coq_module)
         self.assertIn(
             "Inductive SemanticPreservation : forall A : Type, A -> Prop :=",
@@ -2373,6 +2427,43 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Theorem independent_truth_condition_obligation_ledger_truth_conditions_sound :",
+            coq_module,
+        )
+        self.assertIn("Parameter TruthEvidence : Prop -> Type.", coq_module)
+        self.assertIn(
+            "Parameter truth_evidence_sound : forall P : Prop, TruthEvidence P -> P.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record EvidenceBackedTruthConditionSources : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "evidence_lexical_truth_eat_application : forall n : nat",
+            coq_module,
+        )
+        self.assertIn(
+            "evidence_quantifier_truth_sigma_Food : forall P : Food -> Prop",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_kernel_from_evidence_sources",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition evidence_backed_truth_condition_ledger",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem evidence_backed_truth_condition_sources_induce_kernel :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem evidence_backed_truth_condition_sources_induce_truth_conditions :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem evidence_backed_truth_condition_sources_sound :",
             coq_module,
         )
         self.assertIn("Record PrimitiveTruthAssumptions : Type := {", coq_module)
@@ -3276,6 +3367,23 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check independent_truth_condition_obligation_ledger_truth_conditions_sound.",
+            coq_module,
+        )
+        self.assertIn("Check TruthEvidence.", coq_module)
+        self.assertIn("Check truth_evidence_sound.", coq_module)
+        self.assertIn("Check EvidenceBackedTruthConditionSources.", coq_module)
+        self.assertIn("Check concrete_kernel_from_evidence_sources.", coq_module)
+        self.assertIn("Check evidence_backed_truth_condition_ledger.", coq_module)
+        self.assertIn(
+            "Check evidence_backed_truth_condition_sources_induce_kernel.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check evidence_backed_truth_condition_sources_induce_truth_conditions.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check evidence_backed_truth_condition_sources_sound.",
             coq_module,
         )
 
@@ -15694,6 +15802,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_structural_truth_condition_instance",
                 "coq_concrete_truth_condition_kernel_bridge",
                 "coq_independent_truth_condition_obligation_ledger",
+                "coq_evidence_backed_truth_condition_sources",
                 "coq_model_interpretable_truth_kernel_instance",
                 "coq_syntax_directed_truth_kernel_instance",
                 "coq_primitive_truth_assumption_kernel_instance",
@@ -24772,6 +24881,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`SemanticPreservation`", readme)
         self.assertIn("`ModelInterpretable`", readme)
         self.assertIn("`IndependentTruthConditionObligationLedger`", readme)
+        self.assertIn("`TruthEvidence`", readme)
+        self.assertIn("`EvidenceBackedTruthConditionSources`", readme)
+        self.assertIn("`coq_evidence_backed_truth_condition_sources`", readme)
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", readme)
@@ -24785,6 +24897,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`SemanticPreservation`", formalization_readme)
         self.assertIn("`ModelInterpretable`", formalization_readme)
         self.assertIn("`IndependentTruthConditionObligationLedger`", formalization_readme)
+        self.assertIn("`TruthEvidence`", formalization_readme)
+        self.assertIn(
+            "`EvidenceBackedTruthConditionSources`",
+            formalization_readme,
+        )
         self.assertIn("`example_i_semantic_preservation_obligation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", formalization_readme)
@@ -24795,6 +24912,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("SemanticPreservation", manuscript)
         self.assertIn("ModelInterpretable", manuscript)
         self.assertIn("IndependentTruthConditionObligationLedger", manuscript)
+        self.assertIn("TruthEvidence", manuscript)
+        self.assertIn("EvidenceBackedTruthConditionSources", manuscript)
+        self.assertIn("coq_evidence_backed_truth_condition_sources", manuscript)
         self.assertIn("semantic_preservation_obligation", manuscript)
         self.assertIn("obligation well-formedness proofs", manuscript)
         self.assertIn("record-binding proofs", manuscript)

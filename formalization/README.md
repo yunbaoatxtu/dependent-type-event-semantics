@@ -92,7 +92,21 @@ polarity, transition, and causal truth-condition obligations. The checked
 ledger theorems prove that this package records the kernel-derived
 `TruthConditionSpec` and that the induced truth conditions preserve the
 existing model-interpretable boundary. This is a bookkeeping layer, not yet an
-independently justified concrete model. The generated file now also inhabits that interface with
+independently justified concrete model. The generated file now also adds an
+evidence-source boundary for that ledger. `TruthEvidence` is a proof-carrying
+interface for clause-level truth evidence, `truth_evidence_sound` decodes such
+evidence into a proposition, and `EvidenceBackedTruthConditionSources` collects
+lexical, quantifier/Sigma, repetition, temporal, polarity, transition, and
+Cause evidence fields. The bridge `concrete_kernel_from_evidence_sources`
+converts those evidence fields into a `ConcreteTruthConditionKernel`;
+`evidence_backed_truth_condition_ledger` then packages the result as an
+`IndependentTruthConditionObligationLedger`, with checked theorems
+`evidence_backed_truth_condition_sources_induce_kernel`,
+`evidence_backed_truth_condition_sources_induce_truth_conditions`, and
+`evidence_backed_truth_condition_sources_sound`. This still does not provide a
+full independently justified concrete model, but it makes the future source of
+such truth-condition inhabitants explicit. The generated file now also
+inhabits that interface with
 `model_interpretable_truth_kernel`, whose denotation predicate is
 `ModelInterpretable`, exports
 `model_interpretable_truth_conditions_from_kernel`, proves kernel existence, and

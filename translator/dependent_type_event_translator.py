@@ -1023,6 +1023,14 @@ def independent_obligation_sigma_field(type_name: str) -> str:
     return f"ledger_quantifier_truth_sigma_{type_name}_obligation"
 
 
+def evidence_source_application_field(function: str) -> str:
+    return f"evidence_lexical_truth_{function}_application"
+
+
+def evidence_source_sigma_field(type_name: str) -> str:
+    return f"evidence_quantifier_truth_sigma_{type_name}"
+
+
 def primitive_truth_application_field(function: str) -> str:
     return f"primitive_lexical_truth_{function}_application"
 
@@ -1380,6 +1388,102 @@ def _lean_function_independent_obligation_field(
             + [f"ledger_denotes {result_type} ({name} {' '.join(application_args)})"]
         )
     )
+
+
+def _coq_function_evidence_source_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> list[str]:
+    binders = ["forall n : nat", "forall mods : ModifierSeq n"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = arg_types[1:] if arg_types else []
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"forall {arg_name} : {arg_type}")
+        application_args.append(arg_name)
+    return [
+        f"  {evidence_source_application_field(name)} : "
+        + ", ".join(binders)
+        + ",",
+        "      TruthEvidence (evidence_denotes "
+        + f"{result_type} ({name} {' '.join(application_args)}));",
+    ]
+
+
+def _lean_function_evidence_source_field(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> str:
+    binders = ["(n : Nat)", "(mods : ModifierSeq n)"]
+    application_args = ["n", "mods"]
+    remaining_arg_types = (
+        arg_types[2:]
+        if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+        else arg_types
+    )
+    for index, arg_type in enumerate(remaining_arg_types, 1):
+        arg_name = f"arg{index}"
+        binders.append(f"({arg_name} : {arg_type})")
+        application_args.append(arg_name)
+    return (
+        f"  {evidence_source_application_field(name)} : "
+        + " -> ".join(
+            binders
+            + [
+                "TruthEvidence "
+                f"(evidence_denotes {result_type} "
+                f"({name} {' '.join(application_args)}))"
+            ]
+        )
+    )
+
+
+def _coq_function_evidence_kernel_assignment(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> tuple[str, list[str]]:
+    ordinary_arg_types = arg_types[1:] if arg_types else []
+    lambda_args = ["n", "mods"] + [
+        f"arg{index}" for index, _arg_type in enumerate(ordinary_arg_types, 1)
+    ]
+    term = f"{name} {' '.join(lambda_args)}"
+    lines = [
+        f"  {concrete_kernel_application_field(name)} := "
+        f"fun {' '.join(lambda_args)} =>",
+        "      truth_evidence_sound",
+        f"        (evidence_denotes S {result_type} ({term}))",
+        f"        ({evidence_source_application_field(name)} "
+        f"S {' '.join(lambda_args)})",
+    ]
+    return concrete_kernel_application_field(name), lines
+
+
+def _lean_function_evidence_kernel_assignment(
+    name: str,
+    arg_types: list[str],
+    result_type: str,
+) -> tuple[str, list[str]]:
+    ordinary_arg_types = (
+        arg_types[2:]
+        if arg_types[:2] == ["(n : Nat)", "ModifierSeq n"]
+        else arg_types
+    )
+    lambda_args = ["n", "mods"] + [
+        f"arg{index}" for index, _arg_type in enumerate(ordinary_arg_types, 1)
+    ]
+    term = f"{name} {' '.join(lambda_args)}"
+    lines = [
+        f"  {concrete_kernel_application_field(name)} := "
+        f"fun {' '.join(lambda_args)} =>",
+        "      truth_evidence_sound",
+        f"        (S.evidence_denotes {result_type} ({term}))",
+        f"        (S.{evidence_source_application_field(name)} "
+        f"{' '.join(lambda_args)})",
+    ]
+    return concrete_kernel_application_field(name), lines
 
 
 def _coq_function_primitive_truth_field(
@@ -2884,6 +2988,425 @@ def independent_truth_condition_obligation_ledger_lines(
             "  intros K A term H.",
             "  apply concrete_kernel_induces_truth_condition_soundness.",
             "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
+def evidence_backed_truth_condition_source_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "constant TruthEvidence : Prop -> Type",
+            "constant truth_evidence_sound : "
+            "(P : Prop) -> TruthEvidence P -> P",
+            "",
+            "structure EvidenceBackedTruthConditionSources : Type where",
+            "  evidence_denotes : (A : Type) -> A -> Prop",
+        ]
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            lines.append(
+                _lean_function_evidence_source_field(name, arg_types, result_type)
+            )
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  {evidence_source_sigma_field(type_name)} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> evidence_denotes Prop (P x)) -> "
+                "TruthEvidence "
+                f"(evidence_denotes Prop (Exists fun x : {type_name} => P x))"
+            )
+        lines.extend(
+            [
+                "  evidence_repetition_truth : (n : Nat) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (repeat n body))",
+                "  evidence_temporal_truth_at_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (at_T marker body))",
+                "  evidence_temporal_truth_during_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (during_T marker body))",
+                "  evidence_temporal_truth_before_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (before_T marker body))",
+                "  evidence_temporal_truth_after_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (after_T marker body))",
+                "  evidence_temporal_truth_until_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (until_T marker body))",
+                "  evidence_temporal_truth_since_T : "
+                "(marker : Entity) -> (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (since_T marker body))",
+                "  evidence_polarity_truth_not_T : (body : PropT) -> "
+                "evidence_denotes PropT body -> "
+                "TruthEvidence (evidence_denotes PropT (not_T body))",
+                "  evidence_transition_truth : "
+                "(theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "TruthEvidence "
+                "(evidence_denotes TransitionT "
+                "(Transition theme scale source target))",
+                "  evidence_cause_truth : "
+                "(causer : Entity) -> (effect : TransitionT) -> "
+                "evidence_denotes TransitionT effect -> "
+                "TruthEvidence "
+                "(evidence_denotes PropT (Cause causer effect))",
+                "",
+                "def concrete_kernel_from_evidence_sources "
+                "(S : EvidenceBackedTruthConditionSources) : "
+                "ConcreteTruthConditionKernel := {",
+                "  kernel_denotes := S.evidence_denotes,",
+            ]
+        )
+        assignment_groups: list[list[str]] = []
+        for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+            _field, group = _lean_function_evidence_kernel_assignment(
+                name,
+                arg_types,
+                result_type,
+            )
+            assignment_groups.append(group)
+        for type_name in declarations["types"]:
+            assignment_groups.append(
+                [
+                    f"  {concrete_kernel_sigma_field(type_name)} := fun P h =>",
+                    "      truth_evidence_sound",
+                    "        "
+                    f"(S.evidence_denotes Prop "
+                    f"(Exists fun x : {type_name} => P x))",
+                    f"        (S.{evidence_source_sigma_field(type_name)} P h)",
+                ]
+            )
+        assignment_groups.extend(
+            [
+                [
+                    "  repetition_truth := fun n body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (repeat n body))",
+                    "        (S.evidence_repetition_truth n body h)",
+                ],
+                [
+                    "  temporal_truth_at_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (at_T marker body))",
+                    "        (S.evidence_temporal_truth_at_T marker body h)",
+                ],
+                [
+                    "  temporal_truth_during_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (during_T marker body))",
+                    "        (S.evidence_temporal_truth_during_T marker body h)",
+                ],
+                [
+                    "  temporal_truth_before_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (before_T marker body))",
+                    "        (S.evidence_temporal_truth_before_T marker body h)",
+                ],
+                [
+                    "  temporal_truth_after_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (after_T marker body))",
+                    "        (S.evidence_temporal_truth_after_T marker body h)",
+                ],
+                [
+                    "  temporal_truth_until_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (until_T marker body))",
+                    "        (S.evidence_temporal_truth_until_T marker body h)",
+                ],
+                [
+                    "  temporal_truth_since_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (since_T marker body))",
+                    "        (S.evidence_temporal_truth_since_T marker body h)",
+                ],
+                [
+                    "  polarity_truth_not_T := fun body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (not_T body))",
+                    "        (S.evidence_polarity_truth_not_T body h)",
+                ],
+                [
+                    "  transition_truth := fun theme scale source target =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes TransitionT "
+                    "(Transition theme scale source target))",
+                    "        (S.evidence_transition_truth theme scale source target)",
+                ],
+                [
+                    "  cause_truth := fun causer effect h =>",
+                    "      truth_evidence_sound",
+                    "        (S.evidence_denotes PropT (Cause causer effect))",
+                    "        (S.evidence_cause_truth causer effect h)",
+                ],
+            ]
+        )
+        for index, group in enumerate(assignment_groups):
+            suffix = "," if index < len(assignment_groups) - 1 else ""
+            for line_index, line in enumerate(group):
+                if line_index == len(group) - 1:
+                    lines.append(line + suffix)
+                else:
+                    lines.append(line)
+        lines.extend(
+            [
+                "}",
+                "",
+                "def evidence_backed_truth_condition_ledger "
+                "(S : EvidenceBackedTruthConditionSources) : "
+                "IndependentTruthConditionObligationLedger :=",
+                "  independent_truth_condition_obligation_ledger "
+                "(concrete_kernel_from_evidence_sources S)",
+                "",
+                "theorem evidence_backed_truth_condition_sources_induce_kernel :",
+                "    (S : EvidenceBackedTruthConditionSources) -> "
+                "Exists (fun K : ConcreteTruthConditionKernel => "
+                "K = concrete_kernel_from_evidence_sources S) := by",
+                "  intro S",
+                "  exact Exists.intro (concrete_kernel_from_evidence_sources S) rfl",
+                "",
+                "theorem "
+                "evidence_backed_truth_condition_sources_induce_truth_conditions :",
+                "    (S : EvidenceBackedTruthConditionSources) -> "
+                "(evidence_backed_truth_condition_ledger S).ledger_truth_conditions = "
+                "truth_conditions_from_concrete_kernel "
+                "(concrete_kernel_from_evidence_sources S) := by",
+                "  intro S",
+                "  rfl",
+                "",
+                "theorem evidence_backed_truth_condition_sources_sound :",
+                "    (S : EvidenceBackedTruthConditionSources) -> "
+                "(A : Type) -> (term : A) -> ModelInterpretable A term -> "
+                "(evidence_backed_truth_condition_ledger S)."
+                "ledger_truth_conditions.truth_denotes A term := by",
+                "  intro S A term h",
+                "  exact "
+                "independent_truth_condition_obligation_ledger_truth_conditions_sound "
+                "(concrete_kernel_from_evidence_sources S) A term h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Parameter TruthEvidence : Prop -> Type.",
+        "Parameter truth_evidence_sound : "
+        "forall P : Prop, TruthEvidence P -> P.",
+        "",
+        "Record EvidenceBackedTruthConditionSources : Type := {",
+        "  evidence_denotes : forall A : Type, A -> Prop;",
+    ]
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        lines.extend(
+            _coq_function_evidence_source_field(name, arg_types, result_type)
+        )
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  {evidence_source_sigma_field(type_name)} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, evidence_denotes Prop (P x)) ->",
+                "      TruthEvidence "
+                f"(evidence_denotes Prop (exists x : {type_name}, P x));",
+            ]
+        )
+    lines.extend(
+        [
+            "  evidence_repetition_truth : "
+            "forall n : nat, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (repeat n body));",
+            "  evidence_temporal_truth_at_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (at_T marker body));",
+            "  evidence_temporal_truth_during_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (during_T marker body));",
+            "  evidence_temporal_truth_before_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (before_T marker body));",
+            "  evidence_temporal_truth_after_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (after_T marker body));",
+            "  evidence_temporal_truth_until_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (until_T marker body));",
+            "  evidence_temporal_truth_since_T : "
+            "forall marker : Entity, forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (since_T marker body));",
+            "  evidence_polarity_truth_not_T : forall body : PropT,",
+            "      evidence_denotes PropT body ->",
+            "      TruthEvidence (evidence_denotes PropT (not_T body));",
+            "  evidence_transition_truth : "
+            "forall theme : Entity, forall scale : StateScale,",
+            "forall source : State, forall target : State,",
+            "      TruthEvidence "
+            "(evidence_denotes TransitionT "
+            "(Transition theme scale source target));",
+            "  evidence_cause_truth : "
+            "forall causer : Entity, forall effect : TransitionT,",
+            "      evidence_denotes TransitionT effect ->",
+            "      TruthEvidence "
+            "(evidence_denotes PropT (Cause causer effect))",
+            "}.",
+            "",
+            "Definition concrete_kernel_from_evidence_sources",
+            "  (S : EvidenceBackedTruthConditionSources) :",
+            "  ConcreteTruthConditionKernel := {|",
+            "  kernel_denotes := evidence_denotes S;",
+        ]
+    )
+    assignment_groups: list[list[str]] = []
+    for name, (arg_types, result_type) in sorted(declarations["functions"].items()):
+        _field, group = _coq_function_evidence_kernel_assignment(
+            name,
+            arg_types,
+            result_type,
+        )
+        assignment_groups.append(group)
+    for type_name in declarations["types"]:
+        assignment_groups.append(
+            [
+                f"  {concrete_kernel_sigma_field(type_name)} := fun P h =>",
+                "      truth_evidence_sound",
+                f"        (evidence_denotes S Prop "
+                f"(exists x : {type_name}, P x))",
+                f"        ({evidence_source_sigma_field(type_name)} S P h)",
+            ]
+        )
+    assignment_groups.extend(
+        [
+            [
+                "  repetition_truth := fun n body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (repeat n body))",
+                "        (evidence_repetition_truth S n body h)",
+            ],
+            [
+                "  temporal_truth_at_T := fun marker body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (at_T marker body))",
+                "        (evidence_temporal_truth_at_T S marker body h)",
+            ],
+            [
+                "  temporal_truth_during_T := fun marker body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (during_T marker body))",
+                "        (evidence_temporal_truth_during_T S marker body h)",
+            ],
+            [
+                "  temporal_truth_before_T := fun marker body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (before_T marker body))",
+                "        (evidence_temporal_truth_before_T S marker body h)",
+            ],
+            [
+                "  temporal_truth_after_T := fun marker body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (after_T marker body))",
+                "        (evidence_temporal_truth_after_T S marker body h)",
+            ],
+            [
+                "  temporal_truth_until_T := fun marker body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (until_T marker body))",
+                "        (evidence_temporal_truth_until_T S marker body h)",
+            ],
+            [
+                "  temporal_truth_since_T := fun marker body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (since_T marker body))",
+                "        (evidence_temporal_truth_since_T S marker body h)",
+            ],
+            [
+                "  polarity_truth_not_T := fun body h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (not_T body))",
+                "        (evidence_polarity_truth_not_T S body h)",
+            ],
+            [
+                "  transition_truth := fun theme scale source target =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S TransitionT "
+                "(Transition theme scale source target))",
+                "        (evidence_transition_truth S theme scale source target)",
+            ],
+            [
+                "  cause_truth := fun causer effect h =>",
+                "      truth_evidence_sound",
+                "        (evidence_denotes S PropT (Cause causer effect))",
+                "        (evidence_cause_truth S causer effect h)",
+            ],
+        ]
+    )
+    for index, group in enumerate(assignment_groups):
+        suffix = ";" if index < len(assignment_groups) - 1 else ""
+        for line_index, line in enumerate(group):
+            if line_index == len(group) - 1:
+                lines.append(line + suffix)
+            else:
+                lines.append(line)
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition evidence_backed_truth_condition_ledger",
+            "  (S : EvidenceBackedTruthConditionSources) :",
+            "  IndependentTruthConditionObligationLedger :=",
+            "  independent_truth_condition_obligation_ledger",
+            "    (concrete_kernel_from_evidence_sources S).",
+            "",
+            "Theorem evidence_backed_truth_condition_sources_induce_kernel :",
+            "  forall S : EvidenceBackedTruthConditionSources,",
+            "    exists K : ConcreteTruthConditionKernel,",
+            "      K = concrete_kernel_from_evidence_sources S.",
+            "Proof.",
+            "  intro S.",
+            "  exists (concrete_kernel_from_evidence_sources S).",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "evidence_backed_truth_condition_sources_induce_truth_conditions :",
+            "  forall S : EvidenceBackedTruthConditionSources,",
+            "    ledger_truth_conditions",
+            "      (evidence_backed_truth_condition_ledger S) =",
+            "    truth_conditions_from_concrete_kernel",
+            "      (concrete_kernel_from_evidence_sources S).",
+            "Proof.",
+            "  intro S. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem evidence_backed_truth_condition_sources_sound :",
+            "  forall S : EvidenceBackedTruthConditionSources,",
+            "  forall A : Type, forall term : A,",
+            "    ModelInterpretable A term ->",
+            "    truth_denotes",
+            "      (ledger_truth_conditions",
+            "        (evidence_backed_truth_condition_ledger S))",
+            "      A term.",
+            "Proof.",
+            "  intros S A term H.",
+            "  exact",
+            "    (independent_truth_condition_obligation_ledger_truth_conditions_sound",
+            "      (concrete_kernel_from_evidence_sources S) A term H).",
             "Qed.",
         ]
     )
@@ -9216,6 +9739,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             independent_truth_condition_obligation_ledger_lines(declarations, target)
         )
         lines.append("")
+        lines.extend(evidence_backed_truth_condition_source_lines(declarations, target))
+        lines.append("")
         lines.extend(primitive_truth_assumption_kernel_lines(declarations, target))
         lines.append("")
         lines.extend(atomic_closure_truth_kernel_lines(declarations, target))
@@ -9753,6 +10278,17 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check "
             "independent_truth_condition_obligation_ledger_truth_conditions_sound"
         )
+        lines.append("#check TruthEvidence")
+        lines.append("#check truth_evidence_sound")
+        lines.append("#check EvidenceBackedTruthConditionSources")
+        lines.append("#check concrete_kernel_from_evidence_sources")
+        lines.append("#check evidence_backed_truth_condition_ledger")
+        lines.append("#check evidence_backed_truth_condition_sources_induce_kernel")
+        lines.append(
+            "#check "
+            "evidence_backed_truth_condition_sources_induce_truth_conditions"
+        )
+        lines.append("#check evidence_backed_truth_condition_sources_sound")
         lines.append("#check registered_lexical_truth_model")
         lines.append("#check registered_lexical_truth_model_exists")
         lines.append("#check registered_lexical_truth_conditions_from_model")
@@ -9901,6 +10437,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(concrete_truth_condition_kernel_lines(declarations, target))
     lines.append("")
     lines.extend(independent_truth_condition_obligation_ledger_lines(declarations, target))
+    lines.append("")
+    lines.extend(evidence_backed_truth_condition_source_lines(declarations, target))
     lines.append("")
     lines.extend(primitive_truth_assumption_kernel_lines(declarations, target))
     lines.append("")
@@ -10459,6 +10997,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "Check "
         "independent_truth_condition_obligation_ledger_truth_conditions_sound."
     )
+    lines.append("Check TruthEvidence.")
+    lines.append("Check truth_evidence_sound.")
+    lines.append("Check EvidenceBackedTruthConditionSources.")
+    lines.append("Check concrete_kernel_from_evidence_sources.")
+    lines.append("Check evidence_backed_truth_condition_ledger.")
+    lines.append("Check evidence_backed_truth_condition_sources_induce_kernel.")
+    lines.append(
+        "Check evidence_backed_truth_condition_sources_induce_truth_conditions."
+    )
+    lines.append("Check evidence_backed_truth_condition_sources_sound.")
     lines.append("Check registered_lexical_truth_model.")
     lines.append("Check registered_lexical_truth_model_exists.")
     lines.append("Check registered_lexical_truth_conditions_from_model.")
