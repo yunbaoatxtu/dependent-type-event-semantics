@@ -2831,6 +2831,130 @@ theorem independent_registered_truth_condition_sources_example_3_atomic_sound : 
 theorem independent_registered_truth_condition_sources_example_4_atomic_sound : AtomicClosureTruth PropT example_4 := by
   exact independent_registered_truth_condition_sources.independent_registered_truth_condition_agreement.concrete_registered_route_agreement_example_4_direct_atomic
 
+structure IndependentRegisteredTruthConditionClauseInstances : Type where
+  independent_registered_clause_source : IndependentRegisteredTruthConditionSources
+  independent_registered_clause_spec : FullyRegisteredTruthConditionSpec
+  independent_registered_clause_spec_eq :
+      independent_registered_clause_spec =
+        independent_registered_clause_source.independent_registered_truth_condition_spec
+
+def independent_registered_truth_condition_clause_instances : IndependentRegisteredTruthConditionClauseInstances := {
+  independent_registered_clause_source := independent_registered_truth_condition_sources,
+  independent_registered_clause_spec := independent_registered_truth_condition_sources.independent_registered_truth_condition_spec,
+  independent_registered_clause_spec_eq := rfl
+}
+
+theorem independent_registered_truth_condition_clause_instances_exists :
+    Exists (fun C : IndependentRegisteredTruthConditionClauseInstances => C = independent_registered_truth_condition_clause_instances) := by
+  exact Exists.intro independent_registered_truth_condition_clause_instances rfl
+
+theorem independent_registered_truth_condition_clause_spec_matches_source :
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec =
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_source.independent_registered_truth_condition_spec := by
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec_eq
+
+theorem independent_registered_truth_condition_clause_lexical_application_instance :
+    (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term := by
+  intro A term h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_lexical_application A term h
+
+theorem independent_registered_truth_condition_clause_sigma_Entity_instance :
+    (P : Entity -> Prop) -> ((x : Entity) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (P x)) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (Exists fun x : Entity => P x) := by
+  intro P h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_sigma_Entity P h
+
+theorem independent_registered_truth_condition_clause_sigma_Food_instance :
+    (P : Food -> Prop) -> ((x : Food) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (P x)) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (Exists fun x : Food => P x) := by
+  intro P h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_sigma_Food P h
+
+theorem independent_registered_truth_condition_clause_sigma_State_instance :
+    (P : State -> Prop) -> ((x : State) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (P x)) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (Exists fun x : State => P x) := by
+  intro P h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_sigma_State P h
+
+theorem independent_registered_truth_condition_clause_sigma_StateScale_instance :
+    (P : StateScale -> Prop) -> ((x : StateScale) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (P x)) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (Exists fun x : StateScale => P x) := by
+  intro P h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_sigma_StateScale P h
+
+theorem independent_registered_truth_condition_clause_sigma_TransitionT_instance :
+    (P : TransitionT -> Prop) -> ((x : TransitionT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (P x)) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes Prop (Exists fun x : TransitionT => P x) := by
+  intro P h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_sigma_TransitionT P h
+
+theorem independent_registered_truth_condition_clause_repeat_instance :
+    (n : Nat) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  intro n body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_repeat n body h
+
+theorem independent_registered_truth_condition_clause_at_T_instance :
+    (marker : Entity) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (at_T marker body) := by
+  intro marker body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_at_T marker body h
+
+theorem independent_registered_truth_condition_clause_during_T_instance :
+    (marker : Entity) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (during_T marker body) := by
+  intro marker body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_during_T marker body h
+
+theorem independent_registered_truth_condition_clause_before_T_instance :
+    (marker : Entity) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (before_T marker body) := by
+  intro marker body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_before_T marker body h
+
+theorem independent_registered_truth_condition_clause_after_T_instance :
+    (marker : Entity) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (after_T marker body) := by
+  intro marker body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_after_T marker body h
+
+theorem independent_registered_truth_condition_clause_until_T_instance :
+    (marker : Entity) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (until_T marker body) := by
+  intro marker body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_until_T marker body h
+
+theorem independent_registered_truth_condition_clause_since_T_instance :
+    (marker : Entity) -> (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (since_T marker body) := by
+  intro marker body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_since_T marker body h
+
+theorem independent_registered_truth_condition_clause_not_T_instance :
+    (body : PropT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (not_T body) := by
+  intro body h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_not_T body h
+
+theorem independent_registered_truth_condition_clause_transition_instance :
+    (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) -> RegisteredStateTransitionTruth theme scale source target -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target) := by
+  intro theme scale source target h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_transition theme scale source target h
+
+theorem independent_registered_truth_condition_clause_cause_instance :
+    (causer : Entity) -> (effect : TransitionT) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes TransitionT effect -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (Cause causer effect) := by
+  intro causer effect h
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_cause causer effect h
+
+theorem independent_registered_truth_condition_clause_spec_sound :
+    (A : Type) -> (term : A) -> independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term -> AtomicClosureTruth A term := by
+  intro A term h
+  apply independent_registered_truth_condition_sources_spec_sound
+  exact h
+
+theorem independent_registered_truth_condition_clause_example_1_atomic_sound : AtomicClosureTruth PropT example_1 := by
+  apply independent_registered_truth_condition_clause_spec_sound
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_source.independent_registered_truth_condition_examples.example_1_concrete_truth_instance
+
+theorem independent_registered_truth_condition_clause_example_2_atomic_sound : AtomicClosureTruth Prop example_2 := by
+  apply independent_registered_truth_condition_clause_spec_sound
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_source.independent_registered_truth_condition_examples.example_2_concrete_truth_instance
+
+theorem independent_registered_truth_condition_clause_example_3_atomic_sound : AtomicClosureTruth PropT example_3 := by
+  apply independent_registered_truth_condition_clause_spec_sound
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_source.independent_registered_truth_condition_examples.example_3_concrete_truth_instance
+
+theorem independent_registered_truth_condition_clause_example_4_atomic_sound : AtomicClosureTruth PropT example_4 := by
+  apply independent_registered_truth_condition_clause_spec_sound
+  exact independent_registered_truth_condition_clause_instances.independent_registered_clause_source.independent_registered_truth_condition_examples.example_4_concrete_truth_instance
+
 theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1 := by
   apply fully_registered_truth_conditions_imply_atomic_closure
   exact example_1_fully_registered_truth_condition_sound
@@ -2923,6 +3047,7 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_condition_route_example_1_agreement_evidence_atomic_sound
 #check concrete_registered_truth_condition_route_example_1_agreement_kernel_atomic_sound
 #check independent_registered_truth_condition_sources_example_1_atomic_sound
+#check independent_registered_truth_condition_clause_example_1_atomic_sound
 #check example_1_fully_registered_truth_condition_atomic_sound
 #check registered_example_1_truth_instance_atomic_sound
 #check example_2
@@ -2971,6 +3096,7 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound
 #check concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound
 #check independent_registered_truth_condition_sources_example_2_atomic_sound
+#check independent_registered_truth_condition_clause_example_2_atomic_sound
 #check example_2_fully_registered_truth_condition_atomic_sound
 #check registered_example_2_truth_instance_atomic_sound
 #check example_3
@@ -3019,6 +3145,7 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_condition_route_example_3_agreement_evidence_atomic_sound
 #check concrete_registered_truth_condition_route_example_3_agreement_kernel_atomic_sound
 #check independent_registered_truth_condition_sources_example_3_atomic_sound
+#check independent_registered_truth_condition_clause_example_3_atomic_sound
 #check example_3_fully_registered_truth_condition_atomic_sound
 #check registered_example_3_truth_instance_atomic_sound
 #check example_4
@@ -3067,6 +3194,7 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check concrete_registered_truth_condition_route_example_4_agreement_evidence_atomic_sound
 #check concrete_registered_truth_condition_route_example_4_agreement_kernel_atomic_sound
 #check independent_registered_truth_condition_sources_example_4_atomic_sound
+#check independent_registered_truth_condition_clause_example_4_atomic_sound
 #check example_4_fully_registered_truth_condition_atomic_sound
 #check registered_example_4_truth_instance_atomic_sound
 #check independent_truth_condition_obligation_ledger
@@ -3153,5 +3281,17 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check independent_registered_truth_condition_sources_spec_matches_route
 #check independent_registered_truth_condition_sources_agreement_matches_route
 #check independent_registered_truth_condition_sources_spec_sound
+#check IndependentRegisteredTruthConditionClauseInstances
+#check independent_registered_truth_condition_clause_instances
+#check independent_registered_truth_condition_clause_instances_exists
+#check independent_registered_truth_condition_clause_spec_matches_source
+#check independent_registered_truth_condition_clause_lexical_application_instance
+#check independent_registered_truth_condition_clause_sigma_Entity_instance
+#check independent_registered_truth_condition_clause_repeat_instance
+#check independent_registered_truth_condition_clause_at_T_instance
+#check independent_registered_truth_condition_clause_not_T_instance
+#check independent_registered_truth_condition_clause_transition_instance
+#check independent_registered_truth_condition_clause_cause_instance
+#check independent_registered_truth_condition_clause_spec_sound
 #check registered_example_truth_instances
 #check registered_example_truth_instances_exists

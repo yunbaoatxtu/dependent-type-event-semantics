@@ -248,7 +248,17 @@ package match the stored route, proves
 `independent_registered_truth_condition_sources_example_i_atomic_sound` for
 every exported example. This gives the next independently supplied
 truth-condition stage a named source boundary without claiming full natural
-language coverage. The scaffold also
+language coverage. The scaffold then expands that boundary as
+`IndependentRegisteredTruthConditionClauseInstances`, instantiates
+`independent_registered_truth_condition_clause_instances`, proves that the
+clause package exists and matches the stored source spec, and checks named
+constructor-level projections for lexical applications, each exported Sigma
+type, repetition, temporal operators, polarity, registered Transition, and
+Cause. It also checks
+`independent_registered_truth_condition_clause_example_i_atomic_sound` for
+every exported example. This gives later semantic-strengthening work a
+constructor-by-constructor replacement surface instead of one opaque source
+record. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

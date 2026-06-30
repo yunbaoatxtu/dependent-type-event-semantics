@@ -11274,6 +11274,468 @@ def independent_registered_truth_condition_source_lines(
     return lines
 
 
+def independent_registered_truth_condition_clause_instance_lines(
+    declarations: dict[str, Any],
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Project constructor-level instances from the independent source spec."""
+
+    if target == "lean":
+        lines = [
+            "structure IndependentRegisteredTruthConditionClauseInstances : Type where",
+            "  independent_registered_clause_source : "
+            "IndependentRegisteredTruthConditionSources",
+            "  independent_registered_clause_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  independent_registered_clause_spec_eq :",
+            "      independent_registered_clause_spec =",
+            "        independent_registered_clause_source."
+            "independent_registered_truth_condition_spec",
+            "",
+            "def independent_registered_truth_condition_clause_instances : "
+            "IndependentRegisteredTruthConditionClauseInstances := {",
+            "  independent_registered_clause_source := "
+            "independent_registered_truth_condition_sources,",
+            "  independent_registered_clause_spec := "
+            "independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_spec,",
+            "  independent_registered_clause_spec_eq := rfl",
+            "}",
+            "",
+            "theorem independent_registered_truth_condition_clause_instances_exists :",
+            "    Exists (fun C : "
+            "IndependentRegisteredTruthConditionClauseInstances => "
+            "C = independent_registered_truth_condition_clause_instances) := by",
+            "  exact Exists.intro "
+            "independent_registered_truth_condition_clause_instances rfl",
+            "",
+            "theorem "
+            "independent_registered_truth_condition_clause_spec_matches_source :",
+            "    independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec =",
+            "      independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_source."
+            "independent_registered_truth_condition_spec := by",
+            "  exact independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec_eq",
+            "",
+            "theorem "
+            "independent_registered_truth_condition_clause_lexical_application_instance :",
+            "    (A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term -> "
+            "independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec."
+            "fully_registered_truth_denotes A term := by",
+            "  intro A term h",
+            "  exact independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec."
+            "fully_registered_truth_lexical_application A term h",
+        ]
+        for type_name in declarations["types"]:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_clause_sigma_{type_name}_instance :",
+                    f"    (P : {type_name} -> Prop) -> "
+                    f"((x : {type_name}) -> "
+                    "independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    "fully_registered_truth_denotes Prop (P x)) -> "
+                    "independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    "fully_registered_truth_denotes Prop "
+                    f"(Exists fun x : {type_name} => P x) := by",
+                    "  intro P h",
+                    "  exact independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    f"fully_registered_truth_sigma_{type_name} P h",
+                ]
+            )
+        clause_specs = [
+            (
+                "repeat",
+                "(n : Nat) -> (body : PropT) -> ",
+                "n body ",
+                "PropT body",
+                "PropT (repeat n body)",
+            ),
+            (
+                "at_T",
+                "(marker : Entity) -> (body : PropT) -> ",
+                "marker body ",
+                "PropT body",
+                "PropT (at_T marker body)",
+            ),
+            (
+                "during_T",
+                "(marker : Entity) -> (body : PropT) -> ",
+                "marker body ",
+                "PropT body",
+                "PropT (during_T marker body)",
+            ),
+            (
+                "before_T",
+                "(marker : Entity) -> (body : PropT) -> ",
+                "marker body ",
+                "PropT body",
+                "PropT (before_T marker body)",
+            ),
+            (
+                "after_T",
+                "(marker : Entity) -> (body : PropT) -> ",
+                "marker body ",
+                "PropT body",
+                "PropT (after_T marker body)",
+            ),
+            (
+                "until_T",
+                "(marker : Entity) -> (body : PropT) -> ",
+                "marker body ",
+                "PropT body",
+                "PropT (until_T marker body)",
+            ),
+            (
+                "since_T",
+                "(marker : Entity) -> (body : PropT) -> ",
+                "marker body ",
+                "PropT body",
+                "PropT (since_T marker body)",
+            ),
+            (
+                "not_T",
+                "(body : PropT) -> ",
+                "body ",
+                "PropT body",
+                "PropT (not_T body)",
+            ),
+        ]
+        for name, binders, args, premise, conclusion in clause_specs:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_clause_{name}_instance :",
+                    f"    {binders}"
+                    "independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    f"fully_registered_truth_denotes {premise} -> "
+                    "independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    f"fully_registered_truth_denotes {conclusion} := by",
+                    "  intro " + " ".join(
+                        token.split(" : ")[0].strip("()")
+                        for token in binders.split(" -> ")[:-1]
+                        if token
+                    ) + " h",
+                    "  exact independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    f"fully_registered_truth_{name} {args}h",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem "
+                "independent_registered_truth_condition_clause_transition_instance :",
+                "    (theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_denotes TransitionT "
+                "(Transition theme scale source target) := by",
+                "  intro theme scale source target h",
+                "  exact independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_transition theme scale source target h",
+                "",
+                "theorem "
+                "independent_registered_truth_condition_clause_cause_instance :",
+                "    (causer : Entity) -> (effect : TransitionT) -> "
+                "independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_denotes TransitionT effect -> "
+                "independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_denotes PropT (Cause causer effect) := by",
+                "  intro causer effect h",
+                "  exact independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_cause causer effect h",
+                "",
+                "theorem "
+                "independent_registered_truth_condition_clause_spec_sound :",
+                "    (A : Type) -> (term : A) -> "
+                "independent_registered_truth_condition_clause_instances."
+                "independent_registered_clause_spec."
+                "fully_registered_truth_denotes A term -> "
+                "AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply independent_registered_truth_condition_sources_spec_sound",
+                "  exact h",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply independent_registered_truth_condition_clause_spec_sound",
+                    "  exact independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_source."
+                    "independent_registered_truth_condition_examples."
+                    f"example_{idx}_concrete_truth_instance",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record IndependentRegisteredTruthConditionClauseInstances : Type := {",
+        "  independent_registered_clause_source : "
+        "IndependentRegisteredTruthConditionSources;",
+        "  independent_registered_clause_spec : FullyRegisteredTruthConditionSpec;",
+        "  independent_registered_clause_spec_eq :",
+        "      independent_registered_clause_spec =",
+        "        independent_registered_truth_condition_spec",
+        "          independent_registered_clause_source",
+        "}.",
+        "",
+        "Definition independent_registered_truth_condition_clause_instances :",
+        "  IndependentRegisteredTruthConditionClauseInstances := {|",
+        "  independent_registered_clause_source := "
+        "independent_registered_truth_condition_sources;",
+        "  independent_registered_clause_spec := "
+        "independent_registered_truth_condition_spec",
+        "    independent_registered_truth_condition_sources;",
+        "  independent_registered_clause_spec_eq := eq_refl",
+        "|}.",
+        "",
+        "Theorem independent_registered_truth_condition_clause_instances_exists :",
+        "  exists C : IndependentRegisteredTruthConditionClauseInstances,",
+        "    C = independent_registered_truth_condition_clause_instances.",
+        "Proof.",
+        "  exists independent_registered_truth_condition_clause_instances.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem independent_registered_truth_condition_clause_spec_matches_source :",
+        "  independent_registered_clause_spec",
+        "    independent_registered_truth_condition_clause_instances =",
+        "  independent_registered_truth_condition_spec",
+        "    (independent_registered_clause_source",
+        "      independent_registered_truth_condition_clause_instances).",
+        "Proof.",
+        "  exact (independent_registered_clause_spec_eq",
+        "    independent_registered_truth_condition_clause_instances).",
+        "Qed.",
+        "",
+        "Theorem "
+        "independent_registered_truth_condition_clause_lexical_application_instance :",
+        "  forall A : Type, forall term : A,",
+        "    RegisteredLexicalApplicationTruth A term ->",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances) A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  exact (fully_registered_truth_lexical_application",
+        "    (independent_registered_clause_spec",
+        "      independent_registered_truth_condition_clause_instances) A term H).",
+        "Qed.",
+    ]
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_clause_sigma_{type_name}_instance :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                "        Prop (P x)) ->",
+                "    fully_registered_truth_denotes",
+                "      (independent_registered_clause_spec",
+                "        independent_registered_truth_condition_clause_instances)",
+                f"      Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                "  intros P H.",
+                f"  exact (fully_registered_truth_sigma_{type_name}",
+                "    (independent_registered_clause_spec",
+                "      independent_registered_truth_condition_clause_instances)",
+                "    P H).",
+                "Qed.",
+            ]
+        )
+    clause_specs = [
+        (
+            "repeat",
+            "forall n : nat, forall body : PropT,",
+            "n body",
+            "PropT body",
+            "PropT (repeat n body)",
+            "intros n body H.",
+        ),
+        (
+            "at_T",
+            "forall marker : Entity, forall body : PropT,",
+            "marker body",
+            "PropT body",
+            "PropT (at_T marker body)",
+            "intros marker body H.",
+        ),
+        (
+            "during_T",
+            "forall marker : Entity, forall body : PropT,",
+            "marker body",
+            "PropT body",
+            "PropT (during_T marker body)",
+            "intros marker body H.",
+        ),
+        (
+            "before_T",
+            "forall marker : Entity, forall body : PropT,",
+            "marker body",
+            "PropT body",
+            "PropT (before_T marker body)",
+            "intros marker body H.",
+        ),
+        (
+            "after_T",
+            "forall marker : Entity, forall body : PropT,",
+            "marker body",
+            "PropT body",
+            "PropT (after_T marker body)",
+            "intros marker body H.",
+        ),
+        (
+            "until_T",
+            "forall marker : Entity, forall body : PropT,",
+            "marker body",
+            "PropT body",
+            "PropT (until_T marker body)",
+            "intros marker body H.",
+        ),
+        (
+            "since_T",
+            "forall marker : Entity, forall body : PropT,",
+            "marker body",
+            "PropT body",
+            "PropT (since_T marker body)",
+            "intros marker body H.",
+        ),
+        (
+            "not_T",
+            "forall body : PropT,",
+            "body",
+            "PropT body",
+            "PropT (not_T body)",
+            "intros body H.",
+        ),
+    ]
+    for name, binders, args, premise, conclusion, intro_line in clause_specs:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_clause_{name}_instance :",
+                f"  {binders}",
+                "    fully_registered_truth_denotes",
+                "      (independent_registered_clause_spec",
+                "        independent_registered_truth_condition_clause_instances)",
+                f"      {premise} ->",
+                "    fully_registered_truth_denotes",
+                "      (independent_registered_clause_spec",
+                "        independent_registered_truth_condition_clause_instances)",
+                f"      {conclusion}.",
+                "Proof.",
+                f"  {intro_line}",
+                f"  exact (fully_registered_truth_{name}",
+                "    (independent_registered_clause_spec",
+                "      independent_registered_truth_condition_clause_instances)",
+                f"    {args} H).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem "
+            "independent_registered_truth_condition_clause_transition_instance :",
+            "  forall theme : Entity, forall scale : StateScale,",
+            "  forall source : State, forall target : State,",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances)",
+            "      TransitionT (Transition theme scale source target).",
+            "Proof.",
+            "  intros theme scale source target H.",
+            "  exact (fully_registered_truth_transition",
+            "    (independent_registered_clause_spec",
+            "      independent_registered_truth_condition_clause_instances)",
+            "    theme scale source target H).",
+            "Qed.",
+            "",
+            "Theorem "
+            "independent_registered_truth_condition_clause_cause_instance :",
+            "  forall causer : Entity, forall effect : TransitionT,",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances)",
+            "      TransitionT effect ->",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances)",
+            "      PropT (Cause causer effect).",
+            "Proof.",
+            "  intros causer effect H.",
+            "  exact (fully_registered_truth_cause",
+            "    (independent_registered_clause_spec",
+            "      independent_registered_truth_condition_clause_instances)",
+            "    causer effect H).",
+            "Qed.",
+            "",
+            "Theorem independent_registered_truth_condition_clause_spec_sound :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances) A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply independent_registered_truth_condition_sources_spec_sound.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply independent_registered_truth_condition_clause_spec_sound.",
+                "  exact (example_"
+                f"{idx}_concrete_truth_instance",
+                "    (independent_registered_truth_condition_examples",
+                "      (independent_registered_clause_source",
+                "        independent_registered_truth_condition_clause_instances))).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -12196,6 +12658,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             independent_registered_truth_condition_source_lines(results, target)
         )
         lines.append("")
+        lines.extend(
+            independent_registered_truth_condition_clause_instance_lines(
+                declarations,
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -12334,6 +12804,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"independent_registered_truth_condition_sources_example_{idx}_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound"
             )
             lines.append(
                 "#check "
@@ -12496,6 +12970,38 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "independent_registered_truth_condition_sources_agreement_matches_route"
         )
         lines.append("#check independent_registered_truth_condition_sources_spec_sound")
+        lines.append("#check IndependentRegisteredTruthConditionClauseInstances")
+        lines.append("#check independent_registered_truth_condition_clause_instances")
+        lines.append(
+            "#check independent_registered_truth_condition_clause_instances_exists"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_clause_spec_matches_source"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_clause_lexical_application_instance"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_sigma_Entity_instance"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_repeat_instance"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_at_T_instance"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_not_T_instance"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_transition_instance"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_cause_instance"
+        )
+        lines.append("#check independent_registered_truth_condition_clause_spec_sound")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -13137,6 +13643,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(independent_registered_truth_condition_source_lines(results, target))
     lines.append("")
+    lines.extend(
+        independent_registered_truth_condition_clause_instance_lines(
+            declarations,
+            results,
+            target,
+        )
+    )
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -13263,6 +13777,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"independent_registered_truth_condition_sources_example_{idx}_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound."
         )
         lines.append(
             "Check "
@@ -13403,6 +13921,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "independent_registered_truth_condition_sources_agreement_matches_route."
     )
     lines.append("Check independent_registered_truth_condition_sources_spec_sound.")
+    lines.append("Check IndependentRegisteredTruthConditionClauseInstances.")
+    lines.append("Check independent_registered_truth_condition_clause_instances.")
+    lines.append(
+        "Check independent_registered_truth_condition_clause_instances_exists."
+    )
+    lines.append(
+        "Check independent_registered_truth_condition_clause_spec_matches_source."
+    )
+    lines.append(
+        "Check "
+        "independent_registered_truth_condition_clause_lexical_application_instance."
+    )
+    lines.append(
+        "Check independent_registered_truth_condition_clause_sigma_Entity_instance."
+    )
+    lines.append("Check independent_registered_truth_condition_clause_repeat_instance.")
+    lines.append("Check independent_registered_truth_condition_clause_at_T_instance.")
+    lines.append("Check independent_registered_truth_condition_clause_not_T_instance.")
+    lines.append(
+        "Check independent_registered_truth_condition_clause_transition_instance."
+    )
+    lines.append("Check independent_registered_truth_condition_clause_cause_instance.")
+    lines.append("Check independent_registered_truth_condition_clause_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

@@ -1239,6 +1239,23 @@ every exported example. This is a source-boundary witness for the registered
 fragment; it does not yet supply truth clauses for arbitrary unregistered
 lexical, temporal, causal, quantificational, or modifier analyses. The next
 verified objective
+`coq_independent_registered_truth_condition_clause_instances_package` expands
+that source boundary into
+`IndependentRegisteredTruthConditionClauseInstances`, instantiates
+`independent_registered_truth_condition_clause_instances`, and checks named
+constructor-level projections for the stored source spec:
+`independent_registered_truth_condition_clause_lexical_application_instance`,
+`independent_registered_truth_condition_clause_sigma_Entity_instance`,
+`independent_registered_truth_condition_clause_repeat_instance`,
+`independent_registered_truth_condition_clause_at_T_instance`,
+`independent_registered_truth_condition_clause_not_T_instance`,
+`independent_registered_truth_condition_clause_transition_instance`, and
+`independent_registered_truth_condition_clause_cause_instance`. It also checks
+`independent_registered_truth_condition_clause_example_i_atomic_sound` for
+every exported example. This makes the next concrete-instance stage more
+granular: each constructor class now has a stable theorem name that can be
+replaced by a stronger independently justified semantic clause. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
@@ -1290,6 +1307,7 @@ concrete-registered-truth-condition-model, concrete-registered-truth-condition,
 concrete-registered-evidence-backed-example-package,
 concrete-registered-truth-condition-route,
 independent-registered-truth-condition-source,
+independent-registered-truth-condition-clause-instance,
 concrete-registered-truth-kernel,
 or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for

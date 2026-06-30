@@ -598,6 +598,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_independent_registered_truth_condition_clause_atomic_sound_count = len(
+        re.findall(
+            r"^theorem independent_registered_truth_condition_clause_example_\d+_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_independent_registered_truth_condition_clause_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem independent_registered_truth_condition_clause_example_\d+_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2551,6 +2565,105 @@ def main() -> None:
             and "Check independent_registered_truth_condition_sources_spec_sound."
             in coq
             and "Check independent_registered_truth_condition_sources_example_4_atomic_sound."
+            in coq
+        ),
+        "lean independent registered truth-condition clause instances package": (
+            lean_independent_registered_truth_condition_clause_atomic_sound_count
+            == lean_example_count
+            and "structure IndependentRegisteredTruthConditionClauseInstances : Type where"
+            in lean
+            and "independent_registered_clause_source : "
+            "IndependentRegisteredTruthConditionSources" in lean
+            and "independent_registered_clause_spec : "
+            "FullyRegisteredTruthConditionSpec" in lean
+            and "def independent_registered_truth_condition_clause_instances : "
+            "IndependentRegisteredTruthConditionClauseInstances := {" in lean
+            and "theorem independent_registered_truth_condition_clause_instances_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_spec_matches_source :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_lexical_application_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_sigma_Entity_instance :"
+            in lean
+            and "theorem independent_registered_truth_condition_clause_repeat_instance :"
+            in lean
+            and "theorem independent_registered_truth_condition_clause_at_T_instance :"
+            in lean
+            and "theorem independent_registered_truth_condition_clause_not_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_transition_instance :"
+            in lean
+            and "theorem independent_registered_truth_condition_clause_cause_instance :"
+            in lean
+            and "theorem independent_registered_truth_condition_clause_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredTruthConditionClauseInstances"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_clause_lexical_application_instance"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_clause_sigma_Entity_instance"
+            in lean
+            and "#check independent_registered_truth_condition_clause_repeat_instance"
+            in lean
+            and "#check independent_registered_truth_condition_clause_transition_instance"
+            in lean
+            and "#check independent_registered_truth_condition_clause_example_4_atomic_sound"
+            in lean
+        ),
+        "coq independent registered truth-condition clause instances package": (
+            coq_independent_registered_truth_condition_clause_atomic_sound_count
+            == coq_example_count
+            and "Record IndependentRegisteredTruthConditionClauseInstances : Type := {"
+            in coq
+            and "independent_registered_clause_source : "
+            "IndependentRegisteredTruthConditionSources;" in coq
+            and "independent_registered_clause_spec : FullyRegisteredTruthConditionSpec;"
+            in coq
+            and "Definition independent_registered_truth_condition_clause_instances :"
+            in coq
+            and "IndependentRegisteredTruthConditionClauseInstances := {|" in coq
+            and "Theorem independent_registered_truth_condition_clause_instances_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_spec_matches_source :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_lexical_application_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_sigma_Entity_instance :"
+            in coq
+            and "Theorem independent_registered_truth_condition_clause_repeat_instance :"
+            in coq
+            and "Theorem independent_registered_truth_condition_clause_at_T_instance :"
+            in coq
+            and "Theorem independent_registered_truth_condition_clause_not_T_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_transition_instance :"
+            in coq
+            and "Theorem independent_registered_truth_condition_clause_cause_instance :"
+            in coq
+            and "Theorem independent_registered_truth_condition_clause_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredTruthConditionClauseInstances." in coq
+            and "Check "
+            "independent_registered_truth_condition_clause_lexical_application_instance."
+            in coq
+            and "Check independent_registered_truth_condition_clause_sigma_Entity_instance."
+            in coq
+            and "Check independent_registered_truth_condition_clause_repeat_instance."
+            in coq
+            and "Check independent_registered_truth_condition_clause_transition_instance."
+            in coq
+            and "Check independent_registered_truth_condition_clause_example_4_atomic_sound."
             in coq
         ),
         "lean syntax-directed truth kernel soundness proofs": (

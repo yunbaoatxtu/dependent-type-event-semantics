@@ -21112,6 +21112,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_independent_registered_truth_condition_clause_instances_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21343,6 +21348,13 @@ def project_completion_status_payload(
                     "truth-condition package, then proves that the stored "
                     "spec and agreement match the route and that the stored "
                     "spec and each source example imply AtomicClosureTruth. "
+                    "The newest clause-instance package then expands that "
+                    "stored source spec into named constructor-level "
+                    "truth-condition instances: lexical application, each "
+                    "exported Sigma type, repetition, temporal operators, "
+                    "polarity, registered Transition, and Cause all receive "
+                    "separate checked projection theorems, plus per-example "
+                    "atomic soundness through the same source spec. "
                     "It now also factors that finite registered closure "
                     "through a ConcreteRegisteredTruthKernel whose lexical "
                     "and transition clauses are evidence-gated by "
