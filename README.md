@@ -1268,6 +1268,20 @@ for every exported example. This is a coverage ledger for the registered
 constructor classes, not a full independent lexical or temporal semantics. The
 next
 verified objective
+`coq_independent_registered_temporal_truth_condition_instances_package`
+extracts the temporal operator fragment from that ledger as
+`IndependentRegisteredTemporalTruthConditionInstances`. It instantiates
+`independent_registered_temporal_truth_condition_instances`, proves the package
+exists, proves that its stored coverage object is
+`independent_registered_truth_condition_clause_coverage`, and exposes named
+projections for `at_T`, `during_T`, `before_T`, `after_T`, `until_T`, and
+`since_T` through
+`independent_registered_temporal_truth_condition_at_T_instance` through
+`independent_registered_temporal_truth_condition_since_T_instance`. This is the
+first constructor-class subpackage carved out of the full ledger, so future
+work can strengthen temporal truth clauses without disturbing lexical,
+quantifier, repetition, polarity, transition, or causal clauses. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

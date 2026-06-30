@@ -267,7 +267,16 @@ coverage package exists, proves that it still points to
 `independent_registered_truth_condition_clause_coverage_example_i_atomic_sound`
 for every exported example. This is a finite coverage ledger for the registered
 constructor classes, not a proof that arbitrary lexical, temporal, causal, or
-quantificational clauses have independent truth conditions. The scaffold also
+quantificational clauses have independent truth conditions. The scaffold then
+extracts the temporal fragment as
+`IndependentRegisteredTemporalTruthConditionInstances`, instantiates
+`independent_registered_temporal_truth_condition_instances`, proves that the
+temporal package exists, proves that it still points to
+`independent_registered_truth_condition_clause_coverage`, and checks named
+projections for `at_T`, `during_T`, `before_T`, `after_T`, `until_T`, and
+`since_T`. This gives the Parsons/Luo-Shi time-operator replacement route a
+separate proof interface while keeping the broader truth-condition completion
+blocker in place. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

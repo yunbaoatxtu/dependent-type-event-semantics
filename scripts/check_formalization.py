@@ -2752,6 +2752,107 @@ def main() -> None:
             "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound."
             in coq
         ),
+        "lean independent registered temporal truth-condition instances package": (
+            "structure IndependentRegisteredTemporalTruthConditionInstances : Type where"
+            in lean
+            and "independent_registered_temporal_clause_coverage :"
+            in lean
+            and "IndependentRegisteredTruthConditionClauseCoverage" in lean
+            and "def independent_registered_temporal_truth_condition_instances :"
+            in lean
+            and "IndependentRegisteredTemporalTruthConditionInstances := {"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_instances_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_coverage_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_at_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_during_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_before_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_after_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_until_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_since_T_instance :"
+            in lean
+            and "theorem "
+            "independent_registered_temporal_truth_condition_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredTemporalTruthConditionInstances"
+            in lean
+            and "#check independent_registered_temporal_truth_condition_instances"
+            in lean
+            and "#check "
+            "independent_registered_temporal_truth_condition_coverage_matches"
+            in lean
+            and "#check "
+            "independent_registered_temporal_truth_condition_at_T_instance"
+            in lean
+            and "#check "
+            "independent_registered_temporal_truth_condition_since_T_instance"
+            in lean
+            and "#check independent_registered_temporal_truth_condition_spec_sound"
+            in lean
+        ),
+        "coq independent registered temporal truth-condition instances package": (
+            "Record IndependentRegisteredTemporalTruthConditionInstances : Type := {"
+            in coq
+            and "independent_registered_temporal_clause_coverage :" in coq
+            and "IndependentRegisteredTruthConditionClauseCoverage" in coq
+            and "Definition independent_registered_temporal_truth_condition_instances :"
+            in coq
+            and "IndependentRegisteredTemporalTruthConditionInstances := {|"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_instances_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_coverage_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_at_T_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_during_T_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_before_T_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_after_T_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_until_T_instance :"
+            in coq
+            and "Theorem "
+            "independent_registered_temporal_truth_condition_since_T_instance :"
+            in coq
+            and "Theorem independent_registered_temporal_truth_condition_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredTemporalTruthConditionInstances."
+            in coq
+            and "Check independent_registered_temporal_truth_condition_instances."
+            in coq
+            and "Check independent_registered_temporal_truth_condition_coverage_matches."
+            in coq
+            and "Check independent_registered_temporal_truth_condition_at_T_instance."
+            in coq
+            and "Check independent_registered_temporal_truth_condition_since_T_instance."
+            in coq
+            and "Check independent_registered_temporal_truth_condition_spec_sound."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean

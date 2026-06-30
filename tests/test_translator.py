@@ -2305,6 +2305,30 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure IndependentRegisteredTemporalTruthConditionInstances : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def independent_registered_temporal_truth_condition_instances :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_temporal_truth_condition_coverage_matches :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_temporal_truth_condition_at_T_instance :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_temporal_truth_condition_since_T_instance :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check independent_registered_temporal_truth_condition_spec_sound",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
@@ -3717,6 +3741,30 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check independent_registered_truth_condition_clause_coverage_example_2_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record IndependentRegisteredTemporalTruthConditionInstances : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition independent_registered_temporal_truth_condition_instances :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_temporal_truth_condition_coverage_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_temporal_truth_condition_at_T_instance :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_temporal_truth_condition_since_T_instance :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check independent_registered_temporal_truth_condition_spec_sound.",
             coq_module,
         )
         self.assertIn(
@@ -16505,6 +16553,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_independent_registered_truth_condition_source_package",
                 "coq_independent_registered_truth_condition_clause_instances_package",
                 "coq_independent_registered_truth_condition_clause_coverage_package",
+                "coq_independent_registered_temporal_truth_condition_instances_package",
                 "coq_concrete_registered_truth_kernel_instance",
                 "coq_concrete_registered_kernel_example_truth_instance_package",
                 "coq_concrete_registered_example_truth_instance_package",
@@ -25700,6 +25749,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_independent_registered_truth_condition_clause_coverage_package`",
             readme,
         )
+        self.assertIn(
+            "`IndependentRegisteredTemporalTruthConditionInstances`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_independent_registered_temporal_truth_condition_instances_package`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -25781,6 +25838,14 @@ class TranslatorTests(unittest.TestCase):
             "`independent_registered_truth_condition_clause_coverage`",
             formalization_readme,
         )
+        self.assertIn(
+            "`IndependentRegisteredTemporalTruthConditionInstances`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`independent_registered_temporal_truth_condition_instances`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -25839,6 +25904,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_independent_registered_truth_condition_clause_coverage_package",
+            manuscript,
+        )
+        self.assertIn(
+            "IndependentRegisteredTemporalTruthConditionInstances",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_independent_registered_temporal_truth_condition_instances_package",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

@@ -3157,6 +3157,168 @@ theorem independent_registered_truth_condition_clause_coverage_example_3_atomic_
 theorem independent_registered_truth_condition_clause_coverage_example_4_atomic_sound : AtomicClosureTruth PropT example_4 := by
   exact independent_registered_truth_condition_clause_coverage.independent_registered_clause_coverage_example_4
 
+structure IndependentRegisteredTemporalTruthConditionInstances : Type where
+  independent_registered_temporal_clause_coverage :
+      IndependentRegisteredTruthConditionClauseCoverage
+  independent_registered_temporal_clause_coverage_eq :
+      independent_registered_temporal_clause_coverage =
+        independent_registered_truth_condition_clause_coverage
+  independent_registered_temporal_at_T_instance :
+      (marker : Entity) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (at_T marker body)
+  independent_registered_temporal_during_T_instance :
+      (marker : Entity) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (during_T marker body)
+  independent_registered_temporal_before_T_instance :
+      (marker : Entity) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (before_T marker body)
+  independent_registered_temporal_after_T_instance :
+      (marker : Entity) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (after_T marker body)
+  independent_registered_temporal_until_T_instance :
+      (marker : Entity) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (until_T marker body)
+  independent_registered_temporal_since_T_instance :
+      (marker : Entity) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (since_T marker body)
+  independent_registered_temporal_spec_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def independent_registered_temporal_truth_condition_instances :
+    IndependentRegisteredTemporalTruthConditionInstances := {
+  independent_registered_temporal_clause_coverage :=
+    independent_registered_truth_condition_clause_coverage,
+  independent_registered_temporal_clause_coverage_eq := rfl,
+  independent_registered_temporal_at_T_instance := independent_registered_truth_condition_clause_at_T_instance,
+  independent_registered_temporal_during_T_instance := independent_registered_truth_condition_clause_during_T_instance,
+  independent_registered_temporal_before_T_instance := independent_registered_truth_condition_clause_before_T_instance,
+  independent_registered_temporal_after_T_instance := independent_registered_truth_condition_clause_after_T_instance,
+  independent_registered_temporal_until_T_instance := independent_registered_truth_condition_clause_until_T_instance,
+  independent_registered_temporal_since_T_instance := independent_registered_truth_condition_clause_since_T_instance,
+  independent_registered_temporal_spec_sound :=
+    independent_registered_truth_condition_clause_coverage.independent_registered_clause_coverage_spec_sound
+}
+
+theorem independent_registered_temporal_truth_condition_instances_exists :
+    Exists (fun T : IndependentRegisteredTemporalTruthConditionInstances => T = independent_registered_temporal_truth_condition_instances) := by
+  exact Exists.intro independent_registered_temporal_truth_condition_instances rfl
+
+theorem independent_registered_temporal_truth_condition_coverage_matches :
+    independent_registered_temporal_truth_condition_instances.
+      independent_registered_temporal_clause_coverage =
+        independent_registered_truth_condition_clause_coverage := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_clause_coverage_eq
+
+theorem independent_registered_temporal_truth_condition_at_T_instance :
+    (marker : Entity) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (at_T marker body) := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_at_T_instance
+
+theorem independent_registered_temporal_truth_condition_during_T_instance :
+    (marker : Entity) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (during_T marker body) := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_during_T_instance
+
+theorem independent_registered_temporal_truth_condition_before_T_instance :
+    (marker : Entity) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (before_T marker body) := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_before_T_instance
+
+theorem independent_registered_temporal_truth_condition_after_T_instance :
+    (marker : Entity) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (after_T marker body) := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_after_T_instance
+
+theorem independent_registered_temporal_truth_condition_until_T_instance :
+    (marker : Entity) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (until_T marker body) := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_until_T_instance
+
+theorem independent_registered_temporal_truth_condition_since_T_instance :
+    (marker : Entity) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (since_T marker body) := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_since_T_instance
+
+theorem independent_registered_temporal_truth_condition_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact independent_registered_temporal_truth_condition_instances.
+    independent_registered_temporal_spec_sound
+
 theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1 := by
   apply fully_registered_truth_conditions_imply_atomic_closure
   exact example_1_fully_registered_truth_condition_sound
@@ -3504,5 +3666,16 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check independent_registered_truth_condition_clause_coverage_exists
 #check independent_registered_truth_condition_clause_coverage_instances_match
 #check independent_registered_truth_condition_clause_coverage_spec_sound
+#check IndependentRegisteredTemporalTruthConditionInstances
+#check independent_registered_temporal_truth_condition_instances
+#check independent_registered_temporal_truth_condition_instances_exists
+#check independent_registered_temporal_truth_condition_coverage_matches
+#check independent_registered_temporal_truth_condition_at_T_instance
+#check independent_registered_temporal_truth_condition_during_T_instance
+#check independent_registered_temporal_truth_condition_before_T_instance
+#check independent_registered_temporal_truth_condition_after_T_instance
+#check independent_registered_temporal_truth_condition_until_T_instance
+#check independent_registered_temporal_truth_condition_since_T_instance
+#check independent_registered_temporal_truth_condition_spec_sound
 #check registered_example_truth_instances
 #check registered_example_truth_instances_exists
