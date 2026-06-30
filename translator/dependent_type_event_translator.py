@@ -11088,6 +11088,192 @@ def concrete_registered_truth_condition_route_example_agreement_lines(
     return lines
 
 
+def independent_registered_truth_condition_source_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Expose a named source boundary for the finite registered truth route."""
+
+    if target == "lean":
+        lines = [
+            "structure IndependentRegisteredTruthConditionSources : Type where",
+            "  independent_registered_truth_condition_route : "
+            "ConcreteRegisteredTruthConditionRoute",
+            "  independent_registered_truth_condition_agreement : "
+            "ConcreteRegisteredTruthConditionRouteExampleAgreement",
+            "  independent_registered_truth_condition_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  independent_registered_truth_condition_spec_route_eq :",
+            "      independent_registered_truth_condition_spec =",
+            "        independent_registered_truth_condition_route."
+            "concrete_registered_route_direct_spec",
+            "  independent_registered_truth_condition_agreement_route_eq :",
+            "      independent_registered_truth_condition_agreement."
+            "concrete_registered_route_agreement_route =",
+            "        independent_registered_truth_condition_route",
+            "  independent_registered_truth_condition_examples : "
+            "ConcreteRegisteredExampleTruthInstances",
+            "",
+            "def independent_registered_truth_condition_sources : "
+            "IndependentRegisteredTruthConditionSources := {",
+            "  independent_registered_truth_condition_route := "
+            "concrete_registered_truth_condition_route,",
+            "  independent_registered_truth_condition_agreement := "
+            "concrete_registered_truth_condition_route_example_agreement,",
+            "  independent_registered_truth_condition_spec := "
+            "concrete_registered_truth_conditions,",
+            "  independent_registered_truth_condition_spec_route_eq := rfl,",
+            "  independent_registered_truth_condition_agreement_route_eq := rfl,",
+            "  independent_registered_truth_condition_examples := "
+            "concrete_registered_example_truth_instances",
+            "}",
+            "",
+            "theorem independent_registered_truth_condition_sources_exist :",
+            "    Exists (fun S : IndependentRegisteredTruthConditionSources => "
+            "S = independent_registered_truth_condition_sources) := by",
+            "  exact Exists.intro independent_registered_truth_condition_sources rfl",
+            "",
+            "theorem "
+            "independent_registered_truth_condition_sources_spec_matches_route :",
+            "    independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_spec =",
+            "      independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_route."
+            "concrete_registered_route_direct_spec := by",
+            "  exact independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_spec_route_eq",
+            "",
+            "theorem "
+            "independent_registered_truth_condition_sources_agreement_matches_route :",
+            "    independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_agreement."
+            "concrete_registered_route_agreement_route =",
+            "      independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_route := by",
+            "  exact independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_agreement_route_eq",
+            "",
+            "theorem independent_registered_truth_condition_sources_spec_sound :",
+            "    (A : Type) -> (term : A) -> "
+            "independent_registered_truth_condition_sources."
+            "independent_registered_truth_condition_spec."
+            "fully_registered_truth_denotes A term -> "
+            "AtomicClosureTruth A term := by",
+            "  intro A term h",
+            "  apply concrete_registered_truth_condition_route_direct_spec_sound",
+            "  exact h",
+        ]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_sources_example_{idx}_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact independent_registered_truth_condition_sources."
+                    "independent_registered_truth_condition_agreement."
+                    f"concrete_registered_route_agreement_example_{idx}_direct_atomic",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record IndependentRegisteredTruthConditionSources : Type := {",
+        "  independent_registered_truth_condition_route : "
+        "ConcreteRegisteredTruthConditionRoute;",
+        "  independent_registered_truth_condition_agreement : "
+        "ConcreteRegisteredTruthConditionRouteExampleAgreement;",
+        "  independent_registered_truth_condition_spec : "
+        "FullyRegisteredTruthConditionSpec;",
+        "  independent_registered_truth_condition_spec_route_eq :",
+        "      independent_registered_truth_condition_spec =",
+        "        concrete_registered_route_direct_spec",
+        "          independent_registered_truth_condition_route;",
+        "  independent_registered_truth_condition_agreement_route_eq :",
+        "      concrete_registered_route_agreement_route",
+        "        independent_registered_truth_condition_agreement =",
+        "        independent_registered_truth_condition_route;",
+        "  independent_registered_truth_condition_examples : "
+        "ConcreteRegisteredExampleTruthInstances",
+        "}.",
+        "",
+        "Definition independent_registered_truth_condition_sources :",
+        "  IndependentRegisteredTruthConditionSources := {|",
+        "  independent_registered_truth_condition_route := "
+        "concrete_registered_truth_condition_route;",
+        "  independent_registered_truth_condition_agreement := "
+        "concrete_registered_truth_condition_route_example_agreement;",
+        "  independent_registered_truth_condition_spec := "
+        "concrete_registered_truth_conditions;",
+        "  independent_registered_truth_condition_spec_route_eq := eq_refl;",
+        "  independent_registered_truth_condition_agreement_route_eq := eq_refl;",
+        "  independent_registered_truth_condition_examples := "
+        "concrete_registered_example_truth_instances",
+        "|}.",
+        "",
+        "Theorem independent_registered_truth_condition_sources_exist :",
+        "  exists S : IndependentRegisteredTruthConditionSources,",
+        "    S = independent_registered_truth_condition_sources.",
+        "Proof.",
+        "  exists independent_registered_truth_condition_sources. reflexivity.",
+        "Qed.",
+        "",
+        "Theorem "
+        "independent_registered_truth_condition_sources_spec_matches_route :",
+        "  independent_registered_truth_condition_spec",
+        "    independent_registered_truth_condition_sources =",
+        "  concrete_registered_route_direct_spec",
+        "    (independent_registered_truth_condition_route",
+        "      independent_registered_truth_condition_sources).",
+        "Proof.",
+        "  exact (independent_registered_truth_condition_spec_route_eq",
+        "    independent_registered_truth_condition_sources).",
+        "Qed.",
+        "",
+        "Theorem "
+        "independent_registered_truth_condition_sources_agreement_matches_route :",
+        "  concrete_registered_route_agreement_route",
+        "    (independent_registered_truth_condition_agreement",
+        "      independent_registered_truth_condition_sources) =",
+        "  independent_registered_truth_condition_route",
+        "    independent_registered_truth_condition_sources.",
+        "Proof.",
+        "  exact (independent_registered_truth_condition_agreement_route_eq",
+        "    independent_registered_truth_condition_sources).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_truth_condition_sources_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_truth_condition_spec",
+        "        independent_registered_truth_condition_sources) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  apply concrete_registered_truth_condition_route_direct_spec_sound.",
+        "  exact H.",
+        "Qed.",
+    ]
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_sources_example_{idx}_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  exact (concrete_registered_route_agreement_example_"
+                f"{idx}_direct_atomic",
+                "    (independent_registered_truth_condition_agreement",
+                "      independent_registered_truth_condition_sources)).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -12006,6 +12192,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            independent_registered_truth_condition_source_lines(results, target)
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -12140,6 +12330,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"concrete_registered_truth_condition_route_example_{idx}_agreement_kernel_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"independent_registered_truth_condition_sources_example_{idx}_atomic_sound"
             )
             lines.append(
                 "#check "
@@ -12290,6 +12484,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check "
             "concrete_registered_truth_condition_route_example_agreement_route_matches"
         )
+        lines.append("#check IndependentRegisteredTruthConditionSources")
+        lines.append("#check independent_registered_truth_condition_sources")
+        lines.append("#check independent_registered_truth_condition_sources_exist")
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_sources_spec_matches_route"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_sources_agreement_matches_route"
+        )
+        lines.append("#check independent_registered_truth_condition_sources_spec_sound")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -12929,6 +13135,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(independent_registered_truth_condition_source_lines(results, target))
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -13051,6 +13259,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"concrete_registered_truth_condition_route_example_{idx}_agreement_kernel_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"independent_registered_truth_condition_sources_example_{idx}_atomic_sound."
         )
         lines.append(
             "Check "
@@ -13179,6 +13391,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "Check "
         "concrete_registered_truth_condition_route_example_agreement_route_matches."
     )
+    lines.append("Check IndependentRegisteredTruthConditionSources.")
+    lines.append("Check independent_registered_truth_condition_sources.")
+    lines.append("Check independent_registered_truth_condition_sources_exist.")
+    lines.append(
+        "Check "
+        "independent_registered_truth_condition_sources_spec_matches_route."
+    )
+    lines.append(
+        "Check "
+        "independent_registered_truth_condition_sources_agreement_matches_route."
+    )
+    lines.append("Check independent_registered_truth_condition_sources_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

@@ -1228,6 +1228,17 @@ agreement package exists, proves that its route field is
 evidence-backed, and kernel projections for every exported example. This is a
 finite route-agreement witness, not a general truth-condition model. The next
 verified objective
+`coq_independent_registered_truth_condition_source_package` records that finite
+route as `IndependentRegisteredTruthConditionSources`, instantiates
+`independent_registered_truth_condition_sources`, proves the package exists,
+proves that the stored direct spec and route-agreement package still match the
+stored route, proves
+`independent_registered_truth_condition_sources_spec_sound`, and checks
+`independent_registered_truth_condition_sources_example_i_atomic_sound` for
+every exported example. This is a source-boundary witness for the registered
+fragment; it does not yet supply truth clauses for arbitrary unregistered
+lexical, temporal, causal, quantificational, or modifier analyses. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
@@ -1277,7 +1288,9 @@ registered-transition, registered-lexical, registered-lexical-truth-model, or
 concrete-registered-atomic-model, concrete-registered-compositional-model,
 concrete-registered-truth-condition-model, concrete-registered-truth-condition,
 concrete-registered-evidence-backed-example-package,
-concrete-registered-truth-condition-route, concrete-registered-truth-kernel,
+concrete-registered-truth-condition-route,
+independent-registered-truth-condition-source,
+concrete-registered-truth-kernel,
 or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.

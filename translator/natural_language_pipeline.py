@@ -21107,6 +21107,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_independent_registered_truth_condition_source_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21329,6 +21334,15 @@ def project_completion_status_payload(
                     "proves the agreement package exists, proves its route "
                     "field is the concrete registered route, and rechecks "
                     "each packaged per-example projection. "
+                    "The newest source-boundary package then records this "
+                    "finite registered route as "
+                    "IndependentRegisteredTruthConditionSources: it stores "
+                    "the direct route, the route-agreement package, the "
+                    "direct FullyRegisteredTruthConditionSpec, the route "
+                    "and agreement equalities, and the direct per-example "
+                    "truth-condition package, then proves that the stored "
+                    "spec and agreement match the route and that the stored "
+                    "spec and each source example imply AtomicClosureTruth. "
                     "It now also factors that finite registered closure "
                     "through a ConcreteRegisteredTruthKernel whose lexical "
                     "and transition clauses are evidence-gated by "

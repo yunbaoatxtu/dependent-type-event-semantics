@@ -584,6 +584,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_independent_registered_truth_condition_source_atomic_sound_count = len(
+        re.findall(
+            r"^theorem independent_registered_truth_condition_sources_example_\d+_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_independent_registered_truth_condition_source_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem independent_registered_truth_condition_sources_example_\d+_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2464,6 +2478,79 @@ def main() -> None:
             in coq
             and "Check "
             "concrete_registered_truth_condition_route_example_4_agreement_kernel_atomic_sound."
+            in coq
+        ),
+        "lean independent registered truth-condition source package": (
+            lean_independent_registered_truth_condition_source_atomic_sound_count
+            == lean_example_count
+            and "structure IndependentRegisteredTruthConditionSources : Type where"
+            in lean
+            and "independent_registered_truth_condition_route : "
+            "ConcreteRegisteredTruthConditionRoute" in lean
+            and "independent_registered_truth_condition_agreement : "
+            "ConcreteRegisteredTruthConditionRouteExampleAgreement" in lean
+            and "independent_registered_truth_condition_spec : "
+            "FullyRegisteredTruthConditionSpec" in lean
+            and "def independent_registered_truth_condition_sources : "
+            "IndependentRegisteredTruthConditionSources := {" in lean
+            and "theorem independent_registered_truth_condition_sources_exist :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_sources_spec_matches_route :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_sources_agreement_matches_route :"
+            in lean
+            and "theorem independent_registered_truth_condition_sources_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredTruthConditionSources" in lean
+            and "#check independent_registered_truth_condition_sources" in lean
+            and "#check "
+            "independent_registered_truth_condition_sources_spec_matches_route"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_sources_agreement_matches_route"
+            in lean
+            and "#check independent_registered_truth_condition_sources_spec_sound"
+            in lean
+            and "#check independent_registered_truth_condition_sources_example_4_atomic_sound"
+            in lean
+        ),
+        "coq independent registered truth-condition source package": (
+            coq_independent_registered_truth_condition_source_atomic_sound_count
+            == coq_example_count
+            and "Record IndependentRegisteredTruthConditionSources : Type := {"
+            in coq
+            and "independent_registered_truth_condition_route : "
+            "ConcreteRegisteredTruthConditionRoute;" in coq
+            and "independent_registered_truth_condition_agreement : "
+            "ConcreteRegisteredTruthConditionRouteExampleAgreement;" in coq
+            and "independent_registered_truth_condition_spec : "
+            "FullyRegisteredTruthConditionSpec;" in coq
+            and "Definition independent_registered_truth_condition_sources :"
+            in coq
+            and "IndependentRegisteredTruthConditionSources := {|" in coq
+            and "Theorem independent_registered_truth_condition_sources_exist :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_sources_spec_matches_route :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_sources_agreement_matches_route :"
+            in coq
+            and "Theorem independent_registered_truth_condition_sources_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredTruthConditionSources." in coq
+            and "Check independent_registered_truth_condition_sources." in coq
+            and "Check "
+            "independent_registered_truth_condition_sources_spec_matches_route."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_sources_agreement_matches_route."
+            in coq
+            and "Check independent_registered_truth_condition_sources_spec_sound."
+            in coq
+            and "Check independent_registered_truth_condition_sources_example_4_atomic_sound."
             in coq
         ),
         "lean syntax-directed truth kernel soundness proofs": (

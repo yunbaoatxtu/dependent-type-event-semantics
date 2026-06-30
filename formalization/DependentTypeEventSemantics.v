@@ -4479,6 +4479,100 @@ Proof.
   exact (concrete_registered_route_agreement_example_4_kernel_atomic concrete_registered_truth_condition_route_example_agreement).
 Qed.
 
+Record IndependentRegisteredTruthConditionSources : Type := {
+  independent_registered_truth_condition_route : ConcreteRegisteredTruthConditionRoute;
+  independent_registered_truth_condition_agreement : ConcreteRegisteredTruthConditionRouteExampleAgreement;
+  independent_registered_truth_condition_spec : FullyRegisteredTruthConditionSpec;
+  independent_registered_truth_condition_spec_route_eq :
+      independent_registered_truth_condition_spec =
+        concrete_registered_route_direct_spec
+          independent_registered_truth_condition_route;
+  independent_registered_truth_condition_agreement_route_eq :
+      concrete_registered_route_agreement_route
+        independent_registered_truth_condition_agreement =
+        independent_registered_truth_condition_route;
+  independent_registered_truth_condition_examples : ConcreteRegisteredExampleTruthInstances
+}.
+
+Definition independent_registered_truth_condition_sources :
+  IndependentRegisteredTruthConditionSources := {|
+  independent_registered_truth_condition_route := concrete_registered_truth_condition_route;
+  independent_registered_truth_condition_agreement := concrete_registered_truth_condition_route_example_agreement;
+  independent_registered_truth_condition_spec := concrete_registered_truth_conditions;
+  independent_registered_truth_condition_spec_route_eq := eq_refl;
+  independent_registered_truth_condition_agreement_route_eq := eq_refl;
+  independent_registered_truth_condition_examples := concrete_registered_example_truth_instances
+|}.
+
+Theorem independent_registered_truth_condition_sources_exist :
+  exists S : IndependentRegisteredTruthConditionSources,
+    S = independent_registered_truth_condition_sources.
+Proof.
+  exists independent_registered_truth_condition_sources. reflexivity.
+Qed.
+
+Theorem independent_registered_truth_condition_sources_spec_matches_route :
+  independent_registered_truth_condition_spec
+    independent_registered_truth_condition_sources =
+  concrete_registered_route_direct_spec
+    (independent_registered_truth_condition_route
+      independent_registered_truth_condition_sources).
+Proof.
+  exact (independent_registered_truth_condition_spec_route_eq
+    independent_registered_truth_condition_sources).
+Qed.
+
+Theorem independent_registered_truth_condition_sources_agreement_matches_route :
+  concrete_registered_route_agreement_route
+    (independent_registered_truth_condition_agreement
+      independent_registered_truth_condition_sources) =
+  independent_registered_truth_condition_route
+    independent_registered_truth_condition_sources.
+Proof.
+  exact (independent_registered_truth_condition_agreement_route_eq
+    independent_registered_truth_condition_sources).
+Qed.
+
+Theorem independent_registered_truth_condition_sources_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_truth_condition_spec
+        independent_registered_truth_condition_sources) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_truth_condition_route_direct_spec_sound.
+  exact H.
+Qed.
+
+Theorem independent_registered_truth_condition_sources_example_1_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_registered_route_agreement_example_1_direct_atomic
+    (independent_registered_truth_condition_agreement
+      independent_registered_truth_condition_sources)).
+Qed.
+
+Theorem independent_registered_truth_condition_sources_example_2_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_registered_route_agreement_example_2_direct_atomic
+    (independent_registered_truth_condition_agreement
+      independent_registered_truth_condition_sources)).
+Qed.
+
+Theorem independent_registered_truth_condition_sources_example_3_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_registered_route_agreement_example_3_direct_atomic
+    (independent_registered_truth_condition_agreement
+      independent_registered_truth_condition_sources)).
+Qed.
+
+Theorem independent_registered_truth_condition_sources_example_4_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_registered_route_agreement_example_4_direct_atomic
+    (independent_registered_truth_condition_agreement
+      independent_registered_truth_condition_sources)).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -4594,6 +4688,7 @@ Check concrete_registered_truth_condition_route_example_1_kernel_atomic_sound.
 Check concrete_registered_truth_condition_route_example_1_agreement_direct_atomic_sound.
 Check concrete_registered_truth_condition_route_example_1_agreement_evidence_atomic_sound.
 Check concrete_registered_truth_condition_route_example_1_agreement_kernel_atomic_sound.
+Check independent_registered_truth_condition_sources_example_1_atomic_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
 Check registered_example_1_truth_instance_atomic_sound.
 Check example_2.
@@ -4641,6 +4736,7 @@ Check concrete_registered_truth_condition_route_example_2_kernel_atomic_sound.
 Check concrete_registered_truth_condition_route_example_2_agreement_direct_atomic_sound.
 Check concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound.
 Check concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound.
+Check independent_registered_truth_condition_sources_example_2_atomic_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
 Check registered_example_2_truth_instance_atomic_sound.
 Check example_3.
@@ -4688,6 +4784,7 @@ Check concrete_registered_truth_condition_route_example_3_kernel_atomic_sound.
 Check concrete_registered_truth_condition_route_example_3_agreement_direct_atomic_sound.
 Check concrete_registered_truth_condition_route_example_3_agreement_evidence_atomic_sound.
 Check concrete_registered_truth_condition_route_example_3_agreement_kernel_atomic_sound.
+Check independent_registered_truth_condition_sources_example_3_atomic_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
 Check registered_example_3_truth_instance_atomic_sound.
 Check example_4.
@@ -4735,6 +4832,7 @@ Check concrete_registered_truth_condition_route_example_4_kernel_atomic_sound.
 Check concrete_registered_truth_condition_route_example_4_agreement_direct_atomic_sound.
 Check concrete_registered_truth_condition_route_example_4_agreement_evidence_atomic_sound.
 Check concrete_registered_truth_condition_route_example_4_agreement_kernel_atomic_sound.
+Check independent_registered_truth_condition_sources_example_4_atomic_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
 Check registered_example_4_truth_instance_atomic_sound.
 Check independent_truth_condition_obligation_ledger.
@@ -4815,5 +4913,11 @@ Check concrete_registered_truth_condition_route_kernel_spec_sound.
 Check concrete_registered_truth_condition_route_example_agreement.
 Check concrete_registered_truth_condition_route_example_agreement_exists.
 Check concrete_registered_truth_condition_route_example_agreement_route_matches.
+Check IndependentRegisteredTruthConditionSources.
+Check independent_registered_truth_condition_sources.
+Check independent_registered_truth_condition_sources_exist.
+Check independent_registered_truth_condition_sources_spec_matches_route.
+Check independent_registered_truth_condition_sources_agreement_matches_route.
+Check independent_registered_truth_condition_sources_spec_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

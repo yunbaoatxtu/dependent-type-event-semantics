@@ -239,7 +239,16 @@ exported example as
 agreement exists and points back to `concrete_registered_truth_condition_route`,
 and rechecks the packaged direct, evidence-backed, and kernel projections back
 to `AtomicClosureTruth`. This is still finite route agreement, not a proof of a
-general independently supplied truth-condition model. The scaffold also
+general independently supplied truth-condition model. The scaffold then records
+the same finite route as `IndependentRegisteredTruthConditionSources`,
+instantiates `independent_registered_truth_condition_sources`, proves that this
+source package exists, proves that its stored direct spec and route-agreement
+package match the stored route, proves
+`independent_registered_truth_condition_sources_spec_sound`, and checks
+`independent_registered_truth_condition_sources_example_i_atomic_sound` for
+every exported example. This gives the next independently supplied
+truth-condition stage a named source boundary without claiming full natural
+language coverage. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported
