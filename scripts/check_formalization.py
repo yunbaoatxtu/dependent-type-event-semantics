@@ -3187,6 +3187,111 @@ def main() -> None:
             and "Check independent_registered_transition_cause_truth_condition_spec_sound."
             in coq
         ),
+        "lean independent registered truth-condition instance suite package": (
+            "structure IndependentRegisteredTruthConditionInstanceSuite : Type where"
+            in lean
+            and "independent_registered_suite_lexical :" in lean
+            and "IndependentRegisteredLexicalTruthConditionInstances" in lean
+            and "independent_registered_suite_temporal :" in lean
+            and "IndependentRegisteredTemporalTruthConditionInstances" in lean
+            and "independent_registered_suite_sigma :" in lean
+            and "IndependentRegisteredSigmaTruthConditionInstances" in lean
+            and "independent_registered_suite_repeat :" in lean
+            and "IndependentRegisteredRepeatTruthConditionInstances" in lean
+            and "independent_registered_suite_polarity :" in lean
+            and "IndependentRegisteredPolarityTruthConditionInstances" in lean
+            and "independent_registered_suite_transition_cause :" in lean
+            and "IndependentRegisteredTransitionCauseTruthConditionInstances" in lean
+            and "def independent_registered_truth_condition_instance_suite :"
+            in lean
+            and "theorem independent_registered_truth_condition_instance_suite_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_lexical_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_temporal_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_sigma_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_repeat_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_polarity_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_transition_cause_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredTruthConditionInstanceSuite" in lean
+            and "#check independent_registered_truth_condition_instance_suite"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_instance_suite_lexical_matches"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_instance_suite_transition_cause_matches"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_instance_suite_spec_sound"
+            in lean
+        ),
+        "coq independent registered truth-condition instance suite package": (
+            "Record IndependentRegisteredTruthConditionInstanceSuite : Type := {"
+            in coq
+            and "independent_registered_suite_lexical :" in coq
+            and "IndependentRegisteredLexicalTruthConditionInstances" in coq
+            and "independent_registered_suite_temporal :" in coq
+            and "IndependentRegisteredTemporalTruthConditionInstances" in coq
+            and "independent_registered_suite_sigma :" in coq
+            and "IndependentRegisteredSigmaTruthConditionInstances" in coq
+            and "independent_registered_suite_repeat :" in coq
+            and "IndependentRegisteredRepeatTruthConditionInstances" in coq
+            and "independent_registered_suite_polarity :" in coq
+            and "IndependentRegisteredPolarityTruthConditionInstances" in coq
+            and "independent_registered_suite_transition_cause :" in coq
+            and "IndependentRegisteredTransitionCauseTruthConditionInstances" in coq
+            and "Definition independent_registered_truth_condition_instance_suite :"
+            in coq
+            and "Theorem independent_registered_truth_condition_instance_suite_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_lexical_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_temporal_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_sigma_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_repeat_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_polarity_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_transition_cause_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredTruthConditionInstanceSuite." in coq
+            and "Check independent_registered_truth_condition_instance_suite."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_instance_suite_lexical_matches."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_instance_suite_transition_cause_matches."
+            in coq
+            and "Check independent_registered_truth_condition_instance_suite_spec_sound."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean

@@ -3750,6 +3750,123 @@ theorem independent_registered_transition_cause_truth_condition_spec_sound :
   exact independent_registered_transition_cause_truth_condition_instances.
     independent_registered_transition_cause_spec_sound
 
+structure IndependentRegisteredTruthConditionInstanceSuite : Type where
+  independent_registered_suite_lexical :
+      IndependentRegisteredLexicalTruthConditionInstances
+  independent_registered_suite_temporal :
+      IndependentRegisteredTemporalTruthConditionInstances
+  independent_registered_suite_sigma :
+      IndependentRegisteredSigmaTruthConditionInstances
+  independent_registered_suite_repeat :
+      IndependentRegisteredRepeatTruthConditionInstances
+  independent_registered_suite_polarity :
+      IndependentRegisteredPolarityTruthConditionInstances
+  independent_registered_suite_transition_cause :
+      IndependentRegisteredTransitionCauseTruthConditionInstances
+  independent_registered_suite_lexical_eq :
+      independent_registered_suite_lexical =
+        independent_registered_lexical_truth_condition_instances
+  independent_registered_suite_temporal_eq :
+      independent_registered_suite_temporal =
+        independent_registered_temporal_truth_condition_instances
+  independent_registered_suite_sigma_eq :
+      independent_registered_suite_sigma =
+        independent_registered_sigma_truth_condition_instances
+  independent_registered_suite_repeat_eq :
+      independent_registered_suite_repeat =
+        independent_registered_repeat_truth_condition_instances
+  independent_registered_suite_polarity_eq :
+      independent_registered_suite_polarity =
+        independent_registered_polarity_truth_condition_instances
+  independent_registered_suite_transition_cause_eq :
+      independent_registered_suite_transition_cause =
+        independent_registered_transition_cause_truth_condition_instances
+  independent_registered_suite_spec_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def independent_registered_truth_condition_instance_suite :
+    IndependentRegisteredTruthConditionInstanceSuite := {
+  independent_registered_suite_lexical :=
+    independent_registered_lexical_truth_condition_instances,
+  independent_registered_suite_temporal :=
+    independent_registered_temporal_truth_condition_instances,
+  independent_registered_suite_sigma :=
+    independent_registered_sigma_truth_condition_instances,
+  independent_registered_suite_repeat :=
+    independent_registered_repeat_truth_condition_instances,
+  independent_registered_suite_polarity :=
+    independent_registered_polarity_truth_condition_instances,
+  independent_registered_suite_transition_cause :=
+    independent_registered_transition_cause_truth_condition_instances,
+  independent_registered_suite_lexical_eq := rfl,
+  independent_registered_suite_temporal_eq := rfl,
+  independent_registered_suite_sigma_eq := rfl,
+  independent_registered_suite_repeat_eq := rfl,
+  independent_registered_suite_polarity_eq := rfl,
+  independent_registered_suite_transition_cause_eq := rfl,
+  independent_registered_suite_spec_sound :=
+    independent_registered_truth_condition_clause_coverage.independent_registered_clause_coverage_spec_sound
+}
+
+theorem independent_registered_truth_condition_instance_suite_exists :
+    Exists (fun S : IndependentRegisteredTruthConditionInstanceSuite => S = independent_registered_truth_condition_instance_suite) := by
+  exact Exists.intro independent_registered_truth_condition_instance_suite rfl
+
+theorem independent_registered_truth_condition_instance_suite_lexical_matches :
+    independent_registered_truth_condition_instance_suite.
+      independent_registered_suite_lexical =
+        independent_registered_lexical_truth_condition_instances := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_lexical_eq
+
+theorem independent_registered_truth_condition_instance_suite_temporal_matches :
+    independent_registered_truth_condition_instance_suite.
+      independent_registered_suite_temporal =
+        independent_registered_temporal_truth_condition_instances := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_temporal_eq
+
+theorem independent_registered_truth_condition_instance_suite_sigma_matches :
+    independent_registered_truth_condition_instance_suite.
+      independent_registered_suite_sigma =
+        independent_registered_sigma_truth_condition_instances := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_sigma_eq
+
+theorem independent_registered_truth_condition_instance_suite_repeat_matches :
+    independent_registered_truth_condition_instance_suite.
+      independent_registered_suite_repeat =
+        independent_registered_repeat_truth_condition_instances := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_repeat_eq
+
+theorem independent_registered_truth_condition_instance_suite_polarity_matches :
+    independent_registered_truth_condition_instance_suite.
+      independent_registered_suite_polarity =
+        independent_registered_polarity_truth_condition_instances := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_polarity_eq
+
+theorem independent_registered_truth_condition_instance_suite_transition_cause_matches :
+    independent_registered_truth_condition_instance_suite.
+      independent_registered_suite_transition_cause =
+        independent_registered_transition_cause_truth_condition_instances := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_transition_cause_eq
+
+theorem independent_registered_truth_condition_instance_suite_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact independent_registered_truth_condition_instance_suite.
+    independent_registered_suite_spec_sound
+
 theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1 := by
   apply fully_registered_truth_conditions_imply_atomic_closure
   exact example_1_fully_registered_truth_condition_sound
@@ -4139,5 +4256,15 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check independent_registered_transition_cause_truth_condition_transition_instance
 #check independent_registered_transition_cause_truth_condition_cause_instance
 #check independent_registered_transition_cause_truth_condition_spec_sound
+#check IndependentRegisteredTruthConditionInstanceSuite
+#check independent_registered_truth_condition_instance_suite
+#check independent_registered_truth_condition_instance_suite_exists
+#check independent_registered_truth_condition_instance_suite_lexical_matches
+#check independent_registered_truth_condition_instance_suite_temporal_matches
+#check independent_registered_truth_condition_instance_suite_sigma_matches
+#check independent_registered_truth_condition_instance_suite_repeat_matches
+#check independent_registered_truth_condition_instance_suite_polarity_matches
+#check independent_registered_truth_condition_instance_suite_transition_cause_matches
+#check independent_registered_truth_condition_instance_suite_spec_sound
 #check registered_example_truth_instances
 #check registered_example_truth_instances_exists

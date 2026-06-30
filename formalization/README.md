@@ -318,7 +318,14 @@ to `independent_registered_truth_condition_clause_coverage`, and checks both
 and `independent_registered_transition_cause_truth_condition_cause_instance`.
 This gives registered result-state and causal clauses their own proof
 interface without treating arbitrary causal semantics as completed. The
-scaffold also
+scaffold then gathers those six constructor-class packages as
+`IndependentRegisteredTruthConditionInstanceSuite`, instantiates
+`independent_registered_truth_condition_instance_suite`, proves that the suite
+exists, proves that the lexical, temporal, Sigma, repeat, polarity, and
+Transition/Cause fields match the corresponding subpackages, and checks a
+single suite-level soundness projection back to `AtomicClosureTruth`. This
+consolidates the finite registered route while keeping arbitrary independent
+truth-condition semantics open. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

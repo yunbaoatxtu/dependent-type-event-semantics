@@ -1339,6 +1339,17 @@ This gives result-state and causal replacement clauses their own checked
 interface while still leaving general causal semantics and arbitrary lexical
 truth-condition models outside the completed fragment. The next
 verified objective
+`coq_independent_registered_truth_condition_instance_suite_package` gathers the
+six constructor-class subpackages as
+`IndependentRegisteredTruthConditionInstanceSuite`. It instantiates
+`independent_registered_truth_condition_instance_suite`, proves the suite
+exists, proves that the lexical, temporal, Sigma, repeat, polarity, and
+Transition/Cause fields match their independently registered subpackages, and
+exposes a single suite-level soundness projection back to `AtomicClosureTruth`.
+This is a bookkeeping consolidation step for the finite registered route, not a
+claim that arbitrary lexical, temporal, causal, or quantificational truth
+conditions have been independently supplied. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

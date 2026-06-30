@@ -13355,6 +13355,227 @@ def independent_registered_transition_cause_truth_condition_instance_lines(
     ]
 
 
+def independent_registered_truth_condition_instance_suite_lines(
+    target: str,
+) -> list[str]:
+    """Gather the independent registered truth-condition subpackages."""
+
+    packages = [
+        (
+            "lexical",
+            "IndependentRegisteredLexicalTruthConditionInstances",
+            "independent_registered_lexical_truth_condition_instances",
+        ),
+        (
+            "temporal",
+            "IndependentRegisteredTemporalTruthConditionInstances",
+            "independent_registered_temporal_truth_condition_instances",
+        ),
+        (
+            "sigma",
+            "IndependentRegisteredSigmaTruthConditionInstances",
+            "independent_registered_sigma_truth_condition_instances",
+        ),
+        (
+            "repeat",
+            "IndependentRegisteredRepeatTruthConditionInstances",
+            "independent_registered_repeat_truth_condition_instances",
+        ),
+        (
+            "polarity",
+            "IndependentRegisteredPolarityTruthConditionInstances",
+            "independent_registered_polarity_truth_condition_instances",
+        ),
+        (
+            "transition_cause",
+            "IndependentRegisteredTransitionCauseTruthConditionInstances",
+            "independent_registered_transition_cause_truth_condition_instances",
+        ),
+    ]
+
+    if target == "lean":
+        lines = ["structure IndependentRegisteredTruthConditionInstanceSuite : Type where"]
+        for field, type_name, _instance in packages:
+            lines.extend(
+                [
+                    f"  independent_registered_suite_{field} :",
+                    f"      {type_name}",
+                ]
+            )
+        for field, _type_name, instance in packages:
+            lines.extend(
+                [
+                    f"  independent_registered_suite_{field}_eq :",
+                    f"      independent_registered_suite_{field} =",
+                    f"        {instance}",
+                ]
+            )
+        lines.extend(
+            [
+                "  independent_registered_suite_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "",
+                "def independent_registered_truth_condition_instance_suite :",
+                "    IndependentRegisteredTruthConditionInstanceSuite := {",
+            ]
+        )
+        for field, _type_name, instance in packages:
+            lines.extend(
+                [
+                    f"  independent_registered_suite_{field} :=",
+                    f"    {instance},",
+                ]
+            )
+        for field, _type_name, _instance in packages:
+            lines.append(f"  independent_registered_suite_{field}_eq := rfl,")
+        lines.extend(
+            [
+                "  independent_registered_suite_spec_sound :=",
+                "    independent_registered_truth_condition_clause_coverage."
+                "independent_registered_clause_coverage_spec_sound",
+                "}",
+                "",
+                "theorem independent_registered_truth_condition_instance_suite_exists :",
+                "    Exists (fun S : "
+                "IndependentRegisteredTruthConditionInstanceSuite => "
+                "S = independent_registered_truth_condition_instance_suite) := by",
+                "  exact Exists.intro "
+                "independent_registered_truth_condition_instance_suite rfl",
+            ]
+        )
+        for field, _type_name, instance in packages:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_instance_suite_{field}_matches :",
+                    "    independent_registered_truth_condition_instance_suite.",
+                    f"      independent_registered_suite_{field} =",
+                    f"        {instance} := by",
+                    "  exact independent_registered_truth_condition_instance_suite.",
+                    f"    independent_registered_suite_{field}_eq",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem "
+                "independent_registered_truth_condition_instance_suite_spec_sound :",
+                "    (A : Type) -> (term : A) ->",
+                "    independent_registered_truth_condition_clause_instances.",
+                "    independent_registered_clause_spec.",
+                "    fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact independent_registered_truth_condition_instance_suite.",
+                "    independent_registered_suite_spec_sound",
+            ]
+        )
+        return lines
+
+    lines = ["Record IndependentRegisteredTruthConditionInstanceSuite : Type := {"]
+    fields: list[list[str]] = []
+    for field, type_name, _instance in packages:
+        fields.append(
+            [
+                f"  independent_registered_suite_{field} :",
+                f"      {type_name}",
+            ]
+        )
+    for field, _type_name, instance in packages:
+        fields.append(
+            [
+                f"  independent_registered_suite_{field}_eq :",
+                f"      independent_registered_suite_{field} =",
+                f"        {instance}",
+            ]
+        )
+    fields.append(
+        [
+            "  independent_registered_suite_spec_sound :",
+            "    forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        (independent_registered_clause_spec",
+            "          independent_registered_truth_condition_clause_instances) A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+    )
+    for idx, field_lines in enumerate(fields):
+        is_last = idx == len(fields) - 1
+        for field_idx, field_line in enumerate(field_lines):
+            if field_idx == len(field_lines) - 1 and not is_last:
+                lines.append(f"{field_line};")
+            else:
+                lines.append(field_line)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition independent_registered_truth_condition_instance_suite :",
+            "  IndependentRegisteredTruthConditionInstanceSuite := {|",
+        ]
+    )
+    for field, _type_name, instance in packages:
+        lines.extend(
+            [
+                f"  independent_registered_suite_{field} :=",
+                f"    {instance};",
+            ]
+        )
+    for field, _type_name, _instance in packages:
+        lines.append(f"  independent_registered_suite_{field}_eq := eq_refl;")
+    lines.extend(
+        [
+            "  independent_registered_suite_spec_sound :=",
+            "    independent_registered_clause_coverage_spec_sound",
+            "      independent_registered_truth_condition_clause_coverage",
+            "|}.",
+            "",
+            "Theorem independent_registered_truth_condition_instance_suite_exists :",
+            "  exists S : IndependentRegisteredTruthConditionInstanceSuite,",
+            "    S = independent_registered_truth_condition_instance_suite.",
+            "Proof.",
+            "  exists independent_registered_truth_condition_instance_suite.",
+            "  reflexivity.",
+            "Qed.",
+        ]
+    )
+    for field, _type_name, instance in packages:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_instance_suite_{field}_matches :",
+                f"  independent_registered_suite_{field}",
+                "    independent_registered_truth_condition_instance_suite =",
+                f"  {instance}.",
+                "Proof.",
+                f"  exact (independent_registered_suite_{field}_eq",
+                "    independent_registered_truth_condition_instance_suite).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem independent_registered_truth_condition_instance_suite_spec_sound :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances) A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (independent_registered_suite_spec_sound",
+            "    independent_registered_truth_condition_instance_suite).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -14312,6 +14533,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             independent_registered_transition_cause_truth_condition_instance_lines(target)
         )
         lines.append("")
+        lines.extend(independent_registered_truth_condition_instance_suite_lines(target))
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -14757,6 +14980,26 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append(
             "#check independent_registered_transition_cause_truth_condition_spec_sound"
+        )
+        lines.append("#check IndependentRegisteredTruthConditionInstanceSuite")
+        lines.append("#check independent_registered_truth_condition_instance_suite")
+        lines.append(
+            "#check independent_registered_truth_condition_instance_suite_exists"
+        )
+        for field in (
+            "lexical",
+            "temporal",
+            "sigma",
+            "repeat",
+            "polarity",
+            "transition_cause",
+        ):
+            lines.append(
+                "#check "
+                f"independent_registered_truth_condition_instance_suite_{field}_matches"
+            )
+        lines.append(
+            "#check independent_registered_truth_condition_instance_suite_spec_sound"
         )
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
@@ -15434,6 +15677,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         independent_registered_transition_cause_truth_condition_instance_lines(target)
     )
     lines.append("")
+    lines.extend(independent_registered_truth_condition_instance_suite_lines(target))
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -15791,6 +16036,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "Check independent_registered_transition_cause_truth_condition_cause_instance."
     )
     lines.append("Check independent_registered_transition_cause_truth_condition_spec_sound.")
+    lines.append("Check IndependentRegisteredTruthConditionInstanceSuite.")
+    lines.append("Check independent_registered_truth_condition_instance_suite.")
+    lines.append("Check independent_registered_truth_condition_instance_suite_exists.")
+    for field in (
+        "lexical",
+        "temporal",
+        "sigma",
+        "repeat",
+        "polarity",
+        "transition_cause",
+    ):
+        lines.append(
+            "Check "
+            f"independent_registered_truth_condition_instance_suite_{field}_matches."
+        )
+    lines.append("Check independent_registered_truth_condition_instance_suite_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

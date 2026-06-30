@@ -2433,6 +2433,26 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure IndependentRegisteredTruthConditionInstanceSuite : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def independent_registered_truth_condition_instance_suite :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_truth_condition_instance_suite_lexical_matches :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem independent_registered_truth_condition_instance_suite_transition_cause_matches :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check independent_registered_truth_condition_instance_suite_spec_sound",
+            lean_module,
+        )
+        self.assertIn(
             "theorem example_2_fully_registered_truth_condition_atomic_sound :",
             lean_module,
         )
@@ -3973,6 +3993,26 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check independent_registered_transition_cause_truth_condition_spec_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record IndependentRegisteredTruthConditionInstanceSuite : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition independent_registered_truth_condition_instance_suite :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_truth_condition_instance_suite_lexical_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem independent_registered_truth_condition_instance_suite_transition_cause_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check independent_registered_truth_condition_instance_suite_spec_sound.",
             coq_module,
         )
         self.assertIn(
@@ -16767,6 +16807,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_independent_registered_repeat_truth_condition_instances_package",
                 "coq_independent_registered_polarity_truth_condition_instances_package",
                 "coq_independent_registered_transition_cause_truth_condition_instances_package",
+                "coq_independent_registered_truth_condition_instance_suite_package",
                 "coq_concrete_registered_truth_kernel_instance",
                 "coq_concrete_registered_kernel_example_truth_instance_package",
                 "coq_concrete_registered_example_truth_instance_package",
@@ -26010,6 +26051,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_independent_registered_transition_cause_truth_condition_instances_package`",
             readme,
         )
+        self.assertIn(
+            "`IndependentRegisteredTruthConditionInstanceSuite`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_independent_registered_truth_condition_instance_suite_package`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -26139,6 +26188,14 @@ class TranslatorTests(unittest.TestCase):
             "`independent_registered_transition_cause_truth_condition_instances`",
             formalization_readme,
         )
+        self.assertIn(
+            "`IndependentRegisteredTruthConditionInstanceSuite`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`independent_registered_truth_condition_instance_suite`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -26245,6 +26302,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_independent_registered_transition_cause_truth_condition_instances_package",
+            manuscript,
+        )
+        self.assertIn(
+            "IndependentRegisteredTruthConditionInstanceSuite",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_independent_registered_truth_condition_instance_suite_package",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
