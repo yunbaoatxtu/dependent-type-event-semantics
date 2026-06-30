@@ -21084,6 +21084,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_registered_evidence_backed_"
+                    "truth_condition_model_bridge"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_evidence_backed_example_truth_instance_package",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21284,6 +21292,11 @@ def project_completion_status_payload(
                     "and atomic soundness. This remains finite and "
                     "registered-fragment-only rather than an independently "
                     "justified source for arbitrary lexical applications. "
+                    "The newest evidence-backed model bridge packages that "
+                    "spec as ConcreteRegisteredEvidenceBackedTruthConditionModel, "
+                    "proves the model exists, proves the model denotation "
+                    "feeds the spec denotation, and proves both model and "
+                    "spec denotation imply AtomicClosureTruth. "
                     "The newest bookkeeping layer packages those "
                     "evidence-backed per-example truth-condition proofs into "
                     "ConcreteRegisteredEvidenceBackedExampleTruthInstances, "

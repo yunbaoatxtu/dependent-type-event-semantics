@@ -1184,6 +1184,16 @@ generated bridge decodes the source's `TruthEvidence` fields into
 This is a registered evidence source for exported atoms only, not an
 independently justified source for arbitrary lexical applications. The next
 verified objective
+`coq_concrete_registered_evidence_backed_truth_condition_model_bridge`
+packages that evidence-backed spec as
+`ConcreteRegisteredEvidenceBackedTruthConditionModel`, instantiates
+`concrete_registered_evidence_backed_truth_condition_model`, proves
+`concrete_registered_evidence_backed_truth_condition_model_exists`, and checks
+both `concrete_registered_evidence_backed_truth_condition_model_denote_spec`
+and
+`concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure`.
+This gives the evidence-backed route a model-shaped replacement boundary while
+remaining finite and registered-fragment-only. The next verified objective
 `coq_concrete_registered_evidence_backed_example_truth_instance_package`
 packages those evidence-backed per-example truth-condition proofs into
 `ConcreteRegisteredEvidenceBackedExampleTruthInstances`, instantiates

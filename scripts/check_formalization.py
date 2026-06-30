@@ -2071,6 +2071,77 @@ def main() -> None:
             and "apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
             in coq
         ),
+        "lean concrete registered evidence-backed truth condition model bridge": (
+            "structure ConcreteRegisteredEvidenceBackedTruthConditionModel : Type where"
+            in lean
+            and "concrete_registered_evidence_backed_model_denotes : "
+            in lean
+            and "concrete_registered_evidence_backed_model_spec : "
+            "FullyRegisteredTruthConditionSpec" in lean
+            and "concrete_registered_evidence_backed_model_denote_spec : "
+            in lean
+            and "concrete_registered_evidence_backed_model_sound : "
+            in lean
+            and "def concrete_registered_evidence_backed_truth_condition_model : "
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel := {" in lean
+            and "theorem concrete_registered_evidence_backed_truth_condition_model_exists :"
+            in lean
+            and "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_denote_spec :"
+            in lean
+            and "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_imply_atomic_closure :"
+            in lean
+            and "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure :"
+            in lean
+            and "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered"
+            in lean
+            and "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure"
+            in lean
+            and "#check concrete_registered_evidence_backed_truth_condition_model"
+            in lean
+            and "#check concrete_registered_evidence_backed_truth_condition_model_denote_spec"
+            in lean
+            and "#check "
+            "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure"
+            in lean
+        ),
+        "coq concrete registered evidence-backed truth condition model bridge": (
+            "Record ConcreteRegisteredEvidenceBackedTruthConditionModel : Type := {"
+            in coq
+            and "concrete_registered_evidence_backed_model_denotes : "
+            "forall A : Type, A -> Prop;" in coq
+            and "concrete_registered_evidence_backed_model_spec : "
+            "FullyRegisteredTruthConditionSpec;" in coq
+            and "concrete_registered_evidence_backed_model_denote_spec :"
+            in coq
+            and "concrete_registered_evidence_backed_model_sound :"
+            in coq
+            and "Definition concrete_registered_evidence_backed_truth_condition_model :"
+            in coq
+            and "ConcreteRegisteredEvidenceBackedTruthConditionModel := {|"
+            in coq
+            and "Theorem concrete_registered_evidence_backed_truth_condition_model_exists :"
+            in coq
+            and "Theorem concrete_registered_evidence_backed_truth_condition_model_denote_spec :"
+            in coq
+            and "Theorem concrete_registered_evidence_backed_truth_condition_model_imply_atomic_closure :"
+            in coq
+            and "Theorem concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure :"
+            in coq
+            and "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered;"
+            in coq
+            and "apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
+            in coq
+            and "Check concrete_registered_evidence_backed_truth_condition_model."
+            in coq
+            and "Check concrete_registered_evidence_backed_truth_condition_model_denote_spec."
+            in coq
+            and "Check "
+            "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure."
+            in coq
+        ),
         "lean concrete registered evidence-backed example truth instance package": (
             lean_concrete_registered_evidence_backed_example_truth_instance_atomic_sound_count
             == lean_example_count

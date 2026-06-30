@@ -2083,6 +2083,29 @@ class TranslatorTests(unittest.TestCase):
             lean_module,
         )
         self.assertIn(
+            "structure ConcreteRegisteredEvidenceBackedTruthConditionModel : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def concrete_registered_evidence_backed_truth_condition_model : "
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel := {",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem concrete_registered_evidence_backed_truth_condition_model_exists :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_denote_spec :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure :",
+            lean_module,
+        )
+        self.assertIn(
             "structure ConcreteRegisteredEvidenceBackedExampleTruthInstances : Type where",
             lean_module,
         )
@@ -2329,6 +2352,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "#check example_2_concrete_registered_evidence_backed_truth_condition_atomic_sound",
+            lean_module,
+        )
+        self.assertIn(
+            "#check concrete_registered_evidence_backed_truth_condition_model_denote_spec",
+            lean_module,
+        )
+        self.assertIn(
+            "#check concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure",
             lean_module,
         )
         self.assertIn(
@@ -3282,6 +3313,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteRegisteredEvidenceBackedTruthConditionModel : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_registered_evidence_backed_truth_condition_model :",
+            coq_module,
+        )
+        self.assertIn(
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel := {|",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_evidence_backed_truth_condition_model_exists :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_evidence_backed_truth_condition_model_denote_spec :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure :",
+            coq_module,
+        )
+        self.assertIn(
             "Record ConcreteRegisteredExampleTruthInstances : Type := {",
             coq_module,
         )
@@ -3524,6 +3579,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check example_2_concrete_registered_evidence_backed_truth_condition_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_registered_evidence_backed_truth_condition_model_denote_spec.",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure.",
             coq_module,
         )
         self.assertIn(
@@ -16044,6 +16107,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_registered_truth_condition_model_bridge",
                 "coq_concrete_registered_truth_condition_instance",
                 "coq_concrete_registered_evidence_backed_truth_sources",
+                "coq_concrete_registered_evidence_backed_truth_condition_model_bridge",
                 "coq_concrete_registered_evidence_backed_example_truth_instance_package",
                 "coq_concrete_registered_truth_kernel_instance",
                 "coq_concrete_registered_kernel_example_truth_instance_package",
@@ -25191,6 +25255,14 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn(
+            "`ConcreteRegisteredEvidenceBackedTruthConditionModel`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_concrete_registered_evidence_backed_truth_condition_model_bridge`",
+            readme,
+        )
+        self.assertIn(
             "`ConcreteRegisteredEvidenceBackedExampleTruthInstances`",
             readme,
         )
@@ -25224,6 +25296,14 @@ class TranslatorTests(unittest.TestCase):
             formalization_readme,
         )
         self.assertIn(
+            "`ConcreteRegisteredEvidenceBackedTruthConditionModel`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_registered_evidence_backed_truth_condition_model`",
+            formalization_readme,
+        )
+        self.assertIn(
             "`ConcreteRegisteredEvidenceBackedExampleTruthInstances`",
             formalization_readme,
         )
@@ -25244,6 +25324,11 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("ConcreteRegisteredTruthConditionModel", manuscript)
         self.assertIn("RegisteredEvidenceBackedTruthConditionSources", manuscript)
         self.assertIn("concrete_registered_evidence_backed_truth_sources", manuscript)
+        self.assertIn("ConcreteRegisteredEvidenceBackedTruthConditionModel", manuscript)
+        self.assertIn(
+            "coq_concrete_registered_evidence_backed_truth_condition_model_bridge",
+            manuscript,
+        )
         self.assertIn(
             "ConcreteRegisteredEvidenceBackedExampleTruthInstances",
             manuscript,

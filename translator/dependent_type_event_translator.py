@@ -9496,6 +9496,155 @@ def registered_evidence_backed_truth_condition_source_lines(
     return lines
 
 
+def concrete_registered_evidence_backed_truth_condition_model_lines(
+    target: str,
+) -> list[str]:
+    """Package the registered evidence-backed truth spec as a model bridge."""
+
+    if target == "lean":
+        return [
+            "structure ConcreteRegisteredEvidenceBackedTruthConditionModel : Type where",
+            "  concrete_registered_evidence_backed_model_denotes : "
+            "(A : Type) -> A -> Prop",
+            "  concrete_registered_evidence_backed_model_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  concrete_registered_evidence_backed_model_denote_spec : "
+            "(A : Type) -> (term : A) -> "
+            "concrete_registered_evidence_backed_model_denotes A term -> "
+            "concrete_registered_evidence_backed_model_spec."
+            "fully_registered_truth_denotes A term",
+            "  concrete_registered_evidence_backed_model_sound : "
+            "(A : Type) -> (term : A) -> "
+            "concrete_registered_evidence_backed_model_denotes A term -> "
+            "AtomicClosureTruth A term",
+            "",
+            "def concrete_registered_evidence_backed_truth_condition_model : "
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel := {",
+            "  concrete_registered_evidence_backed_model_denotes := "
+            "ConcreteRegisteredTruth,",
+            "  concrete_registered_evidence_backed_model_spec := "
+            "concrete_registered_evidence_backed_truth_conditions,",
+            "  concrete_registered_evidence_backed_model_denote_spec := "
+            "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered,",
+            "  concrete_registered_evidence_backed_model_sound := "
+            "concrete_registered_truth_implies_atomic_closure,",
+            "}",
+            "",
+            "theorem concrete_registered_evidence_backed_truth_condition_model_exists :",
+            "    Exists (fun M : ConcreteRegisteredEvidenceBackedTruthConditionModel => "
+            "M = concrete_registered_evidence_backed_truth_condition_model) := by",
+            "  exact Exists.intro "
+            "concrete_registered_evidence_backed_truth_condition_model rfl",
+            "",
+            "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_denote_spec :",
+            "    (A : Type) -> (term : A) -> "
+            "concrete_registered_evidence_backed_truth_condition_model."
+            "concrete_registered_evidence_backed_model_denotes A term -> "
+            "concrete_registered_evidence_backed_truth_condition_model."
+            "concrete_registered_evidence_backed_model_spec."
+            "fully_registered_truth_denotes A term := by",
+            "  intro A term h",
+            "  exact concrete_registered_evidence_backed_truth_condition_model."
+            "concrete_registered_evidence_backed_model_denote_spec A term h",
+            "",
+            "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_imply_atomic_closure :",
+            "    (A : Type) -> (term : A) -> "
+            "concrete_registered_evidence_backed_truth_condition_model."
+            "concrete_registered_evidence_backed_model_denotes A term -> "
+            "AtomicClosureTruth A term := by",
+            "  intro A term h",
+            "  exact concrete_registered_evidence_backed_truth_condition_model."
+            "concrete_registered_evidence_backed_model_sound A term h",
+            "",
+            "theorem "
+            "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure :",
+            "    (A : Type) -> (term : A) -> "
+            "concrete_registered_evidence_backed_truth_condition_model."
+            "concrete_registered_evidence_backed_model_spec."
+            "fully_registered_truth_denotes A term -> "
+            "AtomicClosureTruth A term := by",
+            "  intro A term h",
+            "  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure",
+            "  exact h",
+        ]
+
+    return [
+        "Record ConcreteRegisteredEvidenceBackedTruthConditionModel : Type := {",
+        "  concrete_registered_evidence_backed_model_denotes : "
+        "forall A : Type, A -> Prop;",
+        "  concrete_registered_evidence_backed_model_spec : "
+        "FullyRegisteredTruthConditionSpec;",
+        "  concrete_registered_evidence_backed_model_denote_spec :",
+        "      forall A : Type, forall term : A,",
+        "      concrete_registered_evidence_backed_model_denotes A term ->",
+        "      fully_registered_truth_denotes",
+        "        concrete_registered_evidence_backed_model_spec A term;",
+        "  concrete_registered_evidence_backed_model_sound :",
+        "      forall A : Type, forall term : A,",
+        "      concrete_registered_evidence_backed_model_denotes A term ->",
+        "      AtomicClosureTruth A term",
+        "}.",
+        "",
+        "Definition concrete_registered_evidence_backed_truth_condition_model :",
+        "  ConcreteRegisteredEvidenceBackedTruthConditionModel := {|",
+        "  concrete_registered_evidence_backed_model_denotes := "
+        "ConcreteRegisteredTruth;",
+        "  concrete_registered_evidence_backed_model_spec := "
+        "concrete_registered_evidence_backed_truth_conditions;",
+        "  concrete_registered_evidence_backed_model_denote_spec :=",
+        "    concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered;",
+        "  concrete_registered_evidence_backed_model_sound :=",
+        "    concrete_registered_truth_implies_atomic_closure",
+        "|}.",
+        "",
+        "Theorem concrete_registered_evidence_backed_truth_condition_model_exists :",
+        "  exists M : ConcreteRegisteredEvidenceBackedTruthConditionModel,",
+        "    M = concrete_registered_evidence_backed_truth_condition_model.",
+        "Proof.",
+        "  exists concrete_registered_evidence_backed_truth_condition_model.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_evidence_backed_truth_condition_model_denote_spec :",
+        "  forall A : Type, forall term : A,",
+        "    concrete_registered_evidence_backed_model_denotes",
+        "      concrete_registered_evidence_backed_truth_condition_model A term ->",
+        "    fully_registered_truth_denotes",
+        "      (concrete_registered_evidence_backed_model_spec",
+        "        concrete_registered_evidence_backed_truth_condition_model) A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  exact (concrete_registered_evidence_backed_model_denote_spec",
+        "    concrete_registered_evidence_backed_truth_condition_model A term H).",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_evidence_backed_truth_condition_model_imply_atomic_closure :",
+        "  forall A : Type, forall term : A,",
+        "    concrete_registered_evidence_backed_model_denotes",
+        "      concrete_registered_evidence_backed_truth_condition_model A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  exact (concrete_registered_evidence_backed_model_sound",
+        "    concrete_registered_evidence_backed_truth_condition_model A term H).",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (concrete_registered_evidence_backed_model_spec",
+        "        concrete_registered_evidence_backed_truth_condition_model) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.",
+        "  exact H.",
+        "Qed.",
+    ]
+
+
 def concrete_registered_truth_kernel_lines(
     declarations: dict[str, Any],
     target: str,
@@ -10885,6 +11034,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_registered_evidence_backed_truth_condition_model_lines(target)
+        )
+        lines.append("")
         lines.extend(concrete_registered_truth_kernel_lines(declarations, target))
         lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
@@ -11528,6 +11681,22 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check "
             "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure"
         )
+        lines.append(
+            "#check "
+            "concrete_registered_evidence_backed_truth_condition_model"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_evidence_backed_truth_condition_model_exists"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_evidence_backed_truth_condition_model_denote_spec"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure"
+        )
         lines.append("#check concrete_registered_evidence_backed_example_truth_instances")
         lines.append(
             "#check "
@@ -11694,6 +11863,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             target,
         )
     )
+    lines.append("")
+    lines.extend(concrete_registered_evidence_backed_truth_condition_model_lines(target))
     lines.append("")
     lines.extend(concrete_registered_truth_kernel_lines(declarations, target))
     lines.append("")
@@ -12359,6 +12530,16 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append(
         "Check "
         "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
+    )
+    lines.append("Check concrete_registered_evidence_backed_truth_condition_model.")
+    lines.append("Check concrete_registered_evidence_backed_truth_condition_model_exists.")
+    lines.append(
+        "Check "
+        "concrete_registered_evidence_backed_truth_condition_model_denote_spec."
+    )
+    lines.append(
+        "Check "
+        "concrete_registered_evidence_backed_truth_condition_model_spec_imply_atomic_closure."
     )
     lines.append("Check concrete_registered_evidence_backed_example_truth_instances.")
     lines.append(
