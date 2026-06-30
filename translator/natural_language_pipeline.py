@@ -21079,6 +21079,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_evidence_backed_truth_sources",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21264,6 +21269,16 @@ def project_completion_status_payload(
                     "model denotation feeds the spec denotation, and proves "
                     "both the model denotation and the induced spec denotation "
                     "imply AtomicClosureTruth. "
+                    "The newest registered evidence-source layer then "
+                    "packages that finite ConcreteRegisteredTruth closure as "
+                    "RegisteredEvidenceBackedTruthConditionSources, decodes "
+                    "its TruthEvidence fields into a "
+                    "FullyRegisteredTruthConditionSpec, instantiates "
+                    "concrete_registered_evidence_backed_truth_conditions, "
+                    "and checks per-example evidence-backed truth-condition "
+                    "and atomic soundness. This remains finite and "
+                    "registered-fragment-only rather than an independently "
+                    "justified source for arbitrary lexical applications. "
                     "It now also factors that finite registered closure "
                     "through a ConcreteRegisteredTruthKernel whose lexical "
                     "and transition clauses are evidence-gated by "

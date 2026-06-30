@@ -8841,6 +8841,661 @@ def concrete_registered_truth_condition_instance_lines(
     return lines
 
 
+def registered_evidence_backed_truth_condition_source_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    if target == "lean":
+        lines = [
+            "structure RegisteredEvidenceBackedTruthConditionSources : Type where",
+            "  registered_evidence_denotes : (A : Type) -> A -> Prop",
+            "  registered_evidence_lexical_application : "
+            "(A : Type) -> (term : A) -> "
+            "RegisteredLexicalApplicationTruth A term -> "
+            "TruthEvidence (registered_evidence_denotes A term)",
+        ]
+        for type_name in declarations["types"]:
+            lines.append(
+                f"  registered_evidence_sigma_{type_name} : "
+                f"(P : {type_name} -> Prop) -> "
+                f"((x : {type_name}) -> registered_evidence_denotes Prop (P x)) -> "
+                "TruthEvidence "
+                f"(registered_evidence_denotes Prop (Exists fun x : {type_name} => P x))"
+            )
+        lines.extend(
+            [
+                "  registered_evidence_repeat : (n : Nat) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (repeat n body))",
+                "  registered_evidence_at_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (at_T marker body))",
+                "  registered_evidence_during_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (during_T marker body))",
+                "  registered_evidence_before_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (before_T marker body))",
+                "  registered_evidence_after_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (after_T marker body))",
+                "  registered_evidence_until_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (until_T marker body))",
+                "  registered_evidence_since_T : (marker : Entity) -> (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (since_T marker body))",
+                "  registered_evidence_not_T : (body : PropT) -> "
+                "registered_evidence_denotes PropT body -> "
+                "TruthEvidence (registered_evidence_denotes PropT (not_T body))",
+                "  registered_evidence_transition : "
+                "(theme : Entity) -> (scale : StateScale) -> "
+                "(source : State) -> (target : State) -> "
+                "RegisteredStateTransitionTruth theme scale source target -> "
+                "TruthEvidence (registered_evidence_denotes TransitionT "
+                "(Transition theme scale source target))",
+                "  registered_evidence_cause : (causer : Entity) -> "
+                "(effect : TransitionT) -> "
+                "registered_evidence_denotes TransitionT effect -> "
+                "TruthEvidence (registered_evidence_denotes PropT (Cause causer effect))",
+                "",
+                "def fully_registered_truth_conditions_from_registered_evidence_sources "
+                "(S : RegisteredEvidenceBackedTruthConditionSources) : "
+                "FullyRegisteredTruthConditionSpec := {",
+                "  fully_registered_truth_denotes := S.registered_evidence_denotes,",
+                "  fully_registered_truth_lexical_application := fun A term h =>",
+                "      truth_evidence_sound",
+                "        (S.registered_evidence_denotes A term)",
+                "        (S.registered_evidence_lexical_application A term h),",
+            ]
+        )
+        bridge_fields: list[list[str]] = []
+        for type_name in declarations["types"]:
+            bridge_fields.append(
+                [
+                    f"  fully_registered_truth_sigma_{type_name} := fun P h =>",
+                    "      truth_evidence_sound",
+                    "        "
+                    f"(S.registered_evidence_denotes Prop "
+                    f"(Exists fun x : {type_name} => P x))",
+                    f"        (S.registered_evidence_sigma_{type_name} P h)",
+                ]
+            )
+        bridge_fields.extend(
+            [
+                [
+                    "  fully_registered_truth_repeat := fun n body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (repeat n body))",
+                    "        (S.registered_evidence_repeat n body h)",
+                ],
+                [
+                    "  fully_registered_truth_at_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (at_T marker body))",
+                    "        (S.registered_evidence_at_T marker body h)",
+                ],
+                [
+                    "  fully_registered_truth_during_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (during_T marker body))",
+                    "        (S.registered_evidence_during_T marker body h)",
+                ],
+                [
+                    "  fully_registered_truth_before_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (before_T marker body))",
+                    "        (S.registered_evidence_before_T marker body h)",
+                ],
+                [
+                    "  fully_registered_truth_after_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (after_T marker body))",
+                    "        (S.registered_evidence_after_T marker body h)",
+                ],
+                [
+                    "  fully_registered_truth_until_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (until_T marker body))",
+                    "        (S.registered_evidence_until_T marker body h)",
+                ],
+                [
+                    "  fully_registered_truth_since_T := fun marker body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (since_T marker body))",
+                    "        (S.registered_evidence_since_T marker body h)",
+                ],
+                [
+                    "  fully_registered_truth_not_T := fun body h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (not_T body))",
+                    "        (S.registered_evidence_not_T body h)",
+                ],
+                [
+                    "  fully_registered_truth_transition := fun theme scale source target h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes TransitionT "
+                    "(Transition theme scale source target))",
+                    "        (S.registered_evidence_transition theme scale source target h)",
+                ],
+                [
+                    "  fully_registered_truth_cause := fun causer effect h =>",
+                    "      truth_evidence_sound",
+                    "        (S.registered_evidence_denotes PropT (Cause causer effect))",
+                    "        (S.registered_evidence_cause causer effect h)",
+                ],
+            ]
+        )
+        for index, group in enumerate(bridge_fields):
+            suffix = "," if index < len(bridge_fields) - 1 else ""
+            for line_index, line in enumerate(group):
+                if line_index == len(group) - 1:
+                    lines.append(line + suffix)
+                else:
+                    lines.append(line)
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem "
+                "registered_evidence_backed_truth_condition_sources_induce_fully_registered_truth_conditions :",
+                "    (S : RegisteredEvidenceBackedTruthConditionSources) -> "
+                "Exists (fun F : FullyRegisteredTruthConditionSpec => "
+                "F = fully_registered_truth_conditions_from_registered_evidence_sources S) := by",
+                "  intro S",
+                "  exact Exists.intro "
+                "(fully_registered_truth_conditions_from_registered_evidence_sources S) rfl",
+                "",
+                "def concrete_registered_evidence_backed_truth_sources : "
+                "RegisteredEvidenceBackedTruthConditionSources := {",
+                "  registered_evidence_denotes := ConcreteRegisteredTruth,",
+                "  registered_evidence_lexical_application := fun A term h =>",
+                "      truth_evidence_intro",
+                "        (ConcreteRegisteredTruth A term)",
+                "        (ConcreteRegisteredTruth.concrete_registered_truth_atomic A term "
+                "(ConcreteRegisteredAtomicTruth."
+                "concrete_registered_atomic_truth_lexical_application A term h)),",
+            ]
+        )
+        source_fields: list[list[str]] = []
+        for type_name in declarations["types"]:
+            source_fields.append(
+                [
+                    f"  registered_evidence_sigma_{type_name} := fun P h =>",
+                    "      truth_evidence_intro",
+                    "        "
+                    f"(ConcreteRegisteredTruth Prop "
+                    f"(Exists fun x : {type_name} => P x))",
+                    "        "
+                    f"(ConcreteRegisteredTruth.concrete_registered_truth_sigma_{type_name} P h)",
+                ]
+            )
+        source_fields.extend(
+            [
+                [
+                    "  registered_evidence_repeat := fun n body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (repeat n body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_repeat n body h)",
+                ],
+                [
+                    "  registered_evidence_at_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (at_T marker body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_at_T marker body h)",
+                ],
+                [
+                    "  registered_evidence_during_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (during_T marker body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_during_T marker body h)",
+                ],
+                [
+                    "  registered_evidence_before_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (before_T marker body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_before_T marker body h)",
+                ],
+                [
+                    "  registered_evidence_after_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (after_T marker body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_after_T marker body h)",
+                ],
+                [
+                    "  registered_evidence_until_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (until_T marker body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_until_T marker body h)",
+                ],
+                [
+                    "  registered_evidence_since_T := fun marker body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (since_T marker body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_since_T marker body h)",
+                ],
+                [
+                    "  registered_evidence_not_T := fun body h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (not_T body))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_not_T body h)",
+                ],
+                [
+                    "  registered_evidence_transition := fun theme scale source target h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth TransitionT "
+                    "(Transition theme scale source target))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_atomic "
+                    "TransitionT (Transition theme scale source target) "
+                    "(ConcreteRegisteredAtomicTruth."
+                    "concrete_registered_atomic_truth_transition "
+                    "theme scale source target h))",
+                ],
+                [
+                    "  registered_evidence_cause := fun causer effect h =>",
+                    "      truth_evidence_intro",
+                    "        (ConcreteRegisteredTruth PropT (Cause causer effect))",
+                    "        (ConcreteRegisteredTruth.concrete_registered_truth_cause causer effect h)",
+                ],
+            ]
+        )
+        for index, group in enumerate(source_fields):
+            suffix = "," if index < len(source_fields) - 1 else ""
+            for line_index, line in enumerate(group):
+                if line_index == len(group) - 1:
+                    lines.append(line + suffix)
+                else:
+                    lines.append(line)
+        lines.extend(
+            [
+                "}",
+                "",
+                "def concrete_registered_evidence_backed_truth_conditions : "
+                "FullyRegisteredTruthConditionSpec :=",
+                "  fully_registered_truth_conditions_from_registered_evidence_sources "
+                "concrete_registered_evidence_backed_truth_sources",
+                "",
+                "theorem concrete_registered_evidence_backed_truth_sources_exist :",
+                "    Exists (fun S : RegisteredEvidenceBackedTruthConditionSources => "
+                "S = concrete_registered_evidence_backed_truth_sources) := by",
+                "  exact Exists.intro concrete_registered_evidence_backed_truth_sources rfl",
+                "",
+                "theorem concrete_registered_evidence_backed_truth_conditions_exists :",
+                "    Exists (fun F : FullyRegisteredTruthConditionSpec => "
+                "F = concrete_registered_evidence_backed_truth_conditions) := by",
+                "  exact Exists.intro concrete_registered_evidence_backed_truth_conditions rfl",
+                "",
+                "theorem "
+                "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered :",
+                "    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term -> "
+                "concrete_registered_evidence_backed_truth_conditions."
+                "fully_registered_truth_denotes A term := by",
+                "  intro A term h",
+                "  exact h",
+                "",
+                "theorem "
+                "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure :",
+                "    (A : Type) -> (term : A) -> "
+                "concrete_registered_evidence_backed_truth_conditions."
+                "fully_registered_truth_denotes A term -> AtomicClosureTruth A term := by",
+                "  intro A term h",
+                "  apply concrete_registered_truth_implies_atomic_closure",
+                "  exact h",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record RegisteredEvidenceBackedTruthConditionSources : Type := {",
+        "  registered_evidence_denotes : forall A : Type, A -> Prop;",
+        "  registered_evidence_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      TruthEvidence (registered_evidence_denotes A term);",
+    ]
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  registered_evidence_sigma_{type_name} : "
+                f"forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name}, "
+                "registered_evidence_denotes Prop (P x)) ->",
+                "      TruthEvidence (registered_evidence_denotes Prop "
+                f"(exists x : {type_name}, P x));",
+            ]
+        )
+    lines.extend(
+        [
+            "  registered_evidence_repeat : forall n : nat, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (repeat n body));",
+            "  registered_evidence_at_T : forall marker : Entity, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (at_T marker body));",
+            "  registered_evidence_during_T : forall marker : Entity, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (during_T marker body));",
+            "  registered_evidence_before_T : forall marker : Entity, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (before_T marker body));",
+            "  registered_evidence_after_T : forall marker : Entity, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (after_T marker body));",
+            "  registered_evidence_until_T : forall marker : Entity, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (until_T marker body));",
+            "  registered_evidence_since_T : forall marker : Entity, forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (since_T marker body));",
+            "  registered_evidence_not_T : forall body : PropT,",
+            "      registered_evidence_denotes PropT body ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (not_T body));",
+            "  registered_evidence_transition :",
+            "      forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      TruthEvidence (registered_evidence_denotes TransitionT",
+            "        (Transition theme scale source target));",
+            "  registered_evidence_cause :",
+            "      forall causer : Entity, forall effect : TransitionT,",
+            "      registered_evidence_denotes TransitionT effect ->",
+            "      TruthEvidence (registered_evidence_denotes PropT (Cause causer effect))",
+            "}.",
+            "",
+            "Definition fully_registered_truth_conditions_from_registered_evidence_sources",
+            "  (S : RegisteredEvidenceBackedTruthConditionSources) :",
+            "  FullyRegisteredTruthConditionSpec := {|",
+            "  fully_registered_truth_denotes := registered_evidence_denotes S;",
+            "  fully_registered_truth_lexical_application :=",
+            "    fun A term h => truth_evidence_sound",
+            "      (registered_evidence_denotes S A term)",
+            "      (registered_evidence_lexical_application S A term h);",
+        ]
+    )
+    bridge_fields = [
+        (
+            f"fully_registered_truth_sigma_{type_name}",
+            [
+                f"fun P h => truth_evidence_sound",
+                "      (registered_evidence_denotes S Prop",
+                f"        (exists x : {type_name}, P x))",
+                f"      (registered_evidence_sigma_{type_name} S P h)",
+            ],
+        )
+        for type_name in declarations["types"]
+    ]
+    bridge_fields.extend(
+        [
+            (
+                "fully_registered_truth_repeat",
+                [
+                    "fun n body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (repeat n body))",
+                    "      (registered_evidence_repeat S n body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_at_T",
+                [
+                    "fun marker body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (at_T marker body))",
+                    "      (registered_evidence_at_T S marker body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_during_T",
+                [
+                    "fun marker body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (during_T marker body))",
+                    "      (registered_evidence_during_T S marker body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_before_T",
+                [
+                    "fun marker body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (before_T marker body))",
+                    "      (registered_evidence_before_T S marker body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_after_T",
+                [
+                    "fun marker body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (after_T marker body))",
+                    "      (registered_evidence_after_T S marker body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_until_T",
+                [
+                    "fun marker body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (until_T marker body))",
+                    "      (registered_evidence_until_T S marker body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_since_T",
+                [
+                    "fun marker body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (since_T marker body))",
+                    "      (registered_evidence_since_T S marker body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_not_T",
+                [
+                    "fun body h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (not_T body))",
+                    "      (registered_evidence_not_T S body h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_transition",
+                [
+                    "fun theme scale source target h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S TransitionT",
+                    "        (Transition theme scale source target))",
+                    "      (registered_evidence_transition S theme scale source target h)",
+                ],
+            ),
+            (
+                "fully_registered_truth_cause",
+                [
+                    "fun causer effect h => truth_evidence_sound",
+                    "      (registered_evidence_denotes S PropT (Cause causer effect))",
+                    "      (registered_evidence_cause S causer effect h)",
+                ],
+            ),
+        ]
+    )
+    for index, (field, value_lines) in enumerate(bridge_fields):
+        suffix = ";" if index < len(bridge_fields) - 1 else ""
+        lines.append(f"  {field} :=")
+        for line_index, line in enumerate(value_lines):
+            if line_index == len(value_lines) - 1:
+                lines.append(f"    {line}{suffix}")
+            else:
+                lines.append(f"    {line}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem registered_evidence_backed_truth_condition_sources_induce_fully_registered_truth_conditions :",
+            "  forall S : RegisteredEvidenceBackedTruthConditionSources,",
+            "    exists F : FullyRegisteredTruthConditionSpec,",
+            "      F = fully_registered_truth_conditions_from_registered_evidence_sources S.",
+            "Proof.",
+            "  intro S.",
+            "  exists (fully_registered_truth_conditions_from_registered_evidence_sources S).",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Definition concrete_registered_evidence_backed_truth_sources :",
+            "  RegisteredEvidenceBackedTruthConditionSources := {|",
+            "  registered_evidence_denotes := ConcreteRegisteredTruth;",
+            "  registered_evidence_lexical_application :=",
+            "    fun A term h => truth_evidence_intro",
+            "      (ConcreteRegisteredTruth A term)",
+            "      (concrete_registered_truth_atomic A term",
+            "        (concrete_registered_atomic_truth_lexical_application A term h));",
+        ]
+    )
+    source_fields = [
+        (
+            f"registered_evidence_sigma_{type_name}",
+            [
+                "fun P h => truth_evidence_intro",
+                f"      (ConcreteRegisteredTruth Prop (exists x : {type_name}, P x))",
+                f"      (concrete_registered_truth_sigma_{type_name} P h)",
+            ],
+        )
+        for type_name in declarations["types"]
+    ]
+    source_fields.extend(
+        [
+            (
+                "registered_evidence_repeat",
+                [
+                    "fun n body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (repeat n body))",
+                    "      (concrete_registered_truth_repeat n body h)",
+                ],
+            ),
+            (
+                "registered_evidence_at_T",
+                [
+                    "fun marker body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (at_T marker body))",
+                    "      (concrete_registered_truth_at_T marker body h)",
+                ],
+            ),
+            (
+                "registered_evidence_during_T",
+                [
+                    "fun marker body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (during_T marker body))",
+                    "      (concrete_registered_truth_during_T marker body h)",
+                ],
+            ),
+            (
+                "registered_evidence_before_T",
+                [
+                    "fun marker body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (before_T marker body))",
+                    "      (concrete_registered_truth_before_T marker body h)",
+                ],
+            ),
+            (
+                "registered_evidence_after_T",
+                [
+                    "fun marker body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (after_T marker body))",
+                    "      (concrete_registered_truth_after_T marker body h)",
+                ],
+            ),
+            (
+                "registered_evidence_until_T",
+                [
+                    "fun marker body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (until_T marker body))",
+                    "      (concrete_registered_truth_until_T marker body h)",
+                ],
+            ),
+            (
+                "registered_evidence_since_T",
+                [
+                    "fun marker body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (since_T marker body))",
+                    "      (concrete_registered_truth_since_T marker body h)",
+                ],
+            ),
+            (
+                "registered_evidence_not_T",
+                [
+                    "fun body h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (not_T body))",
+                    "      (concrete_registered_truth_not_T body h)",
+                ],
+            ),
+            (
+                "registered_evidence_transition",
+                [
+                    "fun theme scale source target h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth TransitionT",
+                    "        (Transition theme scale source target))",
+                    "      (concrete_registered_truth_atomic TransitionT",
+                    "        (Transition theme scale source target)",
+                    "        (concrete_registered_atomic_truth_transition",
+                    "          theme scale source target h))",
+                ],
+            ),
+            (
+                "registered_evidence_cause",
+                [
+                    "fun causer effect h => truth_evidence_intro",
+                    "      (ConcreteRegisteredTruth PropT (Cause causer effect))",
+                    "      (concrete_registered_truth_cause causer effect h)",
+                ],
+            ),
+        ]
+    )
+    for index, (field, value_lines) in enumerate(source_fields):
+        suffix = ";" if index < len(source_fields) - 1 else ""
+        lines.append(f"  {field} :=")
+        for line_index, line in enumerate(value_lines):
+            if line_index == len(value_lines) - 1:
+                lines.append(f"    {line}{suffix}")
+            else:
+                lines.append(f"    {line}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Definition concrete_registered_evidence_backed_truth_conditions :",
+            "  FullyRegisteredTruthConditionSpec :=",
+            "  fully_registered_truth_conditions_from_registered_evidence_sources",
+            "    concrete_registered_evidence_backed_truth_sources.",
+            "",
+            "Theorem concrete_registered_evidence_backed_truth_sources_exist :",
+            "  exists S : RegisteredEvidenceBackedTruthConditionSources,",
+            "    S = concrete_registered_evidence_backed_truth_sources.",
+            "Proof.",
+            "  exists concrete_registered_evidence_backed_truth_sources. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_evidence_backed_truth_conditions_exists :",
+            "  exists F : FullyRegisteredTruthConditionSpec,",
+            "    F = concrete_registered_evidence_backed_truth_conditions.",
+            "Proof.",
+            "  exists concrete_registered_evidence_backed_truth_conditions. reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered :",
+            "  forall A : Type, forall term : A,",
+            "    ConcreteRegisteredTruth A term ->",
+            "    fully_registered_truth_denotes",
+            "      concrete_registered_evidence_backed_truth_conditions A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  exact H.",
+            "Qed.",
+            "",
+            "Theorem concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      concrete_registered_evidence_backed_truth_conditions A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  intros A term H.",
+            "  apply concrete_registered_truth_implies_atomic_closure.",
+            "  exact H.",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_truth_kernel_lines(
     declarations: dict[str, Any],
     target: str,
@@ -10103,6 +10758,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(concrete_registered_truth_condition_instance_lines(declarations, target))
         lines.append("")
+        lines.extend(
+            registered_evidence_backed_truth_condition_source_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         lines.extend(concrete_registered_truth_kernel_lines(declarations, target))
         lines.append("")
         lines.extend(concrete_truth_condition_kernel_instance_lines(declarations, target))
@@ -10521,6 +11183,35 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 f"  exact example_{idx}_concrete_registered_truth_condition_sound"
             )
         lines.append("")
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound : "
+                "concrete_registered_evidence_backed_truth_conditions."
+                "fully_registered_truth_denotes "
+                f"{annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered"
+            )
+            lines.append(f"  exact example_{idx}_concrete_registered_truth")
+            lines.append("")
+            lines.append(
+                "theorem "
+                f"example_{idx}_concrete_registered_evidence_backed_truth_condition_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx} := by"
+            )
+            lines.append(
+                "  apply "
+                "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure"
+            )
+            lines.append(
+                f"  exact "
+                f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound"
+            )
+            lines.append("")
         lines.extend(concrete_registered_example_truth_instance_lines(results, target))
         lines.append("")
         lines.extend(
@@ -10620,6 +11311,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
             lines.append(
                 "#check "
+                f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound"
+            )
+            lines.append(
+                "#check "
+                f"example_{idx}_concrete_registered_evidence_backed_truth_condition_atomic_sound"
+            )
+            lines.append(
+                "#check "
                 f"concrete_registered_example_{idx}_truth_instance_atomic_sound"
             )
             lines.append(
@@ -10675,6 +11374,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("#check concrete_registered_truth_basis_denotes_atomic_base_truth")
         lines.append("#check concrete_registered_truth_conditions")
         lines.append("#check concrete_registered_truth_condition_spec_exists")
+        lines.append("#check RegisteredEvidenceBackedTruthConditionSources")
+        lines.append(
+            "#check "
+            "fully_registered_truth_conditions_from_registered_evidence_sources"
+        )
+        lines.append(
+            "#check "
+            "registered_evidence_backed_truth_condition_sources_induce_fully_registered_truth_conditions"
+        )
+        lines.append("#check concrete_registered_evidence_backed_truth_sources")
+        lines.append("#check concrete_registered_evidence_backed_truth_conditions")
+        lines.append("#check concrete_registered_evidence_backed_truth_sources_exist")
+        lines.append(
+            "#check concrete_registered_evidence_backed_truth_conditions_exists"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered"
+        )
+        lines.append(
+            "#check "
+            "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure"
+        )
         lines.append("#check concrete_registered_compositional_model")
         lines.append("#check concrete_registered_compositional_model_exists")
         lines.append(
@@ -10829,6 +11551,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(registered_lexical_truth_model_lines(declarations, target))
     lines.append("")
     lines.extend(concrete_registered_truth_condition_instance_lines(declarations, target))
+    lines.append("")
+    lines.extend(
+        registered_evidence_backed_truth_condition_source_lines(
+            declarations,
+            target,
+        )
+    )
     lines.append("")
     lines.extend(concrete_registered_truth_kernel_lines(declarations, target))
     lines.append("")
@@ -11284,6 +12013,39 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append("Qed.")
     lines.append("")
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound : "
+            "fully_registered_truth_denotes "
+            "concrete_registered_evidence_backed_truth_conditions "
+            f"{annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered."
+        )
+        lines.append(f"  exact example_{idx}_concrete_registered_truth.")
+        lines.append("Qed.")
+        lines.append("")
+        lines.append(
+            "Theorem "
+            f"example_{idx}_concrete_registered_evidence_backed_truth_condition_atomic_sound : "
+            f"AtomicClosureTruth {annotation} example_{idx}."
+        )
+        lines.append("Proof.")
+        lines.append(
+            "  apply "
+            "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
+        )
+        lines.append(
+            f"  exact "
+            f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound."
+        )
+        lines.append("Qed.")
+        lines.append("")
     lines.extend(concrete_registered_example_truth_instance_lines(results, target))
     lines.append("")
     lines.extend(concrete_registered_kernel_example_truth_instance_lines(results, target))
@@ -11369,6 +12131,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append(
             "Check "
+            f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound."
+        )
+        lines.append(
+            "Check "
+            f"example_{idx}_concrete_registered_evidence_backed_truth_condition_atomic_sound."
+        )
+        lines.append(
+            "Check "
             f"concrete_registered_example_{idx}_truth_instance_atomic_sound."
         )
         lines.append(
@@ -11423,6 +12193,26 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_truth_basis_denotes_atomic_base_truth.")
     lines.append("Check concrete_registered_truth_conditions.")
     lines.append("Check concrete_registered_truth_condition_spec_exists.")
+    lines.append("Check RegisteredEvidenceBackedTruthConditionSources.")
+    lines.append(
+        "Check fully_registered_truth_conditions_from_registered_evidence_sources."
+    )
+    lines.append(
+        "Check "
+        "registered_evidence_backed_truth_condition_sources_induce_fully_registered_truth_conditions."
+    )
+    lines.append("Check concrete_registered_evidence_backed_truth_sources.")
+    lines.append("Check concrete_registered_evidence_backed_truth_conditions.")
+    lines.append("Check concrete_registered_evidence_backed_truth_sources_exist.")
+    lines.append("Check concrete_registered_evidence_backed_truth_conditions_exists.")
+    lines.append(
+        "Check "
+        "concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered."
+    )
+    lines.append(
+        "Check "
+        "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure."
+    )
     lines.append("Check concrete_registered_compositional_model.")
     lines.append("Check concrete_registered_compositional_model_exists.")
     lines.append(

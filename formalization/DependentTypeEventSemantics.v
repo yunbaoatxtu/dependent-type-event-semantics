@@ -2574,6 +2574,263 @@ Proof.
   exact H.
 Qed.
 
+Record RegisteredEvidenceBackedTruthConditionSources : Type := {
+  registered_evidence_denotes : forall A : Type, A -> Prop;
+  registered_evidence_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      TruthEvidence (registered_evidence_denotes A term);
+  registered_evidence_sigma_Entity : forall P : Entity -> Prop,
+      (forall x : Entity, registered_evidence_denotes Prop (P x)) ->
+      TruthEvidence (registered_evidence_denotes Prop (exists x : Entity, P x));
+  registered_evidence_sigma_Food : forall P : Food -> Prop,
+      (forall x : Food, registered_evidence_denotes Prop (P x)) ->
+      TruthEvidence (registered_evidence_denotes Prop (exists x : Food, P x));
+  registered_evidence_sigma_State : forall P : State -> Prop,
+      (forall x : State, registered_evidence_denotes Prop (P x)) ->
+      TruthEvidence (registered_evidence_denotes Prop (exists x : State, P x));
+  registered_evidence_sigma_StateScale : forall P : StateScale -> Prop,
+      (forall x : StateScale, registered_evidence_denotes Prop (P x)) ->
+      TruthEvidence (registered_evidence_denotes Prop (exists x : StateScale, P x));
+  registered_evidence_sigma_TransitionT : forall P : TransitionT -> Prop,
+      (forall x : TransitionT, registered_evidence_denotes Prop (P x)) ->
+      TruthEvidence (registered_evidence_denotes Prop (exists x : TransitionT, P x));
+  registered_evidence_repeat : forall n : nat, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (repeat n body));
+  registered_evidence_at_T : forall marker : Entity, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (at_T marker body));
+  registered_evidence_during_T : forall marker : Entity, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (during_T marker body));
+  registered_evidence_before_T : forall marker : Entity, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (before_T marker body));
+  registered_evidence_after_T : forall marker : Entity, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (after_T marker body));
+  registered_evidence_until_T : forall marker : Entity, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (until_T marker body));
+  registered_evidence_since_T : forall marker : Entity, forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (since_T marker body));
+  registered_evidence_not_T : forall body : PropT,
+      registered_evidence_denotes PropT body ->
+      TruthEvidence (registered_evidence_denotes PropT (not_T body));
+  registered_evidence_transition :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      TruthEvidence (registered_evidence_denotes TransitionT
+        (Transition theme scale source target));
+  registered_evidence_cause :
+      forall causer : Entity, forall effect : TransitionT,
+      registered_evidence_denotes TransitionT effect ->
+      TruthEvidence (registered_evidence_denotes PropT (Cause causer effect))
+}.
+
+Definition fully_registered_truth_conditions_from_registered_evidence_sources
+  (S : RegisteredEvidenceBackedTruthConditionSources) :
+  FullyRegisteredTruthConditionSpec := {|
+  fully_registered_truth_denotes := registered_evidence_denotes S;
+  fully_registered_truth_lexical_application :=
+    fun A term h => truth_evidence_sound
+      (registered_evidence_denotes S A term)
+      (registered_evidence_lexical_application S A term h);
+  fully_registered_truth_sigma_Entity :=
+    fun P h => truth_evidence_sound
+          (registered_evidence_denotes S Prop
+            (exists x : Entity, P x))
+          (registered_evidence_sigma_Entity S P h);
+  fully_registered_truth_sigma_Food :=
+    fun P h => truth_evidence_sound
+          (registered_evidence_denotes S Prop
+            (exists x : Food, P x))
+          (registered_evidence_sigma_Food S P h);
+  fully_registered_truth_sigma_State :=
+    fun P h => truth_evidence_sound
+          (registered_evidence_denotes S Prop
+            (exists x : State, P x))
+          (registered_evidence_sigma_State S P h);
+  fully_registered_truth_sigma_StateScale :=
+    fun P h => truth_evidence_sound
+          (registered_evidence_denotes S Prop
+            (exists x : StateScale, P x))
+          (registered_evidence_sigma_StateScale S P h);
+  fully_registered_truth_sigma_TransitionT :=
+    fun P h => truth_evidence_sound
+          (registered_evidence_denotes S Prop
+            (exists x : TransitionT, P x))
+          (registered_evidence_sigma_TransitionT S P h);
+  fully_registered_truth_repeat :=
+    fun n body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (repeat n body))
+          (registered_evidence_repeat S n body h);
+  fully_registered_truth_at_T :=
+    fun marker body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (at_T marker body))
+          (registered_evidence_at_T S marker body h);
+  fully_registered_truth_during_T :=
+    fun marker body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (during_T marker body))
+          (registered_evidence_during_T S marker body h);
+  fully_registered_truth_before_T :=
+    fun marker body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (before_T marker body))
+          (registered_evidence_before_T S marker body h);
+  fully_registered_truth_after_T :=
+    fun marker body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (after_T marker body))
+          (registered_evidence_after_T S marker body h);
+  fully_registered_truth_until_T :=
+    fun marker body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (until_T marker body))
+          (registered_evidence_until_T S marker body h);
+  fully_registered_truth_since_T :=
+    fun marker body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (since_T marker body))
+          (registered_evidence_since_T S marker body h);
+  fully_registered_truth_not_T :=
+    fun body h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (not_T body))
+          (registered_evidence_not_T S body h);
+  fully_registered_truth_transition :=
+    fun theme scale source target h => truth_evidence_sound
+          (registered_evidence_denotes S TransitionT
+            (Transition theme scale source target))
+          (registered_evidence_transition S theme scale source target h);
+  fully_registered_truth_cause :=
+    fun causer effect h => truth_evidence_sound
+          (registered_evidence_denotes S PropT (Cause causer effect))
+          (registered_evidence_cause S causer effect h)
+|}.
+
+Theorem registered_evidence_backed_truth_condition_sources_induce_fully_registered_truth_conditions :
+  forall S : RegisteredEvidenceBackedTruthConditionSources,
+    exists F : FullyRegisteredTruthConditionSpec,
+      F = fully_registered_truth_conditions_from_registered_evidence_sources S.
+Proof.
+  intro S.
+  exists (fully_registered_truth_conditions_from_registered_evidence_sources S).
+  reflexivity.
+Qed.
+
+Definition concrete_registered_evidence_backed_truth_sources :
+  RegisteredEvidenceBackedTruthConditionSources := {|
+  registered_evidence_denotes := ConcreteRegisteredTruth;
+  registered_evidence_lexical_application :=
+    fun A term h => truth_evidence_intro
+      (ConcreteRegisteredTruth A term)
+      (concrete_registered_truth_atomic A term
+        (concrete_registered_atomic_truth_lexical_application A term h));
+  registered_evidence_sigma_Entity :=
+    fun P h => truth_evidence_intro
+          (ConcreteRegisteredTruth Prop (exists x : Entity, P x))
+          (concrete_registered_truth_sigma_Entity P h);
+  registered_evidence_sigma_Food :=
+    fun P h => truth_evidence_intro
+          (ConcreteRegisteredTruth Prop (exists x : Food, P x))
+          (concrete_registered_truth_sigma_Food P h);
+  registered_evidence_sigma_State :=
+    fun P h => truth_evidence_intro
+          (ConcreteRegisteredTruth Prop (exists x : State, P x))
+          (concrete_registered_truth_sigma_State P h);
+  registered_evidence_sigma_StateScale :=
+    fun P h => truth_evidence_intro
+          (ConcreteRegisteredTruth Prop (exists x : StateScale, P x))
+          (concrete_registered_truth_sigma_StateScale P h);
+  registered_evidence_sigma_TransitionT :=
+    fun P h => truth_evidence_intro
+          (ConcreteRegisteredTruth Prop (exists x : TransitionT, P x))
+          (concrete_registered_truth_sigma_TransitionT P h);
+  registered_evidence_repeat :=
+    fun n body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (repeat n body))
+          (concrete_registered_truth_repeat n body h);
+  registered_evidence_at_T :=
+    fun marker body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (at_T marker body))
+          (concrete_registered_truth_at_T marker body h);
+  registered_evidence_during_T :=
+    fun marker body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (during_T marker body))
+          (concrete_registered_truth_during_T marker body h);
+  registered_evidence_before_T :=
+    fun marker body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (before_T marker body))
+          (concrete_registered_truth_before_T marker body h);
+  registered_evidence_after_T :=
+    fun marker body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (after_T marker body))
+          (concrete_registered_truth_after_T marker body h);
+  registered_evidence_until_T :=
+    fun marker body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (until_T marker body))
+          (concrete_registered_truth_until_T marker body h);
+  registered_evidence_since_T :=
+    fun marker body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (since_T marker body))
+          (concrete_registered_truth_since_T marker body h);
+  registered_evidence_not_T :=
+    fun body h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (not_T body))
+          (concrete_registered_truth_not_T body h);
+  registered_evidence_transition :=
+    fun theme scale source target h => truth_evidence_intro
+          (ConcreteRegisteredTruth TransitionT
+            (Transition theme scale source target))
+          (concrete_registered_truth_atomic TransitionT
+            (Transition theme scale source target)
+            (concrete_registered_atomic_truth_transition
+              theme scale source target h));
+  registered_evidence_cause :=
+    fun causer effect h => truth_evidence_intro
+          (ConcreteRegisteredTruth PropT (Cause causer effect))
+          (concrete_registered_truth_cause causer effect h)
+|}.
+
+Definition concrete_registered_evidence_backed_truth_conditions :
+  FullyRegisteredTruthConditionSpec :=
+  fully_registered_truth_conditions_from_registered_evidence_sources
+    concrete_registered_evidence_backed_truth_sources.
+
+Theorem concrete_registered_evidence_backed_truth_sources_exist :
+  exists S : RegisteredEvidenceBackedTruthConditionSources,
+    S = concrete_registered_evidence_backed_truth_sources.
+Proof.
+  exists concrete_registered_evidence_backed_truth_sources. reflexivity.
+Qed.
+
+Theorem concrete_registered_evidence_backed_truth_conditions_exists :
+  exists F : FullyRegisteredTruthConditionSpec,
+    F = concrete_registered_evidence_backed_truth_conditions.
+Proof.
+  exists concrete_registered_evidence_backed_truth_conditions. reflexivity.
+Qed.
+
+Theorem concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered :
+  forall A : Type, forall term : A,
+    ConcreteRegisteredTruth A term ->
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions A term.
+Proof.
+  intros A term H.
+  exact H.
+Qed.
+
+Theorem concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_truth_implies_atomic_closure.
+  exact H.
+Qed.
+
 Record ConcreteRegisteredTruthKernel : Type := {
   concrete_registered_kernel_denotes : forall A : Type, A -> Prop;
   concrete_registered_kernel_lexical_application :
@@ -3652,6 +3909,54 @@ Proof.
   exact example_4_concrete_registered_truth_condition_sound.
 Qed.
 
+Theorem example_1_concrete_registered_evidence_backed_truth_condition_sound : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_1.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered.
+  exact example_1_concrete_registered_truth.
+Qed.
+
+Theorem example_1_concrete_registered_evidence_backed_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.
+  exact example_1_concrete_registered_evidence_backed_truth_condition_sound.
+Qed.
+
+Theorem example_2_concrete_registered_evidence_backed_truth_condition_sound : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions Prop example_2.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered.
+  exact example_2_concrete_registered_truth.
+Qed.
+
+Theorem example_2_concrete_registered_evidence_backed_truth_condition_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.
+  exact example_2_concrete_registered_evidence_backed_truth_condition_sound.
+Qed.
+
+Theorem example_3_concrete_registered_evidence_backed_truth_condition_sound : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_3.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered.
+  exact example_3_concrete_registered_truth.
+Qed.
+
+Theorem example_3_concrete_registered_evidence_backed_truth_condition_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.
+  exact example_3_concrete_registered_evidence_backed_truth_condition_sound.
+Qed.
+
+Theorem example_4_concrete_registered_evidence_backed_truth_condition_sound : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_4.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered.
+  exact example_4_concrete_registered_truth.
+Qed.
+
+Theorem example_4_concrete_registered_evidence_backed_truth_condition_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.
+  exact example_4_concrete_registered_evidence_backed_truth_condition_sound.
+Qed.
+
 Record ConcreteRegisteredExampleTruthInstances : Type := {
   example_1_concrete_truth_instance :
       fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_1;
@@ -3854,6 +4159,8 @@ Check example_1_concrete_registered_truth_conditions_from_kernel_sound.
 Check example_1_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_1_concrete_registered_truth_condition_sound.
 Check example_1_concrete_registered_truth_condition_atomic_sound.
+Check example_1_concrete_registered_evidence_backed_truth_condition_sound.
+Check example_1_concrete_registered_evidence_backed_truth_condition_atomic_sound.
 Check concrete_registered_example_1_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_1_truth_instance_atomic_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
@@ -3892,6 +4199,8 @@ Check example_2_concrete_registered_truth_conditions_from_kernel_sound.
 Check example_2_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_2_concrete_registered_truth_condition_sound.
 Check example_2_concrete_registered_truth_condition_atomic_sound.
+Check example_2_concrete_registered_evidence_backed_truth_condition_sound.
+Check example_2_concrete_registered_evidence_backed_truth_condition_atomic_sound.
 Check concrete_registered_example_2_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_2_truth_instance_atomic_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
@@ -3930,6 +4239,8 @@ Check example_3_concrete_registered_truth_conditions_from_kernel_sound.
 Check example_3_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_3_concrete_registered_truth_condition_sound.
 Check example_3_concrete_registered_truth_condition_atomic_sound.
+Check example_3_concrete_registered_evidence_backed_truth_condition_sound.
+Check example_3_concrete_registered_evidence_backed_truth_condition_atomic_sound.
 Check concrete_registered_example_3_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_3_truth_instance_atomic_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
@@ -3968,6 +4279,8 @@ Check example_4_concrete_registered_truth_conditions_from_kernel_sound.
 Check example_4_concrete_registered_truth_conditions_from_kernel_atomic_sound.
 Check example_4_concrete_registered_truth_condition_sound.
 Check example_4_concrete_registered_truth_condition_atomic_sound.
+Check example_4_concrete_registered_evidence_backed_truth_condition_sound.
+Check example_4_concrete_registered_evidence_backed_truth_condition_atomic_sound.
 Check concrete_registered_example_4_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_4_truth_instance_atomic_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
@@ -4004,6 +4317,15 @@ Check concrete_registered_atomic_model_denotes_atomic_base_truth.
 Check concrete_registered_truth_basis_denotes_atomic_base_truth.
 Check concrete_registered_truth_conditions.
 Check concrete_registered_truth_condition_spec_exists.
+Check RegisteredEvidenceBackedTruthConditionSources.
+Check fully_registered_truth_conditions_from_registered_evidence_sources.
+Check registered_evidence_backed_truth_condition_sources_induce_fully_registered_truth_conditions.
+Check concrete_registered_evidence_backed_truth_sources.
+Check concrete_registered_evidence_backed_truth_conditions.
+Check concrete_registered_evidence_backed_truth_sources_exist.
+Check concrete_registered_evidence_backed_truth_conditions_exists.
+Check concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered.
+Check concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.
 Check concrete_registered_compositional_model.
 Check concrete_registered_compositional_model_exists.
 Check concrete_registered_compositional_model_denotes_concrete_registered.

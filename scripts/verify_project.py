@@ -10831,6 +10831,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_concrete_registered_compositional_model_bridge",
         "coq_concrete_registered_truth_condition_model_bridge",
         "coq_concrete_registered_truth_condition_instance",
+        "coq_concrete_registered_evidence_backed_truth_sources",
         "coq_concrete_registered_truth_kernel_instance",
         "coq_concrete_registered_kernel_example_truth_instance_package",
         "coq_concrete_registered_example_truth_instance_package",

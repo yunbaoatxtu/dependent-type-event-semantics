@@ -196,7 +196,18 @@ that basis through `ConcreteRegisteredAtomicModel`, proves
 checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound` for every exported
-example. The scaffold also packages the finite registered closure clauses as
+example. The scaffold now also packages this same finite closure as
+`RegisteredEvidenceBackedTruthConditionSources`: the generated
+`concrete_registered_evidence_backed_truth_sources` wraps registered lexical,
+transition, Sigma, repetition, temporal, polarity, and Cause clauses as
+`TruthEvidence`, derives
+`concrete_registered_evidence_backed_truth_conditions :
+FullyRegisteredTruthConditionSpec`, and checks
+`example_i_concrete_registered_evidence_backed_truth_condition_sound` plus
+`example_i_concrete_registered_evidence_backed_truth_condition_atomic_sound` for
+every exported example. This is still a finite registered-fragment source, not
+an independently justified truth-condition model for arbitrary lexical
+applications. The scaffold also packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported
 types, repetition, temporal, polarity, and Cause closure clauses, and a

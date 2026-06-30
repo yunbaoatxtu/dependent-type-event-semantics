@@ -1172,7 +1172,18 @@ and checks `example_i_concrete_registered_truth`,
 `example_i_concrete_registered_truth_condition_sound`, and
 `example_i_concrete_registered_truth_condition_atomic_sound`. This is the first
 concrete registered truth-condition instance for exported atoms, but it is
-still finite and registered-fragment-only. The next verified objective
+still finite and registered-fragment-only. The follow-up verified objective
+`coq_concrete_registered_evidence_backed_truth_sources` packages this same
+finite closure as `RegisteredEvidenceBackedTruthConditionSources`. The
+generated bridge decodes the source's `TruthEvidence` fields into
+`FullyRegisteredTruthConditionSpec`, instantiates
+`concrete_registered_evidence_backed_truth_sources` and
+`concrete_registered_evidence_backed_truth_conditions`, and checks
+`example_i_concrete_registered_evidence_backed_truth_condition_sound` plus
+`example_i_concrete_registered_evidence_backed_truth_condition_atomic_sound`.
+This is a registered evidence source for exported atoms only, not an
+independently justified source for arbitrary lexical applications. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
