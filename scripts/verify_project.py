@@ -10846,6 +10846,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_independent_registered_polarity_truth_condition_instances_package",
         "coq_independent_registered_transition_cause_truth_condition_instances_package",
         "coq_independent_registered_truth_condition_instance_suite_package",
+        "coq_independent_registered_truth_condition_instance_suite_example_package",
         "coq_concrete_registered_truth_kernel_instance",
         "coq_concrete_registered_kernel_example_truth_instance_package",
         "coq_concrete_registered_example_truth_instance_package",

@@ -13576,6 +13576,167 @@ def independent_registered_truth_condition_instance_suite_lines(
     return lines
 
 
+def independent_registered_truth_condition_instance_suite_example_package_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package suite-level atomic projections for exported examples."""
+
+    if target == "lean":
+        lines = [
+            "structure "
+            "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage : "
+            "Type where",
+            "  independent_registered_suite_example_suite :",
+            "      IndependentRegisteredTruthConditionInstanceSuite",
+            "  independent_registered_suite_example_suite_eq :",
+            "      independent_registered_suite_example_suite =",
+            "        independent_registered_truth_condition_instance_suite",
+        ]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.append(
+                f"  example_{idx}_suite_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}"
+            )
+        lines.extend(
+            [
+                "",
+                "def independent_registered_truth_condition_instance_suite_example_package :",
+                "    IndependentRegisteredTruthConditionInstanceSuiteExamplePackage := {",
+                "  independent_registered_suite_example_suite :=",
+                "    independent_registered_truth_condition_instance_suite,",
+                "  independent_registered_suite_example_suite_eq := rfl,",
+            ]
+        )
+        for idx in range(1, len(results) + 1):
+            suffix = "," if idx < len(results) else ""
+            lines.append(
+                f"  example_{idx}_suite_atomic_sound :="
+                " independent_registered_truth_condition_clause_coverage_example_"
+                f"{idx}_atomic_sound{suffix}"
+            )
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem "
+                "independent_registered_truth_condition_instance_suite_example_package_exists :",
+                "    Exists (fun P : "
+                "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage =>",
+                "      P = "
+                "independent_registered_truth_condition_instance_suite_example_package)"
+                " := by",
+                "  exact Exists.intro "
+                "independent_registered_truth_condition_instance_suite_example_package "
+                "rfl",
+                "",
+                "theorem "
+                "independent_registered_truth_condition_instance_suite_example_package_suite_matches :",
+                "    independent_registered_truth_condition_instance_suite_example_package.",
+                "      independent_registered_suite_example_suite =",
+                "        independent_registered_truth_condition_instance_suite := by",
+                "  exact "
+                "independent_registered_truth_condition_instance_suite_example_package.",
+                "    independent_registered_suite_example_suite_eq",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_instance_suite_example_{idx}_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact "
+                    "independent_registered_truth_condition_instance_suite_example_package.",
+                    f"    example_{idx}_suite_atomic_sound",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record IndependentRegisteredTruthConditionInstanceSuiteExamplePackage : "
+        "Type := {",
+        "  independent_registered_suite_example_suite :",
+        "      IndependentRegisteredTruthConditionInstanceSuite;",
+        "  independent_registered_suite_example_suite_eq :",
+        "      independent_registered_suite_example_suite =",
+        "        independent_registered_truth_condition_instance_suite;",
+    ]
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        suffix = ";" if idx < len(results) else ""
+        lines.extend(
+            [
+                f"  example_{idx}_suite_atomic_sound :",
+                f"      AtomicClosureTruth {annotation} example_{idx}{suffix}",
+            ]
+        )
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition "
+            "independent_registered_truth_condition_instance_suite_example_package :",
+            "  IndependentRegisteredTruthConditionInstanceSuiteExamplePackage := {|",
+            "  independent_registered_suite_example_suite :=",
+            "    independent_registered_truth_condition_instance_suite;",
+            "  independent_registered_suite_example_suite_eq := eq_refl;",
+        ]
+    )
+    for idx in range(1, len(results) + 1):
+        suffix = ";" if idx < len(results) else ""
+        lines.append(
+            f"  example_{idx}_suite_atomic_sound :="
+            " independent_registered_truth_condition_clause_coverage_example_"
+            f"{idx}_atomic_sound{suffix}"
+        )
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem "
+            "independent_registered_truth_condition_instance_suite_example_package_exists :",
+            "  exists P : "
+            "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage,",
+            "    P = "
+            "independent_registered_truth_condition_instance_suite_example_package.",
+            "Proof.",
+            "  exists "
+            "independent_registered_truth_condition_instance_suite_example_package.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "independent_registered_truth_condition_instance_suite_example_package_suite_matches :",
+            "  independent_registered_suite_example_suite",
+            "    independent_registered_truth_condition_instance_suite_example_package =",
+            "  independent_registered_truth_condition_instance_suite.",
+            "Proof.",
+            "  exact (independent_registered_suite_example_suite_eq",
+            "    independent_registered_truth_condition_instance_suite_example_package).",
+            "Qed.",
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_instance_suite_example_{idx}_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                f"  exact (example_{idx}_suite_atomic_sound",
+                "    independent_registered_truth_condition_instance_suite_example_package).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -14535,6 +14696,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append("")
         lines.extend(independent_registered_truth_condition_instance_suite_lines(target))
         lines.append("")
+        lines.extend(
+            independent_registered_truth_condition_instance_suite_example_package_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -15001,6 +15169,27 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check independent_registered_truth_condition_instance_suite_spec_sound"
         )
+        lines.append(
+            "#check IndependentRegisteredTruthConditionInstanceSuiteExamplePackage"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_instance_suite_example_package"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_instance_suite_example_package_exists"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_instance_suite_example_package_suite_matches"
+        )
+        for idx in range(1, len(results) + 1):
+            lines.append(
+                "#check "
+                "independent_registered_truth_condition_instance_suite_example_"
+                f"{idx}_atomic_sound"
+            )
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -15679,6 +15868,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(independent_registered_truth_condition_instance_suite_lines(target))
     lines.append("")
+    lines.extend(
+        independent_registered_truth_condition_instance_suite_example_package_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -16052,6 +16248,24 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             f"independent_registered_truth_condition_instance_suite_{field}_matches."
         )
     lines.append("Check independent_registered_truth_condition_instance_suite_spec_sound.")
+    lines.append("Check IndependentRegisteredTruthConditionInstanceSuiteExamplePackage.")
+    lines.append(
+        "Check independent_registered_truth_condition_instance_suite_example_package."
+    )
+    lines.append(
+        "Check "
+        "independent_registered_truth_condition_instance_suite_example_package_exists."
+    )
+    lines.append(
+        "Check "
+        "independent_registered_truth_condition_instance_suite_example_package_suite_matches."
+    )
+    for idx in range(1, len(results) + 1):
+        lines.append(
+            "Check "
+            "independent_registered_truth_condition_instance_suite_example_"
+            f"{idx}_atomic_sound."
+        )
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

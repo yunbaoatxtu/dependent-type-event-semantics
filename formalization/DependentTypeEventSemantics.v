@@ -6071,6 +6071,78 @@ Proof.
     independent_registered_truth_condition_instance_suite).
 Qed.
 
+Record IndependentRegisteredTruthConditionInstanceSuiteExamplePackage : Type := {
+  independent_registered_suite_example_suite :
+      IndependentRegisteredTruthConditionInstanceSuite;
+  independent_registered_suite_example_suite_eq :
+      independent_registered_suite_example_suite =
+        independent_registered_truth_condition_instance_suite;
+  example_1_suite_atomic_sound :
+      AtomicClosureTruth PropT example_1;
+  example_2_suite_atomic_sound :
+      AtomicClosureTruth Prop example_2;
+  example_3_suite_atomic_sound :
+      AtomicClosureTruth PropT example_3;
+  example_4_suite_atomic_sound :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition independent_registered_truth_condition_instance_suite_example_package :
+  IndependentRegisteredTruthConditionInstanceSuiteExamplePackage := {|
+  independent_registered_suite_example_suite :=
+    independent_registered_truth_condition_instance_suite;
+  independent_registered_suite_example_suite_eq := eq_refl;
+  example_1_suite_atomic_sound := independent_registered_truth_condition_clause_coverage_example_1_atomic_sound;
+  example_2_suite_atomic_sound := independent_registered_truth_condition_clause_coverage_example_2_atomic_sound;
+  example_3_suite_atomic_sound := independent_registered_truth_condition_clause_coverage_example_3_atomic_sound;
+  example_4_suite_atomic_sound := independent_registered_truth_condition_clause_coverage_example_4_atomic_sound
+|}.
+
+Theorem independent_registered_truth_condition_instance_suite_example_package_exists :
+  exists P : IndependentRegisteredTruthConditionInstanceSuiteExamplePackage,
+    P = independent_registered_truth_condition_instance_suite_example_package.
+Proof.
+  exists independent_registered_truth_condition_instance_suite_example_package.
+  reflexivity.
+Qed.
+
+Theorem independent_registered_truth_condition_instance_suite_example_package_suite_matches :
+  independent_registered_suite_example_suite
+    independent_registered_truth_condition_instance_suite_example_package =
+  independent_registered_truth_condition_instance_suite.
+Proof.
+  exact (independent_registered_suite_example_suite_eq
+    independent_registered_truth_condition_instance_suite_example_package).
+Qed.
+
+Theorem independent_registered_truth_condition_instance_suite_example_1_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (example_1_suite_atomic_sound
+    independent_registered_truth_condition_instance_suite_example_package).
+Qed.
+
+Theorem independent_registered_truth_condition_instance_suite_example_2_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (example_2_suite_atomic_sound
+    independent_registered_truth_condition_instance_suite_example_package).
+Qed.
+
+Theorem independent_registered_truth_condition_instance_suite_example_3_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (example_3_suite_atomic_sound
+    independent_registered_truth_condition_instance_suite_example_package).
+Qed.
+
+Theorem independent_registered_truth_condition_instance_suite_example_4_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (example_4_suite_atomic_sound
+    independent_registered_truth_condition_instance_suite_example_package).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -6494,5 +6566,13 @@ Check independent_registered_truth_condition_instance_suite_repeat_matches.
 Check independent_registered_truth_condition_instance_suite_polarity_matches.
 Check independent_registered_truth_condition_instance_suite_transition_cause_matches.
 Check independent_registered_truth_condition_instance_suite_spec_sound.
+Check IndependentRegisteredTruthConditionInstanceSuiteExamplePackage.
+Check independent_registered_truth_condition_instance_suite_example_package.
+Check independent_registered_truth_condition_instance_suite_example_package_exists.
+Check independent_registered_truth_condition_instance_suite_example_package_suite_matches.
+Check independent_registered_truth_condition_instance_suite_example_1_atomic_sound.
+Check independent_registered_truth_condition_instance_suite_example_2_atomic_sound.
+Check independent_registered_truth_condition_instance_suite_example_3_atomic_sound.
+Check independent_registered_truth_condition_instance_suite_example_4_atomic_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

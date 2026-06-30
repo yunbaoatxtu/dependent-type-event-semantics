@@ -325,7 +325,16 @@ exists, proves that the lexical, temporal, Sigma, repeat, polarity, and
 Transition/Cause fields match the corresponding subpackages, and checks a
 single suite-level soundness projection back to `AtomicClosureTruth`. This
 consolidates the finite registered route while keeping arbitrary independent
-truth-condition semantics open. The scaffold also
+truth-condition semantics open. The scaffold also packages that suite with the
+exported examples as
+`IndependentRegisteredTruthConditionInstanceSuiteExamplePackage`, instantiates
+`independent_registered_truth_condition_instance_suite_example_package`, proves
+that the packaged suite is
+`independent_registered_truth_condition_instance_suite`, and checks
+`independent_registered_truth_condition_instance_suite_example_i_atomic_sound`
+for each exported example through the clause-coverage atomic proofs. This keeps
+the suite/example boundary synchronized without treating the registered fragment
+as a complete truth-condition model. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

@@ -1350,6 +1350,19 @@ This is a bookkeeping consolidation step for the finite registered route, not a
 claim that arbitrary lexical, temporal, causal, or quantificational truth
 conditions have been independently supplied. The next
 verified objective
+`coq_independent_registered_truth_condition_instance_suite_example_package`
+packages that suite together with the per-example atomic projections as
+`IndependentRegisteredTruthConditionInstanceSuiteExamplePackage`. It
+instantiates
+`independent_registered_truth_condition_instance_suite_example_package`, proves
+that the packaged suite is the generated
+`independent_registered_truth_condition_instance_suite`, and checks
+`independent_registered_truth_condition_instance_suite_example_i_atomic_sound`
+for every exported example by reusing the clause-coverage proofs. This is a
+drift guard between the suite-level constructor packages and the concrete
+exported examples; it still does not supply an independent truth-condition
+model for arbitrary unregistered lexical, temporal, causal, modifier, or
+quantifier constructions. The next verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

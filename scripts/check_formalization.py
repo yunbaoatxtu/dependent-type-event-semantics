@@ -626,6 +626,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_independent_registered_truth_condition_suite_example_atomic_sound_count = len(
+        re.findall(
+            r"^theorem independent_registered_truth_condition_instance_suite_example_\d+_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_independent_registered_truth_condition_suite_example_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem independent_registered_truth_condition_instance_suite_example_\d+_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -3290,6 +3304,70 @@ def main() -> None:
             "independent_registered_truth_condition_instance_suite_transition_cause_matches."
             in coq
             and "Check independent_registered_truth_condition_instance_suite_spec_sound."
+            in coq
+        ),
+        "lean independent registered truth-condition suite example package": (
+            lean_independent_registered_truth_condition_suite_example_atomic_sound_count
+            == lean_example_count
+            and "structure "
+            "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage : "
+            "Type where"
+            in lean
+            and "independent_registered_suite_example_suite :" in lean
+            and "IndependentRegisteredTruthConditionInstanceSuite" in lean
+            and "def "
+            "independent_registered_truth_condition_instance_suite_example_package :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_example_package_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_example_package_suite_matches :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_instance_suite_example_4_atomic_sound :"
+            in lean
+            and "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound"
+            in lean
+            and "#check IndependentRegisteredTruthConditionInstanceSuiteExamplePackage"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_instance_suite_example_package"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_instance_suite_example_4_atomic_sound"
+            in lean
+        ),
+        "coq independent registered truth-condition suite example package": (
+            coq_independent_registered_truth_condition_suite_example_atomic_sound_count
+            == coq_example_count
+            and "Record "
+            "IndependentRegisteredTruthConditionInstanceSuiteExamplePackage : "
+            "Type := {"
+            in coq
+            and "independent_registered_suite_example_suite :" in coq
+            and "IndependentRegisteredTruthConditionInstanceSuite" in coq
+            and "Definition "
+            "independent_registered_truth_condition_instance_suite_example_package :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_example_package_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_example_package_suite_matches :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_instance_suite_example_4_atomic_sound :"
+            in coq
+            and "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound"
+            in coq
+            and "Check IndependentRegisteredTruthConditionInstanceSuiteExamplePackage."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_instance_suite_example_package."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_instance_suite_example_4_atomic_sound."
             in coq
         ),
         "lean syntax-directed truth kernel soundness proofs": (
