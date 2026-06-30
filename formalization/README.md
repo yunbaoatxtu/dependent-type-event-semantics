@@ -292,7 +292,15 @@ repeat package exists, proves that it still points to
 `independent_registered_truth_condition_clause_coverage`, and checks
 `independent_registered_repeat_truth_condition_repeat_instance` for
 `repeat n body`. This keeps natural-number event-counting evidence separate
-from temporal and quantifier evidence. The scaffold also
+from temporal and quantifier evidence. The scaffold then extracts the
+polarity fragment as `IndependentRegisteredPolarityTruthConditionInstances`,
+instantiates `independent_registered_polarity_truth_condition_instances`,
+proves that the polarity package exists, proves that it still points to
+`independent_registered_truth_condition_clause_coverage`, and checks
+`independent_registered_polarity_truth_condition_not_T_instance` for
+`not_T body`. This keeps registered truth-functional negation evidence
+separate from temporal, quantifier, repetition, transition, causal, and lexical
+evidence. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

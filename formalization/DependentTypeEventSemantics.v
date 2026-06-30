@@ -5682,6 +5682,85 @@ Proof.
     independent_registered_repeat_truth_condition_instances).
 Qed.
 
+Record IndependentRegisteredPolarityTruthConditionInstances : Type := {
+  independent_registered_polarity_clause_coverage :
+      IndependentRegisteredTruthConditionClauseCoverage;
+  independent_registered_polarity_clause_coverage_eq :
+      independent_registered_polarity_clause_coverage =
+        independent_registered_truth_condition_clause_coverage;
+  independent_registered_polarity_instance :
+    forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (not_T body);
+  independent_registered_polarity_spec_sound :
+    forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition independent_registered_polarity_truth_condition_instances :
+  IndependentRegisteredPolarityTruthConditionInstances := {|
+  independent_registered_polarity_clause_coverage :=
+    independent_registered_truth_condition_clause_coverage;
+  independent_registered_polarity_clause_coverage_eq := eq_refl;
+  independent_registered_polarity_instance :=
+    independent_registered_truth_condition_clause_not_T_instance;
+  independent_registered_polarity_spec_sound :=
+    independent_registered_clause_coverage_spec_sound
+      independent_registered_truth_condition_clause_coverage
+|}.
+
+Theorem independent_registered_polarity_truth_condition_instances_exists :
+  exists P : IndependentRegisteredPolarityTruthConditionInstances,
+    P = independent_registered_polarity_truth_condition_instances.
+Proof.
+  exists independent_registered_polarity_truth_condition_instances.
+  reflexivity.
+Qed.
+
+Theorem independent_registered_polarity_truth_condition_coverage_matches :
+  independent_registered_polarity_clause_coverage
+    independent_registered_polarity_truth_condition_instances =
+  independent_registered_truth_condition_clause_coverage.
+Proof.
+  exact (independent_registered_polarity_clause_coverage_eq
+    independent_registered_polarity_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_polarity_truth_condition_not_T_instance :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      PropT (not_T body).
+Proof.
+  exact (independent_registered_polarity_instance
+    independent_registered_polarity_truth_condition_instances).
+Qed.
+
+Theorem independent_registered_polarity_truth_condition_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (independent_registered_polarity_spec_sound
+    independent_registered_polarity_truth_condition_instances).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -6076,5 +6155,11 @@ Check independent_registered_repeat_truth_condition_instances_exists.
 Check independent_registered_repeat_truth_condition_coverage_matches.
 Check independent_registered_repeat_truth_condition_repeat_instance.
 Check independent_registered_repeat_truth_condition_spec_sound.
+Check IndependentRegisteredPolarityTruthConditionInstances.
+Check independent_registered_polarity_truth_condition_instances.
+Check independent_registered_polarity_truth_condition_instances_exists.
+Check independent_registered_polarity_truth_condition_coverage_matches.
+Check independent_registered_polarity_truth_condition_not_T_instance.
+Check independent_registered_polarity_truth_condition_spec_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

@@ -2979,6 +2979,67 @@ def main() -> None:
             and "Check independent_registered_repeat_truth_condition_spec_sound."
             in coq
         ),
+        "lean independent registered polarity truth-condition instances package": (
+            "structure IndependentRegisteredPolarityTruthConditionInstances : Type where"
+            in lean
+            and "independent_registered_polarity_clause_coverage :"
+            in lean
+            and "IndependentRegisteredTruthConditionClauseCoverage" in lean
+            and "def independent_registered_polarity_truth_condition_instances :"
+            in lean
+            and "IndependentRegisteredPolarityTruthConditionInstances := {"
+            in lean
+            and "theorem "
+            "independent_registered_polarity_truth_condition_instances_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_polarity_truth_condition_coverage_matches :"
+            in lean
+            and "theorem independent_registered_polarity_truth_condition_not_T_instance :"
+            in lean
+            and "theorem independent_registered_polarity_truth_condition_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredPolarityTruthConditionInstances"
+            in lean
+            and "#check independent_registered_polarity_truth_condition_instances"
+            in lean
+            and "#check independent_registered_polarity_truth_condition_coverage_matches"
+            in lean
+            and "#check independent_registered_polarity_truth_condition_not_T_instance"
+            in lean
+            and "#check independent_registered_polarity_truth_condition_spec_sound"
+            in lean
+        ),
+        "coq independent registered polarity truth-condition instances package": (
+            "Record IndependentRegisteredPolarityTruthConditionInstances : Type := {"
+            in coq
+            and "independent_registered_polarity_clause_coverage :" in coq
+            and "IndependentRegisteredTruthConditionClauseCoverage" in coq
+            and "Definition independent_registered_polarity_truth_condition_instances :"
+            in coq
+            and "IndependentRegisteredPolarityTruthConditionInstances := {|"
+            in coq
+            and "Theorem "
+            "independent_registered_polarity_truth_condition_instances_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_polarity_truth_condition_coverage_matches :"
+            in coq
+            and "Theorem independent_registered_polarity_truth_condition_not_T_instance :"
+            in coq
+            and "Theorem independent_registered_polarity_truth_condition_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredPolarityTruthConditionInstances."
+            in coq
+            and "Check independent_registered_polarity_truth_condition_instances."
+            in coq
+            and "Check independent_registered_polarity_truth_condition_coverage_matches."
+            in coq
+            and "Check independent_registered_polarity_truth_condition_not_T_instance."
+            in coq
+            and "Check independent_registered_polarity_truth_condition_spec_sound."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean

@@ -1305,6 +1305,17 @@ exists, proves that its stored coverage object is
 event counting from temporal, quantifier, polarity, transition, causal, and
 lexical clauses. The next
 verified objective
+`coq_independent_registered_polarity_truth_condition_instances_package`
+extracts the polarity/negation fragment as
+`IndependentRegisteredPolarityTruthConditionInstances`. It instantiates
+`independent_registered_polarity_truth_condition_instances`, proves the
+package exists, proves that its stored coverage object is
+`independent_registered_truth_condition_clause_coverage`, and exposes
+`independent_registered_polarity_truth_condition_not_T_instance` for
+`not_T body`. This keeps the registered truth-functional negation route
+inspectable without claiming a complete theory of natural-language polarity,
+focus, or discourse-sensitive negation. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
