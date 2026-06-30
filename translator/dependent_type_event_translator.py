@@ -11736,6 +11736,474 @@ def independent_registered_truth_condition_clause_instance_lines(
     return lines
 
 
+def independent_registered_truth_condition_clause_coverage_lines(
+    declarations: dict[str, Any],
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package all registered independent clause projections as one ledger."""
+
+    time_and_polarity_clauses = [
+        (
+            "repeat",
+            "(n : Nat) -> (body : PropT) -> ",
+            "forall n : nat, forall body : PropT,",
+            "PropT body",
+            "PropT (repeat n body)",
+        ),
+        (
+            "at_T",
+            "(marker : Entity) -> (body : PropT) -> ",
+            "forall marker : Entity, forall body : PropT,",
+            "PropT body",
+            "PropT (at_T marker body)",
+        ),
+        (
+            "during_T",
+            "(marker : Entity) -> (body : PropT) -> ",
+            "forall marker : Entity, forall body : PropT,",
+            "PropT body",
+            "PropT (during_T marker body)",
+        ),
+        (
+            "before_T",
+            "(marker : Entity) -> (body : PropT) -> ",
+            "forall marker : Entity, forall body : PropT,",
+            "PropT body",
+            "PropT (before_T marker body)",
+        ),
+        (
+            "after_T",
+            "(marker : Entity) -> (body : PropT) -> ",
+            "forall marker : Entity, forall body : PropT,",
+            "PropT body",
+            "PropT (after_T marker body)",
+        ),
+        (
+            "until_T",
+            "(marker : Entity) -> (body : PropT) -> ",
+            "forall marker : Entity, forall body : PropT,",
+            "PropT body",
+            "PropT (until_T marker body)",
+        ),
+        (
+            "since_T",
+            "(marker : Entity) -> (body : PropT) -> ",
+            "forall marker : Entity, forall body : PropT,",
+            "PropT body",
+            "PropT (since_T marker body)",
+        ),
+        (
+            "not_T",
+            "(body : PropT) -> ",
+            "forall body : PropT,",
+            "PropT body",
+            "PropT (not_T body)",
+        ),
+    ]
+
+    if target == "lean":
+        lines = [
+            "structure IndependentRegisteredTruthConditionClauseCoverage : Type where",
+            "  independent_registered_clause_coverage_instances :",
+            "      IndependentRegisteredTruthConditionClauseInstances",
+            "  independent_registered_clause_coverage_instances_eq :",
+            "      independent_registered_clause_coverage_instances =",
+            "        independent_registered_truth_condition_clause_instances",
+            "  independent_registered_clause_coverage_lexical_application :",
+            "      (A : Type) -> (term : A) ->",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes A term",
+        ]
+        for type_name in declarations["types"]:
+            lines.extend(
+                [
+                    f"  independent_registered_clause_coverage_sigma_{type_name} :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) ->",
+                    "        independent_registered_truth_condition_clause_instances.",
+                    "        independent_registered_clause_spec.",
+                    "        fully_registered_truth_denotes Prop (P x)) ->",
+                    "      independent_registered_truth_condition_clause_instances.",
+                    "      independent_registered_clause_spec.",
+                    "      fully_registered_truth_denotes Prop "
+                    f"(Exists fun x : {type_name} => P x)",
+                ]
+            )
+        for name, lean_binders, _coq_binders, premise, conclusion in (
+            time_and_polarity_clauses
+        ):
+            lines.extend(
+                [
+                    f"  independent_registered_clause_coverage_{name} :",
+                    f"      {lean_binders}"
+                    "independent_registered_truth_condition_clause_instances.",
+                    "      independent_registered_clause_spec.",
+                    f"      fully_registered_truth_denotes {premise} ->",
+                    "      independent_registered_truth_condition_clause_instances.",
+                    "      independent_registered_clause_spec.",
+                    f"      fully_registered_truth_denotes {conclusion}",
+                ]
+            )
+        lines.extend(
+            [
+                "  independent_registered_clause_coverage_transition :",
+                "      (theme : Entity) -> (scale : StateScale) ->",
+                "      (source : State) -> (target : State) ->",
+                "      RegisteredStateTransitionTruth theme scale source target ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes TransitionT "
+                "(Transition theme scale source target)",
+                "  independent_registered_clause_coverage_cause :",
+                "      (causer : Entity) -> (effect : TransitionT) ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes TransitionT effect ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes PropT (Cause causer effect)",
+                "  independent_registered_clause_coverage_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    f"  independent_registered_clause_coverage_example_{idx} :",
+                    f"      AtomicClosureTruth {annotation} example_{idx}",
+                ]
+            )
+
+        assignments = [
+            (
+                "independent_registered_clause_coverage_instances",
+                "independent_registered_truth_condition_clause_instances",
+            ),
+            ("independent_registered_clause_coverage_instances_eq", "rfl"),
+            (
+                "independent_registered_clause_coverage_lexical_application",
+                "independent_registered_truth_condition_clause_lexical_application_instance",
+            ),
+        ]
+        assignments.extend(
+            (
+                f"independent_registered_clause_coverage_sigma_{type_name}",
+                f"independent_registered_truth_condition_clause_sigma_{type_name}_instance",
+            )
+            for type_name in declarations["types"]
+        )
+        assignments.extend(
+            (
+                f"independent_registered_clause_coverage_{name}",
+                f"independent_registered_truth_condition_clause_{name}_instance",
+            )
+            for name, _lean_binders, _coq_binders, _premise, _conclusion in (
+                time_and_polarity_clauses
+            )
+        )
+        assignments.extend(
+            [
+                (
+                    "independent_registered_clause_coverage_transition",
+                    "independent_registered_truth_condition_clause_transition_instance",
+                ),
+                (
+                    "independent_registered_clause_coverage_cause",
+                    "independent_registered_truth_condition_clause_cause_instance",
+                ),
+                (
+                    "independent_registered_clause_coverage_spec_sound",
+                    "independent_registered_truth_condition_clause_spec_sound",
+                ),
+            ]
+        )
+        assignments.extend(
+            (
+                f"independent_registered_clause_coverage_example_{idx}",
+                f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound",
+            )
+            for idx in range(1, len(results) + 1)
+        )
+
+        lines.extend(
+            [
+                "",
+                "def independent_registered_truth_condition_clause_coverage :",
+                "    IndependentRegisteredTruthConditionClauseCoverage := {",
+            ]
+        )
+        for idx, (field, value) in enumerate(assignments):
+            suffix = "," if idx < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem independent_registered_truth_condition_clause_coverage_exists :",
+                "    Exists (fun C : "
+                "IndependentRegisteredTruthConditionClauseCoverage => "
+                "C = independent_registered_truth_condition_clause_coverage) := by",
+                "  exact Exists.intro "
+                "independent_registered_truth_condition_clause_coverage rfl",
+                "",
+                "theorem "
+                "independent_registered_truth_condition_clause_coverage_instances_match :",
+                "    independent_registered_truth_condition_clause_coverage.",
+                "      independent_registered_clause_coverage_instances =",
+                "        independent_registered_truth_condition_clause_instances := by",
+                "  exact independent_registered_truth_condition_clause_coverage.",
+                "    independent_registered_clause_coverage_instances_eq",
+                "",
+                "theorem "
+                "independent_registered_truth_condition_clause_coverage_spec_sound :",
+                "    (A : Type) -> (term : A) ->",
+                "    independent_registered_truth_condition_clause_instances.",
+                "    independent_registered_clause_spec.",
+                "    fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact independent_registered_truth_condition_clause_coverage.",
+                "    independent_registered_clause_coverage_spec_sound",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"independent_registered_truth_condition_clause_coverage_example_{idx}_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact independent_registered_truth_condition_clause_coverage."
+                    f"independent_registered_clause_coverage_example_{idx}",
+                ]
+            )
+        return lines
+
+    fields: list[list[str]] = [
+        [
+            "  independent_registered_clause_coverage_instances :",
+            "      IndependentRegisteredTruthConditionClauseInstances",
+        ],
+        [
+            "  independent_registered_clause_coverage_instances_eq :",
+            "      independent_registered_clause_coverage_instances =",
+            "        independent_registered_truth_condition_clause_instances",
+        ],
+        [
+            "  independent_registered_clause_coverage_lexical_application :",
+            "    forall A : Type, forall term : A,",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      fully_registered_truth_denotes",
+            "        (independent_registered_clause_spec",
+            "          independent_registered_truth_condition_clause_instances) A term",
+        ],
+    ]
+    for type_name in declarations["types"]:
+        fields.append(
+            [
+                f"  independent_registered_clause_coverage_sigma_{type_name} :",
+                f"    forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                "          (independent_registered_clause_spec",
+                "            independent_registered_truth_condition_clause_instances)",
+                "          Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                f"        Prop (exists x : {type_name}, P x)",
+            ]
+        )
+    for name, _lean_binders, coq_binders, premise, conclusion in (
+        time_and_polarity_clauses
+    ):
+        fields.append(
+            [
+                f"  independent_registered_clause_coverage_{name} :",
+                f"    {coq_binders}",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                f"        {premise} ->",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                f"        {conclusion}",
+            ]
+        )
+    fields.extend(
+        [
+            [
+                "  independent_registered_clause_coverage_transition :",
+                "    forall theme : Entity, forall scale : StateScale,",
+                "    forall source : State, forall target : State,",
+                "      RegisteredStateTransitionTruth theme scale source target ->",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                "        TransitionT (Transition theme scale source target)",
+            ],
+            [
+                "  independent_registered_clause_coverage_cause :",
+                "    forall causer : Entity, forall effect : TransitionT,",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                "        TransitionT effect ->",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                "        PropT (Cause causer effect)",
+            ],
+            [
+                "  independent_registered_clause_coverage_spec_sound :",
+                "    forall A : Type, forall term : A,",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances) A term ->",
+                "      AtomicClosureTruth A term",
+            ],
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        fields.append(
+            [
+                f"  independent_registered_clause_coverage_example_{idx} :",
+                f"      AtomicClosureTruth {annotation} example_{idx}",
+            ]
+        )
+
+    lines = ["Record IndependentRegisteredTruthConditionClauseCoverage : Type := {"]
+    for idx, field_lines in enumerate(fields):
+        is_last = idx == len(fields) - 1
+        for field_idx, field_line in enumerate(field_lines):
+            if field_idx == len(field_lines) - 1 and not is_last:
+                lines.append(f"{field_line};")
+            else:
+                lines.append(field_line)
+    lines.append("}.")
+
+    assignments = [
+        (
+            "independent_registered_clause_coverage_instances",
+            "independent_registered_truth_condition_clause_instances",
+        ),
+        ("independent_registered_clause_coverage_instances_eq", "eq_refl"),
+        (
+            "independent_registered_clause_coverage_lexical_application",
+            "independent_registered_truth_condition_clause_lexical_application_instance",
+        ),
+    ]
+    assignments.extend(
+        (
+            f"independent_registered_clause_coverage_sigma_{type_name}",
+            f"independent_registered_truth_condition_clause_sigma_{type_name}_instance",
+        )
+        for type_name in declarations["types"]
+    )
+    assignments.extend(
+        (
+            f"independent_registered_clause_coverage_{name}",
+            f"independent_registered_truth_condition_clause_{name}_instance",
+        )
+        for name, _lean_binders, _coq_binders, _premise, _conclusion in (
+            time_and_polarity_clauses
+        )
+    )
+    assignments.extend(
+        [
+            (
+                "independent_registered_clause_coverage_transition",
+                "independent_registered_truth_condition_clause_transition_instance",
+            ),
+            (
+                "independent_registered_clause_coverage_cause",
+                "independent_registered_truth_condition_clause_cause_instance",
+            ),
+            (
+                "independent_registered_clause_coverage_spec_sound",
+                "independent_registered_truth_condition_clause_spec_sound",
+            ),
+        ]
+    )
+    assignments.extend(
+        (
+            f"independent_registered_clause_coverage_example_{idx}",
+            f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound",
+        )
+        for idx in range(1, len(results) + 1)
+    )
+    lines.extend(
+        [
+            "",
+            "Definition independent_registered_truth_condition_clause_coverage :",
+            "  IndependentRegisteredTruthConditionClauseCoverage := {|",
+        ]
+    )
+    for idx, (field, value) in enumerate(assignments):
+        suffix = ";" if idx < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem independent_registered_truth_condition_clause_coverage_exists :",
+            "  exists C : IndependentRegisteredTruthConditionClauseCoverage,",
+            "    C = independent_registered_truth_condition_clause_coverage.",
+            "Proof.",
+            "  exists independent_registered_truth_condition_clause_coverage.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "independent_registered_truth_condition_clause_coverage_instances_match :",
+            "  independent_registered_clause_coverage_instances",
+            "    independent_registered_truth_condition_clause_coverage =",
+            "  independent_registered_truth_condition_clause_instances.",
+            "Proof.",
+            "  exact (independent_registered_clause_coverage_instances_eq",
+            "    independent_registered_truth_condition_clause_coverage).",
+            "Qed.",
+            "",
+            "Theorem independent_registered_truth_condition_clause_coverage_spec_sound :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances) A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (independent_registered_clause_coverage_spec_sound",
+            "    independent_registered_truth_condition_clause_coverage).",
+            "Qed.",
+        ]
+    )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"independent_registered_truth_condition_clause_coverage_example_{idx}_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  exact (independent_registered_clause_coverage_example_"
+                f"{idx}",
+                "    independent_registered_truth_condition_clause_coverage).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -12666,6 +13134,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            independent_registered_truth_condition_clause_coverage_lines(
+                declarations,
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -12808,6 +13284,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"independent_registered_truth_condition_clause_coverage_example_{idx}_atomic_sound"
             )
             lines.append(
                 "#check "
@@ -13002,6 +13482,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check independent_registered_truth_condition_clause_cause_instance"
         )
         lines.append("#check independent_registered_truth_condition_clause_spec_sound")
+        lines.append("#check IndependentRegisteredTruthConditionClauseCoverage")
+        lines.append("#check independent_registered_truth_condition_clause_coverage")
+        lines.append(
+            "#check independent_registered_truth_condition_clause_coverage_exists"
+        )
+        lines.append(
+            "#check "
+            "independent_registered_truth_condition_clause_coverage_instances_match"
+        )
+        lines.append(
+            "#check independent_registered_truth_condition_clause_coverage_spec_sound"
+        )
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -13651,6 +14143,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(
+        independent_registered_truth_condition_clause_coverage_lines(
+            declarations,
+            results,
+            target,
+        )
+    )
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -13781,6 +14281,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"independent_registered_truth_condition_clause_example_{idx}_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"independent_registered_truth_condition_clause_coverage_example_{idx}_atomic_sound."
         )
         lines.append(
             "Check "
@@ -13944,6 +14448,14 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     )
     lines.append("Check independent_registered_truth_condition_clause_cause_instance.")
     lines.append("Check independent_registered_truth_condition_clause_spec_sound.")
+    lines.append("Check IndependentRegisteredTruthConditionClauseCoverage.")
+    lines.append("Check independent_registered_truth_condition_clause_coverage.")
+    lines.append("Check independent_registered_truth_condition_clause_coverage_exists.")
+    lines.append(
+        "Check "
+        "independent_registered_truth_condition_clause_coverage_instances_match."
+    )
+    lines.append("Check independent_registered_truth_condition_clause_coverage_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

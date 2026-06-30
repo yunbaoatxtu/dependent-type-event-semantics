@@ -4943,6 +4943,266 @@ Proof.
         independent_registered_truth_condition_clause_instances))).
 Qed.
 
+Record IndependentRegisteredTruthConditionClauseCoverage : Type := {
+  independent_registered_clause_coverage_instances :
+      IndependentRegisteredTruthConditionClauseInstances;
+  independent_registered_clause_coverage_instances_eq :
+      independent_registered_clause_coverage_instances =
+        independent_registered_truth_condition_clause_instances;
+  independent_registered_clause_coverage_lexical_application :
+    forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term;
+  independent_registered_clause_coverage_sigma_Entity :
+    forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : Entity, P x);
+  independent_registered_clause_coverage_sigma_Food :
+    forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : Food, P x);
+  independent_registered_clause_coverage_sigma_State :
+    forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : State, P x);
+  independent_registered_clause_coverage_sigma_StateScale :
+    forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : StateScale, P x);
+  independent_registered_clause_coverage_sigma_TransitionT :
+    forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec
+            independent_registered_truth_condition_clause_instances)
+          Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        Prop (exists x : TransitionT, P x);
+  independent_registered_clause_coverage_repeat :
+    forall n : nat, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (repeat n body);
+  independent_registered_clause_coverage_at_T :
+    forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (at_T marker body);
+  independent_registered_clause_coverage_during_T :
+    forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (during_T marker body);
+  independent_registered_clause_coverage_before_T :
+    forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (before_T marker body);
+  independent_registered_clause_coverage_after_T :
+    forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (after_T marker body);
+  independent_registered_clause_coverage_until_T :
+    forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (until_T marker body);
+  independent_registered_clause_coverage_since_T :
+    forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (since_T marker body);
+  independent_registered_clause_coverage_not_T :
+    forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (not_T body);
+  independent_registered_clause_coverage_transition :
+    forall theme : Entity, forall scale : StateScale,
+    forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        TransitionT (Transition theme scale source target);
+  independent_registered_clause_coverage_cause :
+    forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        TransitionT effect ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        PropT (Cause causer effect);
+  independent_registered_clause_coverage_spec_sound :
+    forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term;
+  independent_registered_clause_coverage_example_1 :
+      AtomicClosureTruth PropT example_1;
+  independent_registered_clause_coverage_example_2 :
+      AtomicClosureTruth Prop example_2;
+  independent_registered_clause_coverage_example_3 :
+      AtomicClosureTruth PropT example_3;
+  independent_registered_clause_coverage_example_4 :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition independent_registered_truth_condition_clause_coverage :
+  IndependentRegisteredTruthConditionClauseCoverage := {|
+  independent_registered_clause_coverage_instances := independent_registered_truth_condition_clause_instances;
+  independent_registered_clause_coverage_instances_eq := eq_refl;
+  independent_registered_clause_coverage_lexical_application := independent_registered_truth_condition_clause_lexical_application_instance;
+  independent_registered_clause_coverage_sigma_Entity := independent_registered_truth_condition_clause_sigma_Entity_instance;
+  independent_registered_clause_coverage_sigma_Food := independent_registered_truth_condition_clause_sigma_Food_instance;
+  independent_registered_clause_coverage_sigma_State := independent_registered_truth_condition_clause_sigma_State_instance;
+  independent_registered_clause_coverage_sigma_StateScale := independent_registered_truth_condition_clause_sigma_StateScale_instance;
+  independent_registered_clause_coverage_sigma_TransitionT := independent_registered_truth_condition_clause_sigma_TransitionT_instance;
+  independent_registered_clause_coverage_repeat := independent_registered_truth_condition_clause_repeat_instance;
+  independent_registered_clause_coverage_at_T := independent_registered_truth_condition_clause_at_T_instance;
+  independent_registered_clause_coverage_during_T := independent_registered_truth_condition_clause_during_T_instance;
+  independent_registered_clause_coverage_before_T := independent_registered_truth_condition_clause_before_T_instance;
+  independent_registered_clause_coverage_after_T := independent_registered_truth_condition_clause_after_T_instance;
+  independent_registered_clause_coverage_until_T := independent_registered_truth_condition_clause_until_T_instance;
+  independent_registered_clause_coverage_since_T := independent_registered_truth_condition_clause_since_T_instance;
+  independent_registered_clause_coverage_not_T := independent_registered_truth_condition_clause_not_T_instance;
+  independent_registered_clause_coverage_transition := independent_registered_truth_condition_clause_transition_instance;
+  independent_registered_clause_coverage_cause := independent_registered_truth_condition_clause_cause_instance;
+  independent_registered_clause_coverage_spec_sound := independent_registered_truth_condition_clause_spec_sound;
+  independent_registered_clause_coverage_example_1 := independent_registered_truth_condition_clause_example_1_atomic_sound;
+  independent_registered_clause_coverage_example_2 := independent_registered_truth_condition_clause_example_2_atomic_sound;
+  independent_registered_clause_coverage_example_3 := independent_registered_truth_condition_clause_example_3_atomic_sound;
+  independent_registered_clause_coverage_example_4 := independent_registered_truth_condition_clause_example_4_atomic_sound
+|}.
+
+Theorem independent_registered_truth_condition_clause_coverage_exists :
+  exists C : IndependentRegisteredTruthConditionClauseCoverage,
+    C = independent_registered_truth_condition_clause_coverage.
+Proof.
+  exists independent_registered_truth_condition_clause_coverage.
+  reflexivity.
+Qed.
+
+Theorem independent_registered_truth_condition_clause_coverage_instances_match :
+  independent_registered_clause_coverage_instances
+    independent_registered_truth_condition_clause_coverage =
+  independent_registered_truth_condition_clause_instances.
+Proof.
+  exact (independent_registered_clause_coverage_instances_eq
+    independent_registered_truth_condition_clause_coverage).
+Qed.
+
+Theorem independent_registered_truth_condition_clause_coverage_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (independent_registered_clause_coverage_spec_sound
+    independent_registered_truth_condition_clause_coverage).
+Qed.
+
+Theorem independent_registered_truth_condition_clause_coverage_example_1_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  exact (independent_registered_clause_coverage_example_1
+    independent_registered_truth_condition_clause_coverage).
+Qed.
+
+Theorem independent_registered_truth_condition_clause_coverage_example_2_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  exact (independent_registered_clause_coverage_example_2
+    independent_registered_truth_condition_clause_coverage).
+Qed.
+
+Theorem independent_registered_truth_condition_clause_coverage_example_3_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  exact (independent_registered_clause_coverage_example_3
+    independent_registered_truth_condition_clause_coverage).
+Qed.
+
+Theorem independent_registered_truth_condition_clause_coverage_example_4_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  exact (independent_registered_clause_coverage_example_4
+    independent_registered_truth_condition_clause_coverage).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -5060,6 +5320,7 @@ Check concrete_registered_truth_condition_route_example_1_agreement_evidence_ato
 Check concrete_registered_truth_condition_route_example_1_agreement_kernel_atomic_sound.
 Check independent_registered_truth_condition_sources_example_1_atomic_sound.
 Check independent_registered_truth_condition_clause_example_1_atomic_sound.
+Check independent_registered_truth_condition_clause_coverage_example_1_atomic_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
 Check registered_example_1_truth_instance_atomic_sound.
 Check example_2.
@@ -5109,6 +5370,7 @@ Check concrete_registered_truth_condition_route_example_2_agreement_evidence_ato
 Check concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound.
 Check independent_registered_truth_condition_sources_example_2_atomic_sound.
 Check independent_registered_truth_condition_clause_example_2_atomic_sound.
+Check independent_registered_truth_condition_clause_coverage_example_2_atomic_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
 Check registered_example_2_truth_instance_atomic_sound.
 Check example_3.
@@ -5158,6 +5420,7 @@ Check concrete_registered_truth_condition_route_example_3_agreement_evidence_ato
 Check concrete_registered_truth_condition_route_example_3_agreement_kernel_atomic_sound.
 Check independent_registered_truth_condition_sources_example_3_atomic_sound.
 Check independent_registered_truth_condition_clause_example_3_atomic_sound.
+Check independent_registered_truth_condition_clause_coverage_example_3_atomic_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
 Check registered_example_3_truth_instance_atomic_sound.
 Check example_4.
@@ -5207,6 +5470,7 @@ Check concrete_registered_truth_condition_route_example_4_agreement_evidence_ato
 Check concrete_registered_truth_condition_route_example_4_agreement_kernel_atomic_sound.
 Check independent_registered_truth_condition_sources_example_4_atomic_sound.
 Check independent_registered_truth_condition_clause_example_4_atomic_sound.
+Check independent_registered_truth_condition_clause_coverage_example_4_atomic_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
 Check registered_example_4_truth_instance_atomic_sound.
 Check independent_truth_condition_obligation_ledger.
@@ -5305,5 +5569,10 @@ Check independent_registered_truth_condition_clause_not_T_instance.
 Check independent_registered_truth_condition_clause_transition_instance.
 Check independent_registered_truth_condition_clause_cause_instance.
 Check independent_registered_truth_condition_clause_spec_sound.
+Check IndependentRegisteredTruthConditionClauseCoverage.
+Check independent_registered_truth_condition_clause_coverage.
+Check independent_registered_truth_condition_clause_coverage_exists.
+Check independent_registered_truth_condition_clause_coverage_instances_match.
+Check independent_registered_truth_condition_clause_coverage_spec_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

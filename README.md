@@ -1256,6 +1256,18 @@ every exported example. This makes the next concrete-instance stage more
 granular: each constructor class now has a stable theorem name that can be
 replaced by a stronger independently justified semantic clause. The next
 verified objective
+`coq_independent_registered_truth_condition_clause_coverage_package` packages
+those projections as `IndependentRegisteredTruthConditionClauseCoverage`,
+instantiates `independent_registered_truth_condition_clause_coverage`, proves
+the package exists, proves that its stored instance is
+`independent_registered_truth_condition_clause_instances`, exposes the packaged
+soundness projection as
+`independent_registered_truth_condition_clause_coverage_spec_sound`, and checks
+`independent_registered_truth_condition_clause_coverage_example_i_atomic_sound`
+for every exported example. This is a coverage ledger for the registered
+constructor classes, not a full independent lexical or temporal semantics. The
+next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

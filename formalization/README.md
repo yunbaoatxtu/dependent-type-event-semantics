@@ -258,7 +258,16 @@ Cause. It also checks
 `independent_registered_truth_condition_clause_example_i_atomic_sound` for
 every exported example. This gives later semantic-strengthening work a
 constructor-by-constructor replacement surface instead of one opaque source
-record. The scaffold also
+record. The scaffold then packages those projections as
+`IndependentRegisteredTruthConditionClauseCoverage`, instantiates
+`independent_registered_truth_condition_clause_coverage`, proves that the
+coverage package exists, proves that it still points to
+`independent_registered_truth_condition_clause_instances`, exposes
+`independent_registered_truth_condition_clause_coverage_spec_sound`, and checks
+`independent_registered_truth_condition_clause_coverage_example_i_atomic_sound`
+for every exported example. This is a finite coverage ledger for the registered
+constructor classes, not a proof that arbitrary lexical, temporal, causal, or
+quantificational clauses have independent truth conditions. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

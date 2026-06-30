@@ -612,6 +612,20 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_independent_registered_truth_condition_clause_coverage_atomic_sound_count = len(
+        re.findall(
+            r"^theorem independent_registered_truth_condition_clause_coverage_example_\d+_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_independent_registered_truth_condition_clause_coverage_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem independent_registered_truth_condition_clause_coverage_example_\d+_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2664,6 +2678,78 @@ def main() -> None:
             and "Check independent_registered_truth_condition_clause_transition_instance."
             in coq
             and "Check independent_registered_truth_condition_clause_example_4_atomic_sound."
+            in coq
+        ),
+        "lean independent registered truth-condition clause coverage package": (
+            lean_independent_registered_truth_condition_clause_coverage_atomic_sound_count
+            == lean_example_count
+            and "structure IndependentRegisteredTruthConditionClauseCoverage : Type where"
+            in lean
+            and "independent_registered_clause_coverage_instances :"
+            in lean
+            and "IndependentRegisteredTruthConditionClauseInstances" in lean
+            and "def independent_registered_truth_condition_clause_coverage :"
+            in lean
+            and "IndependentRegisteredTruthConditionClauseCoverage := {"
+            in lean
+            and "theorem independent_registered_truth_condition_clause_coverage_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_coverage_instances_match :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_coverage_spec_sound :"
+            in lean
+            and "theorem "
+            "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound :"
+            in lean
+            and "#check IndependentRegisteredTruthConditionClauseCoverage"
+            in lean
+            and "#check independent_registered_truth_condition_clause_coverage"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_clause_coverage_instances_match"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_clause_coverage_spec_sound"
+            in lean
+            and "#check "
+            "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound"
+            in lean
+        ),
+        "coq independent registered truth-condition clause coverage package": (
+            coq_independent_registered_truth_condition_clause_coverage_atomic_sound_count
+            == coq_example_count
+            and "Record IndependentRegisteredTruthConditionClauseCoverage : Type := {"
+            in coq
+            and "independent_registered_clause_coverage_instances :" in coq
+            and "IndependentRegisteredTruthConditionClauseInstances" in coq
+            and "Definition independent_registered_truth_condition_clause_coverage :"
+            in coq
+            and "IndependentRegisteredTruthConditionClauseCoverage := {|"
+            in coq
+            and "Theorem independent_registered_truth_condition_clause_coverage_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_coverage_instances_match :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_coverage_spec_sound :"
+            in coq
+            and "Theorem "
+            "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound :"
+            in coq
+            and "Check IndependentRegisteredTruthConditionClauseCoverage." in coq
+            and "Check independent_registered_truth_condition_clause_coverage."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_clause_coverage_instances_match."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_clause_coverage_spec_sound."
+            in coq
+            and "Check "
+            "independent_registered_truth_condition_clause_coverage_example_4_atomic_sound."
             in coq
         ),
         "lean syntax-directed truth kernel soundness proofs": (
