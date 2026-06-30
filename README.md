@@ -1294,6 +1294,17 @@ separates the registered quantifier/Sigma replacement surface from temporal
 and lexical clauses while still leaving full scope, discourse, and arbitrary
 lexical truth conditions outside the completed fragment. The next
 verified objective
+`coq_independent_registered_repeat_truth_condition_instances_package` extracts
+the event-counting fragment as
+`IndependentRegisteredRepeatTruthConditionInstances`. It instantiates
+`independent_registered_repeat_truth_condition_instances`, proves the package
+exists, proves that its stored coverage object is
+`independent_registered_truth_condition_clause_coverage`, and exposes
+`independent_registered_repeat_truth_condition_repeat_instance` for
+`repeat n body`. This isolates the Luo-Shi natural-number replacement for
+event counting from temporal, quantifier, polarity, transition, causal, and
+lexical clauses. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the

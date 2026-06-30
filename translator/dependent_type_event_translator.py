@@ -12685,6 +12685,164 @@ def independent_registered_sigma_truth_condition_instance_lines(
     return lines
 
 
+def independent_registered_repeat_truth_condition_instance_lines(
+    target: str,
+) -> list[str]:
+    """Expose the registered repetition/event-counting clause as a subpackage."""
+
+    if target == "lean":
+        return [
+            "structure IndependentRegisteredRepeatTruthConditionInstances : Type where",
+            "  independent_registered_repeat_clause_coverage :",
+            "      IndependentRegisteredTruthConditionClauseCoverage",
+            "  independent_registered_repeat_clause_coverage_eq :",
+            "      independent_registered_repeat_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage",
+            "  independent_registered_repeat_instance :",
+            "      (n : Nat) -> (body : PropT) ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes PropT body ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes PropT (repeat n body)",
+            "  independent_registered_repeat_spec_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      independent_registered_truth_condition_clause_instances.",
+            "      independent_registered_clause_spec.",
+            "      fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "",
+            "def independent_registered_repeat_truth_condition_instances :",
+            "    IndependentRegisteredRepeatTruthConditionInstances := {",
+            "  independent_registered_repeat_clause_coverage :=",
+            "    independent_registered_truth_condition_clause_coverage,",
+            "  independent_registered_repeat_clause_coverage_eq := rfl,",
+            "  independent_registered_repeat_instance :=",
+            "    independent_registered_truth_condition_clause_repeat_instance,",
+            "  independent_registered_repeat_spec_sound :=",
+            "    independent_registered_truth_condition_clause_coverage."
+            "independent_registered_clause_coverage_spec_sound",
+            "}",
+            "",
+            "theorem independent_registered_repeat_truth_condition_instances_exists :",
+            "    Exists (fun R : "
+            "IndependentRegisteredRepeatTruthConditionInstances => "
+            "R = independent_registered_repeat_truth_condition_instances) := by",
+            "  exact Exists.intro "
+            "independent_registered_repeat_truth_condition_instances rfl",
+            "",
+            "theorem "
+            "independent_registered_repeat_truth_condition_coverage_matches :",
+            "    independent_registered_repeat_truth_condition_instances.",
+            "      independent_registered_repeat_clause_coverage =",
+            "        independent_registered_truth_condition_clause_coverage := by",
+            "  exact independent_registered_repeat_truth_condition_instances.",
+            "    independent_registered_repeat_clause_coverage_eq",
+            "",
+            "theorem independent_registered_repeat_truth_condition_repeat_instance :",
+            "    (n : Nat) -> (body : PropT) ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes PropT body ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes PropT (repeat n body) := by",
+            "  exact independent_registered_repeat_truth_condition_instances.",
+            "    independent_registered_repeat_instance",
+            "",
+            "theorem independent_registered_repeat_truth_condition_spec_sound :",
+            "    (A : Type) -> (term : A) ->",
+            "    independent_registered_truth_condition_clause_instances.",
+            "    independent_registered_clause_spec.",
+            "    fully_registered_truth_denotes A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact independent_registered_repeat_truth_condition_instances.",
+            "    independent_registered_repeat_spec_sound",
+        ]
+
+    return [
+        "Record IndependentRegisteredRepeatTruthConditionInstances : Type := {",
+        "  independent_registered_repeat_clause_coverage :",
+        "      IndependentRegisteredTruthConditionClauseCoverage;",
+        "  independent_registered_repeat_clause_coverage_eq :",
+        "      independent_registered_repeat_clause_coverage =",
+        "        independent_registered_truth_condition_clause_coverage;",
+        "  independent_registered_repeat_instance :",
+        "    forall n : nat, forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        PropT body ->",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        PropT (repeat n body);",
+        "  independent_registered_repeat_spec_sound :",
+        "    forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances) A term ->",
+        "      AtomicClosureTruth A term",
+        "}.",
+        "",
+        "Definition independent_registered_repeat_truth_condition_instances :",
+        "  IndependentRegisteredRepeatTruthConditionInstances := {|",
+        "  independent_registered_repeat_clause_coverage :=",
+        "    independent_registered_truth_condition_clause_coverage;",
+        "  independent_registered_repeat_clause_coverage_eq := eq_refl;",
+        "  independent_registered_repeat_instance :=",
+        "    independent_registered_truth_condition_clause_repeat_instance;",
+        "  independent_registered_repeat_spec_sound :=",
+        "    independent_registered_clause_coverage_spec_sound",
+        "      independent_registered_truth_condition_clause_coverage",
+        "|}.",
+        "",
+        "Theorem independent_registered_repeat_truth_condition_instances_exists :",
+        "  exists R : IndependentRegisteredRepeatTruthConditionInstances,",
+        "    R = independent_registered_repeat_truth_condition_instances.",
+        "Proof.",
+        "  exists independent_registered_repeat_truth_condition_instances.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem independent_registered_repeat_truth_condition_coverage_matches :",
+        "  independent_registered_repeat_clause_coverage",
+        "    independent_registered_repeat_truth_condition_instances =",
+        "  independent_registered_truth_condition_clause_coverage.",
+        "Proof.",
+        "  exact (independent_registered_repeat_clause_coverage_eq",
+        "    independent_registered_repeat_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_repeat_truth_condition_repeat_instance :",
+        "  forall n : nat, forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances)",
+        "      PropT body ->",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances)",
+        "      PropT (repeat n body).",
+        "Proof.",
+        "  exact (independent_registered_repeat_instance",
+        "    independent_registered_repeat_truth_condition_instances).",
+        "Qed.",
+        "",
+        "Theorem independent_registered_repeat_truth_condition_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (independent_registered_clause_spec",
+        "        independent_registered_truth_condition_clause_instances) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (independent_registered_repeat_spec_sound",
+        "    independent_registered_repeat_truth_condition_instances).",
+        "Qed.",
+    ]
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -13632,6 +13790,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(independent_registered_repeat_truth_condition_instance_lines(target))
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -14021,6 +14181,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check independent_registered_sigma_truth_condition_sigma_Entity_instance"
         )
         lines.append("#check independent_registered_sigma_truth_condition_spec_sound")
+        lines.append("#check IndependentRegisteredRepeatTruthConditionInstances")
+        lines.append("#check independent_registered_repeat_truth_condition_instances")
+        lines.append(
+            "#check independent_registered_repeat_truth_condition_instances_exists"
+        )
+        lines.append(
+            "#check independent_registered_repeat_truth_condition_coverage_matches"
+        )
+        lines.append(
+            "#check independent_registered_repeat_truth_condition_repeat_instance"
+        )
+        lines.append("#check independent_registered_repeat_truth_condition_spec_sound")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -14687,6 +14859,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(independent_registered_repeat_truth_condition_instance_lines(target))
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -15009,6 +15183,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check independent_registered_sigma_truth_condition_coverage_matches.")
     lines.append("Check independent_registered_sigma_truth_condition_sigma_Entity_instance.")
     lines.append("Check independent_registered_sigma_truth_condition_spec_sound.")
+    lines.append("Check IndependentRegisteredRepeatTruthConditionInstances.")
+    lines.append("Check independent_registered_repeat_truth_condition_instances.")
+    lines.append("Check independent_registered_repeat_truth_condition_instances_exists.")
+    lines.append("Check independent_registered_repeat_truth_condition_coverage_matches.")
+    lines.append("Check independent_registered_repeat_truth_condition_repeat_instance.")
+    lines.append("Check independent_registered_repeat_truth_condition_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

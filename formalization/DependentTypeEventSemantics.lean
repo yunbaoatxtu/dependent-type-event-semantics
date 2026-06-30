@@ -3481,6 +3481,69 @@ theorem independent_registered_sigma_truth_condition_spec_sound :
   exact independent_registered_sigma_truth_condition_instances.
     independent_registered_sigma_spec_sound
 
+structure IndependentRegisteredRepeatTruthConditionInstances : Type where
+  independent_registered_repeat_clause_coverage :
+      IndependentRegisteredTruthConditionClauseCoverage
+  independent_registered_repeat_clause_coverage_eq :
+      independent_registered_repeat_clause_coverage =
+        independent_registered_truth_condition_clause_coverage
+  independent_registered_repeat_instance :
+      (n : Nat) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes PropT (repeat n body)
+  independent_registered_repeat_spec_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def independent_registered_repeat_truth_condition_instances :
+    IndependentRegisteredRepeatTruthConditionInstances := {
+  independent_registered_repeat_clause_coverage :=
+    independent_registered_truth_condition_clause_coverage,
+  independent_registered_repeat_clause_coverage_eq := rfl,
+  independent_registered_repeat_instance :=
+    independent_registered_truth_condition_clause_repeat_instance,
+  independent_registered_repeat_spec_sound :=
+    independent_registered_truth_condition_clause_coverage.independent_registered_clause_coverage_spec_sound
+}
+
+theorem independent_registered_repeat_truth_condition_instances_exists :
+    Exists (fun R : IndependentRegisteredRepeatTruthConditionInstances => R = independent_registered_repeat_truth_condition_instances) := by
+  exact Exists.intro independent_registered_repeat_truth_condition_instances rfl
+
+theorem independent_registered_repeat_truth_condition_coverage_matches :
+    independent_registered_repeat_truth_condition_instances.
+      independent_registered_repeat_clause_coverage =
+        independent_registered_truth_condition_clause_coverage := by
+  exact independent_registered_repeat_truth_condition_instances.
+    independent_registered_repeat_clause_coverage_eq
+
+theorem independent_registered_repeat_truth_condition_repeat_instance :
+    (n : Nat) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes PropT (repeat n body) := by
+  exact independent_registered_repeat_truth_condition_instances.
+    independent_registered_repeat_instance
+
+theorem independent_registered_repeat_truth_condition_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact independent_registered_repeat_truth_condition_instances.
+    independent_registered_repeat_spec_sound
+
 theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1 := by
   apply fully_registered_truth_conditions_imply_atomic_closure
   exact example_1_fully_registered_truth_condition_sound
@@ -3845,5 +3908,11 @@ theorem registered_example_4_truth_instance_atomic_sound : AtomicClosureTruth Pr
 #check independent_registered_sigma_truth_condition_coverage_matches
 #check independent_registered_sigma_truth_condition_sigma_Entity_instance
 #check independent_registered_sigma_truth_condition_spec_sound
+#check IndependentRegisteredRepeatTruthConditionInstances
+#check independent_registered_repeat_truth_condition_instances
+#check independent_registered_repeat_truth_condition_instances_exists
+#check independent_registered_repeat_truth_condition_coverage_matches
+#check independent_registered_repeat_truth_condition_repeat_instance
+#check independent_registered_repeat_truth_condition_spec_sound
 #check registered_example_truth_instances
 #check registered_example_truth_instances_exists

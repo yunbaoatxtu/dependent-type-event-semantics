@@ -2918,6 +2918,67 @@ def main() -> None:
             and "Check independent_registered_sigma_truth_condition_spec_sound."
             in coq
         ),
+        "lean independent registered repeat truth-condition instances package": (
+            "structure IndependentRegisteredRepeatTruthConditionInstances : Type where"
+            in lean
+            and "independent_registered_repeat_clause_coverage :"
+            in lean
+            and "IndependentRegisteredTruthConditionClauseCoverage" in lean
+            and "def independent_registered_repeat_truth_condition_instances :"
+            in lean
+            and "IndependentRegisteredRepeatTruthConditionInstances := {"
+            in lean
+            and "theorem "
+            "independent_registered_repeat_truth_condition_instances_exists :"
+            in lean
+            and "theorem "
+            "independent_registered_repeat_truth_condition_coverage_matches :"
+            in lean
+            and "theorem independent_registered_repeat_truth_condition_repeat_instance :"
+            in lean
+            and "theorem independent_registered_repeat_truth_condition_spec_sound :"
+            in lean
+            and "#check IndependentRegisteredRepeatTruthConditionInstances"
+            in lean
+            and "#check independent_registered_repeat_truth_condition_instances"
+            in lean
+            and "#check independent_registered_repeat_truth_condition_coverage_matches"
+            in lean
+            and "#check independent_registered_repeat_truth_condition_repeat_instance"
+            in lean
+            and "#check independent_registered_repeat_truth_condition_spec_sound"
+            in lean
+        ),
+        "coq independent registered repeat truth-condition instances package": (
+            "Record IndependentRegisteredRepeatTruthConditionInstances : Type := {"
+            in coq
+            and "independent_registered_repeat_clause_coverage :" in coq
+            and "IndependentRegisteredTruthConditionClauseCoverage" in coq
+            and "Definition independent_registered_repeat_truth_condition_instances :"
+            in coq
+            and "IndependentRegisteredRepeatTruthConditionInstances := {|"
+            in coq
+            and "Theorem "
+            "independent_registered_repeat_truth_condition_instances_exists :"
+            in coq
+            and "Theorem "
+            "independent_registered_repeat_truth_condition_coverage_matches :"
+            in coq
+            and "Theorem independent_registered_repeat_truth_condition_repeat_instance :"
+            in coq
+            and "Theorem independent_registered_repeat_truth_condition_spec_sound :"
+            in coq
+            and "Check IndependentRegisteredRepeatTruthConditionInstances."
+            in coq
+            and "Check independent_registered_repeat_truth_condition_instances."
+            in coq
+            and "Check independent_registered_repeat_truth_condition_coverage_matches."
+            in coq
+            and "Check independent_registered_repeat_truth_condition_repeat_instance."
+            in coq
+            and "Check independent_registered_repeat_truth_condition_spec_sound."
+            in coq
+        ),
         "lean syntax-directed truth kernel soundness proofs": (
             lean_syntax_directed_truth_kernel_sound_count == lean_example_count
             and "#check example_4_syntax_directed_truth_kernel_sound" in lean

@@ -284,7 +284,15 @@ Sigma package exists, proves that it still points to
 projections such as
 `independent_registered_sigma_truth_condition_sigma_Entity_instance`. This
 keeps registered Sigma and quantifier-scope evidence inspectable without
-claiming a complete natural-language quantifier theory. The scaffold also
+claiming a complete natural-language quantifier theory. The scaffold then
+extracts the repetition/event-counting fragment as
+`IndependentRegisteredRepeatTruthConditionInstances`, instantiates
+`independent_registered_repeat_truth_condition_instances`, proves that the
+repeat package exists, proves that it still points to
+`independent_registered_truth_condition_clause_coverage`, and checks
+`independent_registered_repeat_truth_condition_repeat_instance` for
+`repeat n body`. This keeps natural-number event-counting evidence separate
+from temporal and quantifier evidence. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported
