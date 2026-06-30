@@ -11021,6 +11021,296 @@ def finite_registered_truth_condition_completion_certificate_lines(
     return lines
 
 
+def finite_registered_truth_condition_component_coverage_certificate_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package the finite registered truth-condition component witnesses."""
+
+    packages = [
+        (
+            "lexical",
+            "IndependentRegisteredLexicalTruthConditionInstances",
+            "independent_registered_lexical_truth_condition_instances",
+            "independent_registered_lexical_truth_condition_spec_sound",
+        ),
+        (
+            "temporal",
+            "IndependentRegisteredTemporalTruthConditionInstances",
+            "independent_registered_temporal_truth_condition_instances",
+            "independent_registered_temporal_truth_condition_spec_sound",
+        ),
+        (
+            "sigma",
+            "IndependentRegisteredSigmaTruthConditionInstances",
+            "independent_registered_sigma_truth_condition_instances",
+            "independent_registered_sigma_truth_condition_spec_sound",
+        ),
+        (
+            "repeat",
+            "IndependentRegisteredRepeatTruthConditionInstances",
+            "independent_registered_repeat_truth_condition_instances",
+            "independent_registered_repeat_truth_condition_spec_sound",
+        ),
+        (
+            "polarity",
+            "IndependentRegisteredPolarityTruthConditionInstances",
+            "independent_registered_polarity_truth_condition_instances",
+            "independent_registered_polarity_truth_condition_spec_sound",
+        ),
+        (
+            "transition_cause",
+            "IndependentRegisteredTransitionCauseTruthConditionInstances",
+            "independent_registered_transition_cause_truth_condition_instances",
+            "independent_registered_transition_cause_truth_condition_spec_sound",
+        ),
+        (
+            "suite",
+            "IndependentRegisteredTruthConditionInstanceSuite",
+            "independent_registered_truth_condition_instance_suite",
+            "independent_registered_truth_condition_instance_suite_spec_sound",
+        ),
+    ]
+
+    if target == "lean":
+        lines = [
+            "structure "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate : "
+            "Type where",
+            "  finite_registered_component_completion : "
+            "FiniteRegisteredTruthConditionCompletionCertificate",
+            "  finite_registered_component_completion_eq :",
+            "      finite_registered_component_completion = "
+            "finite_registered_truth_condition_completion_certificate",
+        ]
+        for field, type_name, instance, _sound in packages:
+            lines.extend(
+                [
+                    f"  finite_registered_component_{field} : {type_name}",
+                    f"  finite_registered_component_{field}_eq :",
+                    f"      finite_registered_component_{field} = {instance}",
+                    f"  finite_registered_component_{field}_sound :",
+                    "      (A : Type) -> (term : A) ->",
+                    "      independent_registered_truth_condition_clause_instances.",
+                    "      independent_registered_clause_spec.",
+                    "      fully_registered_truth_denotes A term ->",
+                    "      AtomicClosureTruth A term",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_truth_condition_component_coverage_certificate :",
+                "    FiniteRegisteredTruthConditionComponentCoverageCertificate := {",
+                "  finite_registered_component_completion := "
+                "finite_registered_truth_condition_completion_certificate,",
+                "  finite_registered_component_completion_eq := rfl,",
+            ]
+        )
+        for field, _type_name, instance, sound in packages:
+            lines.extend(
+                [
+                    f"  finite_registered_component_{field} := {instance},",
+                    f"  finite_registered_component_{field}_eq := rfl,",
+                    f"  finite_registered_component_{field}_sound := {sound},",
+                ]
+            )
+        lines[-1] = lines[-1].rstrip(",")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem "
+                "finite_registered_truth_condition_component_coverage_certificate_exists :",
+                "    Exists (fun C : "
+                "FiniteRegisteredTruthConditionComponentCoverageCertificate => "
+                "C = finite_registered_truth_condition_component_coverage_certificate) "
+                ":= by",
+                "  exact Exists.intro "
+                "finite_registered_truth_condition_component_coverage_certificate rfl",
+                "",
+                "theorem "
+                "finite_registered_truth_condition_component_completion_matches :",
+                "    finite_registered_truth_condition_component_coverage_certificate."
+                "finite_registered_component_completion =",
+                "      finite_registered_truth_condition_completion_certificate := by",
+                "  exact "
+                "finite_registered_truth_condition_component_coverage_certificate."
+                "finite_registered_component_completion_eq",
+            ]
+        )
+        for field, _type_name, instance, _sound in packages:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_component_{field}_matches :",
+                    "    finite_registered_truth_condition_component_coverage_certificate."
+                    f"finite_registered_component_{field} =",
+                    f"      {instance} := by",
+                    "  exact "
+                    "finite_registered_truth_condition_component_coverage_certificate."
+                    f"finite_registered_component_{field}_eq",
+                ]
+            )
+        for field, _type_name, _instance, _sound in packages:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_component_{field}_spec_sound :",
+                    "    (A : Type) -> (term : A) ->",
+                    "    independent_registered_truth_condition_clause_instances.",
+                    "    independent_registered_clause_spec.",
+                    "    fully_registered_truth_denotes A term ->",
+                    "    AtomicClosureTruth A term := by",
+                    "  exact "
+                    "finite_registered_truth_condition_component_coverage_certificate."
+                    f"finite_registered_component_{field}_sound",
+                ]
+            )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_truth_condition_component_coverage_example_{idx}_atomic_sound :",
+                    f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  exact "
+                    "finite_registered_truth_condition_component_coverage_certificate."
+                    "finite_registered_component_completion."
+                    "finite_registered_completion_ledger."
+                    "finite_registered_ledger_suite_examples."
+                    f"example_{idx}_suite_atomic_sound",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record "
+        "FiniteRegisteredTruthConditionComponentCoverageCertificate : Type := {",
+        "  finite_registered_component_completion : "
+        "FiniteRegisteredTruthConditionCompletionCertificate;",
+        "  finite_registered_component_completion_eq :",
+        "      finite_registered_component_completion = "
+        "finite_registered_truth_condition_completion_certificate;",
+    ]
+    for field, type_name, instance, _sound in packages:
+        lines.extend(
+            [
+                f"  finite_registered_component_{field} : {type_name};",
+                f"  finite_registered_component_{field}_eq :",
+                f"      finite_registered_component_{field} = {instance};",
+                f"  finite_registered_component_{field}_sound :",
+                "      forall A : Type, forall term : A,",
+                "      fully_registered_truth_denotes",
+                "        (independent_registered_clause_spec",
+                "          independent_registered_truth_condition_clause_instances)",
+                "        A term ->",
+                "      AtomicClosureTruth A term;",
+            ]
+        )
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition "
+            "finite_registered_truth_condition_component_coverage_certificate :",
+            "  FiniteRegisteredTruthConditionComponentCoverageCertificate := {|",
+            "  finite_registered_component_completion := "
+            "finite_registered_truth_condition_completion_certificate;",
+            "  finite_registered_component_completion_eq := eq_refl;",
+        ]
+    )
+    for field, _type_name, instance, sound in packages:
+        lines.extend(
+            [
+                f"  finite_registered_component_{field} := {instance};",
+                f"  finite_registered_component_{field}_eq := eq_refl;",
+                f"  finite_registered_component_{field}_sound := {sound};",
+            ]
+        )
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem "
+            "finite_registered_truth_condition_component_coverage_certificate_exists :",
+            "  exists C : "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate,",
+            "    C = finite_registered_truth_condition_component_coverage_certificate.",
+            "Proof.",
+            "  exists finite_registered_truth_condition_component_coverage_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem "
+            "finite_registered_truth_condition_component_completion_matches :",
+            "  finite_registered_component_completion",
+            "    finite_registered_truth_condition_component_coverage_certificate =",
+            "  finite_registered_truth_condition_completion_certificate.",
+            "Proof.",
+            "  exact (finite_registered_component_completion_eq",
+            "    finite_registered_truth_condition_component_coverage_certificate).",
+            "Qed.",
+        ]
+    )
+    for field, _type_name, instance, _sound in packages:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_component_{field}_matches :",
+                f"  finite_registered_component_{field}",
+                "    finite_registered_truth_condition_component_coverage_certificate =",
+                f"  {instance}.",
+                "Proof.",
+                f"  exact (finite_registered_component_{field}_eq",
+                "    finite_registered_truth_condition_component_coverage_certificate).",
+                "Qed.",
+            ]
+        )
+    for field, _type_name, _instance, _sound in packages:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_component_{field}_spec_sound :",
+                "  forall A : Type, forall term : A,",
+                "    fully_registered_truth_denotes",
+                "      (independent_registered_clause_spec",
+                "        independent_registered_truth_condition_clause_instances)",
+                "      A term ->",
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                f"  exact (finite_registered_component_{field}_sound",
+                "    finite_registered_truth_condition_component_coverage_certificate).",
+                "Qed.",
+            ]
+        )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_truth_condition_component_coverage_example_{idx}_atomic_sound :",
+                f"  AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                f"  exact (example_{idx}_suite_atomic_sound",
+                "    (finite_registered_ledger_suite_examples",
+                "      (finite_registered_completion_ledger",
+                "        (finite_registered_component_completion",
+                "          finite_registered_truth_condition_component_coverage_certificate)))).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -15505,6 +15795,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_truth_condition_component_coverage_certificate_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -15673,6 +15970,11 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "finite_registered_truth_condition_completion_example_"
                     f"{idx}_{route}_atomic_sound"
                 )
+            lines.append(
+                "#check "
+                "finite_registered_truth_condition_component_coverage_example_"
+                f"{idx}_atomic_sound"
+            )
         lines.append("#check independent_truth_condition_obligation_ledger")
         lines.append("#check independent_truth_condition_obligation_ledger_exists")
         lines.append(
@@ -16044,6 +16346,38 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"finite_registered_truth_condition_completion_{route}_sound"
+            )
+        lines.append(
+            "#check "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_truth_condition_component_coverage_certificate"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_truth_condition_component_coverage_certificate_exists"
+        )
+        lines.append(
+            "#check finite_registered_truth_condition_component_completion_matches"
+        )
+        for component in (
+            "lexical",
+            "temporal",
+            "sigma",
+            "repeat",
+            "polarity",
+            "transition_cause",
+            "suite",
+        ):
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_component_{component}_matches"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_truth_condition_component_{component}_spec_sound"
             )
         return "\n".join(lines) + "\n"
 
@@ -16753,6 +17087,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(
+        finite_registered_truth_condition_component_coverage_certificate_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -16911,6 +17252,11 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "finite_registered_truth_condition_completion_example_"
                 f"{idx}_{route}_atomic_sound."
             )
+        lines.append(
+            "Check "
+            "finite_registered_truth_condition_component_coverage_example_"
+            f"{idx}_atomic_sound."
+        )
     lines.append("Check independent_truth_condition_obligation_ledger.")
     lines.append("Check independent_truth_condition_obligation_ledger_exists.")
     lines.append(
@@ -17194,6 +17540,32 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"finite_registered_truth_condition_completion_{route}_sound."
+        )
+    lines.append("Check FiniteRegisteredTruthConditionComponentCoverageCertificate.")
+    lines.append(
+        "Check finite_registered_truth_condition_component_coverage_certificate."
+    )
+    lines.append(
+        "Check "
+        "finite_registered_truth_condition_component_coverage_certificate_exists."
+    )
+    lines.append("Check finite_registered_truth_condition_component_completion_matches.")
+    for component in (
+        "lexical",
+        "temporal",
+        "sigma",
+        "repeat",
+        "polarity",
+        "transition_cause",
+        "suite",
+    ):
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_component_{component}_matches."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_truth_condition_component_{component}_spec_sound."
         )
     return "\n".join(lines) + "\n"
 

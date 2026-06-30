@@ -2558,6 +2558,26 @@ class TranslatorTests(unittest.TestCase):
             "#check finite_registered_truth_condition_completion_example_2_source_atomic_sound",
             lean_module,
         )
+        self.assertIn(
+            "structure FiniteRegisteredTruthConditionComponentCoverageCertificate : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def finite_registered_truth_condition_component_coverage_certificate :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_truth_condition_component_transition_cause_spec_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_truth_condition_component_coverage_example_2_atomic_sound :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check finite_registered_truth_condition_component_coverage_example_2_atomic_sound",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply semantic_preservation_syntax_directed_truth", lean_module)
@@ -4209,6 +4229,26 @@ class TranslatorTests(unittest.TestCase):
             )
         self.assertIn(
             "Check finite_registered_truth_condition_completion_example_2_source_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record FiniteRegisteredTruthConditionComponentCoverageCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition finite_registered_truth_condition_component_coverage_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_truth_condition_component_transition_cause_spec_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_truth_condition_component_coverage_example_2_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check finite_registered_truth_condition_component_coverage_example_2_atomic_sound.",
             coq_module,
         )
         self.assertIn(
@@ -16991,6 +17031,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_example_truth_instance_package",
                 "coq_finite_registered_truth_condition_instance_ledger",
                 "coq_finite_registered_truth_condition_completion_certificate",
+                "coq_finite_registered_truth_condition_component_coverage_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -26262,6 +26303,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_finite_registered_truth_condition_completion_certificate`",
             readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredTruthConditionComponentCoverageCertificate`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_finite_registered_truth_condition_component_coverage_certificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -26423,6 +26472,14 @@ class TranslatorTests(unittest.TestCase):
             "`finite_registered_truth_condition_completion_certificate`",
             formalization_readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredTruthConditionComponentCoverageCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`finite_registered_truth_condition_component_coverage_certificate`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -26561,6 +26618,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_finite_registered_truth_condition_completion_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_finite_registered_truth_condition_component_coverage_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

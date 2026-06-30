@@ -682,6 +682,20 @@ def main() -> None:
         )
         for key, pattern in finite_completion_atomic_patterns.items()
     }
+    lean_finite_registered_truth_condition_component_coverage_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_truth_condition_component_coverage_example_\d+_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_truth_condition_component_coverage_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_truth_condition_component_coverage_example_\d+_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -1633,6 +1647,148 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_truth_condition_completion_example_4_source_atomic_sound."
+            in coq
+        ),
+        "lean finite registered truth-condition component coverage certificate": (
+            lean_finite_registered_truth_condition_component_coverage_atomic_count
+            == lean_example_count
+            and "structure "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate : "
+            "Type where" in lean
+            and "finite_registered_component_completion : "
+            "FiniteRegisteredTruthConditionCompletionCertificate" in lean
+            and "finite_registered_component_lexical : "
+            "IndependentRegisteredLexicalTruthConditionInstances" in lean
+            and "finite_registered_component_temporal : "
+            "IndependentRegisteredTemporalTruthConditionInstances" in lean
+            and "finite_registered_component_sigma : "
+            "IndependentRegisteredSigmaTruthConditionInstances" in lean
+            and "finite_registered_component_repeat : "
+            "IndependentRegisteredRepeatTruthConditionInstances" in lean
+            and "finite_registered_component_polarity : "
+            "IndependentRegisteredPolarityTruthConditionInstances" in lean
+            and "finite_registered_component_transition_cause : "
+            "IndependentRegisteredTransitionCauseTruthConditionInstances" in lean
+            and "finite_registered_component_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite" in lean
+            and "def "
+            "finite_registered_truth_condition_component_coverage_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_coverage_certificate_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_completion_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_transition_cause_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_lexical_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_temporal_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_sigma_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_repeat_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_polarity_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_transition_cause_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_suite_spec_sound :"
+            in lean
+            and "theorem "
+            "finite_registered_truth_condition_component_coverage_example_4_atomic_sound :"
+            in lean
+            and "#check "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_component_coverage_certificate"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_component_transition_cause_spec_sound"
+            in lean
+            and "#check "
+            "finite_registered_truth_condition_component_coverage_example_4_atomic_sound"
+            in lean
+        ),
+        "coq finite registered truth-condition component coverage certificate": (
+            coq_finite_registered_truth_condition_component_coverage_atomic_count
+            == coq_example_count
+            and "Record "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate : Type := {"
+            in coq
+            and "finite_registered_component_completion : "
+            "FiniteRegisteredTruthConditionCompletionCertificate;" in coq
+            and "finite_registered_component_lexical : "
+            "IndependentRegisteredLexicalTruthConditionInstances;" in coq
+            and "finite_registered_component_temporal : "
+            "IndependentRegisteredTemporalTruthConditionInstances;" in coq
+            and "finite_registered_component_sigma : "
+            "IndependentRegisteredSigmaTruthConditionInstances;" in coq
+            and "finite_registered_component_repeat : "
+            "IndependentRegisteredRepeatTruthConditionInstances;" in coq
+            and "finite_registered_component_polarity : "
+            "IndependentRegisteredPolarityTruthConditionInstances;" in coq
+            and "finite_registered_component_transition_cause : "
+            "IndependentRegisteredTransitionCauseTruthConditionInstances;" in coq
+            and "finite_registered_component_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite;" in coq
+            and "Definition "
+            "finite_registered_truth_condition_component_coverage_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_coverage_certificate_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_completion_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_transition_cause_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_lexical_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_temporal_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_sigma_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_repeat_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_polarity_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_transition_cause_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_suite_spec_sound :"
+            in coq
+            and "Theorem "
+            "finite_registered_truth_condition_component_coverage_example_4_atomic_sound :"
+            in coq
+            and "Check "
+            "FiniteRegisteredTruthConditionComponentCoverageCertificate."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_component_coverage_certificate."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_component_transition_cause_spec_sound."
+            in coq
+            and "Check "
+            "finite_registered_truth_condition_component_coverage_example_4_atomic_sound."
             in coq
         ),
         "lean registered lexical truth model bridge": (

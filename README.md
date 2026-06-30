@@ -1415,7 +1415,14 @@ ledger as `FiniteRegisteredTruthConditionCompletionCertificate`. The certificate
 checks registered, direct concrete, evidence-backed, kernel-induced, source, and
 suite projections for every exported example, so the finite registered fragment
 has one Coq/Rocq-checked completion boundary before the project attempts a
-broader truth-condition instance. The open blocker remains
+broader truth-condition instance. The following verified objective
+`coq_finite_registered_truth_condition_component_coverage_certificate` packages
+that completion boundary with the registered lexical, temporal, Sigma, repeat,
+polarity, Transition/Cause, and suite subpackages as
+`FiniteRegisteredTruthConditionComponentCoverageCertificate`. It proves that
+each stored component is the generated component and exposes component-level
+soundness projections back to `AtomicClosureTruth`, plus one per-example
+component-coverage projection. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
@@ -1432,6 +1439,8 @@ concrete-registered-truth-condition-route,
 independent-registered-truth-condition-source,
 independent-registered-truth-condition-clause-instance,
 concrete-registered-truth-kernel,
+finite-registered-completion-certificate,
+finite-registered-component-coverage-certificate,
 or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.

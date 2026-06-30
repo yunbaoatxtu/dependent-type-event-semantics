@@ -386,7 +386,14 @@ as `FiniteRegisteredTruthConditionCompletionCertificate`, instantiates
 `finite_registered_truth_condition_completion_certificate`, proves that it is
 attached to the generated ledger, and checks registered, direct concrete,
 evidence-backed, kernel-induced, source, and suite atomic projections for every
-exported example. This still does not claim that the lexical and transition
+exported example. The scaffold then packages that completion certificate with
+the registered lexical, temporal, Sigma, repeat, polarity, Transition/Cause, and
+suite subpackages as
+`FiniteRegisteredTruthConditionComponentCoverageCertificate`, instantiates
+`finite_registered_truth_condition_component_coverage_certificate`, proves that
+each stored component matches the generated component, and checks component-level
+soundness plus per-example component-coverage projections. This still does not
+claim that the lexical and transition
 constructors have been derived from a full semantic model.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional

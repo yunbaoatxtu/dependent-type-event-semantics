@@ -4351,6 +4351,217 @@ theorem finite_registered_truth_condition_completion_example_4_suite_atomic_soun
     AtomicClosureTruth PropT example_4 := by
   exact finite_registered_truth_condition_completion_certificate.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_4_suite_atomic_sound
 
+structure FiniteRegisteredTruthConditionComponentCoverageCertificate : Type where
+  finite_registered_component_completion : FiniteRegisteredTruthConditionCompletionCertificate
+  finite_registered_component_completion_eq :
+      finite_registered_component_completion = finite_registered_truth_condition_completion_certificate
+  finite_registered_component_lexical : IndependentRegisteredLexicalTruthConditionInstances
+  finite_registered_component_lexical_eq :
+      finite_registered_component_lexical = independent_registered_lexical_truth_condition_instances
+  finite_registered_component_lexical_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_component_temporal : IndependentRegisteredTemporalTruthConditionInstances
+  finite_registered_component_temporal_eq :
+      finite_registered_component_temporal = independent_registered_temporal_truth_condition_instances
+  finite_registered_component_temporal_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_component_sigma : IndependentRegisteredSigmaTruthConditionInstances
+  finite_registered_component_sigma_eq :
+      finite_registered_component_sigma = independent_registered_sigma_truth_condition_instances
+  finite_registered_component_sigma_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_component_repeat : IndependentRegisteredRepeatTruthConditionInstances
+  finite_registered_component_repeat_eq :
+      finite_registered_component_repeat = independent_registered_repeat_truth_condition_instances
+  finite_registered_component_repeat_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_component_polarity : IndependentRegisteredPolarityTruthConditionInstances
+  finite_registered_component_polarity_eq :
+      finite_registered_component_polarity = independent_registered_polarity_truth_condition_instances
+  finite_registered_component_polarity_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_component_transition_cause : IndependentRegisteredTransitionCauseTruthConditionInstances
+  finite_registered_component_transition_cause_eq :
+      finite_registered_component_transition_cause = independent_registered_transition_cause_truth_condition_instances
+  finite_registered_component_transition_cause_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_component_suite : IndependentRegisteredTruthConditionInstanceSuite
+  finite_registered_component_suite_eq :
+      finite_registered_component_suite = independent_registered_truth_condition_instance_suite
+  finite_registered_component_suite_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def finite_registered_truth_condition_component_coverage_certificate :
+    FiniteRegisteredTruthConditionComponentCoverageCertificate := {
+  finite_registered_component_completion := finite_registered_truth_condition_completion_certificate,
+  finite_registered_component_completion_eq := rfl,
+  finite_registered_component_lexical := independent_registered_lexical_truth_condition_instances,
+  finite_registered_component_lexical_eq := rfl,
+  finite_registered_component_lexical_sound := independent_registered_lexical_truth_condition_spec_sound,
+  finite_registered_component_temporal := independent_registered_temporal_truth_condition_instances,
+  finite_registered_component_temporal_eq := rfl,
+  finite_registered_component_temporal_sound := independent_registered_temporal_truth_condition_spec_sound,
+  finite_registered_component_sigma := independent_registered_sigma_truth_condition_instances,
+  finite_registered_component_sigma_eq := rfl,
+  finite_registered_component_sigma_sound := independent_registered_sigma_truth_condition_spec_sound,
+  finite_registered_component_repeat := independent_registered_repeat_truth_condition_instances,
+  finite_registered_component_repeat_eq := rfl,
+  finite_registered_component_repeat_sound := independent_registered_repeat_truth_condition_spec_sound,
+  finite_registered_component_polarity := independent_registered_polarity_truth_condition_instances,
+  finite_registered_component_polarity_eq := rfl,
+  finite_registered_component_polarity_sound := independent_registered_polarity_truth_condition_spec_sound,
+  finite_registered_component_transition_cause := independent_registered_transition_cause_truth_condition_instances,
+  finite_registered_component_transition_cause_eq := rfl,
+  finite_registered_component_transition_cause_sound := independent_registered_transition_cause_truth_condition_spec_sound,
+  finite_registered_component_suite := independent_registered_truth_condition_instance_suite,
+  finite_registered_component_suite_eq := rfl,
+  finite_registered_component_suite_sound := independent_registered_truth_condition_instance_suite_spec_sound
+}
+
+theorem finite_registered_truth_condition_component_coverage_certificate_exists :
+    Exists (fun C : FiniteRegisteredTruthConditionComponentCoverageCertificate => C = finite_registered_truth_condition_component_coverage_certificate) := by
+  exact Exists.intro finite_registered_truth_condition_component_coverage_certificate rfl
+
+theorem finite_registered_truth_condition_component_completion_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_completion =
+      finite_registered_truth_condition_completion_certificate := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_completion_eq
+
+theorem finite_registered_truth_condition_component_lexical_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_lexical =
+      independent_registered_lexical_truth_condition_instances := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_lexical_eq
+
+theorem finite_registered_truth_condition_component_temporal_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_temporal =
+      independent_registered_temporal_truth_condition_instances := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_temporal_eq
+
+theorem finite_registered_truth_condition_component_sigma_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_sigma =
+      independent_registered_sigma_truth_condition_instances := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_sigma_eq
+
+theorem finite_registered_truth_condition_component_repeat_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_repeat =
+      independent_registered_repeat_truth_condition_instances := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_repeat_eq
+
+theorem finite_registered_truth_condition_component_polarity_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_polarity =
+      independent_registered_polarity_truth_condition_instances := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_polarity_eq
+
+theorem finite_registered_truth_condition_component_transition_cause_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_transition_cause =
+      independent_registered_transition_cause_truth_condition_instances := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_transition_cause_eq
+
+theorem finite_registered_truth_condition_component_suite_matches :
+    finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_suite =
+      independent_registered_truth_condition_instance_suite := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_suite_eq
+
+theorem finite_registered_truth_condition_component_lexical_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_lexical_sound
+
+theorem finite_registered_truth_condition_component_temporal_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_temporal_sound
+
+theorem finite_registered_truth_condition_component_sigma_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_sigma_sound
+
+theorem finite_registered_truth_condition_component_repeat_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_repeat_sound
+
+theorem finite_registered_truth_condition_component_polarity_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_polarity_sound
+
+theorem finite_registered_truth_condition_component_transition_cause_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_transition_cause_sound
+
+theorem finite_registered_truth_condition_component_suite_spec_sound :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_suite_sound
+
+theorem finite_registered_truth_condition_component_coverage_example_1_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_completion.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_1_suite_atomic_sound
+
+theorem finite_registered_truth_condition_component_coverage_example_2_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_completion.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_2_suite_atomic_sound
+
+theorem finite_registered_truth_condition_component_coverage_example_3_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_completion.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_3_suite_atomic_sound
+
+theorem finite_registered_truth_condition_component_coverage_example_4_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  exact finite_registered_truth_condition_component_coverage_certificate.finite_registered_component_completion.finite_registered_completion_ledger.finite_registered_ledger_suite_examples.example_4_suite_atomic_sound
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -4411,6 +4622,7 @@ theorem finite_registered_truth_condition_completion_example_4_suite_atomic_soun
 #check finite_registered_truth_condition_completion_example_1_kernel_atomic_sound
 #check finite_registered_truth_condition_completion_example_1_source_atomic_sound
 #check finite_registered_truth_condition_completion_example_1_suite_atomic_sound
+#check finite_registered_truth_condition_component_coverage_example_1_atomic_sound
 #check example_2
 #check example_2_semantic_preservation_obligation
 #check example_2_semantic_preservation_obligation_record
@@ -4471,6 +4683,7 @@ theorem finite_registered_truth_condition_completion_example_4_suite_atomic_soun
 #check finite_registered_truth_condition_completion_example_2_kernel_atomic_sound
 #check finite_registered_truth_condition_completion_example_2_source_atomic_sound
 #check finite_registered_truth_condition_completion_example_2_suite_atomic_sound
+#check finite_registered_truth_condition_component_coverage_example_2_atomic_sound
 #check example_3
 #check example_3_semantic_preservation_obligation
 #check example_3_semantic_preservation_obligation_record
@@ -4531,6 +4744,7 @@ theorem finite_registered_truth_condition_completion_example_4_suite_atomic_soun
 #check finite_registered_truth_condition_completion_example_3_kernel_atomic_sound
 #check finite_registered_truth_condition_completion_example_3_source_atomic_sound
 #check finite_registered_truth_condition_completion_example_3_suite_atomic_sound
+#check finite_registered_truth_condition_component_coverage_example_3_atomic_sound
 #check example_4
 #check example_4_semantic_preservation_obligation
 #check example_4_semantic_preservation_obligation_record
@@ -4591,6 +4805,7 @@ theorem finite_registered_truth_condition_completion_example_4_suite_atomic_soun
 #check finite_registered_truth_condition_completion_example_4_kernel_atomic_sound
 #check finite_registered_truth_condition_completion_example_4_source_atomic_sound
 #check finite_registered_truth_condition_completion_example_4_suite_atomic_sound
+#check finite_registered_truth_condition_component_coverage_example_4_atomic_sound
 #check independent_truth_condition_obligation_ledger
 #check independent_truth_condition_obligation_ledger_exists
 #check independent_truth_condition_obligation_ledger_induces_truth_conditions
@@ -4774,3 +4989,21 @@ theorem finite_registered_truth_condition_completion_example_4_suite_atomic_soun
 #check finite_registered_truth_condition_completion_kernel_spec_sound
 #check finite_registered_truth_condition_completion_source_spec_sound
 #check finite_registered_truth_condition_completion_suite_spec_sound
+#check FiniteRegisteredTruthConditionComponentCoverageCertificate
+#check finite_registered_truth_condition_component_coverage_certificate
+#check finite_registered_truth_condition_component_coverage_certificate_exists
+#check finite_registered_truth_condition_component_completion_matches
+#check finite_registered_truth_condition_component_lexical_matches
+#check finite_registered_truth_condition_component_lexical_spec_sound
+#check finite_registered_truth_condition_component_temporal_matches
+#check finite_registered_truth_condition_component_temporal_spec_sound
+#check finite_registered_truth_condition_component_sigma_matches
+#check finite_registered_truth_condition_component_sigma_spec_sound
+#check finite_registered_truth_condition_component_repeat_matches
+#check finite_registered_truth_condition_component_repeat_spec_sound
+#check finite_registered_truth_condition_component_polarity_matches
+#check finite_registered_truth_condition_component_polarity_spec_sound
+#check finite_registered_truth_condition_component_transition_cause_matches
+#check finite_registered_truth_condition_component_transition_cause_spec_sound
+#check finite_registered_truth_condition_component_suite_matches
+#check finite_registered_truth_condition_component_suite_spec_sound
