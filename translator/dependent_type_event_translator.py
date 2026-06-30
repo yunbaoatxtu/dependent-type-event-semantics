@@ -10591,6 +10591,311 @@ def concrete_registered_kernel_example_truth_instance_lines(
     return lines
 
 
+def concrete_registered_truth_condition_route_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Package the concrete registered truth-condition routes together."""
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteRegisteredTruthConditionRoute : Type where",
+            "  concrete_registered_route_direct_model : "
+            "ConcreteRegisteredTruthConditionModel",
+            "  concrete_registered_route_evidence_sources : "
+            "RegisteredEvidenceBackedTruthConditionSources",
+            "  concrete_registered_route_evidence_model : "
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel",
+            "  concrete_registered_route_kernel : ConcreteRegisteredTruthKernel",
+            "  concrete_registered_route_direct_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  concrete_registered_route_evidence_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  concrete_registered_route_kernel_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  concrete_registered_route_direct_examples : "
+            "ConcreteRegisteredExampleTruthInstances",
+            "  concrete_registered_route_evidence_examples : "
+            "ConcreteRegisteredEvidenceBackedExampleTruthInstances",
+            "  concrete_registered_route_kernel_examples : "
+            "ConcreteRegisteredKernelExampleTruthInstances",
+            "",
+            "def concrete_registered_truth_condition_route : "
+            "ConcreteRegisteredTruthConditionRoute := {",
+            "  concrete_registered_route_direct_model := "
+            "concrete_registered_truth_condition_model,",
+            "  concrete_registered_route_evidence_sources := "
+            "concrete_registered_evidence_backed_truth_sources,",
+            "  concrete_registered_route_evidence_model := "
+            "concrete_registered_evidence_backed_truth_condition_model,",
+            "  concrete_registered_route_kernel := concrete_registered_truth_kernel,",
+            "  concrete_registered_route_direct_spec := "
+            "concrete_registered_truth_conditions,",
+            "  concrete_registered_route_evidence_spec := "
+            "concrete_registered_evidence_backed_truth_conditions,",
+            "  concrete_registered_route_kernel_spec := "
+            "concrete_registered_truth_conditions_from_kernel,",
+            "  concrete_registered_route_direct_examples := "
+            "concrete_registered_example_truth_instances,",
+            "  concrete_registered_route_evidence_examples := "
+            "concrete_registered_evidence_backed_example_truth_instances,",
+            "  concrete_registered_route_kernel_examples := "
+            "concrete_registered_kernel_example_truth_instances",
+            "}",
+            "",
+            "theorem concrete_registered_truth_condition_route_exists :",
+            "    Exists (fun R : ConcreteRegisteredTruthConditionRoute => "
+            "R = concrete_registered_truth_condition_route) := by",
+            "  exact Exists.intro concrete_registered_truth_condition_route rfl",
+            "",
+            "theorem "
+            "concrete_registered_truth_condition_route_direct_spec_matches_model :",
+            "    concrete_registered_truth_condition_route."
+            "concrete_registered_route_direct_spec =",
+            "      concrete_registered_truth_condition_route."
+            "concrete_registered_route_direct_model."
+            "concrete_registered_model_spec := by",
+            "  rfl",
+            "",
+            "theorem "
+            "concrete_registered_truth_condition_route_evidence_spec_matches_model :",
+            "    concrete_registered_truth_condition_route."
+            "concrete_registered_route_evidence_spec =",
+            "      concrete_registered_truth_condition_route."
+            "concrete_registered_route_evidence_model."
+            "concrete_registered_evidence_backed_model_spec := by",
+            "  rfl",
+            "",
+            "theorem "
+            "concrete_registered_truth_condition_route_kernel_spec_matches_kernel :",
+            "    concrete_registered_truth_condition_route."
+            "concrete_registered_route_kernel_spec =",
+            "      fully_registered_truth_conditions_from_concrete_registered_kernel",
+            "        concrete_registered_truth_condition_route."
+            "concrete_registered_route_kernel := by",
+            "  rfl",
+            "",
+            "theorem concrete_registered_truth_condition_route_direct_spec_sound :",
+            "    (A : Type) -> (term : A) -> "
+            "concrete_registered_truth_condition_route."
+            "concrete_registered_route_direct_spec."
+            "fully_registered_truth_denotes A term -> "
+            "AtomicClosureTruth A term := by",
+            "  intro A term h",
+            "  apply concrete_registered_truth_conditions_imply_atomic_closure",
+            "  exact h",
+            "",
+            "theorem concrete_registered_truth_condition_route_evidence_spec_sound :",
+            "    (A : Type) -> (term : A) -> "
+            "concrete_registered_truth_condition_route."
+            "concrete_registered_route_evidence_spec."
+            "fully_registered_truth_denotes A term -> "
+            "AtomicClosureTruth A term := by",
+            "  intro A term h",
+            "  apply "
+            "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure",
+            "  exact h",
+            "",
+            "theorem concrete_registered_truth_condition_route_kernel_spec_sound :",
+            "    (A : Type) -> (term : A) -> "
+            "concrete_registered_truth_condition_route."
+            "concrete_registered_route_kernel_spec."
+            "fully_registered_truth_denotes A term -> "
+            "AtomicClosureTruth A term := by",
+            "  intro A term h",
+            "  apply "
+            "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure",
+            "  exact h",
+        ]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"concrete_registered_truth_condition_route_example_{idx}_direct_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply concrete_registered_truth_condition_route_direct_spec_sound",
+                    "  exact concrete_registered_truth_condition_route."
+                    "concrete_registered_route_direct_examples."
+                    f"example_{idx}_concrete_truth_instance",
+                    "",
+                    "theorem "
+                    f"concrete_registered_truth_condition_route_example_{idx}_evidence_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply concrete_registered_truth_condition_route_evidence_spec_sound",
+                    "  exact concrete_registered_truth_condition_route."
+                    "concrete_registered_route_evidence_examples."
+                    f"example_{idx}_evidence_backed_truth_instance",
+                    "",
+                    "theorem "
+                    f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound : "
+                    f"AtomicClosureTruth {annotation} example_{idx} := by",
+                    "  apply concrete_registered_truth_condition_route_kernel_spec_sound",
+                    "  exact concrete_registered_truth_condition_route."
+                    "concrete_registered_route_kernel_examples."
+                    f"example_{idx}_kernel_truth_instance",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record ConcreteRegisteredTruthConditionRoute : Type := {",
+        "  concrete_registered_route_direct_model : "
+        "ConcreteRegisteredTruthConditionModel;",
+        "  concrete_registered_route_evidence_sources : "
+        "RegisteredEvidenceBackedTruthConditionSources;",
+        "  concrete_registered_route_evidence_model : "
+        "ConcreteRegisteredEvidenceBackedTruthConditionModel;",
+        "  concrete_registered_route_kernel : ConcreteRegisteredTruthKernel;",
+        "  concrete_registered_route_direct_spec : "
+        "FullyRegisteredTruthConditionSpec;",
+        "  concrete_registered_route_evidence_spec : "
+        "FullyRegisteredTruthConditionSpec;",
+        "  concrete_registered_route_kernel_spec : "
+        "FullyRegisteredTruthConditionSpec;",
+        "  concrete_registered_route_direct_examples : "
+        "ConcreteRegisteredExampleTruthInstances;",
+        "  concrete_registered_route_evidence_examples : "
+        "ConcreteRegisteredEvidenceBackedExampleTruthInstances;",
+        "  concrete_registered_route_kernel_examples : "
+        "ConcreteRegisteredKernelExampleTruthInstances",
+        "}.",
+        "",
+        "Definition concrete_registered_truth_condition_route :",
+        "  ConcreteRegisteredTruthConditionRoute := {|",
+        "  concrete_registered_route_direct_model := "
+        "concrete_registered_truth_condition_model;",
+        "  concrete_registered_route_evidence_sources := "
+        "concrete_registered_evidence_backed_truth_sources;",
+        "  concrete_registered_route_evidence_model := "
+        "concrete_registered_evidence_backed_truth_condition_model;",
+        "  concrete_registered_route_kernel := concrete_registered_truth_kernel;",
+        "  concrete_registered_route_direct_spec := "
+        "concrete_registered_truth_conditions;",
+        "  concrete_registered_route_evidence_spec := "
+        "concrete_registered_evidence_backed_truth_conditions;",
+        "  concrete_registered_route_kernel_spec := "
+        "concrete_registered_truth_conditions_from_kernel;",
+        "  concrete_registered_route_direct_examples := "
+        "concrete_registered_example_truth_instances;",
+        "  concrete_registered_route_evidence_examples := "
+        "concrete_registered_evidence_backed_example_truth_instances;",
+        "  concrete_registered_route_kernel_examples := "
+        "concrete_registered_kernel_example_truth_instances",
+        "|}.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_exists :",
+        "  exists R : ConcreteRegisteredTruthConditionRoute,",
+        "    R = concrete_registered_truth_condition_route.",
+        "Proof.",
+        "  exists concrete_registered_truth_condition_route. reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_direct_spec_matches_model :",
+        "  concrete_registered_route_direct_spec "
+        "concrete_registered_truth_condition_route =",
+        "    concrete_registered_model_spec",
+        "      (concrete_registered_route_direct_model",
+        "        concrete_registered_truth_condition_route).",
+        "Proof. reflexivity. Qed.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_evidence_spec_matches_model :",
+        "  concrete_registered_route_evidence_spec "
+        "concrete_registered_truth_condition_route =",
+        "    concrete_registered_evidence_backed_model_spec",
+        "      (concrete_registered_route_evidence_model",
+        "        concrete_registered_truth_condition_route).",
+        "Proof. reflexivity. Qed.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_kernel_spec_matches_kernel :",
+        "  concrete_registered_route_kernel_spec "
+        "concrete_registered_truth_condition_route =",
+        "    fully_registered_truth_conditions_from_concrete_registered_kernel",
+        "      (concrete_registered_route_kernel",
+        "        concrete_registered_truth_condition_route).",
+        "Proof. reflexivity. Qed.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_direct_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (concrete_registered_route_direct_spec",
+        "        concrete_registered_truth_condition_route) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
+        "  exact H.",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_evidence_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (concrete_registered_route_evidence_spec",
+        "        concrete_registered_truth_condition_route) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  apply "
+        "concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.",
+        "  exact H.",
+        "Qed.",
+        "",
+        "Theorem concrete_registered_truth_condition_route_kernel_spec_sound :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        "      (concrete_registered_route_kernel_spec",
+        "        concrete_registered_truth_condition_route) A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  intros A term H.",
+        "  apply "
+        "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.",
+        "  exact H.",
+        "Qed.",
+    ]
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"concrete_registered_truth_condition_route_example_{idx}_direct_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply concrete_registered_truth_condition_route_direct_spec_sound.",
+                "  exact (example_"
+                f"{idx}_concrete_truth_instance",
+                "    (concrete_registered_route_direct_examples",
+                "      concrete_registered_truth_condition_route)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"concrete_registered_truth_condition_route_example_{idx}_evidence_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply concrete_registered_truth_condition_route_evidence_spec_sound.",
+                "  exact (example_"
+                f"{idx}_evidence_backed_truth_instance",
+                "    (concrete_registered_route_evidence_examples",
+                "      concrete_registered_truth_condition_route)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound : "
+                f"AtomicClosureTruth {annotation} example_{idx}.",
+                "Proof.",
+                "  apply concrete_registered_truth_condition_route_kernel_spec_sound.",
+                "  exact (example_"
+                f"{idx}_kernel_truth_instance",
+                "    (concrete_registered_route_kernel_examples",
+                "      concrete_registered_truth_condition_route)).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def typed_application_argument_types(
     function: str,
     arguments: list[str],
@@ -11498,6 +11803,10 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             concrete_registered_kernel_example_truth_instance_lines(results, target)
         )
         lines.append("")
+        lines.extend(
+            concrete_registered_truth_condition_route_lines(results, target)
+        )
+        lines.append("")
         for idx, result in enumerate(results, 1):
             annotation = export_result_type(result["ast"])
             lines.append(
@@ -11608,6 +11917,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 f"concrete_registered_kernel_example_{idx}_truth_instance_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"concrete_registered_truth_condition_route_example_{idx}_direct_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"concrete_registered_truth_condition_route_example_{idx}_evidence_atomic_sound"
+            )
+            lines.append(
+                "#check "
+                f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound"
             )
             lines.append(
                 "#check "
@@ -11734,6 +12055,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check concrete_registered_kernel_example_truth_instances_exists"
         )
+        lines.append("#check concrete_registered_truth_condition_route")
+        lines.append("#check concrete_registered_truth_condition_route_exists")
+        lines.append(
+            "#check concrete_registered_truth_condition_route_direct_spec_matches_model"
+        )
+        lines.append(
+            "#check concrete_registered_truth_condition_route_evidence_spec_matches_model"
+        )
+        lines.append(
+            "#check concrete_registered_truth_condition_route_kernel_spec_matches_kernel"
+        )
+        lines.append("#check concrete_registered_truth_condition_route_direct_spec_sound")
+        lines.append("#check concrete_registered_truth_condition_route_evidence_spec_sound")
+        lines.append("#check concrete_registered_truth_condition_route_kernel_spec_sound")
         lines.append("#check registered_example_truth_instances")
         lines.append("#check registered_example_truth_instances_exists")
         return "\n".join(lines) + "\n"
@@ -12364,6 +12699,8 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(concrete_registered_kernel_example_truth_instance_lines(results, target))
     lines.append("")
+    lines.extend(concrete_registered_truth_condition_route_lines(results, target))
+    lines.append("")
     for idx, result in enumerate(results, 1):
         annotation = export_result_type(result["ast"])
         lines.append(
@@ -12462,6 +12799,18 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"concrete_registered_kernel_example_{idx}_truth_instance_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"concrete_registered_truth_condition_route_example_{idx}_direct_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"concrete_registered_truth_condition_route_example_{idx}_evidence_atomic_sound."
+        )
+        lines.append(
+            "Check "
+            f"concrete_registered_truth_condition_route_example_{idx}_kernel_atomic_sound."
         )
         lines.append(
             "Check "
@@ -12570,6 +12919,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check concrete_registered_example_truth_instances_exists.")
     lines.append("Check concrete_registered_kernel_example_truth_instances.")
     lines.append("Check concrete_registered_kernel_example_truth_instances_exists.")
+    lines.append("Check concrete_registered_truth_condition_route.")
+    lines.append("Check concrete_registered_truth_condition_route_exists.")
+    lines.append(
+        "Check concrete_registered_truth_condition_route_direct_spec_matches_model."
+    )
+    lines.append(
+        "Check concrete_registered_truth_condition_route_evidence_spec_matches_model."
+    )
+    lines.append(
+        "Check concrete_registered_truth_condition_route_kernel_spec_matches_kernel."
+    )
+    lines.append("Check concrete_registered_truth_condition_route_direct_spec_sound.")
+    lines.append("Check concrete_registered_truth_condition_route_evidence_spec_sound.")
+    lines.append("Check concrete_registered_truth_condition_route_kernel_spec_sound.")
     lines.append("Check registered_example_truth_instances.")
     lines.append("Check registered_example_truth_instances_exists.")
     return "\n".join(lines) + "\n"

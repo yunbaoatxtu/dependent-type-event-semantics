@@ -21097,6 +21097,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_concrete_registered_truth_condition_route_package",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "coq_concrete_registered_truth_kernel_instance",
                 "status": "verified",
                 "evidence": "scripts/check_formalization.py",
@@ -21302,6 +21307,16 @@ def project_completion_status_payload(
                     "ConcreteRegisteredEvidenceBackedExampleTruthInstances, "
                     "proves the package exists, and checks that each packaged "
                     "field projects back to AtomicClosureTruth. "
+                    "The newest route package then gathers the direct "
+                    "concrete truth-condition model, evidence-backed sources "
+                    "and model, concrete registered kernel, three induced "
+                    "truth-condition specs, and the direct, evidence-backed, "
+                    "and kernel example packages into "
+                    "ConcreteRegisteredTruthConditionRoute. It proves that "
+                    "the direct and evidence-backed specs match their model "
+                    "spec fields, that the kernel spec matches the route "
+                    "kernel conversion, and that all three route specs and "
+                    "per-example route projections imply AtomicClosureTruth. "
                     "It now also factors that finite registered closure "
                     "through a ConcreteRegisteredTruthKernel whose lexical "
                     "and transition clauses are evidence-gated by "

@@ -223,7 +223,16 @@ truth-condition proofs into
 per-example projections such as
 `concrete_registered_evidence_backed_example_i_truth_instance_atomic_sound` back
 to `AtomicClosureTruth`. This is a package-level witness for the registered
-evidence-backed route, not a full truth-condition model. The scaffold also
+evidence-backed route, not a full truth-condition model. The scaffold then
+packages the direct concrete truth-condition model, evidence-backed source and
+model, concrete registered kernel, direct/evidence/kernel specs, and the three
+example-instance packages as `ConcreteRegisteredTruthConditionRoute`,
+instantiates `concrete_registered_truth_condition_route`, proves that the route
+exists, proves the direct/evidence/kernel spec-coherence theorems, and checks
+route-level direct, evidence-backed, and kernel atomic soundness for every
+exported example. This makes the finite registered truth-condition routes
+auditable as one object before any broader independently supplied truth model
+is claimed. The scaffold also
 packages the finite registered closure clauses as
 `ConcreteRegisteredCompositionalModel`: its fields expose the denotation
 predicate, the atomic inclusion clause, Sigma projection clauses for exported

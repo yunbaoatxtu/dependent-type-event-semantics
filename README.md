@@ -1204,6 +1204,21 @@ checks projections such as
 to `AtomicClosureTruth`. This is a package-level coverage witness for the
 registered evidence-backed route, not a broader semantic model. The next
 verified objective
+`coq_concrete_registered_truth_condition_route_package` gathers the direct
+concrete truth-condition model, the evidence-backed source and model, the
+concrete registered kernel, the three induced truth-condition specs, and the
+direct, evidence-backed, and kernel example packages into
+`ConcreteRegisteredTruthConditionRoute`. It instantiates
+`concrete_registered_truth_condition_route`, proves
+`concrete_registered_truth_condition_route_exists`, checks the three coherence
+proofs
+`concrete_registered_truth_condition_route_direct_spec_matches_model`,
+`concrete_registered_truth_condition_route_evidence_spec_matches_model`, and
+`concrete_registered_truth_condition_route_kernel_spec_matches_kernel`, and
+checks route-level direct, evidence-backed, and kernel atomic soundness for
+each exported example. This aligns the finite registered routes before any
+future independently supplied truth-condition instance is claimed. The next
+verified objective
 `coq_concrete_registered_truth_kernel_instance` factors the same concrete
 registered closure through a generated `ConcreteRegisteredTruthKernel`. Unlike
 the broader `ConcreteTruthConditionKernel`, this registered kernel keeps the
@@ -1253,7 +1268,8 @@ registered-transition, registered-lexical, registered-lexical-truth-model, or
 concrete-registered-atomic-model, concrete-registered-compositional-model,
 concrete-registered-truth-condition-model, concrete-registered-truth-condition,
 concrete-registered-evidence-backed-example-package,
-concrete-registered-truth-kernel, or registered-example package instances.
+concrete-registered-truth-condition-route, concrete-registered-truth-kernel,
+or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

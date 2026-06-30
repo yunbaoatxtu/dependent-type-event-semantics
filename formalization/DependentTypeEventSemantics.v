@@ -4173,6 +4173,193 @@ Proof.
   exact (example_4_kernel_truth_instance concrete_registered_kernel_example_truth_instances).
 Qed.
 
+Record ConcreteRegisteredTruthConditionRoute : Type := {
+  concrete_registered_route_direct_model : ConcreteRegisteredTruthConditionModel;
+  concrete_registered_route_evidence_sources : RegisteredEvidenceBackedTruthConditionSources;
+  concrete_registered_route_evidence_model : ConcreteRegisteredEvidenceBackedTruthConditionModel;
+  concrete_registered_route_kernel : ConcreteRegisteredTruthKernel;
+  concrete_registered_route_direct_spec : FullyRegisteredTruthConditionSpec;
+  concrete_registered_route_evidence_spec : FullyRegisteredTruthConditionSpec;
+  concrete_registered_route_kernel_spec : FullyRegisteredTruthConditionSpec;
+  concrete_registered_route_direct_examples : ConcreteRegisteredExampleTruthInstances;
+  concrete_registered_route_evidence_examples : ConcreteRegisteredEvidenceBackedExampleTruthInstances;
+  concrete_registered_route_kernel_examples : ConcreteRegisteredKernelExampleTruthInstances
+}.
+
+Definition concrete_registered_truth_condition_route :
+  ConcreteRegisteredTruthConditionRoute := {|
+  concrete_registered_route_direct_model := concrete_registered_truth_condition_model;
+  concrete_registered_route_evidence_sources := concrete_registered_evidence_backed_truth_sources;
+  concrete_registered_route_evidence_model := concrete_registered_evidence_backed_truth_condition_model;
+  concrete_registered_route_kernel := concrete_registered_truth_kernel;
+  concrete_registered_route_direct_spec := concrete_registered_truth_conditions;
+  concrete_registered_route_evidence_spec := concrete_registered_evidence_backed_truth_conditions;
+  concrete_registered_route_kernel_spec := concrete_registered_truth_conditions_from_kernel;
+  concrete_registered_route_direct_examples := concrete_registered_example_truth_instances;
+  concrete_registered_route_evidence_examples := concrete_registered_evidence_backed_example_truth_instances;
+  concrete_registered_route_kernel_examples := concrete_registered_kernel_example_truth_instances
+|}.
+
+Theorem concrete_registered_truth_condition_route_exists :
+  exists R : ConcreteRegisteredTruthConditionRoute,
+    R = concrete_registered_truth_condition_route.
+Proof.
+  exists concrete_registered_truth_condition_route. reflexivity.
+Qed.
+
+Theorem concrete_registered_truth_condition_route_direct_spec_matches_model :
+  concrete_registered_route_direct_spec concrete_registered_truth_condition_route =
+    concrete_registered_model_spec
+      (concrete_registered_route_direct_model
+        concrete_registered_truth_condition_route).
+Proof. reflexivity. Qed.
+
+Theorem concrete_registered_truth_condition_route_evidence_spec_matches_model :
+  concrete_registered_route_evidence_spec concrete_registered_truth_condition_route =
+    concrete_registered_evidence_backed_model_spec
+      (concrete_registered_route_evidence_model
+        concrete_registered_truth_condition_route).
+Proof. reflexivity. Qed.
+
+Theorem concrete_registered_truth_condition_route_kernel_spec_matches_kernel :
+  concrete_registered_route_kernel_spec concrete_registered_truth_condition_route =
+    fully_registered_truth_conditions_from_concrete_registered_kernel
+      (concrete_registered_route_kernel
+        concrete_registered_truth_condition_route).
+Proof. reflexivity. Qed.
+
+Theorem concrete_registered_truth_condition_route_direct_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (concrete_registered_route_direct_spec
+        concrete_registered_truth_condition_route) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact H.
+Qed.
+
+Theorem concrete_registered_truth_condition_route_evidence_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (concrete_registered_route_evidence_spec
+        concrete_registered_truth_condition_route) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure.
+  exact H.
+Qed.
+
+Theorem concrete_registered_truth_condition_route_kernel_spec_sound :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (concrete_registered_route_kernel_spec
+        concrete_registered_truth_condition_route) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  intros A term H.
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure.
+  exact H.
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_1_direct_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_condition_route_direct_spec_sound.
+  exact (example_1_concrete_truth_instance
+    (concrete_registered_route_direct_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_1_evidence_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_condition_route_evidence_spec_sound.
+  exact (example_1_evidence_backed_truth_instance
+    (concrete_registered_route_evidence_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_1_kernel_atomic_sound : AtomicClosureTruth PropT example_1.
+Proof.
+  apply concrete_registered_truth_condition_route_kernel_spec_sound.
+  exact (example_1_kernel_truth_instance
+    (concrete_registered_route_kernel_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_2_direct_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_condition_route_direct_spec_sound.
+  exact (example_2_concrete_truth_instance
+    (concrete_registered_route_direct_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_2_evidence_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_condition_route_evidence_spec_sound.
+  exact (example_2_evidence_backed_truth_instance
+    (concrete_registered_route_evidence_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_2_kernel_atomic_sound : AtomicClosureTruth Prop example_2.
+Proof.
+  apply concrete_registered_truth_condition_route_kernel_spec_sound.
+  exact (example_2_kernel_truth_instance
+    (concrete_registered_route_kernel_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_3_direct_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_condition_route_direct_spec_sound.
+  exact (example_3_concrete_truth_instance
+    (concrete_registered_route_direct_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_3_evidence_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_condition_route_evidence_spec_sound.
+  exact (example_3_evidence_backed_truth_instance
+    (concrete_registered_route_evidence_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_3_kernel_atomic_sound : AtomicClosureTruth PropT example_3.
+Proof.
+  apply concrete_registered_truth_condition_route_kernel_spec_sound.
+  exact (example_3_kernel_truth_instance
+    (concrete_registered_route_kernel_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_4_direct_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_condition_route_direct_spec_sound.
+  exact (example_4_concrete_truth_instance
+    (concrete_registered_route_direct_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_4_evidence_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_condition_route_evidence_spec_sound.
+  exact (example_4_evidence_backed_truth_instance
+    (concrete_registered_route_evidence_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
+Theorem concrete_registered_truth_condition_route_example_4_kernel_atomic_sound : AtomicClosureTruth PropT example_4.
+Proof.
+  apply concrete_registered_truth_condition_route_kernel_spec_sound.
+  exact (example_4_kernel_truth_instance
+    (concrete_registered_route_kernel_examples
+      concrete_registered_truth_condition_route)).
+Qed.
+
 Theorem example_1_fully_registered_truth_condition_atomic_sound : AtomicClosureTruth PropT example_1.
 Proof.
   apply fully_registered_truth_conditions_imply_atomic_closure.
@@ -4282,6 +4469,9 @@ Check example_1_concrete_registered_evidence_backed_truth_condition_atomic_sound
 Check concrete_registered_evidence_backed_example_1_truth_instance_atomic_sound.
 Check concrete_registered_example_1_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_1_truth_instance_atomic_sound.
+Check concrete_registered_truth_condition_route_example_1_direct_atomic_sound.
+Check concrete_registered_truth_condition_route_example_1_evidence_atomic_sound.
+Check concrete_registered_truth_condition_route_example_1_kernel_atomic_sound.
 Check example_1_fully_registered_truth_condition_atomic_sound.
 Check registered_example_1_truth_instance_atomic_sound.
 Check example_2.
@@ -4323,6 +4513,9 @@ Check example_2_concrete_registered_evidence_backed_truth_condition_atomic_sound
 Check concrete_registered_evidence_backed_example_2_truth_instance_atomic_sound.
 Check concrete_registered_example_2_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_2_truth_instance_atomic_sound.
+Check concrete_registered_truth_condition_route_example_2_direct_atomic_sound.
+Check concrete_registered_truth_condition_route_example_2_evidence_atomic_sound.
+Check concrete_registered_truth_condition_route_example_2_kernel_atomic_sound.
 Check example_2_fully_registered_truth_condition_atomic_sound.
 Check registered_example_2_truth_instance_atomic_sound.
 Check example_3.
@@ -4364,6 +4557,9 @@ Check example_3_concrete_registered_evidence_backed_truth_condition_atomic_sound
 Check concrete_registered_evidence_backed_example_3_truth_instance_atomic_sound.
 Check concrete_registered_example_3_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_3_truth_instance_atomic_sound.
+Check concrete_registered_truth_condition_route_example_3_direct_atomic_sound.
+Check concrete_registered_truth_condition_route_example_3_evidence_atomic_sound.
+Check concrete_registered_truth_condition_route_example_3_kernel_atomic_sound.
 Check example_3_fully_registered_truth_condition_atomic_sound.
 Check registered_example_3_truth_instance_atomic_sound.
 Check example_4.
@@ -4405,6 +4601,9 @@ Check example_4_concrete_registered_evidence_backed_truth_condition_atomic_sound
 Check concrete_registered_evidence_backed_example_4_truth_instance_atomic_sound.
 Check concrete_registered_example_4_truth_instance_atomic_sound.
 Check concrete_registered_kernel_example_4_truth_instance_atomic_sound.
+Check concrete_registered_truth_condition_route_example_4_direct_atomic_sound.
+Check concrete_registered_truth_condition_route_example_4_evidence_atomic_sound.
+Check concrete_registered_truth_condition_route_example_4_kernel_atomic_sound.
 Check example_4_fully_registered_truth_condition_atomic_sound.
 Check registered_example_4_truth_instance_atomic_sound.
 Check independent_truth_condition_obligation_ledger.
@@ -4474,5 +4673,13 @@ Check concrete_registered_example_truth_instances.
 Check concrete_registered_example_truth_instances_exists.
 Check concrete_registered_kernel_example_truth_instances.
 Check concrete_registered_kernel_example_truth_instances_exists.
+Check concrete_registered_truth_condition_route.
+Check concrete_registered_truth_condition_route_exists.
+Check concrete_registered_truth_condition_route_direct_spec_matches_model.
+Check concrete_registered_truth_condition_route_evidence_spec_matches_model.
+Check concrete_registered_truth_condition_route_kernel_spec_matches_kernel.
+Check concrete_registered_truth_condition_route_direct_spec_sound.
+Check concrete_registered_truth_condition_route_evidence_spec_sound.
+Check concrete_registered_truth_condition_route_kernel_spec_sound.
 Check registered_example_truth_instances.
 Check registered_example_truth_instances_exists.

@@ -500,6 +500,48 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_concrete_registered_route_direct_atomic_sound_count = len(
+        re.findall(
+            r"^theorem concrete_registered_truth_condition_route_example_\d+_direct_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_route_direct_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem concrete_registered_truth_condition_route_example_\d+_direct_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_concrete_registered_route_evidence_atomic_sound_count = len(
+        re.findall(
+            r"^theorem concrete_registered_truth_condition_route_example_\d+_evidence_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_route_evidence_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem concrete_registered_truth_condition_route_example_\d+_evidence_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_concrete_registered_route_kernel_atomic_sound_count = len(
+        re.findall(
+            r"^theorem concrete_registered_truth_condition_route_example_\d+_kernel_atomic_sound :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_concrete_registered_route_kernel_atomic_sound_count = len(
+        re.findall(
+            r"^Theorem concrete_registered_truth_condition_route_example_\d+_kernel_atomic_sound :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2221,6 +2263,96 @@ def main() -> None:
             and "exact (example_4_kernel_truth_instance "
             "concrete_registered_kernel_example_truth_instances)." in coq
             and "concrete_registered_truth_conditions_from_kernel_imply_atomic_closure."
+            in coq
+        ),
+        "lean concrete registered truth-condition route package": (
+            lean_concrete_registered_route_direct_atomic_sound_count
+            == lean_example_count
+            and lean_concrete_registered_route_evidence_atomic_sound_count
+            == lean_example_count
+            and lean_concrete_registered_route_kernel_atomic_sound_count
+            == lean_example_count
+            and "structure ConcreteRegisteredTruthConditionRoute : Type where"
+            in lean
+            and "concrete_registered_route_direct_model : "
+            "ConcreteRegisteredTruthConditionModel" in lean
+            and "concrete_registered_route_evidence_sources : "
+            "RegisteredEvidenceBackedTruthConditionSources" in lean
+            and "concrete_registered_route_evidence_model : "
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel" in lean
+            and "concrete_registered_route_kernel : ConcreteRegisteredTruthKernel"
+            in lean
+            and "def concrete_registered_truth_condition_route : "
+            "ConcreteRegisteredTruthConditionRoute := {" in lean
+            and "theorem concrete_registered_truth_condition_route_exists :"
+            in lean
+            and "theorem "
+            "concrete_registered_truth_condition_route_direct_spec_matches_model :"
+            in lean
+            and "theorem "
+            "concrete_registered_truth_condition_route_evidence_spec_matches_model :"
+            in lean
+            and "theorem "
+            "concrete_registered_truth_condition_route_kernel_spec_matches_kernel :"
+            in lean
+            and "theorem concrete_registered_truth_condition_route_direct_spec_sound :"
+            in lean
+            and "theorem concrete_registered_truth_condition_route_evidence_spec_sound :"
+            in lean
+            and "theorem concrete_registered_truth_condition_route_kernel_spec_sound :"
+            in lean
+            and "#check concrete_registered_truth_condition_route" in lean
+            and "#check concrete_registered_truth_condition_route_direct_spec_matches_model"
+            in lean
+            and "#check concrete_registered_truth_condition_route_example_4_direct_atomic_sound"
+            in lean
+            and "#check concrete_registered_truth_condition_route_example_4_evidence_atomic_sound"
+            in lean
+            and "#check concrete_registered_truth_condition_route_example_4_kernel_atomic_sound"
+            in lean
+        ),
+        "coq concrete registered truth-condition route package": (
+            coq_concrete_registered_route_direct_atomic_sound_count
+            == coq_example_count
+            and coq_concrete_registered_route_evidence_atomic_sound_count
+            == coq_example_count
+            and coq_concrete_registered_route_kernel_atomic_sound_count
+            == coq_example_count
+            and "Record ConcreteRegisteredTruthConditionRoute : Type := {"
+            in coq
+            and "concrete_registered_route_direct_model : "
+            "ConcreteRegisteredTruthConditionModel;" in coq
+            and "concrete_registered_route_evidence_sources : "
+            "RegisteredEvidenceBackedTruthConditionSources;" in coq
+            and "concrete_registered_route_evidence_model : "
+            "ConcreteRegisteredEvidenceBackedTruthConditionModel;" in coq
+            and "concrete_registered_route_kernel : ConcreteRegisteredTruthKernel;"
+            in coq
+            and "Definition concrete_registered_truth_condition_route :"
+            in coq
+            and "ConcreteRegisteredTruthConditionRoute := {|" in coq
+            and "Theorem concrete_registered_truth_condition_route_exists :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_route_direct_spec_matches_model :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_route_evidence_spec_matches_model :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_route_kernel_spec_matches_kernel :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_route_direct_spec_sound :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_route_evidence_spec_sound :"
+            in coq
+            and "Theorem concrete_registered_truth_condition_route_kernel_spec_sound :"
+            in coq
+            and "Check concrete_registered_truth_condition_route." in coq
+            and "Check concrete_registered_truth_condition_route_direct_spec_matches_model."
+            in coq
+            and "Check concrete_registered_truth_condition_route_example_4_direct_atomic_sound."
+            in coq
+            and "Check concrete_registered_truth_condition_route_example_4_evidence_atomic_sound."
+            in coq
+            and "Check concrete_registered_truth_condition_route_example_4_kernel_atomic_sound."
             in coq
         ),
         "lean syntax-directed truth kernel soundness proofs": (
