@@ -404,7 +404,12 @@ source-discipline layer packages the same finite atoms as
 `finite_registered_atomic_source_discipline_certificate`, and checks that each
 lexical atom has a `RegisteredLexicalApplicationTruth` source, each transition
 atom has a `RegisteredStateTransitionTruth` source, and each source projects
-back to concrete, base, and closure truth.
+back to concrete, base, and closure truth. The newest kernel-alignment layer
+packages this source discipline as
+`FiniteRegisteredAtomicKernelAlignmentCertificate`, instantiates
+`finite_registered_atomic_kernel_alignment_certificate`, checks registered
+lexical and transition sources through `ConcreteRegisteredTruthKernel`, and
+projects the resulting kernel denotations back to `AtomicClosureTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

@@ -780,6 +780,62 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_kernel_alignment_lexical_source_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_kernel_alignment_lexical_\d+_source_to_kernel_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_kernel_alignment_lexical_source_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_kernel_alignment_lexical_\d+_source_to_kernel_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_kernel_alignment_lexical_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_kernel_alignment_lexical_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_kernel_alignment_lexical_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_kernel_alignment_lexical_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_kernel_alignment_transition_source_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_kernel_alignment_transition_\d+_source_to_kernel_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_kernel_alignment_transition_source_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_kernel_alignment_transition_\d+_source_to_kernel_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_kernel_alignment_transition_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_kernel_alignment_transition_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_kernel_alignment_transition_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_kernel_alignment_transition_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2034,6 +2090,116 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_source_transition_1_closure_from_source_projected."
+            in coq
+        ),
+        "lean finite registered atomic kernel alignment certificate": (
+            lean_finite_registered_atomic_kernel_alignment_lexical_source_count
+            == 4
+            and lean_finite_registered_atomic_kernel_alignment_lexical_atomic_count
+            == 4
+            and lean_finite_registered_atomic_kernel_alignment_transition_source_count
+            == 1
+            and lean_finite_registered_atomic_kernel_alignment_transition_atomic_count
+            == 1
+            and "theorem finite_registered_atomic_kernel_denotes_imply_atomic_closure :"
+            in lean
+            and "structure FiniteRegisteredAtomicKernelAlignmentCertificate : Type where"
+            in lean
+            and "finite_registered_atomic_kernel_alignment_source : "
+            "FiniteRegisteredAtomicSourceDisciplineCertificate" in lean
+            and "finite_registered_atomic_kernel_alignment_kernel : "
+            "ConcreteRegisteredTruthKernel" in lean
+            and "finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel : "
+            "(x_theme : Food) -> RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme) -> "
+            "concrete_registered_truth_kernel.concrete_registered_kernel_denotes "
+            "Prop (eat 0 mods_nil John x_theme)" in lean
+            and "finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel : "
+            "RegisteredStateTransitionTruth vase integrity_scale intact broken -> "
+            "concrete_registered_truth_kernel.concrete_registered_kernel_denotes "
+            "TransitionT (Transition vase integrity_scale intact broken)" in lean
+            and "def finite_registered_atomic_kernel_alignment_certificate :"
+            in lean
+            and "theorem finite_registered_atomic_kernel_alignment_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_kernel_alignment_source_matches :"
+            in lean
+            and "theorem finite_registered_atomic_kernel_alignment_kernel_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_kernel_alignment_lexical_3_atomic_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_kernel_alignment_transition_1_atomic_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicKernelAlignmentCertificate"
+            in lean
+            and "#check finite_registered_atomic_kernel_alignment_certificate"
+            in lean
+            and "#check "
+            "finite_registered_atomic_kernel_alignment_lexical_3_atomic_projected"
+            in lean
+            and "#check "
+            "finite_registered_atomic_kernel_alignment_transition_1_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic kernel alignment certificate": (
+            coq_finite_registered_atomic_kernel_alignment_lexical_source_count
+            == 4
+            and coq_finite_registered_atomic_kernel_alignment_lexical_atomic_count
+            == 4
+            and coq_finite_registered_atomic_kernel_alignment_transition_source_count
+            == 1
+            and coq_finite_registered_atomic_kernel_alignment_transition_atomic_count
+            == 1
+            and "Theorem finite_registered_atomic_kernel_denotes_imply_atomic_closure :"
+            in coq
+            and "Record FiniteRegisteredAtomicKernelAlignmentCertificate : Type := {"
+            in coq
+            and "finite_registered_atomic_kernel_alignment_source : "
+            "FiniteRegisteredAtomicSourceDisciplineCertificate;" in coq
+            and "finite_registered_atomic_kernel_alignment_kernel : "
+            "ConcreteRegisteredTruthKernel;" in coq
+            and "finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel : "
+            "forall x_theme : Food," in coq
+            and "RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme) ->" in coq
+            and "concrete_registered_kernel_denotes concrete_registered_truth_kernel "
+            "Prop (eat 0 mods_nil John x_theme);" in coq
+            and "finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel : "
+            "RegisteredStateTransitionTruth vase integrity_scale intact broken ->"
+            in coq
+            and "concrete_registered_kernel_denotes concrete_registered_truth_kernel "
+            "TransitionT (Transition vase integrity_scale intact broken)" in coq
+            and "Definition finite_registered_atomic_kernel_alignment_certificate :"
+            in coq
+            and "Theorem finite_registered_atomic_kernel_alignment_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_kernel_alignment_source_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_kernel_alignment_kernel_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_kernel_alignment_lexical_3_atomic_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_kernel_alignment_transition_1_atomic_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicKernelAlignmentCertificate."
+            in coq
+            and "Check finite_registered_atomic_kernel_alignment_certificate."
+            in coq
+            and "Check "
+            "finite_registered_atomic_kernel_alignment_lexical_3_atomic_projected."
+            in coq
+            and "Check "
+            "finite_registered_atomic_kernel_alignment_transition_1_atomic_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (

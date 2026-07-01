@@ -21216,6 +21216,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_finite_registered_atomic_kernel_alignment_certificate",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21461,6 +21466,12 @@ def project_completion_status_payload(
                     "source, and those sources are checked back into "
                     "ConcreteRegisteredAtomicTruth, AtomicBaseTruth, and "
                     "AtomicClosureTruth projections. "
+                    "The newest kernel-alignment layer then packages that "
+                    "source discipline together with ConcreteRegisteredTruthKernel "
+                    "as FiniteRegisteredAtomicKernelAlignmentCertificate, "
+                    "checks every registered lexical and transition source "
+                    "through the concrete registered kernel, and projects the "
+                    "kernel denotation back to AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

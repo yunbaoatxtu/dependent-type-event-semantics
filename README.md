@@ -1436,7 +1436,12 @@ registered evidence source behind each finite atom. It exposes
 `RegisteredStateTransitionTruth` sources for the generated transition atoms,
 and checked source-to-concrete/base/closure projections. This makes the finite
 atom ledger auditable without claiming that all lexical or transition truth
-conditions have been independently supplied. The open blocker remains
+conditions have been independently supplied. The next verified objective
+`coq_finite_registered_atomic_kernel_alignment_certificate` adds
+`FiniteRegisteredAtomicKernelAlignmentCertificate`, which packages the source
+discipline with `ConcreteRegisteredTruthKernel`, checks that every registered
+lexical and transition source feeds the kernel, and projects each resulting
+kernel denotation back to `AtomicClosureTruth`. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
@@ -1453,6 +1458,7 @@ concrete-registered-truth-condition-route,
 independent-registered-truth-condition-source,
 independent-registered-truth-condition-clause-instance,
 concrete-registered-truth-kernel,
+finite-registered-atomic-kernel-alignment,
 finite-registered-completion-certificate,
 finite-registered-component-coverage-certificate,
 or registered-example package instances.

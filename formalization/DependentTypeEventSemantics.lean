@@ -4812,6 +4812,111 @@ theorem finite_registered_atomic_source_transition_1_closure_from_source_project
     RegisteredStateTransitionTruth vase integrity_scale intact broken -> AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken) := by
   exact finite_registered_atomic_source_discipline_certificate.finite_registered_atomic_source_transition_1_closure_from_source
 
+theorem finite_registered_atomic_kernel_denotes_imply_atomic_closure :
+    (A : Type) -> (term : A) ->
+    concrete_registered_truth_kernel.concrete_registered_kernel_denotes A term ->
+    AtomicClosureTruth A term := by
+  intro A term h
+  apply concrete_registered_truth_conditions_from_kernel_imply_atomic_closure
+  exact h
+
+structure FiniteRegisteredAtomicKernelAlignmentCertificate : Type where
+  finite_registered_atomic_kernel_alignment_source : FiniteRegisteredAtomicSourceDisciplineCertificate
+  finite_registered_atomic_kernel_alignment_source_eq :
+      finite_registered_atomic_kernel_alignment_source = finite_registered_atomic_source_discipline_certificate
+  finite_registered_atomic_kernel_alignment_kernel : ConcreteRegisteredTruthKernel
+  finite_registered_atomic_kernel_alignment_kernel_eq :
+      finite_registered_atomic_kernel_alignment_kernel = concrete_registered_truth_kernel
+  finite_registered_atomic_kernel_alignment_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_truth_kernel.concrete_registered_kernel_denotes A term ->
+      AtomicClosureTruth A term
+  finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel : RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT (break 0 mods_nil John vase)
+  finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel : RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)
+  finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel : (x_theme : Food) -> RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes Prop (eat 0 mods_nil John x_theme)
+  finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel : RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT (knock 0 mods_nil John)
+  finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel : RegisteredStateTransitionTruth vase integrity_scale intact broken -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes TransitionT (Transition vase integrity_scale intact broken)
+
+def finite_registered_atomic_kernel_alignment_certificate :
+    FiniteRegisteredAtomicKernelAlignmentCertificate := {
+  finite_registered_atomic_kernel_alignment_source := finite_registered_atomic_source_discipline_certificate,
+  finite_registered_atomic_kernel_alignment_source_eq := rfl,
+  finite_registered_atomic_kernel_alignment_kernel := concrete_registered_truth_kernel,
+  finite_registered_atomic_kernel_alignment_kernel_eq := rfl,
+  finite_registered_atomic_kernel_alignment_sound := finite_registered_atomic_kernel_denotes_imply_atomic_closure,
+  finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel := fun h_source => concrete_registered_truth_kernel.concrete_registered_kernel_lexical_application PropT (break 0 mods_nil John vase) h_source,
+  finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel := fun h_source => concrete_registered_truth_kernel.concrete_registered_kernel_lexical_application PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) h_source,
+  finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel := fun x_theme h_source => concrete_registered_truth_kernel.concrete_registered_kernel_lexical_application Prop (eat 0 mods_nil John x_theme) h_source,
+  finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel := fun h_source => concrete_registered_truth_kernel.concrete_registered_kernel_lexical_application PropT (knock 0 mods_nil John) h_source,
+  finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel := fun h_source => concrete_registered_truth_kernel.concrete_registered_kernel_transition vase integrity_scale intact broken h_source
+}
+
+theorem finite_registered_atomic_kernel_alignment_certificate_exists :
+    Exists (fun C : FiniteRegisteredAtomicKernelAlignmentCertificate => C = finite_registered_atomic_kernel_alignment_certificate) := by
+  exact Exists.intro finite_registered_atomic_kernel_alignment_certificate rfl
+
+theorem finite_registered_atomic_kernel_alignment_source_matches :
+    finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_source =
+      finite_registered_atomic_source_discipline_certificate := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_source_eq
+
+theorem finite_registered_atomic_kernel_alignment_kernel_matches :
+    finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_kernel =
+      concrete_registered_truth_kernel := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_kernel_eq
+
+theorem finite_registered_atomic_kernel_alignment_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_truth_kernel.concrete_registered_kernel_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_sound
+
+theorem finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel_projected :
+    RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT (break 0 mods_nil John vase) := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel
+
+theorem finite_registered_atomic_kernel_alignment_lexical_1_atomic_projected :
+    AtomicClosureTruth PropT (break 0 mods_nil John vase) := by
+  apply finite_registered_atomic_kernel_denotes_imply_atomic_closure
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel (finite_registered_atomic_source_lexical_1_source_projected)
+
+theorem finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel_projected :
+    RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel
+
+theorem finite_registered_atomic_kernel_alignment_lexical_2_atomic_projected :
+    AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  apply finite_registered_atomic_kernel_denotes_imply_atomic_closure
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel (finite_registered_atomic_source_lexical_2_source_projected)
+
+theorem finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel_projected :
+    (x_theme : Food) -> RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes Prop (eat 0 mods_nil John x_theme) := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel
+
+theorem finite_registered_atomic_kernel_alignment_lexical_3_atomic_projected :
+    (x_theme : Food) -> AtomicClosureTruth Prop (eat 0 mods_nil John x_theme) := by
+  intro x_theme
+  apply finite_registered_atomic_kernel_denotes_imply_atomic_closure
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel x_theme (finite_registered_atomic_source_lexical_3_source_projected x_theme)
+
+theorem finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel_projected :
+    RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes PropT (knock 0 mods_nil John) := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel
+
+theorem finite_registered_atomic_kernel_alignment_lexical_4_atomic_projected :
+    AtomicClosureTruth PropT (knock 0 mods_nil John) := by
+  apply finite_registered_atomic_kernel_denotes_imply_atomic_closure
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel (finite_registered_atomic_source_lexical_4_source_projected)
+
+theorem finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel_projected :
+    RegisteredStateTransitionTruth vase integrity_scale intact broken -> concrete_registered_truth_kernel.concrete_registered_kernel_denotes TransitionT (Transition vase integrity_scale intact broken) := by
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel
+
+theorem finite_registered_atomic_kernel_alignment_transition_1_atomic_projected :
+    AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken) := by
+  apply finite_registered_atomic_kernel_denotes_imply_atomic_closure
+  exact finite_registered_atomic_kernel_alignment_certificate.finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel (finite_registered_atomic_source_transition_1_source_projected)
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -5300,3 +5405,20 @@ theorem finite_registered_atomic_source_transition_1_closure_from_source_project
 #check finite_registered_atomic_source_transition_1_concrete_from_source_projected
 #check finite_registered_atomic_source_transition_1_base_from_source_projected
 #check finite_registered_atomic_source_transition_1_closure_from_source_projected
+#check finite_registered_atomic_kernel_denotes_imply_atomic_closure
+#check FiniteRegisteredAtomicKernelAlignmentCertificate
+#check finite_registered_atomic_kernel_alignment_certificate
+#check finite_registered_atomic_kernel_alignment_certificate_exists
+#check finite_registered_atomic_kernel_alignment_source_matches
+#check finite_registered_atomic_kernel_alignment_kernel_matches
+#check finite_registered_atomic_kernel_alignment_sound_projected
+#check finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel_projected
+#check finite_registered_atomic_kernel_alignment_lexical_1_atomic_projected
+#check finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel_projected
+#check finite_registered_atomic_kernel_alignment_lexical_2_atomic_projected
+#check finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel_projected
+#check finite_registered_atomic_kernel_alignment_lexical_3_atomic_projected
+#check finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel_projected
+#check finite_registered_atomic_kernel_alignment_lexical_4_atomic_projected
+#check finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel_projected
+#check finite_registered_atomic_kernel_alignment_transition_1_atomic_projected
