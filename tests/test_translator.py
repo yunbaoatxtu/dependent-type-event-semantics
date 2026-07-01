@@ -4832,6 +4832,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record FiniteRegisteredAtomicConstructorObligationAlignmentCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition finite_registered_atomic_constructor_obligation_alignment_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_constructor_obligation_alignment_lexical_1_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_constructor_obligation_alignment_lexical_1_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_constructor_obligation_alignment_transition_1_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_from_certificate.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17627,6 +17651,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_truth_condition_constructor_class_discharge_suite",
                 "coq_registered_truth_condition_constructor_class_projection_coverage_certificate",
                 "coq_registered_truth_condition_constructor_class_projection_obligation_ledger",
+                "coq_finite_registered_atomic_constructor_obligation_alignment_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27030,6 +27055,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_registered_truth_condition_constructor_class_projection_obligation_ledger`",
             readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredAtomicConstructorObligationAlignmentCertificate`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_finite_registered_atomic_constructor_obligation_alignment_certificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27307,6 +27340,14 @@ class TranslatorTests(unittest.TestCase):
             "`registered_truth_condition_constructor_class_projection_obligation_ledger`",
             formalization_readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredAtomicConstructorObligationAlignmentCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`finite_registered_atomic_constructor_obligation_alignment_certificate`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -27581,6 +27622,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_registered_truth_condition_constructor_class_projection_obligation_ledger",
+            manuscript,
+        )
+        self.assertIn(
+            "FiniteRegisteredAtomicConstructorObligationAlignmentCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_finite_registered_atomic_constructor_obligation_alignment_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

@@ -21317,6 +21317,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_constructor_"
+                    "obligation_alignment_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21662,6 +21670,12 @@ def project_completion_status_payload(
                     "for lexical application, every generated Sigma type, "
                     "every temporal constructor, repeat, polarity, "
                     "Transition/Cause, and spec-to-atomic soundness. "
+                    "The newest finite registered atomic constructor-obligation "
+                    "alignment certificate then feeds every exported finite "
+                    "registered lexical atom and transition atom through that "
+                    "ledger, checking both ledger-derived truth inhabitants "
+                    "and AtomicClosureTruth projections while retaining the "
+                    "typed-discharge certificate as its source. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

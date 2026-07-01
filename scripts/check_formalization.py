@@ -3840,6 +3840,56 @@ def main() -> None:
             and "Check registered_constructor_class_projection_obligation_ledger_spec_sound_projected."
             in coq
         ),
+        "lean finite registered atomic constructor obligation alignment certificate": (
+            "structure FiniteRegisteredAtomicConstructorObligationAlignmentCertificate : Type where"
+            in lean
+            and "def finite_registered_atomic_constructor_obligation_alignment_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_constructor_obligation_alignment_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_constructor_obligation_alignment_typed_source_matches :"
+            in lean
+            and "theorem finite_registered_atomic_constructor_obligation_alignment_ledger_matches :"
+            in lean
+            and "theorem finite_registered_atomic_constructor_obligation_alignment_lexical_1_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_constructor_obligation_alignment_lexical_1_atomic_projected :"
+            in lean
+            and "theorem finite_registered_atomic_constructor_obligation_alignment_transition_1_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicConstructorObligationAlignmentCertificate"
+            in lean
+            and "#check finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_from_certificate"
+            in lean
+        ),
+        "coq finite registered atomic constructor obligation alignment certificate": (
+            "Record FiniteRegisteredAtomicConstructorObligationAlignmentCertificate : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_constructor_obligation_alignment_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_constructor_obligation_alignment_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_constructor_obligation_alignment_typed_source_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_constructor_obligation_alignment_ledger_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_constructor_obligation_alignment_lexical_1_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_constructor_obligation_alignment_lexical_1_atomic_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_constructor_obligation_alignment_transition_1_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicConstructorObligationAlignmentCertificate."
+            in coq
+            and "Check finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_from_certificate."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

@@ -1515,6 +1515,14 @@ lexical, Sigma, temporal, repeat, polarity, Transition/Cause, and
 spec-to-atomic projections as class-local ledger obligations. This makes the
 remaining concrete truth-condition instance work addressable one obligation at
 a time while preserving the same registered-fragment boundary.
+The next verified objective
+`coq_finite_registered_atomic_constructor_obligation_alignment_certificate`
+adds `FiniteRegisteredAtomicConstructorObligationAlignmentCertificate`, which
+feeds every exported finite registered lexical atom and registered transition
+atom through that ledger and checks both the ledger-derived truth inhabitant and
+the resulting `AtomicClosureTruth` projection. This aligns finite concrete
+atoms with the constructor-obligation route without claiming a general
+truth-condition model for arbitrary lexical or temporal material.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

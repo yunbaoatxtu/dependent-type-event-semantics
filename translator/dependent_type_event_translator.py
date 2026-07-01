@@ -19218,6 +19218,527 @@ def registered_truth_condition_constructor_class_projection_obligation_ledger_li
     return lines
 
 
+def finite_registered_atomic_constructor_obligation_alignment_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Align finite registered atoms with the constructor-obligation ledger."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    transitions: list[tuple[str, str, str, str]] = declarations["transitions"]
+    global_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    global_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+
+    def schema_parts(
+        schema: LexicalApplicationSchema,
+    ) -> tuple[str, str, list[tuple[str, str]], list[str]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        binder_names = [name for name, _type_name in binders]
+        return result_type, lexical_application_term(schema), binders, binder_names
+
+    def transition_parts(
+        transition: tuple[str, str, str, str],
+    ) -> tuple[str, str, str, str, str]:
+        theme, scale, source, target_state = transition
+        return theme, scale, source, target_state, (
+            f"(Transition {theme} {scale} {source} {target_state})"
+        )
+
+    def lean_schema_truth_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = (
+            f"{global_spec_lean}.fully_registered_truth_denotes "
+            f"{result_type} ({application})"
+        )
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_atomic_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_registered_source(schema: LexicalApplicationSchema) -> str:
+        constructor = registered_lexical_application_constructor_from_schema(schema)
+        _result_type, _application, _binders, binder_names = schema_parts(schema)
+        source = f"RegisteredLexicalApplicationTruth.{constructor}"
+        if binder_names:
+            source += " " + " ".join(binder_names)
+        return source
+
+    def coq_schema_truth_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = (
+            f"fully_registered_truth_denotes {global_spec_coq} "
+            f"{result_type} ({application})"
+        )
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_schema_atomic_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_schema_registered_source(schema: LexicalApplicationSchema) -> str:
+        constructor = registered_lexical_application_constructor_from_schema(schema)
+        _result_type, _application, _binders, binder_names = schema_parts(schema)
+        if binder_names:
+            return f"{constructor} {' '.join(binder_names)}"
+        return constructor
+
+    if target == "lean":
+        lines = [
+            "structure FiniteRegisteredAtomicConstructorObligationAlignmentCertificate : Type where",
+            "  finite_registered_atomic_constructor_obligation_alignment_typed_source : FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate",
+            "  finite_registered_atomic_constructor_obligation_alignment_typed_source_eq :",
+            "      finite_registered_atomic_constructor_obligation_alignment_typed_source =",
+            "        finite_registered_atomic_truth_condition_typed_discharge_certificate",
+            "  finite_registered_atomic_constructor_obligation_alignment_ledger : RegisteredTruthConditionConstructorClassProjectionObligationLedger",
+            "  finite_registered_atomic_constructor_obligation_alignment_ledger_eq :",
+            "      finite_registered_atomic_constructor_obligation_alignment_ledger =",
+            "        registered_truth_condition_constructor_class_projection_obligation_ledger",
+        ]
+        for index, schema in enumerate(schemas, 1):
+            lines.extend(
+                [
+                    f"  finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth :",
+                    f"      {lean_schema_truth_type(schema)}",
+                    f"  finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic :",
+                    f"      {lean_schema_atomic_type(schema)}",
+                ]
+            )
+        for index, transition in enumerate(transitions, 1):
+            _theme, _scale, _source, _target_state, term = transition_parts(transition)
+            lines.extend(
+                [
+                    f"  finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth :",
+                    f"      {global_spec_lean}.fully_registered_truth_denotes TransitionT {term}",
+                    f"  finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic :",
+                    f"      AtomicClosureTruth TransitionT {term}",
+                ]
+            )
+
+        for index, schema in enumerate(schemas, 1):
+            result_type, application, _binders, binder_names = schema_parts(schema)
+            source = lean_schema_registered_source(schema)
+            lines.extend(
+                [
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected :",
+                    f"    {lean_schema_truth_type(schema)} := by",
+                ]
+            )
+            if binder_names:
+                lines.append(f"  intro {' '.join(binder_names)}")
+            lines.extend(
+                [
+                    "  exact registered_constructor_class_projection_obligation_ledger_lexical_application_projected",
+                    f"    {result_type} ({application}) ({source})",
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_projected :",
+                    f"    {lean_schema_atomic_type(schema)} := by",
+                ]
+            )
+            if binder_names:
+                lines.append(f"  intro {' '.join(binder_names)}")
+            truth_call = (
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected"
+            )
+            if binder_names:
+                truth_call += " " + " ".join(binder_names)
+            lines.extend(
+                [
+                    "  exact registered_constructor_class_projection_obligation_ledger_spec_sound_projected",
+                    f"    {result_type} ({application}) ({truth_call})",
+                ]
+            )
+        for index, transition in enumerate(transitions, 1):
+            theme, scale, source, target_state, term = transition_parts(transition)
+            constructor = registered_state_transition_constructor(
+                theme,
+                scale,
+                source,
+                target_state,
+            )
+            registered = f"RegisteredStateTransitionTruth.{constructor}"
+            lines.extend(
+                [
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected :",
+                    f"    {global_spec_lean}.fully_registered_truth_denotes TransitionT {term} := by",
+                    "  exact registered_constructor_class_projection_obligation_ledger_transition_projected",
+                    f"    {theme} {scale} {source} {target_state} {registered}",
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_projected :",
+                    f"    AtomicClosureTruth TransitionT {term} := by",
+                    "  exact registered_constructor_class_projection_obligation_ledger_spec_sound_projected",
+                    f"    TransitionT {term} finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_atomic_constructor_obligation_alignment_certificate :",
+                "    FiniteRegisteredAtomicConstructorObligationAlignmentCertificate := {",
+                "  finite_registered_atomic_constructor_obligation_alignment_typed_source := finite_registered_atomic_truth_condition_typed_discharge_certificate,",
+                "  finite_registered_atomic_constructor_obligation_alignment_typed_source_eq := rfl,",
+                "  finite_registered_atomic_constructor_obligation_alignment_ledger := registered_truth_condition_constructor_class_projection_obligation_ledger,",
+                "  finite_registered_atomic_constructor_obligation_alignment_ledger_eq := rfl,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, _schema in enumerate(schemas, 1):
+            assignments.extend(
+                [
+                    (
+                        f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth",
+                        f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected",
+                    ),
+                    (
+                        f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic",
+                        f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_projected",
+                    ),
+                ]
+            )
+        for index, _transition in enumerate(transitions, 1):
+            assignments.extend(
+                [
+                    (
+                        f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth",
+                        f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected",
+                    ),
+                    (
+                        f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic",
+                        f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_projected",
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem finite_registered_atomic_constructor_obligation_alignment_certificate_exists :",
+                "    Exists (fun C : FiniteRegisteredAtomicConstructorObligationAlignmentCertificate => C = finite_registered_atomic_constructor_obligation_alignment_certificate) := by",
+                "  exact Exists.intro finite_registered_atomic_constructor_obligation_alignment_certificate rfl",
+                "",
+                "theorem finite_registered_atomic_constructor_obligation_alignment_typed_source_matches :",
+                "    finite_registered_atomic_constructor_obligation_alignment_certificate.finite_registered_atomic_constructor_obligation_alignment_typed_source =",
+                "      finite_registered_atomic_truth_condition_typed_discharge_certificate := by",
+                "  exact finite_registered_atomic_constructor_obligation_alignment_certificate.finite_registered_atomic_constructor_obligation_alignment_typed_source_eq",
+                "",
+                "theorem finite_registered_atomic_constructor_obligation_alignment_ledger_matches :",
+                "    finite_registered_atomic_constructor_obligation_alignment_certificate.finite_registered_atomic_constructor_obligation_alignment_ledger =",
+                "      registered_truth_condition_constructor_class_projection_obligation_ledger := by",
+                "  exact finite_registered_atomic_constructor_obligation_alignment_certificate.finite_registered_atomic_constructor_obligation_alignment_ledger_eq",
+            ]
+        )
+        for index, schema in enumerate(schemas, 1):
+            lines.extend(
+                [
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_from_certificate :",
+                    f"    {lean_schema_truth_type(schema)} := by",
+                    "  exact finite_registered_atomic_constructor_obligation_alignment_certificate."
+                    f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth",
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_from_certificate :",
+                    f"    {lean_schema_atomic_type(schema)} := by",
+                    "  exact finite_registered_atomic_constructor_obligation_alignment_certificate."
+                    f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic",
+                ]
+            )
+        for index, transition in enumerate(transitions, 1):
+            _theme, _scale, _source, _target_state, term = transition_parts(transition)
+            lines.extend(
+                [
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_from_certificate :",
+                    f"    {global_spec_lean}.fully_registered_truth_denotes TransitionT {term} := by",
+                    "  exact finite_registered_atomic_constructor_obligation_alignment_certificate."
+                    f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth",
+                    "",
+                    f"theorem finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_from_certificate :",
+                    f"    AtomicClosureTruth TransitionT {term} := by",
+                    "  exact finite_registered_atomic_constructor_obligation_alignment_certificate."
+                    f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record FiniteRegisteredAtomicConstructorObligationAlignmentCertificate : Type := {",
+        "  finite_registered_atomic_constructor_obligation_alignment_typed_source : FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate;",
+        "  finite_registered_atomic_constructor_obligation_alignment_typed_source_eq :",
+        "      finite_registered_atomic_constructor_obligation_alignment_typed_source =",
+        "        finite_registered_atomic_truth_condition_typed_discharge_certificate;",
+        "  finite_registered_atomic_constructor_obligation_alignment_ledger : RegisteredTruthConditionConstructorClassProjectionObligationLedger;",
+        "  finite_registered_atomic_constructor_obligation_alignment_ledger_eq :",
+        "      finite_registered_atomic_constructor_obligation_alignment_ledger =",
+        "        registered_truth_condition_constructor_class_projection_obligation_ledger;",
+    ]
+    field_lines: list[str] = []
+    for index, schema in enumerate(schemas, 1):
+        truth_lines = coq_schema_truth_type(schema)
+        atomic_lines = coq_schema_atomic_type(schema)
+        field_lines.append(
+            f"  finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth : "
+            + truth_lines[0]
+        )
+        field_lines.extend(truth_lines[1:])
+        field_lines[-1] += ";"
+        field_lines.append(
+            f"  finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic : "
+            + atomic_lines[0]
+        )
+        field_lines.extend(atomic_lines[1:])
+        field_lines[-1] += ";"
+    for index, transition in enumerate(transitions, 1):
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        field_lines.extend(
+            [
+                f"  finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth :",
+                f"      fully_registered_truth_denotes {global_spec_coq} TransitionT {term};",
+                f"  finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic :",
+                f"      AtomicClosureTruth TransitionT {term};",
+            ]
+        )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+        ]
+    )
+    for index, schema in enumerate(schemas, 1):
+        result_type, application, _binders, binder_names = schema_parts(schema)
+        truth_lines = coq_schema_truth_type(schema)
+        lines.extend(
+            [
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected :",
+                f"  {truth_lines[0]}",
+            ]
+        )
+        lines.extend(truth_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  exact (registered_constructor_class_projection_obligation_ledger_lexical_application_projected",
+                f"    {result_type} ({application}) ({coq_schema_registered_source(schema)})).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_projected :",
+            ]
+        )
+        atomic_lines = coq_schema_atomic_type(schema)
+        lines.append(f"  {atomic_lines[0]}")
+        lines.extend(atomic_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        truth_call = (
+            f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected"
+        )
+        if binder_names:
+            truth_call += " " + " ".join(binder_names)
+        lines.extend(
+            [
+                "  exact (registered_constructor_class_projection_obligation_ledger_spec_sound_projected",
+                f"    {result_type} ({application}) ({truth_call})).",
+                "Qed.",
+                "",
+            ]
+        )
+    for index, transition in enumerate(transitions, 1):
+        theme, scale, source, target_state, term = transition_parts(transition)
+        constructor = registered_state_transition_constructor(
+            theme,
+            scale,
+            source,
+            target_state,
+        )
+        lines.extend(
+            [
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected :",
+                f"  fully_registered_truth_denotes {global_spec_coq} TransitionT {term}.",
+                "Proof.",
+                "  exact (registered_constructor_class_projection_obligation_ledger_transition_projected",
+                f"    {theme} {scale} {source} {target_state} {constructor}).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_projected :",
+                f"  AtomicClosureTruth TransitionT {term}.",
+                "Proof.",
+                "  exact (registered_constructor_class_projection_obligation_ledger_spec_sound_projected",
+                f"    TransitionT {term} finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected).",
+                "Qed.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "Definition finite_registered_atomic_constructor_obligation_alignment_certificate :",
+            "  FiniteRegisteredAtomicConstructorObligationAlignmentCertificate := {|",
+            "  finite_registered_atomic_constructor_obligation_alignment_typed_source := finite_registered_atomic_truth_condition_typed_discharge_certificate;",
+            "  finite_registered_atomic_constructor_obligation_alignment_typed_source_eq := eq_refl;",
+            "  finite_registered_atomic_constructor_obligation_alignment_ledger := registered_truth_condition_constructor_class_projection_obligation_ledger;",
+            "  finite_registered_atomic_constructor_obligation_alignment_ledger_eq := eq_refl;",
+        ]
+    )
+    assignments = []
+    for index, _schema in enumerate(schemas, 1):
+        assignments.extend(
+            [
+                (
+                    f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth",
+                    f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected",
+                ),
+                (
+                    f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic",
+                    f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_projected",
+                ),
+            ]
+        )
+    for index, _transition in enumerate(transitions, 1):
+        assignments.extend(
+            [
+                (
+                    f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth",
+                    f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected",
+                ),
+                (
+                    f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic",
+                    f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_projected",
+                ),
+            ]
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem finite_registered_atomic_constructor_obligation_alignment_certificate_exists :",
+            "  exists C : FiniteRegisteredAtomicConstructorObligationAlignmentCertificate,",
+            "    C = finite_registered_atomic_constructor_obligation_alignment_certificate.",
+            "Proof.",
+            "  exists finite_registered_atomic_constructor_obligation_alignment_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_constructor_obligation_alignment_typed_source_matches :",
+            "  finite_registered_atomic_constructor_obligation_alignment_typed_source",
+            "    finite_registered_atomic_constructor_obligation_alignment_certificate =",
+            "  finite_registered_atomic_truth_condition_typed_discharge_certificate.",
+            "Proof.",
+            "  exact (finite_registered_atomic_constructor_obligation_alignment_typed_source_eq",
+            "    finite_registered_atomic_constructor_obligation_alignment_certificate).",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_constructor_obligation_alignment_ledger_matches :",
+            "  finite_registered_atomic_constructor_obligation_alignment_ledger",
+            "    finite_registered_atomic_constructor_obligation_alignment_certificate =",
+            "  registered_truth_condition_constructor_class_projection_obligation_ledger.",
+            "Proof.",
+            "  exact (finite_registered_atomic_constructor_obligation_alignment_ledger_eq",
+            "    finite_registered_atomic_constructor_obligation_alignment_certificate).",
+            "Qed.",
+        ]
+    )
+    for index, schema in enumerate(schemas, 1):
+        truth_lines = coq_schema_truth_type(schema)
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_from_certificate :",
+                f"  {truth_lines[0]}",
+            ]
+        )
+        lines.extend(truth_lines[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact (finite_registered_atomic_constructor_obligation_alignment_lexical_"
+                f"{index}_truth",
+                "    finite_registered_atomic_constructor_obligation_alignment_certificate).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_from_certificate :",
+            ]
+        )
+        atomic_lines = coq_schema_atomic_type(schema)
+        lines.append(f"  {atomic_lines[0]}")
+        lines.extend(atomic_lines[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact (finite_registered_atomic_constructor_obligation_alignment_lexical_"
+                f"{index}_atomic",
+                "    finite_registered_atomic_constructor_obligation_alignment_certificate).",
+                "Qed.",
+            ]
+        )
+    for index, transition in enumerate(transitions, 1):
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_from_certificate :",
+                f"  fully_registered_truth_denotes {global_spec_coq} TransitionT {term}.",
+                "Proof.",
+                "  exact (finite_registered_atomic_constructor_obligation_alignment_transition_"
+                f"{index}_truth",
+                "    finite_registered_atomic_constructor_obligation_alignment_certificate).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_from_certificate :",
+                f"  AtomicClosureTruth TransitionT {term}.",
+                "Proof.",
+                "  exact (finite_registered_atomic_constructor_obligation_alignment_transition_"
+                f"{index}_atomic",
+                "    finite_registered_atomic_constructor_obligation_alignment_certificate).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -23814,6 +24335,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_atomic_constructor_obligation_alignment_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -24995,6 +25523,55 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check registered_constructor_class_projection_obligation_ledger_spec_sound_projected"
         )
+        lines.append(
+            "#check FiniteRegisteredAtomicConstructorObligationAlignmentCertificate"
+        )
+        lines.append(
+            "#check finite_registered_atomic_constructor_obligation_alignment_certificate"
+        )
+        lines.append(
+            "#check finite_registered_atomic_constructor_obligation_alignment_certificate_exists"
+        )
+        lines.append(
+            "#check finite_registered_atomic_constructor_obligation_alignment_typed_source_matches"
+        )
+        lines.append(
+            "#check finite_registered_atomic_constructor_obligation_alignment_ledger_matches"
+        )
+        for index in range(1, len(declarations["lexical_applications"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_from_certificate"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_from_certificate"
+            )
+        for index in range(1, len(declarations["transitions"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_from_certificate"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_from_certificate"
+            )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -25810,6 +26387,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         registered_truth_condition_constructor_class_projection_obligation_ledger_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        finite_registered_atomic_constructor_obligation_alignment_certificate_lines(
             declarations,
             target,
         )
@@ -26836,6 +27420,55 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append(
         "Check registered_constructor_class_projection_obligation_ledger_spec_sound_projected."
     )
+    lines.append(
+        "Check FiniteRegisteredAtomicConstructorObligationAlignmentCertificate."
+    )
+    lines.append(
+        "Check finite_registered_atomic_constructor_obligation_alignment_certificate."
+    )
+    lines.append(
+        "Check finite_registered_atomic_constructor_obligation_alignment_certificate_exists."
+    )
+    lines.append(
+        "Check finite_registered_atomic_constructor_obligation_alignment_typed_source_matches."
+    )
+    lines.append(
+        "Check finite_registered_atomic_constructor_obligation_alignment_ledger_matches."
+    )
+    for index in range(1, len(declarations["lexical_applications"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_truth_from_certificate."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_lexical_{index}_atomic_from_certificate."
+        )
+    for index in range(1, len(declarations["transitions"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_truth_from_certificate."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_from_certificate."
+        )
     return "\n".join(lines) + "\n"
 
 

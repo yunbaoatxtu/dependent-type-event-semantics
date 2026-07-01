@@ -487,6 +487,12 @@ instantiates
 and records the coverage certificate as the ledger source while exposing the
 same lexical, Sigma, temporal, repeat, polarity, Transition/Cause, and
 spec-soundness routes as class-local obligations.
+The finite registered atomic constructor-obligation alignment layer introduces
+`FiniteRegisteredAtomicConstructorObligationAlignmentCertificate`, instantiates
+`finite_registered_atomic_constructor_obligation_alignment_certificate`, and
+checks every finite registered lexical and transition atom through that ledger,
+including both the ledger-derived truth inhabitant and the
+`AtomicClosureTruth` projection.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
