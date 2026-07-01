@@ -2690,6 +2690,34 @@ class TranslatorTests(unittest.TestCase):
             "#check finite_registered_atomic_truth_condition_instance_transition_1_atomic_projected",
             lean_module,
         )
+        self.assertIn(
+            "structure RegisteredAtomicTruthConditionWitness (A : Type) (term : A) : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "structure FiniteRegisteredAtomicTruthConditionWitnessLedger : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def finite_registered_atomic_truth_condition_witness_ledger :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_atomic_truth_condition_witness_lexical_2_projected :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_atomic_truth_condition_witness_lexical_2_truth_projected :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_atomic_truth_condition_witness_transition_1_atomic_projected :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check finite_registered_atomic_truth_condition_witness_transition_1_atomic_projected",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply semantic_preservation_syntax_directed_truth", lean_module)
@@ -4473,6 +4501,34 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check finite_registered_atomic_truth_condition_instance_transition_1_atomic_projected.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record RegisteredAtomicTruthConditionWitness (A : Type) (term : A) : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Record FiniteRegisteredAtomicTruthConditionWitnessLedger : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition finite_registered_atomic_truth_condition_witness_ledger :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_truth_condition_witness_lexical_2_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_truth_condition_witness_lexical_2_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_truth_condition_witness_transition_1_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check finite_registered_atomic_truth_condition_witness_transition_1_atomic_projected.",
             coq_module,
         )
         self.assertIn(
@@ -17261,6 +17317,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_finite_registered_atomic_kernel_alignment_certificate",
                 "coq_finite_registered_atomic_truth_condition_source_certificate",
                 "coq_finite_registered_atomic_truth_condition_instance_certificate",
+                "coq_finite_registered_atomic_truth_condition_witness_ledger",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -26580,6 +26637,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_finite_registered_atomic_truth_condition_instance_certificate`",
             readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredAtomicTruthConditionWitnessLedger`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_finite_registered_atomic_truth_condition_witness_ledger`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -26789,6 +26854,18 @@ class TranslatorTests(unittest.TestCase):
             "`finite_registered_atomic_truth_condition_instance_certificate`",
             formalization_readme,
         )
+        self.assertIn(
+            "`RegisteredAtomicTruthConditionWitness`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`FiniteRegisteredAtomicTruthConditionWitnessLedger`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`finite_registered_atomic_truth_condition_witness_ledger`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -26975,6 +27052,18 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_finite_registered_atomic_truth_condition_instance_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "RegisteredAtomicTruthConditionWitness",
+            manuscript,
+        )
+        self.assertIn(
+            "FiniteRegisteredAtomicTruthConditionWitnessLedger",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_finite_registered_atomic_truth_condition_witness_ledger",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

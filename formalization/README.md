@@ -421,6 +421,12 @@ actual source applications as
 `finite_registered_atomic_truth_condition_instance_certificate`, exposes one
 `fully_registered_truth_denotes` inhabitant for each finite registered lexical
 and transition atom, and checks each inhabitant back to `AtomicClosureTruth`.
+The witness-ledger layer then introduces
+`RegisteredAtomicTruthConditionWitness`, packages those finite truth and atomic
+projection pairs as `FiniteRegisteredAtomicTruthConditionWitnessLedger`,
+instantiates `finite_registered_atomic_truth_condition_witness_ledger`, and
+checks witness, truth, and atomic projections for each registered lexical and
+transition atom.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

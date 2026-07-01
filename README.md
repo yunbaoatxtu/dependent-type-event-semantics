@@ -1452,7 +1452,12 @@ to `AtomicClosureTruth`. The next verified objective
 `FiniteRegisteredAtomicTruthConditionInstanceCertificate`, which applies those
 registered sources to produce explicit `fully_registered_truth_denotes`
 inhabitants for every finite registered lexical atom and state-transition atom,
-then checks each inhabitant back to `AtomicClosureTruth`. The open blocker remains
+then checks each inhabitant back to `AtomicClosureTruth`. The next verified
+objective `coq_finite_registered_atomic_truth_condition_witness_ledger` adds
+`FiniteRegisteredAtomicTruthConditionWitnessLedger`, which packages each finite
+registered atom as a `RegisteredAtomicTruthConditionWitness` pairing its
+`fully_registered_truth_denotes` inhabitant with its `AtomicClosureTruth`
+projection. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
