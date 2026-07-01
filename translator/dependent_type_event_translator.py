@@ -21069,6 +21069,738 @@ def finite_registered_atomic_concrete_truth_closure_certificate_lines(
     return lines
 
 
+def finite_registered_atomic_concrete_truth_instance_ledger_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Package finite concrete truth-condition instances as typed atoms."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    transitions: list[tuple[str, str, str, str]] = declarations["transitions"]
+
+    def schema_parts(
+        schema: LexicalApplicationSchema,
+    ) -> tuple[str, str, list[tuple[str, str]], list[str]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        binder_names = [name for name, _type_name in binders]
+        return result_type, lexical_application_term(schema), binders, binder_names
+
+    def transition_parts(
+        transition: tuple[str, str, str, str],
+    ) -> tuple[str, str, str, str, str]:
+        theme, scale, source, target_state = transition
+        return theme, scale, source, target_state, (
+            f"(Transition {theme} {scale} {source} {target_state})"
+        )
+
+    def lean_binders(binders: list[tuple[str, str]]) -> str:
+        return " ".join(f"({name} : {type_name})" for name, type_name in binders)
+
+    def coq_binders(binders: list[tuple[str, str]]) -> str:
+        return " ".join(f"({name} : {type_name})" for name, type_name in binders)
+
+    def lean_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_lexical_atom_{index}"
+
+    def lean_instance_name(index: int) -> str:
+        return f"finite_registered_atomic_concrete_truth_instance_lexical_{index}"
+
+    def lean_transition_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_transition_atom_{index}"
+
+    def lean_transition_instance_name(index: int) -> str:
+        return f"finite_registered_atomic_concrete_truth_instance_transition_{index}"
+
+    def coq_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_lexical_atom_{index}"
+
+    def coq_instance_name(index: int) -> str:
+        return f"finite_registered_atomic_concrete_truth_instance_lexical_{index}"
+
+    def coq_transition_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_transition_atom_{index}"
+
+    def coq_transition_instance_name(index: int) -> str:
+        return f"finite_registered_atomic_concrete_truth_instance_transition_{index}"
+
+    def coq_schema_type(
+        schema: LexicalApplicationSchema,
+        conclusion: str,
+    ) -> list[str]:
+        _result_type, _application, binders, _binder_names = schema_parts(schema)
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteRegisteredTruthInstance (atom : RegisteredTruthConditionAtom) : Type where",
+            "  concrete_registered_truth_instance_atomic_truth :",
+            "      ConcreteRegisteredAtomicTruth atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term",
+            "  concrete_registered_truth_instance_concrete_truth :",
+            "      ConcreteRegisteredTruth atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term",
+            "  concrete_registered_truth_instance_direct_truth :",
+            "      concrete_registered_truth_conditions.fully_registered_truth_denotes atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term",
+            "  concrete_registered_truth_instance_atomic_closure :",
+            "      AtomicClosureTruth atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term",
+            "",
+        ]
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, binders, binder_names = schema_parts(schema)
+            binder_text = lean_binders(binders)
+            binder_prefix = f" {binder_text}" if binder_text else ""
+            atom_call = lean_atom_name(index)
+            if binder_names:
+                atom_call += " " + " ".join(binder_names)
+            atom_suffix = f" {' '.join(binder_names)}" if binder_names else ""
+            lines.extend(
+                [
+                    f"def {lean_instance_name(index)}{binder_prefix} :",
+                    f"    ConcreteRegisteredTruthInstance ({atom_call}) := {{",
+                    "  concrete_registered_truth_instance_atomic_truth := "
+                    f"finite_registered_atomic_witness_lexical_{index}_concrete_projected"
+                    + (f" {' '.join(binder_names)}," if binder_names else ","),
+                    "  concrete_registered_truth_instance_concrete_truth := "
+                    f"finite_registered_atomic_concrete_truth_closure_lexical_{index}_concrete_projected"
+                    + (f" {' '.join(binder_names)}," if binder_names else ","),
+                    "  concrete_registered_truth_instance_direct_truth := "
+                    f"finite_registered_atomic_concrete_truth_closure_lexical_{index}_direct_from_closure"
+                    + (f" {' '.join(binder_names)}," if binder_names else ","),
+                    "  concrete_registered_truth_instance_atomic_closure := "
+                    f"finite_registered_atomic_concrete_truth_closure_lexical_{index}_atomic_from_closure"
+                    + (f" {' '.join(binder_names)}" if binder_names else ""),
+                    "}",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_"
+                    f"lexical_{index}_direct_projected :",
+                ]
+            )
+            result_type, application, _binders, _names = schema_parts(schema)
+            direct_type = (
+                "concrete_registered_truth_conditions."
+                f"fully_registered_truth_denotes {result_type} ({application})"
+            )
+            if binders:
+                lines.append(f"    {binder_text} -> {direct_type} := by")
+                lines.append(f"  intro {' '.join(binder_names)}")
+            else:
+                lines.append(f"    {direct_type} := by")
+            lines.extend(
+                [
+                    f"  exact ({lean_instance_name(index)}{atom_suffix}).concrete_registered_truth_instance_direct_truth",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_"
+                    f"lexical_{index}_atomic_projected :",
+                ]
+            )
+            atomic_type = f"AtomicClosureTruth {result_type} ({application})"
+            if binders:
+                lines.append(f"    {binder_text} -> {atomic_type} := by")
+                lines.append(f"  intro {' '.join(binder_names)}")
+            else:
+                lines.append(f"    {atomic_type} := by")
+            lines.extend(
+                [
+                    f"  exact ({lean_instance_name(index)}{atom_suffix}).concrete_registered_truth_instance_atomic_closure",
+                    "",
+                ]
+            )
+        for index, transition in enumerate(transitions, 1):
+            _theme, _scale, _source, _target_state, term = transition_parts(transition)
+            lines.extend(
+                [
+                    f"def {lean_transition_instance_name(index)} :",
+                    "    ConcreteRegisteredTruthInstance "
+                    f"({lean_transition_atom_name(index)}) := {{",
+                    "  concrete_registered_truth_instance_atomic_truth := "
+                    f"finite_registered_atomic_witness_transition_{index}_concrete_projected,",
+                    "  concrete_registered_truth_instance_concrete_truth := "
+                    f"finite_registered_atomic_concrete_truth_closure_transition_{index}_concrete_projected,",
+                    "  concrete_registered_truth_instance_direct_truth := "
+                    f"finite_registered_atomic_concrete_truth_closure_transition_{index}_direct_from_closure,",
+                    "  concrete_registered_truth_instance_atomic_closure := "
+                    f"finite_registered_atomic_concrete_truth_closure_transition_{index}_atomic_from_closure",
+                    "}",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_"
+                    f"transition_{index}_direct_projected :",
+                    "    concrete_registered_truth_conditions."
+                    f"fully_registered_truth_denotes TransitionT {term} := by",
+                    "  exact "
+                    f"{lean_transition_instance_name(index)}."
+                    "concrete_registered_truth_instance_direct_truth",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_"
+                    f"transition_{index}_atomic_projected :",
+                    f"    AtomicClosureTruth TransitionT {term} := by",
+                    "  exact "
+                    f"{lean_transition_instance_name(index)}."
+                    "concrete_registered_truth_instance_atomic_closure",
+                    "",
+                ]
+            )
+        lines.extend(
+            [
+                "structure FiniteRegisteredAtomicConcreteTruthInstanceLedger : Type where",
+                "  finite_registered_atomic_concrete_truth_instance_ledger_source : FiniteRegisteredAtomicConcreteTruthClosureCertificate",
+                "  finite_registered_atomic_concrete_truth_instance_ledger_source_eq :",
+                "      finite_registered_atomic_concrete_truth_instance_ledger_source =",
+                "        finite_registered_atomic_concrete_truth_closure_certificate",
+                "  finite_registered_atomic_concrete_truth_instance_ledger_sound :",
+                "      (atom : RegisteredTruthConditionAtom) ->",
+                "      ConcreteRegisteredTruthInstance atom ->",
+                "      AtomicClosureTruth atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term",
+            ]
+        )
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, binders, binder_names = schema_parts(schema)
+            atom_call = lean_atom_name(index)
+            if binder_names:
+                atom_call += " " + " ".join(binder_names)
+                field_type = (
+                    f"{lean_binders(binders)} -> "
+                    f"ConcreteRegisteredTruthInstance ({atom_call})"
+                )
+            else:
+                field_type = f"ConcreteRegisteredTruthInstance ({atom_call})"
+            lines.append(
+                "  finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index} : {field_type}"
+            )
+        for index, _transition in enumerate(transitions, 1):
+            lines.append(
+                "  finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index} : ConcreteRegisteredTruthInstance "
+                f"({lean_transition_atom_name(index)})"
+            )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_atomic_concrete_truth_instance_ledger :",
+                "    FiniteRegisteredAtomicConcreteTruthInstanceLedger := {",
+                "  finite_registered_atomic_concrete_truth_instance_ledger_source := finite_registered_atomic_concrete_truth_closure_certificate,",
+                "  finite_registered_atomic_concrete_truth_instance_ledger_source_eq := rfl,",
+                "  finite_registered_atomic_concrete_truth_instance_ledger_sound := fun atom evidence => evidence.concrete_registered_truth_instance_atomic_closure,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, _schema in enumerate(schemas, 1):
+            assignments.append(
+                (
+                    "finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"lexical_{index}",
+                    lean_instance_name(index),
+                )
+            )
+        for index, _transition in enumerate(transitions, 1):
+            assignments.append(
+                (
+                    "finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}",
+                    lean_transition_instance_name(index),
+                )
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem finite_registered_atomic_concrete_truth_instance_ledger_exists :",
+                "    Exists (fun L : FiniteRegisteredAtomicConcreteTruthInstanceLedger => L = finite_registered_atomic_concrete_truth_instance_ledger) := by",
+                "  exact Exists.intro finite_registered_atomic_concrete_truth_instance_ledger rfl",
+                "",
+                "theorem finite_registered_atomic_concrete_truth_instance_ledger_source_matches :",
+                "    finite_registered_atomic_concrete_truth_instance_ledger.finite_registered_atomic_concrete_truth_instance_ledger_source =",
+                "      finite_registered_atomic_concrete_truth_closure_certificate := by",
+                "  exact finite_registered_atomic_concrete_truth_instance_ledger.finite_registered_atomic_concrete_truth_instance_ledger_source_eq",
+                "",
+                "theorem finite_registered_atomic_concrete_truth_instance_ledger_sound_projected :",
+                "    (atom : RegisteredTruthConditionAtom) ->",
+                "    ConcreteRegisteredTruthInstance atom ->",
+                "    AtomicClosureTruth atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term := by",
+                "  exact finite_registered_atomic_concrete_truth_instance_ledger.finite_registered_atomic_concrete_truth_instance_ledger_sound",
+            ]
+        )
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, binders, binder_names = schema_parts(schema)
+            atom_call = lean_atom_name(index)
+            if binder_names:
+                atom_call += " " + " ".join(binder_names)
+            instance_call = (
+                "finite_registered_atomic_concrete_truth_instance_ledger."
+                "finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index}"
+            )
+            if binder_names:
+                instance_call += " " + " ".join(binder_names)
+            result_type, application, _binders, _names = schema_parts(schema)
+            lines.extend(
+                [
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"lexical_{index}_instance_projected :",
+                ]
+            )
+            if binders:
+                lines.append(
+                    f"    {lean_binders(binders)} -> "
+                    f"ConcreteRegisteredTruthInstance ({atom_call}) := by"
+                )
+                lines.append(f"  intro {' '.join(binder_names)}")
+            else:
+                lines.append(
+                    f"    ConcreteRegisteredTruthInstance ({atom_call}) := by"
+                )
+            lines.extend(
+                [
+                    f"  exact {instance_call}",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"lexical_{index}_direct_projected :",
+                ]
+            )
+            direct_type = (
+                "concrete_registered_truth_conditions."
+                f"fully_registered_truth_denotes {result_type} ({application})"
+            )
+            if binders:
+                lines.append(f"    {lean_binders(binders)} -> {direct_type} := by")
+                lines.append(f"  intro {' '.join(binder_names)}")
+            else:
+                lines.append(f"    {direct_type} := by")
+            lines.extend(
+                [
+                    f"  exact ({instance_call}).concrete_registered_truth_instance_direct_truth",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"lexical_{index}_atomic_projected :",
+                ]
+            )
+            atomic_type = f"AtomicClosureTruth {result_type} ({application})"
+            if binders:
+                lines.append(f"    {lean_binders(binders)} -> {atomic_type} := by")
+                lines.append(f"  intro {' '.join(binder_names)}")
+            else:
+                lines.append(f"    {atomic_type} := by")
+            lines.append(
+                f"  exact ({instance_call}).concrete_registered_truth_instance_atomic_closure"
+            )
+        for index, transition in enumerate(transitions, 1):
+            _theme, _scale, _source, _target_state, term = transition_parts(transition)
+            lines.extend(
+                [
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}_instance_projected :",
+                    "    ConcreteRegisteredTruthInstance "
+                    f"({lean_transition_atom_name(index)}) := by",
+                    "  exact finite_registered_atomic_concrete_truth_instance_ledger."
+                    "finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}_direct_projected :",
+                    "    concrete_registered_truth_conditions."
+                    f"fully_registered_truth_denotes TransitionT {term} := by",
+                    "  exact finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}_instance_projected."
+                    "concrete_registered_truth_instance_direct_truth",
+                    "",
+                    "theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}_atomic_projected :",
+                    f"    AtomicClosureTruth TransitionT {term} := by",
+                    "  exact finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"transition_{index}_instance_projected."
+                    "concrete_registered_truth_instance_atomic_closure",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record ConcreteRegisteredTruthInstance (atom : RegisteredTruthConditionAtom) : Type := {",
+        "  concrete_registered_truth_instance_atomic_truth :",
+        "      ConcreteRegisteredAtomicTruth",
+        "        (registered_truth_condition_atom_type atom)",
+        "        (registered_truth_condition_atom_term atom);",
+        "  concrete_registered_truth_instance_concrete_truth :",
+        "      ConcreteRegisteredTruth",
+        "        (registered_truth_condition_atom_type atom)",
+        "        (registered_truth_condition_atom_term atom);",
+        "  concrete_registered_truth_instance_direct_truth :",
+        "      fully_registered_truth_denotes concrete_registered_truth_conditions",
+        "        (registered_truth_condition_atom_type atom)",
+        "        (registered_truth_condition_atom_term atom);",
+        "  concrete_registered_truth_instance_atomic_closure :",
+        "      AtomicClosureTruth",
+        "        (registered_truth_condition_atom_type atom)",
+        "        (registered_truth_condition_atom_term atom)",
+        "}.",
+        "",
+    ]
+    for index, schema in enumerate(schemas, 1):
+        result_type, application, binders, binder_names = schema_parts(schema)
+        binder_text = coq_binders(binders)
+        binder_prefix = f" {binder_text}" if binder_text else ""
+        atom_call = coq_atom_name(index)
+        if binder_names:
+            atom_call += " " + " ".join(binder_names)
+        lines.extend(
+            [
+                f"Definition {coq_instance_name(index)}{binder_prefix} :",
+                f"  ConcreteRegisteredTruthInstance ({atom_call}).",
+                "Proof.",
+                "  refine {| concrete_registered_truth_instance_atomic_truth := _;",
+                "            concrete_registered_truth_instance_concrete_truth := _;",
+                "            concrete_registered_truth_instance_direct_truth := _;",
+                "            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.",
+                "  - exact (finite_registered_atomic_witness_lexical_"
+                f"{index}_concrete_projected"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "  - exact (finite_registered_atomic_concrete_truth_closure_lexical_"
+                f"{index}_concrete_projected"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "  - exact (finite_registered_atomic_concrete_truth_closure_lexical_"
+                f"{index}_direct_from_closure"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "  - exact (finite_registered_atomic_concrete_truth_closure_lexical_"
+                f"{index}_atomic_from_closure"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "Defined.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_"
+                f"lexical_{index}_direct_projected :",
+            ]
+        )
+        direct_lines = coq_schema_type(
+            schema,
+            (
+                "fully_registered_truth_denotes concrete_registered_truth_conditions "
+                f"{result_type} ({application})"
+            ),
+        )
+        lines.append(f"  {direct_lines[0]}")
+        lines.extend(direct_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        instance_call = coq_instance_name(index)
+        if binder_names:
+            instance_call += " " + " ".join(binder_names)
+        lines.extend(
+            [
+                "  exact (concrete_registered_truth_instance_direct_truth",
+                f"    ({atom_call}) ({instance_call})).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_"
+                f"lexical_{index}_atomic_projected :",
+            ]
+        )
+        atomic_lines = coq_schema_type(
+            schema,
+            f"AtomicClosureTruth {result_type} ({application})",
+        )
+        lines.append(f"  {atomic_lines[0]}")
+        lines.extend(atomic_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  exact (concrete_registered_truth_instance_atomic_closure",
+                f"    ({atom_call}) ({instance_call})).",
+                "Qed.",
+                "",
+            ]
+        )
+    for index, transition in enumerate(transitions, 1):
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        lines.extend(
+            [
+                f"Definition {coq_transition_instance_name(index)} :",
+                "  ConcreteRegisteredTruthInstance "
+                f"({coq_transition_atom_name(index)}).",
+                "Proof.",
+                "  refine {| concrete_registered_truth_instance_atomic_truth := _;",
+                "            concrete_registered_truth_instance_concrete_truth := _;",
+                "            concrete_registered_truth_instance_direct_truth := _;",
+                "            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.",
+                "  - exact (finite_registered_atomic_witness_transition_"
+                f"{index}_concrete_projected).",
+                "  - exact (finite_registered_atomic_concrete_truth_closure_transition_"
+                f"{index}_concrete_projected).",
+                "  - exact (finite_registered_atomic_concrete_truth_closure_transition_"
+                f"{index}_direct_from_closure).",
+                "  - exact (finite_registered_atomic_concrete_truth_closure_transition_"
+                f"{index}_atomic_from_closure).",
+                "Defined.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_"
+                f"transition_{index}_direct_projected :",
+                "  fully_registered_truth_denotes concrete_registered_truth_conditions",
+                f"    TransitionT {term}.",
+                "Proof.",
+                "  exact (concrete_registered_truth_instance_direct_truth",
+                f"    ({coq_transition_atom_name(index)}) "
+                f"({coq_transition_instance_name(index)})).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_"
+                f"transition_{index}_atomic_projected :",
+                f"  AtomicClosureTruth TransitionT {term}.",
+                "Proof.",
+                "  exact (concrete_registered_truth_instance_atomic_closure",
+                f"    ({coq_transition_atom_name(index)}) "
+                f"({coq_transition_instance_name(index)})).",
+                "Qed.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "Record FiniteRegisteredAtomicConcreteTruthInstanceLedger : Type := {",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_source : FiniteRegisteredAtomicConcreteTruthClosureCertificate;",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_source_eq :",
+            "      finite_registered_atomic_concrete_truth_instance_ledger_source =",
+            "        finite_registered_atomic_concrete_truth_closure_certificate;",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_sound :",
+            "      forall atom : RegisteredTruthConditionAtom,",
+            "      ConcreteRegisteredTruthInstance atom ->",
+            "      AtomicClosureTruth",
+            "        (registered_truth_condition_atom_type atom)",
+            "        (registered_truth_condition_atom_term atom);",
+        ]
+    )
+    field_lines: list[str] = []
+    for index, schema in enumerate(schemas, 1):
+        _result_type, _application, binders, binder_names = schema_parts(schema)
+        atom_call = coq_atom_name(index)
+        if binder_names:
+            atom_call += " " + " ".join(binder_names)
+            binder_text = ", ".join(
+                f"forall {name} : {type_name}" for name, type_name in binders
+            )
+            field_lines.extend(
+                [
+                    "  finite_registered_atomic_concrete_truth_instance_ledger_"
+                    f"lexical_{index} : {binder_text},",
+                    f"      ConcreteRegisteredTruthInstance ({atom_call});",
+                ]
+            )
+        else:
+            field_lines.append(
+                "  finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index} : ConcreteRegisteredTruthInstance "
+                f"({atom_call});"
+            )
+    for index, _transition in enumerate(transitions, 1):
+        field_lines.append(
+            "  finite_registered_atomic_concrete_truth_instance_ledger_"
+            f"transition_{index} : ConcreteRegisteredTruthInstance "
+            f"({coq_transition_atom_name(index)});"
+        )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition finite_registered_atomic_concrete_truth_instance_ledger :",
+            "  FiniteRegisteredAtomicConcreteTruthInstanceLedger := {|",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_source := finite_registered_atomic_concrete_truth_closure_certificate;",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_source_eq := eq_refl;",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_sound :=",
+            "    fun atom evidence =>",
+            "      concrete_registered_truth_instance_atomic_closure atom evidence;",
+        ]
+    )
+    assignments = []
+    for index, _schema in enumerate(schemas, 1):
+        assignments.append(
+            (
+                "finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index}",
+                coq_instance_name(index),
+            )
+        )
+    for index, _transition in enumerate(transitions, 1):
+        assignments.append(
+            (
+                "finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}",
+                coq_transition_instance_name(index),
+            )
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem finite_registered_atomic_concrete_truth_instance_ledger_exists :",
+            "  exists L : FiniteRegisteredAtomicConcreteTruthInstanceLedger,",
+            "    L = finite_registered_atomic_concrete_truth_instance_ledger.",
+            "Proof.",
+            "  exists finite_registered_atomic_concrete_truth_instance_ledger.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_concrete_truth_instance_ledger_source_matches :",
+            "  finite_registered_atomic_concrete_truth_instance_ledger_source",
+            "    finite_registered_atomic_concrete_truth_instance_ledger =",
+            "  finite_registered_atomic_concrete_truth_closure_certificate.",
+            "Proof.",
+            "  exact (finite_registered_atomic_concrete_truth_instance_ledger_source_eq",
+            "    finite_registered_atomic_concrete_truth_instance_ledger).",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_concrete_truth_instance_ledger_sound_projected :",
+            "  forall atom : RegisteredTruthConditionAtom,",
+            "    ConcreteRegisteredTruthInstance atom ->",
+            "    AtomicClosureTruth",
+            "      (registered_truth_condition_atom_type atom)",
+            "      (registered_truth_condition_atom_term atom).",
+            "Proof.",
+            "  exact (finite_registered_atomic_concrete_truth_instance_ledger_sound",
+            "    finite_registered_atomic_concrete_truth_instance_ledger).",
+            "Qed.",
+        ]
+    )
+    for index, schema in enumerate(schemas, 1):
+        result_type, application, binders, binder_names = schema_parts(schema)
+        atom_call = coq_atom_name(index)
+        if binder_names:
+            atom_call += " " + " ".join(binder_names)
+        instance_call = (
+            "finite_registered_atomic_concrete_truth_instance_ledger_"
+            f"lexical_{index}"
+        )
+        ledger_instance_call = (
+            "finite_registered_atomic_concrete_truth_instance_ledger_"
+            f"lexical_{index} finite_registered_atomic_concrete_truth_instance_ledger"
+        )
+        if binder_names:
+            instance_call += " " + " ".join(binder_names)
+            ledger_instance_call += " " + " ".join(binder_names)
+        instance_lines = coq_schema_type(
+            schema,
+            f"ConcreteRegisteredTruthInstance ({atom_call})",
+        )
+        lines.extend(
+            [
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index}_instance_projected :",
+                f"  {instance_lines[0]}",
+            ]
+        )
+        lines.extend(instance_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  exact ("
+                "finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index}",
+                "    finite_registered_atomic_concrete_truth_instance_ledger"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index}_direct_projected :",
+            ]
+        )
+        direct_lines = coq_schema_type(
+            schema,
+            (
+                "fully_registered_truth_denotes concrete_registered_truth_conditions "
+                f"{result_type} ({application})"
+            ),
+        )
+        lines.append(f"  {direct_lines[0]}")
+        lines.extend(direct_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  exact (concrete_registered_truth_instance_direct_truth",
+                f"    ({atom_call}) ({ledger_instance_call})).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"lexical_{index}_atomic_projected :",
+            ]
+        )
+        atomic_lines = coq_schema_type(
+            schema,
+            f"AtomicClosureTruth {result_type} ({application})",
+        )
+        lines.append(f"  {atomic_lines[0]}")
+        lines.extend(atomic_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  exact (concrete_registered_truth_instance_atomic_closure",
+                f"    ({atom_call}) ({ledger_instance_call})).",
+                "Qed.",
+            ]
+        )
+    for index, transition in enumerate(transitions, 1):
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        lines.extend(
+            [
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}_instance_projected :",
+                "  ConcreteRegisteredTruthInstance "
+                f"({coq_transition_atom_name(index)}).",
+                "Proof.",
+                "  exact (finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}",
+                "    finite_registered_atomic_concrete_truth_instance_ledger).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}_direct_projected :",
+                "  fully_registered_truth_denotes concrete_registered_truth_conditions",
+                f"    TransitionT {term}.",
+                "Proof.",
+                "  exact (concrete_registered_truth_instance_direct_truth",
+                f"    ({coq_transition_atom_name(index)})",
+                "    (finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}_instance_projected)).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}_atomic_projected :",
+                f"  AtomicClosureTruth TransitionT {term}.",
+                "Proof.",
+                "  exact (concrete_registered_truth_instance_atomic_closure",
+                f"    ({coq_transition_atom_name(index)})",
+                "    (finite_registered_atomic_concrete_truth_instance_ledger_"
+                f"transition_{index}_instance_projected)).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -25686,6 +26418,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_atomic_concrete_truth_instance_ledger_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -27030,6 +27769,62 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "#check "
                 f"finite_registered_atomic_concrete_truth_closure_transition_{index}_atomic_from_closure"
             )
+        lines.append("#check ConcreteRegisteredTruthInstance")
+        lines.append("#check FiniteRegisteredAtomicConcreteTruthInstanceLedger")
+        lines.append("#check finite_registered_atomic_concrete_truth_instance_ledger")
+        lines.append(
+            "#check finite_registered_atomic_concrete_truth_instance_ledger_exists"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_concrete_truth_instance_ledger_source_matches"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_concrete_truth_instance_ledger_sound_projected"
+        )
+        for index in range(1, len(declarations["lexical_applications"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_lexical_{index}_direct_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_lexical_{index}_atomic_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_ledger_lexical_{index}_instance_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_ledger_lexical_{index}_direct_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_ledger_lexical_{index}_atomic_projected"
+            )
+        for index in range(1, len(declarations["transitions"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_transition_{index}_direct_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_transition_{index}_atomic_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_ledger_transition_{index}_instance_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_ledger_transition_{index}_direct_projected"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_truth_instance_ledger_transition_{index}_atomic_projected"
+            )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -27866,6 +28661,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         finite_registered_atomic_concrete_truth_closure_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        finite_registered_atomic_concrete_truth_instance_ledger_lines(
             declarations,
             target,
         )
@@ -29042,6 +29844,58 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"finite_registered_atomic_concrete_truth_closure_transition_{index}_atomic_from_closure."
+        )
+    lines.append("Check ConcreteRegisteredTruthInstance.")
+    lines.append("Check FiniteRegisteredAtomicConcreteTruthInstanceLedger.")
+    lines.append("Check finite_registered_atomic_concrete_truth_instance_ledger.")
+    lines.append("Check finite_registered_atomic_concrete_truth_instance_ledger_exists.")
+    lines.append(
+        "Check finite_registered_atomic_concrete_truth_instance_ledger_source_matches."
+    )
+    lines.append(
+        "Check finite_registered_atomic_concrete_truth_instance_ledger_sound_projected."
+    )
+    for index in range(1, len(declarations["lexical_applications"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_lexical_{index}_direct_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_lexical_{index}_atomic_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_ledger_lexical_{index}_instance_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_ledger_lexical_{index}_direct_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_ledger_lexical_{index}_atomic_projected."
+        )
+    for index in range(1, len(declarations["transitions"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_transition_{index}_direct_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_transition_{index}_atomic_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_ledger_transition_{index}_instance_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_ledger_transition_{index}_direct_projected."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_truth_instance_ledger_transition_{index}_atomic_projected."
         )
     return "\n".join(lines) + "\n"
 

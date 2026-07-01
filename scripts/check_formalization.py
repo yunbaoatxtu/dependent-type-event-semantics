@@ -4002,6 +4002,52 @@ def main() -> None:
             and "Check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure."
             in coq
         ),
+        "lean finite registered atomic concrete truth instance ledger": (
+            "structure ConcreteRegisteredTruthInstance (atom : RegisteredTruthConditionAtom) : Type where"
+            in lean
+            and "structure FiniteRegisteredAtomicConcreteTruthInstanceLedger : Type where"
+            in lean
+            and "def finite_registered_atomic_concrete_truth_instance_ledger :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_instance_ledger_exists :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_instance_ledger_source_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_instance_ledger_sound_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_instance_lexical_1_direct_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_direct_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected :"
+            in lean
+            and "#check ConcreteRegisteredTruthInstance" in lean
+            and "#check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic concrete truth instance ledger": (
+            "Record ConcreteRegisteredTruthInstance (atom : RegisteredTruthConditionAtom) : Type := {"
+            in coq
+            and "Record FiniteRegisteredAtomicConcreteTruthInstanceLedger : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_concrete_truth_instance_ledger :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_instance_ledger_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_instance_ledger_source_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_instance_ledger_sound_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_instance_lexical_1_direct_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_direct_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected :"
+            in coq
+            and "Check ConcreteRegisteredTruthInstance." in coq
+            and "Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

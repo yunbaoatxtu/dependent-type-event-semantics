@@ -506,6 +506,13 @@ each finite registered lexical and transition atom is first promoted from
 `ConcreteRegisteredAtomicTruth` into `ConcreteRegisteredTruth`, then projected
 through the direct `concrete_registered_truth_conditions` spec and back to
 `AtomicClosureTruth`.
+The finite registered atomic concrete-truth-instance ledger introduces
+`ConcreteRegisteredTruthInstance` and
+`FiniteRegisteredAtomicConcreteTruthInstanceLedger`, then packages each finite
+registered lexical and transition atom as a dependent instance record indexed by
+`RegisteredTruthConditionAtom`. The ledger exposes direct truth-condition and
+`AtomicClosureTruth` projections for each record through
+`finite_registered_atomic_concrete_truth_instance_ledger`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

@@ -21341,6 +21341,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_concrete_truth_"
+                    "instance_ledger"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21705,6 +21713,14 @@ def project_completion_status_payload(
                     "ConcreteRegisteredTruth, projects that closure through "
                     "concrete_registered_truth_conditions, and rechecks the "
                     "same atom as AtomicClosureTruth. "
+                    "The newest concrete-truth-instance ledger then reifies "
+                    "that direct closure path as ConcreteRegisteredTruthInstance "
+                    "records indexed by RegisteredTruthConditionAtom, packaging "
+                    "the ConcreteRegisteredAtomicTruth witness, "
+                    "ConcreteRegisteredTruth closure, direct "
+                    "concrete_registered_truth_conditions inhabitant, and "
+                    "AtomicClosureTruth projection for every finite registered "
+                    "lexical and transition atom. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

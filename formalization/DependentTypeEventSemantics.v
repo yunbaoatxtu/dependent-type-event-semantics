@@ -11556,6 +11556,340 @@ Proof.
     (finite_registered_atomic_concrete_truth_closure_transition_1_concrete_projected)).
 Qed.
 
+Record ConcreteRegisteredTruthInstance (atom : RegisteredTruthConditionAtom) : Type := {
+  concrete_registered_truth_instance_atomic_truth :
+      ConcreteRegisteredAtomicTruth
+        (registered_truth_condition_atom_type atom)
+        (registered_truth_condition_atom_term atom);
+  concrete_registered_truth_instance_concrete_truth :
+      ConcreteRegisteredTruth
+        (registered_truth_condition_atom_type atom)
+        (registered_truth_condition_atom_term atom);
+  concrete_registered_truth_instance_direct_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions
+        (registered_truth_condition_atom_type atom)
+        (registered_truth_condition_atom_term atom);
+  concrete_registered_truth_instance_atomic_closure :
+      AtomicClosureTruth
+        (registered_truth_condition_atom_type atom)
+        (registered_truth_condition_atom_term atom)
+}.
+
+Definition finite_registered_atomic_concrete_truth_instance_lexical_1 :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_1).
+Proof.
+  refine {| concrete_registered_truth_instance_atomic_truth := _;
+            concrete_registered_truth_instance_concrete_truth := _;
+            concrete_registered_truth_instance_direct_truth := _;
+            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.
+  - exact (finite_registered_atomic_witness_lexical_1_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_1_direct_from_closure).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_from_closure).
+Defined.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_1_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_1) (finite_registered_atomic_concrete_truth_instance_lexical_1)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_1_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_1) (finite_registered_atomic_concrete_truth_instance_lexical_1)).
+Qed.
+
+Definition finite_registered_atomic_concrete_truth_instance_lexical_2 :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_2).
+Proof.
+  refine {| concrete_registered_truth_instance_atomic_truth := _;
+            concrete_registered_truth_instance_concrete_truth := _;
+            concrete_registered_truth_instance_direct_truth := _;
+            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.
+  - exact (finite_registered_atomic_witness_lexical_2_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_2_direct_from_closure).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_from_closure).
+Defined.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_2_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_2) (finite_registered_atomic_concrete_truth_instance_lexical_2)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_2_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_2) (finite_registered_atomic_concrete_truth_instance_lexical_2)).
+Qed.
+
+Definition finite_registered_atomic_concrete_truth_instance_lexical_3 (x_theme : Food) :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme).
+Proof.
+  refine {| concrete_registered_truth_instance_atomic_truth := _;
+            concrete_registered_truth_instance_concrete_truth := _;
+            concrete_registered_truth_instance_direct_truth := _;
+            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.
+  - exact (finite_registered_atomic_witness_lexical_3_concrete_projected x_theme).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_projected x_theme).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_3_direct_from_closure x_theme).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_from_closure x_theme).
+Defined.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_3_direct_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme) (finite_registered_atomic_concrete_truth_instance_lexical_3 x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_3_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme) (finite_registered_atomic_concrete_truth_instance_lexical_3 x_theme)).
+Qed.
+
+Definition finite_registered_atomic_concrete_truth_instance_lexical_4 :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_4).
+Proof.
+  refine {| concrete_registered_truth_instance_atomic_truth := _;
+            concrete_registered_truth_instance_concrete_truth := _;
+            concrete_registered_truth_instance_direct_truth := _;
+            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.
+  - exact (finite_registered_atomic_witness_lexical_4_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_4_direct_from_closure).
+  - exact (finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_from_closure).
+Defined.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_4_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_4) (finite_registered_atomic_concrete_truth_instance_lexical_4)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_lexical_4_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_4) (finite_registered_atomic_concrete_truth_instance_lexical_4)).
+Qed.
+
+Definition finite_registered_atomic_concrete_truth_instance_transition_1 :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_transition_atom_1).
+Proof.
+  refine {| concrete_registered_truth_instance_atomic_truth := _;
+            concrete_registered_truth_instance_concrete_truth := _;
+            concrete_registered_truth_instance_direct_truth := _;
+            concrete_registered_truth_instance_atomic_closure := _ |}; simpl.
+  - exact (finite_registered_atomic_witness_transition_1_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_transition_1_concrete_projected).
+  - exact (finite_registered_atomic_concrete_truth_closure_transition_1_direct_from_closure).
+  - exact (finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure).
+Defined.
+
+Theorem finite_registered_atomic_concrete_truth_instance_transition_1_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions
+    TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_transition_atom_1) (finite_registered_atomic_concrete_truth_instance_transition_1)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_transition_1_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_transition_atom_1) (finite_registered_atomic_concrete_truth_instance_transition_1)).
+Qed.
+
+Record FiniteRegisteredAtomicConcreteTruthInstanceLedger : Type := {
+  finite_registered_atomic_concrete_truth_instance_ledger_source : FiniteRegisteredAtomicConcreteTruthClosureCertificate;
+  finite_registered_atomic_concrete_truth_instance_ledger_source_eq :
+      finite_registered_atomic_concrete_truth_instance_ledger_source =
+        finite_registered_atomic_concrete_truth_closure_certificate;
+  finite_registered_atomic_concrete_truth_instance_ledger_sound :
+      forall atom : RegisteredTruthConditionAtom,
+      ConcreteRegisteredTruthInstance atom ->
+      AtomicClosureTruth
+        (registered_truth_condition_atom_type atom)
+        (registered_truth_condition_atom_term atom);
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_1 : ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_1);
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_2 : ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_2);
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_3 : forall x_theme : Food,
+      ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme);
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_4 : ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_4);
+  finite_registered_atomic_concrete_truth_instance_ledger_transition_1 : ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_transition_atom_1)
+}.
+
+Definition finite_registered_atomic_concrete_truth_instance_ledger :
+  FiniteRegisteredAtomicConcreteTruthInstanceLedger := {|
+  finite_registered_atomic_concrete_truth_instance_ledger_source := finite_registered_atomic_concrete_truth_closure_certificate;
+  finite_registered_atomic_concrete_truth_instance_ledger_source_eq := eq_refl;
+  finite_registered_atomic_concrete_truth_instance_ledger_sound :=
+    fun atom evidence =>
+      concrete_registered_truth_instance_atomic_closure atom evidence;
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_1 := finite_registered_atomic_concrete_truth_instance_lexical_1;
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_2 := finite_registered_atomic_concrete_truth_instance_lexical_2;
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_3 := finite_registered_atomic_concrete_truth_instance_lexical_3;
+  finite_registered_atomic_concrete_truth_instance_ledger_lexical_4 := finite_registered_atomic_concrete_truth_instance_lexical_4;
+  finite_registered_atomic_concrete_truth_instance_ledger_transition_1 := finite_registered_atomic_concrete_truth_instance_transition_1
+|}.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_exists :
+  exists L : FiniteRegisteredAtomicConcreteTruthInstanceLedger,
+    L = finite_registered_atomic_concrete_truth_instance_ledger.
+Proof.
+  exists finite_registered_atomic_concrete_truth_instance_ledger.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_source_matches :
+  finite_registered_atomic_concrete_truth_instance_ledger_source
+    finite_registered_atomic_concrete_truth_instance_ledger =
+  finite_registered_atomic_concrete_truth_closure_certificate.
+Proof.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_source_eq
+    finite_registered_atomic_concrete_truth_instance_ledger).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_sound_projected :
+  forall atom : RegisteredTruthConditionAtom,
+    ConcreteRegisteredTruthInstance atom ->
+    AtomicClosureTruth
+      (registered_truth_condition_atom_type atom)
+      (registered_truth_condition_atom_term atom).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_sound
+    finite_registered_atomic_concrete_truth_instance_ledger).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_instance_projected :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_1).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_lexical_1
+    finite_registered_atomic_concrete_truth_instance_ledger).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_1) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_1 finite_registered_atomic_concrete_truth_instance_ledger)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_1) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_1 finite_registered_atomic_concrete_truth_instance_ledger)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_instance_projected :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_2).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_lexical_2
+    finite_registered_atomic_concrete_truth_instance_ledger).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_2) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_2 finite_registered_atomic_concrete_truth_instance_ledger)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_2) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_2 finite_registered_atomic_concrete_truth_instance_ledger)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_instance_projected :
+  forall x_theme : Food,
+      ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_lexical_3
+    finite_registered_atomic_concrete_truth_instance_ledger x_theme).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_direct_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_3 finite_registered_atomic_concrete_truth_instance_ledger x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_3 x_theme) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_3 finite_registered_atomic_concrete_truth_instance_ledger x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_instance_projected :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_lexical_atom_4).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_lexical_4
+    finite_registered_atomic_concrete_truth_instance_ledger).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_4) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_4 finite_registered_atomic_concrete_truth_instance_ledger)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_lexical_atom_4) (finite_registered_atomic_concrete_truth_instance_ledger_lexical_4 finite_registered_atomic_concrete_truth_instance_ledger)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_transition_1_instance_projected :
+  ConcreteRegisteredTruthInstance (finite_registered_atomic_truth_condition_typed_transition_atom_1).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_instance_ledger_transition_1
+    finite_registered_atomic_concrete_truth_instance_ledger).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_transition_1_direct_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions
+    TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (concrete_registered_truth_instance_direct_truth
+    (finite_registered_atomic_truth_condition_typed_transition_atom_1)
+    (finite_registered_atomic_concrete_truth_instance_ledger_transition_1_instance_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (concrete_registered_truth_instance_atomic_closure
+    (finite_registered_atomic_truth_condition_typed_transition_atom_1)
+    (finite_registered_atomic_concrete_truth_instance_ledger_transition_1_instance_projected)).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -12386,3 +12720,34 @@ Check finite_registered_atomic_concrete_truth_closure_transition_1_direct_truth_
 Check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_projected.
 Check finite_registered_atomic_concrete_truth_closure_transition_1_direct_from_closure.
 Check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure.
+Check ConcreteRegisteredTruthInstance.
+Check FiniteRegisteredAtomicConcreteTruthInstanceLedger.
+Check finite_registered_atomic_concrete_truth_instance_ledger.
+Check finite_registered_atomic_concrete_truth_instance_ledger_exists.
+Check finite_registered_atomic_concrete_truth_instance_ledger_source_matches.
+Check finite_registered_atomic_concrete_truth_instance_ledger_sound_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_1_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_1_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_instance_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_2_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_2_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_instance_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_3_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_3_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_instance_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_4_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_lexical_4_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_instance_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_transition_1_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_transition_1_atomic_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_instance_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_direct_projected.
+Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected.

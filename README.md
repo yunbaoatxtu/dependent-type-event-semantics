@@ -1540,6 +1540,14 @@ closure through the direct `concrete_registered_truth_conditions` spec, and
 checks the resulting `AtomicClosureTruth` projection. This makes the direct
 concrete closure route explicit while still remaining finite and
 registered-fragment scoped.
+The next verified objective
+`coq_finite_registered_atomic_concrete_truth_instance_ledger` adds
+`ConcreteRegisteredTruthInstance` and
+`FiniteRegisteredAtomicConcreteTruthInstanceLedger`, which reify each finite
+registered atom as a typed concrete truth-condition instance. Each ledger entry
+carries the registered atomic witness, the `ConcreteRegisteredTruth` closure,
+the direct `concrete_registered_truth_conditions` inhabitant, and the
+`AtomicClosureTruth` projection for the same `RegisteredTruthConditionAtom`.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
