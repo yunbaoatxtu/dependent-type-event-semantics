@@ -8317,6 +8317,198 @@ Proof.
     (finite_registered_atomic_truth_condition_witness_transition_1 finite_registered_atomic_truth_condition_witness_ledger)).
 Qed.
 
+Definition registered_atomic_truth_condition_witness_evidence
+  (A : Type) (term : A)
+  (witness : RegisteredAtomicTruthConditionWitness A term) :
+  TruthEvidence
+    (fully_registered_truth_denotes concrete_registered_truth_conditions A term) :=
+  truth_evidence_intro
+    (fully_registered_truth_denotes concrete_registered_truth_conditions A term)
+    (registered_atomic_truth_condition_witness_truth A term witness).
+
+Record FiniteRegisteredAtomicTruthConditionEvidenceLedger : Type := {
+  finite_registered_atomic_truth_condition_evidence_source : FiniteRegisteredAtomicTruthConditionWitnessLedger;
+  finite_registered_atomic_truth_condition_evidence_source_eq :
+      finite_registered_atomic_truth_condition_evidence_source = finite_registered_atomic_truth_condition_witness_ledger;
+  finite_registered_atomic_truth_condition_witness_to_evidence :
+      forall A : Type, forall term : A,
+      RegisteredAtomicTruthConditionWitness A term ->
+      TruthEvidence
+        (fully_registered_truth_denotes concrete_registered_truth_conditions A term);
+  finite_registered_atomic_truth_condition_evidence_sound :
+      forall A : Type, forall term : A,
+      TruthEvidence
+        (fully_registered_truth_denotes concrete_registered_truth_conditions A term) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions A term;
+  finite_registered_atomic_truth_condition_evidence_lexical_1 : TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase));
+  finite_registered_atomic_truth_condition_evidence_lexical_2 : TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast));
+  finite_registered_atomic_truth_condition_evidence_lexical_3 : forall x_theme : Food,
+      TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme));
+  finite_registered_atomic_truth_condition_evidence_lexical_4 : TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John));
+  finite_registered_atomic_truth_condition_evidence_transition_1 : TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken))
+}.
+
+Definition finite_registered_atomic_truth_condition_evidence_ledger :
+  FiniteRegisteredAtomicTruthConditionEvidenceLedger := {|
+  finite_registered_atomic_truth_condition_evidence_source := finite_registered_atomic_truth_condition_witness_ledger;
+  finite_registered_atomic_truth_condition_evidence_source_eq := eq_refl;
+  finite_registered_atomic_truth_condition_witness_to_evidence :=
+    fun A term witness =>
+      registered_atomic_truth_condition_witness_evidence A term witness;
+  finite_registered_atomic_truth_condition_evidence_sound :=
+    fun A term evidence =>
+      truth_evidence_sound
+        (fully_registered_truth_denotes concrete_registered_truth_conditions A term)
+        evidence;
+  finite_registered_atomic_truth_condition_evidence_lexical_1 := registered_atomic_truth_condition_witness_evidence _ _ (finite_registered_atomic_truth_condition_witness_lexical_1_projected);
+  finite_registered_atomic_truth_condition_evidence_lexical_2 := registered_atomic_truth_condition_witness_evidence _ _ (finite_registered_atomic_truth_condition_witness_lexical_2_projected);
+  finite_registered_atomic_truth_condition_evidence_lexical_3 := fun x_theme => registered_atomic_truth_condition_witness_evidence _ _ (finite_registered_atomic_truth_condition_witness_lexical_3_projected x_theme);
+  finite_registered_atomic_truth_condition_evidence_lexical_4 := registered_atomic_truth_condition_witness_evidence _ _ (finite_registered_atomic_truth_condition_witness_lexical_4_projected);
+  finite_registered_atomic_truth_condition_evidence_transition_1 := registered_atomic_truth_condition_witness_evidence _ _ (finite_registered_atomic_truth_condition_witness_transition_1_projected)
+|}.
+
+Theorem finite_registered_atomic_truth_condition_evidence_ledger_exists :
+  exists L : FiniteRegisteredAtomicTruthConditionEvidenceLedger,
+    L = finite_registered_atomic_truth_condition_evidence_ledger.
+Proof.
+  exists finite_registered_atomic_truth_condition_evidence_ledger.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_matches :
+  finite_registered_atomic_truth_condition_evidence_source
+    finite_registered_atomic_truth_condition_evidence_ledger =
+  finite_registered_atomic_truth_condition_witness_ledger.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_eq
+    finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_witness_to_evidence_projected :
+  forall A : Type, forall term : A,
+    RegisteredAtomicTruthConditionWitness A term ->
+    TruthEvidence
+      (fully_registered_truth_denotes concrete_registered_truth_conditions A term).
+Proof.
+  exact (finite_registered_atomic_truth_condition_witness_to_evidence
+    finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_sound_projected :
+  forall A : Type, forall term : A,
+    TruthEvidence
+      (fully_registered_truth_denotes concrete_registered_truth_conditions A term) ->
+    fully_registered_truth_denotes concrete_registered_truth_conditions A term.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_sound
+    finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_1_evidence_projected :
+  TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase)).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_1 finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_1_truth_from_evidence_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_lexical_1_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_1_atomic_from_evidence_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_1_truth_from_evidence_projected).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_2_evidence_projected :
+  TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_2 finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_2_truth_from_evidence_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_lexical_2_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_2_atomic_from_evidence_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_2_truth_from_evidence_projected).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected :
+  forall x_theme : Food,
+      TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme)).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_3 finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_3_truth_from_evidence_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_truth_condition_evidence_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_3_atomic_from_evidence_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_3_truth_from_evidence_projected x_theme).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_4_evidence_projected :
+  TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John)).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_4 finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_4_truth_from_evidence_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_lexical_4_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_lexical_4_atomic_from_evidence_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_evidence_lexical_4_truth_from_evidence_projected).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_transition_1_evidence_projected :
+  TruthEvidence (fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken)).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_transition_1 finite_registered_atomic_truth_condition_evidence_ledger).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_transition_1_truth_from_evidence_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_transition_1_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_evidence_transition_1_truth_from_evidence_projected).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -8880,3 +9072,25 @@ Check finite_registered_atomic_truth_condition_witness_lexical_4_atomic_projecte
 Check finite_registered_atomic_truth_condition_witness_transition_1_projected.
 Check finite_registered_atomic_truth_condition_witness_transition_1_truth_projected.
 Check finite_registered_atomic_truth_condition_witness_transition_1_atomic_projected.
+Check registered_atomic_truth_condition_witness_evidence.
+Check FiniteRegisteredAtomicTruthConditionEvidenceLedger.
+Check finite_registered_atomic_truth_condition_evidence_ledger.
+Check finite_registered_atomic_truth_condition_evidence_ledger_exists.
+Check finite_registered_atomic_truth_condition_evidence_source_matches.
+Check finite_registered_atomic_truth_condition_witness_to_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_sound_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_1_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_1_truth_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_1_atomic_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_2_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_2_truth_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_2_atomic_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_3_truth_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_3_atomic_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_4_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_4_truth_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_lexical_4_atomic_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_transition_1_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_transition_1_truth_from_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected.

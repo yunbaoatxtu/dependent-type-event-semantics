@@ -21245,6 +21245,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_truth_condition_"
+                    "evidence_ledger"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21517,6 +21525,13 @@ def project_completion_status_payload(
                     "pairs into FiniteRegisteredAtomicTruthConditionWitnessLedger, "
                     "and checks the lexical and transition witness, truth, "
                     "and atomic projections as a single finite ledger. "
+                    "The newest evidence-ledger layer then wraps each finite "
+                    "registered atom witness as TruthEvidence using "
+                    "truth_evidence_intro, gathers those evidence objects in "
+                    "FiniteRegisteredAtomicTruthConditionEvidenceLedger, and "
+                    "checks that truth_evidence_sound recovers the concrete "
+                    "truth-condition inhabitant before projecting it back to "
+                    "AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

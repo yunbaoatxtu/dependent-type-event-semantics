@@ -1060,6 +1060,90 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_truth_condition_evidence_lexical_evidence_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_lexical_\d+_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_lexical_evidence_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_lexical_\d+_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_lexical_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_lexical_\d+_truth_from_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_lexical_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_lexical_\d+_truth_from_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_lexical_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_lexical_\d+_atomic_from_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_lexical_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_lexical_\d+_atomic_from_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_transition_evidence_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_transition_\d+_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_transition_evidence_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_transition_\d+_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_transition_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_transition_\d+_truth_from_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_transition_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_transition_\d+_truth_from_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_transition_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_transition_\d+_atomic_from_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_transition_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_transition_\d+_atomic_from_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2769,6 +2853,138 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_truth_condition_witness_transition_1_atomic_projected."
+            in coq
+        ),
+        "lean finite registered atomic truth condition evidence ledger": (
+            lean_finite_registered_atomic_truth_condition_evidence_lexical_evidence_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_evidence_lexical_truth_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_evidence_lexical_atomic_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_evidence_transition_evidence_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_evidence_transition_truth_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_evidence_transition_atomic_count
+            == 1
+            and "def registered_atomic_truth_condition_witness_evidence "
+            in lean
+            and "structure FiniteRegisteredAtomicTruthConditionEvidenceLedger : Type where"
+            in lean
+            and "finite_registered_atomic_truth_condition_evidence_source : "
+            "FiniteRegisteredAtomicTruthConditionWitnessLedger" in lean
+            and "finite_registered_atomic_truth_condition_witness_to_evidence :"
+            in lean
+            and "finite_registered_atomic_truth_condition_evidence_lexical_3 : "
+            "(x_theme : Food) -> TruthEvidence "
+            "(concrete_registered_truth_conditions."
+            "fully_registered_truth_denotes Prop (eat 0 mods_nil John x_theme))"
+            in lean
+            and "def finite_registered_atomic_truth_condition_evidence_ledger :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_ledger_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_witness_to_evidence_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_sound_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_truth_from_evidence_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_atomic_from_evidence_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_transition_1_evidence_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected :"
+            in lean
+            and "#check registered_atomic_truth_condition_witness_evidence"
+            in lean
+            and "#check FiniteRegisteredAtomicTruthConditionEvidenceLedger"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected"
+            in lean
+        ),
+        "coq finite registered atomic truth condition evidence ledger": (
+            coq_finite_registered_atomic_truth_condition_evidence_lexical_evidence_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_evidence_lexical_truth_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_evidence_lexical_atomic_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_evidence_transition_evidence_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_evidence_transition_truth_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_evidence_transition_atomic_count
+            == 1
+            and "Definition registered_atomic_truth_condition_witness_evidence"
+            in coq
+            and "Record FiniteRegisteredAtomicTruthConditionEvidenceLedger : Type := {"
+            in coq
+            and "finite_registered_atomic_truth_condition_evidence_source : "
+            "FiniteRegisteredAtomicTruthConditionWitnessLedger;" in coq
+            and "finite_registered_atomic_truth_condition_witness_to_evidence :"
+            in coq
+            and "finite_registered_atomic_truth_condition_evidence_lexical_3 : "
+            "forall x_theme : Food," in coq
+            and "TruthEvidence (fully_registered_truth_denotes "
+            "concrete_registered_truth_conditions Prop "
+            "(eat 0 mods_nil John x_theme));" in coq
+            and "Definition finite_registered_atomic_truth_condition_evidence_ledger :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_ledger_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_witness_to_evidence_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_sound_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_truth_from_evidence_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_atomic_from_evidence_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_transition_1_evidence_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected :"
+            in coq
+            and "Check registered_atomic_truth_condition_witness_evidence."
+            in coq
+            and "Check FiniteRegisteredAtomicTruthConditionEvidenceLedger."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_evidence_lexical_3_evidence_projected."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (

@@ -426,7 +426,13 @@ The witness-ledger layer then introduces
 projection pairs as `FiniteRegisteredAtomicTruthConditionWitnessLedger`,
 instantiates `finite_registered_atomic_truth_condition_witness_ledger`, and
 checks witness, truth, and atomic projections for each registered lexical and
-transition atom.
+transition atom. The evidence-ledger layer then instantiates
+`FiniteRegisteredAtomicTruthConditionEvidenceLedger` as
+`finite_registered_atomic_truth_condition_evidence_ledger`, wraps each witness
+with `TruthEvidence`, checks the `truth_evidence_sound` projection back to the
+concrete truth-condition inhabitant, and rechecks the resulting
+`AtomicClosureTruth` projection for each registered lexical and transition
+atom.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

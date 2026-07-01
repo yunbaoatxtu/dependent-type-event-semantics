@@ -10860,6 +10860,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_finite_registered_atomic_truth_condition_source_certificate",
         "coq_finite_registered_atomic_truth_condition_instance_certificate",
         "coq_finite_registered_atomic_truth_condition_witness_ledger",
+        "coq_finite_registered_atomic_truth_condition_evidence_ledger",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
