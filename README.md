@@ -1613,6 +1613,16 @@ projection, constructor-ledger truth route, and constructor-ledger atomic
 projection. It is still a registered repetition constructor-class certificate,
 not an independent model of arbitrary event individuation or discourse-level
 counting.
+The next verified objective
+`coq_concrete_truth_condition_provider_polarity_class_instance_certificate`
+adds `ConcreteTruthConditionProviderPolarityClassInstanceCertificate`. This
+stage binds the polarity/negation provider class to
+`IndependentRegisteredPolarityTruthConditionInstances`; for `not_T body` it
+records the provider-side truth route, provider-side `AtomicClosureTruth`
+projection, constructor-ledger truth route, and constructor-ledger atomic
+projection. It is still a registered polarity constructor-class certificate,
+not an independent model of arbitrary natural-language negation, polarity
+licensing, or discourse-scope interaction.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

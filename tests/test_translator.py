@@ -5104,6 +5104,34 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionProviderPolarityClassInstanceCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_provider_polarity_class_instance_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_polarity_class_provider_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_polarity_class_provider_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_polarity_class_ledger_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_polarity_class_ledger_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_provider_polarity_class_ledger_atomic_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17910,6 +17938,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_provider_sigma_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_temporal_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_repeat_class_instance_certificate",
+                "coq_concrete_truth_condition_provider_polarity_class_instance_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27405,6 +27434,14 @@ class TranslatorTests(unittest.TestCase):
             "`ConcreteTruthConditionProviderRepeatClassInstanceCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_provider_polarity_class_instance_certificate`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderPolarityClassInstanceCertificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27765,6 +27802,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`concrete_truth_condition_provider_repeat_class_instance_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderPolarityClassInstanceCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_provider_polarity_class_instance_certificate`",
             formalization_readme,
         )
         self.assertIn("AtomicValuationSpec", manuscript)
@@ -28130,6 +28175,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_provider_repeat_class_instance_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionProviderPolarityClassInstanceCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_provider_polarity_class_instance_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

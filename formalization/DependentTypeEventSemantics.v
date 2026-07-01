@@ -14098,6 +14098,133 @@ Proof.
     concrete_truth_condition_provider_repeat_class_instance_certificate).
 Qed.
 
+Record ConcreteTruthConditionProviderPolarityClassInstanceCertificate : Type := {
+  concrete_truth_condition_provider_polarity_class_source :
+      ConcreteTruthConditionProviderClassObligationSuite;
+  concrete_truth_condition_provider_polarity_class_source_eq :
+      concrete_truth_condition_provider_polarity_class_source =
+        concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_polarity_class_instances :
+      IndependentRegisteredPolarityTruthConditionInstances;
+  concrete_truth_condition_provider_polarity_class_instances_eq :
+      concrete_truth_condition_provider_polarity_class_instances =
+        independent_registered_polarity_truth_condition_instances;
+  concrete_truth_condition_provider_polarity_class_provider_truth :
+      forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (not_T body);
+  concrete_truth_condition_provider_polarity_class_provider_atomic :
+      forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (not_T body);
+  concrete_truth_condition_provider_polarity_class_ledger_truth :
+      forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (not_T body);
+  concrete_truth_condition_provider_polarity_class_ledger_atomic :
+      forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (not_T body)
+}.
+
+Definition concrete_truth_condition_provider_polarity_class_instance_certificate :
+  ConcreteTruthConditionProviderPolarityClassInstanceCertificate := {|
+  concrete_truth_condition_provider_polarity_class_source :=
+    concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_polarity_class_source_eq := eq_refl;
+  concrete_truth_condition_provider_polarity_class_instances :=
+    independent_registered_polarity_truth_condition_instances;
+  concrete_truth_condition_provider_polarity_class_instances_eq := eq_refl;
+  concrete_truth_condition_provider_polarity_class_provider_truth :=
+    independent_registered_polarity_truth_condition_not_T_instance;
+  concrete_truth_condition_provider_polarity_class_provider_atomic :=
+    fun body body_truth =>
+      concrete_truth_condition_provider_class_obligation_independent_sound_projected
+        PropT (not_T body)
+        (independent_registered_polarity_truth_condition_not_T_instance body body_truth);
+  concrete_truth_condition_provider_polarity_class_ledger_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_not_T_projected;
+  concrete_truth_condition_provider_polarity_class_ledger_atomic :=
+    fun body body_truth =>
+      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+        PropT (not_T body)
+        (concrete_truth_condition_provider_class_obligation_ledger_not_T_projected body body_truth)
+|}.
+
+Theorem concrete_truth_condition_provider_polarity_class_instance_certificate_exists :
+  exists C : ConcreteTruthConditionProviderPolarityClassInstanceCertificate,
+    C = concrete_truth_condition_provider_polarity_class_instance_certificate.
+Proof.
+  exists concrete_truth_condition_provider_polarity_class_instance_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_provider_polarity_class_source_matches :
+  concrete_truth_condition_provider_polarity_class_source
+    concrete_truth_condition_provider_polarity_class_instance_certificate =
+  concrete_truth_condition_provider_class_obligation_suite.
+Proof.
+  exact (concrete_truth_condition_provider_polarity_class_source_eq
+    concrete_truth_condition_provider_polarity_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_polarity_class_instances_match :
+  concrete_truth_condition_provider_polarity_class_instances
+    concrete_truth_condition_provider_polarity_class_instance_certificate =
+  independent_registered_polarity_truth_condition_instances.
+Proof.
+  exact (concrete_truth_condition_provider_polarity_class_instances_eq
+    concrete_truth_condition_provider_polarity_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_polarity_class_provider_truth_projected :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (not_T body).
+Proof.
+  exact (concrete_truth_condition_provider_polarity_class_provider_truth
+    concrete_truth_condition_provider_polarity_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_polarity_class_provider_atomic_projected :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (not_T body).
+Proof.
+  exact (concrete_truth_condition_provider_polarity_class_provider_atomic
+    concrete_truth_condition_provider_polarity_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_polarity_class_ledger_truth_projected :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (not_T body).
+Proof.
+  exact (concrete_truth_condition_provider_polarity_class_ledger_truth
+    concrete_truth_condition_provider_polarity_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_polarity_class_ledger_atomic_projected :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (not_T body).
+Proof.
+  exact (concrete_truth_condition_provider_polarity_class_ledger_atomic
+    concrete_truth_condition_provider_polarity_class_instance_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -15113,3 +15240,12 @@ Check concrete_truth_condition_provider_repeat_class_provider_truth_projected.
 Check concrete_truth_condition_provider_repeat_class_provider_atomic_projected.
 Check concrete_truth_condition_provider_repeat_class_ledger_truth_projected.
 Check concrete_truth_condition_provider_repeat_class_ledger_atomic_projected.
+Check ConcreteTruthConditionProviderPolarityClassInstanceCertificate.
+Check concrete_truth_condition_provider_polarity_class_instance_certificate.
+Check concrete_truth_condition_provider_polarity_class_instance_certificate_exists.
+Check concrete_truth_condition_provider_polarity_class_source_matches.
+Check concrete_truth_condition_provider_polarity_class_instances_match.
+Check concrete_truth_condition_provider_polarity_class_provider_truth_projected.
+Check concrete_truth_condition_provider_polarity_class_provider_atomic_projected.
+Check concrete_truth_condition_provider_polarity_class_ledger_truth_projected.
+Check concrete_truth_condition_provider_polarity_class_ledger_atomic_projected.

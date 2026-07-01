@@ -21405,6 +21405,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_provider_"
+                    "polarity_class_instance_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21822,6 +21830,12 @@ def project_completion_status_payload(
                     "recording provider truth/atomic projections and the "
                     "matching constructor-ledger truth/atomic route for "
                     "repeat n body. "
+                    "The newest polarity provider class-instance certificate "
+                    "then discharges the not_T constructor through "
+                    "IndependentRegisteredPolarityTruthConditionInstances, "
+                    "recording provider truth/atomic projections and the "
+                    "matching constructor-ledger truth/atomic route for "
+                    "not_T body. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

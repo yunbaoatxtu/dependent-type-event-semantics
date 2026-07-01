@@ -25135,6 +25135,260 @@ def concrete_truth_condition_provider_repeat_class_instance_certificate_lines(
     ]
 
 
+def concrete_truth_condition_provider_polarity_class_instance_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Discharge the registered polarity/negation class."""
+
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+
+    if target == "lean":
+        return [
+            "structure ConcreteTruthConditionProviderPolarityClassInstanceCertificate : Type where",
+            "  concrete_truth_condition_provider_polarity_class_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_polarity_class_source_eq :",
+            "      concrete_truth_condition_provider_polarity_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_polarity_class_instances :",
+            "      IndependentRegisteredPolarityTruthConditionInstances",
+            "  concrete_truth_condition_provider_polarity_class_instances_eq :",
+            "      concrete_truth_condition_provider_polarity_class_instances =",
+            "        independent_registered_polarity_truth_condition_instances",
+            "  concrete_truth_condition_provider_polarity_class_provider_truth :",
+            "      (body : PropT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT (not_T body)",
+            "  concrete_truth_condition_provider_polarity_class_provider_atomic :",
+            "      (body : PropT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "      AtomicClosureTruth PropT (not_T body)",
+            "  concrete_truth_condition_provider_polarity_class_ledger_truth :",
+            "      (body : PropT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (not_T body)",
+            "  concrete_truth_condition_provider_polarity_class_ledger_atomic :",
+            "      (body : PropT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "      AtomicClosureTruth PropT (not_T body)",
+            "",
+            "def concrete_truth_condition_provider_polarity_class_instance_certificate :",
+            "    ConcreteTruthConditionProviderPolarityClassInstanceCertificate := {",
+            "  concrete_truth_condition_provider_polarity_class_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite,",
+            "  concrete_truth_condition_provider_polarity_class_source_eq := rfl,",
+            "  concrete_truth_condition_provider_polarity_class_instances :=",
+            "    independent_registered_polarity_truth_condition_instances,",
+            "  concrete_truth_condition_provider_polarity_class_instances_eq := rfl,",
+            "  concrete_truth_condition_provider_polarity_class_provider_truth :=",
+            "    independent_registered_polarity_truth_condition_not_T_instance,",
+            "  concrete_truth_condition_provider_polarity_class_provider_atomic :=",
+            "    fun body body_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+            "        PropT (not_T body)",
+            "        (independent_registered_polarity_truth_condition_not_T_instance body body_truth),",
+            "  concrete_truth_condition_provider_polarity_class_ledger_truth :=",
+            "    concrete_truth_condition_provider_class_obligation_ledger_not_T_projected,",
+            "  concrete_truth_condition_provider_polarity_class_ledger_atomic :=",
+            "    fun body body_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+            "        PropT (not_T body)",
+            "        (concrete_truth_condition_provider_class_obligation_ledger_not_T_projected body body_truth)",
+            "}",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_instance_certificate_exists :",
+            "    Exists (fun C : ConcreteTruthConditionProviderPolarityClassInstanceCertificate =>",
+            "      C = concrete_truth_condition_provider_polarity_class_instance_certificate) := by",
+            "  exact Exists.intro concrete_truth_condition_provider_polarity_class_instance_certificate rfl",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_source_matches :",
+            "    concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "      concrete_truth_condition_provider_polarity_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite := by",
+            "  exact concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "    concrete_truth_condition_provider_polarity_class_source_eq",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_instances_match :",
+            "    concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "      concrete_truth_condition_provider_polarity_class_instances =",
+            "        independent_registered_polarity_truth_condition_instances := by",
+            "  exact concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "    concrete_truth_condition_provider_polarity_class_instances_eq",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_provider_truth_projected :",
+            "    (body : PropT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT (not_T body) := by",
+            "  exact concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "    concrete_truth_condition_provider_polarity_class_provider_truth",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_provider_atomic_projected :",
+            "    (body : PropT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "    AtomicClosureTruth PropT (not_T body) := by",
+            "  exact concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "    concrete_truth_condition_provider_polarity_class_provider_atomic",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_ledger_truth_projected :",
+            "    (body : PropT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (not_T body) := by",
+            "  exact concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "    concrete_truth_condition_provider_polarity_class_ledger_truth",
+            "",
+            "theorem concrete_truth_condition_provider_polarity_class_ledger_atomic_projected :",
+            "    (body : PropT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "    AtomicClosureTruth PropT (not_T body) := by",
+            "  exact concrete_truth_condition_provider_polarity_class_instance_certificate.",
+            "    concrete_truth_condition_provider_polarity_class_ledger_atomic",
+        ]
+
+    return [
+        "Record ConcreteTruthConditionProviderPolarityClassInstanceCertificate : Type := {",
+        "  concrete_truth_condition_provider_polarity_class_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_polarity_class_source_eq :",
+        "      concrete_truth_condition_provider_polarity_class_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_polarity_class_instances :",
+        "      IndependentRegisteredPolarityTruthConditionInstances;",
+        "  concrete_truth_condition_provider_polarity_class_instances_eq :",
+        "      concrete_truth_condition_provider_polarity_class_instances =",
+        "        independent_registered_polarity_truth_condition_instances;",
+        "  concrete_truth_condition_provider_polarity_class_provider_truth :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT body ->",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT (not_T body);",
+        "  concrete_truth_condition_provider_polarity_class_provider_atomic :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (not_T body);",
+        "  concrete_truth_condition_provider_polarity_class_ledger_truth :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT body ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT (not_T body);",
+        "  concrete_truth_condition_provider_polarity_class_ledger_atomic :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (not_T body)",
+        "}.",
+        "",
+        "Definition concrete_truth_condition_provider_polarity_class_instance_certificate :",
+        "  ConcreteTruthConditionProviderPolarityClassInstanceCertificate := {|",
+        "  concrete_truth_condition_provider_polarity_class_source :=",
+        "    concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_polarity_class_source_eq := eq_refl;",
+        "  concrete_truth_condition_provider_polarity_class_instances :=",
+        "    independent_registered_polarity_truth_condition_instances;",
+        "  concrete_truth_condition_provider_polarity_class_instances_eq := eq_refl;",
+        "  concrete_truth_condition_provider_polarity_class_provider_truth :=",
+        "    independent_registered_polarity_truth_condition_not_T_instance;",
+        "  concrete_truth_condition_provider_polarity_class_provider_atomic :=",
+        "    fun body body_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+        "        PropT (not_T body)",
+        "        (independent_registered_polarity_truth_condition_not_T_instance body body_truth);",
+        "  concrete_truth_condition_provider_polarity_class_ledger_truth :=",
+        "    concrete_truth_condition_provider_class_obligation_ledger_not_T_projected;",
+        "  concrete_truth_condition_provider_polarity_class_ledger_atomic :=",
+        "    fun body body_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+        "        PropT (not_T body)",
+        "        (concrete_truth_condition_provider_class_obligation_ledger_not_T_projected body body_truth)",
+        "|}.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_instance_certificate_exists :",
+        "  exists C : ConcreteTruthConditionProviderPolarityClassInstanceCertificate,",
+        "    C = concrete_truth_condition_provider_polarity_class_instance_certificate.",
+        "Proof.",
+        "  exists concrete_truth_condition_provider_polarity_class_instance_certificate.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_source_matches :",
+        "  concrete_truth_condition_provider_polarity_class_source",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate =",
+        "  concrete_truth_condition_provider_class_obligation_suite.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_polarity_class_source_eq",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_instances_match :",
+        "  concrete_truth_condition_provider_polarity_class_instances",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate =",
+        "  independent_registered_polarity_truth_condition_instances.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_polarity_class_instances_eq",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_provider_truth_projected :",
+        "  forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT body ->",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_polarity_class_provider_truth",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_provider_atomic_projected :",
+        "  forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT body ->",
+        "    AtomicClosureTruth PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_polarity_class_provider_atomic",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_ledger_truth_projected :",
+        "  forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT body ->",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_polarity_class_ledger_truth",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_polarity_class_ledger_atomic_projected :",
+        "  forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT body ->",
+        "    AtomicClosureTruth PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_polarity_class_ledger_atomic",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate).",
+        "Qed.",
+    ]
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -29805,6 +30059,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_polarity_class_instance_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -31443,6 +31703,28 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "concrete_truth_condition_provider_repeat_class_"
                     f"{route}_{projection}_projected"
                 )
+        lines.append(
+            "#check ConcreteTruthConditionProviderPolarityClassInstanceCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_polarity_class_instance_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_polarity_class_instance_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_polarity_class_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_polarity_class_instances_match"
+        )
+        for route in ("provider", "ledger"):
+            for projection in ("truth", "atomic"):
+                lines.append(
+                    "#check "
+                    "concrete_truth_condition_provider_polarity_class_"
+                    f"{route}_{projection}_projected"
+                )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -32333,6 +32615,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_provider_repeat_class_instance_certificate_lines(
+            target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_polarity_class_instance_certificate_lines(
             target
         )
     )
@@ -33743,6 +34031,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "Check "
                 "concrete_truth_condition_provider_repeat_class_"
+                f"{route}_{projection}_projected."
+            )
+    lines.append("Check ConcreteTruthConditionProviderPolarityClassInstanceCertificate.")
+    lines.append("Check concrete_truth_condition_provider_polarity_class_instance_certificate.")
+    lines.append(
+        "Check concrete_truth_condition_provider_polarity_class_instance_certificate_exists."
+    )
+    lines.append("Check concrete_truth_condition_provider_polarity_class_source_matches.")
+    lines.append("Check concrete_truth_condition_provider_polarity_class_instances_match.")
+    for route in ("provider", "ledger"):
+        for projection in ("truth", "atomic"):
+            lines.append(
+                "Check "
+                "concrete_truth_condition_provider_polarity_class_"
                 f"{route}_{projection}_projected."
             )
     return "\n".join(lines) + "\n"
