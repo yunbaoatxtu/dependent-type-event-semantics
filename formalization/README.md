@@ -521,6 +521,13 @@ finite concrete instance ledger with
 `concrete_registered_truth_conditions` projections and suite-derived
 truth/`AtomicClosureTruth` projections for every finite registered lexical and
 transition atom.
+The finite registered atomic concrete-truth-provider interface certificate then
+introduces `ConcreteTruthConditionProviderInterface` and
+`finite_registered_atomic_concrete_truth_provider_interface_certificate`. This
+interface packages the direct concrete registered spec, the independent suite
+spec, and the finite provider certificate, and the certificate rechecks every
+finite registered lexical and transition atom through that interface before
+projecting it back to `AtomicClosureTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

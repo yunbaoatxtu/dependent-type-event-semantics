@@ -1556,6 +1556,15 @@ For each finite registered lexical and transition atom, the certificate stores
 both the direct concrete truth-condition route and the suite-derived
 truth/`AtomicClosureTruth` route, keeping the claim finite and
 registered-fragment scoped.
+The next verified objective
+`coq_finite_registered_atomic_concrete_truth_provider_interface_certificate`
+adds `ConcreteTruthConditionProviderInterface` and
+`FiniteRegisteredAtomicConcreteTruthProviderInterfaceCertificate`. This layer
+packages the direct `concrete_registered_truth_conditions` spec, the
+independent suite spec, and the finite provider certificate behind one checked
+interface, then reprojects every finite registered lexical and transition
+atom's direct and suite truth inhabitants through that interface back to
+`AtomicClosureTruth`.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

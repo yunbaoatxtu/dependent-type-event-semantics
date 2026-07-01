@@ -4096,6 +4096,72 @@ def main() -> None:
             and "Check finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected."
             in coq
         ),
+        "lean finite registered atomic concrete truth provider interface certificate": (
+            "structure ConcreteTruthConditionProviderInterface : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_interface :"
+            in lean
+            and "theorem concrete_truth_condition_provider_interface_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_direct_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_independent_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_direct_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_independent_sound_projected :"
+            in lean
+            and "structure FiniteRegisteredAtomicConcreteTruthProviderInterfaceCertificate : Type where"
+            in lean
+            and "def finite_registered_atomic_concrete_truth_provider_interface_certificate :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_interface_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_interface_source_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_interface_lexical_1_direct_atomic_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionProviderInterface" in lean
+            and "#check finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic concrete truth provider interface certificate": (
+            "Record ConcreteTruthConditionProviderInterface : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_interface :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_interface_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_direct_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_independent_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_direct_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_independent_sound_projected :"
+            in coq
+            and "Record FiniteRegisteredAtomicConcreteTruthProviderInterfaceCertificate : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_concrete_truth_provider_interface_certificate :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_interface_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_interface_source_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_interface_lexical_1_direct_atomic_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionProviderInterface." in coq
+            and "Check finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
