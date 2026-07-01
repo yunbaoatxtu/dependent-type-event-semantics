@@ -1507,6 +1507,14 @@ which re-exports projection theorems for every generated Sigma type and every
 registered temporal constructor, plus repeat, polarity, Transition, Cause, and
 spec-to-atomic soundness. This closes the class-suite projection coverage gap
 without changing the parser's registered-fragment boundary.
+The next verified objective
+`coq_registered_truth_condition_constructor_class_projection_obligation_ledger`
+adds `RegisteredTruthConditionConstructorClassProjectionObligationLedger`,
+which stores the projection-coverage certificate as its source and reifies the
+lexical, Sigma, temporal, repeat, polarity, Transition/Cause, and
+spec-to-atomic projections as class-local ledger obligations. This makes the
+remaining concrete truth-condition instance work addressable one obligation at
+a time while preserving the same registered-fragment boundary.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

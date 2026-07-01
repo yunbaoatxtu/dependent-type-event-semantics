@@ -3790,6 +3790,56 @@ def main() -> None:
             and "Check registered_constructor_class_projection_coverage_spec_sound_projected."
             in coq
         ),
+        "lean registered truth condition constructor class projection obligation ledger": (
+            "structure RegisteredTruthConditionConstructorClassProjectionObligationLedger : Type where"
+            in lean
+            and "def registered_truth_condition_constructor_class_projection_obligation_ledger :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_class_projection_obligation_ledger_exists :"
+            in lean
+            and "theorem registered_constructor_class_projection_obligation_ledger_source_matches :"
+            in lean
+            and "theorem registered_constructor_class_projection_obligation_ledger_sigma_Food_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_obligation_ledger_sigma_TransitionT_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_obligation_ledger_during_T_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_obligation_ledger_since_T_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_obligation_ledger_cause_projected :"
+            in lean
+            and "#check RegisteredTruthConditionConstructorClassProjectionObligationLedger"
+            in lean
+            and "#check registered_constructor_class_projection_obligation_ledger_spec_sound_projected"
+            in lean
+        ),
+        "coq registered truth condition constructor class projection obligation ledger": (
+            "Record RegisteredTruthConditionConstructorClassProjectionObligationLedger : Type := {"
+            in coq
+            and "Definition registered_truth_condition_constructor_class_projection_obligation_ledger :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_class_projection_obligation_ledger_exists :"
+            in coq
+            and "Theorem registered_constructor_class_projection_obligation_ledger_source_matches :"
+            in coq
+            and "Theorem registered_constructor_class_projection_obligation_ledger_sigma_Food_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_obligation_ledger_sigma_TransitionT_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_obligation_ledger_during_T_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_obligation_ledger_since_T_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_obligation_ledger_cause_projected :"
+            in coq
+            and "Check RegisteredTruthConditionConstructorClassProjectionObligationLedger."
+            in coq
+            and "Check registered_constructor_class_projection_obligation_ledger_spec_sound_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

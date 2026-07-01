@@ -21309,6 +21309,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_registered_truth_condition_constructor_"
+                    "class_projection_obligation_ledger"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21647,6 +21655,13 @@ def project_completion_status_payload(
                     "so the coverage of generated constructor routes is "
                     "itself checked rather than represented by only example "
                     "projections. "
+                    "The newest projection-obligation ledger then reifies "
+                    "that coverage certificate as "
+                    "RegisteredTruthConditionConstructorClassProjectionObligationLedger, "
+                    "with a source equality and per-class obligation fields "
+                    "for lexical application, every generated Sigma type, "
+                    "every temporal constructor, repeat, polarity, "
+                    "Transition/Cause, and spec-to-atomic soundness. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

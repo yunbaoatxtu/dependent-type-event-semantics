@@ -10312,6 +10312,361 @@ Proof.
     registered_truth_condition_constructor_class_projection_coverage_certificate).
 Qed.
 
+Record RegisteredTruthConditionConstructorClassProjectionObligationLedger : Type := {
+  registered_constructor_class_projection_obligation_ledger_source : RegisteredTruthConditionConstructorClassProjectionCoverageCertificate;
+  registered_constructor_class_projection_obligation_ledger_source_eq :
+      registered_constructor_class_projection_obligation_ledger_source =
+        registered_truth_condition_constructor_class_projection_coverage_certificate;
+  registered_constructor_class_projection_obligation_ledger_lexical_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term;
+  registered_constructor_class_projection_obligation_ledger_sigma_Entity :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : Entity, P x);
+  registered_constructor_class_projection_obligation_ledger_sigma_Food :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : Food, P x);
+  registered_constructor_class_projection_obligation_ledger_sigma_State :
+      forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : State, P x);
+  registered_constructor_class_projection_obligation_ledger_sigma_StateScale :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : StateScale, P x);
+  registered_constructor_class_projection_obligation_ledger_sigma_TransitionT :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : TransitionT, P x);
+  registered_constructor_class_projection_obligation_ledger_at_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (at_T marker body);
+  registered_constructor_class_projection_obligation_ledger_during_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (during_T marker body);
+  registered_constructor_class_projection_obligation_ledger_before_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (before_T marker body);
+  registered_constructor_class_projection_obligation_ledger_after_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (after_T marker body);
+  registered_constructor_class_projection_obligation_ledger_until_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (until_T marker body);
+  registered_constructor_class_projection_obligation_ledger_since_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (since_T marker body);
+  registered_constructor_class_projection_obligation_ledger_repeat :
+      forall n : nat, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (repeat n body);
+  registered_constructor_class_projection_obligation_ledger_not_T :
+      forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (not_T body);
+  registered_constructor_class_projection_obligation_ledger_transition :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        TransitionT (Transition theme scale source target);
+  registered_constructor_class_projection_obligation_ledger_cause :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect);
+  registered_constructor_class_projection_obligation_ledger_spec_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition registered_truth_condition_constructor_class_projection_obligation_ledger :
+  RegisteredTruthConditionConstructorClassProjectionObligationLedger := {|
+  registered_constructor_class_projection_obligation_ledger_source := registered_truth_condition_constructor_class_projection_coverage_certificate;
+  registered_constructor_class_projection_obligation_ledger_source_eq := eq_refl;
+  registered_constructor_class_projection_obligation_ledger_lexical_application := registered_constructor_class_projection_coverage_lexical_application_projected;
+  registered_constructor_class_projection_obligation_ledger_sigma_Entity := registered_constructor_class_projection_coverage_sigma_Entity_projected;
+  registered_constructor_class_projection_obligation_ledger_sigma_Food := registered_constructor_class_projection_coverage_sigma_Food_projected;
+  registered_constructor_class_projection_obligation_ledger_sigma_State := registered_constructor_class_projection_coverage_sigma_State_projected;
+  registered_constructor_class_projection_obligation_ledger_sigma_StateScale := registered_constructor_class_projection_coverage_sigma_StateScale_projected;
+  registered_constructor_class_projection_obligation_ledger_sigma_TransitionT := registered_constructor_class_projection_coverage_sigma_TransitionT_projected;
+  registered_constructor_class_projection_obligation_ledger_at_T := registered_constructor_class_projection_coverage_at_T_projected;
+  registered_constructor_class_projection_obligation_ledger_during_T := registered_constructor_class_projection_coverage_during_T_projected;
+  registered_constructor_class_projection_obligation_ledger_before_T := registered_constructor_class_projection_coverage_before_T_projected;
+  registered_constructor_class_projection_obligation_ledger_after_T := registered_constructor_class_projection_coverage_after_T_projected;
+  registered_constructor_class_projection_obligation_ledger_until_T := registered_constructor_class_projection_coverage_until_T_projected;
+  registered_constructor_class_projection_obligation_ledger_since_T := registered_constructor_class_projection_coverage_since_T_projected;
+  registered_constructor_class_projection_obligation_ledger_repeat := registered_constructor_class_projection_coverage_repeat_projected;
+  registered_constructor_class_projection_obligation_ledger_not_T := registered_constructor_class_projection_coverage_not_T_projected;
+  registered_constructor_class_projection_obligation_ledger_transition := registered_constructor_class_projection_coverage_transition_projected;
+  registered_constructor_class_projection_obligation_ledger_cause := registered_constructor_class_projection_coverage_cause_projected;
+  registered_constructor_class_projection_obligation_ledger_spec_sound := registered_constructor_class_projection_coverage_spec_sound_projected
+|}.
+
+Theorem registered_truth_condition_constructor_class_projection_obligation_ledger_exists :
+  exists C : RegisteredTruthConditionConstructorClassProjectionObligationLedger,
+    C = registered_truth_condition_constructor_class_projection_obligation_ledger.
+Proof.
+  exists registered_truth_condition_constructor_class_projection_obligation_ledger.
+  reflexivity.
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_source_matches :
+  registered_constructor_class_projection_obligation_ledger_source
+    registered_truth_condition_constructor_class_projection_obligation_ledger =
+  registered_truth_condition_constructor_class_projection_coverage_certificate.
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_source_eq
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_lexical_application_projected :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term.
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_lexical_application
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_sigma_Entity_projected :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Entity, P x).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_sigma_Entity
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_sigma_Food_projected :
+  forall P : Food -> Prop,
+    (forall x : Food,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Food, P x).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_sigma_Food
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_sigma_State_projected :
+  forall P : State -> Prop,
+    (forall x : State,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : State, P x).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_sigma_State
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_sigma_StateScale_projected :
+  forall P : StateScale -> Prop,
+    (forall x : StateScale,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : StateScale, P x).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_sigma_StateScale
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_sigma_TransitionT_projected :
+  forall P : TransitionT -> Prop,
+    (forall x : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : TransitionT, P x).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_sigma_TransitionT
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_at_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (at_T marker body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_at_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_during_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (during_T marker body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_during_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_before_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (before_T marker body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_before_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_after_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (after_T marker body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_after_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_until_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (until_T marker body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_until_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_since_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (since_T marker body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_since_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_repeat_projected :
+  forall n : nat, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (repeat n body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_repeat
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_not_T_projected :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (not_T body).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_not_T
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_transition_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+      TransitionT (Transition theme scale source target).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_transition
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_cause_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect).
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_cause
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
+Theorem registered_constructor_class_projection_obligation_ledger_spec_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (registered_constructor_class_projection_obligation_ledger_spec_sound
+    registered_truth_condition_constructor_class_projection_obligation_ledger).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -11024,3 +11379,24 @@ Check registered_constructor_class_projection_coverage_not_T_projected.
 Check registered_constructor_class_projection_coverage_transition_projected.
 Check registered_constructor_class_projection_coverage_cause_projected.
 Check registered_constructor_class_projection_coverage_spec_sound_projected.
+Check RegisteredTruthConditionConstructorClassProjectionObligationLedger.
+Check registered_truth_condition_constructor_class_projection_obligation_ledger.
+Check registered_truth_condition_constructor_class_projection_obligation_ledger_exists.
+Check registered_constructor_class_projection_obligation_ledger_source_matches.
+Check registered_constructor_class_projection_obligation_ledger_lexical_application_projected.
+Check registered_constructor_class_projection_obligation_ledger_sigma_Entity_projected.
+Check registered_constructor_class_projection_obligation_ledger_sigma_Food_projected.
+Check registered_constructor_class_projection_obligation_ledger_sigma_State_projected.
+Check registered_constructor_class_projection_obligation_ledger_sigma_StateScale_projected.
+Check registered_constructor_class_projection_obligation_ledger_sigma_TransitionT_projected.
+Check registered_constructor_class_projection_obligation_ledger_at_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_during_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_before_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_after_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_until_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_since_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_repeat_projected.
+Check registered_constructor_class_projection_obligation_ledger_not_T_projected.
+Check registered_constructor_class_projection_obligation_ledger_transition_projected.
+Check registered_constructor_class_projection_obligation_ledger_cause_projected.
+Check registered_constructor_class_projection_obligation_ledger_spec_sound_projected.

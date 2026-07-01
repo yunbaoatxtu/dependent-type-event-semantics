@@ -18765,6 +18765,459 @@ def registered_truth_condition_constructor_class_projection_coverage_lines(
     return lines
 
 
+def registered_truth_condition_constructor_class_projection_obligation_ledger_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Reify constructor-class projection coverage as local obligations."""
+
+    sigma_types = list(declarations["types"])
+    temporal_constructors = [
+        "at_T",
+        "during_T",
+        "before_T",
+        "after_T",
+        "until_T",
+        "since_T",
+    ]
+    global_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    global_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+
+    if target == "lean":
+        lines = [
+            "structure RegisteredTruthConditionConstructorClassProjectionObligationLedger : Type where",
+            "  registered_constructor_class_projection_obligation_ledger_source : RegisteredTruthConditionConstructorClassProjectionCoverageCertificate",
+            "  registered_constructor_class_projection_obligation_ledger_source_eq :",
+            "      registered_constructor_class_projection_obligation_ledger_source =",
+            "        registered_truth_condition_constructor_class_projection_coverage_certificate",
+            "  registered_constructor_class_projection_obligation_ledger_lexical_application :",
+            "      (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->",
+            f"      {global_spec_lean}.fully_registered_truth_denotes A term",
+        ]
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    f"  registered_constructor_class_projection_obligation_ledger_sigma_{type_name} :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {global_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      {global_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x)",
+                ]
+            )
+        for name in temporal_constructors:
+            lines.extend(
+                [
+                    f"  registered_constructor_class_projection_obligation_ledger_{name} :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {global_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      {global_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body)",
+                ]
+            )
+        lines.extend(
+            [
+                "  registered_constructor_class_projection_obligation_ledger_repeat :",
+                "      (n : Nat) -> (body : PropT) ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes PropT (repeat n body)",
+                "  registered_constructor_class_projection_obligation_ledger_not_T :",
+                "      (body : PropT) ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes PropT (not_T body)",
+                "  registered_constructor_class_projection_obligation_ledger_transition :",
+                "      (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->",
+                "      RegisteredStateTransitionTruth theme scale source target ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes TransitionT (Transition theme scale source target)",
+                "  registered_constructor_class_projection_obligation_ledger_cause :",
+                "      (causer : Entity) -> (effect : TransitionT) ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect)",
+                "  registered_constructor_class_projection_obligation_ledger_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                f"      {global_spec_lean}.fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "",
+                "def registered_truth_condition_constructor_class_projection_obligation_ledger :",
+                "    RegisteredTruthConditionConstructorClassProjectionObligationLedger := {",
+                "  registered_constructor_class_projection_obligation_ledger_source := registered_truth_condition_constructor_class_projection_coverage_certificate,",
+                "  registered_constructor_class_projection_obligation_ledger_source_eq := rfl,",
+                "  registered_constructor_class_projection_obligation_ledger_lexical_application := registered_constructor_class_projection_coverage_lexical_application_projected,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for type_name in sigma_types:
+            assignments.append(
+                (
+                    f"registered_constructor_class_projection_obligation_ledger_sigma_{type_name}",
+                    f"registered_constructor_class_projection_coverage_sigma_{type_name}_projected",
+                )
+            )
+        for name in temporal_constructors:
+            assignments.append(
+                (
+                    f"registered_constructor_class_projection_obligation_ledger_{name}",
+                    f"registered_constructor_class_projection_coverage_{name}_projected",
+                )
+            )
+        assignments.extend(
+            [
+                (
+                    "registered_constructor_class_projection_obligation_ledger_repeat",
+                    "registered_constructor_class_projection_coverage_repeat_projected",
+                ),
+                (
+                    "registered_constructor_class_projection_obligation_ledger_not_T",
+                    "registered_constructor_class_projection_coverage_not_T_projected",
+                ),
+                (
+                    "registered_constructor_class_projection_obligation_ledger_transition",
+                    "registered_constructor_class_projection_coverage_transition_projected",
+                ),
+                (
+                    "registered_constructor_class_projection_obligation_ledger_cause",
+                    "registered_constructor_class_projection_coverage_cause_projected",
+                ),
+                (
+                    "registered_constructor_class_projection_obligation_ledger_spec_sound",
+                    "registered_constructor_class_projection_coverage_spec_sound_projected",
+                ),
+            ]
+        )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem registered_truth_condition_constructor_class_projection_obligation_ledger_exists :",
+                "    Exists (fun C : RegisteredTruthConditionConstructorClassProjectionObligationLedger => C = registered_truth_condition_constructor_class_projection_obligation_ledger) := by",
+                "  exact Exists.intro registered_truth_condition_constructor_class_projection_obligation_ledger rfl",
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_source_matches :",
+                "    registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_source =",
+                "      registered_truth_condition_constructor_class_projection_coverage_certificate := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_source_eq",
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_lexical_application_projected :",
+                "    (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes A term := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_lexical_application",
+            ]
+        )
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    "",
+                    f"theorem registered_constructor_class_projection_obligation_ledger_sigma_{type_name}_projected :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) -> {global_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"    {global_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x) := by",
+                    "  exact registered_truth_condition_constructor_class_projection_obligation_ledger."
+                    f"registered_constructor_class_projection_obligation_ledger_sigma_{type_name}",
+                ]
+            )
+        for name in temporal_constructors:
+            lines.extend(
+                [
+                    "",
+                    f"theorem registered_constructor_class_projection_obligation_ledger_{name}_projected :",
+                    "    (marker : Entity) -> (body : PropT) ->",
+                    f"    {global_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"    {global_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body) := by",
+                    "  exact registered_truth_condition_constructor_class_projection_obligation_ledger."
+                    f"registered_constructor_class_projection_obligation_ledger_{name}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_repeat_projected :",
+                "    (n : Nat) -> (body : PropT) ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes PropT (repeat n body) := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_repeat",
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_not_T_projected :",
+                "    (body : PropT) ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes PropT (not_T body) := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_not_T",
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_transition_projected :",
+                "    (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->",
+                "    RegisteredStateTransitionTruth theme scale source target ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes TransitionT (Transition theme scale source target) := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_transition",
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_cause_projected :",
+                "    (causer : Entity) -> (effect : TransitionT) ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect) := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_cause",
+                "",
+                "theorem registered_constructor_class_projection_obligation_ledger_spec_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                f"    {global_spec_lean}.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact registered_truth_condition_constructor_class_projection_obligation_ledger.registered_constructor_class_projection_obligation_ledger_spec_sound",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record RegisteredTruthConditionConstructorClassProjectionObligationLedger : Type := {",
+        "  registered_constructor_class_projection_obligation_ledger_source : RegisteredTruthConditionConstructorClassProjectionCoverageCertificate;",
+        "  registered_constructor_class_projection_obligation_ledger_source_eq :",
+        "      registered_constructor_class_projection_obligation_ledger_source =",
+        "        registered_truth_condition_constructor_class_projection_coverage_certificate;",
+        "  registered_constructor_class_projection_obligation_ledger_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      fully_registered_truth_denotes",
+        f"        {global_spec_coq} A term;",
+    ]
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                f"  registered_constructor_class_projection_obligation_ledger_sigma_{type_name} :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {global_spec_coq} Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                f"        {global_spec_coq}",
+                f"        Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    for name in temporal_constructors:
+        lines.extend(
+            [
+                f"  registered_constructor_class_projection_obligation_ledger_{name} :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {global_spec_coq} PropT body ->",
+                "      fully_registered_truth_denotes",
+                f"        {global_spec_coq}",
+                f"        PropT ({name} marker body);",
+            ]
+        )
+    lines.extend(
+        [
+            "  registered_constructor_class_projection_obligation_ledger_repeat :",
+            "      forall n : nat, forall body : PropT,",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} PropT body ->",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} PropT (repeat n body);",
+            "  registered_constructor_class_projection_obligation_ledger_not_T :",
+            "      forall body : PropT,",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} PropT body ->",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} PropT (not_T body);",
+            "  registered_constructor_class_projection_obligation_ledger_transition :",
+            "      forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq}",
+            "        TransitionT (Transition theme scale source target);",
+            "  registered_constructor_class_projection_obligation_ledger_cause :",
+            "      forall causer : Entity, forall effect : TransitionT,",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} TransitionT effect ->",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} PropT (Cause causer effect);",
+            "  registered_constructor_class_projection_obligation_ledger_spec_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            f"        {global_spec_coq} A term ->",
+            "      AtomicClosureTruth A term",
+            "}.",
+            "",
+            "Definition registered_truth_condition_constructor_class_projection_obligation_ledger :",
+            "  RegisteredTruthConditionConstructorClassProjectionObligationLedger := {|",
+            "  registered_constructor_class_projection_obligation_ledger_source := registered_truth_condition_constructor_class_projection_coverage_certificate;",
+            "  registered_constructor_class_projection_obligation_ledger_source_eq := eq_refl;",
+            "  registered_constructor_class_projection_obligation_ledger_lexical_application := registered_constructor_class_projection_coverage_lexical_application_projected;",
+        ]
+    )
+    assignments = []
+    for type_name in sigma_types:
+        assignments.append(
+            (
+                f"registered_constructor_class_projection_obligation_ledger_sigma_{type_name}",
+                f"registered_constructor_class_projection_coverage_sigma_{type_name}_projected",
+            )
+        )
+    for name in temporal_constructors:
+        assignments.append(
+            (
+                f"registered_constructor_class_projection_obligation_ledger_{name}",
+                f"registered_constructor_class_projection_coverage_{name}_projected",
+            )
+        )
+    assignments.extend(
+        [
+            (
+                "registered_constructor_class_projection_obligation_ledger_repeat",
+                "registered_constructor_class_projection_coverage_repeat_projected",
+            ),
+            (
+                "registered_constructor_class_projection_obligation_ledger_not_T",
+                "registered_constructor_class_projection_coverage_not_T_projected",
+            ),
+            (
+                "registered_constructor_class_projection_obligation_ledger_transition",
+                "registered_constructor_class_projection_coverage_transition_projected",
+            ),
+            (
+                "registered_constructor_class_projection_obligation_ledger_cause",
+                "registered_constructor_class_projection_coverage_cause_projected",
+            ),
+            (
+                "registered_constructor_class_projection_obligation_ledger_spec_sound",
+                "registered_constructor_class_projection_coverage_spec_sound_projected",
+            ),
+        ]
+    )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem registered_truth_condition_constructor_class_projection_obligation_ledger_exists :",
+            "  exists C : RegisteredTruthConditionConstructorClassProjectionObligationLedger,",
+            "    C = registered_truth_condition_constructor_class_projection_obligation_ledger.",
+            "Proof.",
+            "  exists registered_truth_condition_constructor_class_projection_obligation_ledger.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_source_matches :",
+            "  registered_constructor_class_projection_obligation_ledger_source",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger =",
+            "  registered_truth_condition_constructor_class_projection_coverage_certificate.",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_source_eq",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_lexical_application_projected :",
+            "  forall A : Type, forall term : A,",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} A term.",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_lexical_application",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+        ]
+    )
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                "",
+                f"Theorem registered_constructor_class_projection_obligation_ledger_sigma_{type_name}_projected :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                f"        {global_spec_coq} Prop (P x)) ->",
+                "    fully_registered_truth_denotes",
+                f"      {global_spec_coq} Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                "  exact (registered_constructor_class_projection_obligation_ledger_sigma_"
+                f"{type_name}",
+                "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+                "Qed.",
+            ]
+        )
+    for name in temporal_constructors:
+        lines.extend(
+            [
+                "",
+                f"Theorem registered_constructor_class_projection_obligation_ledger_{name}_projected :",
+                "  forall marker : Entity, forall body : PropT,",
+                "    fully_registered_truth_denotes",
+                f"      {global_spec_coq} PropT body ->",
+                "    fully_registered_truth_denotes",
+                f"      {global_spec_coq} PropT ({name} marker body).",
+                "Proof.",
+                "  exact (registered_constructor_class_projection_obligation_ledger_"
+                f"{name}",
+                "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_repeat_projected :",
+            "  forall n : nat, forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} PropT body ->",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} PropT (repeat n body).",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_repeat",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_not_T_projected :",
+            "  forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} PropT body ->",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} PropT (not_T body).",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_not_T",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_transition_projected :",
+            "  forall theme : Entity, forall scale : StateScale,",
+            "  forall source : State, forall target : State,",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq}",
+            "      TransitionT (Transition theme scale source target).",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_transition",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_cause_projected :",
+            "  forall causer : Entity, forall effect : TransitionT,",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} TransitionT effect ->",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} PropT (Cause causer effect).",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_cause",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+            "",
+            "Theorem registered_constructor_class_projection_obligation_ledger_spec_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            f"      {global_spec_coq} A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (registered_constructor_class_projection_obligation_ledger_spec_sound",
+            "    registered_truth_condition_constructor_class_projection_obligation_ledger).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -23354,6 +23807,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            registered_truth_condition_constructor_class_projection_obligation_ledger_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -24489,6 +24949,52 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check registered_constructor_class_projection_coverage_spec_sound_projected"
         )
+        lines.append(
+            "#check RegisteredTruthConditionConstructorClassProjectionObligationLedger"
+        )
+        lines.append(
+            "#check "
+            "registered_truth_condition_constructor_class_projection_obligation_"
+            "ledger"
+        )
+        lines.append(
+            "#check "
+            "registered_truth_condition_constructor_class_projection_obligation_"
+            "ledger_exists"
+        )
+        lines.append(
+            "#check registered_constructor_class_projection_obligation_ledger_source_matches"
+        )
+        lines.append(
+            "#check "
+            "registered_constructor_class_projection_obligation_ledger_lexical_"
+            "application_projected"
+        )
+        for type_name in declarations["types"]:
+            lines.append(
+                "#check "
+                f"registered_constructor_class_projection_obligation_ledger_sigma_{type_name}_projected"
+            )
+        for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T"):
+            lines.append(
+                "#check "
+                f"registered_constructor_class_projection_obligation_ledger_{name}_projected"
+            )
+        lines.append(
+            "#check registered_constructor_class_projection_obligation_ledger_repeat_projected"
+        )
+        lines.append(
+            "#check registered_constructor_class_projection_obligation_ledger_not_T_projected"
+        )
+        lines.append(
+            "#check registered_constructor_class_projection_obligation_ledger_transition_projected"
+        )
+        lines.append(
+            "#check registered_constructor_class_projection_obligation_ledger_cause_projected"
+        )
+        lines.append(
+            "#check registered_constructor_class_projection_obligation_ledger_spec_sound_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -25297,6 +25803,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         registered_truth_condition_constructor_class_projection_coverage_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        registered_truth_condition_constructor_class_projection_obligation_ledger_lines(
             declarations,
             target,
         )
@@ -26276,6 +26789,52 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("Check registered_constructor_class_projection_coverage_cause_projected.")
     lines.append(
         "Check registered_constructor_class_projection_coverage_spec_sound_projected."
+    )
+    lines.append(
+        "Check RegisteredTruthConditionConstructorClassProjectionObligationLedger."
+    )
+    lines.append(
+        "Check "
+        "registered_truth_condition_constructor_class_projection_obligation_"
+        "ledger."
+    )
+    lines.append(
+        "Check "
+        "registered_truth_condition_constructor_class_projection_obligation_"
+        "ledger_exists."
+    )
+    lines.append(
+        "Check registered_constructor_class_projection_obligation_ledger_source_matches."
+    )
+    lines.append(
+        "Check "
+        "registered_constructor_class_projection_obligation_ledger_lexical_"
+        "application_projected."
+    )
+    for type_name in declarations["types"]:
+        lines.append(
+            "Check "
+            f"registered_constructor_class_projection_obligation_ledger_sigma_{type_name}_projected."
+        )
+    for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T"):
+        lines.append(
+            "Check "
+            f"registered_constructor_class_projection_obligation_ledger_{name}_projected."
+        )
+    lines.append(
+        "Check registered_constructor_class_projection_obligation_ledger_repeat_projected."
+    )
+    lines.append(
+        "Check registered_constructor_class_projection_obligation_ledger_not_T_projected."
+    )
+    lines.append(
+        "Check registered_constructor_class_projection_obligation_ledger_transition_projected."
+    )
+    lines.append(
+        "Check registered_constructor_class_projection_obligation_ledger_cause_projected."
+    )
+    lines.append(
+        "Check registered_constructor_class_projection_obligation_ledger_spec_sound_projected."
     )
     return "\n".join(lines) + "\n"
 

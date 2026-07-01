@@ -4808,6 +4808,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record RegisteredTruthConditionConstructorClassProjectionObligationLedger : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition registered_truth_condition_constructor_class_projection_obligation_ledger :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_constructor_class_projection_obligation_ledger_sigma_Food_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_constructor_class_projection_obligation_ledger_during_T_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_constructor_class_projection_obligation_ledger_since_T_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check registered_constructor_class_projection_obligation_ledger_spec_sound_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17602,6 +17626,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_registered_truth_condition_constructor_discharge_certificate",
                 "coq_registered_truth_condition_constructor_class_discharge_suite",
                 "coq_registered_truth_condition_constructor_class_projection_coverage_certificate",
+                "coq_registered_truth_condition_constructor_class_projection_obligation_ledger",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -26997,6 +27022,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_registered_truth_condition_constructor_class_projection_coverage_certificate`",
             readme,
         )
+        self.assertIn(
+            "`RegisteredTruthConditionConstructorClassProjectionObligationLedger`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_registered_truth_condition_constructor_class_projection_obligation_ledger`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27266,6 +27299,14 @@ class TranslatorTests(unittest.TestCase):
             "`registered_truth_condition_constructor_class_projection_coverage_certificate`",
             formalization_readme,
         )
+        self.assertIn(
+            "`RegisteredTruthConditionConstructorClassProjectionObligationLedger`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`registered_truth_condition_constructor_class_projection_obligation_ledger`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -27532,6 +27573,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_registered_truth_condition_constructor_class_projection_coverage_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "RegisteredTruthConditionConstructorClassProjectionObligationLedger",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_registered_truth_condition_constructor_class_projection_obligation_ledger",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
