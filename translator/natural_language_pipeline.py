@@ -21349,6 +21349,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_concrete_truth_"
+                    "provider_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21721,6 +21729,11 @@ def project_completion_status_payload(
                     "concrete_registered_truth_conditions inhabitant, and "
                     "AtomicClosureTruth projection for every finite registered "
                     "lexical and transition atom. "
+                    "The newest concrete-truth-provider certificate aligns "
+                    "that finite ledger with the IndependentRegisteredTruthConditionInstanceSuite, "
+                    "checking for each finite registered lexical and transition "
+                    "atom both the direct concrete truth-condition route and "
+                    "the suite-derived truth/AtomicClosureTruth route. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

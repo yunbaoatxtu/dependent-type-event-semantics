@@ -11890,6 +11890,248 @@ Proof.
     (finite_registered_atomic_concrete_truth_instance_ledger_transition_1_instance_projected)).
 Qed.
 
+Record FiniteRegisteredAtomicConcreteTruthProviderCertificate : Type := {
+  finite_registered_atomic_concrete_truth_provider_ledger :
+      FiniteRegisteredAtomicConcreteTruthInstanceLedger;
+  finite_registered_atomic_concrete_truth_provider_ledger_eq :
+      finite_registered_atomic_concrete_truth_provider_ledger =
+        finite_registered_atomic_concrete_truth_instance_ledger;
+  finite_registered_atomic_concrete_truth_provider_suite :
+      IndependentRegisteredTruthConditionInstanceSuite;
+  finite_registered_atomic_concrete_truth_provider_suite_eq :
+      finite_registered_atomic_concrete_truth_provider_suite =
+        independent_registered_truth_condition_instance_suite;
+  finite_registered_atomic_concrete_truth_provider_suite_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_truth_provider_lexical_1_direct_atomic : AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_truth_provider_lexical_1_suite_atomic : AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_truth_provider_lexical_2_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_truth_provider_lexical_2_direct_atomic : AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_truth_provider_lexical_2_suite_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_truth_provider_lexical_2_suite_atomic : AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_truth_provider_lexical_3_direct_truth : forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_truth_provider_lexical_3_direct_atomic : forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_truth_provider_lexical_3_suite_truth : forall x_theme : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_truth_provider_lexical_3_suite_atomic : forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_truth_provider_lexical_4_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_truth_provider_lexical_4_direct_atomic : AtomicClosureTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_truth_provider_lexical_4_suite_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_truth_provider_lexical_4_suite_atomic : AtomicClosureTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_truth_provider_transition_1_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_concrete_truth_provider_transition_1_direct_atomic : AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_concrete_truth_provider_transition_1_suite_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic : AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken)
+}.
+
+Definition finite_registered_atomic_concrete_truth_provider_certificate :
+  FiniteRegisteredAtomicConcreteTruthProviderCertificate := {|
+  finite_registered_atomic_concrete_truth_provider_ledger :=
+    finite_registered_atomic_concrete_truth_instance_ledger;
+  finite_registered_atomic_concrete_truth_provider_ledger_eq := eq_refl;
+  finite_registered_atomic_concrete_truth_provider_suite :=
+    independent_registered_truth_condition_instance_suite;
+  finite_registered_atomic_concrete_truth_provider_suite_eq := eq_refl;
+  finite_registered_atomic_concrete_truth_provider_suite_sound :=
+    independent_registered_truth_condition_instance_suite_spec_sound;
+  finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth := finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_direct_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_1_direct_atomic := finite_registered_atomic_concrete_truth_instance_ledger_lexical_1_atomic_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth := independent_registered_lexical_truth_condition_application_instance PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  finite_registered_atomic_concrete_truth_provider_lexical_1_suite_atomic := independent_registered_truth_condition_instance_suite_spec_sound PropT (break 0 mods_nil John vase) (independent_registered_lexical_truth_condition_application_instance PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected));
+  finite_registered_atomic_concrete_truth_provider_lexical_2_direct_truth := finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_direct_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_2_direct_atomic := finite_registered_atomic_concrete_truth_instance_ledger_lexical_2_atomic_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_2_suite_truth := independent_registered_lexical_truth_condition_application_instance PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  finite_registered_atomic_concrete_truth_provider_lexical_2_suite_atomic := independent_registered_truth_condition_instance_suite_spec_sound PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (independent_registered_lexical_truth_condition_application_instance PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected));
+  finite_registered_atomic_concrete_truth_provider_lexical_3_direct_truth := finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_direct_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_3_direct_atomic := finite_registered_atomic_concrete_truth_instance_ledger_lexical_3_atomic_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_3_suite_truth := fun x_theme => independent_registered_lexical_truth_condition_application_instance Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  finite_registered_atomic_concrete_truth_provider_lexical_3_suite_atomic := fun x_theme => independent_registered_truth_condition_instance_suite_spec_sound Prop (eat 0 mods_nil John x_theme) (independent_registered_lexical_truth_condition_application_instance Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme));
+  finite_registered_atomic_concrete_truth_provider_lexical_4_direct_truth := finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_direct_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_4_direct_atomic := finite_registered_atomic_concrete_truth_instance_ledger_lexical_4_atomic_projected;
+  finite_registered_atomic_concrete_truth_provider_lexical_4_suite_truth := independent_registered_lexical_truth_condition_application_instance PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  finite_registered_atomic_concrete_truth_provider_lexical_4_suite_atomic := independent_registered_truth_condition_instance_suite_spec_sound PropT (knock 0 mods_nil John) (independent_registered_lexical_truth_condition_application_instance PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected));
+  finite_registered_atomic_concrete_truth_provider_transition_1_direct_truth := finite_registered_atomic_concrete_truth_instance_ledger_transition_1_direct_projected;
+  finite_registered_atomic_concrete_truth_provider_transition_1_direct_atomic := finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected;
+  finite_registered_atomic_concrete_truth_provider_transition_1_suite_truth := independent_registered_transition_cause_truth_condition_transition_instance vase integrity_scale intact broken (finite_registered_atomic_source_transition_1_source_projected);
+  finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic := independent_registered_truth_condition_instance_suite_spec_sound TransitionT (Transition vase integrity_scale intact broken) (independent_registered_transition_cause_truth_condition_transition_instance vase integrity_scale intact broken (finite_registered_atomic_source_transition_1_source_projected))
+|}.
+
+Theorem finite_registered_atomic_concrete_truth_provider_certificate_exists :
+  exists C : FiniteRegisteredAtomicConcreteTruthProviderCertificate,
+    C = finite_registered_atomic_concrete_truth_provider_certificate.
+Proof.
+  exists finite_registered_atomic_concrete_truth_provider_certificate.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_ledger_matches :
+  finite_registered_atomic_concrete_truth_provider_ledger
+    finite_registered_atomic_concrete_truth_provider_certificate =
+  finite_registered_atomic_concrete_truth_instance_ledger.
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_ledger_eq
+    finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_suite_matches :
+  finite_registered_atomic_concrete_truth_provider_suite
+    finite_registered_atomic_concrete_truth_provider_certificate =
+  independent_registered_truth_condition_instance_suite.
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_suite_eq
+    finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_suite_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_suite_sound
+    finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_1_direct_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_1_direct_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_1_suite_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_1_suite_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_2_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_2_direct_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_2_direct_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_2_direct_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_2_suite_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_2_suite_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_2_suite_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_2_suite_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_3_direct_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_3_direct_truth finite_registered_atomic_concrete_truth_provider_certificate x_theme).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_3_direct_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_3_direct_atomic finite_registered_atomic_concrete_truth_provider_certificate x_theme).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_3_suite_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_3_suite_truth finite_registered_atomic_concrete_truth_provider_certificate x_theme).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_3_suite_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_3_suite_atomic finite_registered_atomic_concrete_truth_provider_certificate x_theme).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_4_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_4_direct_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_4_direct_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_4_direct_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_4_suite_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_4_suite_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_lexical_4_suite_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_lexical_4_suite_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_transition_1_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_transition_1_direct_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_transition_1_direct_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_transition_1_direct_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_transition_1_suite_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_transition_1_suite_truth finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic finite_registered_atomic_concrete_truth_provider_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -12751,3 +12993,29 @@ Check finite_registered_atomic_concrete_truth_instance_transition_1_atomic_proje
 Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_instance_projected.
 Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_direct_projected.
 Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected.
+Check FiniteRegisteredAtomicConcreteTruthProviderCertificate.
+Check finite_registered_atomic_concrete_truth_provider_certificate.
+Check finite_registered_atomic_concrete_truth_provider_certificate_exists.
+Check finite_registered_atomic_concrete_truth_provider_ledger_matches.
+Check finite_registered_atomic_concrete_truth_provider_suite_matches.
+Check finite_registered_atomic_concrete_truth_provider_suite_sound_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_1_direct_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_1_suite_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_2_direct_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_2_direct_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_2_suite_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_2_suite_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_3_direct_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_3_direct_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_3_suite_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_3_suite_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_4_direct_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_4_direct_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_4_suite_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_lexical_4_suite_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_transition_1_direct_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_transition_1_direct_atomic_projected.
+Check finite_registered_atomic_concrete_truth_provider_transition_1_suite_truth_projected.
+Check finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected.

@@ -1548,6 +1548,14 @@ registered atom as a typed concrete truth-condition instance. Each ledger entry
 carries the registered atomic witness, the `ConcreteRegisteredTruth` closure,
 the direct `concrete_registered_truth_conditions` inhabitant, and the
 `AtomicClosureTruth` projection for the same `RegisteredTruthConditionAtom`.
+The next verified objective
+`coq_finite_registered_atomic_concrete_truth_provider_certificate` adds
+`FiniteRegisteredAtomicConcreteTruthProviderCertificate`, aligning that finite
+concrete instance ledger with `IndependentRegisteredTruthConditionInstanceSuite`.
+For each finite registered lexical and transition atom, the certificate stores
+both the direct concrete truth-condition route and the suite-derived
+truth/`AtomicClosureTruth` route, keeping the claim finite and
+registered-fragment scoped.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

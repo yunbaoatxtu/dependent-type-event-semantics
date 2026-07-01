@@ -513,6 +513,14 @@ registered lexical and transition atom as a dependent instance record indexed by
 `RegisteredTruthConditionAtom`. The ledger exposes direct truth-condition and
 `AtomicClosureTruth` projections for each record through
 `finite_registered_atomic_concrete_truth_instance_ledger`.
+The finite registered atomic concrete-truth-provider certificate introduces
+`FiniteRegisteredAtomicConcreteTruthProviderCertificate` and
+`finite_registered_atomic_concrete_truth_provider_certificate`. It aligns the
+finite concrete instance ledger with
+`IndependentRegisteredTruthConditionInstanceSuite`, exposing both direct
+`concrete_registered_truth_conditions` projections and suite-derived
+truth/`AtomicClosureTruth` projections for every finite registered lexical and
+transition atom.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

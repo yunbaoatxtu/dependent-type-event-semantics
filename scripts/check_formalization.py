@@ -4048,6 +4048,54 @@ def main() -> None:
             and "Check finite_registered_atomic_concrete_truth_instance_ledger_transition_1_atomic_projected."
             in coq
         ),
+        "lean finite registered atomic concrete truth provider certificate": (
+            "structure FiniteRegisteredAtomicConcreteTruthProviderCertificate : Type where"
+            in lean
+            and "def finite_registered_atomic_concrete_truth_provider_certificate :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_ledger_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_suite_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_suite_sound_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicConcreteTruthProviderCertificate"
+            in lean
+            and "#check finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic concrete truth provider certificate": (
+            "Record FiniteRegisteredAtomicConcreteTruthProviderCertificate : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_concrete_truth_provider_certificate :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_ledger_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_suite_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_suite_sound_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_lexical_1_direct_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_lexical_1_suite_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicConcreteTruthProviderCertificate."
+            in coq
+            and "Check finite_registered_atomic_concrete_truth_provider_transition_1_suite_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
