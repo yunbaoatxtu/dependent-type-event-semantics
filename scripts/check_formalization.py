@@ -4266,6 +4266,64 @@ def main() -> None:
             and "Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected."
             in coq
         ),
+        "lean concrete truth provider sigma class instance certificate": (
+            "structure ConcreteTruthConditionProviderSigmaClassInstanceCertificate : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_sigma_class_instance_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_provider_sigma_class_instance_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_sigma_class_source_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_sigma_class_instances_match :"
+            in lean
+            and all(
+                (
+                    f"theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth_projected :"
+                    in lean
+                    and f"theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic_projected :"
+                    in lean
+                    and f"theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth_projected :"
+                    in lean
+                    and f"theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected :"
+                    in lean
+                    and f"#check concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected"
+                    in lean
+                )
+                for type_name in ("Entity", "Food", "State", "StateScale", "TransitionT")
+            )
+            and "#check ConcreteTruthConditionProviderSigmaClassInstanceCertificate"
+            in lean
+        ),
+        "coq concrete truth provider sigma class instance certificate": (
+            "Record ConcreteTruthConditionProviderSigmaClassInstanceCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_sigma_class_instance_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_sigma_class_instance_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_sigma_class_source_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_sigma_class_instances_match :"
+            in coq
+            and all(
+                (
+                    f"Theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth_projected :"
+                    in coq
+                    and f"Theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic_projected :"
+                    in coq
+                    and f"Theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth_projected :"
+                    in coq
+                    and f"Theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected :"
+                    in coq
+                    and f"Check concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected."
+                    in coq
+                )
+                for type_name in ("Entity", "Food", "State", "StateScale", "TransitionT")
+            )
+            and "Check ConcreteTruthConditionProviderSigmaClassInstanceCertificate."
+            in coq
+        ),
         "lean concrete truth provider temporal class instance certificate": (
             "structure ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type where"
             in lean

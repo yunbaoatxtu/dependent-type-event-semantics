@@ -24184,6 +24184,361 @@ def concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
     ]
 
 
+def concrete_truth_condition_provider_sigma_class_instance_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Discharge registered dependent-existential clauses through the provider."""
+
+    sigma_types = list(declarations["types"])
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionProviderSigmaClassInstanceCertificate : Type where",
+            "  concrete_truth_condition_provider_sigma_class_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_sigma_class_source_eq :",
+            "      concrete_truth_condition_provider_sigma_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_sigma_class_instances :",
+            "      IndependentRegisteredSigmaTruthConditionInstances",
+            "  concrete_truth_condition_provider_sigma_class_instances_eq :",
+            "      concrete_truth_condition_provider_sigma_class_instances =",
+            "        independent_registered_sigma_truth_condition_instances",
+        ]
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {independent_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x)",
+                    f"  concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {independent_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      AtomicClosureTruth Prop (Exists fun x : {type_name} => P x)",
+                    f"  concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x)",
+                    f"  concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      AtomicClosureTruth Prop (Exists fun x : {type_name} => P x)",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_provider_sigma_class_instance_certificate :",
+                "    ConcreteTruthConditionProviderSigmaClassInstanceCertificate := {",
+                "  concrete_truth_condition_provider_sigma_class_source :=",
+                "    concrete_truth_condition_provider_class_obligation_suite,",
+                "  concrete_truth_condition_provider_sigma_class_source_eq := rfl,",
+                "  concrete_truth_condition_provider_sigma_class_instances :=",
+                "    independent_registered_sigma_truth_condition_instances,",
+                "  concrete_truth_condition_provider_sigma_class_instances_eq := rfl,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for type_name in sigma_types:
+            assignments.extend(
+                [
+                    (
+                        f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth",
+                        f"independent_registered_sigma_truth_condition_sigma_{type_name}_instance",
+                    ),
+                    (
+                        f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic",
+                        "fun P body_truth =>\n"
+                        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected\n"
+                        f"        Prop (Exists fun x : {type_name} => P x)\n"
+                        f"        (independent_registered_sigma_truth_condition_sigma_{type_name}_instance P body_truth)",
+                    ),
+                    (
+                        f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth",
+                        "concrete_truth_condition_provider_class_obligation_"
+                        f"ledger_sigma_{type_name}_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic",
+                        "fun P body_truth =>\n"
+                        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected\n"
+                        f"        Prop (Exists fun x : {type_name} => P x)\n"
+                        "        (concrete_truth_condition_provider_class_obligation_"
+                        f"ledger_sigma_{type_name}_projected P body_truth)",
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            value_lines = value.splitlines()
+            lines.append(f"  {field} :=")
+            for value_index, value_line in enumerate(value_lines):
+                if value_index == len(value_lines) - 1:
+                    lines.append(f"    {value_line}{suffix}")
+                else:
+                    lines.append(f"    {value_line}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_provider_sigma_class_instance_certificate_exists :",
+                "    Exists (fun C : ConcreteTruthConditionProviderSigmaClassInstanceCertificate =>",
+                "      C = concrete_truth_condition_provider_sigma_class_instance_certificate) := by",
+                "  exact Exists.intro concrete_truth_condition_provider_sigma_class_instance_certificate rfl",
+                "",
+                "theorem concrete_truth_condition_provider_sigma_class_source_matches :",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                "      concrete_truth_condition_provider_sigma_class_source =",
+                "        concrete_truth_condition_provider_class_obligation_suite := by",
+                "  exact concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                "    concrete_truth_condition_provider_sigma_class_source_eq",
+                "",
+                "theorem concrete_truth_condition_provider_sigma_class_instances_match :",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                "      concrete_truth_condition_provider_sigma_class_instances =",
+                "        independent_registered_sigma_truth_condition_instances := by",
+                "  exact concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                "    concrete_truth_condition_provider_sigma_class_instances_eq",
+            ]
+        )
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    "",
+                    f"theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth_projected :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) -> {independent_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"    {independent_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x) := by",
+                    "  exact concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth",
+                    "",
+                    f"theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic_projected :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) -> {independent_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"    AtomicClosureTruth Prop (Exists fun x : {type_name} => P x) := by",
+                    "  exact concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic",
+                    "",
+                    f"theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth_projected :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x) := by",
+                    "  exact concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth",
+                    "",
+                    f"theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"    AtomicClosureTruth Prop (Exists fun x : {type_name} => P x) := by",
+                    "  exact concrete_truth_condition_provider_sigma_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionProviderSigmaClassInstanceCertificate : Type := {",
+        "  concrete_truth_condition_provider_sigma_class_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_sigma_class_source_eq :",
+        "      concrete_truth_condition_provider_sigma_class_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_sigma_class_instances :",
+        "      IndependentRegisteredSigmaTruthConditionInstances;",
+        "  concrete_truth_condition_provider_sigma_class_instances_eq :",
+        "      concrete_truth_condition_provider_sigma_class_instances =",
+        "        independent_registered_sigma_truth_condition_instances;",
+    ]
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {independent_spec_coq} Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq}",
+                f"        Prop (exists x : {type_name}, P x);",
+                f"  concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {independent_spec_coq} Prop (P x)) ->",
+                f"      AtomicClosureTruth Prop (exists x : {type_name}, P x);",
+                f"  concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {constructor_spec_coq} Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq}",
+                f"        Prop (exists x : {type_name}, P x);",
+                f"  concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {constructor_spec_coq} Prop (P x)) ->",
+                f"      AtomicClosureTruth Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_provider_sigma_class_instance_certificate :",
+            "  ConcreteTruthConditionProviderSigmaClassInstanceCertificate := {|",
+            "  concrete_truth_condition_provider_sigma_class_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite;",
+            "  concrete_truth_condition_provider_sigma_class_source_eq := eq_refl;",
+            "  concrete_truth_condition_provider_sigma_class_instances :=",
+            "    independent_registered_sigma_truth_condition_instances;",
+            "  concrete_truth_condition_provider_sigma_class_instances_eq := eq_refl;",
+        ]
+    )
+    assignments = []
+    for type_name in sigma_types:
+        assignments.extend(
+            [
+                (
+                    f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth",
+                    f"independent_registered_sigma_truth_condition_sigma_{type_name}_instance",
+                ),
+                (
+                    f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic",
+                    "fun P body_truth =>\n"
+                    "      concrete_truth_condition_provider_class_obligation_independent_sound_projected\n"
+                    f"        Prop (ex (fun x : {type_name} => P x))\n"
+                    f"        (independent_registered_sigma_truth_condition_sigma_{type_name}_instance P body_truth)",
+                ),
+                (
+                    f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth",
+                    "concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_sigma_{type_name}_projected",
+                ),
+                (
+                    f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic",
+                    "fun P body_truth =>\n"
+                    "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected\n"
+                    f"        Prop (ex (fun x : {type_name} => P x))\n"
+                    "        (concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_sigma_{type_name}_projected P body_truth)",
+                ),
+            ]
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        value_lines = value.splitlines()
+        lines.append(f"  {field} :=")
+        for value_index, value_line in enumerate(value_lines):
+            if value_index == len(value_lines) - 1:
+                lines.append(f"    {value_line}{suffix}")
+            else:
+                lines.append(f"    {value_line}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_provider_sigma_class_instance_certificate_exists :",
+            "  exists C : ConcreteTruthConditionProviderSigmaClassInstanceCertificate,",
+            "    C = concrete_truth_condition_provider_sigma_class_instance_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_provider_sigma_class_instance_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_sigma_class_source_matches :",
+            "  concrete_truth_condition_provider_sigma_class_source",
+            "    concrete_truth_condition_provider_sigma_class_instance_certificate =",
+            "  concrete_truth_condition_provider_class_obligation_suite.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_sigma_class_source_eq",
+            "    concrete_truth_condition_provider_sigma_class_instance_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_sigma_class_instances_match :",
+            "  concrete_truth_condition_provider_sigma_class_instances",
+            "    concrete_truth_condition_provider_sigma_class_instance_certificate =",
+            "  independent_registered_sigma_truth_condition_instances.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_sigma_class_instances_eq",
+            "    concrete_truth_condition_provider_sigma_class_instance_certificate).",
+            "Qed.",
+        ]
+    )
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                "",
+                f"Theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth_projected :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} Prop (P x)) ->",
+                "    fully_registered_truth_denotes",
+                f"      {independent_spec_coq} Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate).",
+                "Qed.",
+                "",
+                f"Theorem concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic_projected :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} Prop (P x)) ->",
+                f"    AtomicClosureTruth Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate).",
+                "Qed.",
+                "",
+                f"Theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth_projected :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} Prop (P x)) ->",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate).",
+                "Qed.",
+                "",
+                f"Theorem concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} Prop (P x)) ->",
+                f"    AtomicClosureTruth Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
     target: str,
 ) -> list[str]:
@@ -29178,6 +29533,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
         lines.append("")
         lines.extend(
+            concrete_truth_condition_provider_sigma_class_instance_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
+        lines.extend(
             concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
                 target
             )
@@ -30754,6 +31116,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "#check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected"
         )
         lines.append(
+            "#check ConcreteTruthConditionProviderSigmaClassInstanceCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_sigma_class_instance_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_sigma_class_instance_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_sigma_class_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_sigma_class_instances_match"
+        )
+        for type_name in declarations["types"]:
+            for route in ("provider", "ledger"):
+                for projection in ("truth", "atomic"):
+                    lines.append(
+                        "#check "
+                        "concrete_truth_condition_provider_sigma_class_"
+                        f"{route}_{type_name}_{projection}_projected"
+                    )
+        lines.append(
             "#check ConcreteTruthConditionProviderTemporalClassInstanceCertificate"
         )
         lines.append(
@@ -31648,6 +32033,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(
         concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
             target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_sigma_class_instance_certificate_lines(
+            declarations,
+            target,
         )
     )
     lines.append("")
@@ -33021,6 +33413,21 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append(
         "Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected."
     )
+    lines.append("Check ConcreteTruthConditionProviderSigmaClassInstanceCertificate.")
+    lines.append("Check concrete_truth_condition_provider_sigma_class_instance_certificate.")
+    lines.append(
+        "Check concrete_truth_condition_provider_sigma_class_instance_certificate_exists."
+    )
+    lines.append("Check concrete_truth_condition_provider_sigma_class_source_matches.")
+    lines.append("Check concrete_truth_condition_provider_sigma_class_instances_match.")
+    for type_name in declarations["types"]:
+        for route in ("provider", "ledger"):
+            for projection in ("truth", "atomic"):
+                lines.append(
+                    "Check "
+                    "concrete_truth_condition_provider_sigma_class_"
+                    f"{route}_{type_name}_{projection}_projected."
+                )
     lines.append("Check ConcreteTruthConditionProviderTemporalClassInstanceCertificate.")
     lines.append("Check concrete_truth_condition_provider_temporal_class_instance_certificate.")
     lines.append(

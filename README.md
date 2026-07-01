@@ -1584,6 +1584,16 @@ truth and `AtomicClosureTruth` projections for every
 truth and atomic route. It is still a registered lexical class certificate, not
 a completed model for arbitrary lexical meanings.
 The next verified objective
+`coq_concrete_truth_condition_provider_sigma_class_instance_certificate`
+adds `ConcreteTruthConditionProviderSigmaClassInstanceCertificate`. This
+stage binds the dependent-existential provider class to
+`IndependentRegisteredSigmaTruthConditionInstances`; for each generated Sigma
+type it records the provider-side truth route, provider-side
+`AtomicClosureTruth` projection, constructor-ledger truth route, and
+constructor-ledger atomic projection. It is still a registered Sigma
+constructor-class certificate, not a proof of arbitrary quantificational or
+argument-omission semantics.
+The next verified objective
 `coq_concrete_truth_condition_provider_temporal_class_instance_certificate`
 adds `ConcreteTruthConditionProviderTemporalClassInstanceCertificate`. This
 stage binds the temporal provider class to

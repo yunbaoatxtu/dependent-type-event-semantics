@@ -542,6 +542,13 @@ connects the class-obligation suite to
 `independent_registered_lexical_truth_condition_instances`, then exposes
 provider truth, provider atomic, ledger truth, and ledger atomic projections
 for every `RegisteredLexicalApplicationTruth`.
+The Sigma provider class-instance certificate introduces
+`ConcreteTruthConditionProviderSigmaClassInstanceCertificate` and
+`concrete_truth_condition_provider_sigma_class_instance_certificate`. It
+connects the class-obligation suite to
+`independent_registered_sigma_truth_condition_instances`, then exposes
+provider truth, provider atomic, ledger truth, and ledger atomic projections
+for every generated dependent-existential constructor type.
 The temporal provider class-instance certificate introduces
 `ConcreteTruthConditionProviderTemporalClassInstanceCertificate` and
 `concrete_truth_condition_provider_temporal_class_instance_certificate`. It

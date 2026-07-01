@@ -5020,6 +5020,34 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionProviderSigmaClassInstanceCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_provider_sigma_class_instance_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_sigma_class_provider_Entity_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_sigma_class_provider_Food_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_sigma_class_ledger_State_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_sigma_class_ledger_TransitionT_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_provider_sigma_class_ledger_TransitionT_atomic_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Record ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type := {",
             coq_module,
         )
@@ -17851,6 +17879,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_finite_registered_atomic_concrete_truth_provider_interface_certificate",
                 "coq_concrete_truth_condition_provider_class_obligation_suite",
                 "coq_concrete_truth_condition_provider_lexical_class_instance_certificate",
+                "coq_concrete_truth_condition_provider_sigma_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_temporal_class_instance_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
@@ -27324,6 +27353,14 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn(
+            "`coq_concrete_truth_condition_provider_sigma_class_instance_certificate`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderSigmaClassInstanceCertificate`",
+            readme,
+        )
+        self.assertIn(
             "`coq_concrete_truth_condition_provider_temporal_class_instance_certificate`",
             readme,
         )
@@ -27667,6 +27704,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`concrete_truth_condition_provider_lexical_class_instance_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderSigmaClassInstanceCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_provider_sigma_class_instance_certificate`",
             formalization_readme,
         )
         self.assertIn(
@@ -28016,6 +28061,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_provider_lexical_class_instance_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionProviderSigmaClassInstanceCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_provider_sigma_class_instance_certificate",
             manuscript,
         )
         self.assertIn(
