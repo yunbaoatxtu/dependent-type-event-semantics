@@ -12844,6 +12844,127 @@ Proof.
     concrete_truth_condition_provider_class_obligation_suite).
 Qed.
 
+Record ConcreteTruthConditionProviderLexicalClassInstanceCertificate : Type := {
+  concrete_truth_condition_provider_lexical_class_source :
+      ConcreteTruthConditionProviderClassObligationSuite;
+  concrete_truth_condition_provider_lexical_class_source_eq :
+      concrete_truth_condition_provider_lexical_class_source =
+        concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_lexical_class_instances :
+      IndependentRegisteredLexicalTruthConditionInstances;
+  concrete_truth_condition_provider_lexical_class_instances_eq :
+      concrete_truth_condition_provider_lexical_class_instances =
+        independent_registered_lexical_truth_condition_instances;
+  concrete_truth_condition_provider_lexical_class_provider_truth :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term;
+  concrete_truth_condition_provider_lexical_class_provider_atomic :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_provider_lexical_class_ledger_truth :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term;
+  concrete_truth_condition_provider_lexical_class_ledger_atomic :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition concrete_truth_condition_provider_lexical_class_instance_certificate :
+  ConcreteTruthConditionProviderLexicalClassInstanceCertificate := {|
+  concrete_truth_condition_provider_lexical_class_source :=
+    concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_lexical_class_source_eq := eq_refl;
+  concrete_truth_condition_provider_lexical_class_instances :=
+    independent_registered_lexical_truth_condition_instances;
+  concrete_truth_condition_provider_lexical_class_instances_eq := eq_refl;
+  concrete_truth_condition_provider_lexical_class_provider_truth :=
+    independent_registered_lexical_truth_condition_application_instance;
+  concrete_truth_condition_provider_lexical_class_provider_atomic :=
+    fun A term witness =>
+      concrete_truth_condition_provider_class_obligation_independent_sound_projected
+        A term
+        (independent_registered_lexical_truth_condition_application_instance
+          A term witness);
+  concrete_truth_condition_provider_lexical_class_ledger_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected;
+  concrete_truth_condition_provider_lexical_class_ledger_atomic :=
+    fun A term witness =>
+      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+        A term
+        (concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected
+          A term witness)
+|}.
+
+Theorem concrete_truth_condition_provider_lexical_class_instance_certificate_exists :
+  exists C : ConcreteTruthConditionProviderLexicalClassInstanceCertificate,
+    C = concrete_truth_condition_provider_lexical_class_instance_certificate.
+Proof.
+  exists concrete_truth_condition_provider_lexical_class_instance_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_provider_lexical_class_source_matches :
+  concrete_truth_condition_provider_lexical_class_source
+    concrete_truth_condition_provider_lexical_class_instance_certificate =
+  concrete_truth_condition_provider_class_obligation_suite.
+Proof.
+  exact (concrete_truth_condition_provider_lexical_class_source_eq
+    concrete_truth_condition_provider_lexical_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_lexical_class_instances_match :
+  concrete_truth_condition_provider_lexical_class_instances
+    concrete_truth_condition_provider_lexical_class_instance_certificate =
+  independent_registered_lexical_truth_condition_instances.
+Proof.
+  exact (concrete_truth_condition_provider_lexical_class_instances_eq
+    concrete_truth_condition_provider_lexical_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_lexical_class_provider_truth_projected :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term.
+Proof.
+  exact (concrete_truth_condition_provider_lexical_class_provider_truth
+    concrete_truth_condition_provider_lexical_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_lexical_class_provider_atomic_projected :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_provider_lexical_class_provider_atomic
+    concrete_truth_condition_provider_lexical_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_lexical_class_ledger_truth_projected :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term.
+Proof.
+  exact (concrete_truth_condition_provider_lexical_class_ledger_truth
+    concrete_truth_condition_provider_lexical_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_lexical_class_ledger_atomic_projected :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_provider_lexical_class_ledger_atomic
+    concrete_truth_condition_provider_lexical_class_instance_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -13787,3 +13908,12 @@ Check concrete_truth_condition_provider_class_obligation_ledger_not_T_projected.
 Check concrete_truth_condition_provider_class_obligation_ledger_transition_projected.
 Check concrete_truth_condition_provider_class_obligation_ledger_cause_projected.
 Check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected.
+Check ConcreteTruthConditionProviderLexicalClassInstanceCertificate.
+Check concrete_truth_condition_provider_lexical_class_instance_certificate.
+Check concrete_truth_condition_provider_lexical_class_instance_certificate_exists.
+Check concrete_truth_condition_provider_lexical_class_source_matches.
+Check concrete_truth_condition_provider_lexical_class_instances_match.
+Check concrete_truth_condition_provider_lexical_class_provider_truth_projected.
+Check concrete_truth_condition_provider_lexical_class_provider_atomic_projected.
+Check concrete_truth_condition_provider_lexical_class_ledger_truth_projected.
+Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected.

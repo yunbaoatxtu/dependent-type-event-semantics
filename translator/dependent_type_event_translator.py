@@ -23936,6 +23936,254 @@ def concrete_truth_condition_provider_class_obligation_suite_lines(
     return lines
 
 
+def concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Discharge the registered lexical class through the provider interface."""
+
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+
+    if target == "lean":
+        return [
+            "structure ConcreteTruthConditionProviderLexicalClassInstanceCertificate : Type where",
+            "  concrete_truth_condition_provider_lexical_class_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_lexical_class_source_eq :",
+            "      concrete_truth_condition_provider_lexical_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_lexical_class_instances :",
+            "      IndependentRegisteredLexicalTruthConditionInstances",
+            "  concrete_truth_condition_provider_lexical_class_instances_eq :",
+            "      concrete_truth_condition_provider_lexical_class_instances =",
+            "        independent_registered_lexical_truth_condition_instances",
+            "  concrete_truth_condition_provider_lexical_class_provider_truth :",
+            "      (A : Type) -> (term : A) ->",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes A term",
+            "  concrete_truth_condition_provider_lexical_class_provider_atomic :",
+            "      (A : Type) -> (term : A) ->",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_provider_lexical_class_ledger_truth :",
+            "      (A : Type) -> (term : A) ->",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes A term",
+            "  concrete_truth_condition_provider_lexical_class_ledger_atomic :",
+            "      (A : Type) -> (term : A) ->",
+            "      RegisteredLexicalApplicationTruth A term ->",
+            "      AtomicClosureTruth A term",
+            "",
+            "def concrete_truth_condition_provider_lexical_class_instance_certificate :",
+            "    ConcreteTruthConditionProviderLexicalClassInstanceCertificate := {",
+            "  concrete_truth_condition_provider_lexical_class_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite,",
+            "  concrete_truth_condition_provider_lexical_class_source_eq := rfl,",
+            "  concrete_truth_condition_provider_lexical_class_instances :=",
+            "    independent_registered_lexical_truth_condition_instances,",
+            "  concrete_truth_condition_provider_lexical_class_instances_eq := rfl,",
+            "  concrete_truth_condition_provider_lexical_class_provider_truth :=",
+            "    independent_registered_lexical_truth_condition_application_instance,",
+            "  concrete_truth_condition_provider_lexical_class_provider_atomic :=",
+            "    fun A term witness =>",
+            "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+            "        A term",
+            "        (independent_registered_lexical_truth_condition_application_instance A term witness),",
+            "  concrete_truth_condition_provider_lexical_class_ledger_truth :=",
+            "    concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected,",
+            "  concrete_truth_condition_provider_lexical_class_ledger_atomic :=",
+            "    fun A term witness =>",
+            "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+            "        A term",
+            "        (concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected A term witness)",
+            "}",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_instance_certificate_exists :",
+            "    Exists (fun C : ConcreteTruthConditionProviderLexicalClassInstanceCertificate =>",
+            "      C = concrete_truth_condition_provider_lexical_class_instance_certificate) := by",
+            "  exact Exists.intro concrete_truth_condition_provider_lexical_class_instance_certificate rfl",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_source_matches :",
+            "    concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "      concrete_truth_condition_provider_lexical_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite := by",
+            "  exact concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "    concrete_truth_condition_provider_lexical_class_source_eq",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_instances_match :",
+            "    concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "      concrete_truth_condition_provider_lexical_class_instances =",
+            "        independent_registered_lexical_truth_condition_instances := by",
+            "  exact concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "    concrete_truth_condition_provider_lexical_class_instances_eq",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_provider_truth_projected :",
+            "    (A : Type) -> (term : A) ->",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes A term := by",
+            "  exact concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "    concrete_truth_condition_provider_lexical_class_provider_truth",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_provider_atomic_projected :",
+            "    (A : Type) -> (term : A) ->",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "    concrete_truth_condition_provider_lexical_class_provider_atomic",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_ledger_truth_projected :",
+            "    (A : Type) -> (term : A) ->",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes A term := by",
+            "  exact concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "    concrete_truth_condition_provider_lexical_class_ledger_truth",
+            "",
+            "theorem concrete_truth_condition_provider_lexical_class_ledger_atomic_projected :",
+            "    (A : Type) -> (term : A) ->",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact concrete_truth_condition_provider_lexical_class_instance_certificate.",
+            "    concrete_truth_condition_provider_lexical_class_ledger_atomic",
+        ]
+
+    return [
+        "Record ConcreteTruthConditionProviderLexicalClassInstanceCertificate : Type := {",
+        "  concrete_truth_condition_provider_lexical_class_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_lexical_class_source_eq :",
+        "      concrete_truth_condition_provider_lexical_class_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_lexical_class_instances :",
+        "      IndependentRegisteredLexicalTruthConditionInstances;",
+        "  concrete_truth_condition_provider_lexical_class_instances_eq :",
+        "      concrete_truth_condition_provider_lexical_class_instances =",
+        "        independent_registered_lexical_truth_condition_instances;",
+        "  concrete_truth_condition_provider_lexical_class_provider_truth :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} A term;",
+        "  concrete_truth_condition_provider_lexical_class_provider_atomic :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_provider_lexical_class_ledger_truth :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} A term;",
+        "  concrete_truth_condition_provider_lexical_class_ledger_atomic :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      AtomicClosureTruth A term",
+        "}.",
+        "",
+        "Definition concrete_truth_condition_provider_lexical_class_instance_certificate :",
+        "  ConcreteTruthConditionProviderLexicalClassInstanceCertificate := {|",
+        "  concrete_truth_condition_provider_lexical_class_source :=",
+        "    concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_lexical_class_source_eq := eq_refl;",
+        "  concrete_truth_condition_provider_lexical_class_instances :=",
+        "    independent_registered_lexical_truth_condition_instances;",
+        "  concrete_truth_condition_provider_lexical_class_instances_eq := eq_refl;",
+        "  concrete_truth_condition_provider_lexical_class_provider_truth :=",
+        "    independent_registered_lexical_truth_condition_application_instance;",
+        "  concrete_truth_condition_provider_lexical_class_provider_atomic :=",
+        "    fun A term witness =>",
+        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+        "        A term",
+        "        (independent_registered_lexical_truth_condition_application_instance",
+        "          A term witness);",
+        "  concrete_truth_condition_provider_lexical_class_ledger_truth :=",
+        "    concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected;",
+        "  concrete_truth_condition_provider_lexical_class_ledger_atomic :=",
+        "    fun A term witness =>",
+        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+        "        A term",
+        "        (concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected",
+        "          A term witness)",
+        "|}.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_instance_certificate_exists :",
+        "  exists C : ConcreteTruthConditionProviderLexicalClassInstanceCertificate,",
+        "    C = concrete_truth_condition_provider_lexical_class_instance_certificate.",
+        "Proof.",
+        "  exists concrete_truth_condition_provider_lexical_class_instance_certificate.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_source_matches :",
+        "  concrete_truth_condition_provider_lexical_class_source",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate =",
+        "  concrete_truth_condition_provider_class_obligation_suite.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_lexical_class_source_eq",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_instances_match :",
+        "  concrete_truth_condition_provider_lexical_class_instances",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate =",
+        "  independent_registered_lexical_truth_condition_instances.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_lexical_class_instances_eq",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_provider_truth_projected :",
+        "  forall A : Type, forall term : A,",
+        "    RegisteredLexicalApplicationTruth A term ->",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_lexical_class_provider_truth",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_provider_atomic_projected :",
+        "  forall A : Type, forall term : A,",
+        "    RegisteredLexicalApplicationTruth A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_lexical_class_provider_atomic",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_ledger_truth_projected :",
+        "  forall A : Type, forall term : A,",
+        "    RegisteredLexicalApplicationTruth A term ->",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_lexical_class_ledger_truth",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_lexical_class_ledger_atomic_projected :",
+        "  forall A : Type, forall term : A,",
+        "    RegisteredLexicalApplicationTruth A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_lexical_class_ledger_atomic",
+        "    concrete_truth_condition_provider_lexical_class_instance_certificate).",
+        "Qed.",
+    ]
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -28581,6 +28829,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -30124,6 +30378,33 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected"
         )
+        lines.append(
+            "#check ConcreteTruthConditionProviderLexicalClassInstanceCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_instance_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_instance_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_instances_match"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_provider_truth_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_provider_atomic_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_ledger_truth_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -30990,6 +31271,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         concrete_truth_condition_provider_class_obligation_suite_lines(
             declarations,
             target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
+            target
         )
     )
     lines.append("")
@@ -32337,6 +32624,25 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     )
     lines.append(
         "Check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected."
+    )
+    lines.append("Check ConcreteTruthConditionProviderLexicalClassInstanceCertificate.")
+    lines.append("Check concrete_truth_condition_provider_lexical_class_instance_certificate.")
+    lines.append(
+        "Check concrete_truth_condition_provider_lexical_class_instance_certificate_exists."
+    )
+    lines.append("Check concrete_truth_condition_provider_lexical_class_source_matches.")
+    lines.append("Check concrete_truth_condition_provider_lexical_class_instances_match.")
+    lines.append(
+        "Check concrete_truth_condition_provider_lexical_class_provider_truth_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_lexical_class_provider_atomic_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_lexical_class_ledger_truth_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected."
     )
     return "\n".join(lines) + "\n"
 

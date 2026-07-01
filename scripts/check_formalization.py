@@ -4218,6 +4218,54 @@ def main() -> None:
             and "Check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected."
             in coq
         ),
+        "lean concrete truth provider lexical class instance certificate": (
+            "structure ConcreteTruthConditionProviderLexicalClassInstanceCertificate : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_lexical_class_instance_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_instance_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_source_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_instances_match :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_provider_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_provider_atomic_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_ledger_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_lexical_class_ledger_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionProviderLexicalClassInstanceCertificate"
+            in lean
+            and "#check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth provider lexical class instance certificate": (
+            "Record ConcreteTruthConditionProviderLexicalClassInstanceCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_lexical_class_instance_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_instance_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_source_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_instances_match :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_provider_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_provider_atomic_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_ledger_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_lexical_class_ledger_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionProviderLexicalClassInstanceCertificate."
+            in coq
+            and "Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

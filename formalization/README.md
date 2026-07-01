@@ -535,6 +535,13 @@ provider interface source, the registered constructor-class projection
 obligation ledger, direct and independent provider soundness, and the ledger
 projections for lexical application, each generated Sigma type, temporal
 operators, repeat, polarity, Transition/Cause, and spec-to-atomic soundness.
+The lexical provider class-instance certificate introduces
+`ConcreteTruthConditionProviderLexicalClassInstanceCertificate` and
+`concrete_truth_condition_provider_lexical_class_instance_certificate`. It
+connects the class-obligation suite to
+`independent_registered_lexical_truth_condition_instances`, then exposes
+provider truth, provider atomic, ledger truth, and ledger atomic projections
+for every `RegisteredLexicalApplicationTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
