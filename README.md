@@ -1583,6 +1583,16 @@ truth and `AtomicClosureTruth` projections for every
 `RegisteredLexicalApplicationTruth`, and checks the parallel constructor-ledger
 truth and atomic route. It is still a registered lexical class certificate, not
 a completed model for arbitrary lexical meanings.
+The next verified objective
+`coq_concrete_truth_condition_provider_temporal_class_instance_certificate`
+adds `ConcreteTruthConditionProviderTemporalClassInstanceCertificate`. This
+stage binds the temporal provider class to
+`IndependentRegisteredTemporalTruthConditionInstances`; for each of `at_T`,
+`during_T`, `before_T`, `after_T`, `until_T`, and `since_T`, it records the
+provider-side truth route, provider-side `AtomicClosureTruth` projection,
+constructor-ledger truth route, and constructor-ledger atomic projection. It is
+still a registered temporal constructor-class certificate, not an independent
+model of all temporal natural-language meanings.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

@@ -21381,6 +21381,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_provider_"
+                    "temporal_class_instance_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21779,6 +21787,13 @@ def project_completion_status_payload(
                     "records provider truth and AtomicClosureTruth projections "
                     "for every RegisteredLexicalApplicationTruth, and checks "
                     "the parallel constructor-ledger truth and atomic route. "
+                    "The newest temporal provider class-instance certificate "
+                    "then discharges the at_T, during_T, before_T, after_T, "
+                    "until_T, and since_T constructor class through "
+                    "IndependentRegisteredTemporalTruthConditionInstances, "
+                    "recording provider truth/atomic projections and the "
+                    "matching constructor-ledger truth/atomic route for each "
+                    "temporal operator. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

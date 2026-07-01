@@ -4266,6 +4266,64 @@ def main() -> None:
             and "Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected."
             in coq
         ),
+        "lean concrete truth provider temporal class instance certificate": (
+            "structure ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_temporal_class_instance_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_provider_temporal_class_instance_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_temporal_class_source_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_temporal_class_instances_match :"
+            in lean
+            and all(
+                (
+                    f"theorem concrete_truth_condition_provider_temporal_class_provider_{name}_truth_projected :"
+                    in lean
+                    and f"theorem concrete_truth_condition_provider_temporal_class_provider_{name}_atomic_projected :"
+                    in lean
+                    and f"theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_truth_projected :"
+                    in lean
+                    and f"theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected :"
+                    in lean
+                    and f"#check concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected"
+                    in lean
+                )
+                for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T")
+            )
+            and "#check ConcreteTruthConditionProviderTemporalClassInstanceCertificate"
+            in lean
+        ),
+        "coq concrete truth provider temporal class instance certificate": (
+            "Record ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_temporal_class_instance_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_temporal_class_instance_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_temporal_class_source_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_temporal_class_instances_match :"
+            in coq
+            and all(
+                (
+                    f"Theorem concrete_truth_condition_provider_temporal_class_provider_{name}_truth_projected :"
+                    in coq
+                    and f"Theorem concrete_truth_condition_provider_temporal_class_provider_{name}_atomic_projected :"
+                    in coq
+                    and f"Theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_truth_projected :"
+                    in coq
+                    and f"Theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected :"
+                    in coq
+                    and f"Check concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected."
+                    in coq
+                )
+                for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T")
+            )
+            and "Check ConcreteTruthConditionProviderTemporalClassInstanceCertificate."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

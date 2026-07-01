@@ -24184,6 +24184,348 @@ def concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
     ]
 
 
+def concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Discharge the registered temporal class through the provider interface."""
+
+    temporal_clauses = ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T")
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type where",
+            "  concrete_truth_condition_provider_temporal_class_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_temporal_class_source_eq :",
+            "      concrete_truth_condition_provider_temporal_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_temporal_class_instances :",
+            "      IndependentRegisteredTemporalTruthConditionInstances",
+            "  concrete_truth_condition_provider_temporal_class_instances_eq :",
+            "      concrete_truth_condition_provider_temporal_class_instances =",
+            "        independent_registered_temporal_truth_condition_instances",
+        ]
+        for name in temporal_clauses:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_provider_temporal_class_provider_{name}_truth :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body)",
+                    f"  concrete_truth_condition_provider_temporal_class_provider_{name}_atomic :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      AtomicClosureTruth PropT ({name} marker body)",
+                    f"  concrete_truth_condition_provider_temporal_class_ledger_{name}_truth :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body)",
+                    f"  concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      AtomicClosureTruth PropT ({name} marker body)",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_provider_temporal_class_instance_certificate :",
+                "    ConcreteTruthConditionProviderTemporalClassInstanceCertificate := {",
+                "  concrete_truth_condition_provider_temporal_class_source :=",
+                "    concrete_truth_condition_provider_class_obligation_suite,",
+                "  concrete_truth_condition_provider_temporal_class_source_eq := rfl,",
+                "  concrete_truth_condition_provider_temporal_class_instances :=",
+                "    independent_registered_temporal_truth_condition_instances,",
+                "  concrete_truth_condition_provider_temporal_class_instances_eq := rfl,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for name in temporal_clauses:
+            assignments.extend(
+                [
+                    (
+                        f"concrete_truth_condition_provider_temporal_class_provider_{name}_truth",
+                        f"independent_registered_temporal_truth_condition_{name}_instance",
+                    ),
+                    (
+                        f"concrete_truth_condition_provider_temporal_class_provider_{name}_atomic",
+                        "fun marker body body_truth =>\n"
+                        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected\n"
+                        f"        PropT ({name} marker body)\n"
+                        f"        (independent_registered_temporal_truth_condition_{name}_instance marker body body_truth)",
+                    ),
+                    (
+                        f"concrete_truth_condition_provider_temporal_class_ledger_{name}_truth",
+                        f"concrete_truth_condition_provider_class_obligation_ledger_{name}_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic",
+                        "fun marker body body_truth =>\n"
+                        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected\n"
+                        f"        PropT ({name} marker body)\n"
+                        "        (concrete_truth_condition_provider_class_obligation_ledger_"
+                        f"{name}_projected marker body body_truth)",
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            value_lines = value.splitlines()
+            lines.append(f"  {field} :=")
+            for value_index, value_line in enumerate(value_lines):
+                if value_index == len(value_lines) - 1:
+                    lines.append(f"    {value_line}{suffix}")
+                else:
+                    lines.append(f"    {value_line}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_provider_temporal_class_instance_certificate_exists :",
+                "    Exists (fun C : ConcreteTruthConditionProviderTemporalClassInstanceCertificate =>",
+                "      C = concrete_truth_condition_provider_temporal_class_instance_certificate) := by",
+                "  exact Exists.intro concrete_truth_condition_provider_temporal_class_instance_certificate rfl",
+                "",
+                "theorem concrete_truth_condition_provider_temporal_class_source_matches :",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                "      concrete_truth_condition_provider_temporal_class_source =",
+                "        concrete_truth_condition_provider_class_obligation_suite := by",
+                "  exact concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                "    concrete_truth_condition_provider_temporal_class_source_eq",
+                "",
+                "theorem concrete_truth_condition_provider_temporal_class_instances_match :",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                "      concrete_truth_condition_provider_temporal_class_instances =",
+                "        independent_registered_temporal_truth_condition_instances := by",
+                "  exact concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                "    concrete_truth_condition_provider_temporal_class_instances_eq",
+            ]
+        )
+        for name in temporal_clauses:
+            lines.extend(
+                [
+                    "",
+                    f"theorem concrete_truth_condition_provider_temporal_class_provider_{name}_truth_projected :",
+                    "    (marker : Entity) -> (body : PropT) ->",
+                    f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"    {independent_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body) := by",
+                    "  exact concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_temporal_class_provider_{name}_truth",
+                    "",
+                    f"theorem concrete_truth_condition_provider_temporal_class_provider_{name}_atomic_projected :",
+                    "    (marker : Entity) -> (body : PropT) ->",
+                    f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"    AtomicClosureTruth PropT ({name} marker body) := by",
+                    "  exact concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_temporal_class_provider_{name}_atomic",
+                    "",
+                    f"theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_truth_projected :",
+                    "    (marker : Entity) -> (body : PropT) ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body) := by",
+                    "  exact concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_temporal_class_ledger_{name}_truth",
+                    "",
+                    f"theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected :",
+                    "    (marker : Entity) -> (body : PropT) ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"    AtomicClosureTruth PropT ({name} marker body) := by",
+                    "  exact concrete_truth_condition_provider_temporal_class_instance_certificate.",
+                    f"    concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type := {",
+        "  concrete_truth_condition_provider_temporal_class_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_temporal_class_source_eq :",
+        "      concrete_truth_condition_provider_temporal_class_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_temporal_class_instances :",
+        "      IndependentRegisteredTemporalTruthConditionInstances;",
+        "  concrete_truth_condition_provider_temporal_class_instances_eq :",
+        "      concrete_truth_condition_provider_temporal_class_instances =",
+        "        independent_registered_temporal_truth_condition_instances;",
+    ]
+    for name in temporal_clauses:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_provider_temporal_class_provider_{name}_truth :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} PropT body ->",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} PropT ({name} marker body);",
+                f"  concrete_truth_condition_provider_temporal_class_provider_{name}_atomic :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} PropT body ->",
+                f"      AtomicClosureTruth PropT ({name} marker body);",
+                f"  concrete_truth_condition_provider_temporal_class_ledger_{name}_truth :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT body ->",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT ({name} marker body);",
+                f"  concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT body ->",
+                f"      AtomicClosureTruth PropT ({name} marker body);",
+            ]
+        )
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_provider_temporal_class_instance_certificate :",
+            "  ConcreteTruthConditionProviderTemporalClassInstanceCertificate := {|",
+            "  concrete_truth_condition_provider_temporal_class_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite;",
+            "  concrete_truth_condition_provider_temporal_class_source_eq := eq_refl;",
+            "  concrete_truth_condition_provider_temporal_class_instances :=",
+            "    independent_registered_temporal_truth_condition_instances;",
+            "  concrete_truth_condition_provider_temporal_class_instances_eq := eq_refl;",
+        ]
+    )
+    assignments = []
+    for name in temporal_clauses:
+        assignments.extend(
+            [
+                (
+                    f"concrete_truth_condition_provider_temporal_class_provider_{name}_truth",
+                    f"independent_registered_temporal_truth_condition_{name}_instance",
+                ),
+                (
+                    f"concrete_truth_condition_provider_temporal_class_provider_{name}_atomic",
+                    "fun marker body body_truth =>\n"
+                    "      concrete_truth_condition_provider_class_obligation_independent_sound_projected\n"
+                    f"        PropT ({name} marker body)\n"
+                    f"        (independent_registered_temporal_truth_condition_{name}_instance marker body body_truth)",
+                ),
+                (
+                    f"concrete_truth_condition_provider_temporal_class_ledger_{name}_truth",
+                    f"concrete_truth_condition_provider_class_obligation_ledger_{name}_projected",
+                ),
+                (
+                    f"concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic",
+                    "fun marker body body_truth =>\n"
+                    "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected\n"
+                    f"        PropT ({name} marker body)\n"
+                    "        (concrete_truth_condition_provider_class_obligation_ledger_"
+                    f"{name}_projected marker body body_truth)",
+                ),
+            ]
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        value_lines = value.splitlines()
+        lines.append(f"  {field} :=")
+        for value_index, value_line in enumerate(value_lines):
+            if value_index == len(value_lines) - 1:
+                lines.append(f"    {value_line}{suffix}")
+            else:
+                lines.append(f"    {value_line}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_provider_temporal_class_instance_certificate_exists :",
+            "  exists C : ConcreteTruthConditionProviderTemporalClassInstanceCertificate,",
+            "    C = concrete_truth_condition_provider_temporal_class_instance_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_provider_temporal_class_instance_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_temporal_class_source_matches :",
+            "  concrete_truth_condition_provider_temporal_class_source",
+            "    concrete_truth_condition_provider_temporal_class_instance_certificate =",
+            "  concrete_truth_condition_provider_class_obligation_suite.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_temporal_class_source_eq",
+            "    concrete_truth_condition_provider_temporal_class_instance_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_temporal_class_instances_match :",
+            "  concrete_truth_condition_provider_temporal_class_instances",
+            "    concrete_truth_condition_provider_temporal_class_instance_certificate =",
+            "  independent_registered_temporal_truth_condition_instances.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_temporal_class_instances_eq",
+            "    concrete_truth_condition_provider_temporal_class_instance_certificate).",
+            "Qed.",
+        ]
+    )
+    for name in temporal_clauses:
+        lines.extend(
+            [
+                "",
+                f"Theorem concrete_truth_condition_provider_temporal_class_provider_{name}_truth_projected :",
+                "  forall marker : Entity, forall body : PropT,",
+                "    fully_registered_truth_denotes",
+                f"      {independent_spec_coq} PropT body ->",
+                "    fully_registered_truth_denotes",
+                f"      {independent_spec_coq} PropT ({name} marker body).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_temporal_class_provider_{name}_truth",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate).",
+                "Qed.",
+                "",
+                f"Theorem concrete_truth_condition_provider_temporal_class_provider_{name}_atomic_projected :",
+                "  forall marker : Entity, forall body : PropT,",
+                "    fully_registered_truth_denotes",
+                f"      {independent_spec_coq} PropT body ->",
+                f"    AtomicClosureTruth PropT ({name} marker body).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_temporal_class_provider_{name}_atomic",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate).",
+                "Qed.",
+                "",
+                f"Theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_truth_projected :",
+                "  forall marker : Entity, forall body : PropT,",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} PropT body ->",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} PropT ({name} marker body).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_temporal_class_ledger_{name}_truth",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate).",
+                "Qed.",
+                "",
+                f"Theorem concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected :",
+                "  forall marker : Entity, forall body : PropT,",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} PropT body ->",
+                f"    AtomicClosureTruth PropT ({name} marker body).",
+                "Proof.",
+                f"  exact (concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -28835,6 +29177,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -30405,6 +30753,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "#check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected"
         )
+        lines.append(
+            "#check ConcreteTruthConditionProviderTemporalClassInstanceCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_temporal_class_instance_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_temporal_class_instance_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_temporal_class_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_temporal_class_instances_match"
+        )
+        for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T"):
+            for route in ("provider", "ledger"):
+                for projection in ("truth", "atomic"):
+                    lines.append(
+                        "#check "
+                        "concrete_truth_condition_provider_temporal_class_"
+                        f"{route}_{name}_{projection}_projected"
+                    )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -31276,6 +31647,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_provider_lexical_class_instance_certificate_lines(
+            target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
             target
         )
     )
@@ -32644,6 +33021,21 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append(
         "Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected."
     )
+    lines.append("Check ConcreteTruthConditionProviderTemporalClassInstanceCertificate.")
+    lines.append("Check concrete_truth_condition_provider_temporal_class_instance_certificate.")
+    lines.append(
+        "Check concrete_truth_condition_provider_temporal_class_instance_certificate_exists."
+    )
+    lines.append("Check concrete_truth_condition_provider_temporal_class_source_matches.")
+    lines.append("Check concrete_truth_condition_provider_temporal_class_instances_match.")
+    for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T"):
+        for route in ("provider", "ledger"):
+            for projection in ("truth", "atomic"):
+                lines.append(
+                    "Check "
+                    "concrete_truth_condition_provider_temporal_class_"
+                    f"{route}_{name}_{projection}_projected."
+                )
     return "\n".join(lines) + "\n"
 
 

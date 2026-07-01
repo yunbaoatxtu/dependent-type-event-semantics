@@ -542,6 +542,14 @@ connects the class-obligation suite to
 `independent_registered_lexical_truth_condition_instances`, then exposes
 provider truth, provider atomic, ledger truth, and ledger atomic projections
 for every `RegisteredLexicalApplicationTruth`.
+The temporal provider class-instance certificate introduces
+`ConcreteTruthConditionProviderTemporalClassInstanceCertificate` and
+`concrete_truth_condition_provider_temporal_class_instance_certificate`. It
+connects the class-obligation suite to
+`independent_registered_temporal_truth_condition_instances`, then exposes
+provider truth, provider atomic, ledger truth, and ledger atomic projections
+for each registered temporal constructor: `at_T`, `during_T`, `before_T`,
+`after_T`, `until_T`, and `since_T`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

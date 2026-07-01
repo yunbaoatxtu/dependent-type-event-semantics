@@ -12965,6 +12965,523 @@ Proof.
     concrete_truth_condition_provider_lexical_class_instance_certificate).
 Qed.
 
+Record ConcreteTruthConditionProviderTemporalClassInstanceCertificate : Type := {
+  concrete_truth_condition_provider_temporal_class_source :
+      ConcreteTruthConditionProviderClassObligationSuite;
+  concrete_truth_condition_provider_temporal_class_source_eq :
+      concrete_truth_condition_provider_temporal_class_source =
+        concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_temporal_class_instances :
+      IndependentRegisteredTemporalTruthConditionInstances;
+  concrete_truth_condition_provider_temporal_class_instances_eq :
+      concrete_truth_condition_provider_temporal_class_instances =
+        independent_registered_temporal_truth_condition_instances;
+  concrete_truth_condition_provider_temporal_class_provider_at_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (at_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_at_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (at_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_at_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (at_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_at_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (at_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_during_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (during_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_during_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (during_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_during_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (during_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_during_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (during_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_before_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (before_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_before_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (before_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_before_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (before_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_before_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (before_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_after_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (after_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_after_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (after_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_after_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (after_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_after_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (after_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_until_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (until_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_until_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (until_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_until_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (until_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_until_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (until_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_since_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (since_T marker body);
+  concrete_truth_condition_provider_temporal_class_provider_since_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+      AtomicClosureTruth PropT (since_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_since_T_truth :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (since_T marker body);
+  concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      AtomicClosureTruth PropT (since_T marker body)
+}.
+
+Definition concrete_truth_condition_provider_temporal_class_instance_certificate :
+  ConcreteTruthConditionProviderTemporalClassInstanceCertificate := {|
+  concrete_truth_condition_provider_temporal_class_source :=
+    concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_temporal_class_source_eq := eq_refl;
+  concrete_truth_condition_provider_temporal_class_instances :=
+    independent_registered_temporal_truth_condition_instances;
+  concrete_truth_condition_provider_temporal_class_instances_eq := eq_refl;
+  concrete_truth_condition_provider_temporal_class_provider_at_T_truth :=
+    independent_registered_temporal_truth_condition_at_T_instance;
+  concrete_truth_condition_provider_temporal_class_provider_at_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_independent_sound_projected
+            PropT (at_T marker body)
+            (independent_registered_temporal_truth_condition_at_T_instance marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_ledger_at_T_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_at_T_projected;
+  concrete_truth_condition_provider_temporal_class_ledger_at_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+            PropT (at_T marker body)
+            (concrete_truth_condition_provider_class_obligation_ledger_at_T_projected marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_provider_during_T_truth :=
+    independent_registered_temporal_truth_condition_during_T_instance;
+  concrete_truth_condition_provider_temporal_class_provider_during_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_independent_sound_projected
+            PropT (during_T marker body)
+            (independent_registered_temporal_truth_condition_during_T_instance marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_ledger_during_T_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_during_T_projected;
+  concrete_truth_condition_provider_temporal_class_ledger_during_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+            PropT (during_T marker body)
+            (concrete_truth_condition_provider_class_obligation_ledger_during_T_projected marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_provider_before_T_truth :=
+    independent_registered_temporal_truth_condition_before_T_instance;
+  concrete_truth_condition_provider_temporal_class_provider_before_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_independent_sound_projected
+            PropT (before_T marker body)
+            (independent_registered_temporal_truth_condition_before_T_instance marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_ledger_before_T_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_before_T_projected;
+  concrete_truth_condition_provider_temporal_class_ledger_before_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+            PropT (before_T marker body)
+            (concrete_truth_condition_provider_class_obligation_ledger_before_T_projected marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_provider_after_T_truth :=
+    independent_registered_temporal_truth_condition_after_T_instance;
+  concrete_truth_condition_provider_temporal_class_provider_after_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_independent_sound_projected
+            PropT (after_T marker body)
+            (independent_registered_temporal_truth_condition_after_T_instance marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_ledger_after_T_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_after_T_projected;
+  concrete_truth_condition_provider_temporal_class_ledger_after_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+            PropT (after_T marker body)
+            (concrete_truth_condition_provider_class_obligation_ledger_after_T_projected marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_provider_until_T_truth :=
+    independent_registered_temporal_truth_condition_until_T_instance;
+  concrete_truth_condition_provider_temporal_class_provider_until_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_independent_sound_projected
+            PropT (until_T marker body)
+            (independent_registered_temporal_truth_condition_until_T_instance marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_ledger_until_T_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_until_T_projected;
+  concrete_truth_condition_provider_temporal_class_ledger_until_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+            PropT (until_T marker body)
+            (concrete_truth_condition_provider_class_obligation_ledger_until_T_projected marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_provider_since_T_truth :=
+    independent_registered_temporal_truth_condition_since_T_instance;
+  concrete_truth_condition_provider_temporal_class_provider_since_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_independent_sound_projected
+            PropT (since_T marker body)
+            (independent_registered_temporal_truth_condition_since_T_instance marker body body_truth);
+  concrete_truth_condition_provider_temporal_class_ledger_since_T_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_since_T_projected;
+  concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic :=
+    fun marker body body_truth =>
+          concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+            PropT (since_T marker body)
+            (concrete_truth_condition_provider_class_obligation_ledger_since_T_projected marker body body_truth)
+|}.
+
+Theorem concrete_truth_condition_provider_temporal_class_instance_certificate_exists :
+  exists C : ConcreteTruthConditionProviderTemporalClassInstanceCertificate,
+    C = concrete_truth_condition_provider_temporal_class_instance_certificate.
+Proof.
+  exists concrete_truth_condition_provider_temporal_class_instance_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_source_matches :
+  concrete_truth_condition_provider_temporal_class_source
+    concrete_truth_condition_provider_temporal_class_instance_certificate =
+  concrete_truth_condition_provider_class_obligation_suite.
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_source_eq
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_instances_match :
+  concrete_truth_condition_provider_temporal_class_instances
+    concrete_truth_condition_provider_temporal_class_instance_certificate =
+  independent_registered_temporal_truth_condition_instances.
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_instances_eq
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_at_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (at_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_at_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_at_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (at_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_at_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_at_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (at_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_at_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_at_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (at_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_at_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_during_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (during_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_during_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_during_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (during_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_during_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_during_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (during_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_during_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_during_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (during_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_during_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_before_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (before_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_before_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_before_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (before_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_before_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_before_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (before_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_before_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_before_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (before_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_before_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_after_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (after_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_after_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_after_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (after_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_after_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_after_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (after_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_after_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_after_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (after_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_after_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_until_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (until_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_until_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_until_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (until_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_until_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_until_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (until_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_until_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_until_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (until_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_until_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_since_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (since_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_since_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_provider_since_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT body ->
+    AtomicClosureTruth PropT (since_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_provider_since_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_since_T_truth_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (since_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_since_T_truth
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    AtomicClosureTruth PropT (since_T marker body).
+Proof.
+  exact (concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic
+    concrete_truth_condition_provider_temporal_class_instance_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -13917,3 +14434,32 @@ Check concrete_truth_condition_provider_lexical_class_provider_truth_projected.
 Check concrete_truth_condition_provider_lexical_class_provider_atomic_projected.
 Check concrete_truth_condition_provider_lexical_class_ledger_truth_projected.
 Check concrete_truth_condition_provider_lexical_class_ledger_atomic_projected.
+Check ConcreteTruthConditionProviderTemporalClassInstanceCertificate.
+Check concrete_truth_condition_provider_temporal_class_instance_certificate.
+Check concrete_truth_condition_provider_temporal_class_instance_certificate_exists.
+Check concrete_truth_condition_provider_temporal_class_source_matches.
+Check concrete_truth_condition_provider_temporal_class_instances_match.
+Check concrete_truth_condition_provider_temporal_class_provider_at_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_at_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_at_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_at_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_during_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_during_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_during_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_during_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_before_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_before_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_before_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_before_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_after_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_after_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_after_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_after_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_until_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_until_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_until_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_until_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_since_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_provider_since_T_atomic_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_since_T_truth_projected.
+Check concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic_projected.
