@@ -1228,6 +1228,62 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_\d+_truth_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_\d+_truth_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_independent_suite_alignment_transition_\d+_truth_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_independent_suite_alignment_transition_\d+_truth_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_independent_suite_alignment_transition_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_independent_suite_alignment_transition_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -3155,6 +3211,94 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected."
+            in coq
+        ),
+        "lean finite registered atomic truth condition independent suite alignment certificate": (
+            lean_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_truth_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_atomic_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_truth_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_atomic_count
+            == 1
+            and "structure FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate : Type where"
+            in lean
+            and "finite_registered_atomic_truth_condition_independent_suite_alignment_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite" in lean
+            and "finite_registered_atomic_truth_condition_independent_suite_alignment_clause_instances : "
+            "IndependentRegisteredTruthConditionClauseInstances" in lean
+            and "finite_registered_atomic_truth_condition_independent_suite_alignment_spec : "
+            "FullyRegisteredTruthConditionSpec" in lean
+            and "def finite_registered_atomic_truth_condition_independent_suite_alignment_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_certificate_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_suite_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_clause_instances_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_3_truth_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_3_atomic_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_atomic_projected :"
+            in lean
+            and "#check "
+            "FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic truth condition independent suite alignment certificate": (
+            coq_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_truth_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_atomic_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_truth_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_independent_suite_alignment_transition_atomic_count
+            == 1
+            and "Record FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate : Type := {"
+            in coq
+            and "finite_registered_atomic_truth_condition_independent_suite_alignment_suite : "
+            "IndependentRegisteredTruthConditionInstanceSuite;" in coq
+            and "finite_registered_atomic_truth_condition_independent_suite_alignment_clause_instances : "
+            "IndependentRegisteredTruthConditionClauseInstances;" in coq
+            and "finite_registered_atomic_truth_condition_independent_suite_alignment_spec : "
+            "FullyRegisteredTruthConditionSpec;" in coq
+            and "Definition finite_registered_atomic_truth_condition_independent_suite_alignment_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_certificate_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_suite_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_clause_instances_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_3_truth_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_3_atomic_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_atomic_projected :"
+            in coq
+            and "Check "
+            "FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_atomic_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (

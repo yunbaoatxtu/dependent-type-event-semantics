@@ -439,7 +439,16 @@ instantiates
 aligns the finite evidence ledger with
 `RegisteredEvidenceBackedTruthConditionSources`, and checks source evidence,
 truth-condition denotation, and `AtomicClosureTruth` projections for each
-registered lexical and transition atom.
+registered lexical and transition atom. The independent-suite-alignment layer
+then introduces
+`FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate`,
+instantiates
+`finite_registered_atomic_truth_condition_independent_suite_alignment_certificate`,
+aligns those finite registered atom sources with
+`IndependentRegisteredTruthConditionInstanceSuite` and
+`IndependentRegisteredTruthConditionClauseInstances`, and checks
+suite-derived truth-condition denotations plus `AtomicClosureTruth`
+projections for each registered lexical and transition atom.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

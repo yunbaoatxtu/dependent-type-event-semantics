@@ -21261,6 +21261,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_truth_condition_"
+                    "independent_suite_alignment_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21549,6 +21557,15 @@ def project_completion_status_payload(
                     "as TruthEvidence for ConcreteRegisteredTruth, decodes "
                     "it through the evidence-backed truth-condition spec, "
                     "and projects each result back to AtomicClosureTruth. "
+                    "The newest independent-suite-alignment layer then "
+                    "packages that source alignment together with "
+                    "IndependentRegisteredTruthConditionInstanceSuite and "
+                    "IndependentRegisteredTruthConditionClauseInstances as "
+                    "FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate, "
+                    "feeds each finite registered lexical and transition "
+                    "source through the independent registered instance "
+                    "suite, and checks each suite-derived denotation back to "
+                    "AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

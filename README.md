@@ -1469,8 +1469,15 @@ which aligns that finite evidence ledger with
 `RegisteredEvidenceBackedTruthConditionSources`, projects each registered
 lexical and transition source into `TruthEvidence (ConcreteRegisteredTruth ...)`,
 checks the corresponding evidence-backed truth-condition denotation, and
-reprojects each finite registered atom to `AtomicClosureTruth`. The open
-blocker remains
+reprojects each finite registered atom to `AtomicClosureTruth`. The next
+verified objective
+`coq_finite_registered_atomic_truth_condition_independent_suite_alignment_certificate`
+adds `FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate`,
+which aligns the same finite registered lexical and transition sources with
+`IndependentRegisteredTruthConditionInstanceSuite` and
+`IndependentRegisteredTruthConditionClauseInstances`, produces suite-derived
+`fully_registered_truth_denotes` inhabitants for each registered atom, and
+projects them back to `AtomicClosureTruth`. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
