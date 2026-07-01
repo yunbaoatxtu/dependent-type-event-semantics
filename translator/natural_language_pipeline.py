@@ -21325,6 +21325,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_concrete_route_"
+                    "comparison_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21676,6 +21684,13 @@ def project_completion_status_payload(
                     "ledger, checking both ledger-derived truth inhabitants "
                     "and AtomicClosureTruth projections while retaining the "
                     "typed-discharge certificate as its source. "
+                    "The newest concrete-route comparison certificate then "
+                    "checks the same finite registered lexical and transition "
+                    "atoms through the direct concrete registered spec, the "
+                    "evidence-backed registered spec, and the concrete "
+                    "registered kernel-induced spec, proving that each route "
+                    "supplies both a truth-condition inhabitant and an "
+                    "AtomicClosureTruth projection. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

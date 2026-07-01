@@ -1523,6 +1523,14 @@ atom through that ledger and checks both the ledger-derived truth inhabitant and
 the resulting `AtomicClosureTruth` projection. This aligns finite concrete
 atoms with the constructor-obligation route without claiming a general
 truth-condition model for arbitrary lexical or temporal material.
+The next verified objective
+`coq_finite_registered_atomic_concrete_route_comparison_certificate` adds
+`FiniteRegisteredAtomicConcreteRouteComparisonCertificate`, which checks every
+finite registered lexical atom and registered transition atom across the direct
+concrete registered spec, the evidence-backed registered spec, and the kernel
+induced registered spec. Each route must supply its own truth-condition
+inhabitant and its own `AtomicClosureTruth` projection, so the finite atom
+basis is now route-compared rather than merely source-listed.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

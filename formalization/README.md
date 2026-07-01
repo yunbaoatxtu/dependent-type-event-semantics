@@ -493,6 +493,12 @@ The finite registered atomic constructor-obligation alignment layer introduces
 checks every finite registered lexical and transition atom through that ledger,
 including both the ledger-derived truth inhabitant and the
 `AtomicClosureTruth` projection.
+The finite registered atomic concrete-route comparison layer introduces
+`FiniteRegisteredAtomicConcreteRouteComparisonCertificate`, instantiates
+`finite_registered_atomic_concrete_route_comparison_certificate`, and checks
+each finite registered lexical and transition atom through the direct concrete
+registered spec, the evidence-backed registered spec, and the kernel-induced
+registered spec. Each route is required to project back to `AtomicClosureTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

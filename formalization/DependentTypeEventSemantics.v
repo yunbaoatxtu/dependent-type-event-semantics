@@ -10882,6 +10882,387 @@ Proof.
     finite_registered_atomic_constructor_obligation_alignment_certificate).
 Qed.
 
+Record FiniteRegisteredAtomicConcreteRouteComparisonCertificate : Type := {
+  finite_registered_atomic_concrete_route_comparison_constructor_alignment : FiniteRegisteredAtomicConstructorObligationAlignmentCertificate;
+  finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq :
+      finite_registered_atomic_concrete_route_comparison_constructor_alignment =
+        finite_registered_atomic_constructor_obligation_alignment_certificate;
+  finite_registered_atomic_concrete_route_comparison_direct_spec : FullyRegisteredTruthConditionSpec;
+  finite_registered_atomic_concrete_route_comparison_direct_spec_eq :
+      finite_registered_atomic_concrete_route_comparison_direct_spec =
+        concrete_registered_truth_conditions;
+  finite_registered_atomic_concrete_route_comparison_evidence_spec : FullyRegisteredTruthConditionSpec;
+  finite_registered_atomic_concrete_route_comparison_evidence_spec_eq :
+      finite_registered_atomic_concrete_route_comparison_evidence_spec =
+        concrete_registered_evidence_backed_truth_conditions;
+  finite_registered_atomic_concrete_route_comparison_kernel_spec : FullyRegisteredTruthConditionSpec;
+  finite_registered_atomic_concrete_route_comparison_kernel_spec_eq :
+      finite_registered_atomic_concrete_route_comparison_kernel_spec =
+        concrete_registered_truth_conditions_from_kernel;
+  finite_registered_atomic_concrete_route_comparison_direct_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_truth_conditions A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_concrete_route_comparison_evidence_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_evidence_backed_truth_conditions A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_concrete_route_comparison_kernel_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_truth_conditions_from_kernel A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth : fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_concrete_route_comparison_lexical_2_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_truth : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_truth : fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_concrete_route_comparison_lexical_3_direct_truth : forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_truth : forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_truth : forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_concrete_route_comparison_lexical_4_direct_truth : fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_truth : fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_truth : fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT (knock 0 mods_nil John);
+  finite_registered_atomic_concrete_route_comparison_transition_1_direct_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_concrete_route_comparison_transition_1_evidence_truth :
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel TransitionT (Transition vase integrity_scale intact broken)
+}.
+
+Definition finite_registered_atomic_concrete_route_comparison_certificate :
+  FiniteRegisteredAtomicConcreteRouteComparisonCertificate := {|
+  finite_registered_atomic_concrete_route_comparison_constructor_alignment := finite_registered_atomic_constructor_obligation_alignment_certificate;
+  finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq := eq_refl;
+  finite_registered_atomic_concrete_route_comparison_direct_spec := concrete_registered_truth_conditions;
+  finite_registered_atomic_concrete_route_comparison_direct_spec_eq := eq_refl;
+  finite_registered_atomic_concrete_route_comparison_evidence_spec := concrete_registered_evidence_backed_truth_conditions;
+  finite_registered_atomic_concrete_route_comparison_evidence_spec_eq := eq_refl;
+  finite_registered_atomic_concrete_route_comparison_kernel_spec := concrete_registered_truth_conditions_from_kernel;
+  finite_registered_atomic_concrete_route_comparison_kernel_spec_eq := eq_refl;
+  finite_registered_atomic_concrete_route_comparison_direct_sound := concrete_registered_truth_conditions_imply_atomic_closure;
+  finite_registered_atomic_concrete_route_comparison_evidence_sound := concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure;
+  finite_registered_atomic_concrete_route_comparison_kernel_sound := concrete_registered_truth_conditions_from_kernel_imply_atomic_closure;
+  finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth := finite_registered_atomic_truth_condition_instance_lexical_1_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth := finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth := finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel_projected (finite_registered_atomic_source_lexical_1_source_projected);
+  finite_registered_atomic_concrete_route_comparison_lexical_2_direct_truth := finite_registered_atomic_truth_condition_instance_lexical_2_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_truth := finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_truth := finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel_projected (finite_registered_atomic_source_lexical_2_source_projected);
+  finite_registered_atomic_concrete_route_comparison_lexical_3_direct_truth := fun x_theme => finite_registered_atomic_truth_condition_instance_lexical_3_truth_projected x_theme;
+  finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_truth := fun x_theme => finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_truth_projected x_theme;
+  finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_truth := fun x_theme => finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel_projected x_theme (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  finite_registered_atomic_concrete_route_comparison_lexical_4_direct_truth := finite_registered_atomic_truth_condition_instance_lexical_4_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_truth := finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_truth := finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel_projected (finite_registered_atomic_source_lexical_4_source_projected);
+  finite_registered_atomic_concrete_route_comparison_transition_1_direct_truth := finite_registered_atomic_truth_condition_instance_transition_1_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_transition_1_evidence_truth := finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_truth_projected;
+  finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth := finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel_projected (finite_registered_atomic_source_transition_1_source_projected)
+|}.
+
+Theorem finite_registered_atomic_concrete_route_comparison_certificate_exists :
+  exists C : FiniteRegisteredAtomicConcreteRouteComparisonCertificate,
+    C = finite_registered_atomic_concrete_route_comparison_certificate.
+Proof.
+  exists finite_registered_atomic_concrete_route_comparison_certificate.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches :
+  finite_registered_atomic_concrete_route_comparison_constructor_alignment
+    finite_registered_atomic_concrete_route_comparison_certificate =
+  finite_registered_atomic_constructor_obligation_alignment_certificate.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_direct_spec_matches :
+  finite_registered_atomic_concrete_route_comparison_direct_spec
+    finite_registered_atomic_concrete_route_comparison_certificate =
+  concrete_registered_truth_conditions.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_spec_eq
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_direct_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_truth_conditions A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_sound
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_evidence_spec_matches :
+  finite_registered_atomic_concrete_route_comparison_evidence_spec
+    finite_registered_atomic_concrete_route_comparison_certificate =
+  concrete_registered_evidence_backed_truth_conditions.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_spec_eq
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_evidence_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_sound
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_kernel_spec_matches :
+  finite_registered_atomic_concrete_route_comparison_kernel_spec
+    finite_registered_atomic_concrete_route_comparison_certificate =
+  concrete_registered_truth_conditions_from_kernel.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_spec_eq
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_kernel_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_truth_conditions_from_kernel A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_sound
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_direct_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_sound_projected
+    PropT (break 0 mods_nil John vase) (finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_sound_projected
+    PropT (break 0 mods_nil John vase) (finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_sound_projected
+    PropT (break 0 mods_nil John vase) (finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_2_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_2_direct_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_2_direct_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_sound_projected
+    PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_concrete_route_comparison_lexical_2_direct_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_sound_projected
+    PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_sound_projected
+    PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_3_direct_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_3_direct_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_3_direct_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_sound_projected
+    Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_concrete_route_comparison_lexical_3_direct_truth_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_sound_projected
+    Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_truth_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_sound_projected
+    Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_truth_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_4_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_4_direct_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_4_direct_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_sound_projected
+    PropT (knock 0 mods_nil John) (finite_registered_atomic_concrete_route_comparison_lexical_4_direct_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_sound_projected
+    PropT (knock 0 mods_nil John) (finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_sound_projected
+    PropT (knock 0 mods_nil John) (finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_transition_1_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_transition_1_direct_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_transition_1_direct_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_direct_sound_projected
+    TransitionT (Transition vase integrity_scale intact broken)
+    (finite_registered_atomic_concrete_route_comparison_transition_1_direct_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_transition_1_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_transition_1_evidence_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_transition_1_evidence_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_evidence_sound_projected
+    TransitionT (Transition vase integrity_scale intact broken)
+    (finite_registered_atomic_concrete_route_comparison_transition_1_evidence_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth
+    finite_registered_atomic_concrete_route_comparison_certificate).
+Qed.
+
+Theorem finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_concrete_route_comparison_kernel_sound_projected
+    TransitionT (Transition vase integrity_scale intact broken)
+    (finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth_projected)).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -11640,3 +12021,43 @@ Check finite_registered_atomic_constructor_obligation_alignment_transition_1_tru
 Check finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_projected.
 Check finite_registered_atomic_constructor_obligation_alignment_transition_1_truth_from_certificate.
 Check finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_from_certificate.
+Check FiniteRegisteredAtomicConcreteRouteComparisonCertificate.
+Check finite_registered_atomic_concrete_route_comparison_certificate.
+Check finite_registered_atomic_concrete_route_comparison_certificate_exists.
+Check finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches.
+Check finite_registered_atomic_concrete_route_comparison_direct_spec_matches.
+Check finite_registered_atomic_concrete_route_comparison_direct_sound_projected.
+Check finite_registered_atomic_concrete_route_comparison_evidence_spec_matches.
+Check finite_registered_atomic_concrete_route_comparison_evidence_sound_projected.
+Check finite_registered_atomic_concrete_route_comparison_kernel_spec_matches.
+Check finite_registered_atomic_concrete_route_comparison_kernel_sound_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_1_direct_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_2_direct_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_2_direct_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_2_evidence_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_2_kernel_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_3_direct_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_3_direct_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_3_evidence_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_3_kernel_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_4_direct_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_4_direct_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_4_evidence_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_lexical_4_kernel_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_transition_1_direct_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_transition_1_direct_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_transition_1_evidence_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_transition_1_evidence_atomic_projected.
+Check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth_projected.
+Check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected.

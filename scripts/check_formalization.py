@@ -3890,6 +3890,64 @@ def main() -> None:
             and "Check finite_registered_atomic_constructor_obligation_alignment_transition_1_atomic_from_certificate."
             in coq
         ),
+        "lean finite registered atomic concrete route comparison certificate": (
+            "structure FiniteRegisteredAtomicConcreteRouteComparisonCertificate : Type where"
+            in lean
+            and "def finite_registered_atomic_concrete_route_comparison_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_concrete_route_comparison_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_direct_spec_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_evidence_spec_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_kernel_spec_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicConcreteRouteComparisonCertificate"
+            in lean
+            and "#check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic concrete route comparison certificate": (
+            "Record FiniteRegisteredAtomicConcreteRouteComparisonCertificate : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_concrete_route_comparison_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_concrete_route_comparison_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_direct_spec_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_evidence_spec_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_kernel_spec_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_direct_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_evidence_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_lexical_1_kernel_truth_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicConcreteRouteComparisonCertificate."
+            in coq
+            and "Check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

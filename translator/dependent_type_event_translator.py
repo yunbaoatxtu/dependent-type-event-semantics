@@ -19739,6 +19739,603 @@ def finite_registered_atomic_constructor_obligation_alignment_certificate_lines(
     return lines
 
 
+def finite_registered_atomic_concrete_route_comparison_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Compare finite registered atoms across the concrete registered routes."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    transitions: list[tuple[str, str, str, str]] = declarations["transitions"]
+
+    route_specs = [
+        ("direct", "concrete_registered_truth_conditions"),
+        ("evidence", "concrete_registered_evidence_backed_truth_conditions"),
+        ("kernel", "concrete_registered_truth_conditions_from_kernel"),
+    ]
+
+    def schema_parts(
+        schema: LexicalApplicationSchema,
+    ) -> tuple[str, str, list[tuple[str, str]], list[str]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        binder_names = [name for name, _type_name in binders]
+        return result_type, lexical_application_term(schema), binders, binder_names
+
+    def transition_parts(
+        transition: tuple[str, str, str, str],
+    ) -> tuple[str, str, str, str, str]:
+        theme, scale, source, target_state = transition
+        return theme, scale, source, target_state, (
+            f"(Transition {theme} {scale} {source} {target_state})"
+        )
+
+    def lean_schema_truth_type(schema: LexicalApplicationSchema, spec: str) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"{spec}.fully_registered_truth_denotes {result_type} ({application})"
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_atomic_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_kernel_value(index: int, binder_names: list[str]) -> str:
+        source_call = f"finite_registered_atomic_source_lexical_{index}_source_projected"
+        if binder_names:
+            source_call += " " + " ".join(binder_names)
+            return (
+                f"fun {' '.join(binder_names)} => "
+                "finite_registered_atomic_kernel_alignment_"
+                f"lexical_{index}_source_to_kernel_projected "
+                f"{' '.join(binder_names)} ({source_call})"
+            )
+        return (
+            "finite_registered_atomic_kernel_alignment_"
+            f"lexical_{index}_source_to_kernel_projected ({source_call})"
+        )
+
+    def lean_schema_projected_call(index: int, route: str, binder_names: list[str]) -> str:
+        call = (
+            "finite_registered_atomic_concrete_route_comparison_"
+            f"lexical_{index}_{route}_truth_projected"
+        )
+        if binder_names:
+            call += " " + " ".join(binder_names)
+        return call
+
+    def lean_transition_truth_type(
+        transition: tuple[str, str, str, str],
+        spec: str,
+    ) -> str:
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        return f"{spec}.fully_registered_truth_denotes TransitionT {term}"
+
+    def lean_transition_atomic_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        return f"AtomicClosureTruth TransitionT {term}"
+
+    def coq_schema_truth_type(
+        schema: LexicalApplicationSchema,
+        spec: str,
+    ) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = (
+            f"fully_registered_truth_denotes {spec} {result_type} ({application})"
+        )
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_schema_atomic_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_schema_truth_value(index: int, route: str, binder_names: list[str]) -> str:
+        if route == "direct":
+            base = (
+                "finite_registered_atomic_truth_condition_instance_"
+                f"lexical_{index}_truth_projected"
+            )
+        elif route == "evidence":
+            base = (
+                "finite_registered_atomic_truth_condition_evidence_source_alignment_"
+                f"lexical_{index}_truth_projected"
+            )
+        else:
+            source_call = f"finite_registered_atomic_source_lexical_{index}_source_projected"
+            if binder_names:
+                source_call += " " + " ".join(binder_names)
+                return (
+                    f"fun {' '.join(binder_names)} => "
+                    "finite_registered_atomic_kernel_alignment_"
+                    f"lexical_{index}_source_to_kernel_projected "
+                    f"{' '.join(binder_names)} ({source_call})"
+                )
+            return (
+                "finite_registered_atomic_kernel_alignment_"
+                f"lexical_{index}_source_to_kernel_projected ({source_call})"
+            )
+        if binder_names:
+            return f"fun {' '.join(binder_names)} => {base} {' '.join(binder_names)}"
+        return base
+
+    def coq_transition_truth_type(
+        transition: tuple[str, str, str, str],
+        spec: str,
+    ) -> str:
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        return f"fully_registered_truth_denotes {spec} TransitionT {term}"
+
+    def coq_transition_atomic_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        return f"AtomicClosureTruth TransitionT {term}"
+
+    def coq_transition_truth_value(index: int, route: str) -> str:
+        if route == "direct":
+            return (
+                "finite_registered_atomic_truth_condition_instance_"
+                f"transition_{index}_truth_projected"
+            )
+        if route == "evidence":
+            return (
+                "finite_registered_atomic_truth_condition_evidence_source_alignment_"
+                f"transition_{index}_truth_projected"
+            )
+        return (
+            "finite_registered_atomic_kernel_alignment_"
+            f"transition_{index}_source_to_kernel_projected "
+            f"(finite_registered_atomic_source_transition_{index}_source_projected)"
+        )
+
+    if target == "lean":
+        lines = [
+            "structure FiniteRegisteredAtomicConcreteRouteComparisonCertificate : Type where",
+            "  finite_registered_atomic_concrete_route_comparison_constructor_alignment : FiniteRegisteredAtomicConstructorObligationAlignmentCertificate",
+            "  finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq :",
+            "      finite_registered_atomic_concrete_route_comparison_constructor_alignment =",
+            "        finite_registered_atomic_constructor_obligation_alignment_certificate",
+            "  finite_registered_atomic_concrete_route_comparison_direct_spec : FullyRegisteredTruthConditionSpec",
+            "  finite_registered_atomic_concrete_route_comparison_direct_spec_eq :",
+            "      finite_registered_atomic_concrete_route_comparison_direct_spec = concrete_registered_truth_conditions",
+            "  finite_registered_atomic_concrete_route_comparison_evidence_spec : FullyRegisteredTruthConditionSpec",
+            "  finite_registered_atomic_concrete_route_comparison_evidence_spec_eq :",
+            "      finite_registered_atomic_concrete_route_comparison_evidence_spec = concrete_registered_evidence_backed_truth_conditions",
+            "  finite_registered_atomic_concrete_route_comparison_kernel_spec : FullyRegisteredTruthConditionSpec",
+            "  finite_registered_atomic_concrete_route_comparison_kernel_spec_eq :",
+            "      finite_registered_atomic_concrete_route_comparison_kernel_spec = concrete_registered_truth_conditions_from_kernel",
+        ]
+        for route, spec in route_specs:
+            lines.extend(
+                [
+                    f"  finite_registered_atomic_concrete_route_comparison_{route}_sound :",
+                    "      (A : Type) -> (term : A) ->",
+                    f"      {spec}.fully_registered_truth_denotes A term ->",
+                    "      AtomicClosureTruth A term",
+                ]
+            )
+        for index, schema in enumerate(schemas, 1):
+            for route, spec in route_specs:
+                lines.append(
+                    "  "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_truth : "
+                    f"{lean_schema_truth_type(schema, spec)}"
+                )
+        for index, transition in enumerate(transitions, 1):
+            for route, spec in route_specs:
+                lines.append(
+                    "  "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth : "
+                    f"{lean_transition_truth_type(transition, spec)}"
+                )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_atomic_concrete_route_comparison_certificate :",
+                "    FiniteRegisteredAtomicConcreteRouteComparisonCertificate := {",
+                "  finite_registered_atomic_concrete_route_comparison_constructor_alignment := finite_registered_atomic_constructor_obligation_alignment_certificate,",
+                "  finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq := rfl,",
+                "  finite_registered_atomic_concrete_route_comparison_direct_spec := concrete_registered_truth_conditions,",
+                "  finite_registered_atomic_concrete_route_comparison_direct_spec_eq := rfl,",
+                "  finite_registered_atomic_concrete_route_comparison_evidence_spec := concrete_registered_evidence_backed_truth_conditions,",
+                "  finite_registered_atomic_concrete_route_comparison_evidence_spec_eq := rfl,",
+                "  finite_registered_atomic_concrete_route_comparison_kernel_spec := concrete_registered_truth_conditions_from_kernel,",
+                "  finite_registered_atomic_concrete_route_comparison_kernel_spec_eq := rfl,",
+                "  finite_registered_atomic_concrete_route_comparison_direct_sound := concrete_registered_truth_conditions_imply_atomic_closure,",
+                "  finite_registered_atomic_concrete_route_comparison_evidence_sound := concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure,",
+                "  finite_registered_atomic_concrete_route_comparison_kernel_sound := concrete_registered_truth_conditions_from_kernel_imply_atomic_closure,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, _binders, binder_names = schema_parts(schema)
+            assignments.extend(
+                [
+                    (
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"lexical_{index}_direct_truth",
+                        (
+                            "finite_registered_atomic_truth_condition_instance_"
+                            f"lexical_{index}_truth_projected"
+                        ),
+                    ),
+                    (
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"lexical_{index}_evidence_truth",
+                        (
+                            "finite_registered_atomic_truth_condition_evidence_source_alignment_"
+                            f"lexical_{index}_truth_projected"
+                        ),
+                    ),
+                    (
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"lexical_{index}_kernel_truth",
+                        lean_schema_kernel_value(index, binder_names),
+                    ),
+                ]
+            )
+        for index, _transition in enumerate(transitions, 1):
+            assignments.extend(
+                [
+                    (
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_direct_truth",
+                        (
+                            "finite_registered_atomic_truth_condition_instance_"
+                            f"transition_{index}_truth_projected"
+                        ),
+                    ),
+                    (
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_evidence_truth",
+                        (
+                            "finite_registered_atomic_truth_condition_evidence_source_alignment_"
+                            f"transition_{index}_truth_projected"
+                        ),
+                    ),
+                    (
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_kernel_truth",
+                        (
+                            "finite_registered_atomic_kernel_alignment_"
+                            f"transition_{index}_source_to_kernel_projected "
+                            "(finite_registered_atomic_source_transition_"
+                            f"{index}_source_projected)"
+                        ),
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem finite_registered_atomic_concrete_route_comparison_certificate_exists :",
+                "    Exists (fun C : FiniteRegisteredAtomicConcreteRouteComparisonCertificate => C = finite_registered_atomic_concrete_route_comparison_certificate) := by",
+                "  exact Exists.intro finite_registered_atomic_concrete_route_comparison_certificate rfl",
+                "",
+                "theorem finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches :",
+                "    finite_registered_atomic_concrete_route_comparison_certificate.finite_registered_atomic_concrete_route_comparison_constructor_alignment =",
+                "      finite_registered_atomic_constructor_obligation_alignment_certificate := by",
+                "  exact finite_registered_atomic_concrete_route_comparison_certificate.finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq",
+            ]
+        )
+        for route, spec in route_specs:
+            lines.extend(
+                [
+                    "",
+                    f"theorem finite_registered_atomic_concrete_route_comparison_{route}_spec_matches :",
+                    "    finite_registered_atomic_concrete_route_comparison_certificate."
+                    f"finite_registered_atomic_concrete_route_comparison_{route}_spec = {spec} := by",
+                    "  exact finite_registered_atomic_concrete_route_comparison_certificate."
+                    f"finite_registered_atomic_concrete_route_comparison_{route}_spec_eq",
+                    "",
+                    f"theorem finite_registered_atomic_concrete_route_comparison_{route}_sound_projected :",
+                    "    (A : Type) -> (term : A) ->",
+                    f"    {spec}.fully_registered_truth_denotes A term ->",
+                    "    AtomicClosureTruth A term := by",
+                    "  exact finite_registered_atomic_concrete_route_comparison_certificate."
+                    f"finite_registered_atomic_concrete_route_comparison_{route}_sound",
+                ]
+            )
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, _binders, binder_names = schema_parts(schema)
+            for route, spec in route_specs:
+                lines.extend(
+                    [
+                        "",
+                        "theorem "
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"lexical_{index}_{route}_truth_projected :",
+                        f"    {lean_schema_truth_type(schema, spec)} := by",
+                        "  exact finite_registered_atomic_concrete_route_comparison_certificate."
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"lexical_{index}_{route}_truth",
+                        "",
+                        "theorem "
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"lexical_{index}_{route}_atomic_projected :",
+                        f"    {lean_schema_atomic_type(schema)} := by",
+                    ]
+                )
+                if binder_names:
+                    lines.append(f"  intro {' '.join(binder_names)}")
+                lines.extend(
+                    [
+                        "  exact "
+                        f"finite_registered_atomic_concrete_route_comparison_{route}_sound_projected "
+                        f"_ _ ({lean_schema_projected_call(index, route, binder_names)})",
+                    ]
+                )
+        for index, transition in enumerate(transitions, 1):
+            for route, spec in route_specs:
+                lines.extend(
+                    [
+                        "",
+                        "theorem "
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_{route}_truth_projected :",
+                        f"    {lean_transition_truth_type(transition, spec)} := by",
+                        "  exact finite_registered_atomic_concrete_route_comparison_certificate."
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_{route}_truth",
+                        "",
+                        "theorem "
+                        "finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_{route}_atomic_projected :",
+                        f"    {lean_transition_atomic_type(transition)} := by",
+                        "  exact "
+                        f"finite_registered_atomic_concrete_route_comparison_{route}_sound_projected "
+                        "_ _ (finite_registered_atomic_concrete_route_comparison_"
+                        f"transition_{index}_{route}_truth_projected)",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Record FiniteRegisteredAtomicConcreteRouteComparisonCertificate : Type := {",
+        "  finite_registered_atomic_concrete_route_comparison_constructor_alignment : FiniteRegisteredAtomicConstructorObligationAlignmentCertificate;",
+        "  finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq :",
+        "      finite_registered_atomic_concrete_route_comparison_constructor_alignment =",
+        "        finite_registered_atomic_constructor_obligation_alignment_certificate;",
+        "  finite_registered_atomic_concrete_route_comparison_direct_spec : FullyRegisteredTruthConditionSpec;",
+        "  finite_registered_atomic_concrete_route_comparison_direct_spec_eq :",
+        "      finite_registered_atomic_concrete_route_comparison_direct_spec =",
+        "        concrete_registered_truth_conditions;",
+        "  finite_registered_atomic_concrete_route_comparison_evidence_spec : FullyRegisteredTruthConditionSpec;",
+        "  finite_registered_atomic_concrete_route_comparison_evidence_spec_eq :",
+        "      finite_registered_atomic_concrete_route_comparison_evidence_spec =",
+        "        concrete_registered_evidence_backed_truth_conditions;",
+        "  finite_registered_atomic_concrete_route_comparison_kernel_spec : FullyRegisteredTruthConditionSpec;",
+        "  finite_registered_atomic_concrete_route_comparison_kernel_spec_eq :",
+        "      finite_registered_atomic_concrete_route_comparison_kernel_spec =",
+        "        concrete_registered_truth_conditions_from_kernel;",
+    ]
+    for route, spec in route_specs:
+        lines.extend(
+            [
+                f"  finite_registered_atomic_concrete_route_comparison_{route}_sound :",
+                "      forall A : Type, forall term : A,",
+                "      fully_registered_truth_denotes",
+                f"        {spec} A term ->",
+                "      AtomicClosureTruth A term;",
+            ]
+        )
+    field_lines: list[str] = []
+    for index, schema in enumerate(schemas, 1):
+        for route, spec in route_specs:
+            type_lines = coq_schema_truth_type(schema, spec)
+            field_lines.append(
+                "  "
+                "finite_registered_atomic_concrete_route_comparison_"
+                f"lexical_{index}_{route}_truth : "
+                + type_lines[0]
+            )
+            field_lines.extend(type_lines[1:])
+            field_lines[-1] += ";"
+    for index, transition in enumerate(transitions, 1):
+        for route, spec in route_specs:
+            field_lines.extend(
+                [
+                    "  "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth :",
+                    f"      {coq_transition_truth_type(transition, spec)};",
+                ]
+            )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition finite_registered_atomic_concrete_route_comparison_certificate :",
+            "  FiniteRegisteredAtomicConcreteRouteComparisonCertificate := {|",
+            "  finite_registered_atomic_concrete_route_comparison_constructor_alignment := finite_registered_atomic_constructor_obligation_alignment_certificate;",
+            "  finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq := eq_refl;",
+            "  finite_registered_atomic_concrete_route_comparison_direct_spec := concrete_registered_truth_conditions;",
+            "  finite_registered_atomic_concrete_route_comparison_direct_spec_eq := eq_refl;",
+            "  finite_registered_atomic_concrete_route_comparison_evidence_spec := concrete_registered_evidence_backed_truth_conditions;",
+            "  finite_registered_atomic_concrete_route_comparison_evidence_spec_eq := eq_refl;",
+            "  finite_registered_atomic_concrete_route_comparison_kernel_spec := concrete_registered_truth_conditions_from_kernel;",
+            "  finite_registered_atomic_concrete_route_comparison_kernel_spec_eq := eq_refl;",
+            "  finite_registered_atomic_concrete_route_comparison_direct_sound := concrete_registered_truth_conditions_imply_atomic_closure;",
+            "  finite_registered_atomic_concrete_route_comparison_evidence_sound := concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure;",
+            "  finite_registered_atomic_concrete_route_comparison_kernel_sound := concrete_registered_truth_conditions_from_kernel_imply_atomic_closure;",
+        ]
+    )
+    assignments = []
+    for index, schema in enumerate(schemas, 1):
+        _result_type, _application, _binders, binder_names = schema_parts(schema)
+        for route, _spec in route_specs:
+            assignments.append(
+                (
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_truth",
+                    coq_schema_truth_value(index, route, binder_names),
+                )
+            )
+    for index, _transition in enumerate(transitions, 1):
+        for route, _spec in route_specs:
+            assignments.append(
+                (
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth",
+                    coq_transition_truth_value(index, route),
+                )
+            )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem finite_registered_atomic_concrete_route_comparison_certificate_exists :",
+            "  exists C : FiniteRegisteredAtomicConcreteRouteComparisonCertificate,",
+            "    C = finite_registered_atomic_concrete_route_comparison_certificate.",
+            "Proof.",
+            "  exists finite_registered_atomic_concrete_route_comparison_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches :",
+            "  finite_registered_atomic_concrete_route_comparison_constructor_alignment",
+            "    finite_registered_atomic_concrete_route_comparison_certificate =",
+            "  finite_registered_atomic_constructor_obligation_alignment_certificate.",
+            "Proof.",
+            "  exact (finite_registered_atomic_concrete_route_comparison_constructor_alignment_eq",
+            "    finite_registered_atomic_concrete_route_comparison_certificate).",
+            "Qed.",
+        ]
+    )
+    for route, spec in route_specs:
+        lines.extend(
+            [
+                "",
+                f"Theorem finite_registered_atomic_concrete_route_comparison_{route}_spec_matches :",
+                "  finite_registered_atomic_concrete_route_comparison_"
+                f"{route}_spec",
+                "    finite_registered_atomic_concrete_route_comparison_certificate =",
+                f"  {spec}.",
+                "Proof.",
+                "  exact (finite_registered_atomic_concrete_route_comparison_"
+                f"{route}_spec_eq",
+                "    finite_registered_atomic_concrete_route_comparison_certificate).",
+                "Qed.",
+                "",
+                f"Theorem finite_registered_atomic_concrete_route_comparison_{route}_sound_projected :",
+                "  forall A : Type, forall term : A,",
+                "    fully_registered_truth_denotes",
+                f"      {spec} A term ->",
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                "  exact (finite_registered_atomic_concrete_route_comparison_"
+                f"{route}_sound",
+                "    finite_registered_atomic_concrete_route_comparison_certificate).",
+                "Qed.",
+            ]
+        )
+    for index, schema in enumerate(schemas, 1):
+        result_type, application, _binders, binder_names = schema_parts(schema)
+        for route, spec in route_specs:
+            truth_lines = coq_schema_truth_type(schema, spec)
+            lines.extend(
+                [
+                    "",
+                    "Theorem "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_truth_projected :",
+                    f"  {truth_lines[0]}",
+                ]
+            )
+            lines.extend(truth_lines[1:])
+            lines[-1] += "."
+            lines.extend(
+                [
+                    "Proof.",
+                    "  exact (finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_truth",
+                    "    finite_registered_atomic_concrete_route_comparison_certificate).",
+                    "Qed.",
+                    "",
+                    "Theorem "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_atomic_projected :",
+                ]
+            )
+            atomic_lines = coq_schema_atomic_type(schema)
+            lines.append(f"  {atomic_lines[0]}")
+            lines.extend(atomic_lines[1:])
+            lines[-1] += "."
+            lines.append("Proof.")
+            if binder_names:
+                lines.append(f"  intros {' '.join(binder_names)}.")
+            truth_call = (
+                "finite_registered_atomic_concrete_route_comparison_"
+                f"lexical_{index}_{route}_truth_projected"
+            )
+            if binder_names:
+                truth_call += " " + " ".join(binder_names)
+            lines.extend(
+                [
+                    "  exact (finite_registered_atomic_concrete_route_comparison_"
+                    f"{route}_sound_projected",
+                    f"    {result_type} ({application}) ({truth_call})).",
+                    "Qed.",
+                ]
+            )
+    for index, transition in enumerate(transitions, 1):
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        for route, spec in route_specs:
+            lines.extend(
+                [
+                    "",
+                    "Theorem "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth_projected :",
+                    f"  {coq_transition_truth_type(transition, spec)}.",
+                    "Proof.",
+                    "  exact (finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth",
+                    "    finite_registered_atomic_concrete_route_comparison_certificate).",
+                    "Qed.",
+                    "",
+                    "Theorem "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_atomic_projected :",
+                    f"  {coq_transition_atomic_type(transition)}.",
+                    "Proof.",
+                    "  exact (finite_registered_atomic_concrete_route_comparison_"
+                    f"{route}_sound_projected",
+                    f"    TransitionT {term}",
+                    "    (finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth_projected)).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -24342,6 +24939,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_atomic_concrete_route_comparison_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -25572,6 +26176,53 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "#check "
                 f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_from_certificate"
             )
+        lines.append(
+            "#check FiniteRegisteredAtomicConcreteRouteComparisonCertificate"
+        )
+        lines.append(
+            "#check finite_registered_atomic_concrete_route_comparison_certificate"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_concrete_route_comparison_certificate_exists"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches"
+        )
+        for route in ("direct", "evidence", "kernel"):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_route_comparison_{route}_spec_matches"
+            )
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_concrete_route_comparison_{route}_sound_projected"
+            )
+        for index in range(1, len(declarations["lexical_applications"]) + 1):
+            for route in ("direct", "evidence", "kernel"):
+                lines.append(
+                    "#check "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_truth_projected"
+                )
+                lines.append(
+                    "#check "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"lexical_{index}_{route}_atomic_projected"
+                )
+        for index in range(1, len(declarations["transitions"]) + 1):
+            for route in ("direct", "evidence", "kernel"):
+                lines.append(
+                    "#check "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_truth_projected"
+                )
+                lines.append(
+                    "#check "
+                    "finite_registered_atomic_concrete_route_comparison_"
+                    f"transition_{index}_{route}_atomic_projected"
+                )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -26394,6 +27045,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         finite_registered_atomic_constructor_obligation_alignment_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        finite_registered_atomic_concrete_route_comparison_certificate_lines(
             declarations,
             target,
         )
@@ -27469,6 +28127,48 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             f"finite_registered_atomic_constructor_obligation_alignment_transition_{index}_atomic_from_certificate."
         )
+    lines.append("Check FiniteRegisteredAtomicConcreteRouteComparisonCertificate.")
+    lines.append("Check finite_registered_atomic_concrete_route_comparison_certificate.")
+    lines.append(
+        "Check finite_registered_atomic_concrete_route_comparison_certificate_exists."
+    )
+    lines.append(
+        "Check "
+        "finite_registered_atomic_concrete_route_comparison_constructor_alignment_matches."
+    )
+    for route in ("direct", "evidence", "kernel"):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_route_comparison_{route}_spec_matches."
+        )
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_concrete_route_comparison_{route}_sound_projected."
+        )
+    for index in range(1, len(declarations["lexical_applications"]) + 1):
+        for route in ("direct", "evidence", "kernel"):
+            lines.append(
+                "Check "
+                "finite_registered_atomic_concrete_route_comparison_"
+                f"lexical_{index}_{route}_truth_projected."
+            )
+            lines.append(
+                "Check "
+                "finite_registered_atomic_concrete_route_comparison_"
+                f"lexical_{index}_{route}_atomic_projected."
+            )
+    for index in range(1, len(declarations["transitions"]) + 1):
+        for route in ("direct", "evidence", "kernel"):
+            lines.append(
+                "Check "
+                "finite_registered_atomic_concrete_route_comparison_"
+                f"transition_{index}_{route}_truth_projected."
+            )
+            lines.append(
+                "Check "
+                "finite_registered_atomic_concrete_route_comparison_"
+                f"transition_{index}_{route}_atomic_projected."
+            )
     return "\n".join(lines) + "\n"
 
 
