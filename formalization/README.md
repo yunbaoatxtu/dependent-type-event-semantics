@@ -409,7 +409,13 @@ packages this source discipline as
 `FiniteRegisteredAtomicKernelAlignmentCertificate`, instantiates
 `finite_registered_atomic_kernel_alignment_certificate`, checks registered
 lexical and transition sources through `ConcreteRegisteredTruthKernel`, and
-projects the resulting kernel denotations back to `AtomicClosureTruth`.
+projects the resulting kernel denotations back to `AtomicClosureTruth`. The
+truth-condition-source layer then packages that alignment as
+`FiniteRegisteredAtomicTruthConditionSourceCertificate`, instantiates
+`finite_registered_atomic_truth_condition_source_certificate`, projects each
+registered lexical and transition source into `concrete_registered_truth_conditions`,
+reuses the source-to-kernel route, and checks the resulting finite registered
+atoms back to `AtomicClosureTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

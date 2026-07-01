@@ -7787,6 +7787,214 @@ Proof.
     (finite_registered_atomic_source_transition_1_source_projected)).
 Qed.
 
+Record FiniteRegisteredAtomicTruthConditionSourceCertificate : Type := {
+  finite_registered_atomic_truth_condition_source_alignment : FiniteRegisteredAtomicKernelAlignmentCertificate;
+  finite_registered_atomic_truth_condition_source_alignment_eq :
+      finite_registered_atomic_truth_condition_source_alignment = finite_registered_atomic_kernel_alignment_certificate;
+  finite_registered_atomic_truth_condition_source_spec : FullyRegisteredTruthConditionSpec;
+  finite_registered_atomic_truth_condition_source_spec_eq :
+      finite_registered_atomic_truth_condition_source_spec = concrete_registered_truth_conditions;
+  finite_registered_atomic_truth_condition_source_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes concrete_registered_truth_conditions A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_truth_condition_source_lexical_1_source_to_spec : RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_truth_condition_source_lexical_2_source_to_spec : RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec : forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_truth_condition_source_lexical_4_source_to_spec : RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John);
+  finite_registered_atomic_truth_condition_source_transition_1_source_to_spec : RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken)
+}.
+
+Definition finite_registered_atomic_truth_condition_source_certificate :
+  FiniteRegisteredAtomicTruthConditionSourceCertificate := {|
+  finite_registered_atomic_truth_condition_source_alignment := finite_registered_atomic_kernel_alignment_certificate;
+  finite_registered_atomic_truth_condition_source_alignment_eq := eq_refl;
+  finite_registered_atomic_truth_condition_source_spec := concrete_registered_truth_conditions;
+  finite_registered_atomic_truth_condition_source_spec_eq := eq_refl;
+  finite_registered_atomic_truth_condition_source_sound := concrete_registered_truth_conditions_imply_atomic_closure;
+  finite_registered_atomic_truth_condition_source_lexical_1_source_to_spec := fun h_source => fully_registered_truth_lexical_application concrete_registered_truth_conditions PropT (break 0 mods_nil John vase) h_source;
+  finite_registered_atomic_truth_condition_source_lexical_2_source_to_spec := fun h_source => fully_registered_truth_lexical_application concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) h_source;
+  finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec := fun x_theme h_source => fully_registered_truth_lexical_application concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme) h_source;
+  finite_registered_atomic_truth_condition_source_lexical_4_source_to_spec := fun h_source => fully_registered_truth_lexical_application concrete_registered_truth_conditions PropT (knock 0 mods_nil John) h_source;
+  finite_registered_atomic_truth_condition_source_transition_1_source_to_spec := fun h_source => fully_registered_truth_transition concrete_registered_truth_conditions vase integrity_scale intact broken h_source
+|}.
+
+Theorem finite_registered_atomic_truth_condition_source_certificate_exists :
+  exists C : FiniteRegisteredAtomicTruthConditionSourceCertificate,
+    C = finite_registered_atomic_truth_condition_source_certificate.
+Proof.
+  exists finite_registered_atomic_truth_condition_source_certificate.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_alignment_matches :
+  finite_registered_atomic_truth_condition_source_alignment
+    finite_registered_atomic_truth_condition_source_certificate =
+  finite_registered_atomic_kernel_alignment_certificate.
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_alignment_eq
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_spec_matches :
+  finite_registered_atomic_truth_condition_source_spec
+    finite_registered_atomic_truth_condition_source_certificate =
+  concrete_registered_truth_conditions.
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_spec_eq
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes concrete_registered_truth_conditions A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_sound
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_1_source_to_spec_projected :
+  RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_lexical_1_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_1_source_to_kernel_projected :
+  RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_kernel_alignment_lexical_1_source_to_kernel
+    (finite_registered_atomic_truth_condition_source_alignment
+      finite_registered_atomic_truth_condition_source_certificate)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_1_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_source_lexical_1_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate
+    (finite_registered_atomic_source_lexical_1_source_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_2_source_to_spec_projected :
+  RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_lexical_2_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_2_source_to_kernel_projected :
+  RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_kernel_alignment_lexical_2_source_to_kernel
+    (finite_registered_atomic_truth_condition_source_alignment
+      finite_registered_atomic_truth_condition_source_certificate)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_2_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_source_lexical_2_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate
+    (finite_registered_atomic_source_lexical_2_source_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec_projected :
+  forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_3_source_to_kernel_projected :
+  forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      concrete_registered_kernel_denotes concrete_registered_truth_kernel Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_kernel_alignment_lexical_3_source_to_kernel
+    (finite_registered_atomic_truth_condition_source_alignment
+      finite_registered_atomic_truth_condition_source_certificate)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_3_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate
+    x_theme
+    (finite_registered_atomic_source_lexical_3_source_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_4_source_to_spec_projected :
+  RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_lexical_4_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_4_source_to_kernel_projected :
+  RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      concrete_registered_kernel_denotes concrete_registered_truth_kernel PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel
+    (finite_registered_atomic_truth_condition_source_alignment
+      finite_registered_atomic_truth_condition_source_certificate)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_lexical_4_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_source_lexical_4_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate
+    (finite_registered_atomic_source_lexical_4_source_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_transition_1_source_to_spec_projected :
+  RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      fully_registered_truth_denotes concrete_registered_truth_conditions TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_truth_condition_source_transition_1_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_transition_1_source_to_kernel_projected :
+  RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      concrete_registered_kernel_denotes concrete_registered_truth_kernel TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel
+    (finite_registered_atomic_truth_condition_source_alignment
+      finite_registered_atomic_truth_condition_source_certificate)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_source_transition_1_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  apply concrete_registered_truth_conditions_imply_atomic_closure.
+  exact (finite_registered_atomic_truth_condition_source_transition_1_source_to_spec
+    finite_registered_atomic_truth_condition_source_certificate
+    (finite_registered_atomic_source_transition_1_source_projected)).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -8292,3 +8500,24 @@ Check finite_registered_atomic_kernel_alignment_lexical_4_source_to_kernel_proje
 Check finite_registered_atomic_kernel_alignment_lexical_4_atomic_projected.
 Check finite_registered_atomic_kernel_alignment_transition_1_source_to_kernel_projected.
 Check finite_registered_atomic_kernel_alignment_transition_1_atomic_projected.
+Check FiniteRegisteredAtomicTruthConditionSourceCertificate.
+Check finite_registered_atomic_truth_condition_source_certificate.
+Check finite_registered_atomic_truth_condition_source_certificate_exists.
+Check finite_registered_atomic_truth_condition_source_alignment_matches.
+Check finite_registered_atomic_truth_condition_source_spec_matches.
+Check finite_registered_atomic_truth_condition_source_sound_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_1_source_to_spec_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_1_source_to_kernel_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_1_atomic_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_2_source_to_spec_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_2_source_to_kernel_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_2_atomic_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_3_source_to_kernel_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_3_atomic_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_4_source_to_spec_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_4_source_to_kernel_projected.
+Check finite_registered_atomic_truth_condition_source_lexical_4_atomic_projected.
+Check finite_registered_atomic_truth_condition_source_transition_1_source_to_spec_projected.
+Check finite_registered_atomic_truth_condition_source_transition_1_source_to_kernel_projected.
+Check finite_registered_atomic_truth_condition_source_transition_1_atomic_projected.

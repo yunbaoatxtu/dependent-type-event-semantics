@@ -12793,6 +12793,595 @@ def finite_registered_atomic_kernel_alignment_certificate_lines(
     return lines
 
 
+def finite_registered_atomic_truth_condition_source_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Expose finite registered atom sources as concrete truth-condition inputs."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    transitions: list[tuple[str, str, str, str]] = declarations["transitions"]
+
+    def schema_parts(
+        schema: LexicalApplicationSchema,
+    ) -> tuple[str, str, list[tuple[str, str]], list[str]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        binder_names = [name for name, _type_name in binders]
+        return result_type, lexical_application_term(schema), binders, binder_names
+
+    def transition_parts(
+        transition: tuple[str, str, str, str],
+    ) -> tuple[str, str, str, str, str]:
+        theme, scale, source, target_state = transition
+        return theme, scale, source, target_state, (
+            f"(Transition {theme} {scale} {source} {target_state})"
+        )
+
+    def lean_schema_source_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        source = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        conclusion = (
+            "concrete_registered_truth_conditions."
+            f"fully_registered_truth_denotes {result_type} ({application})"
+        )
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, source, conclusion])
+
+    def lean_schema_kernel_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        source = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        conclusion = (
+            "concrete_registered_truth_kernel."
+            f"concrete_registered_kernel_denotes {result_type} ({application})"
+        )
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, source, conclusion])
+
+    def lean_schema_source_value(schema: LexicalApplicationSchema) -> str:
+        result_type, application, _binders, binder_names = schema_parts(schema)
+        h_name = "h_source"
+        args = [*binder_names, h_name]
+        value = (
+            "concrete_registered_truth_conditions."
+            "fully_registered_truth_lexical_application "
+            f"{result_type} ({application}) {h_name}"
+        )
+        return f"fun {' '.join(args)} => {value}"
+
+    def lean_schema_atomic_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_source_call(index: int, binder_names: list[str]) -> str:
+        call = f"finite_registered_atomic_source_lexical_{index}_source_projected"
+        if binder_names:
+            call += " " + " ".join(binder_names)
+        return call
+
+    def lean_truth_condition_source_call(index: int, binder_names: list[str]) -> str:
+        call = (
+            "finite_registered_atomic_truth_condition_source_certificate."
+            f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec"
+        )
+        if binder_names:
+            call += " " + " ".join(binder_names)
+        return call
+
+    def lean_transition_source_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, term = transition_parts(transition)
+        return (
+            "RegisteredStateTransitionTruth "
+            f"{theme} {scale} {source} {target_state} -> "
+            "concrete_registered_truth_conditions."
+            f"fully_registered_truth_denotes TransitionT {term}"
+        )
+
+    def lean_transition_kernel_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, term = transition_parts(transition)
+        return (
+            "RegisteredStateTransitionTruth "
+            f"{theme} {scale} {source} {target_state} -> "
+            "concrete_registered_truth_kernel."
+            f"concrete_registered_kernel_denotes TransitionT {term}"
+        )
+
+    def lean_transition_source_value(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_parts(transition)
+        return (
+            "fun h_source => concrete_registered_truth_conditions."
+            "fully_registered_truth_transition "
+            f"{theme} {scale} {source} {target_state} h_source"
+        )
+
+    def lean_transition_atomic_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        return f"AtomicClosureTruth TransitionT {term}"
+
+    def coq_schema_source_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        source = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        conclusion = (
+            "fully_registered_truth_denotes concrete_registered_truth_conditions "
+            f"{result_type} ({application})"
+        )
+        if not binders:
+            return [f"{source} ->", f"      {conclusion}"]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {source} ->", f"      {conclusion}"]
+
+    def coq_schema_kernel_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        source = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        conclusion = (
+            "concrete_registered_kernel_denotes concrete_registered_truth_kernel "
+            f"{result_type} ({application})"
+        )
+        if not binders:
+            return [f"{source} ->", f"      {conclusion}"]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {source} ->", f"      {conclusion}"]
+
+    def coq_schema_source_value(schema: LexicalApplicationSchema) -> str:
+        result_type, application, _binders, binder_names = schema_parts(schema)
+        h_name = "h_source"
+        value = (
+            "fully_registered_truth_lexical_application "
+            f"concrete_registered_truth_conditions {result_type} "
+            f"({application}) {h_name}"
+        )
+        return f"fun {' '.join([*binder_names, h_name])} => {value}"
+
+    def coq_schema_atomic_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_transition_source_type(
+        transition: tuple[str, str, str, str],
+    ) -> list[str]:
+        theme, scale, source, target_state, term = transition_parts(transition)
+        return [
+            "RegisteredStateTransitionTruth "
+            f"{theme} {scale} {source} {target_state} ->",
+            "      fully_registered_truth_denotes concrete_registered_truth_conditions "
+            f"TransitionT {term}",
+        ]
+
+    def coq_transition_kernel_type(
+        transition: tuple[str, str, str, str],
+    ) -> list[str]:
+        theme, scale, source, target_state, term = transition_parts(transition)
+        return [
+            "RegisteredStateTransitionTruth "
+            f"{theme} {scale} {source} {target_state} ->",
+            "      concrete_registered_kernel_denotes concrete_registered_truth_kernel "
+            f"TransitionT {term}",
+        ]
+
+    def coq_transition_source_value(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_parts(transition)
+        return (
+            "fun h_source => fully_registered_truth_transition "
+            f"concrete_registered_truth_conditions {theme} {scale} "
+            f"{source} {target_state} h_source"
+        )
+
+    def coq_transition_atomic_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        _theme, _scale, _source, _target_state, term = transition_parts(transition)
+        return f"AtomicClosureTruth TransitionT {term}"
+
+    if target == "lean":
+        lines = [
+            "structure FiniteRegisteredAtomicTruthConditionSourceCertificate : Type where",
+            "  finite_registered_atomic_truth_condition_source_alignment : "
+            "FiniteRegisteredAtomicKernelAlignmentCertificate",
+            "  finite_registered_atomic_truth_condition_source_alignment_eq :",
+            "      finite_registered_atomic_truth_condition_source_alignment = "
+            "finite_registered_atomic_kernel_alignment_certificate",
+            "  finite_registered_atomic_truth_condition_source_spec : "
+            "FullyRegisteredTruthConditionSpec",
+            "  finite_registered_atomic_truth_condition_source_spec_eq :",
+            "      finite_registered_atomic_truth_condition_source_spec = "
+            "concrete_registered_truth_conditions",
+            "  finite_registered_atomic_truth_condition_source_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_registered_truth_conditions."
+            "fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+        for index, schema in enumerate(schemas, 1):
+            lines.append(
+                "  "
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec : "
+                f"{lean_schema_source_type(schema)}"
+            )
+        for index, transition in enumerate(transitions, 1):
+            lines.append(
+                "  "
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec : "
+                f"{lean_transition_source_type(transition)}"
+            )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_atomic_truth_condition_source_certificate :",
+                "    FiniteRegisteredAtomicTruthConditionSourceCertificate := {",
+                "  finite_registered_atomic_truth_condition_source_alignment := "
+                "finite_registered_atomic_kernel_alignment_certificate,",
+                "  finite_registered_atomic_truth_condition_source_alignment_eq := rfl,",
+                "  finite_registered_atomic_truth_condition_source_spec := "
+                "concrete_registered_truth_conditions,",
+                "  finite_registered_atomic_truth_condition_source_spec_eq := rfl,",
+                "  finite_registered_atomic_truth_condition_source_sound := "
+                "concrete_registered_truth_conditions_imply_atomic_closure,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, schema in enumerate(schemas, 1):
+            assignments.append(
+                (
+                    f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec",
+                    lean_schema_source_value(schema),
+                )
+            )
+        for index, transition in enumerate(transitions, 1):
+            assignments.append(
+                (
+                    f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec",
+                    lean_transition_source_value(transition),
+                )
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem finite_registered_atomic_truth_condition_source_certificate_exists :",
+                "    Exists (fun C : "
+                "FiniteRegisteredAtomicTruthConditionSourceCertificate => "
+                "C = finite_registered_atomic_truth_condition_source_certificate) := by",
+                "  exact Exists.intro "
+                "finite_registered_atomic_truth_condition_source_certificate rfl",
+                "",
+                "theorem finite_registered_atomic_truth_condition_source_alignment_matches :",
+                "    finite_registered_atomic_truth_condition_source_certificate."
+                "finite_registered_atomic_truth_condition_source_alignment =",
+                "      finite_registered_atomic_kernel_alignment_certificate := by",
+                "  exact finite_registered_atomic_truth_condition_source_certificate."
+                "finite_registered_atomic_truth_condition_source_alignment_eq",
+                "",
+                "theorem finite_registered_atomic_truth_condition_source_spec_matches :",
+                "    finite_registered_atomic_truth_condition_source_certificate."
+                "finite_registered_atomic_truth_condition_source_spec =",
+                "      concrete_registered_truth_conditions := by",
+                "  exact finite_registered_atomic_truth_condition_source_certificate."
+                "finite_registered_atomic_truth_condition_source_spec_eq",
+                "",
+                "theorem finite_registered_atomic_truth_condition_source_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                "    concrete_registered_truth_conditions."
+                "fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact finite_registered_atomic_truth_condition_source_certificate."
+                "finite_registered_atomic_truth_condition_source_sound",
+            ]
+        )
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, _binders, binder_names = schema_parts(schema)
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec_projected :",
+                    f"    {lean_schema_source_type(schema)} := by",
+                    "  exact finite_registered_atomic_truth_condition_source_certificate."
+                    f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec",
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_kernel_projected :",
+                    f"    {lean_schema_kernel_type(schema)} := by",
+                    "  exact finite_registered_atomic_truth_condition_source_certificate."
+                    "finite_registered_atomic_truth_condition_source_alignment."
+                    f"finite_registered_atomic_kernel_alignment_lexical_{index}_source_to_kernel",
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_truth_condition_source_lexical_{index}_atomic_projected :",
+                    f"    {lean_schema_atomic_type(schema)} := by",
+                ]
+            )
+            if binder_names:
+                lines.append(f"  intro {' '.join(binder_names)}")
+            lines.extend(
+                [
+                    "  apply concrete_registered_truth_conditions_imply_atomic_closure",
+                    "  exact "
+                    f"{lean_truth_condition_source_call(index, binder_names)} "
+                    f"({lean_schema_source_call(index, binder_names)})",
+                ]
+            )
+        for index, transition in enumerate(transitions, 1):
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec_projected :",
+                    f"    {lean_transition_source_type(transition)} := by",
+                    "  exact finite_registered_atomic_truth_condition_source_certificate."
+                    f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec",
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_kernel_projected :",
+                    f"    {lean_transition_kernel_type(transition)} := by",
+                    "  exact finite_registered_atomic_truth_condition_source_certificate."
+                    "finite_registered_atomic_truth_condition_source_alignment."
+                    f"finite_registered_atomic_kernel_alignment_transition_{index}_source_to_kernel",
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_truth_condition_source_transition_{index}_atomic_projected :",
+                    f"    {lean_transition_atomic_type(transition)} := by",
+                    "  apply concrete_registered_truth_conditions_imply_atomic_closure",
+                    "  exact finite_registered_atomic_truth_condition_source_certificate."
+                    f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec "
+                    f"(finite_registered_atomic_source_transition_{index}_source_projected)",
+                ]
+            )
+        return lines
+
+    lines = [
+        "Record FiniteRegisteredAtomicTruthConditionSourceCertificate : Type := {",
+        "  finite_registered_atomic_truth_condition_source_alignment : "
+        "FiniteRegisteredAtomicKernelAlignmentCertificate;",
+        "  finite_registered_atomic_truth_condition_source_alignment_eq :",
+        "      finite_registered_atomic_truth_condition_source_alignment = "
+        "finite_registered_atomic_kernel_alignment_certificate;",
+        "  finite_registered_atomic_truth_condition_source_spec : "
+        "FullyRegisteredTruthConditionSpec;",
+        "  finite_registered_atomic_truth_condition_source_spec_eq :",
+        "      finite_registered_atomic_truth_condition_source_spec = "
+        "concrete_registered_truth_conditions;",
+        "  finite_registered_atomic_truth_condition_source_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes concrete_registered_truth_conditions A term ->",
+        "      AtomicClosureTruth A term;",
+    ]
+    for index, schema in enumerate(schemas, 1):
+        type_lines = coq_schema_source_type(schema)
+        lines.append(
+            "  "
+            f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec : "
+            + type_lines[0]
+        )
+        lines.extend(type_lines[1:])
+        lines[-1] += ";"
+    for index, transition in enumerate(transitions, 1):
+        type_lines = coq_transition_source_type(transition)
+        lines.append(
+            "  "
+            f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec : "
+            + type_lines[0]
+        )
+        lines.extend(type_lines[1:])
+        lines[-1] += ";"
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition finite_registered_atomic_truth_condition_source_certificate :",
+            "  FiniteRegisteredAtomicTruthConditionSourceCertificate := {|",
+            "  finite_registered_atomic_truth_condition_source_alignment := "
+            "finite_registered_atomic_kernel_alignment_certificate;",
+            "  finite_registered_atomic_truth_condition_source_alignment_eq := eq_refl;",
+            "  finite_registered_atomic_truth_condition_source_spec := "
+            "concrete_registered_truth_conditions;",
+            "  finite_registered_atomic_truth_condition_source_spec_eq := eq_refl;",
+            "  finite_registered_atomic_truth_condition_source_sound := "
+            "concrete_registered_truth_conditions_imply_atomic_closure;",
+        ]
+    )
+    assignments = []
+    for index, schema in enumerate(schemas, 1):
+        assignments.append(
+            (
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec",
+                coq_schema_source_value(schema),
+            )
+        )
+    for index, transition in enumerate(transitions, 1):
+        assignments.append(
+            (
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec",
+                coq_transition_source_value(transition),
+            )
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_source_certificate_exists :",
+            "  exists C : FiniteRegisteredAtomicTruthConditionSourceCertificate,",
+            "    C = finite_registered_atomic_truth_condition_source_certificate.",
+            "Proof.",
+            "  exists finite_registered_atomic_truth_condition_source_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_source_alignment_matches :",
+            "  finite_registered_atomic_truth_condition_source_alignment",
+            "    finite_registered_atomic_truth_condition_source_certificate =",
+            "  finite_registered_atomic_kernel_alignment_certificate.",
+            "Proof.",
+            "  exact (finite_registered_atomic_truth_condition_source_alignment_eq",
+            "    finite_registered_atomic_truth_condition_source_certificate).",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_source_spec_matches :",
+            "  finite_registered_atomic_truth_condition_source_spec",
+            "    finite_registered_atomic_truth_condition_source_certificate =",
+            "  concrete_registered_truth_conditions.",
+            "Proof.",
+            "  exact (finite_registered_atomic_truth_condition_source_spec_eq",
+            "    finite_registered_atomic_truth_condition_source_certificate).",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_source_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes concrete_registered_truth_conditions A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (finite_registered_atomic_truth_condition_source_sound",
+            "    finite_registered_atomic_truth_condition_source_certificate).",
+            "Qed.",
+        ]
+    )
+    for index, schema in enumerate(schemas, 1):
+        _result_type, _application, _binders, binder_names = schema_parts(schema)
+        type_lines = coq_schema_source_type(schema)
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec_projected :",
+                f"  {type_lines[0]}",
+            ]
+        )
+        lines.extend(type_lines[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact ("
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec",
+                "    finite_registered_atomic_truth_condition_source_certificate).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_kernel_projected :",
+            ]
+        )
+        kernel_type_lines = coq_schema_kernel_type(schema)
+        lines.append(f"  {kernel_type_lines[0]}")
+        lines.extend(kernel_type_lines[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact ("
+                f"finite_registered_atomic_kernel_alignment_lexical_{index}_source_to_kernel",
+                "    (finite_registered_atomic_truth_condition_source_alignment",
+                "      finite_registered_atomic_truth_condition_source_certificate)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_atomic_projected :",
+            ]
+        )
+        atomic_type_lines = coq_schema_atomic_type(schema)
+        lines.append(f"  {atomic_type_lines[0]}")
+        lines.extend(atomic_type_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
+                "  exact ("
+                f"finite_registered_atomic_truth_condition_source_lexical_{index}_source_to_spec",
+                "    finite_registered_atomic_truth_condition_source_certificate",
+            ]
+        )
+        if binder_names:
+            lines.append(f"    {' '.join(binder_names)}")
+        source_call = f"finite_registered_atomic_source_lexical_{index}_source_projected"
+        if binder_names:
+            source_call += " " + " ".join(binder_names)
+        lines.extend(
+            [
+                f"    ({source_call})).",
+                "Qed.",
+            ]
+        )
+    for index, transition in enumerate(transitions, 1):
+        type_lines = coq_transition_source_type(transition)
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec_projected :",
+                f"  {type_lines[0]}",
+            ]
+        )
+        lines.extend(type_lines[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact ("
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec",
+                "    finite_registered_atomic_truth_condition_source_certificate).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_kernel_projected :",
+            ]
+        )
+        kernel_type_lines = coq_transition_kernel_type(transition)
+        lines.append(f"  {kernel_type_lines[0]}")
+        lines.extend(kernel_type_lines[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact ("
+                f"finite_registered_atomic_kernel_alignment_transition_{index}_source_to_kernel",
+                "    (finite_registered_atomic_truth_condition_source_alignment",
+                "      finite_registered_atomic_truth_condition_source_certificate)).",
+                "Qed.",
+                "",
+                "Theorem "
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_atomic_projected :",
+                f"  {coq_transition_atomic_type(transition)}.",
+                "Proof.",
+                "  apply concrete_registered_truth_conditions_imply_atomic_closure.",
+                "  exact ("
+                f"finite_registered_atomic_truth_condition_source_transition_{index}_source_to_spec",
+                "    finite_registered_atomic_truth_condition_source_certificate",
+                f"    (finite_registered_atomic_source_transition_{index}_source_projected)).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -17305,6 +17894,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_atomic_truth_condition_source_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -17954,6 +18550,56 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "#check "
                 "finite_registered_atomic_kernel_alignment_"
+                f"transition_{index}_atomic_projected"
+            )
+        lines.append("#check FiniteRegisteredAtomicTruthConditionSourceCertificate")
+        lines.append(
+            "#check finite_registered_atomic_truth_condition_source_certificate"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_truth_condition_source_certificate_exists"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_truth_condition_source_alignment_matches"
+        )
+        lines.append(
+            "#check finite_registered_atomic_truth_condition_source_spec_matches"
+        )
+        lines.append(
+            "#check finite_registered_atomic_truth_condition_source_sound_projected"
+        )
+        for index in range(1, len(declarations["lexical_applications"]) + 1):
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_source_"
+                f"lexical_{index}_source_to_spec_projected"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_source_"
+                f"lexical_{index}_source_to_kernel_projected"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_source_"
+                f"lexical_{index}_atomic_projected"
+            )
+        for index in range(1, len(declarations["transitions"]) + 1):
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_source_"
+                f"transition_{index}_source_to_spec_projected"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_source_"
+                f"transition_{index}_source_to_kernel_projected"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_source_"
                 f"transition_{index}_atomic_projected"
             )
         return "\n".join(lines) + "\n"
@@ -18692,6 +19338,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(
+        finite_registered_atomic_truth_condition_source_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -19233,6 +19886,46 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             f"finite_registered_atomic_kernel_alignment_transition_{index}_atomic_projected."
+        )
+    lines.append("Check FiniteRegisteredAtomicTruthConditionSourceCertificate.")
+    lines.append("Check finite_registered_atomic_truth_condition_source_certificate.")
+    lines.append(
+        "Check finite_registered_atomic_truth_condition_source_certificate_exists."
+    )
+    lines.append("Check finite_registered_atomic_truth_condition_source_alignment_matches.")
+    lines.append("Check finite_registered_atomic_truth_condition_source_spec_matches.")
+    lines.append("Check finite_registered_atomic_truth_condition_source_sound_projected.")
+    for index in range(1, len(declarations["lexical_applications"]) + 1):
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_source_"
+            f"lexical_{index}_source_to_spec_projected."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_source_"
+            f"lexical_{index}_source_to_kernel_projected."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_source_"
+            f"lexical_{index}_atomic_projected."
+        )
+    for index in range(1, len(declarations["transitions"]) + 1):
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_source_"
+            f"transition_{index}_source_to_spec_projected."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_source_"
+            f"transition_{index}_source_to_kernel_projected."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_source_"
+            f"transition_{index}_atomic_projected."
         )
     return "\n".join(lines) + "\n"
 

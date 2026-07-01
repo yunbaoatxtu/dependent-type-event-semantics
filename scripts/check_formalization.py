@@ -836,6 +836,90 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_truth_condition_source_lexical_spec_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_source_lexical_\d+_source_to_spec_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_source_lexical_spec_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_source_lexical_\d+_source_to_spec_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_source_lexical_kernel_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_source_lexical_\d+_source_to_kernel_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_source_lexical_kernel_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_source_lexical_\d+_source_to_kernel_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_source_lexical_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_source_lexical_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_source_lexical_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_source_lexical_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_source_transition_spec_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_source_transition_\d+_source_to_spec_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_source_transition_spec_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_source_transition_\d+_source_to_spec_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_source_transition_kernel_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_source_transition_\d+_source_to_kernel_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_source_transition_kernel_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_source_transition_\d+_source_to_kernel_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_source_transition_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_source_transition_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_source_transition_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_source_transition_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2200,6 +2284,124 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_kernel_alignment_transition_1_atomic_projected."
+            in coq
+        ),
+        "lean finite registered atomic truth condition source certificate": (
+            lean_finite_registered_atomic_truth_condition_source_lexical_spec_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_source_lexical_kernel_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_source_lexical_atomic_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_source_transition_spec_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_source_transition_kernel_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_source_transition_atomic_count
+            == 1
+            and "structure FiniteRegisteredAtomicTruthConditionSourceCertificate : Type where"
+            in lean
+            and "finite_registered_atomic_truth_condition_source_alignment : "
+            "FiniteRegisteredAtomicKernelAlignmentCertificate" in lean
+            and "finite_registered_atomic_truth_condition_source_spec : "
+            "FullyRegisteredTruthConditionSpec" in lean
+            and "finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec : "
+            "(x_theme : Food) -> RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme) -> "
+            "concrete_registered_truth_conditions."
+            "fully_registered_truth_denotes Prop (eat 0 mods_nil John x_theme)"
+            in lean
+            and "def finite_registered_atomic_truth_condition_source_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_certificate_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_alignment_matches :"
+            in lean
+            and "theorem finite_registered_atomic_truth_condition_source_spec_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_sound_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_lexical_3_source_to_kernel_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_lexical_3_atomic_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_source_transition_1_atomic_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicTruthConditionSourceCertificate"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_source_lexical_3_atomic_projected"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_source_transition_1_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic truth condition source certificate": (
+            coq_finite_registered_atomic_truth_condition_source_lexical_spec_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_source_lexical_kernel_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_source_lexical_atomic_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_source_transition_spec_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_source_transition_kernel_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_source_transition_atomic_count
+            == 1
+            and "Record FiniteRegisteredAtomicTruthConditionSourceCertificate : Type := {"
+            in coq
+            and "finite_registered_atomic_truth_condition_source_alignment : "
+            "FiniteRegisteredAtomicKernelAlignmentCertificate;" in coq
+            and "finite_registered_atomic_truth_condition_source_spec : "
+            "FullyRegisteredTruthConditionSpec;" in coq
+            and "finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec : "
+            "forall x_theme : Food," in coq
+            and "RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme) ->" in coq
+            and "fully_registered_truth_denotes concrete_registered_truth_conditions "
+            "Prop (eat 0 mods_nil John x_theme);" in coq
+            and "Definition finite_registered_atomic_truth_condition_source_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_certificate_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_alignment_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_truth_condition_source_spec_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_sound_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_lexical_3_source_to_spec_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_lexical_3_source_to_kernel_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_lexical_3_atomic_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_source_transition_1_atomic_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicTruthConditionSourceCertificate."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_source_lexical_3_atomic_projected."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_source_transition_1_atomic_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (
