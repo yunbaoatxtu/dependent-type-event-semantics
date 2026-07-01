@@ -8911,6 +8911,162 @@ Proof.
     (finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_truth_projected)).
 Qed.
 
+Record FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate : Type := {
+  finite_registered_atomic_truth_condition_discharge_alignment : FiniteRegisteredAtomicTruthConditionIndependentSuiteAlignmentCertificate;
+  finite_registered_atomic_truth_condition_discharge_alignment_eq :
+      finite_registered_atomic_truth_condition_discharge_alignment = finite_registered_atomic_truth_condition_independent_suite_alignment_certificate;
+  finite_registered_atomic_truth_condition_discharge_spec : FullyRegisteredTruthConditionSpec;
+  finite_registered_atomic_truth_condition_discharge_spec_eq :
+      finite_registered_atomic_truth_condition_discharge_spec = independent_registered_clause_spec independent_registered_truth_condition_clause_instances;
+  finite_registered_atomic_truth_condition_discharge_truth_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_truth_condition_discharge_lexical_1_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_truth_condition_discharge_lexical_1_atomic : AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_truth_condition_discharge_lexical_2_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_truth_condition_discharge_lexical_2_atomic : AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_truth_condition_discharge_lexical_3_truth : forall x_theme : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_truth_condition_discharge_lexical_3_atomic : forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_truth_condition_discharge_lexical_4_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (knock 0 mods_nil John);
+  finite_registered_atomic_truth_condition_discharge_lexical_4_atomic : AtomicClosureTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_truth_condition_discharge_transition_1_truth : fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_truth_condition_discharge_transition_1_atomic : AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken)
+}.
+
+Definition finite_registered_atomic_truth_condition_instance_discharge_certificate :
+  FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate := {|
+  finite_registered_atomic_truth_condition_discharge_alignment := finite_registered_atomic_truth_condition_independent_suite_alignment_certificate;
+  finite_registered_atomic_truth_condition_discharge_alignment_eq := eq_refl;
+  finite_registered_atomic_truth_condition_discharge_spec := independent_registered_clause_spec independent_registered_truth_condition_clause_instances;
+  finite_registered_atomic_truth_condition_discharge_spec_eq := eq_refl;
+  finite_registered_atomic_truth_condition_discharge_truth_sound := finite_registered_atomic_truth_condition_independent_suite_alignment_truth_sound_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_1_truth := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_1_truth_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_1_atomic := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_1_atomic_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_2_truth := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_2_truth_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_2_atomic := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_2_atomic_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_3_truth := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_3_truth_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_3_atomic := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_3_atomic_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_4_truth := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_4_truth_projected;
+  finite_registered_atomic_truth_condition_discharge_lexical_4_atomic := finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_4_atomic_projected;
+  finite_registered_atomic_truth_condition_discharge_transition_1_truth := finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_truth_projected;
+  finite_registered_atomic_truth_condition_discharge_transition_1_atomic := finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_atomic_projected
+|}.
+
+Theorem finite_registered_atomic_truth_condition_instance_discharge_certificate_exists :
+  exists C : FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate,
+    C = finite_registered_atomic_truth_condition_instance_discharge_certificate.
+Proof.
+  exists finite_registered_atomic_truth_condition_instance_discharge_certificate.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_alignment_matches :
+  finite_registered_atomic_truth_condition_discharge_alignment
+    finite_registered_atomic_truth_condition_instance_discharge_certificate =
+  finite_registered_atomic_truth_condition_independent_suite_alignment_certificate.
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_alignment_eq
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_spec_matches :
+  finite_registered_atomic_truth_condition_discharge_spec
+    finite_registered_atomic_truth_condition_instance_discharge_certificate =
+  independent_registered_clause_spec
+    independent_registered_truth_condition_clause_instances.
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_spec_eq
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_truth_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_truth_sound
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_1_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_1_truth
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_1_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_1_atomic
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_2_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_2_truth
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_2_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_2_atomic
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_3_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_3_truth
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_3_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_3_atomic
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_4_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_4_truth
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_lexical_4_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_lexical_4_atomic
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_transition_1_truth_projected :
+  fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_transition_1_truth
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_discharge_transition_1_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_truth_condition_discharge_transition_1_atomic
+    finite_registered_atomic_truth_condition_instance_discharge_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -9533,3 +9689,19 @@ Check finite_registered_atomic_truth_condition_independent_suite_alignment_lexic
 Check finite_registered_atomic_truth_condition_independent_suite_alignment_lexical_4_atomic_projected.
 Check finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_truth_projected.
 Check finite_registered_atomic_truth_condition_independent_suite_alignment_transition_1_atomic_projected.
+Check FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate.
+Check finite_registered_atomic_truth_condition_instance_discharge_certificate.
+Check finite_registered_atomic_truth_condition_instance_discharge_certificate_exists.
+Check finite_registered_atomic_truth_condition_discharge_alignment_matches.
+Check finite_registered_atomic_truth_condition_discharge_spec_matches.
+Check finite_registered_atomic_truth_condition_discharge_truth_sound_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_1_truth_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_1_atomic_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_2_truth_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_2_atomic_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_3_truth_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_3_atomic_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_4_truth_projected.
+Check finite_registered_atomic_truth_condition_discharge_lexical_4_atomic_projected.
+Check finite_registered_atomic_truth_condition_discharge_transition_1_truth_projected.
+Check finite_registered_atomic_truth_condition_discharge_transition_1_atomic_projected.

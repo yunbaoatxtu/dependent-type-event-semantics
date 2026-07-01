@@ -4676,6 +4676,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition finite_registered_atomic_truth_condition_instance_discharge_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_truth_condition_discharge_lexical_2_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_truth_condition_discharge_lexical_2_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_truth_condition_discharge_transition_1_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check finite_registered_atomic_truth_condition_discharge_transition_1_atomic_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17465,6 +17489,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_finite_registered_atomic_truth_condition_evidence_ledger",
                 "coq_finite_registered_atomic_truth_condition_evidence_source_alignment_certificate",
                 "coq_finite_registered_atomic_truth_condition_independent_suite_alignment_certificate",
+                "coq_finite_registered_atomic_truth_condition_instance_discharge_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -26816,6 +26841,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_finite_registered_atomic_truth_condition_independent_suite_alignment_certificate`",
             readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_finite_registered_atomic_truth_condition_instance_discharge_certificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27283,6 +27316,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_finite_registered_atomic_truth_condition_independent_suite_alignment_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_finite_registered_atomic_truth_condition_instance_discharge_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

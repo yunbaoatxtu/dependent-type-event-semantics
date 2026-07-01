@@ -21269,6 +21269,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_truth_condition_"
+                    "instance_discharge_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21566,6 +21574,14 @@ def project_completion_status_payload(
                     "source through the independent registered instance "
                     "suite, and checks each suite-derived denotation back to "
                     "AtomicClosureTruth. "
+                    "The newest instance-discharge layer packages that "
+                    "suite-derived path as "
+                    "FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate: "
+                    "it records the selected independent "
+                    "FullyRegisteredTruthConditionSpec, the spec-to-atomic "
+                    "soundness projection, and both truth and atomic "
+                    "discharge fields for each finite registered lexical "
+                    "and transition atom. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
