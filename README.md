@@ -1603,6 +1603,16 @@ provider-side truth route, provider-side `AtomicClosureTruth` projection,
 constructor-ledger truth route, and constructor-ledger atomic projection. It is
 still a registered temporal constructor-class certificate, not an independent
 model of all temporal natural-language meanings.
+The next verified objective
+`coq_concrete_truth_condition_provider_repeat_class_instance_certificate`
+adds `ConcreteTruthConditionProviderRepeatClassInstanceCertificate`. This
+stage binds the event-counting/repetition provider class to
+`IndependentRegisteredRepeatTruthConditionInstances`; for `repeat n body` it
+records the provider-side truth route, provider-side `AtomicClosureTruth`
+projection, constructor-ledger truth route, and constructor-ledger atomic
+projection. It is still a registered repetition constructor-class certificate,
+not an independent model of arbitrary event individuation or discourse-level
+counting.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

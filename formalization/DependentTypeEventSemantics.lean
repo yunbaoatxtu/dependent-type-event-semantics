@@ -8933,6 +8933,105 @@ theorem concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic_p
   exact concrete_truth_condition_provider_temporal_class_instance_certificate.
     concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic
 
+structure ConcreteTruthConditionProviderRepeatClassInstanceCertificate : Type where
+  concrete_truth_condition_provider_repeat_class_source :
+      ConcreteTruthConditionProviderClassObligationSuite
+  concrete_truth_condition_provider_repeat_class_source_eq :
+      concrete_truth_condition_provider_repeat_class_source =
+        concrete_truth_condition_provider_class_obligation_suite
+  concrete_truth_condition_provider_repeat_class_instances :
+      IndependentRegisteredRepeatTruthConditionInstances
+  concrete_truth_condition_provider_repeat_class_instances_eq :
+      concrete_truth_condition_provider_repeat_class_instances =
+        independent_registered_repeat_truth_condition_instances
+  concrete_truth_condition_provider_repeat_class_provider_truth :
+      (n : Nat) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (repeat n body)
+  concrete_truth_condition_provider_repeat_class_provider_atomic :
+      (n : Nat) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+      AtomicClosureTruth PropT (repeat n body)
+  concrete_truth_condition_provider_repeat_class_ledger_truth :
+      (n : Nat) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body)
+  concrete_truth_condition_provider_repeat_class_ledger_atomic :
+      (n : Nat) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      AtomicClosureTruth PropT (repeat n body)
+
+def concrete_truth_condition_provider_repeat_class_instance_certificate :
+    ConcreteTruthConditionProviderRepeatClassInstanceCertificate := {
+  concrete_truth_condition_provider_repeat_class_source :=
+    concrete_truth_condition_provider_class_obligation_suite,
+  concrete_truth_condition_provider_repeat_class_source_eq := rfl,
+  concrete_truth_condition_provider_repeat_class_instances :=
+    independent_registered_repeat_truth_condition_instances,
+  concrete_truth_condition_provider_repeat_class_instances_eq := rfl,
+  concrete_truth_condition_provider_repeat_class_provider_truth :=
+    independent_registered_repeat_truth_condition_repeat_instance,
+  concrete_truth_condition_provider_repeat_class_provider_atomic :=
+    fun n body body_truth =>
+      concrete_truth_condition_provider_class_obligation_independent_sound_projected
+        PropT (repeat n body)
+        (independent_registered_repeat_truth_condition_repeat_instance n body body_truth),
+  concrete_truth_condition_provider_repeat_class_ledger_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_repeat_projected,
+  concrete_truth_condition_provider_repeat_class_ledger_atomic :=
+    fun n body body_truth =>
+      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+        PropT (repeat n body)
+        (concrete_truth_condition_provider_class_obligation_ledger_repeat_projected n body body_truth)
+}
+
+theorem concrete_truth_condition_provider_repeat_class_instance_certificate_exists :
+    Exists (fun C : ConcreteTruthConditionProviderRepeatClassInstanceCertificate =>
+      C = concrete_truth_condition_provider_repeat_class_instance_certificate) := by
+  exact Exists.intro concrete_truth_condition_provider_repeat_class_instance_certificate rfl
+
+theorem concrete_truth_condition_provider_repeat_class_source_matches :
+    concrete_truth_condition_provider_repeat_class_instance_certificate.
+      concrete_truth_condition_provider_repeat_class_source =
+        concrete_truth_condition_provider_class_obligation_suite := by
+  exact concrete_truth_condition_provider_repeat_class_instance_certificate.
+    concrete_truth_condition_provider_repeat_class_source_eq
+
+theorem concrete_truth_condition_provider_repeat_class_instances_match :
+    concrete_truth_condition_provider_repeat_class_instance_certificate.
+      concrete_truth_condition_provider_repeat_class_instances =
+        independent_registered_repeat_truth_condition_instances := by
+  exact concrete_truth_condition_provider_repeat_class_instance_certificate.
+    concrete_truth_condition_provider_repeat_class_instances_eq
+
+theorem concrete_truth_condition_provider_repeat_class_provider_truth_projected :
+    (n : Nat) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  exact concrete_truth_condition_provider_repeat_class_instance_certificate.
+    concrete_truth_condition_provider_repeat_class_provider_truth
+
+theorem concrete_truth_condition_provider_repeat_class_provider_atomic_projected :
+    (n : Nat) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+    AtomicClosureTruth PropT (repeat n body) := by
+  exact concrete_truth_condition_provider_repeat_class_instance_certificate.
+    concrete_truth_condition_provider_repeat_class_provider_atomic
+
+theorem concrete_truth_condition_provider_repeat_class_ledger_truth_projected :
+    (n : Nat) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  exact concrete_truth_condition_provider_repeat_class_instance_certificate.
+    concrete_truth_condition_provider_repeat_class_ledger_truth
+
+theorem concrete_truth_condition_provider_repeat_class_ledger_atomic_projected :
+    (n : Nat) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    AtomicClosureTruth PropT (repeat n body) := by
+  exact concrete_truth_condition_provider_repeat_class_instance_certificate.
+    concrete_truth_condition_provider_repeat_class_ledger_atomic
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -9939,3 +10038,12 @@ theorem concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic_p
 #check concrete_truth_condition_provider_temporal_class_provider_since_T_atomic_projected
 #check concrete_truth_condition_provider_temporal_class_ledger_since_T_truth_projected
 #check concrete_truth_condition_provider_temporal_class_ledger_since_T_atomic_projected
+#check ConcreteTruthConditionProviderRepeatClassInstanceCertificate
+#check concrete_truth_condition_provider_repeat_class_instance_certificate
+#check concrete_truth_condition_provider_repeat_class_instance_certificate_exists
+#check concrete_truth_condition_provider_repeat_class_source_matches
+#check concrete_truth_condition_provider_repeat_class_instances_match
+#check concrete_truth_condition_provider_repeat_class_provider_truth_projected
+#check concrete_truth_condition_provider_repeat_class_provider_atomic_projected
+#check concrete_truth_condition_provider_repeat_class_ledger_truth_projected
+#check concrete_truth_condition_provider_repeat_class_ledger_atomic_projected

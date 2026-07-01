@@ -24881,6 +24881,260 @@ def concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
     return lines
 
 
+def concrete_truth_condition_provider_repeat_class_instance_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Discharge the registered repetition/event-counting class."""
+
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+
+    if target == "lean":
+        return [
+            "structure ConcreteTruthConditionProviderRepeatClassInstanceCertificate : Type where",
+            "  concrete_truth_condition_provider_repeat_class_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_repeat_class_source_eq :",
+            "      concrete_truth_condition_provider_repeat_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_repeat_class_instances :",
+            "      IndependentRegisteredRepeatTruthConditionInstances",
+            "  concrete_truth_condition_provider_repeat_class_instances_eq :",
+            "      concrete_truth_condition_provider_repeat_class_instances =",
+            "        independent_registered_repeat_truth_condition_instances",
+            "  concrete_truth_condition_provider_repeat_class_provider_truth :",
+            "      (n : Nat) -> (body : PropT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT (repeat n body)",
+            "  concrete_truth_condition_provider_repeat_class_provider_atomic :",
+            "      (n : Nat) -> (body : PropT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "      AtomicClosureTruth PropT (repeat n body)",
+            "  concrete_truth_condition_provider_repeat_class_ledger_truth :",
+            "      (n : Nat) -> (body : PropT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (repeat n body)",
+            "  concrete_truth_condition_provider_repeat_class_ledger_atomic :",
+            "      (n : Nat) -> (body : PropT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "      AtomicClosureTruth PropT (repeat n body)",
+            "",
+            "def concrete_truth_condition_provider_repeat_class_instance_certificate :",
+            "    ConcreteTruthConditionProviderRepeatClassInstanceCertificate := {",
+            "  concrete_truth_condition_provider_repeat_class_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite,",
+            "  concrete_truth_condition_provider_repeat_class_source_eq := rfl,",
+            "  concrete_truth_condition_provider_repeat_class_instances :=",
+            "    independent_registered_repeat_truth_condition_instances,",
+            "  concrete_truth_condition_provider_repeat_class_instances_eq := rfl,",
+            "  concrete_truth_condition_provider_repeat_class_provider_truth :=",
+            "    independent_registered_repeat_truth_condition_repeat_instance,",
+            "  concrete_truth_condition_provider_repeat_class_provider_atomic :=",
+            "    fun n body body_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+            "        PropT (repeat n body)",
+            "        (independent_registered_repeat_truth_condition_repeat_instance n body body_truth),",
+            "  concrete_truth_condition_provider_repeat_class_ledger_truth :=",
+            "    concrete_truth_condition_provider_class_obligation_ledger_repeat_projected,",
+            "  concrete_truth_condition_provider_repeat_class_ledger_atomic :=",
+            "    fun n body body_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+            "        PropT (repeat n body)",
+            "        (concrete_truth_condition_provider_class_obligation_ledger_repeat_projected n body body_truth)",
+            "}",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_instance_certificate_exists :",
+            "    Exists (fun C : ConcreteTruthConditionProviderRepeatClassInstanceCertificate =>",
+            "      C = concrete_truth_condition_provider_repeat_class_instance_certificate) := by",
+            "  exact Exists.intro concrete_truth_condition_provider_repeat_class_instance_certificate rfl",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_source_matches :",
+            "    concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "      concrete_truth_condition_provider_repeat_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite := by",
+            "  exact concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "    concrete_truth_condition_provider_repeat_class_source_eq",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_instances_match :",
+            "    concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "      concrete_truth_condition_provider_repeat_class_instances =",
+            "        independent_registered_repeat_truth_condition_instances := by",
+            "  exact concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "    concrete_truth_condition_provider_repeat_class_instances_eq",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_provider_truth_projected :",
+            "    (n : Nat) -> (body : PropT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT (repeat n body) := by",
+            "  exact concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "    concrete_truth_condition_provider_repeat_class_provider_truth",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_provider_atomic_projected :",
+            "    (n : Nat) -> (body : PropT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "    AtomicClosureTruth PropT (repeat n body) := by",
+            "  exact concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "    concrete_truth_condition_provider_repeat_class_provider_atomic",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_ledger_truth_projected :",
+            "    (n : Nat) -> (body : PropT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (repeat n body) := by",
+            "  exact concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "    concrete_truth_condition_provider_repeat_class_ledger_truth",
+            "",
+            "theorem concrete_truth_condition_provider_repeat_class_ledger_atomic_projected :",
+            "    (n : Nat) -> (body : PropT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "    AtomicClosureTruth PropT (repeat n body) := by",
+            "  exact concrete_truth_condition_provider_repeat_class_instance_certificate.",
+            "    concrete_truth_condition_provider_repeat_class_ledger_atomic",
+        ]
+
+    return [
+        "Record ConcreteTruthConditionProviderRepeatClassInstanceCertificate : Type := {",
+        "  concrete_truth_condition_provider_repeat_class_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_repeat_class_source_eq :",
+        "      concrete_truth_condition_provider_repeat_class_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_repeat_class_instances :",
+        "      IndependentRegisteredRepeatTruthConditionInstances;",
+        "  concrete_truth_condition_provider_repeat_class_instances_eq :",
+        "      concrete_truth_condition_provider_repeat_class_instances =",
+        "        independent_registered_repeat_truth_condition_instances;",
+        "  concrete_truth_condition_provider_repeat_class_provider_truth :",
+        "      forall n : nat, forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT body ->",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT (repeat n body);",
+        "  concrete_truth_condition_provider_repeat_class_provider_atomic :",
+        "      forall n : nat, forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (repeat n body);",
+        "  concrete_truth_condition_provider_repeat_class_ledger_truth :",
+        "      forall n : nat, forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT body ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT (repeat n body);",
+        "  concrete_truth_condition_provider_repeat_class_ledger_atomic :",
+        "      forall n : nat, forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (repeat n body)",
+        "}.",
+        "",
+        "Definition concrete_truth_condition_provider_repeat_class_instance_certificate :",
+        "  ConcreteTruthConditionProviderRepeatClassInstanceCertificate := {|",
+        "  concrete_truth_condition_provider_repeat_class_source :=",
+        "    concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_repeat_class_source_eq := eq_refl;",
+        "  concrete_truth_condition_provider_repeat_class_instances :=",
+        "    independent_registered_repeat_truth_condition_instances;",
+        "  concrete_truth_condition_provider_repeat_class_instances_eq := eq_refl;",
+        "  concrete_truth_condition_provider_repeat_class_provider_truth :=",
+        "    independent_registered_repeat_truth_condition_repeat_instance;",
+        "  concrete_truth_condition_provider_repeat_class_provider_atomic :=",
+        "    fun n body body_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+        "        PropT (repeat n body)",
+        "        (independent_registered_repeat_truth_condition_repeat_instance n body body_truth);",
+        "  concrete_truth_condition_provider_repeat_class_ledger_truth :=",
+        "    concrete_truth_condition_provider_class_obligation_ledger_repeat_projected;",
+        "  concrete_truth_condition_provider_repeat_class_ledger_atomic :=",
+        "    fun n body body_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+        "        PropT (repeat n body)",
+        "        (concrete_truth_condition_provider_class_obligation_ledger_repeat_projected n body body_truth)",
+        "|}.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_instance_certificate_exists :",
+        "  exists C : ConcreteTruthConditionProviderRepeatClassInstanceCertificate,",
+        "    C = concrete_truth_condition_provider_repeat_class_instance_certificate.",
+        "Proof.",
+        "  exists concrete_truth_condition_provider_repeat_class_instance_certificate.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_source_matches :",
+        "  concrete_truth_condition_provider_repeat_class_source",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate =",
+        "  concrete_truth_condition_provider_class_obligation_suite.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_repeat_class_source_eq",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_instances_match :",
+        "  concrete_truth_condition_provider_repeat_class_instances",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate =",
+        "  independent_registered_repeat_truth_condition_instances.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_repeat_class_instances_eq",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_provider_truth_projected :",
+        "  forall n : nat, forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT body ->",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT (repeat n body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_repeat_class_provider_truth",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_provider_atomic_projected :",
+        "  forall n : nat, forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT body ->",
+        "    AtomicClosureTruth PropT (repeat n body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_repeat_class_provider_atomic",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_ledger_truth_projected :",
+        "  forall n : nat, forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT body ->",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT (repeat n body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_repeat_class_ledger_truth",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_repeat_class_ledger_atomic_projected :",
+        "  forall n : nat, forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT body ->",
+        "    AtomicClosureTruth PropT (repeat n body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_repeat_class_ledger_atomic",
+        "    concrete_truth_condition_provider_repeat_class_instance_certificate).",
+        "Qed.",
+    ]
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -29545,6 +29799,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_repeat_class_instance_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -31161,6 +31421,28 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                         "concrete_truth_condition_provider_temporal_class_"
                         f"{route}_{name}_{projection}_projected"
                     )
+        lines.append(
+            "#check ConcreteTruthConditionProviderRepeatClassInstanceCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_repeat_class_instance_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_repeat_class_instance_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_repeat_class_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_repeat_class_instances_match"
+        )
+        for route in ("provider", "ledger"):
+            for projection in ("truth", "atomic"):
+                lines.append(
+                    "#check "
+                    "concrete_truth_condition_provider_repeat_class_"
+                    f"{route}_{projection}_projected"
+                )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -32045,6 +32327,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_provider_temporal_class_instance_certificate_lines(
+            target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_repeat_class_instance_certificate_lines(
             target
         )
     )
@@ -33443,6 +33731,20 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "concrete_truth_condition_provider_temporal_class_"
                     f"{route}_{name}_{projection}_projected."
                 )
+    lines.append("Check ConcreteTruthConditionProviderRepeatClassInstanceCertificate.")
+    lines.append("Check concrete_truth_condition_provider_repeat_class_instance_certificate.")
+    lines.append(
+        "Check concrete_truth_condition_provider_repeat_class_instance_certificate_exists."
+    )
+    lines.append("Check concrete_truth_condition_provider_repeat_class_source_matches.")
+    lines.append("Check concrete_truth_condition_provider_repeat_class_instances_match.")
+    for route in ("provider", "ledger"):
+        for projection in ("truth", "atomic"):
+            lines.append(
+                "Check "
+                "concrete_truth_condition_provider_repeat_class_"
+                f"{route}_{projection}_projected."
+            )
     return "\n".join(lines) + "\n"
 
 

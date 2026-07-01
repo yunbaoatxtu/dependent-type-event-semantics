@@ -10879,6 +10879,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_concrete_truth_condition_provider_lexical_class_instance_certificate",
         "coq_concrete_truth_condition_provider_sigma_class_instance_certificate",
         "coq_concrete_truth_condition_provider_temporal_class_instance_certificate",
+        "coq_concrete_truth_condition_provider_repeat_class_instance_certificate",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
