@@ -393,8 +393,12 @@ suite subpackages as
 `finite_registered_truth_condition_component_coverage_certificate`, proves that
 each stored component matches the generated component, and checks component-level
 soundness plus per-example component-coverage projections. This still does not
-claim that the lexical and transition
-constructors have been derived from a full semantic model.
+claim that the lexical and transition constructors have been derived from a full
+semantic model. The newest finite step then exposes those registered atoms
+directly as `FiniteRegisteredAtomicWitnessCertificate`, instantiates
+`finite_registered_atomic_witness_certificate`, and checks concrete,
+`AtomicBaseTruth`, and `AtomicClosureTruth` projections for each generated
+registered lexical application and registered state transition.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

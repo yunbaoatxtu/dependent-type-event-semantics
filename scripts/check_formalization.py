@@ -696,6 +696,34 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_witness_lexical_projection_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_witness_lexical_\d+_(concrete|base|closure)_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_witness_lexical_projection_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_witness_lexical_\d+_(concrete|base|closure)_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_witness_transition_projection_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_witness_transition_\d+_(concrete|base|closure)_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_witness_transition_projection_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_witness_transition_\d+_(concrete|base|closure)_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -1789,6 +1817,77 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_truth_condition_component_coverage_example_4_atomic_sound."
+            in coq
+        ),
+        "lean finite registered atomic witness certificate": (
+            lean_finite_registered_atomic_witness_lexical_projection_count == 12
+            and lean_finite_registered_atomic_witness_transition_projection_count
+            == 3
+            and "structure FiniteRegisteredAtomicWitnessCertificate : Type where"
+            in lean
+            and "finite_registered_atomic_witness_basis : "
+            "ConcreteRegisteredTruthBasis" in lean
+            and "finite_registered_atomic_witness_lexical_3_concrete : "
+            "(x_theme : Food) -> "
+            "ConcreteRegisteredAtomicTruth Prop (eat 0 mods_nil John x_theme)"
+            in lean
+            and "finite_registered_atomic_witness_transition_1_closure : "
+            "AtomicClosureTruth TransitionT "
+            "(Transition vase integrity_scale intact broken)" in lean
+            and "def finite_registered_atomic_witness_certificate :" in lean
+            and "theorem finite_registered_atomic_witness_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_witness_basis_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_witness_lexical_3_base_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_witness_transition_1_closure_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicWitnessCertificate" in lean
+            and "#check finite_registered_atomic_witness_certificate" in lean
+            and "#check "
+            "finite_registered_atomic_witness_lexical_3_closure_projected"
+            in lean
+            and "#check "
+            "finite_registered_atomic_witness_transition_1_closure_projected"
+            in lean
+        ),
+        "coq finite registered atomic witness certificate": (
+            coq_finite_registered_atomic_witness_lexical_projection_count == 12
+            and coq_finite_registered_atomic_witness_transition_projection_count
+            == 3
+            and "Record FiniteRegisteredAtomicWitnessCertificate : Type := {"
+            in coq
+            and "finite_registered_atomic_witness_basis : "
+            "ConcreteRegisteredTruthBasis;" in coq
+            and "finite_registered_atomic_witness_lexical_3_concrete : "
+            "forall x_theme : Food," in coq
+            and "ConcreteRegisteredAtomicTruth Prop "
+            "(eat 0 mods_nil John x_theme);" in coq
+            and "finite_registered_atomic_witness_transition_1_closure : "
+            "AtomicClosureTruth TransitionT "
+            "(Transition vase integrity_scale intact broken)" in coq
+            and "Definition finite_registered_atomic_witness_certificate :"
+            in coq
+            and "Theorem finite_registered_atomic_witness_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_witness_basis_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_witness_lexical_3_base_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_witness_transition_1_closure_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicWitnessCertificate." in coq
+            and "Check finite_registered_atomic_witness_certificate." in coq
+            and "Check "
+            "finite_registered_atomic_witness_lexical_3_closure_projected."
+            in coq
+            and "Check "
+            "finite_registered_atomic_witness_transition_1_closure_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (

@@ -1422,7 +1422,13 @@ polarity, Transition/Cause, and suite subpackages as
 `FiniteRegisteredTruthConditionComponentCoverageCertificate`. It proves that
 each stored component is the generated component and exposes component-level
 soundness projections back to `AtomicClosureTruth`, plus one per-example
-component-coverage projection. The open blocker remains
+component-coverage projection. The next verified objective
+`coq_finite_registered_atomic_witness_certificate` exposes the finite registered
+atomic basis directly as `FiniteRegisteredAtomicWitnessCertificate`: each
+registered lexical application and each registered state transition receives
+separate concrete, `AtomicBaseTruth`, and `AtomicClosureTruth` projections. This
+is a more concrete witness ledger for the current registered atoms, but it is
+still finite and generated from the exported examples. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
