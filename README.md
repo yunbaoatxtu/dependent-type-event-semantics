@@ -1531,6 +1531,15 @@ concrete registered spec, the evidence-backed registered spec, and the kernel
 induced registered spec. Each route must supply its own truth-condition
 inhabitant and its own `AtomicClosureTruth` projection, so the finite atom
 basis is now route-compared rather than merely source-listed.
+The next verified objective
+`coq_finite_registered_atomic_concrete_truth_closure_certificate` adds
+`FiniteRegisteredAtomicConcreteTruthClosureCertificate`, which promotes every
+finite registered lexical atom and registered transition atom from
+`ConcreteRegisteredAtomicTruth` into `ConcreteRegisteredTruth`, projects that
+closure through the direct `concrete_registered_truth_conditions` spec, and
+checks the resulting `AtomicClosureTruth` projection. This makes the direct
+concrete closure route explicit while still remaining finite and
+registered-fragment scoped.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

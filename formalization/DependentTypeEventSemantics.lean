@@ -7056,6 +7056,187 @@ theorem finite_registered_atomic_concrete_route_comparison_transition_1_kernel_a
     AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken) := by
   exact finite_registered_atomic_concrete_route_comparison_kernel_sound_projected _ _ (finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth_projected)
 
+structure FiniteRegisteredAtomicConcreteTruthClosureCertificate : Type where
+  finite_registered_atomic_concrete_truth_closure_route_comparison : FiniteRegisteredAtomicConcreteRouteComparisonCertificate
+  finite_registered_atomic_concrete_truth_closure_route_comparison_eq :
+      finite_registered_atomic_concrete_truth_closure_route_comparison =
+        finite_registered_atomic_concrete_route_comparison_certificate
+  finite_registered_atomic_concrete_truth_closure_basis : ConcreteRegisteredTruthBasis
+  finite_registered_atomic_concrete_truth_closure_basis_eq :
+      finite_registered_atomic_concrete_truth_closure_basis = concrete_registered_truth_basis
+  finite_registered_atomic_concrete_truth_closure_to_direct_spec :
+      (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term ->
+      concrete_registered_truth_conditions.fully_registered_truth_denotes A term
+  finite_registered_atomic_concrete_truth_closure_to_atomic :
+      (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term ->
+      AtomicClosureTruth A term
+  finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_truth : ConcreteRegisteredTruth PropT (break 0 mods_nil John vase)
+  finite_registered_atomic_concrete_truth_closure_lexical_1_direct_truth : concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (break 0 mods_nil John vase)
+  finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_truth : AtomicClosureTruth PropT (break 0 mods_nil John vase)
+  finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_truth : ConcreteRegisteredTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)
+  finite_registered_atomic_concrete_truth_closure_lexical_2_direct_truth : concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)
+  finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_truth : AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)
+  finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_truth : (x_theme : Food) -> ConcreteRegisteredTruth Prop (eat 0 mods_nil John x_theme)
+  finite_registered_atomic_concrete_truth_closure_lexical_3_direct_truth : (x_theme : Food) -> concrete_registered_truth_conditions.fully_registered_truth_denotes Prop (eat 0 mods_nil John x_theme)
+  finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_truth : (x_theme : Food) -> AtomicClosureTruth Prop (eat 0 mods_nil John x_theme)
+  finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_truth : ConcreteRegisteredTruth PropT (knock 0 mods_nil John)
+  finite_registered_atomic_concrete_truth_closure_lexical_4_direct_truth : concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (knock 0 mods_nil John)
+  finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_truth : AtomicClosureTruth PropT (knock 0 mods_nil John)
+  finite_registered_atomic_concrete_truth_closure_transition_1_concrete_truth : ConcreteRegisteredTruth TransitionT (Transition vase integrity_scale intact broken)
+  finite_registered_atomic_concrete_truth_closure_transition_1_direct_truth : concrete_registered_truth_conditions.fully_registered_truth_denotes TransitionT (Transition vase integrity_scale intact broken)
+  finite_registered_atomic_concrete_truth_closure_transition_1_atomic_truth : AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken)
+
+def finite_registered_atomic_concrete_truth_closure_certificate :
+    FiniteRegisteredAtomicConcreteTruthClosureCertificate := {
+  finite_registered_atomic_concrete_truth_closure_route_comparison := finite_registered_atomic_concrete_route_comparison_certificate,
+  finite_registered_atomic_concrete_truth_closure_route_comparison_eq := rfl,
+  finite_registered_atomic_concrete_truth_closure_basis := concrete_registered_truth_basis,
+  finite_registered_atomic_concrete_truth_closure_basis_eq := rfl,
+  finite_registered_atomic_concrete_truth_closure_to_direct_spec := concrete_registered_truth_conditions_denote_concrete_registered,
+  finite_registered_atomic_concrete_truth_closure_to_atomic := concrete_registered_truth_implies_atomic_closure,
+  finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_truth := ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (break 0 mods_nil John vase) (finite_registered_atomic_witness_lexical_1_concrete_projected),
+  finite_registered_atomic_concrete_truth_closure_lexical_1_direct_truth := concrete_registered_truth_conditions_denote_concrete_registered PropT (break 0 mods_nil John vase) (ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (break 0 mods_nil John vase) (finite_registered_atomic_witness_lexical_1_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_truth := concrete_registered_truth_implies_atomic_closure PropT (break 0 mods_nil John vase) (ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (break 0 mods_nil John vase) (finite_registered_atomic_witness_lexical_1_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_truth := ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_witness_lexical_2_concrete_projected),
+  finite_registered_atomic_concrete_truth_closure_lexical_2_direct_truth := concrete_registered_truth_conditions_denote_concrete_registered PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_witness_lexical_2_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_truth := concrete_registered_truth_implies_atomic_closure PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_witness_lexical_2_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_truth := fun x_theme => ConcreteRegisteredTruth.concrete_registered_truth_atomic Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_witness_lexical_3_concrete_projected x_theme),
+  finite_registered_atomic_concrete_truth_closure_lexical_3_direct_truth := fun x_theme => concrete_registered_truth_conditions_denote_concrete_registered Prop (eat 0 mods_nil John x_theme) (ConcreteRegisteredTruth.concrete_registered_truth_atomic Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_witness_lexical_3_concrete_projected x_theme)),
+  finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_truth := fun x_theme => concrete_registered_truth_implies_atomic_closure Prop (eat 0 mods_nil John x_theme) (ConcreteRegisteredTruth.concrete_registered_truth_atomic Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_witness_lexical_3_concrete_projected x_theme)),
+  finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_truth := ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (knock 0 mods_nil John) (finite_registered_atomic_witness_lexical_4_concrete_projected),
+  finite_registered_atomic_concrete_truth_closure_lexical_4_direct_truth := concrete_registered_truth_conditions_denote_concrete_registered PropT (knock 0 mods_nil John) (ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (knock 0 mods_nil John) (finite_registered_atomic_witness_lexical_4_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_truth := concrete_registered_truth_implies_atomic_closure PropT (knock 0 mods_nil John) (ConcreteRegisteredTruth.concrete_registered_truth_atomic PropT (knock 0 mods_nil John) (finite_registered_atomic_witness_lexical_4_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_transition_1_concrete_truth := ConcreteRegisteredTruth.concrete_registered_truth_atomic TransitionT (Transition vase integrity_scale intact broken) (finite_registered_atomic_witness_transition_1_concrete_projected),
+  finite_registered_atomic_concrete_truth_closure_transition_1_direct_truth := concrete_registered_truth_conditions_denote_concrete_registered TransitionT (Transition vase integrity_scale intact broken) (ConcreteRegisteredTruth.concrete_registered_truth_atomic TransitionT (Transition vase integrity_scale intact broken) (finite_registered_atomic_witness_transition_1_concrete_projected)),
+  finite_registered_atomic_concrete_truth_closure_transition_1_atomic_truth := concrete_registered_truth_implies_atomic_closure TransitionT (Transition vase integrity_scale intact broken) (ConcreteRegisteredTruth.concrete_registered_truth_atomic TransitionT (Transition vase integrity_scale intact broken) (finite_registered_atomic_witness_transition_1_concrete_projected))
+}
+
+theorem finite_registered_atomic_concrete_truth_closure_certificate_exists :
+    Exists (fun C : FiniteRegisteredAtomicConcreteTruthClosureCertificate => C = finite_registered_atomic_concrete_truth_closure_certificate) := by
+  exact Exists.intro finite_registered_atomic_concrete_truth_closure_certificate rfl
+
+theorem finite_registered_atomic_concrete_truth_closure_route_comparison_matches :
+    finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_route_comparison =
+      finite_registered_atomic_concrete_route_comparison_certificate := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_route_comparison_eq
+
+theorem finite_registered_atomic_concrete_truth_closure_basis_matches :
+    finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_basis =
+      concrete_registered_truth_basis := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_basis_eq
+
+theorem finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected :
+    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term ->
+    concrete_registered_truth_conditions.fully_registered_truth_denotes A term := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_to_direct_spec
+
+theorem finite_registered_atomic_concrete_truth_closure_to_atomic_projected :
+    (A : Type) -> (term : A) -> ConcreteRegisteredTruth A term ->
+    AtomicClosureTruth A term := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_to_atomic
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected :
+    ConcreteRegisteredTruth PropT (break 0 mods_nil John vase) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_1_direct_truth_projected :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (break 0 mods_nil John vase) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_1_direct_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_projected :
+    AtomicClosureTruth PropT (break 0 mods_nil John vase) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_1_direct_from_closure :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (break 0 mods_nil John vase) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_from_closure :
+    AtomicClosureTruth PropT (break 0 mods_nil John vase) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_atomic_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_projected :
+    ConcreteRegisteredTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_2_direct_truth_projected :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_2_direct_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_projected :
+    AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_2_direct_from_closure :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_from_closure :
+    AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_atomic_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_projected :
+    (x_theme : Food) -> ConcreteRegisteredTruth Prop (eat 0 mods_nil John x_theme) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_3_direct_truth_projected :
+    (x_theme : Food) -> concrete_registered_truth_conditions.fully_registered_truth_denotes Prop (eat 0 mods_nil John x_theme) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_3_direct_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_projected :
+    (x_theme : Food) -> AtomicClosureTruth Prop (eat 0 mods_nil John x_theme) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_3_direct_from_closure :
+    (x_theme : Food) -> concrete_registered_truth_conditions.fully_registered_truth_denotes Prop (eat 0 mods_nil John x_theme) := by
+  intro x_theme
+  exact finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_projected x_theme)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_from_closure :
+    (x_theme : Food) -> AtomicClosureTruth Prop (eat 0 mods_nil John x_theme) := by
+  intro x_theme
+  exact finite_registered_atomic_concrete_truth_closure_to_atomic_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_projected x_theme)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_projected :
+    ConcreteRegisteredTruth PropT (knock 0 mods_nil John) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_4_direct_truth_projected :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (knock 0 mods_nil John) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_4_direct_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_projected :
+    AtomicClosureTruth PropT (knock 0 mods_nil John) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_4_direct_from_closure :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes PropT (knock 0 mods_nil John) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_from_closure :
+    AtomicClosureTruth PropT (knock 0 mods_nil John) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_atomic_projected _ _ (finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_transition_1_concrete_projected :
+    ConcreteRegisteredTruth TransitionT (Transition vase integrity_scale intact broken) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_transition_1_concrete_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_transition_1_direct_truth_projected :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes TransitionT (Transition vase integrity_scale intact broken) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_transition_1_direct_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_transition_1_atomic_projected :
+    AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken) := by
+  exact finite_registered_atomic_concrete_truth_closure_certificate.finite_registered_atomic_concrete_truth_closure_transition_1_atomic_truth
+
+theorem finite_registered_atomic_concrete_truth_closure_transition_1_direct_from_closure :
+    concrete_registered_truth_conditions.fully_registered_truth_denotes TransitionT (Transition vase integrity_scale intact broken) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected _ _ (finite_registered_atomic_concrete_truth_closure_transition_1_concrete_projected)
+
+theorem finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure :
+    AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken) := by
+  exact finite_registered_atomic_concrete_truth_closure_to_atomic_projected _ _ (finite_registered_atomic_concrete_truth_closure_transition_1_concrete_projected)
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -7854,3 +8035,35 @@ theorem finite_registered_atomic_concrete_route_comparison_transition_1_kernel_a
 #check finite_registered_atomic_concrete_route_comparison_transition_1_evidence_atomic_projected
 #check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_truth_projected
 #check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected
+#check FiniteRegisteredAtomicConcreteTruthClosureCertificate
+#check finite_registered_atomic_concrete_truth_closure_certificate
+#check finite_registered_atomic_concrete_truth_closure_certificate_exists
+#check finite_registered_atomic_concrete_truth_closure_route_comparison_matches
+#check finite_registered_atomic_concrete_truth_closure_basis_matches
+#check finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected
+#check finite_registered_atomic_concrete_truth_closure_to_atomic_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_1_direct_truth_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_1_direct_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_1_atomic_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_2_concrete_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_2_direct_truth_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_2_direct_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_2_atomic_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_3_concrete_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_3_direct_truth_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_3_direct_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_3_atomic_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_4_concrete_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_4_direct_truth_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_projected
+#check finite_registered_atomic_concrete_truth_closure_lexical_4_direct_from_closure
+#check finite_registered_atomic_concrete_truth_closure_lexical_4_atomic_from_closure
+#check finite_registered_atomic_concrete_truth_closure_transition_1_concrete_projected
+#check finite_registered_atomic_concrete_truth_closure_transition_1_direct_truth_projected
+#check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_projected
+#check finite_registered_atomic_concrete_truth_closure_transition_1_direct_from_closure
+#check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure

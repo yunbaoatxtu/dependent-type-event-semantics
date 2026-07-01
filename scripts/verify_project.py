@@ -10871,6 +10871,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_registered_truth_condition_constructor_class_projection_obligation_ledger",
         "coq_finite_registered_atomic_constructor_obligation_alignment_certificate",
         "coq_finite_registered_atomic_concrete_route_comparison_certificate",
+        "coq_finite_registered_atomic_concrete_truth_closure_certificate",
         "paper_docx_sync",
         "web_and_api_contracts",
     }

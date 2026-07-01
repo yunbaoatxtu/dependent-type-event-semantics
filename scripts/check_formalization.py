@@ -3948,6 +3948,60 @@ def main() -> None:
             and "Check finite_registered_atomic_concrete_route_comparison_transition_1_kernel_atomic_projected."
             in coq
         ),
+        "lean finite registered atomic concrete truth closure certificate": (
+            "structure FiniteRegisteredAtomicConcreteTruthClosureCertificate : Type where"
+            in lean
+            and "def finite_registered_atomic_concrete_truth_closure_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_concrete_truth_closure_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_route_comparison_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_basis_matches :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_to_atomic_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_lexical_1_direct_from_closure :"
+            in lean
+            and "theorem finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure :"
+            in lean
+            and "#check FiniteRegisteredAtomicConcreteTruthClosureCertificate"
+            in lean
+            and "#check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure"
+            in lean
+        ),
+        "coq finite registered atomic concrete truth closure certificate": (
+            "Record FiniteRegisteredAtomicConcreteTruthClosureCertificate : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_concrete_truth_closure_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_concrete_truth_closure_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_route_comparison_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_basis_matches :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_to_direct_spec_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_to_atomic_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_lexical_1_concrete_projected :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_lexical_1_direct_from_closure :"
+            in coq
+            and "Theorem finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure :"
+            in coq
+            and "Check FiniteRegisteredAtomicConcreteTruthClosureCertificate."
+            in coq
+            and "Check finite_registered_atomic_concrete_truth_closure_transition_1_atomic_from_closure."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

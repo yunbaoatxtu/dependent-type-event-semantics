@@ -499,6 +499,13 @@ The finite registered atomic concrete-route comparison layer introduces
 each finite registered lexical and transition atom through the direct concrete
 registered spec, the evidence-backed registered spec, and the kernel-induced
 registered spec. Each route is required to project back to `AtomicClosureTruth`.
+The finite registered atomic concrete-truth-closure layer introduces
+`FiniteRegisteredAtomicConcreteTruthClosureCertificate`, instantiates
+`finite_registered_atomic_concrete_truth_closure_certificate`, and checks that
+each finite registered lexical and transition atom is first promoted from
+`ConcreteRegisteredAtomicTruth` into `ConcreteRegisteredTruth`, then projected
+through the direct `concrete_registered_truth_conditions` spec and back to
+`AtomicClosureTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
