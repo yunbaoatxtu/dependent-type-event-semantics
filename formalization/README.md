@@ -415,7 +415,12 @@ truth-condition-source layer then packages that alignment as
 `finite_registered_atomic_truth_condition_source_certificate`, projects each
 registered lexical and transition source into `concrete_registered_truth_conditions`,
 reuses the source-to-kernel route, and checks the resulting finite registered
-atoms back to `AtomicClosureTruth`.
+atoms back to `AtomicClosureTruth`. The finite-instance layer then packages the
+actual source applications as
+`FiniteRegisteredAtomicTruthConditionInstanceCertificate`, instantiates
+`finite_registered_atomic_truth_condition_instance_certificate`, exposes one
+`fully_registered_truth_denotes` inhabitant for each finite registered lexical
+and transition atom, and checks each inhabitant back to `AtomicClosureTruth`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

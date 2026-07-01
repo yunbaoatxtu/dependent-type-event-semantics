@@ -1447,7 +1447,12 @@ kernel denotation back to `AtomicClosureTruth`. The next verified objective
 alignment with `concrete_registered_truth_conditions`, projects each registered
 lexical and transition source into the concrete truth-condition specification,
 reuses the source-to-kernel route, and checks each finite registered atom back
-to `AtomicClosureTruth`. The open blocker remains
+to `AtomicClosureTruth`. The next verified objective
+`coq_finite_registered_atomic_truth_condition_instance_certificate` adds
+`FiniteRegisteredAtomicTruthConditionInstanceCertificate`, which applies those
+registered sources to produce explicit `fully_registered_truth_denotes`
+inhabitants for every finite registered lexical atom and state-transition atom,
+then checks each inhabitant back to `AtomicClosureTruth`. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth

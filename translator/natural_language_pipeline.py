@@ -21229,6 +21229,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_truth_condition_"
+                    "instance_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21487,6 +21495,13 @@ def project_completion_status_payload(
                     "into the concrete truth-condition spec, reuses the "
                     "kernel-alignment projections, and checks AtomicClosureTruth "
                     "for each finite registered atom. "
+                    "The newest finite-instance layer then applies those "
+                    "registered sources to produce explicit "
+                    "fully_registered_truth_denotes inhabitants for every "
+                    "registered lexical atom and registered transition atom, "
+                    "packages them as "
+                    "FiniteRegisteredAtomicTruthConditionInstanceCertificate, "
+                    "and checks each inhabitant back to AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
