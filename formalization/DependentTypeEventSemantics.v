@@ -8509,6 +8509,226 @@ Proof.
   exact (finite_registered_atomic_truth_condition_evidence_transition_1_truth_from_evidence_projected).
 Qed.
 
+Record FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate : Type := {
+  finite_registered_atomic_truth_condition_evidence_source_alignment_evidence : FiniteRegisteredAtomicTruthConditionEvidenceLedger;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_evidence_eq :
+      finite_registered_atomic_truth_condition_evidence_source_alignment_evidence = finite_registered_atomic_truth_condition_evidence_ledger;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_sources : RegisteredEvidenceBackedTruthConditionSources;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_sources_eq :
+      finite_registered_atomic_truth_condition_evidence_source_alignment_sources = concrete_registered_evidence_backed_truth_sources;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_spec : FullyRegisteredTruthConditionSpec;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_spec_eq :
+      finite_registered_atomic_truth_condition_evidence_source_alignment_spec = concrete_registered_evidence_backed_truth_conditions;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound :
+      forall A : Type, forall term : A,
+      TruthEvidence (ConcreteRegisteredTruth A term) ->
+      fully_registered_truth_denotes
+        concrete_registered_evidence_backed_truth_conditions A term;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_evidence_backed_truth_conditions A term ->
+      AtomicClosureTruth A term;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_source_evidence : TruthEvidence (ConcreteRegisteredTruth PropT (break 0 mods_nil John vase));
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_source_evidence : TruthEvidence (ConcreteRegisteredTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast));
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence : forall x_theme : Food,
+      TruthEvidence (ConcreteRegisteredTruth Prop (eat 0 mods_nil John x_theme));
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_source_evidence : TruthEvidence (ConcreteRegisteredTruth PropT (knock 0 mods_nil John));
+  finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_source_evidence : TruthEvidence (ConcreteRegisteredTruth TransitionT (Transition vase integrity_scale intact broken))
+}.
+
+Definition finite_registered_atomic_truth_condition_evidence_source_alignment_certificate :
+  FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate := {|
+  finite_registered_atomic_truth_condition_evidence_source_alignment_evidence := finite_registered_atomic_truth_condition_evidence_ledger;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_evidence_eq := eq_refl;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_sources := concrete_registered_evidence_backed_truth_sources;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_sources_eq := eq_refl;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_spec := concrete_registered_evidence_backed_truth_conditions;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_spec_eq := eq_refl;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound :=
+    fun A term evidence =>
+      concrete_registered_evidence_backed_truth_conditions_denote_concrete_registered
+        A term (truth_evidence_sound (ConcreteRegisteredTruth A term) evidence);
+  finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound :=
+    fun A term h =>
+      concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure A term h;
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_source_evidence := registered_evidence_lexical_application concrete_registered_evidence_backed_truth_sources PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_source_evidence := registered_evidence_lexical_application concrete_registered_evidence_backed_truth_sources PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence := fun x_theme => registered_evidence_lexical_application concrete_registered_evidence_backed_truth_sources Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_source_evidence := registered_evidence_lexical_application concrete_registered_evidence_backed_truth_sources PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_source_evidence := registered_evidence_transition concrete_registered_evidence_backed_truth_sources vase integrity_scale intact broken (finite_registered_atomic_source_transition_1_source_projected)
+|}.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_certificate_exists :
+  exists C : FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate,
+    C = finite_registered_atomic_truth_condition_evidence_source_alignment_certificate.
+Proof.
+  exists finite_registered_atomic_truth_condition_evidence_source_alignment_certificate.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_evidence_matches :
+  finite_registered_atomic_truth_condition_evidence_source_alignment_evidence
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate =
+  finite_registered_atomic_truth_condition_evidence_ledger.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_evidence_eq
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_sources_match :
+  finite_registered_atomic_truth_condition_evidence_source_alignment_sources
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate =
+  concrete_registered_evidence_backed_truth_sources.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_sources_eq
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_spec_matches :
+  finite_registered_atomic_truth_condition_evidence_source_alignment_spec
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate =
+  concrete_registered_evidence_backed_truth_conditions.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_spec_eq
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected :
+  forall A : Type, forall term : A,
+    TruthEvidence (ConcreteRegisteredTruth A term) ->
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions A term.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound
+    finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_source_evidence_projected :
+  TruthEvidence (ConcreteRegisteredTruth PropT (break 0 mods_nil John vase)).
+Proof.
+  exact (
+    finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_source_evidence
+      finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_source_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_atomic_projected :
+  AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_source_evidence_projected :
+  TruthEvidence (ConcreteRegisteredTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast)).
+Proof.
+  exact (
+    finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_source_evidence
+      finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_source_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_atomic_projected :
+  AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence_projected :
+  forall x_theme : Food,
+      TruthEvidence (ConcreteRegisteredTruth Prop (eat 0 mods_nil John x_theme)).
+Proof.
+  exact (
+    finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence
+      finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_truth_projected :
+  forall x_theme : Food,
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_atomic_projected :
+  forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  intros x_theme.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_truth_projected x_theme)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_source_evidence_projected :
+  TruthEvidence (ConcreteRegisteredTruth PropT (knock 0 mods_nil John)).
+Proof.
+  exact (
+    finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_source_evidence
+      finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_source_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_atomic_projected :
+  AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_truth_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_source_evidence_projected :
+  TruthEvidence (ConcreteRegisteredTruth TransitionT (Transition vase integrity_scale intact broken)).
+Proof.
+  exact (
+    finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_source_evidence
+      finite_registered_atomic_truth_condition_evidence_source_alignment_certificate).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_source_evidence_projected)).
+Qed.
+
+Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected :
+  AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected _ _
+    (finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_truth_projected)).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -9094,3 +9314,24 @@ Check finite_registered_atomic_truth_condition_evidence_lexical_4_atomic_from_ev
 Check finite_registered_atomic_truth_condition_evidence_transition_1_evidence_projected.
 Check finite_registered_atomic_truth_condition_evidence_transition_1_truth_from_evidence_projected.
 Check finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected.
+Check FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_certificate.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_certificate_exists.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_sources_match.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_truth_sound_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_atomic_sound_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_source_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_truth_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_1_atomic_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_source_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_truth_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_2_atomic_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_truth_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_atomic_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_source_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_truth_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_4_atomic_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_source_evidence_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_truth_projected.
+Check finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected.

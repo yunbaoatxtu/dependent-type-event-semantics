@@ -21253,6 +21253,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_truth_condition_"
+                    "evidence_source_alignment_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21532,6 +21540,15 @@ def project_completion_status_payload(
                     "checks that truth_evidence_sound recovers the concrete "
                     "truth-condition inhabitant before projecting it back to "
                     "AtomicClosureTruth. "
+                    "The newest evidence-source-alignment layer then packages "
+                    "that evidence ledger together with "
+                    "RegisteredEvidenceBackedTruthConditionSources and "
+                    "concrete_registered_evidence_backed_truth_conditions as "
+                    "FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate, "
+                    "checks each registered lexical and transition source "
+                    "as TruthEvidence for ConcreteRegisteredTruth, decodes "
+                    "it through the evidence-backed truth-condition spec, "
+                    "and projects each result back to AtomicClosureTruth. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

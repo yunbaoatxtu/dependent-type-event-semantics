@@ -432,7 +432,14 @@ transition atom. The evidence-ledger layer then instantiates
 with `TruthEvidence`, checks the `truth_evidence_sound` projection back to the
 concrete truth-condition inhabitant, and rechecks the resulting
 `AtomicClosureTruth` projection for each registered lexical and transition
-atom.
+atom. The evidence-source-alignment layer then introduces
+`FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate`,
+instantiates
+`finite_registered_atomic_truth_condition_evidence_source_alignment_certificate`,
+aligns the finite evidence ledger with
+`RegisteredEvidenceBackedTruthConditionSources`, and checks source evidence,
+truth-condition denotation, and `AtomicClosureTruth` projections for each
+registered lexical and transition atom.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

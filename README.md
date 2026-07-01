@@ -1462,7 +1462,15 @@ projection. The next verified objective
 `FiniteRegisteredAtomicTruthConditionEvidenceLedger`, which wraps each finite
 registered atom witness as `TruthEvidence`, checks that `truth_evidence_sound`
 recovers the concrete truth-condition inhabitant, and then projects that
-inhabitant back to `AtomicClosureTruth`. The open blocker remains
+inhabitant back to `AtomicClosureTruth`. The next verified objective
+`coq_finite_registered_atomic_truth_condition_evidence_source_alignment_certificate`
+adds `FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate`,
+which aligns that finite evidence ledger with
+`RegisteredEvidenceBackedTruthConditionSources`, projects each registered
+lexical and transition source into `TruthEvidence (ConcreteRegisteredTruth ...)`,
+checks the corresponding evidence-backed truth-condition denotation, and
+reprojects each finite registered atom to `AtomicClosureTruth`. The open
+blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth
@@ -1482,6 +1490,7 @@ concrete-registered-truth-kernel,
 finite-registered-atomic-kernel-alignment,
 finite-registered-completion-certificate,
 finite-registered-component-coverage-certificate,
+finite-registered-atomic-truth-condition-evidence-source-alignment-certificate,
 or registered-example package instances.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.

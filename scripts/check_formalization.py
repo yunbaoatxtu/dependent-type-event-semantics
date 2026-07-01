@@ -1144,6 +1144,90 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_source_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_\d+_source_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_source_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_\d+_source_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_\d+_truth_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_\d+_truth_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_source_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_\d+_source_evidence_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_source_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_\d+_source_evidence_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_\d+_truth_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_\d+_truth_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_evidence_source_alignment_transition_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -2985,6 +3069,92 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_truth_condition_evidence_transition_1_atomic_from_evidence_projected."
+            in coq
+        ),
+        "lean finite registered atomic truth condition evidence source alignment certificate": (
+            lean_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_source_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_truth_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_atomic_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_source_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_truth_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_atomic_count
+            == 1
+            and "structure FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate : Type where"
+            in lean
+            and "finite_registered_atomic_truth_condition_evidence_source_alignment_sources : "
+            "RegisteredEvidenceBackedTruthConditionSources" in lean
+            and "finite_registered_atomic_truth_condition_evidence_source_alignment_sources_eq :"
+            in lean
+            and "def finite_registered_atomic_truth_condition_evidence_source_alignment_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_certificate_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_sources_match :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_atomic_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected :"
+            in lean
+            and "#check "
+            "FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic truth condition evidence source alignment certificate": (
+            coq_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_source_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_truth_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_atomic_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_source_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_truth_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_evidence_source_alignment_transition_atomic_count
+            == 1
+            and "Record FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate : Type := {"
+            in coq
+            and "finite_registered_atomic_truth_condition_evidence_source_alignment_sources : "
+            "RegisteredEvidenceBackedTruthConditionSources;" in coq
+            and "finite_registered_atomic_truth_condition_evidence_source_alignment_sources_eq :"
+            in coq
+            and "Definition finite_registered_atomic_truth_condition_evidence_source_alignment_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_certificate_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_sources_match :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_source_evidence_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_lexical_3_atomic_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected :"
+            in coq
+            and "Check "
+            "FiniteRegisteredAtomicTruthConditionEvidenceSourceAlignmentCertificate."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_evidence_source_alignment_transition_1_atomic_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (
