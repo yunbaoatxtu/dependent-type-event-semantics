@@ -3740,6 +3740,56 @@ def main() -> None:
             and "Check registered_constructor_class_discharge_suite_spec_sound_projected."
             in coq
         ),
+        "lean registered truth condition constructor class projection coverage": (
+            "structure RegisteredTruthConditionConstructorClassProjectionCoverageCertificate : Type where"
+            in lean
+            and "def registered_truth_condition_constructor_class_projection_coverage_certificate :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_class_projection_coverage_certificate_exists :"
+            in lean
+            and "theorem registered_constructor_class_projection_coverage_source_matches :"
+            in lean
+            and "theorem registered_constructor_class_projection_coverage_sigma_Food_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_coverage_sigma_TransitionT_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_coverage_during_T_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_coverage_since_T_projected :"
+            in lean
+            and "theorem registered_constructor_class_projection_coverage_cause_projected :"
+            in lean
+            and "#check RegisteredTruthConditionConstructorClassProjectionCoverageCertificate"
+            in lean
+            and "#check registered_constructor_class_projection_coverage_spec_sound_projected"
+            in lean
+        ),
+        "coq registered truth condition constructor class projection coverage": (
+            "Record RegisteredTruthConditionConstructorClassProjectionCoverageCertificate : Type := {"
+            in coq
+            and "Definition registered_truth_condition_constructor_class_projection_coverage_certificate :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_class_projection_coverage_certificate_exists :"
+            in coq
+            and "Theorem registered_constructor_class_projection_coverage_source_matches :"
+            in coq
+            and "Theorem registered_constructor_class_projection_coverage_sigma_Food_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_coverage_sigma_TransitionT_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_coverage_during_T_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_coverage_since_T_projected :"
+            in coq
+            and "Theorem registered_constructor_class_projection_coverage_cause_projected :"
+            in coq
+            and "Check RegisteredTruthConditionConstructorClassProjectionCoverageCertificate."
+            in coq
+            and "Check registered_constructor_class_projection_coverage_spec_sound_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

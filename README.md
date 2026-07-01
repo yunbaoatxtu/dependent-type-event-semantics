@@ -1500,6 +1500,13 @@ The next verified objective
 constructor-level certificate into lexical, Sigma, temporal, repeat, polarity,
 and Transition/Cause class records with checked projection theorems for each
 class.
+The next verified objective
+`coq_registered_truth_condition_constructor_class_projection_coverage_certificate`
+adds `RegisteredTruthConditionConstructorClassProjectionCoverageCertificate`,
+which re-exports projection theorems for every generated Sigma type and every
+registered temporal constructor, plus repeat, polarity, Transition, Cause, and
+spec-to-atomic soundness. This closes the class-suite projection coverage gap
+without changing the parser's registered-fragment boundary.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

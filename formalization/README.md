@@ -472,6 +472,14 @@ the same checked discharge route into lexical, Sigma, temporal, repeat,
 polarity, and Transition/Cause records. This keeps the remaining concrete
 truth-condition work class-local without claiming arbitrary natural-language
 completion.
+The constructor-class projection-coverage layer introduces
+`RegisteredTruthConditionConstructorClassProjectionCoverageCertificate`,
+instantiates
+`registered_truth_condition_constructor_class_projection_coverage_certificate`,
+and re-exports every generated Sigma projection together with all temporal
+operator projections (`at_T`, `during_T`, `before_T`, `after_T`, `until_T`,
+and `since_T`), plus repeat, polarity, Transition/Cause, and spec-soundness
+projections.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

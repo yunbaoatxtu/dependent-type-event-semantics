@@ -21301,6 +21301,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_registered_truth_condition_constructor_"
+                    "class_projection_coverage_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21630,6 +21638,15 @@ def project_completion_status_payload(
                     "RegisteredTransitionCauseConstructorDischarge, and "
                     "RegisteredTruthConditionConstructorClassDischargeSuite, "
                     "with checked projection theorems for each class. "
+                    "The newest constructor-class projection-coverage layer "
+                    "then packages every generated Sigma projection, every "
+                    "temporal operator projection, repeat, polarity, "
+                    "Transition/Cause, lexical application, and spec-to-atomic "
+                    "soundness as "
+                    "RegisteredTruthConditionConstructorClassProjectionCoverageCertificate, "
+                    "so the coverage of generated constructor routes is "
+                    "itself checked rather than represented by only example "
+                    "projections. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
