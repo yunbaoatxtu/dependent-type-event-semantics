@@ -9609,6 +9609,354 @@ Proof.
     registered_truth_condition_constructor_discharge_certificate).
 Qed.
 
+Record RegisteredLexicalConstructorDischarge : Type := {
+  registered_lexical_constructor_discharge_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_lexical_constructor_discharge_source_eq :
+      registered_lexical_constructor_discharge_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_lexical_constructor_discharge_application :
+      forall A : Type, forall term : A,
+      RegisteredLexicalApplicationTruth A term ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term;
+  registered_lexical_constructor_discharge_spec_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition registered_lexical_constructor_discharge :
+  RegisteredLexicalConstructorDischarge := {|
+  registered_lexical_constructor_discharge_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_lexical_constructor_discharge_source_eq := eq_refl;
+  registered_lexical_constructor_discharge_application := registered_truth_condition_constructor_discharge_lexical_application_projected;
+  registered_lexical_constructor_discharge_spec_sound := registered_truth_condition_constructor_discharge_spec_sound_projected
+|}.
+
+Record RegisteredSigmaConstructorDischarge : Type := {
+  registered_sigma_constructor_discharge_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_sigma_constructor_discharge_source_eq :
+      registered_sigma_constructor_discharge_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_sigma_constructor_discharge_sigma_Entity :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : Entity, P x);
+  registered_sigma_constructor_discharge_sigma_Food :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : Food, P x);
+  registered_sigma_constructor_discharge_sigma_State :
+      forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : State, P x);
+  registered_sigma_constructor_discharge_sigma_StateScale :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : StateScale, P x);
+  registered_sigma_constructor_discharge_sigma_TransitionT :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        Prop (exists x : TransitionT, P x)
+}.
+
+Definition registered_sigma_constructor_discharge :
+  RegisteredSigmaConstructorDischarge := {|
+  registered_sigma_constructor_discharge_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_sigma_constructor_discharge_source_eq := eq_refl;
+  registered_sigma_constructor_discharge_sigma_Entity := registered_truth_condition_constructor_discharge_sigma_Entity registered_truth_condition_constructor_discharge_certificate;
+  registered_sigma_constructor_discharge_sigma_Food := registered_truth_condition_constructor_discharge_sigma_Food registered_truth_condition_constructor_discharge_certificate;
+  registered_sigma_constructor_discharge_sigma_State := registered_truth_condition_constructor_discharge_sigma_State registered_truth_condition_constructor_discharge_certificate;
+  registered_sigma_constructor_discharge_sigma_StateScale := registered_truth_condition_constructor_discharge_sigma_StateScale registered_truth_condition_constructor_discharge_certificate;
+  registered_sigma_constructor_discharge_sigma_TransitionT := registered_truth_condition_constructor_discharge_sigma_TransitionT registered_truth_condition_constructor_discharge_certificate
+|}.
+
+Record RegisteredTemporalConstructorDischarge : Type := {
+  registered_temporal_constructor_discharge_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_temporal_constructor_discharge_source_eq :
+      registered_temporal_constructor_discharge_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_at_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (at_T marker body);
+  registered_temporal_constructor_discharge_during_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (during_T marker body);
+  registered_temporal_constructor_discharge_before_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (before_T marker body);
+  registered_temporal_constructor_discharge_after_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (after_T marker body);
+  registered_temporal_constructor_discharge_until_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (until_T marker body);
+  registered_temporal_constructor_discharge_since_T :
+      forall marker : Entity, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        PropT (since_T marker body)
+}.
+
+Definition registered_temporal_constructor_discharge :
+  RegisteredTemporalConstructorDischarge := {|
+  registered_temporal_constructor_discharge_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_source_eq := eq_refl;
+  registered_temporal_constructor_discharge_at_T := registered_truth_condition_constructor_discharge_at_T registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_during_T := registered_truth_condition_constructor_discharge_during_T registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_before_T := registered_truth_condition_constructor_discharge_before_T registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_after_T := registered_truth_condition_constructor_discharge_after_T registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_until_T := registered_truth_condition_constructor_discharge_until_T registered_truth_condition_constructor_discharge_certificate;
+  registered_temporal_constructor_discharge_since_T := registered_truth_condition_constructor_discharge_since_T registered_truth_condition_constructor_discharge_certificate
+|}.
+
+Record RegisteredRepeatConstructorDischarge : Type := {
+  registered_repeat_constructor_discharge_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_repeat_constructor_discharge_source_eq :
+      registered_repeat_constructor_discharge_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_repeat_constructor_discharge_repeat :
+      forall n : nat, forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (repeat n body)
+}.
+
+Definition registered_repeat_constructor_discharge :
+  RegisteredRepeatConstructorDischarge := {|
+  registered_repeat_constructor_discharge_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_repeat_constructor_discharge_source_eq := eq_refl;
+  registered_repeat_constructor_discharge_repeat := registered_truth_condition_constructor_discharge_repeat_projected
+|}.
+
+Record RegisteredPolarityConstructorDischarge : Type := {
+  registered_polarity_constructor_discharge_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_polarity_constructor_discharge_source_eq :
+      registered_polarity_constructor_discharge_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_polarity_constructor_discharge_not_T :
+      forall body : PropT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (not_T body)
+}.
+
+Definition registered_polarity_constructor_discharge :
+  RegisteredPolarityConstructorDischarge := {|
+  registered_polarity_constructor_discharge_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_polarity_constructor_discharge_source_eq := eq_refl;
+  registered_polarity_constructor_discharge_not_T := registered_truth_condition_constructor_discharge_not_T_projected
+|}.
+
+Record RegisteredTransitionCauseConstructorDischarge : Type := {
+  registered_transition_cause_constructor_discharge_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_transition_cause_constructor_discharge_source_eq :
+      registered_transition_cause_constructor_discharge_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_transition_cause_constructor_discharge_transition :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        TransitionT (Transition theme scale source target);
+  registered_transition_cause_constructor_discharge_cause :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect)
+}.
+
+Definition registered_transition_cause_constructor_discharge :
+  RegisteredTransitionCauseConstructorDischarge := {|
+  registered_transition_cause_constructor_discharge_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_transition_cause_constructor_discharge_source_eq := eq_refl;
+  registered_transition_cause_constructor_discharge_transition := registered_truth_condition_constructor_discharge_transition_projected;
+  registered_transition_cause_constructor_discharge_cause := registered_truth_condition_constructor_discharge_cause_projected
+|}.
+
+Record RegisteredTruthConditionConstructorClassDischargeSuite : Type := {
+  registered_constructor_class_discharge_suite_source : RegisteredTruthConditionConstructorDischargeCertificate;
+  registered_constructor_class_discharge_suite_source_eq :
+      registered_constructor_class_discharge_suite_source =
+        registered_truth_condition_constructor_discharge_certificate;
+  registered_constructor_class_discharge_suite_lexical : RegisteredLexicalConstructorDischarge;
+  registered_constructor_class_discharge_suite_sigma : RegisteredSigmaConstructorDischarge;
+  registered_constructor_class_discharge_suite_temporal : RegisteredTemporalConstructorDischarge;
+  registered_constructor_class_discharge_suite_repeat : RegisteredRepeatConstructorDischarge;
+  registered_constructor_class_discharge_suite_polarity : RegisteredPolarityConstructorDischarge;
+  registered_constructor_class_discharge_suite_transition_cause : RegisteredTransitionCauseConstructorDischarge;
+  registered_constructor_class_discharge_suite_spec_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term
+}.
+
+Definition registered_truth_condition_constructor_class_discharge_suite :
+  RegisteredTruthConditionConstructorClassDischargeSuite := {|
+  registered_constructor_class_discharge_suite_source := registered_truth_condition_constructor_discharge_certificate;
+  registered_constructor_class_discharge_suite_source_eq := eq_refl;
+  registered_constructor_class_discharge_suite_lexical := registered_lexical_constructor_discharge;
+  registered_constructor_class_discharge_suite_sigma := registered_sigma_constructor_discharge;
+  registered_constructor_class_discharge_suite_temporal := registered_temporal_constructor_discharge;
+  registered_constructor_class_discharge_suite_repeat := registered_repeat_constructor_discharge;
+  registered_constructor_class_discharge_suite_polarity := registered_polarity_constructor_discharge;
+  registered_constructor_class_discharge_suite_transition_cause := registered_transition_cause_constructor_discharge;
+  registered_constructor_class_discharge_suite_spec_sound := registered_truth_condition_constructor_discharge_spec_sound_projected
+|}.
+
+Theorem registered_truth_condition_constructor_class_discharge_suite_exists :
+  exists C : RegisteredTruthConditionConstructorClassDischargeSuite,
+    C = registered_truth_condition_constructor_class_discharge_suite.
+Proof.
+  exists registered_truth_condition_constructor_class_discharge_suite.
+  reflexivity.
+Qed.
+
+Theorem registered_truth_condition_constructor_class_discharge_suite_source_matches :
+  registered_constructor_class_discharge_suite_source
+    registered_truth_condition_constructor_class_discharge_suite =
+  registered_truth_condition_constructor_discharge_certificate.
+Proof.
+  exact (registered_constructor_class_discharge_suite_source_eq
+    registered_truth_condition_constructor_class_discharge_suite).
+Qed.
+
+Theorem registered_lexical_constructor_discharge_application_projected :
+  forall A : Type, forall term : A,
+    RegisteredLexicalApplicationTruth A term ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term.
+Proof.
+  exact (registered_lexical_constructor_discharge_application
+    registered_lexical_constructor_discharge).
+Qed.
+
+Theorem registered_sigma_constructor_discharge_Entity_projected :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Entity, P x).
+Proof.
+  exact (registered_sigma_constructor_discharge_sigma_Entity
+    registered_sigma_constructor_discharge).
+Qed.
+
+Theorem registered_temporal_constructor_discharge_at_T_projected :
+  forall marker : Entity, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (at_T marker body).
+Proof.
+  exact (registered_temporal_constructor_discharge_at_T
+    registered_temporal_constructor_discharge).
+Qed.
+
+Theorem registered_repeat_constructor_discharge_projected :
+  forall n : nat, forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (repeat n body).
+Proof.
+  exact (registered_repeat_constructor_discharge_repeat
+    registered_repeat_constructor_discharge).
+Qed.
+
+Theorem registered_polarity_constructor_discharge_not_T_projected :
+  forall body : PropT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT body ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (not_T body).
+Proof.
+  exact (registered_polarity_constructor_discharge_not_T
+    registered_polarity_constructor_discharge).
+Qed.
+
+Theorem registered_transition_cause_constructor_discharge_transition_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+      TransitionT (Transition theme scale source target).
+Proof.
+  exact (registered_transition_cause_constructor_discharge_transition
+    registered_transition_cause_constructor_discharge).
+Qed.
+
+Theorem registered_transition_cause_constructor_discharge_cause_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect).
+Proof.
+  exact (registered_transition_cause_constructor_discharge_cause
+    registered_transition_cause_constructor_discharge).
+Qed.
+
+Theorem registered_constructor_class_discharge_suite_spec_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (registered_constructor_class_discharge_suite_spec_sound
+    registered_truth_condition_constructor_class_discharge_suite).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -10282,3 +10630,21 @@ Check registered_truth_condition_constructor_discharge_not_T_projected.
 Check registered_truth_condition_constructor_discharge_transition_projected.
 Check registered_truth_condition_constructor_discharge_cause_projected.
 Check registered_truth_condition_constructor_discharge_spec_sound_projected.
+Check RegisteredLexicalConstructorDischarge.
+Check RegisteredSigmaConstructorDischarge.
+Check RegisteredTemporalConstructorDischarge.
+Check RegisteredRepeatConstructorDischarge.
+Check RegisteredPolarityConstructorDischarge.
+Check RegisteredTransitionCauseConstructorDischarge.
+Check RegisteredTruthConditionConstructorClassDischargeSuite.
+Check registered_truth_condition_constructor_class_discharge_suite.
+Check registered_truth_condition_constructor_class_discharge_suite_exists.
+Check registered_truth_condition_constructor_class_discharge_suite_source_matches.
+Check registered_lexical_constructor_discharge_application_projected.
+Check registered_sigma_constructor_discharge_Entity_projected.
+Check registered_temporal_constructor_discharge_at_T_projected.
+Check registered_repeat_constructor_discharge_projected.
+Check registered_polarity_constructor_discharge_not_T_projected.
+Check registered_transition_cause_constructor_discharge_transition_projected.
+Check registered_transition_cause_constructor_discharge_cause_projected.
+Check registered_constructor_class_discharge_suite_spec_sound_projected.

@@ -465,6 +465,13 @@ projection. The constructor-discharge layer introduces
 `registered_truth_condition_constructor_discharge_certificate`, and re-exports
 the registered lexical, Sigma, repeat, temporal, polarity, Transition/Cause, and
 spec-soundness clauses through one checked constructor-level record.
+The constructor-class-discharge layer introduces
+`RegisteredTruthConditionConstructorClassDischargeSuite`, instantiates
+`registered_truth_condition_constructor_class_discharge_suite`, and separates
+the same checked discharge route into lexical, Sigma, temporal, repeat,
+polarity, and Transition/Cause records. This keeps the remaining concrete
+truth-condition work class-local without claiming arbitrary natural-language
+completion.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

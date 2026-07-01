@@ -21293,6 +21293,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_registered_truth_condition_constructor_"
+                    "class_discharge_suite"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21613,6 +21621,15 @@ def project_completion_status_payload(
                     "so the remaining truth-condition work can be tracked "
                     "one constructor class at a time rather than only through "
                     "finite atom witnesses. "
+                    "The newest constructor-class suite then splits that "
+                    "certificate into RegisteredLexicalConstructorDischarge, "
+                    "RegisteredSigmaConstructorDischarge, "
+                    "RegisteredTemporalConstructorDischarge, "
+                    "RegisteredRepeatConstructorDischarge, "
+                    "RegisteredPolarityConstructorDischarge, "
+                    "RegisteredTransitionCauseConstructorDischarge, and "
+                    "RegisteredTruthConditionConstructorClassDischargeSuite, "
+                    "with checked projection theorems for each class. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

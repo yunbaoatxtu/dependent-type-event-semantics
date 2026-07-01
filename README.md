@@ -1494,6 +1494,12 @@ with its truth and atomic discharge evidence. The next verified objective
 `RegisteredTruthConditionConstructorDischargeCertificate`, which packages the
 registered lexical, Sigma, repeat, temporal, polarity, Transition, Cause, and
 spec-to-atomic discharge projections as a single constructor-level certificate.
+The next verified objective
+`coq_registered_truth_condition_constructor_class_discharge_suite` adds
+`RegisteredTruthConditionConstructorClassDischargeSuite`, splitting that
+constructor-level certificate into lexical, Sigma, temporal, repeat, polarity,
+and Transition/Cause class records with checked projection theorems for each
+class.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

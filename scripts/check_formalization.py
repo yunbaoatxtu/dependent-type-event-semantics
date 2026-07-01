@@ -3679,6 +3679,67 @@ def main() -> None:
             and "Check registered_truth_condition_constructor_discharge_spec_sound_projected."
             in coq
         ),
+        "lean registered truth condition constructor class discharge suite": (
+            "structure RegisteredLexicalConstructorDischarge : Type where"
+            in lean
+            and "structure RegisteredSigmaConstructorDischarge : Type where"
+            in lean
+            and "structure RegisteredTemporalConstructorDischarge : Type where"
+            in lean
+            and "structure RegisteredRepeatConstructorDischarge : Type where"
+            in lean
+            and "structure RegisteredPolarityConstructorDischarge : Type where"
+            in lean
+            and "structure RegisteredTransitionCauseConstructorDischarge : Type where"
+            in lean
+            and "structure RegisteredTruthConditionConstructorClassDischargeSuite : Type where"
+            in lean
+            and "def registered_truth_condition_constructor_class_discharge_suite :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_class_discharge_suite_exists :"
+            in lean
+            and "theorem registered_lexical_constructor_discharge_application_projected :"
+            in lean
+            and "theorem registered_sigma_constructor_discharge_Entity_projected :"
+            in lean
+            and "theorem registered_temporal_constructor_discharge_at_T_projected :"
+            in lean
+            and "theorem registered_transition_cause_constructor_discharge_cause_projected :"
+            in lean
+            and "#check RegisteredTruthConditionConstructorClassDischargeSuite"
+            in lean
+            and "#check registered_constructor_class_discharge_suite_spec_sound_projected"
+            in lean
+        ),
+        "coq registered truth condition constructor class discharge suite": (
+            "Record RegisteredLexicalConstructorDischarge : Type := {" in coq
+            and "Record RegisteredSigmaConstructorDischarge : Type := {" in coq
+            and "Record RegisteredTemporalConstructorDischarge : Type := {" in coq
+            and "Record RegisteredRepeatConstructorDischarge : Type := {" in coq
+            and "Record RegisteredPolarityConstructorDischarge : Type := {" in coq
+            and "Record RegisteredTransitionCauseConstructorDischarge : Type := {"
+            in coq
+            and "Record RegisteredTruthConditionConstructorClassDischargeSuite : Type := {"
+            in coq
+            and "Definition registered_truth_condition_constructor_class_discharge_suite :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_class_discharge_suite_exists :"
+            in coq
+            and "Theorem registered_lexical_constructor_discharge_application_projected :"
+            in coq
+            and "Theorem registered_sigma_constructor_discharge_Entity_projected :"
+            in coq
+            and "Theorem registered_temporal_constructor_discharge_at_T_projected :"
+            in coq
+            and "Theorem registered_transition_cause_constructor_discharge_cause_projected :"
+            in coq
+            and "Check RegisteredTruthConditionConstructorClassDischargeSuite."
+            in coq
+            and "Check registered_constructor_class_discharge_suite_spec_sound_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

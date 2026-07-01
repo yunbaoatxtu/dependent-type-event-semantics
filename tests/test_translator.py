@@ -4756,6 +4756,34 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record RegisteredTruthConditionConstructorClassDischargeSuite : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition registered_truth_condition_constructor_class_discharge_suite :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_lexical_constructor_discharge_application_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_sigma_constructor_discharge_Entity_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_temporal_constructor_discharge_at_T_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem registered_transition_cause_constructor_discharge_cause_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check registered_constructor_class_discharge_suite_spec_sound_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17548,6 +17576,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_finite_registered_atomic_truth_condition_instance_discharge_certificate",
                 "coq_finite_registered_atomic_truth_condition_typed_discharge_certificate",
                 "coq_registered_truth_condition_constructor_discharge_certificate",
+                "coq_registered_truth_condition_constructor_class_discharge_suite",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -26927,6 +26956,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_registered_truth_condition_constructor_discharge_certificate`",
             readme,
         )
+        self.assertIn(
+            "`RegisteredTruthConditionConstructorClassDischargeSuite`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_registered_truth_condition_constructor_class_discharge_suite`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27180,6 +27217,14 @@ class TranslatorTests(unittest.TestCase):
             "`registered_truth_condition_constructor_discharge_certificate`",
             formalization_readme,
         )
+        self.assertIn(
+            "`RegisteredTruthConditionConstructorClassDischargeSuite`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`registered_truth_condition_constructor_class_discharge_suite`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -27430,6 +27475,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_registered_truth_condition_constructor_discharge_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "RegisteredTruthConditionConstructorClassDischargeSuite",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_registered_truth_condition_constructor_class_discharge_suite",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
