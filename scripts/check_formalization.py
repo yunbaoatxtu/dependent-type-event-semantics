@@ -4162,6 +4162,62 @@ def main() -> None:
             and "Check finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic_projected."
             in coq
         ),
+        "lean concrete truth provider class obligation suite": (
+            "structure ConcreteTruthConditionProviderClassObligationSuite : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_class_obligation_suite :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_suite_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_source_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_ledger_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_direct_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_independent_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_Food_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_ledger_since_T_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_obligation_ledger_cause_projected :"
+            in lean
+            and "#check ConcreteTruthConditionProviderClassObligationSuite"
+            in lean
+            and "#check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected"
+            in lean
+        ),
+        "coq concrete truth provider class obligation suite": (
+            "Record ConcreteTruthConditionProviderClassObligationSuite : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_class_obligation_suite :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_suite_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_source_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_ledger_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_direct_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_independent_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_Food_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_ledger_since_T_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_obligation_ledger_cause_projected :"
+            in coq
+            and "Check ConcreteTruthConditionProviderClassObligationSuite."
+            in coq
+            and "Check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

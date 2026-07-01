@@ -528,6 +528,13 @@ interface packages the direct concrete registered spec, the independent suite
 spec, and the finite provider certificate, and the certificate rechecks every
 finite registered lexical and transition atom through that interface before
 projecting it back to `AtomicClosureTruth`.
+The concrete truth-condition provider class-obligation suite introduces
+`ConcreteTruthConditionProviderClassObligationSuite` and
+`concrete_truth_condition_provider_class_obligation_suite`. It records the
+provider interface source, the registered constructor-class projection
+obligation ledger, direct and independent provider soundness, and the ledger
+projections for lexical application, each generated Sigma type, temporal
+operators, repeat, polarity, Transition/Cause, and spec-to-atomic soundness.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

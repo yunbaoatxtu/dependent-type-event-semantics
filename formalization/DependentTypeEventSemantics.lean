@@ -7849,6 +7849,271 @@ theorem finite_registered_atomic_concrete_truth_provider_interface_transition_1_
     AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken) := by
   exact finite_registered_atomic_concrete_truth_provider_interface_certificate.finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic
 
+structure ConcreteTruthConditionProviderClassObligationSuite : Type where
+  concrete_truth_condition_provider_class_obligation_source :
+      ConcreteTruthConditionProviderInterface
+  concrete_truth_condition_provider_class_obligation_source_eq :
+      concrete_truth_condition_provider_class_obligation_source =
+        concrete_truth_condition_provider_interface
+  concrete_truth_condition_provider_class_obligation_ledger :
+      RegisteredTruthConditionConstructorClassProjectionObligationLedger
+  concrete_truth_condition_provider_class_obligation_ledger_eq :
+      concrete_truth_condition_provider_class_obligation_ledger =
+        registered_truth_condition_constructor_class_projection_obligation_ledger
+  concrete_truth_condition_provider_class_obligation_direct_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_truth_conditions.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_provider_class_obligation_independent_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_provider_class_obligation_ledger_lexical_application :
+      (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_Entity :
+      (P : Entity -> Prop) ->
+      ((x : Entity) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Entity => P x)
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_Food :
+      (P : Food -> Prop) ->
+      ((x : Food) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Food => P x)
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_State :
+      (P : State -> Prop) ->
+      ((x : State) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : State => P x)
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_StateScale :
+      (P : StateScale -> Prop) ->
+      ((x : StateScale) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : StateScale => P x)
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_TransitionT :
+      (P : TransitionT -> Prop) ->
+      ((x : TransitionT) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : TransitionT => P x)
+  concrete_truth_condition_provider_class_obligation_ledger_at_T :
+      (marker : Entity) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (at_T marker body)
+  concrete_truth_condition_provider_class_obligation_ledger_during_T :
+      (marker : Entity) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (during_T marker body)
+  concrete_truth_condition_provider_class_obligation_ledger_before_T :
+      (marker : Entity) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (before_T marker body)
+  concrete_truth_condition_provider_class_obligation_ledger_after_T :
+      (marker : Entity) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (after_T marker body)
+  concrete_truth_condition_provider_class_obligation_ledger_until_T :
+      (marker : Entity) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (until_T marker body)
+  concrete_truth_condition_provider_class_obligation_ledger_since_T :
+      (marker : Entity) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (since_T marker body)
+  concrete_truth_condition_provider_class_obligation_ledger_repeat :
+      (n : Nat) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body)
+  concrete_truth_condition_provider_class_obligation_ledger_not_T :
+      (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (not_T body)
+  concrete_truth_condition_provider_class_obligation_ledger_transition :
+      (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->
+      RegisteredStateTransitionTruth theme scale source target ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target)
+  concrete_truth_condition_provider_class_obligation_ledger_cause :
+      (causer : Entity) -> (effect : TransitionT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT effect ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (Cause causer effect)
+  concrete_truth_condition_provider_class_obligation_ledger_spec_sound :
+      (A : Type) -> (term : A) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def concrete_truth_condition_provider_class_obligation_suite :
+    ConcreteTruthConditionProviderClassObligationSuite := {
+  concrete_truth_condition_provider_class_obligation_source := concrete_truth_condition_provider_interface,
+  concrete_truth_condition_provider_class_obligation_source_eq := rfl,
+  concrete_truth_condition_provider_class_obligation_ledger := registered_truth_condition_constructor_class_projection_obligation_ledger,
+  concrete_truth_condition_provider_class_obligation_ledger_eq := rfl,
+  concrete_truth_condition_provider_class_obligation_direct_sound := concrete_truth_condition_provider_direct_sound_projected,
+  concrete_truth_condition_provider_class_obligation_independent_sound := concrete_truth_condition_provider_independent_sound_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_lexical_application := registered_constructor_class_projection_obligation_ledger_lexical_application_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_Entity := registered_constructor_class_projection_obligation_ledger_sigma_Entity_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_Food := registered_constructor_class_projection_obligation_ledger_sigma_Food_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_State := registered_constructor_class_projection_obligation_ledger_sigma_State_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_StateScale := registered_constructor_class_projection_obligation_ledger_sigma_StateScale_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_sigma_TransitionT := registered_constructor_class_projection_obligation_ledger_sigma_TransitionT_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_at_T := registered_constructor_class_projection_obligation_ledger_at_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_during_T := registered_constructor_class_projection_obligation_ledger_during_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_before_T := registered_constructor_class_projection_obligation_ledger_before_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_after_T := registered_constructor_class_projection_obligation_ledger_after_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_until_T := registered_constructor_class_projection_obligation_ledger_until_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_since_T := registered_constructor_class_projection_obligation_ledger_since_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_repeat := registered_constructor_class_projection_obligation_ledger_repeat_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_not_T := registered_constructor_class_projection_obligation_ledger_not_T_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_transition := registered_constructor_class_projection_obligation_ledger_transition_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_cause := registered_constructor_class_projection_obligation_ledger_cause_projected,
+  concrete_truth_condition_provider_class_obligation_ledger_spec_sound := registered_constructor_class_projection_obligation_ledger_spec_sound_projected
+}
+
+theorem concrete_truth_condition_provider_class_obligation_suite_exists :
+    Exists (fun S : ConcreteTruthConditionProviderClassObligationSuite =>
+      S = concrete_truth_condition_provider_class_obligation_suite) := by
+  exact Exists.intro concrete_truth_condition_provider_class_obligation_suite rfl
+
+theorem concrete_truth_condition_provider_class_obligation_source_matches :
+    concrete_truth_condition_provider_class_obligation_suite.
+      concrete_truth_condition_provider_class_obligation_source =
+        concrete_truth_condition_provider_interface := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_source_eq
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_matches :
+    concrete_truth_condition_provider_class_obligation_suite.
+      concrete_truth_condition_provider_class_obligation_ledger =
+        registered_truth_condition_constructor_class_projection_obligation_ledger := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_eq
+
+theorem concrete_truth_condition_provider_class_obligation_direct_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_truth_conditions.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_direct_sound
+
+theorem concrete_truth_condition_provider_class_obligation_independent_sound_projected :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_independent_sound
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected :
+    (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_lexical_application
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_Entity_projected :
+    (P : Entity -> Prop) ->
+    ((x : Entity) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Entity => P x) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_sigma_Entity
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_Food_projected :
+    (P : Food -> Prop) ->
+    ((x : Food) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Food => P x) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_sigma_Food
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_State_projected :
+    (P : State -> Prop) ->
+    ((x : State) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : State => P x) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_sigma_State
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_StateScale_projected :
+    (P : StateScale -> Prop) ->
+    ((x : StateScale) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : StateScale => P x) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_sigma_StateScale
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_TransitionT_projected :
+    (P : TransitionT -> Prop) ->
+    ((x : TransitionT) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : TransitionT => P x) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_sigma_TransitionT
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_at_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (at_T marker body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_at_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_during_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (during_T marker body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_during_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_before_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (before_T marker body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_before_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_after_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (after_T marker body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_after_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_until_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (until_T marker body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_until_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_since_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (since_T marker body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_since_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_repeat_projected :
+    (n : Nat) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_repeat
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_not_T_projected :
+    (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (not_T body) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_not_T
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_transition_projected :
+    (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->
+    RegisteredStateTransitionTruth theme scale source target ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_transition
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_cause_projected :
+    (causer : Entity) -> (effect : TransitionT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT effect ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (Cause causer effect) := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_cause
+
+theorem concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected :
+    (A : Type) -> (term : A) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_provider_class_obligation_suite.
+    concrete_truth_condition_provider_class_obligation_ledger_spec_sound
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -8768,3 +9033,27 @@ theorem finite_registered_atomic_concrete_truth_provider_interface_transition_1_
 #check finite_registered_atomic_concrete_truth_provider_interface_transition_1_direct_atomic_projected
 #check finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_truth_projected
 #check finite_registered_atomic_concrete_truth_provider_interface_transition_1_suite_atomic_projected
+#check ConcreteTruthConditionProviderClassObligationSuite
+#check concrete_truth_condition_provider_class_obligation_suite
+#check concrete_truth_condition_provider_class_obligation_suite_exists
+#check concrete_truth_condition_provider_class_obligation_source_matches
+#check concrete_truth_condition_provider_class_obligation_ledger_matches
+#check concrete_truth_condition_provider_class_obligation_direct_sound_projected
+#check concrete_truth_condition_provider_class_obligation_independent_sound_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_sigma_Entity_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_sigma_Food_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_sigma_State_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_sigma_StateScale_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_sigma_TransitionT_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_at_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_during_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_before_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_after_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_until_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_since_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_repeat_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_not_T_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_transition_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_cause_projected
+#check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected

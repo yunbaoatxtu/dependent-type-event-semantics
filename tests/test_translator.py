@@ -4972,6 +4972,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionProviderClassObligationSuite : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_provider_class_obligation_suite :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_obligation_direct_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_sigma_Food_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_cause_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17773,6 +17797,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_finite_registered_atomic_concrete_truth_instance_ledger",
                 "coq_finite_registered_atomic_concrete_truth_provider_certificate",
                 "coq_finite_registered_atomic_concrete_truth_provider_interface_certificate",
+                "coq_concrete_truth_condition_provider_class_obligation_suite",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27228,6 +27253,14 @@ class TranslatorTests(unittest.TestCase):
             "`FiniteRegisteredAtomicConcreteTruthProviderInterfaceCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_provider_class_obligation_suite`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderClassObligationSuite`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27548,6 +27581,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`finite_registered_atomic_concrete_truth_provider_interface_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderClassObligationSuite`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_provider_class_obligation_suite`",
             formalization_readme,
         )
         self.assertIn("AtomicValuationSpec", manuscript)
@@ -27873,6 +27914,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_finite_registered_atomic_concrete_truth_provider_interface_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionProviderClassObligationSuite",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_provider_class_obligation_suite",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

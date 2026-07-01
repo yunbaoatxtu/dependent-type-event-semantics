@@ -1565,6 +1565,15 @@ independent suite spec, and the finite provider certificate behind one checked
 interface, then reprojects every finite registered lexical and transition
 atom's direct and suite truth inhabitants through that interface back to
 `AtomicClosureTruth`.
+The next verified objective
+`coq_concrete_truth_condition_provider_class_obligation_suite` adds
+`ConcreteTruthConditionProviderClassObligationSuite`. This layer binds the
+provider interface to the
+`RegisteredTruthConditionConstructorClassProjectionObligationLedger`: it stores
+the checked provider source, the constructor-obligation ledger source, direct
+and independent provider soundness projections, and every ledger projection for
+lexical application, Sigma, temporal operators, repeat, polarity,
+Transition/Cause, and spec-to-atomic soundness.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

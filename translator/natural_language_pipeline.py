@@ -21365,6 +21365,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_provider_"
+                    "class_obligation_suite"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21749,6 +21757,14 @@ def project_completion_status_payload(
                     "and reprojects every finite registered lexical and "
                     "transition atom's direct and suite truth inhabitants "
                     "through that interface back to AtomicClosureTruth. "
+                    "The newest provider class-obligation suite then binds "
+                    "that interface to the registered constructor-class "
+                    "projection-obligation ledger: it records the provider "
+                    "source, the constructor ledger source, the direct and "
+                    "independent provider soundness projections, and every "
+                    "ledger projection for lexical application, Sigma, "
+                    "temporal operators, repeat, polarity, Transition/Cause, "
+                    "and spec-to-atomic soundness. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

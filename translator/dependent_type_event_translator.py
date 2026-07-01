@@ -23334,6 +23334,608 @@ def finite_registered_atomic_concrete_truth_provider_interface_certificate_lines
     return lines
 
 
+def concrete_truth_condition_provider_class_obligation_suite_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Bind the concrete provider interface to constructor-class obligations."""
+
+    sigma_types = list(declarations["types"])
+    temporal_constructors = [
+        "at_T",
+        "during_T",
+        "before_T",
+        "after_T",
+        "until_T",
+        "since_T",
+    ]
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionProviderClassObligationSuite : Type where",
+            "  concrete_truth_condition_provider_class_obligation_source :",
+            "      ConcreteTruthConditionProviderInterface",
+            "  concrete_truth_condition_provider_class_obligation_source_eq :",
+            "      concrete_truth_condition_provider_class_obligation_source =",
+            "        concrete_truth_condition_provider_interface",
+            "  concrete_truth_condition_provider_class_obligation_ledger :",
+            "      RegisteredTruthConditionConstructorClassProjectionObligationLedger",
+            "  concrete_truth_condition_provider_class_obligation_ledger_eq :",
+            "      concrete_truth_condition_provider_class_obligation_ledger =",
+            "        registered_truth_condition_constructor_class_projection_obligation_ledger",
+            "  concrete_truth_condition_provider_class_obligation_direct_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_registered_truth_conditions.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_provider_class_obligation_independent_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_provider_class_obligation_ledger_lexical_application :",
+            "      (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes A term",
+        ]
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    "  concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_sigma_{type_name} :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x)",
+                ]
+            )
+        for name in temporal_constructors:
+            lines.extend(
+                [
+                    "  concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_{name} :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body)",
+                ]
+            )
+        lines.extend(
+            [
+                "  concrete_truth_condition_provider_class_obligation_ledger_repeat :",
+                "      (n : Nat) -> (body : PropT) ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (repeat n body)",
+                "  concrete_truth_condition_provider_class_obligation_ledger_not_T :",
+                "      (body : PropT) ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (not_T body)",
+                "  concrete_truth_condition_provider_class_obligation_ledger_transition :",
+                "      (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->",
+                "      RegisteredStateTransitionTruth theme scale source target ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes TransitionT (Transition theme scale source target)",
+                "  concrete_truth_condition_provider_class_obligation_ledger_cause :",
+                "      (causer : Entity) -> (effect : TransitionT) ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect)",
+                "  concrete_truth_condition_provider_class_obligation_ledger_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "",
+                "def concrete_truth_condition_provider_class_obligation_suite :",
+                "    ConcreteTruthConditionProviderClassObligationSuite := {",
+            ]
+        )
+        assignments: list[tuple[str, str]] = [
+            (
+                "concrete_truth_condition_provider_class_obligation_source",
+                "concrete_truth_condition_provider_interface",
+            ),
+            ("concrete_truth_condition_provider_class_obligation_source_eq", "rfl"),
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger",
+                "registered_truth_condition_constructor_class_projection_obligation_ledger",
+            ),
+            ("concrete_truth_condition_provider_class_obligation_ledger_eq", "rfl"),
+            (
+                "concrete_truth_condition_provider_class_obligation_direct_sound",
+                "concrete_truth_condition_provider_direct_sound_projected",
+            ),
+            (
+                "concrete_truth_condition_provider_class_obligation_independent_sound",
+                "concrete_truth_condition_provider_independent_sound_projected",
+            ),
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger_lexical_application",
+                "registered_constructor_class_projection_obligation_ledger_lexical_application_projected",
+            ),
+        ]
+        for type_name in sigma_types:
+            assignments.append(
+                (
+                    "concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_sigma_{type_name}",
+                    "registered_constructor_class_projection_obligation_ledger_"
+                    f"sigma_{type_name}_projected",
+                )
+            )
+        for name in temporal_constructors:
+            assignments.append(
+                (
+                    "concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_{name}",
+                    "registered_constructor_class_projection_obligation_ledger_"
+                    f"{name}_projected",
+                )
+            )
+        assignments.extend(
+            [
+                (
+                    "concrete_truth_condition_provider_class_obligation_ledger_repeat",
+                    "registered_constructor_class_projection_obligation_ledger_repeat_projected",
+                ),
+                (
+                    "concrete_truth_condition_provider_class_obligation_ledger_not_T",
+                    "registered_constructor_class_projection_obligation_ledger_not_T_projected",
+                ),
+                (
+                    "concrete_truth_condition_provider_class_obligation_ledger_transition",
+                    "registered_constructor_class_projection_obligation_ledger_transition_projected",
+                ),
+                (
+                    "concrete_truth_condition_provider_class_obligation_ledger_cause",
+                    "registered_constructor_class_projection_obligation_ledger_cause_projected",
+                ),
+                (
+                    "concrete_truth_condition_provider_class_obligation_ledger_spec_sound",
+                    "registered_constructor_class_projection_obligation_ledger_spec_sound_projected",
+                ),
+            ]
+        )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_suite_exists :",
+                "    Exists (fun S : ConcreteTruthConditionProviderClassObligationSuite =>",
+                "      S = concrete_truth_condition_provider_class_obligation_suite) := by",
+                "  exact Exists.intro concrete_truth_condition_provider_class_obligation_suite rfl",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_source_matches :",
+                "    concrete_truth_condition_provider_class_obligation_suite.",
+                "      concrete_truth_condition_provider_class_obligation_source =",
+                "        concrete_truth_condition_provider_interface := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_source_eq",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_matches :",
+                "    concrete_truth_condition_provider_class_obligation_suite.",
+                "      concrete_truth_condition_provider_class_obligation_ledger =",
+                "        registered_truth_condition_constructor_class_projection_obligation_ledger := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_eq",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_direct_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                "    concrete_registered_truth_conditions.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_direct_sound",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_independent_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                "    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_independent_sound",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected :",
+                "    (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes A term := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_lexical_application",
+            ]
+        )
+        for type_name in sigma_types:
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_sigma_{type_name}_projected :",
+                    f"    (P : {type_name} -> Prop) ->",
+                    f"    ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x) := by",
+                    "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                    "    concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_sigma_{type_name}",
+                ]
+            )
+        for name in temporal_constructors:
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_{name}_projected :",
+                    "    (marker : Entity) -> (body : PropT) ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT ({name} marker body) := by",
+                    "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                    "    concrete_truth_condition_provider_class_obligation_"
+                    f"ledger_{name}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_repeat_projected :",
+                "    (n : Nat) -> (body : PropT) ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (repeat n body) := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_repeat",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_not_T_projected :",
+                "    (body : PropT) ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (not_T body) := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_not_T",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_transition_projected :",
+                "    (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->",
+                "    RegisteredStateTransitionTruth theme scale source target ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes TransitionT (Transition theme scale source target) := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_transition",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_cause_projected :",
+                "    (causer : Entity) -> (effect : TransitionT) ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect) := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_cause",
+                "",
+                "theorem concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_provider_class_obligation_suite.",
+                "    concrete_truth_condition_provider_class_obligation_ledger_spec_sound",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionProviderClassObligationSuite : Type := {",
+        "  concrete_truth_condition_provider_class_obligation_source :",
+        "      ConcreteTruthConditionProviderInterface;",
+        "  concrete_truth_condition_provider_class_obligation_source_eq :",
+        "      concrete_truth_condition_provider_class_obligation_source =",
+        "        concrete_truth_condition_provider_interface;",
+        "  concrete_truth_condition_provider_class_obligation_ledger :",
+        "      RegisteredTruthConditionConstructorClassProjectionObligationLedger;",
+        "  concrete_truth_condition_provider_class_obligation_ledger_eq :",
+        "      concrete_truth_condition_provider_class_obligation_ledger =",
+        "        registered_truth_condition_constructor_class_projection_obligation_ledger;",
+        "  concrete_truth_condition_provider_class_obligation_direct_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes concrete_registered_truth_conditions A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_provider_class_obligation_independent_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_provider_class_obligation_ledger_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} A term;",
+    ]
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                "  concrete_truth_condition_provider_class_obligation_"
+                f"ledger_sigma_{type_name} :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {constructor_spec_coq} Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq}",
+                f"        Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    for name in temporal_constructors:
+        lines.extend(
+            [
+                "  concrete_truth_condition_provider_class_obligation_"
+                f"ledger_{name} :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT body ->",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq}",
+                f"        PropT ({name} marker body);",
+            ]
+        )
+    lines.extend(
+        [
+            "  concrete_truth_condition_provider_class_obligation_ledger_repeat :",
+            "      forall n : nat, forall body : PropT,",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} PropT body ->",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} PropT (repeat n body);",
+            "  concrete_truth_condition_provider_class_obligation_ledger_not_T :",
+            "      forall body : PropT,",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} PropT body ->",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} PropT (not_T body);",
+            "  concrete_truth_condition_provider_class_obligation_ledger_transition :",
+            "      forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq}",
+            "        TransitionT (Transition theme scale source target);",
+            "  concrete_truth_condition_provider_class_obligation_ledger_cause :",
+            "      forall causer : Entity, forall effect : TransitionT,",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} TransitionT effect ->",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} PropT (Cause causer effect);",
+            "  concrete_truth_condition_provider_class_obligation_ledger_spec_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} A term ->",
+            "      AtomicClosureTruth A term",
+            "}.",
+            "",
+            "Definition concrete_truth_condition_provider_class_obligation_suite :",
+            "  ConcreteTruthConditionProviderClassObligationSuite := {|",
+        ]
+    )
+    assignments = [
+        (
+            "concrete_truth_condition_provider_class_obligation_source",
+            "concrete_truth_condition_provider_interface",
+        ),
+        ("concrete_truth_condition_provider_class_obligation_source_eq", "eq_refl"),
+        (
+            "concrete_truth_condition_provider_class_obligation_ledger",
+            "registered_truth_condition_constructor_class_projection_obligation_ledger",
+        ),
+        ("concrete_truth_condition_provider_class_obligation_ledger_eq", "eq_refl"),
+        (
+            "concrete_truth_condition_provider_class_obligation_direct_sound",
+            "concrete_truth_condition_provider_direct_sound_projected",
+        ),
+        (
+            "concrete_truth_condition_provider_class_obligation_independent_sound",
+            "concrete_truth_condition_provider_independent_sound_projected",
+        ),
+        (
+            "concrete_truth_condition_provider_class_obligation_ledger_lexical_application",
+            "registered_constructor_class_projection_obligation_ledger_lexical_application_projected",
+        ),
+    ]
+    for type_name in sigma_types:
+        assignments.append(
+            (
+                "concrete_truth_condition_provider_class_obligation_"
+                f"ledger_sigma_{type_name}",
+                "registered_constructor_class_projection_obligation_ledger_"
+                f"sigma_{type_name}_projected",
+            )
+        )
+    for name in temporal_constructors:
+        assignments.append(
+            (
+                "concrete_truth_condition_provider_class_obligation_"
+                f"ledger_{name}",
+                "registered_constructor_class_projection_obligation_ledger_"
+                f"{name}_projected",
+            )
+        )
+    assignments.extend(
+        [
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger_repeat",
+                "registered_constructor_class_projection_obligation_ledger_repeat_projected",
+            ),
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger_not_T",
+                "registered_constructor_class_projection_obligation_ledger_not_T_projected",
+            ),
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger_transition",
+                "registered_constructor_class_projection_obligation_ledger_transition_projected",
+            ),
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger_cause",
+                "registered_constructor_class_projection_obligation_ledger_cause_projected",
+            ),
+            (
+                "concrete_truth_condition_provider_class_obligation_ledger_spec_sound",
+                "registered_constructor_class_projection_obligation_ledger_spec_sound_projected",
+            ),
+        ]
+    )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_suite_exists :",
+            "  exists S : ConcreteTruthConditionProviderClassObligationSuite,",
+            "    S = concrete_truth_condition_provider_class_obligation_suite.",
+            "Proof.",
+            "  exists concrete_truth_condition_provider_class_obligation_suite.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_source_matches :",
+            "  concrete_truth_condition_provider_class_obligation_source",
+            "    concrete_truth_condition_provider_class_obligation_suite =",
+            "  concrete_truth_condition_provider_interface.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_source_eq",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_matches :",
+            "  concrete_truth_condition_provider_class_obligation_ledger",
+            "    concrete_truth_condition_provider_class_obligation_suite =",
+            "  registered_truth_condition_constructor_class_projection_obligation_ledger.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_eq",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_direct_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes concrete_registered_truth_conditions A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_direct_sound",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_independent_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances)",
+            "      A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_independent_sound",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_lexical_application_projected :",
+            "  forall A : Type, forall term : A,",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_lexical_application",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+        ]
+    )
+    for type_name in sigma_types:
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_provider_class_obligation_"
+                f"ledger_sigma_{type_name}_projected :",
+                f"  forall P : {type_name} -> Prop,",
+                f"    (forall x : {type_name},",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} Prop (P x)) ->",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} Prop (exists x : {type_name}, P x).",
+                "Proof.",
+                "  exact (concrete_truth_condition_provider_class_obligation_"
+                f"ledger_sigma_{type_name}",
+                "    concrete_truth_condition_provider_class_obligation_suite).",
+                "Qed.",
+            ]
+        )
+    for name in temporal_constructors:
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_provider_class_obligation_"
+                f"ledger_{name}_projected :",
+                "  forall marker : Entity, forall body : PropT,",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} PropT body ->",
+                "    fully_registered_truth_denotes",
+                f"      {constructor_spec_coq} PropT ({name} marker body).",
+                "Proof.",
+                "  exact (concrete_truth_condition_provider_class_obligation_"
+                f"ledger_{name}",
+                "    concrete_truth_condition_provider_class_obligation_suite).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_repeat_projected :",
+            "  forall n : nat, forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} PropT body ->",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} PropT (repeat n body).",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_repeat",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_not_T_projected :",
+            "  forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} PropT body ->",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} PropT (not_T body).",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_not_T",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_transition_projected :",
+            "  forall theme : Entity, forall scale : StateScale,",
+            "  forall source : State, forall target : State,",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq}",
+            "      TransitionT (Transition theme scale source target).",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_transition",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_cause_projected :",
+            "  forall causer : Entity, forall effect : TransitionT,",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} TransitionT effect ->",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} PropT (Cause causer effect).",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_cause",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_obligation_ledger_spec_sound",
+            "    concrete_truth_condition_provider_class_obligation_suite).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -27972,6 +28574,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_class_obligation_suite_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -29466,6 +30075,55 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "finite_registered_atomic_concrete_truth_provider_interface_"
                     f"transition_{index}_{route}_projected"
                 )
+        lines.append("#check ConcreteTruthConditionProviderClassObligationSuite")
+        lines.append("#check concrete_truth_condition_provider_class_obligation_suite")
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_suite_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_ledger_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_direct_sound_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_independent_sound_projected"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_provider_class_obligation_ledger_"
+            "lexical_application_projected"
+        )
+        for type_name in declarations["types"]:
+            lines.append(
+                "#check "
+                "concrete_truth_condition_provider_class_obligation_"
+                f"ledger_sigma_{type_name}_projected"
+            )
+        for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T"):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_provider_class_obligation_"
+                f"ledger_{name}_projected"
+            )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_ledger_repeat_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_ledger_not_T_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_ledger_transition_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_ledger_cause_projected"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -30323,6 +30981,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         finite_registered_atomic_concrete_truth_provider_interface_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_class_obligation_suite_lines(
             declarations,
             target,
         )
@@ -31630,6 +32295,49 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "finite_registered_atomic_concrete_truth_provider_interface_"
                 f"transition_{index}_{route}_projected."
             )
+    lines.append("Check ConcreteTruthConditionProviderClassObligationSuite.")
+    lines.append("Check concrete_truth_condition_provider_class_obligation_suite.")
+    lines.append("Check concrete_truth_condition_provider_class_obligation_suite_exists.")
+    lines.append("Check concrete_truth_condition_provider_class_obligation_source_matches.")
+    lines.append("Check concrete_truth_condition_provider_class_obligation_ledger_matches.")
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_direct_sound_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_independent_sound_projected."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_provider_class_obligation_ledger_"
+        "lexical_application_projected."
+    )
+    for type_name in declarations["types"]:
+        lines.append(
+            "Check "
+            "concrete_truth_condition_provider_class_obligation_"
+            f"ledger_sigma_{type_name}_projected."
+        )
+    for name in ("at_T", "during_T", "before_T", "after_T", "until_T", "since_T"):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_provider_class_obligation_"
+            f"ledger_{name}_projected."
+        )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_ledger_repeat_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_ledger_not_T_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_ledger_transition_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_ledger_cause_projected."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected."
+    )
     return "\n".join(lines) + "\n"
 
 
