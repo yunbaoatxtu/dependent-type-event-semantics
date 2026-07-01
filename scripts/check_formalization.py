@@ -1340,6 +1340,90 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_truth_condition_typed_lexical_atom_count = len(
+        re.findall(
+            r"^def finite_registered_atomic_truth_condition_typed_lexical_atom_\d+(?:\s|:)",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_typed_lexical_atom_count = len(
+        re.findall(
+            r"^Definition finite_registered_atomic_truth_condition_typed_lexical_atom_\d+(?:\s|:)",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_typed_lexical_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_typed_discharge_lexical_\d+_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_typed_lexical_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_typed_discharge_lexical_\d+_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_typed_lexical_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_typed_discharge_lexical_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_typed_lexical_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_typed_discharge_lexical_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_typed_transition_atom_count = len(
+        re.findall(
+            r"^def finite_registered_atomic_truth_condition_typed_transition_atom_\d+(?:\s|:)",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_typed_transition_atom_count = len(
+        re.findall(
+            r"^Definition finite_registered_atomic_truth_condition_typed_transition_atom_\d+(?:\s|:)",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_typed_transition_truth_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_typed_discharge_transition_\d+_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_typed_transition_truth_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_typed_discharge_transition_\d+_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_truth_condition_typed_transition_atomic_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_truth_condition_typed_discharge_transition_\d+_atomic_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_truth_condition_typed_transition_atomic_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_truth_condition_typed_discharge_transition_\d+_atomic_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -3447,6 +3531,96 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_truth_condition_discharge_transition_1_atomic_projected."
+            in coq
+        ),
+        "lean finite registered atomic truth condition typed discharge certificate": (
+            lean_finite_registered_atomic_truth_condition_typed_lexical_atom_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_typed_lexical_truth_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_typed_lexical_atomic_count
+            == 4
+            and lean_finite_registered_atomic_truth_condition_typed_transition_atom_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_typed_transition_truth_count
+            == 1
+            and lean_finite_registered_atomic_truth_condition_typed_transition_atomic_count
+            == 1
+            and "structure RegisteredTruthConditionAtom : Type where" in lean
+            and "structure RegisteredTruthConditionAtomDischarge "
+            "(atom : RegisteredTruthConditionAtom) : Type where" in lean
+            and "structure FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate : Type where"
+            in lean
+            and "def finite_registered_atomic_truth_condition_typed_discharge_certificate :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_certificate_exists :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_source_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_sound_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_lexical_3_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_lexical_3_atomic_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_transition_1_atomic_projected :"
+            in lean
+            and "#check "
+            "FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate"
+            in lean
+            and "#check "
+            "finite_registered_atomic_truth_condition_typed_discharge_transition_1_atomic_projected"
+            in lean
+        ),
+        "coq finite registered atomic truth condition typed discharge certificate": (
+            coq_finite_registered_atomic_truth_condition_typed_lexical_atom_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_typed_lexical_truth_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_typed_lexical_atomic_count
+            == 4
+            and coq_finite_registered_atomic_truth_condition_typed_transition_atom_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_typed_transition_truth_count
+            == 1
+            and coq_finite_registered_atomic_truth_condition_typed_transition_atomic_count
+            == 1
+            and "Record RegisteredTruthConditionAtom : Type := {" in coq
+            and "Record RegisteredTruthConditionAtomDischarge "
+            "(atom : RegisteredTruthConditionAtom) : Type := {" in coq
+            and "Record FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate : Type := {"
+            in coq
+            and "Definition finite_registered_atomic_truth_condition_typed_discharge_certificate :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_certificate_exists :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_source_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_sound_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_lexical_3_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_lexical_3_atomic_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_truth_condition_typed_discharge_transition_1_atomic_projected :"
+            in coq
+            and "Check "
+            "FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate."
+            in coq
+            and "Check "
+            "finite_registered_atomic_truth_condition_typed_discharge_transition_1_atomic_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (

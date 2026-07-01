@@ -21277,6 +21277,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_finite_registered_atomic_truth_condition_"
+                    "typed_discharge_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21582,6 +21590,13 @@ def project_completion_status_payload(
                     "soundness projection, and both truth and atomic "
                     "discharge fields for each finite registered lexical "
                     "and transition atom. "
+                    "The newest typed-discharge layer then reifies those "
+                    "finite atoms as dependent RegisteredTruthConditionAtom "
+                    "objects and packages each proof as a "
+                    "RegisteredTruthConditionAtomDischarge, so the Coq "
+                    "boundary now checks a typed atom plus its truth and "
+                    "atomic discharge rather than only a family of named "
+                    "projection theorems. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

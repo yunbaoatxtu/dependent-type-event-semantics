@@ -1482,7 +1482,14 @@ projects them back to `AtomicClosureTruth`. The next verified objective
 adds `FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate`, which
 packages the selected independent `FullyRegisteredTruthConditionSpec`, its
 spec-to-atomic soundness projection, and both truth and atomic discharge fields
-for every finite registered lexical and transition atom. The open blocker remains
+for every finite registered lexical and transition atom. The next verified
+objective
+`coq_finite_registered_atomic_truth_condition_typed_discharge_certificate`
+adds `RegisteredTruthConditionAtom`,
+`RegisteredTruthConditionAtomDischarge`, and
+`FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate`, reifying each
+finite registered lexical and transition atom as a dependent typed atom paired
+with its truth and atomic discharge evidence. The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth

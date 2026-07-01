@@ -454,7 +454,13 @@ instance-discharge layer then introduces
 `finite_registered_atomic_truth_condition_instance_discharge_certificate`, records
 the selected independent `FullyRegisteredTruthConditionSpec` and its
 spec-to-atomic soundness projection, and checks truth plus atomic discharge fields
-for every finite registered lexical and transition atom.
+for every finite registered lexical and transition atom. The typed-discharge
+layer introduces `RegisteredTruthConditionAtom`,
+`RegisteredTruthConditionAtomDischarge`, and
+`FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate`; each finite
+registered lexical or transition atom is reified as a dependent typed atom and
+paired with both its suite-derived truth inhabitant and its `AtomicClosureTruth`
+projection.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

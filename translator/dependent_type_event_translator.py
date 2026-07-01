@@ -16715,6 +16715,558 @@ def finite_registered_atomic_truth_condition_instance_discharge_certificate_line
     return lines
 
 
+def finite_registered_atomic_truth_condition_typed_discharge_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Package finite registered discharges as dependent typed atom objects."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    transitions: list[tuple[str, str, str, str]] = declarations["transitions"]
+
+    def schema_parts(
+        schema: LexicalApplicationSchema,
+    ) -> tuple[str, str, list[tuple[str, str]], list[str]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        binder_names = [name for name, _type_name in binders]
+        return result_type, lexical_application_term(schema), binders, binder_names
+
+    def transition_term(transition: tuple[str, str, str, str]) -> str:
+        theme, scale, source, target_state = transition
+        return f"(Transition {theme} {scale} {source} {target_state})"
+
+    def lean_binders(binders: list[tuple[str, str]]) -> str:
+        return " ".join(f"({name} : {type_name})" for name, type_name in binders)
+
+    def coq_binders(binders: list[tuple[str, str]]) -> str:
+        return " ".join(f"({name} : {type_name})" for name, type_name in binders)
+
+    def lean_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_lexical_atom_{index}"
+
+    def lean_atom_discharge_name(index: int) -> str:
+        return f"{lean_atom_name(index)}_discharge"
+
+    def lean_transition_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_transition_atom_{index}"
+
+    def lean_transition_discharge_name(index: int) -> str:
+        return f"{lean_transition_atom_name(index)}_discharge"
+
+    def coq_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_lexical_atom_{index}"
+
+    def coq_atom_discharge_name(index: int) -> str:
+        return f"{coq_atom_name(index)}_discharge"
+
+    def coq_transition_atom_name(index: int) -> str:
+        return f"finite_registered_atomic_truth_condition_typed_transition_atom_{index}"
+
+    def coq_transition_discharge_name(index: int) -> str:
+        return f"{coq_transition_atom_name(index)}_discharge"
+
+    def lean_schema_truth_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = (
+            "independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec."
+            f"fully_registered_truth_denotes {result_type} ({application})"
+        )
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_atomic_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def coq_schema_truth_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = (
+            "fully_registered_truth_denotes "
+            "(independent_registered_clause_spec "
+            "independent_registered_truth_condition_clause_instances) "
+            f"{result_type} ({application})"
+        )
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_schema_atomic_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders, _binder_names = schema_parts(schema)
+        conclusion = f"AtomicClosureTruth {result_type} ({application})"
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    if target == "lean":
+        lines = [
+            "structure RegisteredTruthConditionAtom : Type where",
+            "  registered_truth_condition_atom_type : Type",
+            "  registered_truth_condition_atom_term : registered_truth_condition_atom_type",
+            "",
+            "structure RegisteredTruthConditionAtomDischarge "
+            "(atom : RegisteredTruthConditionAtom) : Type where",
+            "  registered_truth_condition_atom_truth_discharge :",
+            "      independent_registered_truth_condition_clause_instances."
+            "independent_registered_clause_spec."
+            "fully_registered_truth_denotes "
+            "atom.registered_truth_condition_atom_type "
+            "atom.registered_truth_condition_atom_term",
+            "  registered_truth_condition_atom_atomic_discharge :",
+            "      AtomicClosureTruth atom.registered_truth_condition_atom_type "
+            "atom.registered_truth_condition_atom_term",
+            "",
+        ]
+        for index, schema in enumerate(schemas, 1):
+            result_type, application, binders, binder_names = schema_parts(schema)
+            binder_text = lean_binders(binders)
+            binder_prefix = f" {binder_text}" if binder_text else ""
+            atom_call = lean_atom_name(index)
+            if binder_names:
+                atom_call += " " + " ".join(binder_names)
+            lines.extend(
+                [
+                    f"def {lean_atom_name(index)}{binder_prefix} : "
+                    "RegisteredTruthConditionAtom := {",
+                    f"  registered_truth_condition_atom_type := {result_type},",
+                    f"  registered_truth_condition_atom_term := {application}",
+                    "}",
+                    "",
+                    f"def {lean_atom_discharge_name(index)}{binder_prefix} :",
+                    f"    RegisteredTruthConditionAtomDischarge ({atom_call}) := {{",
+                    "  registered_truth_condition_atom_truth_discharge := "
+                    "finite_registered_atomic_truth_condition_discharge_"
+                    f"lexical_{index}_truth_projected"
+                    + (f" {' '.join(binder_names)}," if binder_names else ","),
+                    "  registered_truth_condition_atom_atomic_discharge := "
+                    "finite_registered_atomic_truth_condition_discharge_"
+                    f"lexical_{index}_atomic_projected"
+                    + (f" {' '.join(binder_names)}" if binder_names else ""),
+                    "}",
+                    "",
+                    "theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"lexical_{index}_projected :",
+                    f"    {lean_schema_truth_type(schema)} := by",
+                ]
+            )
+            if binder_names:
+                lines.append(f"  intro {' '.join(binder_names)}")
+            truth_value = f"{lean_atom_discharge_name(index)}"
+            if binder_names:
+                truth_value += " " + " ".join(binder_names)
+            lines.extend(
+                [
+                    f"  exact ({truth_value}).registered_truth_condition_atom_truth_discharge",
+                    "",
+                    "theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"lexical_{index}_atomic_projected :",
+                    f"    {lean_schema_atomic_type(schema)} := by",
+                ]
+            )
+            if binder_names:
+                lines.append(f"  intro {' '.join(binder_names)}")
+            lines.extend(
+                [
+                    f"  exact ({truth_value}).registered_truth_condition_atom_atomic_discharge",
+                    "",
+                ]
+            )
+        for index, transition in enumerate(transitions, 1):
+            term = transition_term(transition)
+            lines.extend(
+                [
+                    f"def {lean_transition_atom_name(index)} : RegisteredTruthConditionAtom := {{",
+                    "  registered_truth_condition_atom_type := TransitionT,",
+                    f"  registered_truth_condition_atom_term := {term}",
+                    "}",
+                    "",
+                    f"def {lean_transition_discharge_name(index)} :",
+                    "    RegisteredTruthConditionAtomDischarge "
+                    f"({lean_transition_atom_name(index)}) := {{",
+                    "  registered_truth_condition_atom_truth_discharge := "
+                    "finite_registered_atomic_truth_condition_discharge_"
+                    f"transition_{index}_truth_projected,",
+                    "  registered_truth_condition_atom_atomic_discharge := "
+                    "finite_registered_atomic_truth_condition_discharge_"
+                    f"transition_{index}_atomic_projected",
+                    "}",
+                    "",
+                    "theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"transition_{index}_projected :",
+                    "    independent_registered_truth_condition_clause_instances."
+                    "independent_registered_clause_spec."
+                    f"fully_registered_truth_denotes TransitionT {term} := by",
+                    "  exact "
+                    f"{lean_transition_discharge_name(index)}."
+                    "registered_truth_condition_atom_truth_discharge",
+                    "",
+                    "theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"transition_{index}_atomic_projected :",
+                    f"    AtomicClosureTruth TransitionT {term} := by",
+                    "  exact "
+                    f"{lean_transition_discharge_name(index)}."
+                    "registered_truth_condition_atom_atomic_discharge",
+                    "",
+                ]
+            )
+        lines.extend(
+            [
+                "structure FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate : Type where",
+                "  finite_registered_atomic_truth_condition_typed_discharge_source : "
+                "FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate",
+                "  finite_registered_atomic_truth_condition_typed_discharge_source_eq :",
+                "      finite_registered_atomic_truth_condition_typed_discharge_source = "
+                "finite_registered_atomic_truth_condition_instance_discharge_certificate",
+                "  finite_registered_atomic_truth_condition_typed_discharge_sound :",
+                "      (atom : RegisteredTruthConditionAtom) ->",
+                "      RegisteredTruthConditionAtomDischarge atom ->",
+                "      AtomicClosureTruth atom.registered_truth_condition_atom_type "
+                "atom.registered_truth_condition_atom_term",
+            ]
+        )
+        for index, schema in enumerate(schemas, 1):
+            _result_type, _application, binders, binder_names = schema_parts(schema)
+            atom_call = lean_atom_name(index)
+            if binder_names:
+                atom_call += " " + " ".join(binder_names)
+                field_type = (
+                    f"{lean_binders(binders)} -> "
+                    f"RegisteredTruthConditionAtomDischarge ({atom_call})"
+                )
+            else:
+                field_type = f"RegisteredTruthConditionAtomDischarge ({atom_call})"
+            lines.append(
+                "  finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index} : {field_type}"
+            )
+        for index, _transition in enumerate(transitions, 1):
+            lines.append(
+                "  finite_registered_atomic_truth_condition_typed_discharge_"
+                f"transition_{index} : RegisteredTruthConditionAtomDischarge "
+                f"({lean_transition_atom_name(index)})"
+            )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_atomic_truth_condition_typed_discharge_certificate :",
+                "    FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate := {",
+                "  finite_registered_atomic_truth_condition_typed_discharge_source := "
+                "finite_registered_atomic_truth_condition_instance_discharge_certificate,",
+                "  finite_registered_atomic_truth_condition_typed_discharge_source_eq := rfl,",
+                "  finite_registered_atomic_truth_condition_typed_discharge_sound := "
+                "fun atom evidence => "
+                "evidence.registered_truth_condition_atom_atomic_discharge,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, _schema in enumerate(schemas, 1):
+            assignments.append(
+                (
+                    "finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"lexical_{index}",
+                    lean_atom_discharge_name(index),
+                )
+            )
+        for index, _transition in enumerate(transitions, 1):
+            assignments.append(
+                (
+                    "finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"transition_{index}",
+                    lean_transition_discharge_name(index),
+                )
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem finite_registered_atomic_truth_condition_typed_discharge_certificate_exists :",
+                "    Exists (fun C : "
+                "FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate => "
+                "C = finite_registered_atomic_truth_condition_typed_discharge_certificate) := by",
+                "  exact Exists.intro "
+                "finite_registered_atomic_truth_condition_typed_discharge_certificate rfl",
+                "",
+                "theorem finite_registered_atomic_truth_condition_typed_discharge_source_matches :",
+                "    finite_registered_atomic_truth_condition_typed_discharge_certificate."
+                "finite_registered_atomic_truth_condition_typed_discharge_source =",
+                "      finite_registered_atomic_truth_condition_instance_discharge_certificate := by",
+                "  exact finite_registered_atomic_truth_condition_typed_discharge_certificate."
+                "finite_registered_atomic_truth_condition_typed_discharge_source_eq",
+                "",
+                "theorem finite_registered_atomic_truth_condition_typed_discharge_sound_projected :",
+                "    (atom : RegisteredTruthConditionAtom) ->",
+                "    RegisteredTruthConditionAtomDischarge atom ->",
+                "    AtomicClosureTruth atom.registered_truth_condition_atom_type "
+                "atom.registered_truth_condition_atom_term := by",
+                "  exact finite_registered_atomic_truth_condition_typed_discharge_certificate."
+                "finite_registered_atomic_truth_condition_typed_discharge_sound",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record RegisteredTruthConditionAtom : Type := {",
+        "  registered_truth_condition_atom_type : Type;",
+        "  registered_truth_condition_atom_term : registered_truth_condition_atom_type",
+        "}.",
+        "",
+        "Record RegisteredTruthConditionAtomDischarge "
+        "(atom : RegisteredTruthConditionAtom) : Type := {",
+        "  registered_truth_condition_atom_truth_discharge :",
+        "      fully_registered_truth_denotes",
+        "        (independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances)",
+        "        (registered_truth_condition_atom_type atom)",
+        "        (registered_truth_condition_atom_term atom);",
+        "  registered_truth_condition_atom_atomic_discharge :",
+        "      AtomicClosureTruth",
+        "        (registered_truth_condition_atom_type atom)",
+        "        (registered_truth_condition_atom_term atom)",
+        "}.",
+        "",
+    ]
+    for index, schema in enumerate(schemas, 1):
+        result_type, application, binders, binder_names = schema_parts(schema)
+        binder_text = coq_binders(binders)
+        binder_prefix = f" {binder_text}" if binder_text else ""
+        atom_call = coq_atom_name(index)
+        if binder_names:
+            atom_call += " " + " ".join(binder_names)
+        lines.extend(
+            [
+                f"Definition {coq_atom_name(index)}{binder_prefix} :",
+                "  RegisteredTruthConditionAtom := {|",
+                f"  registered_truth_condition_atom_type := {result_type};",
+                f"  registered_truth_condition_atom_term := {application}",
+                "|}.",
+                "",
+                f"Definition {coq_atom_discharge_name(index)}{binder_prefix} :",
+                f"  RegisteredTruthConditionAtomDischarge ({atom_call}).",
+                "Proof.",
+                "  refine {| registered_truth_condition_atom_truth_discharge := _;",
+                "            registered_truth_condition_atom_atomic_discharge := _ |}; simpl.",
+                "  - exact (finite_registered_atomic_truth_condition_discharge_"
+                f"lexical_{index}_truth_projected"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "  - exact (finite_registered_atomic_truth_condition_discharge_"
+                f"lexical_{index}_atomic_projected"
+                + (f" {' '.join(binder_names)})." if binder_names else ")."),
+                "Defined.",
+                "",
+                "Theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index}_projected :",
+            ]
+        )
+        truth_type_lines = coq_schema_truth_type(schema)
+        lines.append(f"  {truth_type_lines[0]}")
+        lines.extend(truth_type_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        discharge_call = coq_atom_discharge_name(index)
+        atom_proj_call = coq_atom_name(index)
+        if binder_names:
+            discharge_call += " " + " ".join(binder_names)
+            atom_proj_call += " " + " ".join(binder_names)
+        lines.extend(
+            [
+                "  exact (registered_truth_condition_atom_truth_discharge",
+                f"    ({atom_proj_call}) ({discharge_call})).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index}_atomic_projected :",
+            ]
+        )
+        atomic_type_lines = coq_schema_atomic_type(schema)
+        lines.append(f"  {atomic_type_lines[0]}")
+        lines.extend(atomic_type_lines[1:])
+        lines[-1] += "."
+        lines.append("Proof.")
+        if binder_names:
+            lines.append(f"  intros {' '.join(binder_names)}.")
+        lines.extend(
+            [
+                "  exact (registered_truth_condition_atom_atomic_discharge",
+                f"    ({atom_proj_call}) ({discharge_call})).",
+                "Qed.",
+                "",
+            ]
+        )
+    for index, transition in enumerate(transitions, 1):
+        term = transition_term(transition)
+        lines.extend(
+            [
+                f"Definition {coq_transition_atom_name(index)} :",
+                "  RegisteredTruthConditionAtom := {|",
+                "  registered_truth_condition_atom_type := TransitionT;",
+                f"  registered_truth_condition_atom_term := {term}",
+                "|}.",
+                "",
+                f"Definition {coq_transition_discharge_name(index)} :",
+                "  RegisteredTruthConditionAtomDischarge "
+                f"({coq_transition_atom_name(index)}).",
+                "Proof.",
+                "  refine {| registered_truth_condition_atom_truth_discharge := _;",
+                "            registered_truth_condition_atom_atomic_discharge := _ |}; simpl.",
+                "  - exact (finite_registered_atomic_truth_condition_discharge_"
+                f"transition_{index}_truth_projected).",
+                "  - exact (finite_registered_atomic_truth_condition_discharge_"
+                f"transition_{index}_atomic_projected).",
+                "Defined.",
+                "",
+                "Theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                f"transition_{index}_projected :",
+                "  fully_registered_truth_denotes",
+                "    (independent_registered_clause_spec",
+                "      independent_registered_truth_condition_clause_instances)",
+                f"    TransitionT {term}.",
+                "Proof.",
+                "  exact (registered_truth_condition_atom_truth_discharge",
+                f"    ({coq_transition_atom_name(index)}) "
+                f"({coq_transition_discharge_name(index)})).",
+                "Qed.",
+                "",
+                "Theorem finite_registered_atomic_truth_condition_typed_discharge_"
+                f"transition_{index}_atomic_projected :",
+                f"  AtomicClosureTruth TransitionT {term}.",
+                "Proof.",
+                "  exact (registered_truth_condition_atom_atomic_discharge",
+                f"    ({coq_transition_atom_name(index)}) "
+                f"({coq_transition_discharge_name(index)})).",
+                "Qed.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "Record FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate : Type := {",
+            "  finite_registered_atomic_truth_condition_typed_discharge_source : "
+            "FiniteRegisteredAtomicTruthConditionInstanceDischargeCertificate;",
+            "  finite_registered_atomic_truth_condition_typed_discharge_source_eq :",
+            "      finite_registered_atomic_truth_condition_typed_discharge_source = "
+            "finite_registered_atomic_truth_condition_instance_discharge_certificate;",
+            "  finite_registered_atomic_truth_condition_typed_discharge_sound :",
+            "      forall atom : RegisteredTruthConditionAtom,",
+            "      RegisteredTruthConditionAtomDischarge atom ->",
+            "      AtomicClosureTruth",
+            "        (registered_truth_condition_atom_type atom)",
+            "        (registered_truth_condition_atom_term atom);",
+        ]
+    )
+    field_lines: list[str] = []
+    for index, schema in enumerate(schemas, 1):
+        _result_type, _application, binders, binder_names = schema_parts(schema)
+        atom_call = coq_atom_name(index)
+        if binder_names:
+            atom_call += " " + " ".join(binder_names)
+            binder_text = ", ".join(
+                f"forall {name} : {type_name}" for name, type_name in binders
+            )
+            field_lines.extend(
+                [
+                    "  finite_registered_atomic_truth_condition_typed_discharge_"
+                    f"lexical_{index} : {binder_text},",
+                    f"      RegisteredTruthConditionAtomDischarge ({atom_call});",
+                ]
+            )
+        else:
+            field_lines.append(
+                "  finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index} : RegisteredTruthConditionAtomDischarge "
+                f"({atom_call});"
+            )
+    for index, _transition in enumerate(transitions, 1):
+        field_lines.append(
+            "  finite_registered_atomic_truth_condition_typed_discharge_"
+            f"transition_{index} : RegisteredTruthConditionAtomDischarge "
+            f"({coq_transition_atom_name(index)});"
+        )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition finite_registered_atomic_truth_condition_typed_discharge_certificate :",
+            "  FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate := {|",
+            "  finite_registered_atomic_truth_condition_typed_discharge_source := "
+            "finite_registered_atomic_truth_condition_instance_discharge_certificate;",
+            "  finite_registered_atomic_truth_condition_typed_discharge_source_eq := eq_refl;",
+            "  finite_registered_atomic_truth_condition_typed_discharge_sound :=",
+            "    fun atom evidence =>",
+            "      registered_truth_condition_atom_atomic_discharge atom evidence;",
+        ]
+    )
+    assignments = []
+    for index, _schema in enumerate(schemas, 1):
+        assignments.append(
+            (
+                "finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index}",
+                coq_atom_discharge_name(index),
+            )
+        )
+    for index, _transition in enumerate(transitions, 1):
+        assignments.append(
+            (
+                "finite_registered_atomic_truth_condition_typed_discharge_"
+                f"transition_{index}",
+                coq_transition_discharge_name(index),
+            )
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_typed_discharge_certificate_exists :",
+            "  exists C : FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate,",
+            "    C = finite_registered_atomic_truth_condition_typed_discharge_certificate.",
+            "Proof.",
+            "  exists finite_registered_atomic_truth_condition_typed_discharge_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_typed_discharge_source_matches :",
+            "  finite_registered_atomic_truth_condition_typed_discharge_source",
+            "    finite_registered_atomic_truth_condition_typed_discharge_certificate =",
+            "  finite_registered_atomic_truth_condition_instance_discharge_certificate.",
+            "Proof.",
+            "  exact (finite_registered_atomic_truth_condition_typed_discharge_source_eq",
+            "    finite_registered_atomic_truth_condition_typed_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_truth_condition_typed_discharge_sound_projected :",
+            "  forall atom : RegisteredTruthConditionAtom,",
+            "    RegisteredTruthConditionAtomDischarge atom ->",
+            "    AtomicClosureTruth",
+            "      (registered_truth_condition_atom_type atom)",
+            "      (registered_truth_condition_atom_term atom).",
+            "Proof.",
+            "  exact (finite_registered_atomic_truth_condition_typed_discharge_sound",
+            "    finite_registered_atomic_truth_condition_typed_discharge_certificate).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -21276,6 +21828,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_atomic_truth_condition_typed_discharge_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -22257,6 +22816,56 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "finite_registered_atomic_truth_condition_discharge_"
                 f"transition_{index}_atomic_projected"
             )
+        lines.append("#check RegisteredTruthConditionAtom")
+        lines.append("#check RegisteredTruthConditionAtomDischarge")
+        lines.append(
+            "#check FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate"
+        )
+        lines.append(
+            "#check finite_registered_atomic_truth_condition_typed_discharge_certificate"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_truth_condition_typed_discharge_certificate_exists"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_truth_condition_typed_discharge_source_matches"
+        )
+        lines.append(
+            "#check "
+            "finite_registered_atomic_truth_condition_typed_discharge_sound_projected"
+        )
+        for index in range(1, len(declarations["lexical_applications"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_truth_condition_typed_lexical_atom_{index}"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index}_projected"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_typed_discharge_"
+                f"lexical_{index}_atomic_projected"
+            )
+        for index in range(1, len(declarations["transitions"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_truth_condition_typed_transition_atom_{index}"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_typed_discharge_"
+                f"transition_{index}_projected"
+            )
+            lines.append(
+                "#check "
+                "finite_registered_atomic_truth_condition_typed_discharge_"
+                f"transition_{index}_atomic_projected"
+            )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -23037,6 +23646,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         finite_registered_atomic_truth_condition_instance_discharge_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        finite_registered_atomic_truth_condition_typed_discharge_certificate_lines(
             declarations,
             target,
         )
@@ -23880,6 +24496,56 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         lines.append(
             "Check "
             "finite_registered_atomic_truth_condition_discharge_"
+            f"transition_{index}_atomic_projected."
+        )
+    lines.append("Check RegisteredTruthConditionAtom.")
+    lines.append("Check RegisteredTruthConditionAtomDischarge.")
+    lines.append(
+        "Check FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate."
+    )
+    lines.append(
+        "Check finite_registered_atomic_truth_condition_typed_discharge_certificate."
+    )
+    lines.append(
+        "Check "
+        "finite_registered_atomic_truth_condition_typed_discharge_certificate_exists."
+    )
+    lines.append(
+        "Check "
+        "finite_registered_atomic_truth_condition_typed_discharge_source_matches."
+    )
+    lines.append(
+        "Check "
+        "finite_registered_atomic_truth_condition_typed_discharge_sound_projected."
+    )
+    for index in range(1, len(declarations["lexical_applications"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_truth_condition_typed_lexical_atom_{index}."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_typed_discharge_"
+            f"lexical_{index}_projected."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_typed_discharge_"
+            f"lexical_{index}_atomic_projected."
+        )
+    for index in range(1, len(declarations["transitions"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_truth_condition_typed_transition_atom_{index}."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_typed_discharge_"
+            f"transition_{index}_projected."
+        )
+        lines.append(
+            "Check "
+            "finite_registered_atomic_truth_condition_typed_discharge_"
             f"transition_{index}_atomic_projected."
         )
     return "\n".join(lines) + "\n"
