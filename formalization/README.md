@@ -460,7 +460,11 @@ layer introduces `RegisteredTruthConditionAtom`,
 `FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate`; each finite
 registered lexical or transition atom is reified as a dependent typed atom and
 paired with both its suite-derived truth inhabitant and its `AtomicClosureTruth`
-projection.
+projection. The constructor-discharge layer introduces
+`RegisteredTruthConditionConstructorDischargeCertificate`, instantiates
+`registered_truth_condition_constructor_discharge_certificate`, and re-exports
+the registered lexical, Sigma, repeat, temporal, polarity, Transition/Cause, and
+spec-soundness clauses through one checked constructor-level record.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

@@ -3623,6 +3623,62 @@ def main() -> None:
             "finite_registered_atomic_truth_condition_typed_discharge_transition_1_atomic_projected."
             in coq
         ),
+        "lean registered truth condition constructor discharge certificate": (
+            "structure RegisteredTruthConditionConstructorDischargeCertificate : Type where"
+            in lean
+            and "def registered_truth_condition_constructor_discharge_certificate :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_discharge_certificate_exists :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_discharge_source_matches :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_discharge_spec_matches :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_discharge_lexical_application_projected :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_discharge_sigma_Entity_projected :"
+            in lean
+            and "theorem "
+            "registered_truth_condition_constructor_discharge_cause_projected :"
+            in lean
+            and "#check RegisteredTruthConditionConstructorDischargeCertificate"
+            in lean
+            and "#check registered_truth_condition_constructor_discharge_spec_sound_projected"
+            in lean
+        ),
+        "coq registered truth condition constructor discharge certificate": (
+            "Record RegisteredTruthConditionConstructorDischargeCertificate : Type := {"
+            in coq
+            and "Definition registered_truth_condition_constructor_discharge_certificate :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_discharge_certificate_exists :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_discharge_source_matches :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_discharge_spec_matches :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_discharge_lexical_application_projected :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_discharge_sigma_Entity_projected :"
+            in coq
+            and "Theorem "
+            "registered_truth_condition_constructor_discharge_cause_projected :"
+            in coq
+            and "Check RegisteredTruthConditionConstructorDischargeCertificate."
+            in coq
+            and "Check registered_truth_condition_constructor_discharge_spec_sound_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

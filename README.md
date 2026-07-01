@@ -1489,7 +1489,12 @@ adds `RegisteredTruthConditionAtom`,
 `RegisteredTruthConditionAtomDischarge`, and
 `FiniteRegisteredAtomicTruthConditionTypedDischargeCertificate`, reifying each
 finite registered lexical and transition atom as a dependent typed atom paired
-with its truth and atomic discharge evidence. The open blocker remains
+with its truth and atomic discharge evidence. The next verified objective
+`coq_registered_truth_condition_constructor_discharge_certificate` adds
+`RegisteredTruthConditionConstructorDischargeCertificate`, which packages the
+registered lexical, Sigma, repeat, temporal, polarity, Transition, Cause, and
+spec-to-atomic discharge projections as a single constructor-level certificate.
+The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
 specified lexical, temporal, causal, quantificational, and modifier truth

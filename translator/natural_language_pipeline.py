@@ -21285,6 +21285,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_registered_truth_condition_constructor_"
+                    "discharge_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21597,6 +21605,14 @@ def project_completion_status_payload(
                     "boundary now checks a typed atom plus its truth and "
                     "atomic discharge rather than only a family of named "
                     "projection theorems. "
+                    "The newest constructor-discharge layer then packages "
+                    "the registered lexical, Sigma, repeat, temporal, "
+                    "polarity, Transition, Cause, and spec-to-atomic "
+                    "projection routes as "
+                    "RegisteredTruthConditionConstructorDischargeCertificate, "
+                    "so the remaining truth-condition work can be tracked "
+                    "one constructor class at a time rather than only through "
+                    "finite atom witnesses. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

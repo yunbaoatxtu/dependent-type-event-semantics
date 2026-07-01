@@ -17267,6 +17267,441 @@ def finite_registered_atomic_truth_condition_typed_discharge_certificate_lines(
     return lines
 
 
+def registered_truth_condition_constructor_discharge_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Package constructor-level registered truth-condition discharge clauses."""
+
+    constructor_specs = [
+        ("repeat", "(n : Nat) -> (body : PropT) -> ", "forall n : nat, forall body : PropT,", "PropT body", "PropT (repeat n body)"),
+        ("at_T", "(marker : Entity) -> (body : PropT) -> ", "forall marker : Entity, forall body : PropT,", "PropT body", "PropT (at_T marker body)"),
+        ("during_T", "(marker : Entity) -> (body : PropT) -> ", "forall marker : Entity, forall body : PropT,", "PropT body", "PropT (during_T marker body)"),
+        ("before_T", "(marker : Entity) -> (body : PropT) -> ", "forall marker : Entity, forall body : PropT,", "PropT body", "PropT (before_T marker body)"),
+        ("after_T", "(marker : Entity) -> (body : PropT) -> ", "forall marker : Entity, forall body : PropT,", "PropT body", "PropT (after_T marker body)"),
+        ("until_T", "(marker : Entity) -> (body : PropT) -> ", "forall marker : Entity, forall body : PropT,", "PropT body", "PropT (until_T marker body)"),
+        ("since_T", "(marker : Entity) -> (body : PropT) -> ", "forall marker : Entity, forall body : PropT,", "PropT body", "PropT (since_T marker body)"),
+        ("not_T", "(body : PropT) -> ", "forall body : PropT,", "PropT body", "PropT (not_T body)"),
+    ]
+
+    if target == "lean":
+        lines = [
+            "structure RegisteredTruthConditionConstructorDischargeCertificate : Type where",
+            "  registered_truth_condition_constructor_discharge_source : IndependentRegisteredTruthConditionClauseInstances",
+            "  registered_truth_condition_constructor_discharge_source_eq :",
+            "      registered_truth_condition_constructor_discharge_source =",
+            "        independent_registered_truth_condition_clause_instances",
+            "  registered_truth_condition_constructor_discharge_spec : FullyRegisteredTruthConditionSpec",
+            "  registered_truth_condition_constructor_discharge_spec_eq :",
+            "      registered_truth_condition_constructor_discharge_spec =",
+            "        independent_registered_truth_condition_clause_instances.independent_registered_clause_spec",
+            "  registered_truth_condition_constructor_discharge_lexical_application :",
+            "      (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->",
+            "      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term",
+        ]
+        for type_name in declarations["types"]:
+            lines.extend(
+                [
+                    f"  registered_truth_condition_constructor_discharge_sigma_{type_name} :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : {type_name} => P x)",
+                ]
+            )
+        for name, lean_binders, _coq_binders, premise, conclusion in constructor_specs:
+            lines.extend(
+                [
+                    f"  registered_truth_condition_constructor_discharge_{name} :",
+                    f"      {lean_binders}registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes {premise} ->",
+                    f"      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes {conclusion}",
+                ]
+            )
+        lines.extend(
+            [
+                "  registered_truth_condition_constructor_discharge_transition :",
+                "      (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->",
+                "      RegisteredStateTransitionTruth theme scale source target ->",
+                "      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target)",
+                "  registered_truth_condition_constructor_discharge_cause :",
+                "      (causer : Entity) -> (effect : TransitionT) ->",
+                "      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT effect ->",
+                "      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (Cause causer effect)",
+                "  registered_truth_condition_constructor_discharge_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "",
+                "def registered_truth_condition_constructor_discharge_certificate :",
+                "    RegisteredTruthConditionConstructorDischargeCertificate := {",
+                "  registered_truth_condition_constructor_discharge_source := independent_registered_truth_condition_clause_instances,",
+                "  registered_truth_condition_constructor_discharge_source_eq := rfl,",
+                "  registered_truth_condition_constructor_discharge_spec := independent_registered_truth_condition_clause_instances.independent_registered_clause_spec,",
+                "  registered_truth_condition_constructor_discharge_spec_eq := rfl,",
+                "  registered_truth_condition_constructor_discharge_lexical_application := independent_registered_truth_condition_clause_lexical_application_instance,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for type_name in declarations["types"]:
+            assignments.append(
+                (
+                    f"registered_truth_condition_constructor_discharge_sigma_{type_name}",
+                    f"independent_registered_truth_condition_clause_sigma_{type_name}_instance",
+                )
+            )
+        for name, *_ in constructor_specs:
+            assignments.append(
+                (
+                    f"registered_truth_condition_constructor_discharge_{name}",
+                    f"independent_registered_truth_condition_clause_{name}_instance",
+                )
+            )
+        assignments.extend(
+            [
+                (
+                    "registered_truth_condition_constructor_discharge_transition",
+                    "independent_registered_truth_condition_clause_transition_instance",
+                ),
+                (
+                    "registered_truth_condition_constructor_discharge_cause",
+                    "independent_registered_truth_condition_clause_cause_instance",
+                ),
+                (
+                    "registered_truth_condition_constructor_discharge_spec_sound",
+                    "independent_registered_truth_condition_clause_spec_sound",
+                ),
+            ]
+        )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_certificate_exists :",
+                "    Exists (fun C : RegisteredTruthConditionConstructorDischargeCertificate => C = registered_truth_condition_constructor_discharge_certificate) := by",
+                "  exact Exists.intro registered_truth_condition_constructor_discharge_certificate rfl",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_source_matches :",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_source =",
+                "      independent_registered_truth_condition_clause_instances := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_source_eq",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_spec_matches :",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec =",
+                "      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec_eq",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_lexical_application_projected :",
+                "    (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_lexical_application",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_sigma_Entity_projected :",
+                "    (P : Entity -> Prop) ->",
+                "    ((x : Entity) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Entity => P x) := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_sigma_Entity",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_repeat_projected :",
+                "    (n : Nat) -> (body : PropT) ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body) := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_repeat",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_at_T_projected :",
+                "    (marker : Entity) -> (body : PropT) ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (at_T marker body) := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_at_T",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_not_T_projected :",
+                "    (body : PropT) ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (not_T body) := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_not_T",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_transition_projected :",
+                "    (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->",
+                "    RegisteredStateTransitionTruth theme scale source target ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target) := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_transition",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_cause_projected :",
+                "    (causer : Entity) -> (effect : TransitionT) ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT effect ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (Cause causer effect) := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_cause",
+                "",
+                "theorem registered_truth_condition_constructor_discharge_spec_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                "    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec_sound",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record RegisteredTruthConditionConstructorDischargeCertificate : Type := {",
+        "  registered_truth_condition_constructor_discharge_source : IndependentRegisteredTruthConditionClauseInstances;",
+        "  registered_truth_condition_constructor_discharge_source_eq :",
+        "      registered_truth_condition_constructor_discharge_source =",
+        "        independent_registered_truth_condition_clause_instances;",
+        "  registered_truth_condition_constructor_discharge_spec : FullyRegisteredTruthConditionSpec;",
+        "  registered_truth_condition_constructor_discharge_spec_eq :",
+        "      registered_truth_condition_constructor_discharge_spec =",
+        "        independent_registered_clause_spec",
+        "          independent_registered_truth_condition_clause_instances;",
+        "  registered_truth_condition_constructor_discharge_lexical_application :",
+        "      forall A : Type, forall term : A,",
+        "      RegisteredLexicalApplicationTruth A term ->",
+        "      fully_registered_truth_denotes",
+        "        registered_truth_condition_constructor_discharge_spec A term;",
+    ]
+    for type_name in declarations["types"]:
+        lines.extend(
+            [
+                f"  registered_truth_condition_constructor_discharge_sigma_{type_name} :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                "          registered_truth_condition_constructor_discharge_spec",
+                "          Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                "        registered_truth_condition_constructor_discharge_spec",
+                f"        Prop (exists x : {type_name}, P x);",
+            ]
+        )
+    for name, _lean_binders, coq_binders, premise, conclusion in constructor_specs:
+        lines.extend(
+            [
+                f"  registered_truth_condition_constructor_discharge_{name} :",
+                f"      {coq_binders}",
+                "      fully_registered_truth_denotes",
+                "        registered_truth_condition_constructor_discharge_spec",
+                f"        {premise} ->",
+                "      fully_registered_truth_denotes",
+                "        registered_truth_condition_constructor_discharge_spec",
+                f"        {conclusion};",
+            ]
+        )
+    lines.extend(
+        [
+            "  registered_truth_condition_constructor_discharge_transition :",
+            "      forall theme : Entity, forall scale : StateScale,",
+            "      forall source : State, forall target : State,",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      fully_registered_truth_denotes",
+            "        registered_truth_condition_constructor_discharge_spec",
+            "        TransitionT (Transition theme scale source target);",
+            "  registered_truth_condition_constructor_discharge_cause :",
+            "      forall causer : Entity, forall effect : TransitionT,",
+            "      fully_registered_truth_denotes",
+            "        registered_truth_condition_constructor_discharge_spec",
+            "        TransitionT effect ->",
+            "      fully_registered_truth_denotes",
+            "        registered_truth_condition_constructor_discharge_spec",
+            "        PropT (Cause causer effect);",
+            "  registered_truth_condition_constructor_discharge_spec_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        registered_truth_condition_constructor_discharge_spec A term ->",
+            "      AtomicClosureTruth A term",
+            "}.",
+            "",
+            "Definition registered_truth_condition_constructor_discharge_certificate :",
+            "  RegisteredTruthConditionConstructorDischargeCertificate := {|",
+            "  registered_truth_condition_constructor_discharge_source := independent_registered_truth_condition_clause_instances;",
+            "  registered_truth_condition_constructor_discharge_source_eq := eq_refl;",
+            "  registered_truth_condition_constructor_discharge_spec := independent_registered_clause_spec",
+            "    independent_registered_truth_condition_clause_instances;",
+            "  registered_truth_condition_constructor_discharge_spec_eq := eq_refl;",
+            "  registered_truth_condition_constructor_discharge_lexical_application := independent_registered_truth_condition_clause_lexical_application_instance;",
+        ]
+    )
+    assignments = []
+    for type_name in declarations["types"]:
+        assignments.append(
+            (
+                f"registered_truth_condition_constructor_discharge_sigma_{type_name}",
+                f"independent_registered_truth_condition_clause_sigma_{type_name}_instance",
+            )
+        )
+    for name, *_ in constructor_specs:
+        assignments.append(
+            (
+                f"registered_truth_condition_constructor_discharge_{name}",
+                f"independent_registered_truth_condition_clause_{name}_instance",
+            )
+        )
+    assignments.extend(
+        [
+            (
+                "registered_truth_condition_constructor_discharge_transition",
+                "independent_registered_truth_condition_clause_transition_instance",
+            ),
+            (
+                "registered_truth_condition_constructor_discharge_cause",
+                "independent_registered_truth_condition_clause_cause_instance",
+            ),
+            (
+                "registered_truth_condition_constructor_discharge_spec_sound",
+                "independent_registered_truth_condition_clause_spec_sound",
+            ),
+        ]
+    )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_certificate_exists :",
+            "  exists C : RegisteredTruthConditionConstructorDischargeCertificate,",
+            "    C = registered_truth_condition_constructor_discharge_certificate.",
+            "Proof.",
+            "  exists registered_truth_condition_constructor_discharge_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_source_matches :",
+            "  registered_truth_condition_constructor_discharge_source",
+            "    registered_truth_condition_constructor_discharge_certificate =",
+            "  independent_registered_truth_condition_clause_instances.",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_source_eq",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_spec_matches :",
+            "  registered_truth_condition_constructor_discharge_spec",
+            "    registered_truth_condition_constructor_discharge_certificate =",
+            "  independent_registered_clause_spec",
+            "    independent_registered_truth_condition_clause_instances.",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_spec_eq",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_lexical_application_projected :",
+            "  forall A : Type, forall term : A,",
+            "    RegisteredLexicalApplicationTruth A term ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      A term.",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_lexical_application",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_sigma_Entity_projected :",
+            "  forall P : Entity -> Prop,",
+            "    (forall x : Entity,",
+            "      fully_registered_truth_denotes",
+            "        (registered_truth_condition_constructor_discharge_spec",
+            "          registered_truth_condition_constructor_discharge_certificate)",
+            "        Prop (P x)) ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      Prop (exists x : Entity, P x).",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_sigma_Entity",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_repeat_projected :",
+            "  forall n : nat, forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT body ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT (repeat n body).",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_repeat",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_at_T_projected :",
+            "  forall marker : Entity, forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT body ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT (at_T marker body).",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_at_T",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_not_T_projected :",
+            "  forall body : PropT,",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT body ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT (not_T body).",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_not_T",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_transition_projected :",
+            "  forall theme : Entity, forall scale : StateScale,",
+            "  forall source : State, forall target : State,",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      TransitionT (Transition theme scale source target).",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_transition",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_cause_projected :",
+            "  forall causer : Entity, forall effect : TransitionT,",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      TransitionT effect ->",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      PropT (Cause causer effect).",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_cause",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+            "",
+            "Theorem registered_truth_condition_constructor_discharge_spec_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (registered_truth_condition_constructor_discharge_spec_sound",
+            "    registered_truth_condition_constructor_discharge_certificate).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -21835,6 +22270,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            registered_truth_condition_constructor_discharge_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -22866,6 +23308,39 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "finite_registered_atomic_truth_condition_typed_discharge_"
                 f"transition_{index}_atomic_projected"
             )
+        lines.append("#check RegisteredTruthConditionConstructorDischargeCertificate")
+        lines.append("#check registered_truth_condition_constructor_discharge_certificate")
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_certificate_exists"
+        )
+        lines.append("#check registered_truth_condition_constructor_discharge_source_matches")
+        lines.append("#check registered_truth_condition_constructor_discharge_spec_matches")
+        lines.append(
+            "#check "
+            "registered_truth_condition_constructor_discharge_"
+            "lexical_application_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_sigma_Entity_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_repeat_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_at_T_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_not_T_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_transition_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_cause_projected"
+        )
+        lines.append(
+            "#check registered_truth_condition_constructor_discharge_spec_sound_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -23653,6 +24128,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         finite_registered_atomic_truth_condition_typed_discharge_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        registered_truth_condition_constructor_discharge_certificate_lines(
             declarations,
             target,
         )
@@ -24548,6 +25030,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "finite_registered_atomic_truth_condition_typed_discharge_"
             f"transition_{index}_atomic_projected."
         )
+    lines.append("Check RegisteredTruthConditionConstructorDischargeCertificate.")
+    lines.append("Check registered_truth_condition_constructor_discharge_certificate.")
+    lines.append("Check registered_truth_condition_constructor_discharge_certificate_exists.")
+    lines.append("Check registered_truth_condition_constructor_discharge_source_matches.")
+    lines.append("Check registered_truth_condition_constructor_discharge_spec_matches.")
+    lines.append(
+        "Check "
+        "registered_truth_condition_constructor_discharge_"
+        "lexical_application_projected."
+    )
+    lines.append(
+        "Check registered_truth_condition_constructor_discharge_sigma_Entity_projected."
+    )
+    lines.append("Check registered_truth_condition_constructor_discharge_repeat_projected.")
+    lines.append("Check registered_truth_condition_constructor_discharge_at_T_projected.")
+    lines.append("Check registered_truth_condition_constructor_discharge_not_T_projected.")
+    lines.append(
+        "Check registered_truth_condition_constructor_discharge_transition_projected."
+    )
+    lines.append("Check registered_truth_condition_constructor_discharge_cause_projected.")
+    lines.append(
+        "Check registered_truth_condition_constructor_discharge_spec_sound_projected."
+    )
     return "\n".join(lines) + "\n"
 
 

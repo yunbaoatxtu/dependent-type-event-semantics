@@ -5860,6 +5860,161 @@ theorem finite_registered_atomic_truth_condition_typed_discharge_sound_projected
     AtomicClosureTruth atom.registered_truth_condition_atom_type atom.registered_truth_condition_atom_term := by
   exact finite_registered_atomic_truth_condition_typed_discharge_certificate.finite_registered_atomic_truth_condition_typed_discharge_sound
 
+structure RegisteredTruthConditionConstructorDischargeCertificate : Type where
+  registered_truth_condition_constructor_discharge_source : IndependentRegisteredTruthConditionClauseInstances
+  registered_truth_condition_constructor_discharge_source_eq :
+      registered_truth_condition_constructor_discharge_source =
+        independent_registered_truth_condition_clause_instances
+  registered_truth_condition_constructor_discharge_spec : FullyRegisteredTruthConditionSpec
+  registered_truth_condition_constructor_discharge_spec_eq :
+      registered_truth_condition_constructor_discharge_spec =
+        independent_registered_truth_condition_clause_instances.independent_registered_clause_spec
+  registered_truth_condition_constructor_discharge_lexical_application :
+      (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term
+  registered_truth_condition_constructor_discharge_sigma_Entity :
+      (P : Entity -> Prop) ->
+      ((x : Entity) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Entity => P x)
+  registered_truth_condition_constructor_discharge_sigma_Food :
+      (P : Food -> Prop) ->
+      ((x : Food) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Food => P x)
+  registered_truth_condition_constructor_discharge_sigma_State :
+      (P : State -> Prop) ->
+      ((x : State) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : State => P x)
+  registered_truth_condition_constructor_discharge_sigma_StateScale :
+      (P : StateScale -> Prop) ->
+      ((x : StateScale) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : StateScale => P x)
+  registered_truth_condition_constructor_discharge_sigma_TransitionT :
+      (P : TransitionT -> Prop) ->
+      ((x : TransitionT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : TransitionT => P x)
+  registered_truth_condition_constructor_discharge_repeat :
+      (n : Nat) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body)
+  registered_truth_condition_constructor_discharge_at_T :
+      (marker : Entity) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (at_T marker body)
+  registered_truth_condition_constructor_discharge_during_T :
+      (marker : Entity) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (during_T marker body)
+  registered_truth_condition_constructor_discharge_before_T :
+      (marker : Entity) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (before_T marker body)
+  registered_truth_condition_constructor_discharge_after_T :
+      (marker : Entity) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (after_T marker body)
+  registered_truth_condition_constructor_discharge_until_T :
+      (marker : Entity) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (until_T marker body)
+  registered_truth_condition_constructor_discharge_since_T :
+      (marker : Entity) -> (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (since_T marker body)
+  registered_truth_condition_constructor_discharge_not_T :
+      (body : PropT) -> registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (not_T body)
+  registered_truth_condition_constructor_discharge_transition :
+      (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->
+      RegisteredStateTransitionTruth theme scale source target ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target)
+  registered_truth_condition_constructor_discharge_cause :
+      (causer : Entity) -> (effect : TransitionT) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT effect ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (Cause causer effect)
+  registered_truth_condition_constructor_discharge_spec_sound :
+      (A : Type) -> (term : A) ->
+      registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def registered_truth_condition_constructor_discharge_certificate :
+    RegisteredTruthConditionConstructorDischargeCertificate := {
+  registered_truth_condition_constructor_discharge_source := independent_registered_truth_condition_clause_instances,
+  registered_truth_condition_constructor_discharge_source_eq := rfl,
+  registered_truth_condition_constructor_discharge_spec := independent_registered_truth_condition_clause_instances.independent_registered_clause_spec,
+  registered_truth_condition_constructor_discharge_spec_eq := rfl,
+  registered_truth_condition_constructor_discharge_lexical_application := independent_registered_truth_condition_clause_lexical_application_instance,
+  registered_truth_condition_constructor_discharge_sigma_Entity := independent_registered_truth_condition_clause_sigma_Entity_instance,
+  registered_truth_condition_constructor_discharge_sigma_Food := independent_registered_truth_condition_clause_sigma_Food_instance,
+  registered_truth_condition_constructor_discharge_sigma_State := independent_registered_truth_condition_clause_sigma_State_instance,
+  registered_truth_condition_constructor_discharge_sigma_StateScale := independent_registered_truth_condition_clause_sigma_StateScale_instance,
+  registered_truth_condition_constructor_discharge_sigma_TransitionT := independent_registered_truth_condition_clause_sigma_TransitionT_instance,
+  registered_truth_condition_constructor_discharge_repeat := independent_registered_truth_condition_clause_repeat_instance,
+  registered_truth_condition_constructor_discharge_at_T := independent_registered_truth_condition_clause_at_T_instance,
+  registered_truth_condition_constructor_discharge_during_T := independent_registered_truth_condition_clause_during_T_instance,
+  registered_truth_condition_constructor_discharge_before_T := independent_registered_truth_condition_clause_before_T_instance,
+  registered_truth_condition_constructor_discharge_after_T := independent_registered_truth_condition_clause_after_T_instance,
+  registered_truth_condition_constructor_discharge_until_T := independent_registered_truth_condition_clause_until_T_instance,
+  registered_truth_condition_constructor_discharge_since_T := independent_registered_truth_condition_clause_since_T_instance,
+  registered_truth_condition_constructor_discharge_not_T := independent_registered_truth_condition_clause_not_T_instance,
+  registered_truth_condition_constructor_discharge_transition := independent_registered_truth_condition_clause_transition_instance,
+  registered_truth_condition_constructor_discharge_cause := independent_registered_truth_condition_clause_cause_instance,
+  registered_truth_condition_constructor_discharge_spec_sound := independent_registered_truth_condition_clause_spec_sound
+}
+
+theorem registered_truth_condition_constructor_discharge_certificate_exists :
+    Exists (fun C : RegisteredTruthConditionConstructorDischargeCertificate => C = registered_truth_condition_constructor_discharge_certificate) := by
+  exact Exists.intro registered_truth_condition_constructor_discharge_certificate rfl
+
+theorem registered_truth_condition_constructor_discharge_source_matches :
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_source =
+      independent_registered_truth_condition_clause_instances := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_source_eq
+
+theorem registered_truth_condition_constructor_discharge_spec_matches :
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec =
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec_eq
+
+theorem registered_truth_condition_constructor_discharge_lexical_application_projected :
+    (A : Type) -> (term : A) -> RegisteredLexicalApplicationTruth A term ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_lexical_application
+
+theorem registered_truth_condition_constructor_discharge_sigma_Entity_projected :
+    (P : Entity -> Prop) ->
+    ((x : Entity) -> registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (P x)) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes Prop (Exists fun x : Entity => P x) := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_sigma_Entity
+
+theorem registered_truth_condition_constructor_discharge_repeat_projected :
+    (n : Nat) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_repeat
+
+theorem registered_truth_condition_constructor_discharge_at_T_projected :
+    (marker : Entity) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (at_T marker body) := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_at_T
+
+theorem registered_truth_condition_constructor_discharge_not_T_projected :
+    (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (not_T body) := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_not_T
+
+theorem registered_truth_condition_constructor_discharge_transition_projected :
+    (theme : Entity) -> (scale : StateScale) -> (source : State) -> (target : State) ->
+    RegisteredStateTransitionTruth theme scale source target ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT (Transition theme scale source target) := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_transition
+
+theorem registered_truth_condition_constructor_discharge_cause_projected :
+    (causer : Entity) -> (effect : TransitionT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes TransitionT effect ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (Cause causer effect) := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_cause
+
+theorem registered_truth_condition_constructor_discharge_spec_sound_projected :
+    (A : Type) -> (term : A) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec_sound
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -6520,3 +6675,16 @@ theorem finite_registered_atomic_truth_condition_typed_discharge_sound_projected
 #check finite_registered_atomic_truth_condition_typed_transition_atom_1
 #check finite_registered_atomic_truth_condition_typed_discharge_transition_1_projected
 #check finite_registered_atomic_truth_condition_typed_discharge_transition_1_atomic_projected
+#check RegisteredTruthConditionConstructorDischargeCertificate
+#check registered_truth_condition_constructor_discharge_certificate
+#check registered_truth_condition_constructor_discharge_certificate_exists
+#check registered_truth_condition_constructor_discharge_source_matches
+#check registered_truth_condition_constructor_discharge_spec_matches
+#check registered_truth_condition_constructor_discharge_lexical_application_projected
+#check registered_truth_condition_constructor_discharge_sigma_Entity_projected
+#check registered_truth_condition_constructor_discharge_repeat_projected
+#check registered_truth_condition_constructor_discharge_at_T_projected
+#check registered_truth_condition_constructor_discharge_not_T_projected
+#check registered_truth_condition_constructor_discharge_transition_projected
+#check registered_truth_condition_constructor_discharge_cause_projected
+#check registered_truth_condition_constructor_discharge_spec_sound_projected
