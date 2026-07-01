@@ -724,6 +724,62 @@ def main() -> None:
             re.MULTILINE,
         )
     )
+    lean_finite_registered_atomic_source_lexical_source_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_source_lexical_\d+_source_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_source_lexical_source_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_source_lexical_\d+_source_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_source_lexical_bridge_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_source_lexical_\d+_(concrete|base|closure)_from_source_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_source_lexical_bridge_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_source_lexical_\d+_(concrete|base|closure)_from_source_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_source_transition_source_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_source_transition_\d+_source_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_source_transition_source_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_source_transition_\d+_source_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
+    lean_finite_registered_atomic_source_transition_bridge_count = len(
+        re.findall(
+            r"^theorem finite_registered_atomic_source_transition_\d+_(concrete|base|closure)_from_source_projected :",
+            lean,
+            re.MULTILINE,
+        )
+    )
+    coq_finite_registered_atomic_source_transition_bridge_count = len(
+        re.findall(
+            r"^Theorem finite_registered_atomic_source_transition_\d+_(concrete|base|closure)_from_source_projected :",
+            coq,
+            re.MULTILINE,
+        )
+    )
 
     checks = {
         "lean declarations": "constant Entity : Type" in lean,
@@ -1888,6 +1944,96 @@ def main() -> None:
             in coq
             and "Check "
             "finite_registered_atomic_witness_transition_1_closure_projected."
+            in coq
+        ),
+        "lean finite registered atomic source discipline certificate": (
+            lean_finite_registered_atomic_source_lexical_source_count == 4
+            and lean_finite_registered_atomic_source_lexical_bridge_count == 12
+            and lean_finite_registered_atomic_source_transition_source_count == 1
+            and lean_finite_registered_atomic_source_transition_bridge_count == 3
+            and "structure FiniteRegisteredAtomicSourceDisciplineCertificate : Type where"
+            in lean
+            and "finite_registered_atomic_source_witness : "
+            "FiniteRegisteredAtomicWitnessCertificate" in lean
+            and "finite_registered_atomic_source_lexical_3_source : "
+            "(x_theme : Food) -> "
+            "RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme)" in lean
+            and "finite_registered_atomic_source_lexical_3_closure_from_source : "
+            "(x_theme : Food) -> RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme) -> AtomicClosureTruth Prop "
+            "(eat 0 mods_nil John x_theme)" in lean
+            and "finite_registered_atomic_source_transition_1_source : "
+            "RegisteredStateTransitionTruth vase integrity_scale intact broken"
+            in lean
+            and "def finite_registered_atomic_source_discipline_certificate :"
+            in lean
+            and "theorem finite_registered_atomic_source_discipline_certificate_exists :"
+            in lean
+            and "theorem finite_registered_atomic_source_witness_matches :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_source_lexical_3_source_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_source_lexical_3_closure_from_source_projected :"
+            in lean
+            and "theorem "
+            "finite_registered_atomic_source_transition_1_closure_from_source_projected :"
+            in lean
+            and "#check FiniteRegisteredAtomicSourceDisciplineCertificate"
+            in lean
+            and "#check "
+            "finite_registered_atomic_source_lexical_3_closure_from_source_projected"
+            in lean
+            and "#check "
+            "finite_registered_atomic_source_transition_1_closure_from_source_projected"
+            in lean
+        ),
+        "coq finite registered atomic source discipline certificate": (
+            coq_finite_registered_atomic_source_lexical_source_count == 4
+            and coq_finite_registered_atomic_source_lexical_bridge_count == 12
+            and coq_finite_registered_atomic_source_transition_source_count == 1
+            and coq_finite_registered_atomic_source_transition_bridge_count == 3
+            and "Record FiniteRegisteredAtomicSourceDisciplineCertificate : Type := {"
+            in coq
+            and "finite_registered_atomic_source_witness : "
+            "FiniteRegisteredAtomicWitnessCertificate;" in coq
+            and "finite_registered_atomic_source_lexical_3_source : "
+            "forall x_theme : Food," in coq
+            and "RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme);" in coq
+            and "finite_registered_atomic_source_lexical_3_closure_from_source : "
+            "forall x_theme : Food," in coq
+            and "RegisteredLexicalApplicationTruth Prop "
+            "(eat 0 mods_nil John x_theme) ->" in coq
+            and "AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);"
+            in coq
+            and "finite_registered_atomic_source_transition_1_source : "
+            "RegisteredStateTransitionTruth vase integrity_scale intact broken;"
+            in coq
+            and "Definition finite_registered_atomic_source_discipline_certificate :"
+            in coq
+            and "Theorem finite_registered_atomic_source_discipline_certificate_exists :"
+            in coq
+            and "Theorem finite_registered_atomic_source_witness_matches :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_source_lexical_3_source_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_source_lexical_3_closure_from_source_projected :"
+            in coq
+            and "Theorem "
+            "finite_registered_atomic_source_transition_1_closure_from_source_projected :"
+            in coq
+            and "Check FiniteRegisteredAtomicSourceDisciplineCertificate."
+            in coq
+            and "Check "
+            "finite_registered_atomic_source_lexical_3_closure_from_source_projected."
+            in coq
+            and "Check "
+            "finite_registered_atomic_source_transition_1_closure_from_source_projected."
             in coq
         ),
         "lean registered lexical truth model bridge": (

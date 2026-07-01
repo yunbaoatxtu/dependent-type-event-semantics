@@ -21211,6 +21211,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "coq_finite_registered_atomic_source_discipline_certificate",
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21448,6 +21453,14 @@ def project_completion_status_payload(
                     "RegisteredExampleTruthInstances record, proves the "
                     "package exists, and checks that each packaged field "
                     "projects back to AtomicClosureTruth. "
+                    "The current finite atom witness is now also guarded by "
+                    "a FiniteRegisteredAtomicSourceDisciplineCertificate: "
+                    "each generated lexical atom exposes a "
+                    "RegisteredLexicalApplicationTruth source, each generated "
+                    "transition atom exposes a RegisteredStateTransitionTruth "
+                    "source, and those sources are checked back into "
+                    "ConcreteRegisteredAtomicTruth, AtomicBaseTruth, and "
+                    "AtomicClosureTruth projections. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

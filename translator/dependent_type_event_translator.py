@@ -11699,6 +11699,585 @@ def finite_registered_atomic_witness_certificate_lines(
     return lines
 
 
+def finite_registered_atomic_source_discipline_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Record the registered evidence source behind each finite atom witness."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    transitions: list[tuple[str, str, str, str]] = declarations["transitions"]
+
+    def schema_application(schema: LexicalApplicationSchema) -> tuple[str, str, list[tuple[str, str]]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        return result_type, lexical_application_term(schema), binders
+
+    def lean_schema_registered_type(schema: LexicalApplicationSchema) -> str:
+        result_type, application, binders = schema_application(schema)
+        conclusion = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_schema_from_source_type(
+        schema: LexicalApplicationSchema,
+        sort: str,
+    ) -> str:
+        result_type, application, binders = schema_application(schema)
+        source = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        conclusion = {
+            "concrete": (
+                f"ConcreteRegisteredAtomicTruth {result_type} ({application})"
+            ),
+            "base": f"AtomicBaseTruth {result_type} ({application})",
+            "closure": f"AtomicClosureTruth {result_type} ({application})",
+        }[sort]
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, source, conclusion])
+
+    def lean_schema_registered_value(schema: LexicalApplicationSchema) -> str:
+        constructor = registered_lexical_application_constructor_from_schema(schema)
+        result_type, application, binders = schema_application(schema)
+        del result_type, application
+        binder_names = [name for name, _type_name in binders]
+        value = "RegisteredLexicalApplicationTruth." + constructor
+        if binder_names:
+            value += " " + " ".join(binder_names)
+            return f"fun {' '.join(binder_names)} => {value}"
+        return value
+
+    def lean_schema_from_source_value(
+        schema: LexicalApplicationSchema,
+        sort: str,
+    ) -> str:
+        result_type, application, binders = schema_application(schema)
+        binder_names = [name for name, _type_name in binders]
+        h_name = "h_source"
+        value = {
+            "concrete": (
+                "ConcreteRegisteredAtomicTruth."
+                "concrete_registered_atomic_truth_lexical_application "
+                f"{result_type} ({application}) {h_name}"
+            ),
+            "base": (
+                "registered_lexical_application_atomic_base_truth "
+                f"{result_type} ({application}) {h_name}"
+            ),
+            "closure": (
+                "registered_lexical_application_atomic_closure_truth "
+                f"{result_type} ({application}) {h_name}"
+            ),
+        }[sort]
+        args = [*binder_names, h_name]
+        return f"fun {' '.join(args)} => {value}"
+
+    def transition_term_parts(
+        transition: tuple[str, str, str, str],
+    ) -> tuple[str, str, str, str, str]:
+        theme, scale, source, target_state = transition
+        return theme, scale, source, target_state, (
+            f"(Transition {theme} {scale} {source} {target_state})"
+        )
+
+    def lean_transition_source_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_term_parts(transition)
+        return (
+            "RegisteredStateTransitionTruth "
+            f"{theme} {scale} {source} {target_state}"
+        )
+
+    def lean_transition_from_source_type(
+        transition: tuple[str, str, str, str],
+        sort: str,
+    ) -> str:
+        source_type = lean_transition_source_type(transition)
+        _theme, _scale, _source, _target_state, term = transition_term_parts(transition)
+        conclusion = {
+            "concrete": f"ConcreteRegisteredAtomicTruth TransitionT {term}",
+            "base": f"AtomicBaseTruth TransitionT {term}",
+            "closure": f"AtomicClosureTruth TransitionT {term}",
+        }[sort]
+        return f"{source_type} -> {conclusion}"
+
+    def lean_transition_source_value(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_term_parts(transition)
+        constructor = registered_state_transition_constructor(
+            theme,
+            scale,
+            source,
+            target_state,
+        )
+        return "RegisteredStateTransitionTruth." + constructor
+
+    def lean_transition_from_source_value(
+        transition: tuple[str, str, str, str],
+        sort: str,
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_term_parts(transition)
+        h_name = "h_source"
+        base = (
+            "registered_state_transition_atomic_base_truth "
+            f"{theme} {scale} {source} {target_state} {h_name}"
+        )
+        value = {
+            "concrete": (
+                "ConcreteRegisteredAtomicTruth."
+                "concrete_registered_atomic_truth_transition "
+                f"{theme} {scale} {source} {target_state} {h_name}"
+            ),
+            "base": base,
+            "closure": (
+                "AtomicClosureTruth.atomic_closure_truth_transition "
+                f"{theme} {scale} {source} {target_state} ({base})"
+            ),
+        }[sort]
+        return f"fun {h_name} => {value}"
+
+    def coq_schema_registered_type(schema: LexicalApplicationSchema) -> list[str]:
+        result_type, application, binders = schema_application(schema)
+        conclusion = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        if not binders:
+            return [conclusion]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {conclusion}"]
+
+    def coq_schema_from_source_type(
+        schema: LexicalApplicationSchema,
+        sort: str,
+    ) -> list[str]:
+        result_type, application, binders = schema_application(schema)
+        source_type = f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+        conclusion = {
+            "concrete": (
+                f"ConcreteRegisteredAtomicTruth {result_type} ({application})"
+            ),
+            "base": f"AtomicBaseTruth {result_type} ({application})",
+            "closure": f"AtomicClosureTruth {result_type} ({application})",
+        }[sort]
+        if not binders:
+            return [f"{source_type} ->", f"      {conclusion}"]
+        binder_text = ", ".join(
+            f"forall {name} : {type_name}" for name, type_name in binders
+        )
+        return [f"{binder_text},", f"      {source_type} ->", f"      {conclusion}"]
+
+    def coq_schema_registered_value(schema: LexicalApplicationSchema) -> str:
+        constructor = registered_lexical_application_constructor_from_schema(schema)
+        _result_type, _application, binders = schema_application(schema)
+        binder_names = [name for name, _type_name in binders]
+        value = constructor
+        if binder_names:
+            value += " " + " ".join(binder_names)
+            return f"fun {' '.join(binder_names)} => {value}"
+        return value
+
+    def coq_schema_from_source_value(
+        schema: LexicalApplicationSchema,
+        sort: str,
+    ) -> str:
+        result_type, application, binders = schema_application(schema)
+        binder_names = [name for name, _type_name in binders]
+        h_name = "h_source"
+        value = {
+            "concrete": (
+                "concrete_registered_atomic_truth_lexical_application "
+                f"{result_type} ({application}) {h_name}"
+            ),
+            "base": (
+                "registered_lexical_application_atomic_base_truth "
+                f"{result_type} ({application}) {h_name}"
+            ),
+            "closure": (
+                "registered_lexical_application_atomic_closure_truth "
+                f"{result_type} ({application}) {h_name}"
+            ),
+        }[sort]
+        return f"fun {' '.join([*binder_names, h_name])} => {value}"
+
+    def coq_transition_source_type(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_term_parts(transition)
+        return (
+            "RegisteredStateTransitionTruth "
+            f"{theme} {scale} {source} {target_state}"
+        )
+
+    def coq_transition_from_source_type(
+        transition: tuple[str, str, str, str],
+        sort: str,
+    ) -> list[str]:
+        source_type = coq_transition_source_type(transition)
+        _theme, _scale, _source, _target_state, term = transition_term_parts(transition)
+        conclusion = {
+            "concrete": f"ConcreteRegisteredAtomicTruth TransitionT {term}",
+            "base": f"AtomicBaseTruth TransitionT {term}",
+            "closure": f"AtomicClosureTruth TransitionT {term}",
+        }[sort]
+        return [f"{source_type} ->", f"      {conclusion}"]
+
+    def coq_transition_source_value(
+        transition: tuple[str, str, str, str],
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_term_parts(transition)
+        return registered_state_transition_constructor(
+            theme,
+            scale,
+            source,
+            target_state,
+        )
+
+    def coq_transition_from_source_value(
+        transition: tuple[str, str, str, str],
+        sort: str,
+    ) -> str:
+        theme, scale, source, target_state, _term = transition_term_parts(transition)
+        h_name = "h_source"
+        base = (
+            "registered_state_transition_atomic_base_truth "
+            f"{theme} {scale} {source} {target_state} {h_name}"
+        )
+        value = {
+            "concrete": (
+                "concrete_registered_atomic_truth_transition "
+                f"{theme} {scale} {source} {target_state} {h_name}"
+            ),
+            "base": base,
+            "closure": (
+                "atomic_closure_truth_transition "
+                f"{theme} {scale} {source} {target_state} ({base})"
+            ),
+        }[sort]
+        return f"fun {h_name} => {value}"
+
+    if target == "lean":
+        lines = [
+            "structure FiniteRegisteredAtomicSourceDisciplineCertificate : Type where",
+            "  finite_registered_atomic_source_witness : "
+            "FiniteRegisteredAtomicWitnessCertificate",
+            "  finite_registered_atomic_source_witness_eq :",
+            "      finite_registered_atomic_source_witness = "
+            "finite_registered_atomic_witness_certificate",
+        ]
+        for index, schema in enumerate(schemas, 1):
+            lines.append(
+                f"  finite_registered_atomic_source_lexical_{index}_source : "
+                f"{lean_schema_registered_type(schema)}"
+            )
+            for sort in ("concrete", "base", "closure"):
+                lines.append(
+                    "  "
+                    f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source : "
+                    f"{lean_schema_from_source_type(schema, sort)}"
+                )
+        for index, transition in enumerate(transitions, 1):
+            lines.append(
+                f"  finite_registered_atomic_source_transition_{index}_source : "
+                f"{lean_transition_source_type(transition)}"
+            )
+            for sort in ("concrete", "base", "closure"):
+                lines.append(
+                    "  "
+                    f"finite_registered_atomic_source_transition_{index}_{sort}_from_source : "
+                    f"{lean_transition_from_source_type(transition, sort)}"
+                )
+        lines.extend(
+            [
+                "",
+                "def finite_registered_atomic_source_discipline_certificate :",
+                "    FiniteRegisteredAtomicSourceDisciplineCertificate := {",
+                "  finite_registered_atomic_source_witness := "
+                "finite_registered_atomic_witness_certificate,",
+                "  finite_registered_atomic_source_witness_eq := rfl,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, schema in enumerate(schemas, 1):
+            assignments.append(
+                (
+                    f"finite_registered_atomic_source_lexical_{index}_source",
+                    lean_schema_registered_value(schema),
+                )
+            )
+            for sort in ("concrete", "base", "closure"):
+                assignments.append(
+                    (
+                        f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source",
+                        lean_schema_from_source_value(schema, sort),
+                    )
+                )
+        for index, transition in enumerate(transitions, 1):
+            assignments.append(
+                (
+                    f"finite_registered_atomic_source_transition_{index}_source",
+                    lean_transition_source_value(transition),
+                )
+            )
+            for sort in ("concrete", "base", "closure"):
+                assignments.append(
+                    (
+                        f"finite_registered_atomic_source_transition_{index}_{sort}_from_source",
+                        lean_transition_from_source_value(transition, sort),
+                    )
+                )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem finite_registered_atomic_source_discipline_certificate_exists :",
+                "    Exists (fun C : "
+                "FiniteRegisteredAtomicSourceDisciplineCertificate => "
+                "C = finite_registered_atomic_source_discipline_certificate) := by",
+                "  exact Exists.intro "
+                "finite_registered_atomic_source_discipline_certificate rfl",
+                "",
+                "theorem finite_registered_atomic_source_witness_matches :",
+                "    finite_registered_atomic_source_discipline_certificate."
+                "finite_registered_atomic_source_witness =",
+                "      finite_registered_atomic_witness_certificate := by",
+                "  exact finite_registered_atomic_source_discipline_certificate."
+                "finite_registered_atomic_source_witness_eq",
+            ]
+        )
+        for index, schema in enumerate(schemas, 1):
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_source_lexical_{index}_source_projected :",
+                    f"    {lean_schema_registered_type(schema)} := by",
+                    "  exact finite_registered_atomic_source_discipline_certificate."
+                    f"finite_registered_atomic_source_lexical_{index}_source",
+                ]
+            )
+            for sort in ("concrete", "base", "closure"):
+                lines.extend(
+                    [
+                        "",
+                        "theorem "
+                        f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source_projected :",
+                        f"    {lean_schema_from_source_type(schema, sort)} := by",
+                        "  exact finite_registered_atomic_source_discipline_certificate."
+                        f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source",
+                    ]
+                )
+        for index, transition in enumerate(transitions, 1):
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"finite_registered_atomic_source_transition_{index}_source_projected :",
+                    f"    {lean_transition_source_type(transition)} := by",
+                    "  exact finite_registered_atomic_source_discipline_certificate."
+                    f"finite_registered_atomic_source_transition_{index}_source",
+                ]
+            )
+            for sort in ("concrete", "base", "closure"):
+                lines.extend(
+                    [
+                        "",
+                        "theorem "
+                        f"finite_registered_atomic_source_transition_{index}_{sort}_from_source_projected :",
+                        f"    {lean_transition_from_source_type(transition, sort)} := by",
+                        "  exact finite_registered_atomic_source_discipline_certificate."
+                        f"finite_registered_atomic_source_transition_{index}_{sort}_from_source",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Record FiniteRegisteredAtomicSourceDisciplineCertificate : Type := {",
+        "  finite_registered_atomic_source_witness : "
+        "FiniteRegisteredAtomicWitnessCertificate;",
+        "  finite_registered_atomic_source_witness_eq :",
+        "      finite_registered_atomic_source_witness = "
+        "finite_registered_atomic_witness_certificate;",
+    ]
+    for index, schema in enumerate(schemas, 1):
+        source_type = coq_schema_registered_type(schema)
+        lines.append(
+            f"  finite_registered_atomic_source_lexical_{index}_source : "
+            + source_type[0]
+        )
+        lines.extend(source_type[1:])
+        lines[-1] += ";"
+        for sort in ("concrete", "base", "closure"):
+            type_lines = coq_schema_from_source_type(schema, sort)
+            lines.append(
+                "  "
+                f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source : "
+                + type_lines[0]
+            )
+            lines.extend(type_lines[1:])
+            lines[-1] += ";"
+    for index, transition in enumerate(transitions, 1):
+        lines.append(
+            f"  finite_registered_atomic_source_transition_{index}_source : "
+            f"{coq_transition_source_type(transition)};"
+        )
+        for sort in ("concrete", "base", "closure"):
+            type_lines = coq_transition_from_source_type(transition, sort)
+            lines.append(
+                "  "
+                f"finite_registered_atomic_source_transition_{index}_{sort}_from_source : "
+                + type_lines[0]
+            )
+            lines.extend(type_lines[1:])
+            lines[-1] += ";"
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition finite_registered_atomic_source_discipline_certificate :",
+            "  FiniteRegisteredAtomicSourceDisciplineCertificate := {|",
+            "  finite_registered_atomic_source_witness := "
+            "finite_registered_atomic_witness_certificate;",
+            "  finite_registered_atomic_source_witness_eq := eq_refl;",
+        ]
+    )
+    assignments = []
+    for index, schema in enumerate(schemas, 1):
+        assignments.append(
+            (
+                f"finite_registered_atomic_source_lexical_{index}_source",
+                coq_schema_registered_value(schema),
+            )
+        )
+        for sort in ("concrete", "base", "closure"):
+            assignments.append(
+                (
+                    f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source",
+                    coq_schema_from_source_value(schema, sort),
+                )
+            )
+    for index, transition in enumerate(transitions, 1):
+        assignments.append(
+            (
+                f"finite_registered_atomic_source_transition_{index}_source",
+                coq_transition_source_value(transition),
+            )
+        )
+        for sort in ("concrete", "base", "closure"):
+            assignments.append(
+                (
+                    f"finite_registered_atomic_source_transition_{index}_{sort}_from_source",
+                    coq_transition_from_source_value(transition, sort),
+                )
+            )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem finite_registered_atomic_source_discipline_certificate_exists :",
+            "  exists C : FiniteRegisteredAtomicSourceDisciplineCertificate,",
+            "    C = finite_registered_atomic_source_discipline_certificate.",
+            "Proof.",
+            "  exists finite_registered_atomic_source_discipline_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem finite_registered_atomic_source_witness_matches :",
+            "  finite_registered_atomic_source_witness",
+            "    finite_registered_atomic_source_discipline_certificate =",
+            "  finite_registered_atomic_witness_certificate.",
+            "Proof.",
+            "  exact (finite_registered_atomic_source_witness_eq",
+            "    finite_registered_atomic_source_discipline_certificate).",
+            "Qed.",
+        ]
+    )
+    for index, schema in enumerate(schemas, 1):
+        source_type = coq_schema_registered_type(schema)
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_atomic_source_lexical_{index}_source_projected :",
+                f"  {source_type[0]}",
+            ]
+        )
+        lines.extend(source_type[1:])
+        lines[-1] += "."
+        lines.extend(
+            [
+                "Proof.",
+                "  exact ("
+                f"finite_registered_atomic_source_lexical_{index}_source",
+                "    finite_registered_atomic_source_discipline_certificate).",
+                "Qed.",
+            ]
+        )
+        for sort in ("concrete", "base", "closure"):
+            type_lines = coq_schema_from_source_type(schema, sort)
+            lines.extend(
+                [
+                    "",
+                    "Theorem "
+                    f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source_projected :",
+                    f"  {type_lines[0]}",
+                ]
+            )
+            lines.extend(type_lines[1:])
+            lines[-1] += "."
+            lines.extend(
+                [
+                    "Proof.",
+                    "  exact ("
+                    f"finite_registered_atomic_source_lexical_{index}_{sort}_from_source",
+                    "    finite_registered_atomic_source_discipline_certificate).",
+                    "Qed.",
+                ]
+            )
+    for index, transition in enumerate(transitions, 1):
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"finite_registered_atomic_source_transition_{index}_source_projected :",
+                f"  {coq_transition_source_type(transition)}.",
+                "Proof.",
+                "  exact ("
+                f"finite_registered_atomic_source_transition_{index}_source",
+                "    finite_registered_atomic_source_discipline_certificate).",
+                "Qed.",
+            ]
+        )
+        for sort in ("concrete", "base", "closure"):
+            type_lines = coq_transition_from_source_type(transition, sort)
+            lines.extend(
+                [
+                    "",
+                    "Theorem "
+                    f"finite_registered_atomic_source_transition_{index}_{sort}_from_source_projected :",
+                    f"  {type_lines[0]}",
+                ]
+            )
+            lines.extend(type_lines[1:])
+            lines[-1] += "."
+            lines.extend(
+                [
+                    "Proof.",
+                    "  exact ("
+                    f"finite_registered_atomic_source_transition_{index}_{sort}_from_source",
+                    "    finite_registered_atomic_source_discipline_certificate).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -16197,6 +16776,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            finite_registered_atomic_source_discipline_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -16789,6 +17375,34 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 lines.append(
                     "#check "
                     f"finite_registered_atomic_witness_transition_{index}_{sort}_projected"
+                )
+        lines.append("#check FiniteRegisteredAtomicSourceDisciplineCertificate")
+        lines.append("#check finite_registered_atomic_source_discipline_certificate")
+        lines.append(
+            "#check finite_registered_atomic_source_discipline_certificate_exists"
+        )
+        lines.append("#check finite_registered_atomic_source_witness_matches")
+        for index in range(1, len(declarations["lexical_applications"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_source_lexical_{index}_source_projected"
+            )
+            for sort in ("concrete", "base", "closure"):
+                lines.append(
+                    "#check "
+                    "finite_registered_atomic_source_"
+                    f"lexical_{index}_{sort}_from_source_projected"
+                )
+        for index in range(1, len(declarations["transitions"]) + 1):
+            lines.append(
+                "#check "
+                f"finite_registered_atomic_source_transition_{index}_source_projected"
+            )
+            for sort in ("concrete", "base", "closure"):
+                lines.append(
+                    "#check "
+                    "finite_registered_atomic_source_"
+                    f"transition_{index}_{sort}_from_source_projected"
                 )
         return "\n".join(lines) + "\n"
 
@@ -17512,6 +18126,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         )
     )
     lines.append("")
+    lines.extend(
+        finite_registered_atomic_source_discipline_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
     for idx in range(1, len(results) + 1):
         lines.append(f"Check example_{idx}.")
         lines.append(f"Check example_{idx}_semantic_preservation_obligation.")
@@ -18000,6 +18621,32 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "Check "
                 f"finite_registered_atomic_witness_transition_{index}_{sort}_projected."
+            )
+    lines.append("Check FiniteRegisteredAtomicSourceDisciplineCertificate.")
+    lines.append("Check finite_registered_atomic_source_discipline_certificate.")
+    lines.append("Check finite_registered_atomic_source_discipline_certificate_exists.")
+    lines.append("Check finite_registered_atomic_source_witness_matches.")
+    for index in range(1, len(declarations["lexical_applications"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_source_lexical_{index}_source_projected."
+        )
+        for sort in ("concrete", "base", "closure"):
+            lines.append(
+                "Check "
+                "finite_registered_atomic_source_"
+                f"lexical_{index}_{sort}_from_source_projected."
+            )
+    for index in range(1, len(declarations["transitions"]) + 1):
+        lines.append(
+            "Check "
+            f"finite_registered_atomic_source_transition_{index}_source_projected."
+        )
+        for sort in ("concrete", "base", "closure"):
+            lines.append(
+                "Check "
+                "finite_registered_atomic_source_"
+                f"transition_{index}_{sort}_from_source_projected."
             )
     return "\n".join(lines) + "\n"
 

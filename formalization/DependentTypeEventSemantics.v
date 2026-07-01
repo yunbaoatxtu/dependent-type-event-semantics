@@ -7368,6 +7368,253 @@ Proof.
     finite_registered_atomic_witness_certificate).
 Qed.
 
+Record FiniteRegisteredAtomicSourceDisciplineCertificate : Type := {
+  finite_registered_atomic_source_witness : FiniteRegisteredAtomicWitnessCertificate;
+  finite_registered_atomic_source_witness_eq :
+      finite_registered_atomic_source_witness = finite_registered_atomic_witness_certificate;
+  finite_registered_atomic_source_lexical_1_source : RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_source_lexical_1_concrete_from_source : RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      ConcreteRegisteredAtomicTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_source_lexical_1_base_from_source : RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      AtomicBaseTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_source_lexical_1_closure_from_source : RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  finite_registered_atomic_source_lexical_2_source : RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_source_lexical_2_concrete_from_source : RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      ConcreteRegisteredAtomicTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_source_lexical_2_base_from_source : RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      AtomicBaseTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_source_lexical_2_closure_from_source : RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  finite_registered_atomic_source_lexical_3_source : forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_source_lexical_3_concrete_from_source : forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      ConcreteRegisteredAtomicTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_source_lexical_3_base_from_source : forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      AtomicBaseTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_source_lexical_3_closure_from_source : forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  finite_registered_atomic_source_lexical_4_source : RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_source_lexical_4_concrete_from_source : RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      ConcreteRegisteredAtomicTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_source_lexical_4_base_from_source : RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      AtomicBaseTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_source_lexical_4_closure_from_source : RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      AtomicClosureTruth PropT (knock 0 mods_nil John);
+  finite_registered_atomic_source_transition_1_source : RegisteredStateTransitionTruth vase integrity_scale intact broken;
+  finite_registered_atomic_source_transition_1_concrete_from_source : RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      ConcreteRegisteredAtomicTruth TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_source_transition_1_base_from_source : RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      AtomicBaseTruth TransitionT (Transition vase integrity_scale intact broken);
+  finite_registered_atomic_source_transition_1_closure_from_source : RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken)
+}.
+
+Definition finite_registered_atomic_source_discipline_certificate :
+  FiniteRegisteredAtomicSourceDisciplineCertificate := {|
+  finite_registered_atomic_source_witness := finite_registered_atomic_witness_certificate;
+  finite_registered_atomic_source_witness_eq := eq_refl;
+  finite_registered_atomic_source_lexical_1_source := registered_lexical_break_0_John_vase;
+  finite_registered_atomic_source_lexical_1_concrete_from_source := fun h_source => concrete_registered_atomic_truth_lexical_application PropT (break 0 mods_nil John vase) h_source;
+  finite_registered_atomic_source_lexical_1_base_from_source := fun h_source => registered_lexical_application_atomic_base_truth PropT (break 0 mods_nil John vase) h_source;
+  finite_registered_atomic_source_lexical_1_closure_from_source := fun h_source => registered_lexical_application_atomic_closure_truth PropT (break 0 mods_nil John vase) h_source;
+  finite_registered_atomic_source_lexical_2_source := registered_lexical_butter_2_slowly_in_bathroom_John_toast;
+  finite_registered_atomic_source_lexical_2_concrete_from_source := fun h_source => concrete_registered_atomic_truth_lexical_application PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) h_source;
+  finite_registered_atomic_source_lexical_2_base_from_source := fun h_source => registered_lexical_application_atomic_base_truth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) h_source;
+  finite_registered_atomic_source_lexical_2_closure_from_source := fun h_source => registered_lexical_application_atomic_closure_truth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) h_source;
+  finite_registered_atomic_source_lexical_3_source := fun x_theme => registered_lexical_eat_0_John_x_theme x_theme;
+  finite_registered_atomic_source_lexical_3_concrete_from_source := fun x_theme h_source => concrete_registered_atomic_truth_lexical_application Prop (eat 0 mods_nil John x_theme) h_source;
+  finite_registered_atomic_source_lexical_3_base_from_source := fun x_theme h_source => registered_lexical_application_atomic_base_truth Prop (eat 0 mods_nil John x_theme) h_source;
+  finite_registered_atomic_source_lexical_3_closure_from_source := fun x_theme h_source => registered_lexical_application_atomic_closure_truth Prop (eat 0 mods_nil John x_theme) h_source;
+  finite_registered_atomic_source_lexical_4_source := registered_lexical_knock_0_John;
+  finite_registered_atomic_source_lexical_4_concrete_from_source := fun h_source => concrete_registered_atomic_truth_lexical_application PropT (knock 0 mods_nil John) h_source;
+  finite_registered_atomic_source_lexical_4_base_from_source := fun h_source => registered_lexical_application_atomic_base_truth PropT (knock 0 mods_nil John) h_source;
+  finite_registered_atomic_source_lexical_4_closure_from_source := fun h_source => registered_lexical_application_atomic_closure_truth PropT (knock 0 mods_nil John) h_source;
+  finite_registered_atomic_source_transition_1_source := registered_transition_vase_integrity_scale_intact_to_broken;
+  finite_registered_atomic_source_transition_1_concrete_from_source := fun h_source => concrete_registered_atomic_truth_transition vase integrity_scale intact broken h_source;
+  finite_registered_atomic_source_transition_1_base_from_source := fun h_source => registered_state_transition_atomic_base_truth vase integrity_scale intact broken h_source;
+  finite_registered_atomic_source_transition_1_closure_from_source := fun h_source => atomic_closure_truth_transition vase integrity_scale intact broken (registered_state_transition_atomic_base_truth vase integrity_scale intact broken h_source)
+|}.
+
+Theorem finite_registered_atomic_source_discipline_certificate_exists :
+  exists C : FiniteRegisteredAtomicSourceDisciplineCertificate,
+    C = finite_registered_atomic_source_discipline_certificate.
+Proof.
+  exists finite_registered_atomic_source_discipline_certificate.
+  reflexivity.
+Qed.
+
+Theorem finite_registered_atomic_source_witness_matches :
+  finite_registered_atomic_source_witness
+    finite_registered_atomic_source_discipline_certificate =
+  finite_registered_atomic_witness_certificate.
+Proof.
+  exact (finite_registered_atomic_source_witness_eq
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_1_source_projected :
+  RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_source_lexical_1_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_1_concrete_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      ConcreteRegisteredAtomicTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_source_lexical_1_concrete_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_1_base_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      AtomicBaseTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_source_lexical_1_base_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_1_closure_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase) ->
+      AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (finite_registered_atomic_source_lexical_1_closure_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_2_source_projected :
+  RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_source_lexical_2_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_2_concrete_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      ConcreteRegisteredAtomicTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_source_lexical_2_concrete_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_2_base_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      AtomicBaseTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_source_lexical_2_base_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_2_closure_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) ->
+      AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (finite_registered_atomic_source_lexical_2_closure_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_3_source_projected :
+  forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_source_lexical_3_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_3_concrete_from_source_projected :
+  forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      ConcreteRegisteredAtomicTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_source_lexical_3_concrete_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_3_base_from_source_projected :
+  forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      AtomicBaseTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_source_lexical_3_base_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_3_closure_from_source_projected :
+  forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme) ->
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (finite_registered_atomic_source_lexical_3_closure_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_4_source_projected :
+  RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_source_lexical_4_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_4_concrete_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      ConcreteRegisteredAtomicTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_source_lexical_4_concrete_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_4_base_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      AtomicBaseTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_source_lexical_4_base_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_lexical_4_closure_from_source_projected :
+  RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John) ->
+      AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (finite_registered_atomic_source_lexical_4_closure_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_transition_1_source_projected :
+  RegisteredStateTransitionTruth vase integrity_scale intact broken.
+Proof.
+  exact (finite_registered_atomic_source_transition_1_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_transition_1_concrete_from_source_projected :
+  RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      ConcreteRegisteredAtomicTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_source_transition_1_concrete_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_transition_1_base_from_source_projected :
+  RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      AtomicBaseTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_source_transition_1_base_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
+Theorem finite_registered_atomic_source_transition_1_closure_from_source_projected :
+  RegisteredStateTransitionTruth vase integrity_scale intact broken ->
+      AtomicClosureTruth TransitionT (Transition vase integrity_scale intact broken).
+Proof.
+  exact (finite_registered_atomic_source_transition_1_closure_from_source
+    finite_registered_atomic_source_discipline_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -7832,3 +8079,27 @@ Check finite_registered_atomic_witness_lexical_4_closure_projected.
 Check finite_registered_atomic_witness_transition_1_concrete_projected.
 Check finite_registered_atomic_witness_transition_1_base_projected.
 Check finite_registered_atomic_witness_transition_1_closure_projected.
+Check FiniteRegisteredAtomicSourceDisciplineCertificate.
+Check finite_registered_atomic_source_discipline_certificate.
+Check finite_registered_atomic_source_discipline_certificate_exists.
+Check finite_registered_atomic_source_witness_matches.
+Check finite_registered_atomic_source_lexical_1_source_projected.
+Check finite_registered_atomic_source_lexical_1_concrete_from_source_projected.
+Check finite_registered_atomic_source_lexical_1_base_from_source_projected.
+Check finite_registered_atomic_source_lexical_1_closure_from_source_projected.
+Check finite_registered_atomic_source_lexical_2_source_projected.
+Check finite_registered_atomic_source_lexical_2_concrete_from_source_projected.
+Check finite_registered_atomic_source_lexical_2_base_from_source_projected.
+Check finite_registered_atomic_source_lexical_2_closure_from_source_projected.
+Check finite_registered_atomic_source_lexical_3_source_projected.
+Check finite_registered_atomic_source_lexical_3_concrete_from_source_projected.
+Check finite_registered_atomic_source_lexical_3_base_from_source_projected.
+Check finite_registered_atomic_source_lexical_3_closure_from_source_projected.
+Check finite_registered_atomic_source_lexical_4_source_projected.
+Check finite_registered_atomic_source_lexical_4_concrete_from_source_projected.
+Check finite_registered_atomic_source_lexical_4_base_from_source_projected.
+Check finite_registered_atomic_source_lexical_4_closure_from_source_projected.
+Check finite_registered_atomic_source_transition_1_source_projected.
+Check finite_registered_atomic_source_transition_1_concrete_from_source_projected.
+Check finite_registered_atomic_source_transition_1_base_from_source_projected.
+Check finite_registered_atomic_source_transition_1_closure_from_source_projected.

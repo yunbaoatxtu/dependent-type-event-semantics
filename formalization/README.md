@@ -398,7 +398,13 @@ semantic model. The newest finite step then exposes those registered atoms
 directly as `FiniteRegisteredAtomicWitnessCertificate`, instantiates
 `finite_registered_atomic_witness_certificate`, and checks concrete,
 `AtomicBaseTruth`, and `AtomicClosureTruth` projections for each generated
-registered lexical application and registered state transition.
+registered lexical application and registered state transition. The following
+source-discipline layer packages the same finite atoms as
+`FiniteRegisteredAtomicSourceDisciplineCertificate`, instantiates
+`finite_registered_atomic_source_discipline_certificate`, and checks that each
+lexical atom has a `RegisteredLexicalApplicationTruth` source, each transition
+atom has a `RegisteredStateTransitionTruth` source, and each source projects
+back to concrete, base, and closure truth.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

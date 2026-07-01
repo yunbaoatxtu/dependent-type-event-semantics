@@ -2598,6 +2598,26 @@ class TranslatorTests(unittest.TestCase):
             "#check finite_registered_atomic_witness_transition_1_closure_projected",
             lean_module,
         )
+        self.assertIn(
+            "structure FiniteRegisteredAtomicSourceDisciplineCertificate : Type where",
+            lean_module,
+        )
+        self.assertIn(
+            "def finite_registered_atomic_source_discipline_certificate :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_atomic_source_lexical_2_base_from_source_projected :",
+            lean_module,
+        )
+        self.assertIn(
+            "theorem finite_registered_atomic_source_transition_1_closure_from_source_projected :",
+            lean_module,
+        )
+        self.assertIn(
+            "#check finite_registered_atomic_source_transition_1_closure_from_source_projected",
+            lean_module,
+        )
         self.assertIn("apply SemanticPreservation.preserve_cause", lean_module)
         self.assertIn("apply semantic_preservation_model_interpretable", lean_module)
         self.assertIn("apply semantic_preservation_syntax_directed_truth", lean_module)
@@ -4289,6 +4309,26 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "Check finite_registered_atomic_witness_transition_1_closure_projected.",
+            coq_module,
+        )
+        self.assertIn(
+            "Record FiniteRegisteredAtomicSourceDisciplineCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition finite_registered_atomic_source_discipline_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_source_lexical_2_base_from_source_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem finite_registered_atomic_source_transition_1_closure_from_source_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check finite_registered_atomic_source_transition_1_closure_from_source_projected.",
             coq_module,
         )
         self.assertIn(
@@ -17073,6 +17113,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_finite_registered_truth_condition_completion_certificate",
                 "coq_finite_registered_truth_condition_component_coverage_certificate",
                 "coq_finite_registered_atomic_witness_certificate",
+                "coq_finite_registered_atomic_source_discipline_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -26360,6 +26401,14 @@ class TranslatorTests(unittest.TestCase):
             "`coq_finite_registered_atomic_witness_certificate`",
             readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredAtomicSourceDisciplineCertificate`",
+            readme,
+        )
+        self.assertIn(
+            "`coq_finite_registered_atomic_source_discipline_certificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -26537,6 +26586,14 @@ class TranslatorTests(unittest.TestCase):
             "`finite_registered_atomic_witness_certificate`",
             formalization_readme,
         )
+        self.assertIn(
+            "`FiniteRegisteredAtomicSourceDisciplineCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`finite_registered_atomic_source_discipline_certificate`",
+            formalization_readme,
+        )
         self.assertIn("AtomicValuationSpec", manuscript)
         self.assertIn("LexicalAtomTruthAssumptions", manuscript)
         self.assertIn("TransitionAtomTruthAssumptions", manuscript)
@@ -26691,6 +26748,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_finite_registered_atomic_witness_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "FiniteRegisteredAtomicSourceDisciplineCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_finite_registered_atomic_source_discipline_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
