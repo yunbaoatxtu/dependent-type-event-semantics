@@ -15852,6 +15852,316 @@ Proof.
     concrete_truth_condition_independent_model_candidate_certificate).
 Qed.
 
+Record ConcreteTruthConditionIndependentModelReadinessCertificate : Type := {
+  concrete_truth_condition_independent_model_readiness_candidate :
+      ConcreteTruthConditionIndependentModelCandidateCertificate;
+  concrete_truth_condition_independent_model_readiness_candidate_eq :
+      concrete_truth_condition_independent_model_readiness_candidate =
+        concrete_truth_condition_independent_model_candidate_certificate;
+  concrete_truth_condition_independent_model_readiness_coverage :
+      RegisteredTruthConditionConstructorClassProjectionCoverageCertificate;
+  concrete_truth_condition_independent_model_readiness_coverage_eq :
+      concrete_truth_condition_independent_model_readiness_coverage =
+        registered_truth_condition_constructor_class_projection_coverage_certificate;
+  concrete_truth_condition_independent_model_readiness_ledger :
+      RegisteredTruthConditionConstructorClassProjectionObligationLedger;
+  concrete_truth_condition_independent_model_readiness_ledger_eq :
+      concrete_truth_condition_independent_model_readiness_ledger =
+        registered_truth_condition_constructor_class_projection_obligation_ledger;
+  concrete_truth_condition_independent_model_readiness_provider_obligation :
+      ConcreteTruthConditionProviderClassObligationSuite;
+  concrete_truth_condition_independent_model_readiness_provider_obligation_eq :
+      concrete_truth_condition_independent_model_readiness_provider_obligation =
+        concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_independent_model_readiness_supply :
+      ConcreteTruthConditionInstanceSupplyCertificate;
+  concrete_truth_condition_independent_model_readiness_supply_eq :
+      concrete_truth_condition_independent_model_readiness_supply =
+        concrete_truth_condition_instance_supply_certificate;
+  concrete_truth_condition_independent_model_readiness_direct_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (concrete_truth_condition_instance_supply_direct_spec
+          concrete_truth_condition_instance_supply_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_readiness_evidence_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (concrete_truth_condition_instance_supply_evidence_spec
+          concrete_truth_condition_instance_supply_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_readiness_kernel_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (concrete_truth_condition_instance_supply_kernel_spec
+          concrete_truth_condition_instance_supply_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_readiness_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_readiness_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_readiness_example_1_direct_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_independent_model_readiness_example_1_evidence_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_independent_model_readiness_example_1_kernel_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_independent_model_readiness_example_2_direct_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_independent_model_readiness_example_2_evidence_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_independent_model_readiness_example_2_kernel_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_independent_model_readiness_example_3_direct_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_independent_model_readiness_example_3_evidence_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_independent_model_readiness_example_3_kernel_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_independent_model_readiness_example_4_direct_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_independent_model_readiness_example_4_evidence_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_independent_model_readiness_example_4_kernel_atomic :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition concrete_truth_condition_independent_model_readiness_certificate :
+  ConcreteTruthConditionIndependentModelReadinessCertificate := {|
+  concrete_truth_condition_independent_model_readiness_candidate :=
+    concrete_truth_condition_independent_model_candidate_certificate;
+  concrete_truth_condition_independent_model_readiness_candidate_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_model_readiness_coverage :=
+    registered_truth_condition_constructor_class_projection_coverage_certificate;
+  concrete_truth_condition_independent_model_readiness_coverage_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_model_readiness_ledger :=
+    registered_truth_condition_constructor_class_projection_obligation_ledger;
+  concrete_truth_condition_independent_model_readiness_ledger_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_model_readiness_provider_obligation :=
+    concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_independent_model_readiness_provider_obligation_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_model_readiness_supply :=
+    concrete_truth_condition_instance_supply_certificate;
+  concrete_truth_condition_independent_model_readiness_supply_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_model_readiness_direct_sound :=
+    concrete_truth_condition_independent_model_candidate_direct_supply_sound_projected;
+  concrete_truth_condition_independent_model_readiness_evidence_sound :=
+    concrete_truth_condition_independent_model_candidate_evidence_supply_sound_projected;
+  concrete_truth_condition_independent_model_readiness_kernel_sound :=
+    concrete_truth_condition_independent_model_candidate_kernel_supply_sound_projected;
+  concrete_truth_condition_independent_model_readiness_independent_sound :=
+    concrete_truth_condition_provider_class_obligation_independent_sound_projected;
+  concrete_truth_condition_independent_model_readiness_constructor_sound :=
+    concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected;
+  concrete_truth_condition_independent_model_readiness_example_1_direct_atomic := concrete_truth_condition_independent_model_candidate_example_1_direct_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_1_evidence_atomic := concrete_truth_condition_independent_model_candidate_example_1_evidence_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_1_kernel_atomic := concrete_truth_condition_independent_model_candidate_example_1_kernel_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_2_direct_atomic := concrete_truth_condition_independent_model_candidate_example_2_direct_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_2_evidence_atomic := concrete_truth_condition_independent_model_candidate_example_2_evidence_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_2_kernel_atomic := concrete_truth_condition_independent_model_candidate_example_2_kernel_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_3_direct_atomic := concrete_truth_condition_independent_model_candidate_example_3_direct_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_3_evidence_atomic := concrete_truth_condition_independent_model_candidate_example_3_evidence_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_3_kernel_atomic := concrete_truth_condition_independent_model_candidate_example_3_kernel_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_4_direct_atomic := concrete_truth_condition_independent_model_candidate_example_4_direct_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_4_evidence_atomic := concrete_truth_condition_independent_model_candidate_example_4_evidence_atomic_projected;
+  concrete_truth_condition_independent_model_readiness_example_4_kernel_atomic := concrete_truth_condition_independent_model_candidate_example_4_kernel_atomic_projected
+|}.
+
+Theorem concrete_truth_condition_independent_model_readiness_certificate_exists :
+  exists C : ConcreteTruthConditionIndependentModelReadinessCertificate,
+    C = concrete_truth_condition_independent_model_readiness_certificate.
+Proof.
+  exists concrete_truth_condition_independent_model_readiness_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_candidate_matches :
+  concrete_truth_condition_independent_model_readiness_candidate
+    concrete_truth_condition_independent_model_readiness_certificate =
+  concrete_truth_condition_independent_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_candidate_eq
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_coverage_matches :
+  concrete_truth_condition_independent_model_readiness_coverage
+    concrete_truth_condition_independent_model_readiness_certificate =
+  registered_truth_condition_constructor_class_projection_coverage_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_coverage_eq
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_ledger_matches :
+  concrete_truth_condition_independent_model_readiness_ledger
+    concrete_truth_condition_independent_model_readiness_certificate =
+  registered_truth_condition_constructor_class_projection_obligation_ledger.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_ledger_eq
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_provider_obligation_matches :
+  concrete_truth_condition_independent_model_readiness_provider_obligation
+    concrete_truth_condition_independent_model_readiness_certificate =
+  concrete_truth_condition_provider_class_obligation_suite.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_provider_obligation_eq
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_supply_matches :
+  concrete_truth_condition_independent_model_readiness_supply
+    concrete_truth_condition_independent_model_readiness_certificate =
+  concrete_truth_condition_instance_supply_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_supply_eq
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_direct_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes (concrete_truth_condition_instance_supply_direct_spec concrete_truth_condition_instance_supply_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_direct_sound
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_evidence_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes (concrete_truth_condition_instance_supply_evidence_spec concrete_truth_condition_instance_supply_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_evidence_sound
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_kernel_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes (concrete_truth_condition_instance_supply_kernel_spec concrete_truth_condition_instance_supply_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_kernel_sound
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_independent_sound
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_constructor_sound
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_1_direct_atomic_projected :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_1_direct_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_1_evidence_atomic_projected :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_1_evidence_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_1_kernel_atomic_projected :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_1_kernel_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_2_direct_atomic_projected :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_2_direct_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_2_evidence_atomic_projected :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_2_evidence_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_2_kernel_atomic_projected :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_2_kernel_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_3_direct_atomic_projected :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_3_direct_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_3_evidence_atomic_projected :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_3_evidence_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_3_kernel_atomic_projected :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_3_kernel_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_4_direct_atomic_projected :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_4_direct_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_4_evidence_atomic_projected :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_4_evidence_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_readiness_example_4_kernel_atomic_projected :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_independent_model_readiness_example_4_kernel_atomic
+    concrete_truth_condition_independent_model_readiness_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -17001,3 +17311,28 @@ Check concrete_truth_condition_independent_model_candidate_example_4_kernel_supp
 Check concrete_truth_condition_independent_model_candidate_example_4_direct_atomic_projected.
 Check concrete_truth_condition_independent_model_candidate_example_4_evidence_atomic_projected.
 Check concrete_truth_condition_independent_model_candidate_example_4_kernel_atomic_projected.
+Check ConcreteTruthConditionIndependentModelReadinessCertificate.
+Check concrete_truth_condition_independent_model_readiness_certificate.
+Check concrete_truth_condition_independent_model_readiness_certificate_exists.
+Check concrete_truth_condition_independent_model_readiness_candidate_matches.
+Check concrete_truth_condition_independent_model_readiness_coverage_matches.
+Check concrete_truth_condition_independent_model_readiness_ledger_matches.
+Check concrete_truth_condition_independent_model_readiness_provider_obligation_matches.
+Check concrete_truth_condition_independent_model_readiness_supply_matches.
+Check concrete_truth_condition_independent_model_readiness_direct_sound_projected.
+Check concrete_truth_condition_independent_model_readiness_evidence_sound_projected.
+Check concrete_truth_condition_independent_model_readiness_kernel_sound_projected.
+Check concrete_truth_condition_independent_model_readiness_independent_sound_projected.
+Check concrete_truth_condition_independent_model_readiness_constructor_sound_projected.
+Check concrete_truth_condition_independent_model_readiness_example_1_direct_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_1_evidence_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_1_kernel_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_2_direct_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_2_evidence_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_2_kernel_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_3_direct_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_3_evidence_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_3_kernel_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_4_direct_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_4_evidence_atomic_projected.
+Check concrete_truth_condition_independent_model_readiness_example_4_kernel_atomic_projected.

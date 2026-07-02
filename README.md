@@ -1674,6 +1674,17 @@ specs, that the supplied kernel spec matches the route kernel conversion, and
 that model-to-spec and spec-to-atomic projections remain available for each
 exported example. It is a candidate-model boundary for the finite registered
 fragment, not a completed independent semantics for arbitrary English.
+The next verified objective
+`coq_concrete_truth_condition_independent_model_readiness_certificate` adds
+`ConcreteTruthConditionIndependentModelReadinessCertificate`. This readiness
+certificate collects the candidate-model certificate, constructor-class
+projection coverage certificate, constructor projection-obligation ledger,
+provider class-obligation suite, and instance-supply certificate into one
+checked boundary. It re-exposes direct, evidence-backed, kernel-induced,
+independent-suite, and constructor-ledger soundness routes to
+`AtomicClosureTruth`, plus direct/evidence/kernel example projections. It is
+a finite readiness package for the registered fragment, not the missing
+independently justified truth-condition model itself.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

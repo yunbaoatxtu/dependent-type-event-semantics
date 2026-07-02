@@ -21453,6 +21453,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "model_readiness_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21914,6 +21922,15 @@ def project_completion_status_payload(
                     "that the supplied kernel spec matches the route kernel "
                     "conversion, and that model-to-spec and spec-to-atomic "
                     "projections are available for every exported example. "
+                    "The newest independent-model-readiness certificate then "
+                    "collects the candidate certificate, constructor-class "
+                    "projection coverage certificate, constructor projection "
+                    "obligation ledger, provider class-obligation suite, and "
+                    "instance-supply certificate into one checked boundary. "
+                    "It re-exposes direct, evidence-backed, kernel-induced, "
+                    "independent-suite, and constructor-ledger soundness routes "
+                    "to AtomicClosureTruth and verifies direct/evidence/kernel "
+                    "example projections through that readiness package. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

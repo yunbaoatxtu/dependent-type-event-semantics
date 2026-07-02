@@ -4784,6 +4784,62 @@ def main() -> None:
             and "Check concrete_truth_condition_independent_model_candidate_example_1_direct_model_truth_projected."
             in coq
         ),
+        "lean concrete truth condition independent model readiness certificate": (
+            "structure ConcreteTruthConditionIndependentModelReadinessCertificate :"
+            in lean
+            and "def concrete_truth_condition_independent_model_readiness_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_candidate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_coverage_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_ledger_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_provider_obligation_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_supply_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_direct_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_constructor_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_readiness_example_1_direct_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionIndependentModelReadinessCertificate"
+            in lean
+            and "#check concrete_truth_condition_independent_model_readiness_example_1_direct_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth condition independent model readiness certificate": (
+            "Record ConcreteTruthConditionIndependentModelReadinessCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_independent_model_readiness_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_candidate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_coverage_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_ledger_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_provider_obligation_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_supply_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_direct_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_constructor_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_readiness_example_1_direct_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionIndependentModelReadinessCertificate."
+            in coq
+            and "Check concrete_truth_condition_independent_model_readiness_example_1_direct_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

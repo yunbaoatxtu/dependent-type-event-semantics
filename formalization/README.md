@@ -609,6 +609,15 @@ evidence-backed model, the concrete registered route, and the provider
 class-instance suite, then checks direct/evidence spec-model alignment,
 kernel-spec route alignment, model-to-spec projections, and spec-to-atomic
 projections for the generated examples.
+The independent model-readiness certificate introduces
+`ConcreteTruthConditionIndependentModelReadinessCertificate` and
+`concrete_truth_condition_independent_model_readiness_certificate`. It gathers
+the candidate certificate, constructor-class projection coverage certificate,
+constructor projection-obligation ledger, provider class-obligation suite, and
+instance-supply certificate, then re-exposes direct/evidence/kernel,
+independent-suite, and constructor-ledger soundness projections together with
+direct/evidence/kernel `AtomicClosureTruth` projections for each generated
+example.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
