@@ -668,6 +668,14 @@ certificate, `IndependentRegisteredPolarityTruthConditionInstances`, and
 `ConcreteRegisteredCompositionalModel`, then checks provider,
 constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
 for `not_T body`.
+The independent Transition/Cause model-candidate certificate introduces
+`ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate` and
+`concrete_truth_condition_independent_transition_cause_model_candidate_certificate`.
+It ties the causal-resultative class entrance to the provider Transition/Cause
+certificate, `IndependentRegisteredTransitionCauseTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`, then checks provider,
+constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
+for registered state transitions and `Cause causer effect`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

@@ -5128,6 +5128,62 @@ def main() -> None:
             and "Check concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic_projected."
             in coq
         ),
+        "lean concrete truth condition independent transition cause model candidate certificate": (
+            "structure ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate :"
+            in lean
+            and "def concrete_truth_condition_independent_transition_cause_model_candidate_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_instances_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_model_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate"
+            in lean
+            and "#check concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth condition independent transition cause model candidate certificate": (
+            "Record ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_independent_transition_cause_model_candidate_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_instances_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_model_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate."
+            in coq
+            and "Check concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

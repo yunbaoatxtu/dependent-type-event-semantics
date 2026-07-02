@@ -21509,6 +21509,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "transition_cause_model_candidate_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22022,6 +22030,30 @@ def project_completion_status_payload(
                     "Parsons/Luo-Shi temporal replacement route without "
                     "claiming arbitrary aspect, attachment, or discourse "
                     "coverage. "
+                    "The newest independent repeat model-candidate certificate "
+                    "then anchors the natural-number-indexed repeat class "
+                    "to the provider repeat class certificate, "
+                    "IndependentRegisteredRepeatTruthConditionInstances, and "
+                    "ConcreteRegisteredCompositionalModel. For repeat n body "
+                    "it records provider truth/atomic, constructor-ledger "
+                    "truth/atomic, compositional-model denotation, and model "
+                    "AtomicClosureTruth projections. "
+                    "The newest independent polarity model-candidate certificate "
+                    "does the same for not_T body through the provider "
+                    "polarity class certificate and "
+                    "IndependentRegisteredPolarityTruthConditionInstances. "
+                    "The newest independent Transition/Cause model-candidate "
+                    "certificate then anchors the causal-resultative class "
+                    "to the provider Transition/Cause class certificate, "
+                    "IndependentRegisteredTransitionCauseTruthConditionInstances, "
+                    "and ConcreteRegisteredCompositionalModel. Registered "
+                    "state transitions enter the model through "
+                    "ConcreteRegisteredAtomicTruth, while Cause causer effect "
+                    "is checked as a proposition-level constructor over a "
+                    "typed TransitionT effect. This strengthens the "
+                    "result-state and causation replacement path without "
+                    "claiming arbitrary causal explanation or unregistered "
+                    "result-state lexicalization. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

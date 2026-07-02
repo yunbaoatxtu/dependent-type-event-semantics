@@ -1754,6 +1754,22 @@ truth and atomic projections, constructor-ledger truth and atomic projections,
 compositional-model denotation, and model-level `AtomicClosureTruth`
 projection. It advances the negation replacement route without treating
 negation as an event predicate or an entity-level pseudo argument.
+The next verified objective
+`coq_concrete_truth_condition_independent_transition_cause_model_candidate_certificate`
+adds
+`ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate`.
+This Transition/Cause model-candidate certificate anchors the causal-resultative
+class-readiness boundary to the provider Transition/Cause class certificate,
+`IndependentRegisteredTransitionCauseTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`. For registered
+`Transition theme scale source target`, it stores provider truth and atomic
+projections, constructor-ledger truth and atomic projections, and a
+compositional-model route through `ConcreteRegisteredAtomicTruth`. For
+`Cause causer effect`, it stores provider truth and atomic projections,
+constructor-ledger truth and atomic projections, compositional-model denotation,
+and model-level `AtomicClosureTruth` projection. It advances the result-state
+and causation replacement route without treating causation as a relation between
+hidden event variables.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

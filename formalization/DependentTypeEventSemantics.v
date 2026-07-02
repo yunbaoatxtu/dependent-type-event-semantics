@@ -18207,6 +18207,308 @@ Proof.
     concrete_truth_condition_independent_polarity_model_candidate_certificate).
 Qed.
 
+Record ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate : Type := {
+  concrete_truth_condition_independent_transition_cause_model_candidate_source :
+      ConcreteTruthConditionIndependentModelClassReadinessCertificate;
+  concrete_truth_condition_independent_transition_cause_model_candidate_source_eq :
+      concrete_truth_condition_independent_transition_cause_model_candidate_source =
+        concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate :
+      ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate;
+  concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_eq :
+      concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate =
+        concrete_truth_condition_provider_transition_cause_class_instance_certificate;
+  concrete_truth_condition_independent_transition_cause_model_candidate_instances :
+      IndependentRegisteredTransitionCauseTruthConditionInstances;
+  concrete_truth_condition_independent_transition_cause_model_candidate_instances_eq :
+      concrete_truth_condition_independent_transition_cause_model_candidate_instances =
+        independent_registered_transition_cause_truth_condition_instances;
+  concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model :
+      ConcreteRegisteredCompositionalModel;
+  concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_eq :
+      concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model =
+        concrete_registered_compositional_model;
+  concrete_truth_condition_independent_transition_cause_model_candidate_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_transition_cause_model_candidate_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_transition_cause_model_candidate_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_composition_denotes concrete_registered_compositional_model A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances)
+        TransitionT (Transition theme scale source target);
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_atomic :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      AtomicClosureTruth TransitionT (Transition theme scale source target);
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_ledger_truth :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        TransitionT (Transition theme scale source target);
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_ledger_atomic :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      AtomicClosureTruth TransitionT (Transition theme scale source target);
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_denotes :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model TransitionT
+        (Transition theme scale source target);
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      AtomicClosureTruth TransitionT (Transition theme scale source target);
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (Cause causer effect);
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_atomic :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+      AtomicClosureTruth PropT (Cause causer effect);
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_ledger_truth :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect);
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_ledger_atomic :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+      AtomicClosureTruth PropT (Cause causer effect);
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_denotes :
+      forall causer : Entity, forall effect : TransitionT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model TransitionT effect ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model PropT (Cause causer effect);
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic :
+      forall causer : Entity, forall effect : TransitionT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model TransitionT effect ->
+      AtomicClosureTruth PropT (Cause causer effect)
+}.
+
+Definition concrete_truth_condition_independent_transition_cause_model_candidate_certificate :
+  ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate := {|
+  concrete_truth_condition_independent_transition_cause_model_candidate_source :=
+    concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_transition_cause_model_candidate_source_eq := eq_refl;
+  concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate :=
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate;
+  concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_transition_cause_model_candidate_instances :=
+    independent_registered_transition_cause_truth_condition_instances;
+  concrete_truth_condition_independent_transition_cause_model_candidate_instances_eq := eq_refl;
+  concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model :=
+    concrete_registered_compositional_model;
+  concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_transition_cause_model_candidate_independent_sound :=
+    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_constructor_sound :=
+    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_model_sound :=
+    concrete_registered_compositional_model_imply_atomic_closure;
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth :=
+    concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_atomic :=
+    concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_ledger_truth :=
+    concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_ledger_atomic :=
+    concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_denotes :=
+    fun theme scale source target transition_truth =>
+      concrete_registered_composition_atomic concrete_registered_compositional_model
+        TransitionT (Transition theme scale source target)
+        (concrete_registered_atomic_truth_transition
+          theme scale source target transition_truth);
+  concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic :=
+    fun theme scale source target transition_truth =>
+      concrete_registered_compositional_model_imply_atomic_closure
+        TransitionT (Transition theme scale source target)
+        (concrete_registered_composition_atomic concrete_registered_compositional_model
+          TransitionT (Transition theme scale source target)
+          (concrete_registered_atomic_truth_transition
+            theme scale source target transition_truth));
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth :=
+    concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_atomic :=
+    concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_ledger_truth :=
+    concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_ledger_atomic :=
+    concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected;
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_denotes :=
+    concrete_registered_composition_cause concrete_registered_compositional_model;
+  concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic :=
+    fun causer effect effect_truth =>
+      concrete_registered_compositional_model_imply_atomic_closure
+        PropT (Cause causer effect)
+        (concrete_registered_composition_cause
+          concrete_registered_compositional_model causer effect effect_truth)
+|}.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_certificate_exists :
+  exists C : ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate,
+    C = concrete_truth_condition_independent_transition_cause_model_candidate_certificate.
+Proof.
+  exists concrete_truth_condition_independent_transition_cause_model_candidate_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_source_matches :
+  concrete_truth_condition_independent_transition_cause_model_candidate_source
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate =
+  concrete_truth_condition_independent_model_class_readiness_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_source_eq
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_matches :
+  concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate =
+  concrete_truth_condition_provider_transition_cause_class_instance_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_eq
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_instances_matches :
+  concrete_truth_condition_independent_transition_cause_model_candidate_instances
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate =
+  independent_registered_transition_cause_truth_condition_instances.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_instances_eq
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_matches :
+  concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate =
+  concrete_registered_compositional_model.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_eq
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_independent_sound
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_constructor_sound
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_model_sound_projected :
+  forall A : Type, forall term : A,
+    concrete_registered_composition_denotes concrete_registered_compositional_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_model_sound
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances)
+      TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_ledger_truth_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+      TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_transition_ledger_truth
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    AtomicClosureTruth TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_ledger_truth_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_cause_ledger_truth
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    concrete_registered_composition_denotes concrete_registered_compositional_model TransitionT effect ->
+    AtomicClosureTruth PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -19455,3 +19757,17 @@ Check concrete_truth_condition_independent_polarity_model_candidate_constructor_
 Check concrete_truth_condition_independent_polarity_model_candidate_model_sound_projected.
 Check concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth_projected.
 Check concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic_projected.
+Check ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_certificate.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_certificate_exists.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_source_matches.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_class_certificate_matches.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_instances_matches.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_compositional_model_matches.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_independent_sound_projected.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_constructor_sound_projected.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_model_sound_projected.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_transition_provider_truth_projected.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic_projected.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth_projected.
+Check concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected.
