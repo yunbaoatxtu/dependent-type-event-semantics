@@ -676,6 +676,15 @@ certificate, `IndependentRegisteredTransitionCauseTruthConditionInstances`, and
 `ConcreteRegisteredCompositionalModel`, then checks provider,
 constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
 for registered state transitions and `Cause causer effect`.
+The independent model-candidate class-suite certificate introduces
+`ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate` and
+`concrete_truth_condition_independent_model_candidate_class_suite_certificate`.
+It gathers the lexical, Sigma, temporal, repeat, polarity, and
+Transition/Cause candidate certificates into one checked record. The generated
+projections check each stored candidate against the concrete certificate and
+re-expose representative compositional-model routes for dependent
+existentials, temporal anchoring, repeat, negation, registered state
+transitions, and causal-resultative `Cause` forms.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

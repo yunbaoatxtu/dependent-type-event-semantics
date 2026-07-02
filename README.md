@@ -1770,6 +1770,19 @@ constructor-ledger truth and atomic projections, compositional-model denotation,
 and model-level `AtomicClosureTruth` projection. It advances the result-state
 and causation replacement route without treating causation as a relation between
 hidden event variables.
+The next verified objective
+`coq_concrete_truth_condition_independent_model_candidate_class_suite_certificate`
+adds
+`ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate`. This
+suite certificate gathers the lexical, Sigma, temporal, repeat, polarity, and
+Transition/Cause model-candidate certificates into one checked boundary. It
+checks that each suite field is definitionally the concrete class certificate
+already exported, re-exposes independent-suite, constructor-ledger, and
+compositional-model soundness projections, and checks representative
+model-to-`AtomicClosureTruth` projections for dependent existentials, temporal
+operators, repeat, negation, registered transitions, and `Cause causer effect`.
+It is still a finite registered-fragment model-candidate suite, not a proof of
+arbitrary lexical or causal truth-condition semantics.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

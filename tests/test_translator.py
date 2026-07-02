@@ -5556,6 +5556,30 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_independent_model_candidate_class_suite_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_candidate_class_suite_model_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -18376,6 +18400,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_independent_repeat_model_candidate_certificate",
                 "coq_concrete_truth_condition_independent_polarity_model_candidate_certificate",
                 "coq_concrete_truth_condition_independent_transition_cause_model_candidate_certificate",
+                "coq_concrete_truth_condition_independent_model_candidate_class_suite_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27983,6 +28008,14 @@ class TranslatorTests(unittest.TestCase):
             "`ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_independent_model_candidate_class_suite_certificate`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -28034,6 +28067,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`concrete_truth_condition_independent_transition_cause_model_candidate_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_independent_model_candidate_class_suite_certificate`",
             formalization_readme,
         )
         self.assertIn(
@@ -28916,6 +28957,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_independent_transition_cause_model_candidate_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_independent_model_candidate_class_suite_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

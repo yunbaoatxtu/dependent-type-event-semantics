@@ -21517,6 +21517,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "model_candidate_class_suite_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22054,6 +22062,14 @@ def project_completion_status_payload(
                     "result-state and causation replacement path without "
                     "claiming arbitrary causal explanation or unregistered "
                     "result-state lexicalization. "
+                    "The newest independent model-candidate class-suite "
+                    "certificate then gathers the lexical, Sigma, temporal, "
+                    "repeat, polarity, and Transition/Cause model candidates "
+                    "into one checked suite. It verifies that each suite field "
+                    "matches its concrete candidate certificate and re-exposes "
+                    "representative model-to-AtomicClosureTruth projections "
+                    "for dependent existentials, time, repeat, negation, "
+                    "registered transitions, and Cause. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

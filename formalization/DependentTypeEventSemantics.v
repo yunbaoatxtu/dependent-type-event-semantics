@@ -18509,6 +18509,283 @@ Proof.
     concrete_truth_condition_independent_transition_cause_model_candidate_certificate).
 Qed.
 
+Record ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate : Type := {
+  concrete_truth_condition_independent_model_candidate_class_suite_source :
+      ConcreteTruthConditionIndependentModelClassReadinessCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_source_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_source =
+        concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate :
+      ConcreteTruthConditionIndependentLexicalModelCandidateCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate =
+        concrete_truth_condition_independent_lexical_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate :
+      ConcreteTruthConditionIndependentSigmaModelCandidateCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate =
+        concrete_truth_condition_independent_sigma_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate :
+      ConcreteTruthConditionIndependentTemporalModelCandidateCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate =
+        concrete_truth_condition_independent_temporal_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate :
+      ConcreteTruthConditionIndependentRepeatModelCandidateCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate =
+        concrete_truth_condition_independent_repeat_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate :
+      ConcreteTruthConditionIndependentPolarityModelCandidateCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate =
+        concrete_truth_condition_independent_polarity_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate :
+      ConcreteTruthConditionIndependentTransitionCauseModelCandidateCertificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate_eq :
+      concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate =
+        concrete_truth_condition_independent_transition_cause_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_candidate_class_suite_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_candidate_class_suite_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_composition_denotes concrete_registered_compositional_model A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_Entity_model_atomic :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_model_candidate_class_suite_at_T_model_atomic :
+      forall marker : Entity, forall body : PropT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model PropT body ->
+      AtomicClosureTruth PropT (at_T marker body);
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_model_atomic :
+      forall n : nat, forall body : PropT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model PropT body ->
+      AtomicClosureTruth PropT (repeat n body);
+  concrete_truth_condition_independent_model_candidate_class_suite_not_T_model_atomic :
+      forall body : PropT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model PropT body ->
+      AtomicClosureTruth PropT (not_T body);
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_model_atomic :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      AtomicClosureTruth TransitionT (Transition theme scale source target);
+  concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic :
+      forall causer : Entity, forall effect : TransitionT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model TransitionT effect ->
+      AtomicClosureTruth PropT (Cause causer effect)
+}.
+
+Definition concrete_truth_condition_independent_model_candidate_class_suite_certificate :
+  ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate := {|
+  concrete_truth_condition_independent_model_candidate_class_suite_source :=
+    concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_source_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate :=
+    concrete_truth_condition_independent_lexical_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate :=
+    concrete_truth_condition_independent_sigma_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate :=
+    concrete_truth_condition_independent_temporal_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate :=
+    concrete_truth_condition_independent_repeat_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate :=
+    concrete_truth_condition_independent_polarity_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate :=
+    concrete_truth_condition_independent_transition_cause_model_candidate_certificate;
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate_eq := eq_refl;
+  concrete_truth_condition_independent_model_candidate_class_suite_independent_sound :=
+    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_constructor_sound :=
+    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_model_sound :=
+    concrete_registered_compositional_model_imply_atomic_closure;
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_Entity_model_atomic :=
+    concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_at_T_model_atomic :=
+    concrete_truth_condition_independent_temporal_model_candidate_at_T_model_atomic_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_model_atomic :=
+    concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_not_T_model_atomic :=
+    concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_model_atomic :=
+    concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic_projected;
+  concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic :=
+    concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected
+|}.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_certificate_exists :
+  exists C : ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate,
+    C = concrete_truth_condition_independent_model_candidate_class_suite_certificate.
+Proof.
+  exists concrete_truth_condition_independent_model_candidate_class_suite_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_source_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_source
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_model_class_readiness_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_source_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_lexical_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_sigma_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_temporal_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_repeat_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_polarity_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate_matches :
+  concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate =
+  concrete_truth_condition_independent_transition_cause_model_candidate_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate_eq
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_independent_sound
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_constructor_sound
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_model_sound_projected :
+  forall A : Type, forall term : A,
+    concrete_registered_composition_denotes concrete_registered_compositional_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_model_sound
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_sigma_Entity_model_atomic_projected :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+    AtomicClosureTruth Prop (exists x : Entity, P x).
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_sigma_Entity_model_atomic
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_at_T_model_atomic_projected :
+  forall marker : Entity, forall body : PropT,
+    concrete_registered_composition_denotes concrete_registered_compositional_model PropT body ->
+    AtomicClosureTruth PropT (at_T marker body).
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_at_T_model_atomic
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_repeat_model_atomic_projected :
+  forall n : nat, forall body : PropT,
+    concrete_registered_composition_denotes concrete_registered_compositional_model PropT body ->
+    AtomicClosureTruth PropT (repeat n body).
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_repeat_model_atomic
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_not_T_model_atomic_projected :
+  forall body : PropT,
+    concrete_registered_composition_denotes concrete_registered_compositional_model PropT body ->
+    AtomicClosureTruth PropT (not_T body).
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_not_T_model_atomic
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_transition_model_atomic_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    AtomicClosureTruth TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_transition_model_atomic
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    concrete_registered_composition_denotes concrete_registered_compositional_model TransitionT effect ->
+    AtomicClosureTruth PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -19771,3 +20048,22 @@ Check concrete_truth_condition_independent_transition_cause_model_candidate_tran
 Check concrete_truth_condition_independent_transition_cause_model_candidate_transition_model_atomic_projected.
 Check concrete_truth_condition_independent_transition_cause_model_candidate_cause_provider_truth_projected.
 Check concrete_truth_condition_independent_transition_cause_model_candidate_cause_model_atomic_projected.
+Check ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate.
+Check concrete_truth_condition_independent_model_candidate_class_suite_certificate.
+Check concrete_truth_condition_independent_model_candidate_class_suite_certificate_exists.
+Check concrete_truth_condition_independent_model_candidate_class_suite_source_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_lexical_candidate_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_sigma_candidate_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_temporal_candidate_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_repeat_candidate_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_polarity_candidate_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_transition_cause_candidate_matches.
+Check concrete_truth_condition_independent_model_candidate_class_suite_independent_sound_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_constructor_sound_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_model_sound_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_sigma_Entity_model_atomic_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_at_T_model_atomic_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_repeat_model_atomic_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_not_T_model_atomic_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_transition_model_atomic_projected.
+Check concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic_projected.
