@@ -28730,6 +28730,630 @@ def concrete_truth_condition_independent_model_class_readiness_certificate_lines
     return lines
 
 
+def concrete_truth_condition_independent_lexical_model_candidate_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Package the lexical class-readiness entrance with finite lexical atoms."""
+
+    schemas: list[LexicalApplicationSchema] = declarations["lexical_applications"]
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+
+    def schema_parts(
+        schema: LexicalApplicationSchema,
+    ) -> tuple[str, str, list[tuple[str, str]]]:
+        _function, result_type, _count, _modifier_term, _modifiers, _args, binders = schema
+        return result_type, lexical_application_term(schema), binders
+
+    def lean_arrow_type(
+        binders: list[tuple[str, str]],
+        conclusion: str,
+    ) -> str:
+        binder_parts = [f"({name} : {type_name})" for name, type_name in binders]
+        return " -> ".join([*binder_parts, conclusion])
+
+    def lean_abs(binders: list[tuple[str, str]], body: str) -> str:
+        names = [name for name, _type_name in binders]
+        if not names:
+            return body
+        return f"fun {' '.join(names)} => {body}"
+
+    def lean_source(index: int, binders: list[tuple[str, str]]) -> str:
+        names = [name for name, _type_name in binders]
+        value = f"finite_registered_atomic_source_lexical_{index}_source_projected"
+        if names:
+            value += " " + " ".join(names)
+        return value
+
+    def lean_model_truth(result_type: str, application: str, source: str) -> str:
+        return (
+            "registered_lexical_truth_conditions_from_model."
+            "fully_registered_truth_lexical_application "
+            f"{result_type} ({application}) ({source})"
+        )
+
+    def lean_value(
+        index: int,
+        schema: LexicalApplicationSchema,
+        projection: str,
+    ) -> str:
+        result_type, application, binders = schema_parts(schema)
+        source = lean_source(index, binders)
+        independent_truth = (
+            "concrete_truth_condition_provider_lexical_class_provider_truth_projected "
+            f"{result_type} ({application}) ({source})"
+        )
+        ledger_truth = (
+            "concrete_truth_condition_provider_lexical_class_ledger_truth_projected "
+            f"{result_type} ({application}) ({source})"
+        )
+        model_truth = lean_model_truth(result_type, application, source)
+        values = {
+            "source": source,
+            "provider_truth": independent_truth,
+            "provider_atomic": (
+                "concrete_truth_condition_provider_lexical_class_provider_atomic_projected "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "ledger_truth": ledger_truth,
+            "ledger_atomic": (
+                "concrete_truth_condition_provider_lexical_class_ledger_atomic_projected "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "model_denotes": (
+                "registered_lexical_truth_model.registered_lexical_model_lexical_application "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "model_truth": model_truth,
+            "model_atomic": (
+                "registered_lexical_truth_conditions_from_model_imply_atomic_closure "
+                f"{result_type} ({application}) ({model_truth})"
+            ),
+        }
+        return lean_abs(binders, values[projection])
+
+    def coq_field_type(
+        field: str,
+        conclusion: str,
+        binders: list[tuple[str, str]],
+        suffix: str = ";",
+    ) -> list[str]:
+        lines = [f"  {field} :"]
+        if binders:
+            for name, type_name in binders:
+                lines.append(f"      forall {name} : {type_name},")
+            lines.append(f"      {conclusion}{suffix}")
+        else:
+            lines.append(f"      {conclusion}{suffix}")
+        return lines
+
+    def coq_source(index: int, binders: list[tuple[str, str]]) -> str:
+        names = [name for name, _type_name in binders]
+        value = f"finite_registered_atomic_source_lexical_{index}_source_projected"
+        if names:
+            value += " " + " ".join(names)
+        return value
+
+    def coq_abs(binders: list[tuple[str, str]], body: str) -> str:
+        names = [name for name, _type_name in binders]
+        if not names:
+            return body
+        return f"fun {' '.join(names)} => {body}"
+
+    def coq_model_truth(result_type: str, application: str, source: str) -> str:
+        return (
+            "fully_registered_truth_lexical_application "
+            "registered_lexical_truth_conditions_from_model "
+            f"{result_type} ({application}) ({source})"
+        )
+
+    def coq_value(
+        index: int,
+        schema: LexicalApplicationSchema,
+        projection: str,
+    ) -> str:
+        result_type, application, binders = schema_parts(schema)
+        source = coq_source(index, binders)
+        model_truth = coq_model_truth(result_type, application, source)
+        values = {
+            "source": source,
+            "provider_truth": (
+                "concrete_truth_condition_provider_lexical_class_provider_truth_projected "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "provider_atomic": (
+                "concrete_truth_condition_provider_lexical_class_provider_atomic_projected "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "ledger_truth": (
+                "concrete_truth_condition_provider_lexical_class_ledger_truth_projected "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "ledger_atomic": (
+                "concrete_truth_condition_provider_lexical_class_ledger_atomic_projected "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "model_denotes": (
+                "registered_lexical_model_lexical_application "
+                "registered_lexical_truth_model "
+                f"{result_type} ({application}) ({source})"
+            ),
+            "model_truth": model_truth,
+            "model_atomic": (
+                "registered_lexical_truth_conditions_from_model_imply_atomic_closure "
+                f"{result_type} ({application}) ({model_truth})"
+            ),
+        }
+        return coq_abs(binders, values[projection])
+
+    projections = [
+        (
+            "source",
+            lambda result_type, application: (
+                f"RegisteredLexicalApplicationTruth {result_type} ({application})"
+            ),
+        ),
+        (
+            "provider_truth",
+            lambda result_type, application: (
+                "fully_registered_truth_denotes "
+                f"{independent_spec_coq} {result_type} ({application})"
+            ),
+        ),
+        (
+            "provider_atomic",
+            lambda result_type, application: (
+                f"AtomicClosureTruth {result_type} ({application})"
+            ),
+        ),
+        (
+            "ledger_truth",
+            lambda result_type, application: (
+                "fully_registered_truth_denotes "
+                f"{constructor_spec_coq} {result_type} ({application})"
+            ),
+        ),
+        (
+            "ledger_atomic",
+            lambda result_type, application: (
+                f"AtomicClosureTruth {result_type} ({application})"
+            ),
+        ),
+        (
+            "model_denotes",
+            lambda result_type, application: (
+                "registered_lexical_model_denotes registered_lexical_truth_model "
+                f"{result_type} ({application})"
+            ),
+        ),
+        (
+            "model_truth",
+            lambda result_type, application: (
+                "fully_registered_truth_denotes "
+                "registered_lexical_truth_conditions_from_model "
+                f"{result_type} ({application})"
+            ),
+        ),
+        (
+            "model_atomic",
+            lambda result_type, application: (
+                f"AtomicClosureTruth {result_type} ({application})"
+            ),
+        ),
+    ]
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionIndependentLexicalModelCandidateCertificate :",
+            "    Type where",
+            "  concrete_truth_condition_independent_lexical_model_candidate_source :",
+            "      ConcreteTruthConditionIndependentModelClassReadinessCertificate",
+            "  concrete_truth_condition_independent_lexical_model_candidate_source_eq :",
+            "      concrete_truth_condition_independent_lexical_model_candidate_source =",
+            "        concrete_truth_condition_independent_model_class_readiness_certificate",
+            "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate :",
+            "      ConcreteTruthConditionProviderLexicalClassInstanceCertificate",
+            "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq :",
+            "      concrete_truth_condition_independent_lexical_model_candidate_class_certificate =",
+            "        concrete_truth_condition_provider_lexical_class_instance_certificate",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_model :",
+            "      RegisteredLexicalTruthModel",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq :",
+            "      concrete_truth_condition_independent_lexical_model_candidate_registered_model =",
+            "        registered_lexical_truth_model",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec :",
+            "      FullyRegisteredTruthConditionSpec",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq :",
+            "      concrete_truth_condition_independent_lexical_model_candidate_registered_spec =",
+            "        registered_lexical_truth_conditions_from_model",
+            "  concrete_truth_condition_independent_lexical_model_candidate_independent_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_lexical_model_candidate_constructor_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+        for index, schema in enumerate(schemas, 1):
+            result_type, application, binders = schema_parts(schema)
+            lean_projections = [
+                (
+                    "source",
+                    f"RegisteredLexicalApplicationTruth {result_type} ({application})",
+                ),
+                (
+                    "provider_truth",
+                    f"{independent_spec_lean}.fully_registered_truth_denotes "
+                    f"{result_type} ({application})",
+                ),
+                (
+                    "provider_atomic",
+                    f"AtomicClosureTruth {result_type} ({application})",
+                ),
+                (
+                    "ledger_truth",
+                    f"{constructor_spec_lean}.fully_registered_truth_denotes "
+                    f"{result_type} ({application})",
+                ),
+                (
+                    "ledger_atomic",
+                    f"AtomicClosureTruth {result_type} ({application})",
+                ),
+                (
+                    "model_denotes",
+                    "registered_lexical_truth_model.registered_lexical_model_denotes "
+                    f"{result_type} ({application})",
+                ),
+                (
+                    "model_truth",
+                    "registered_lexical_truth_conditions_from_model."
+                    "fully_registered_truth_denotes "
+                    f"{result_type} ({application})",
+                ),
+                (
+                    "model_atomic",
+                    f"AtomicClosureTruth {result_type} ({application})",
+                ),
+            ]
+            for projection, conclusion in lean_projections:
+                lines.append(
+                    "  concrete_truth_condition_independent_lexical_model_candidate_"
+                    f"lexical_{index}_{projection} :"
+                )
+                lines.append(f"      {lean_arrow_type(binders, conclusion)}")
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_independent_lexical_model_candidate_certificate :",
+                "    ConcreteTruthConditionIndependentLexicalModelCandidateCertificate := {",
+                "  concrete_truth_condition_independent_lexical_model_candidate_source :=",
+                "    concrete_truth_condition_independent_model_class_readiness_certificate,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_source_eq := rfl,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate :=",
+                "    concrete_truth_condition_provider_lexical_class_instance_certificate,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq := rfl,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_registered_model :=",
+                "    registered_lexical_truth_model,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq := rfl,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec :=",
+                "    registered_lexical_truth_conditions_from_model,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq := rfl,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_independent_sound :=",
+                "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected,",
+                "  concrete_truth_condition_independent_lexical_model_candidate_constructor_sound :=",
+                "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for index, schema in enumerate(schemas, 1):
+            for projection, _builder in projections:
+                assignments.append(
+                    (
+                        "concrete_truth_condition_independent_lexical_model_candidate_"
+                        f"lexical_{index}_{projection}",
+                        lean_value(index, schema, projection),
+                    )
+                )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_independent_lexical_model_candidate_certificate_exists :",
+                "    Exists (fun C :",
+                "      ConcreteTruthConditionIndependentLexicalModelCandidateCertificate =>",
+                "      C = concrete_truth_condition_independent_lexical_model_candidate_certificate) := by",
+                "  exact Exists.intro",
+                "    concrete_truth_condition_independent_lexical_model_candidate_certificate rfl",
+            ]
+        )
+        for match_name, field, expected in (
+            (
+                "source",
+                "concrete_truth_condition_independent_lexical_model_candidate_source",
+                "concrete_truth_condition_independent_model_class_readiness_certificate",
+            ),
+            (
+                "class_certificate",
+                "concrete_truth_condition_independent_lexical_model_candidate_class_certificate",
+                "concrete_truth_condition_provider_lexical_class_instance_certificate",
+            ),
+            (
+                "registered_model",
+                "concrete_truth_condition_independent_lexical_model_candidate_registered_model",
+                "registered_lexical_truth_model",
+            ),
+            (
+                "registered_spec",
+                "concrete_truth_condition_independent_lexical_model_candidate_registered_spec",
+                "registered_lexical_truth_conditions_from_model",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_lexical_model_candidate_"
+                    f"{match_name}_matches :",
+                    "    concrete_truth_condition_independent_lexical_model_candidate_certificate."
+                    f"{field} =",
+                    f"      {expected} := by",
+                    "  exact concrete_truth_condition_independent_lexical_model_candidate_certificate."
+                    f"{field}_eq",
+                ]
+            )
+        for projection, field, spec in (
+            (
+                "independent",
+                "concrete_truth_condition_independent_lexical_model_candidate_independent_sound",
+                independent_spec_lean,
+            ),
+            (
+                "constructor",
+                "concrete_truth_condition_independent_lexical_model_candidate_constructor_sound",
+                constructor_spec_lean,
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_lexical_model_candidate_"
+                    f"{projection}_sound_projected :",
+                    "    (A : Type) -> (term : A) ->",
+                    f"    {spec}.fully_registered_truth_denotes A term ->",
+                    "    AtomicClosureTruth A term := by",
+                    "  exact concrete_truth_condition_independent_lexical_model_candidate_certificate."
+                    f"{field}",
+                ]
+            )
+        for index, schema in enumerate(schemas, 1):
+            result_type, application, binders = schema_parts(schema)
+            for projection, conclusion in (
+                (
+                    "provider_truth",
+                    f"{independent_spec_lean}.fully_registered_truth_denotes "
+                    f"{result_type} ({application})",
+                ),
+                (
+                    "ledger_truth",
+                    f"{constructor_spec_lean}.fully_registered_truth_denotes "
+                    f"{result_type} ({application})",
+                ),
+                (
+                    "model_atomic",
+                    f"AtomicClosureTruth {result_type} ({application})",
+                ),
+            ):
+                lines.extend(
+                    [
+                        "",
+                        "theorem concrete_truth_condition_independent_lexical_model_candidate_"
+                        f"lexical_{index}_{projection}_projected :",
+                        f"    {lean_arrow_type(binders, conclusion)} := by",
+                        "  exact concrete_truth_condition_independent_lexical_model_candidate_certificate.",
+                        "    concrete_truth_condition_independent_lexical_model_candidate_"
+                        f"lexical_{index}_{projection}",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionIndependentLexicalModelCandidateCertificate : Type := {",
+        "  concrete_truth_condition_independent_lexical_model_candidate_source :",
+        "      ConcreteTruthConditionIndependentModelClassReadinessCertificate;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_source_eq :",
+        "      concrete_truth_condition_independent_lexical_model_candidate_source =",
+        "        concrete_truth_condition_independent_model_class_readiness_certificate;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate :",
+        "      ConcreteTruthConditionProviderLexicalClassInstanceCertificate;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq :",
+        "      concrete_truth_condition_independent_lexical_model_candidate_class_certificate =",
+        "        concrete_truth_condition_provider_lexical_class_instance_certificate;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_registered_model :",
+        "      RegisteredLexicalTruthModel;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq :",
+        "      concrete_truth_condition_independent_lexical_model_candidate_registered_model =",
+        "        registered_lexical_truth_model;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec :",
+        "      FullyRegisteredTruthConditionSpec;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq :",
+        "      concrete_truth_condition_independent_lexical_model_candidate_registered_spec =",
+        "        registered_lexical_truth_conditions_from_model;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_independent_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_lexical_model_candidate_constructor_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+    ]
+    field_specs: list[tuple[int, LexicalApplicationSchema, str, str]] = []
+    for index, schema in enumerate(schemas, 1):
+        result_type, application, binders = schema_parts(schema)
+        for projection, builder in projections:
+            field = (
+                "concrete_truth_condition_independent_lexical_model_candidate_"
+                f"lexical_{index}_{projection}"
+            )
+            field_specs.append((index, schema, projection, field))
+            lines.extend(coq_field_type(field, builder(result_type, application), binders))
+    if lines[-1].endswith(";"):
+        lines[-1] = lines[-1][:-1]
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_independent_lexical_model_candidate_certificate :",
+            "  ConcreteTruthConditionIndependentLexicalModelCandidateCertificate := {|",
+            "  concrete_truth_condition_independent_lexical_model_candidate_source :=",
+            "    concrete_truth_condition_independent_model_class_readiness_certificate;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_source_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate :=",
+            "    concrete_truth_condition_provider_lexical_class_instance_certificate;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_model :=",
+            "    registered_lexical_truth_model;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec :=",
+            "    registered_lexical_truth_conditions_from_model;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_independent_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;",
+            "  concrete_truth_condition_independent_lexical_model_candidate_constructor_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;",
+        ]
+    )
+    for spec_index, (index, schema, projection, field) in enumerate(field_specs):
+        suffix = ";" if spec_index < len(field_specs) - 1 else ""
+        lines.append(f"  {field} := {coq_value(index, schema, projection)}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_independent_lexical_model_candidate_certificate_exists :",
+            "  exists C : ConcreteTruthConditionIndependentLexicalModelCandidateCertificate,",
+            "    C = concrete_truth_condition_independent_lexical_model_candidate_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_independent_lexical_model_candidate_certificate.",
+            "  reflexivity.",
+            "Qed.",
+        ]
+    )
+    for match_name, field, expected in (
+        (
+            "source",
+            "concrete_truth_condition_independent_lexical_model_candidate_source",
+            "concrete_truth_condition_independent_model_class_readiness_certificate",
+        ),
+        (
+            "class_certificate",
+            "concrete_truth_condition_independent_lexical_model_candidate_class_certificate",
+            "concrete_truth_condition_provider_lexical_class_instance_certificate",
+        ),
+        (
+            "registered_model",
+            "concrete_truth_condition_independent_lexical_model_candidate_registered_model",
+            "registered_lexical_truth_model",
+        ),
+        (
+            "registered_spec",
+            "concrete_truth_condition_independent_lexical_model_candidate_registered_spec",
+            "registered_lexical_truth_conditions_from_model",
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_lexical_model_candidate_"
+                f"{match_name}_matches :",
+                f"  {field}",
+                "    concrete_truth_condition_independent_lexical_model_candidate_certificate =",
+                f"  {expected}.",
+                "Proof.",
+                f"  exact ({field}_eq",
+                "    concrete_truth_condition_independent_lexical_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    for projection, field, spec in (
+        (
+            "independent",
+            "concrete_truth_condition_independent_lexical_model_candidate_independent_sound",
+            independent_spec_coq,
+        ),
+        (
+            "constructor",
+            "concrete_truth_condition_independent_lexical_model_candidate_constructor_sound",
+            constructor_spec_coq,
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_lexical_model_candidate_"
+                f"{projection}_sound_projected :",
+                "  forall A : Type, forall term : A,",
+                "    fully_registered_truth_denotes",
+                f"      {spec} A term ->",
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                f"  exact ({field}",
+                "    concrete_truth_condition_independent_lexical_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    projected = {"provider_truth", "ledger_truth", "model_atomic"}
+    for index, schema, projection, field in field_specs:
+        if projection not in projected:
+            continue
+        result_type, application, binders = schema_parts(schema)
+        conclusion_builder = next(
+            builder for name, builder in projections if name == projection
+        )
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_lexical_model_candidate_"
+                f"lexical_{index}_{projection}_projected :",
+                *coq_field_type(
+                    "",
+                    conclusion_builder(result_type, application),
+                    binders,
+                    ".",
+                )[1:],
+                "Proof.",
+                f"  exact ({field}",
+                "    concrete_truth_condition_independent_lexical_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -33452,6 +34076,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_independent_lexical_model_candidate_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -35365,6 +35996,43 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "concrete_truth_condition_independent_model_class_readiness_"
                 f"{projection}_sound_projected"
             )
+        lines.append(
+            "#check ConcreteTruthConditionIndependentLexicalModelCandidateCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_independent_lexical_model_candidate_certificate"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_lexical_model_candidate_certificate_exists"
+        )
+        for match_name in (
+            "source",
+            "class_certificate",
+            "registered_model",
+            "registered_spec",
+        ):
+            lines.append(
+                "#check "
+                f"concrete_truth_condition_independent_lexical_model_candidate_{match_name}_matches"
+            )
+        for projection in ("independent", "constructor"):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_lexical_model_candidate_"
+                f"{projection}_sound_projected"
+            )
+        if declarations["lexical_applications"]:
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_lexical_model_candidate_"
+                "lexical_1_provider_truth_projected"
+            )
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_lexical_model_candidate_"
+                "lexical_1_model_atomic_projected"
+            )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -36308,6 +36976,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.extend(
         concrete_truth_condition_independent_model_class_readiness_certificate_lines(
             target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_independent_lexical_model_candidate_certificate_lines(
+            declarations,
+            target,
         )
     )
     lines.append("")
@@ -37979,6 +38654,41 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             "concrete_truth_condition_independent_model_class_readiness_"
             f"{projection}_sound_projected."
+        )
+    lines.append("Check ConcreteTruthConditionIndependentLexicalModelCandidateCertificate.")
+    lines.append(
+        "Check concrete_truth_condition_independent_lexical_model_candidate_certificate."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_lexical_model_candidate_certificate_exists."
+    )
+    for match_name in (
+        "source",
+        "class_certificate",
+        "registered_model",
+        "registered_spec",
+    ):
+        lines.append(
+            "Check "
+            f"concrete_truth_condition_independent_lexical_model_candidate_{match_name}_matches."
+        )
+    for projection in ("independent", "constructor"):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_lexical_model_candidate_"
+            f"{projection}_sound_projected."
+        )
+    if declarations["lexical_applications"]:
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_lexical_model_candidate_"
+            "lexical_1_provider_truth_projected."
+        )
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_lexical_model_candidate_"
+            "lexical_1_model_atomic_projected."
         )
     return "\n".join(lines) + "\n"
 

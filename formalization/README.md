@@ -627,6 +627,15 @@ certificates. The generated projections check that the provider obligation in
 this class-indexed boundary is the same provider obligation stored in the
 readiness package, and they re-expose the independent-suite and
 constructor-ledger soundness routes for future class-local model refinement.
+The independent lexical model-candidate certificate introduces
+`ConcreteTruthConditionIndependentLexicalModelCandidateCertificate` and
+`concrete_truth_condition_independent_lexical_model_candidate_certificate`.
+It ties the lexical class entrance to the provider lexical certificate,
+`RegisteredLexicalTruthModel`, and
+`registered_lexical_truth_conditions_from_model`, then checks source,
+provider, constructor-ledger, registered-model, model-truth, and
+`AtomicClosureTruth` projections for each finite registered lexical
+application.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

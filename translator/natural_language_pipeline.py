@@ -21469,6 +21469,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "lexical_model_candidate_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21947,6 +21955,18 @@ def project_completion_status_payload(
                     "independent-suite and constructor-ledger soundness "
                     "projections are re-exposed from the class-readiness "
                     "record. "
+                    "The newest independent lexical model-candidate certificate "
+                    "then anchors the lexical class-readiness boundary to the "
+                    "provider lexical class certificate, "
+                    "RegisteredLexicalTruthModel, and "
+                    "registered_lexical_truth_conditions_from_model. For each "
+                    "finite registered lexical application it records the "
+                    "registered source, provider truth and atomic projections, "
+                    "constructor-ledger truth and atomic projections, the "
+                    "registered lexical-model denotation, and model truth plus "
+                    "AtomicClosureTruth projections. This starts the lexical "
+                    "class of the future independent model while remaining "
+                    "finite and registered. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

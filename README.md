@@ -1695,6 +1695,17 @@ Transition/Cause. It re-exposes independent-suite and constructor-ledger
 soundness projections from that class-indexed boundary, so the next concrete
 model work can target typed constructor classes rather than one undifferentiated
 proof gap.
+The next verified objective
+`coq_concrete_truth_condition_independent_lexical_model_candidate_certificate`
+adds `ConcreteTruthConditionIndependentLexicalModelCandidateCertificate`.
+This lexical model-candidate certificate anchors the lexical class-readiness
+boundary to the provider lexical class certificate, `RegisteredLexicalTruthModel`,
+and `registered_lexical_truth_conditions_from_model`. For every finite
+registered lexical application it stores the registered source, provider
+truth and atomic projections, constructor-ledger truth and atomic projections,
+registered lexical-model denotation, and model truth plus `AtomicClosureTruth`
+projection. It starts the lexical constructor class of the future independent
+model while keeping the advertised boundary finite and registered.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

@@ -4892,6 +4892,50 @@ def main() -> None:
             and "Check concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected."
             in coq
         ),
+        "lean concrete truth condition independent lexical model candidate certificate": (
+            "structure ConcreteTruthConditionIndependentLexicalModelCandidateCertificate :"
+            in lean
+            and "def concrete_truth_condition_independent_lexical_model_candidate_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_independent_lexical_model_candidate_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_independent_lexical_model_candidate_class_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_lexical_model_candidate_registered_model_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_lexical_model_candidate_independent_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionIndependentLexicalModelCandidateCertificate"
+            in lean
+            and "#check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth condition independent lexical model candidate certificate": (
+            "Record ConcreteTruthConditionIndependentLexicalModelCandidateCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_independent_lexical_model_candidate_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_lexical_model_candidate_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_lexical_model_candidate_class_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_lexical_model_candidate_registered_model_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_lexical_model_candidate_independent_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionIndependentLexicalModelCandidateCertificate."
+            in coq
+            and "Check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

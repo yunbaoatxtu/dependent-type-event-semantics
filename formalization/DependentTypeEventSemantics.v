@@ -16362,6 +16362,318 @@ Proof.
     concrete_truth_condition_independent_model_class_readiness_certificate).
 Qed.
 
+Record ConcreteTruthConditionIndependentLexicalModelCandidateCertificate : Type := {
+  concrete_truth_condition_independent_lexical_model_candidate_source :
+      ConcreteTruthConditionIndependentModelClassReadinessCertificate;
+  concrete_truth_condition_independent_lexical_model_candidate_source_eq :
+      concrete_truth_condition_independent_lexical_model_candidate_source =
+        concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_lexical_model_candidate_class_certificate :
+      ConcreteTruthConditionProviderLexicalClassInstanceCertificate;
+  concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq :
+      concrete_truth_condition_independent_lexical_model_candidate_class_certificate =
+        concrete_truth_condition_provider_lexical_class_instance_certificate;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_model :
+      RegisteredLexicalTruthModel;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq :
+      concrete_truth_condition_independent_lexical_model_candidate_registered_model =
+        registered_lexical_truth_model;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_spec :
+      FullyRegisteredTruthConditionSpec;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq :
+      concrete_truth_condition_independent_lexical_model_candidate_registered_spec =
+        registered_lexical_truth_conditions_from_model;
+  concrete_truth_condition_independent_lexical_model_candidate_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_lexical_model_candidate_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_source :
+      RegisteredLexicalApplicationTruth PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth :
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_atomic :
+      AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_ledger_truth :
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_ledger_atomic :
+      AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_denotes :
+      registered_lexical_model_denotes registered_lexical_truth_model PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_truth :
+      fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic :
+      AtomicClosureTruth PropT (break 0 mods_nil John vase);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_source :
+      RegisteredLexicalApplicationTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_provider_truth :
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_provider_atomic :
+      AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_ledger_truth :
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_ledger_atomic :
+      AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_denotes :
+      registered_lexical_model_denotes registered_lexical_truth_model PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_truth :
+      fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_atomic :
+      AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_source :
+      forall x_theme : Food,
+      RegisteredLexicalApplicationTruth Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_provider_truth :
+      forall x_theme : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_provider_atomic :
+      forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_ledger_truth :
+      forall x_theme : Food,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_ledger_atomic :
+      forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_denotes :
+      forall x_theme : Food,
+      registered_lexical_model_denotes registered_lexical_truth_model Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_truth :
+      forall x_theme : Food,
+      fully_registered_truth_denotes registered_lexical_truth_conditions_from_model Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_atomic :
+      forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_source :
+      RegisteredLexicalApplicationTruth PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_provider_truth :
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_provider_atomic :
+      AtomicClosureTruth PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_ledger_truth :
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_ledger_atomic :
+      AtomicClosureTruth PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_denotes :
+      registered_lexical_model_denotes registered_lexical_truth_model PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_truth :
+      fully_registered_truth_denotes registered_lexical_truth_conditions_from_model PropT (knock 0 mods_nil John);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_atomic :
+      AtomicClosureTruth PropT (knock 0 mods_nil John)
+}.
+
+Definition concrete_truth_condition_independent_lexical_model_candidate_certificate :
+  ConcreteTruthConditionIndependentLexicalModelCandidateCertificate := {|
+  concrete_truth_condition_independent_lexical_model_candidate_source :=
+    concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_lexical_model_candidate_source_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_lexical_model_candidate_class_certificate :=
+    concrete_truth_condition_provider_lexical_class_instance_certificate;
+  concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_model :=
+    registered_lexical_truth_model;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_spec :=
+    registered_lexical_truth_conditions_from_model;
+  concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_lexical_model_candidate_independent_sound :=
+    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;
+  concrete_truth_condition_independent_lexical_model_candidate_constructor_sound :=
+    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_source := finite_registered_atomic_source_lexical_1_source_projected;
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth := concrete_truth_condition_provider_lexical_class_provider_truth_projected PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_atomic := concrete_truth_condition_provider_lexical_class_provider_atomic_projected PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_ledger_truth := concrete_truth_condition_provider_lexical_class_ledger_truth_projected PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_ledger_atomic := concrete_truth_condition_provider_lexical_class_ledger_atomic_projected PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_denotes := registered_lexical_model_lexical_application registered_lexical_truth_model PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_truth := fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic := registered_lexical_truth_conditions_from_model_imply_atomic_closure PropT (break 0 mods_nil John vase) (fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model PropT (break 0 mods_nil John vase) (finite_registered_atomic_source_lexical_1_source_projected));
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_source := finite_registered_atomic_source_lexical_2_source_projected;
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_provider_truth := concrete_truth_condition_provider_lexical_class_provider_truth_projected PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_provider_atomic := concrete_truth_condition_provider_lexical_class_provider_atomic_projected PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_ledger_truth := concrete_truth_condition_provider_lexical_class_ledger_truth_projected PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_ledger_atomic := concrete_truth_condition_provider_lexical_class_ledger_atomic_projected PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_denotes := registered_lexical_model_lexical_application registered_lexical_truth_model PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_truth := fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_atomic := registered_lexical_truth_conditions_from_model_imply_atomic_closure PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast) (finite_registered_atomic_source_lexical_2_source_projected));
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_source := fun x_theme => finite_registered_atomic_source_lexical_3_source_projected x_theme;
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_provider_truth := fun x_theme => concrete_truth_condition_provider_lexical_class_provider_truth_projected Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_provider_atomic := fun x_theme => concrete_truth_condition_provider_lexical_class_provider_atomic_projected Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_ledger_truth := fun x_theme => concrete_truth_condition_provider_lexical_class_ledger_truth_projected Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_ledger_atomic := fun x_theme => concrete_truth_condition_provider_lexical_class_ledger_atomic_projected Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_denotes := fun x_theme => registered_lexical_model_lexical_application registered_lexical_truth_model Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_truth := fun x_theme => fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_atomic := fun x_theme => registered_lexical_truth_conditions_from_model_imply_atomic_closure Prop (eat 0 mods_nil John x_theme) (fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model Prop (eat 0 mods_nil John x_theme) (finite_registered_atomic_source_lexical_3_source_projected x_theme));
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_source := finite_registered_atomic_source_lexical_4_source_projected;
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_provider_truth := concrete_truth_condition_provider_lexical_class_provider_truth_projected PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_provider_atomic := concrete_truth_condition_provider_lexical_class_provider_atomic_projected PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_ledger_truth := concrete_truth_condition_provider_lexical_class_ledger_truth_projected PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_ledger_atomic := concrete_truth_condition_provider_lexical_class_ledger_atomic_projected PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_denotes := registered_lexical_model_lexical_application registered_lexical_truth_model PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_truth := fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected);
+  concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_atomic := registered_lexical_truth_conditions_from_model_imply_atomic_closure PropT (knock 0 mods_nil John) (fully_registered_truth_lexical_application registered_lexical_truth_conditions_from_model PropT (knock 0 mods_nil John) (finite_registered_atomic_source_lexical_4_source_projected))
+|}.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_certificate_exists :
+  exists C : ConcreteTruthConditionIndependentLexicalModelCandidateCertificate,
+    C = concrete_truth_condition_independent_lexical_model_candidate_certificate.
+Proof.
+  exists concrete_truth_condition_independent_lexical_model_candidate_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_source_matches :
+  concrete_truth_condition_independent_lexical_model_candidate_source
+    concrete_truth_condition_independent_lexical_model_candidate_certificate =
+  concrete_truth_condition_independent_model_class_readiness_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_source_eq
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_class_certificate_matches :
+  concrete_truth_condition_independent_lexical_model_candidate_class_certificate
+    concrete_truth_condition_independent_lexical_model_candidate_certificate =
+  concrete_truth_condition_provider_lexical_class_instance_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_class_certificate_eq
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_registered_model_matches :
+  concrete_truth_condition_independent_lexical_model_candidate_registered_model
+    concrete_truth_condition_independent_lexical_model_candidate_certificate =
+  registered_lexical_truth_model.
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_registered_model_eq
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_registered_spec_matches :
+  concrete_truth_condition_independent_lexical_model_candidate_registered_spec
+    concrete_truth_condition_independent_lexical_model_candidate_certificate =
+  registered_lexical_truth_conditions_from_model.
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_registered_spec_eq
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_independent_sound
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_constructor_sound
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth_projected :
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_ledger_truth_projected :
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_1_ledger_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected :
+      AtomicClosureTruth PropT (break 0 mods_nil John vase).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_2_provider_truth_projected :
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_2_provider_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_2_ledger_truth_projected :
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_2_ledger_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_atomic_projected :
+      AtomicClosureTruth PropT (butter 2 (mods_cons 1 slowly (mods_cons 0 in_bathroom mods_nil)) John toast).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_2_model_atomic
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_3_provider_truth_projected :
+      forall x_theme : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_3_provider_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_3_ledger_truth_projected :
+      forall x_theme : Food,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_3_ledger_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_atomic_projected :
+      forall x_theme : Food,
+      AtomicClosureTruth Prop (eat 0 mods_nil John x_theme).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_3_model_atomic
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_4_provider_truth_projected :
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_4_provider_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_4_ledger_truth_projected :
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_4_ledger_truth
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_atomic_projected :
+      AtomicClosureTruth PropT (knock 0 mods_nil John).
+Proof.
+  exact (concrete_truth_condition_independent_lexical_model_candidate_lexical_4_model_atomic
+    concrete_truth_condition_independent_lexical_model_candidate_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -17551,3 +17863,14 @@ Check concrete_truth_condition_independent_model_class_readiness_polarity_certif
 Check concrete_truth_condition_independent_model_class_readiness_transition_cause_certificate_matches.
 Check concrete_truth_condition_independent_model_class_readiness_independent_sound_projected.
 Check concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected.
+Check ConcreteTruthConditionIndependentLexicalModelCandidateCertificate.
+Check concrete_truth_condition_independent_lexical_model_candidate_certificate.
+Check concrete_truth_condition_independent_lexical_model_candidate_certificate_exists.
+Check concrete_truth_condition_independent_lexical_model_candidate_source_matches.
+Check concrete_truth_condition_independent_lexical_model_candidate_class_certificate_matches.
+Check concrete_truth_condition_independent_lexical_model_candidate_registered_model_matches.
+Check concrete_truth_condition_independent_lexical_model_candidate_registered_spec_matches.
+Check concrete_truth_condition_independent_lexical_model_candidate_independent_sound_projected.
+Check concrete_truth_condition_independent_lexical_model_candidate_constructor_sound_projected.
+Check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth_projected.
+Check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected.
