@@ -29924,6 +29924,573 @@ def concrete_truth_condition_independent_sigma_model_candidate_certificate_lines
     return lines
 
 
+def concrete_truth_condition_independent_temporal_model_candidate_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Package the temporal class-readiness entrance with model witnesses."""
+
+    temporal_names = [
+        "at_T",
+        "during_T",
+        "before_T",
+        "after_T",
+        "until_T",
+        "since_T",
+    ]
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    model_denotes_lean = (
+        "concrete_registered_compositional_model."
+        "concrete_registered_composition_denotes"
+    )
+    model_denotes_coq = (
+        "concrete_registered_composition_denotes "
+        "concrete_registered_compositional_model"
+    )
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionIndependentTemporalModelCandidateCertificate :",
+            "    Type where",
+            "  concrete_truth_condition_independent_temporal_model_candidate_source :",
+            "      ConcreteTruthConditionIndependentModelClassReadinessCertificate",
+            "  concrete_truth_condition_independent_temporal_model_candidate_source_eq :",
+            "      concrete_truth_condition_independent_temporal_model_candidate_source =",
+            "        concrete_truth_condition_independent_model_class_readiness_certificate",
+            "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate :",
+            "      ConcreteTruthConditionProviderTemporalClassInstanceCertificate",
+            "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate_eq :",
+            "      concrete_truth_condition_independent_temporal_model_candidate_class_certificate =",
+            "        concrete_truth_condition_provider_temporal_class_instance_certificate",
+            "  concrete_truth_condition_independent_temporal_model_candidate_instances :",
+            "      IndependentRegisteredTemporalTruthConditionInstances",
+            "  concrete_truth_condition_independent_temporal_model_candidate_instances_eq :",
+            "      concrete_truth_condition_independent_temporal_model_candidate_instances =",
+            "        independent_registered_temporal_truth_condition_instances",
+            "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model :",
+            "      ConcreteRegisteredCompositionalModel",
+            "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model_eq :",
+            "      concrete_truth_condition_independent_temporal_model_candidate_compositional_model =",
+            "        concrete_registered_compositional_model",
+            "  concrete_truth_condition_independent_temporal_model_candidate_independent_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_temporal_model_candidate_constructor_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_temporal_model_candidate_model_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {model_denotes_lean} A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+        for name in temporal_names:
+            term = f"({name} marker body)"
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_truth :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes PropT {term}",
+                    f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_atomic :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      AtomicClosureTruth PropT {term}",
+                    f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_truth :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT {term}",
+                    f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_atomic :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+                    f"      AtomicClosureTruth PropT {term}",
+                    f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_model_denotes :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {model_denotes_lean} PropT body ->",
+                    f"      {model_denotes_lean} PropT {term}",
+                    f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_model_atomic :",
+                    "      (marker : Entity) -> (body : PropT) ->",
+                    f"      {model_denotes_lean} PropT body ->",
+                    f"      AtomicClosureTruth PropT {term}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_independent_temporal_model_candidate_certificate :",
+                "    ConcreteTruthConditionIndependentTemporalModelCandidateCertificate := {",
+                "  concrete_truth_condition_independent_temporal_model_candidate_source :=",
+                "    concrete_truth_condition_independent_model_class_readiness_certificate,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_source_eq := rfl,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate :=",
+                "    concrete_truth_condition_provider_temporal_class_instance_certificate,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate_eq := rfl,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_instances :=",
+                "    independent_registered_temporal_truth_condition_instances,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_instances_eq := rfl,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model :=",
+                "    concrete_registered_compositional_model,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model_eq := rfl,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_independent_sound :=",
+                "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_constructor_sound :=",
+                "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected,",
+                "  concrete_truth_condition_independent_temporal_model_candidate_model_sound :=",
+                "    concrete_registered_compositional_model_imply_atomic_closure,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for name in temporal_names:
+            term = f"({name} marker body)"
+            assignments.extend(
+                [
+                    (
+                        f"concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_truth",
+                        f"concrete_truth_condition_provider_temporal_class_provider_{name}_truth_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_atomic",
+                        f"concrete_truth_condition_provider_temporal_class_provider_{name}_atomic_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_truth",
+                        f"concrete_truth_condition_provider_temporal_class_ledger_{name}_truth_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_atomic",
+                        f"concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_temporal_model_candidate_{name}_model_denotes",
+                        "fun marker body body_truth =>\n"
+                        "      concrete_registered_compositional_model."
+                        f"concrete_registered_composition_{name} marker body body_truth",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_temporal_model_candidate_{name}_model_atomic",
+                        "fun marker body body_truth =>\n"
+                        "      concrete_registered_compositional_model_imply_atomic_closure\n"
+                        f"        PropT {term}\n"
+                        "        (concrete_registered_compositional_model."
+                        f"concrete_registered_composition_{name} marker body body_truth)",
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            value_lines = value.splitlines()
+            lines.append(f"  {field} :=")
+            for value_index, value_line in enumerate(value_lines):
+                if value_index == len(value_lines) - 1:
+                    lines.append(f"    {value_line}{suffix}")
+                else:
+                    lines.append(f"    {value_line}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_independent_temporal_model_candidate_certificate_exists :",
+                "    Exists (fun C :",
+                "      ConcreteTruthConditionIndependentTemporalModelCandidateCertificate =>",
+                "      C = concrete_truth_condition_independent_temporal_model_candidate_certificate) := by",
+                "  exact Exists.intro",
+                "    concrete_truth_condition_independent_temporal_model_candidate_certificate rfl",
+            ]
+        )
+        for match_name, field, expected in (
+            (
+                "source",
+                "concrete_truth_condition_independent_temporal_model_candidate_source",
+                "concrete_truth_condition_independent_model_class_readiness_certificate",
+            ),
+            (
+                "class_certificate",
+                "concrete_truth_condition_independent_temporal_model_candidate_class_certificate",
+                "concrete_truth_condition_provider_temporal_class_instance_certificate",
+            ),
+            (
+                "instances",
+                "concrete_truth_condition_independent_temporal_model_candidate_instances",
+                "independent_registered_temporal_truth_condition_instances",
+            ),
+            (
+                "compositional_model",
+                "concrete_truth_condition_independent_temporal_model_candidate_compositional_model",
+                "concrete_registered_compositional_model",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_temporal_model_candidate_"
+                    f"{match_name}_matches :",
+                    "    concrete_truth_condition_independent_temporal_model_candidate_certificate."
+                    f"{field} =",
+                    f"      {expected} := by",
+                    "  exact concrete_truth_condition_independent_temporal_model_candidate_certificate."
+                    f"{field}_eq",
+                ]
+            )
+        for projection, field, spec in (
+            (
+                "independent",
+                "concrete_truth_condition_independent_temporal_model_candidate_independent_sound",
+                independent_spec_lean,
+            ),
+            (
+                "constructor",
+                "concrete_truth_condition_independent_temporal_model_candidate_constructor_sound",
+                constructor_spec_lean,
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_temporal_model_candidate_"
+                    f"{projection}_sound_projected :",
+                    "    (A : Type) -> (term : A) ->",
+                    f"    {spec}.fully_registered_truth_denotes A term ->",
+                    "    AtomicClosureTruth A term := by",
+                    "  exact concrete_truth_condition_independent_temporal_model_candidate_certificate."
+                    f"{field}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem concrete_truth_condition_independent_temporal_model_candidate_model_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                f"    {model_denotes_lean} A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_independent_temporal_model_candidate_certificate.",
+                "    concrete_truth_condition_independent_temporal_model_candidate_model_sound",
+            ]
+        )
+        for name in temporal_names:
+            term = f"({name} marker body)"
+            for projection, body_truth, conclusion in (
+                (
+                    "provider_truth",
+                    f"{independent_spec_lean}.fully_registered_truth_denotes PropT body",
+                    f"{independent_spec_lean}.fully_registered_truth_denotes PropT {term}",
+                ),
+                (
+                    "ledger_truth",
+                    f"{constructor_spec_lean}.fully_registered_truth_denotes PropT body",
+                    f"{constructor_spec_lean}.fully_registered_truth_denotes PropT {term}",
+                ),
+                (
+                    "model_atomic",
+                    f"{model_denotes_lean} PropT body",
+                    f"AtomicClosureTruth PropT {term}",
+                ),
+            ):
+                lines.extend(
+                    [
+                        "",
+                        "theorem concrete_truth_condition_independent_temporal_model_candidate_"
+                        f"{name}_{projection}_projected :",
+                        "    (marker : Entity) -> (body : PropT) ->",
+                        f"    {body_truth} ->",
+                        f"    {conclusion} := by",
+                        "  exact concrete_truth_condition_independent_temporal_model_candidate_certificate.",
+                        "    concrete_truth_condition_independent_temporal_model_candidate_"
+                        f"{name}_{projection}",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionIndependentTemporalModelCandidateCertificate : Type := {",
+        "  concrete_truth_condition_independent_temporal_model_candidate_source :",
+        "      ConcreteTruthConditionIndependentModelClassReadinessCertificate;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_source_eq :",
+        "      concrete_truth_condition_independent_temporal_model_candidate_source =",
+        "        concrete_truth_condition_independent_model_class_readiness_certificate;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate :",
+        "      ConcreteTruthConditionProviderTemporalClassInstanceCertificate;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate_eq :",
+        "      concrete_truth_condition_independent_temporal_model_candidate_class_certificate =",
+        "        concrete_truth_condition_provider_temporal_class_instance_certificate;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_instances :",
+        "      IndependentRegisteredTemporalTruthConditionInstances;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_instances_eq :",
+        "      concrete_truth_condition_independent_temporal_model_candidate_instances =",
+        "        independent_registered_temporal_truth_condition_instances;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model :",
+        "      ConcreteRegisteredCompositionalModel;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model_eq :",
+        "      concrete_truth_condition_independent_temporal_model_candidate_compositional_model =",
+        "        concrete_registered_compositional_model;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_independent_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_constructor_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_temporal_model_candidate_model_sound :",
+        "      forall A : Type, forall term : A,",
+        f"      {model_denotes_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+    ]
+    for name in temporal_names:
+        term = f"({name} marker body)"
+        lines.extend(
+            [
+                f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_truth :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} PropT body ->",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} PropT {term};",
+                f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_atomic :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} PropT body ->",
+                f"      AtomicClosureTruth PropT {term};",
+                f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_truth :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT body ->",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT {term};",
+                f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_atomic :",
+                "      forall marker : Entity, forall body : PropT,",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} PropT body ->",
+                f"      AtomicClosureTruth PropT {term};",
+                f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_model_denotes :",
+                "      forall marker : Entity, forall body : PropT,",
+                f"      {model_denotes_coq} PropT body ->",
+                f"      {model_denotes_coq} PropT {term};",
+                f"  concrete_truth_condition_independent_temporal_model_candidate_{name}_model_atomic :",
+                "      forall marker : Entity, forall body : PropT,",
+                f"      {model_denotes_coq} PropT body ->",
+                f"      AtomicClosureTruth PropT {term};",
+            ]
+        )
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_independent_temporal_model_candidate_certificate :",
+            "  ConcreteTruthConditionIndependentTemporalModelCandidateCertificate := {|",
+            "  concrete_truth_condition_independent_temporal_model_candidate_source :=",
+            "    concrete_truth_condition_independent_model_class_readiness_certificate;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_source_eq := eq_refl;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate :=",
+            "    concrete_truth_condition_provider_temporal_class_instance_certificate;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_class_certificate_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_instances :=",
+            "    independent_registered_temporal_truth_condition_instances;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_instances_eq := eq_refl;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model :=",
+            "    concrete_registered_compositional_model;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_compositional_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_independent_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_constructor_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;",
+            "  concrete_truth_condition_independent_temporal_model_candidate_model_sound :=",
+            "    concrete_registered_compositional_model_imply_atomic_closure;",
+        ]
+    )
+    assignments: list[tuple[str, str]] = []
+    for name in temporal_names:
+        term = f"({name} marker body)"
+        assignments.extend(
+            [
+                (
+                    f"concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_truth",
+                    f"concrete_truth_condition_provider_temporal_class_provider_{name}_truth_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_temporal_model_candidate_{name}_provider_atomic",
+                    f"concrete_truth_condition_provider_temporal_class_provider_{name}_atomic_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_truth",
+                    f"concrete_truth_condition_provider_temporal_class_ledger_{name}_truth_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_temporal_model_candidate_{name}_ledger_atomic",
+                    f"concrete_truth_condition_provider_temporal_class_ledger_{name}_atomic_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_temporal_model_candidate_{name}_model_denotes",
+                    f"concrete_registered_composition_{name} concrete_registered_compositional_model",
+                ),
+                (
+                    f"concrete_truth_condition_independent_temporal_model_candidate_{name}_model_atomic",
+                    "fun marker body body_truth =>\n"
+                    "      concrete_registered_compositional_model_imply_atomic_closure\n"
+                    f"        PropT {term}\n"
+                    f"        (concrete_registered_composition_{name}\n"
+                    "          concrete_registered_compositional_model marker body body_truth)",
+                ),
+            ]
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        value_lines = value.splitlines()
+        lines.append(f"  {field} :=")
+        for value_index, value_line in enumerate(value_lines):
+            if value_index == len(value_lines) - 1:
+                lines.append(f"    {value_line}{suffix}")
+            else:
+                lines.append(f"    {value_line}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_independent_temporal_model_candidate_certificate_exists :",
+            "  exists C : ConcreteTruthConditionIndependentTemporalModelCandidateCertificate,",
+            "    C = concrete_truth_condition_independent_temporal_model_candidate_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_independent_temporal_model_candidate_certificate.",
+            "  reflexivity.",
+            "Qed.",
+        ]
+    )
+    for match_name, field, expected in (
+        (
+            "source",
+            "concrete_truth_condition_independent_temporal_model_candidate_source",
+            "concrete_truth_condition_independent_model_class_readiness_certificate",
+        ),
+        (
+            "class_certificate",
+            "concrete_truth_condition_independent_temporal_model_candidate_class_certificate",
+            "concrete_truth_condition_provider_temporal_class_instance_certificate",
+        ),
+        (
+            "instances",
+            "concrete_truth_condition_independent_temporal_model_candidate_instances",
+            "independent_registered_temporal_truth_condition_instances",
+        ),
+        (
+            "compositional_model",
+            "concrete_truth_condition_independent_temporal_model_candidate_compositional_model",
+            "concrete_registered_compositional_model",
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_temporal_model_candidate_"
+                f"{match_name}_matches :",
+                f"  {field}",
+                "    concrete_truth_condition_independent_temporal_model_candidate_certificate =",
+                f"  {expected}.",
+                "Proof.",
+                f"  exact ({field}_eq",
+                "    concrete_truth_condition_independent_temporal_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    for projection, field, spec in (
+        (
+            "independent",
+            "concrete_truth_condition_independent_temporal_model_candidate_independent_sound",
+            independent_spec_coq,
+        ),
+        (
+            "constructor",
+            "concrete_truth_condition_independent_temporal_model_candidate_constructor_sound",
+            constructor_spec_coq,
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_temporal_model_candidate_"
+                f"{projection}_sound_projected :",
+                "  forall A : Type, forall term : A,",
+                "    fully_registered_truth_denotes",
+                f"      {spec} A term ->",
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                f"  exact ({field}",
+                "    concrete_truth_condition_independent_temporal_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem concrete_truth_condition_independent_temporal_model_candidate_model_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            f"    {model_denotes_coq} A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_independent_temporal_model_candidate_model_sound",
+            "    concrete_truth_condition_independent_temporal_model_candidate_certificate).",
+            "Qed.",
+        ]
+    )
+    for name in temporal_names:
+        term = f"({name} marker body)"
+        for projection, body_truth, conclusion in (
+            (
+                "provider_truth",
+                "fully_registered_truth_denotes "
+                f"{independent_spec_coq} PropT body",
+                "fully_registered_truth_denotes "
+                f"{independent_spec_coq} PropT {term}",
+            ),
+            (
+                "ledger_truth",
+                "fully_registered_truth_denotes "
+                f"{constructor_spec_coq} PropT body",
+                "fully_registered_truth_denotes "
+                f"{constructor_spec_coq} PropT {term}",
+            ),
+            (
+                "model_atomic",
+                f"{model_denotes_coq} PropT body",
+                f"AtomicClosureTruth PropT {term}",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "Theorem concrete_truth_condition_independent_temporal_model_candidate_"
+                    f"{name}_{projection}_projected :",
+                    "  forall marker : Entity, forall body : PropT,",
+                    f"    {body_truth} ->",
+                    f"    {conclusion}.",
+                    "Proof.",
+                    "  exact (concrete_truth_condition_independent_temporal_model_candidate_"
+                    f"{name}_{projection}",
+                    "    concrete_truth_condition_independent_temporal_model_candidate_certificate).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -34660,6 +35227,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_independent_temporal_model_candidate_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -36648,6 +37221,42 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "concrete_truth_condition_independent_sigma_model_candidate_"
                 f"sigma_{first_type}_model_atomic_projected"
             )
+        lines.append(
+            "#check ConcreteTruthConditionIndependentTemporalModelCandidateCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_independent_temporal_model_candidate_certificate"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_temporal_model_candidate_certificate_exists"
+        )
+        for match_name in (
+            "source",
+            "class_certificate",
+            "instances",
+            "compositional_model",
+        ):
+            lines.append(
+                "#check "
+                f"concrete_truth_condition_independent_temporal_model_candidate_{match_name}_matches"
+            )
+        for projection in ("independent", "constructor", "model"):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_temporal_model_candidate_"
+                f"{projection}_sound_projected"
+            )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_temporal_model_candidate_"
+            "at_T_provider_truth_projected"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_temporal_model_candidate_"
+            "at_T_model_atomic_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -37605,6 +38214,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         concrete_truth_condition_independent_sigma_model_candidate_certificate_lines(
             declarations,
             target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_independent_temporal_model_candidate_certificate_lines(
+            target
         )
     )
     lines.append("")
@@ -39348,6 +39963,40 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "concrete_truth_condition_independent_sigma_model_candidate_"
             f"sigma_{first_type}_model_atomic_projected."
         )
+    lines.append("Check ConcreteTruthConditionIndependentTemporalModelCandidateCertificate.")
+    lines.append(
+        "Check concrete_truth_condition_independent_temporal_model_candidate_certificate."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_temporal_model_candidate_certificate_exists."
+    )
+    for match_name in (
+        "source",
+        "class_certificate",
+        "instances",
+        "compositional_model",
+    ):
+        lines.append(
+            "Check "
+            f"concrete_truth_condition_independent_temporal_model_candidate_{match_name}_matches."
+        )
+    for projection in ("independent", "constructor", "model"):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_temporal_model_candidate_"
+            f"{projection}_sound_projected."
+        )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_temporal_model_candidate_"
+        "at_T_provider_truth_projected."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_temporal_model_candidate_"
+        "at_T_model_atomic_projected."
+    )
     return "\n".join(lines) + "\n"
 
 

@@ -1718,6 +1718,19 @@ atomic projections, compositional-model denotation, and model-level
 `AtomicClosureTruth` projection. It strengthens the argument-omission and
 existential-witness path without claiming arbitrary quantifier scope,
 attachment, or discourse semantics.
+The next verified objective
+`coq_concrete_truth_condition_independent_temporal_model_candidate_certificate`
+adds `ConcreteTruthConditionIndependentTemporalModelCandidateCertificate`.
+This temporal model-candidate certificate anchors the temporal class-readiness
+boundary to the provider temporal class certificate,
+`IndependentRegisteredTemporalTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`. For `at_T`, `during_T`, `before_T`,
+`after_T`, `until_T`, and `since_T`, it stores provider truth and atomic
+projections, constructor-ledger truth and atomic projections,
+compositional-model denotation, and model-level `AtomicClosureTruth`
+projection. It strengthens the temporal anchoring path central to the
+Parsons/Luo-Shi comparison without claiming arbitrary aspect, attachment,
+or discourse semantics.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

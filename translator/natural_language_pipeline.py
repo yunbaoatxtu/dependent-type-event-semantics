@@ -21485,6 +21485,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "temporal_model_candidate_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21986,6 +21994,18 @@ def project_completion_status_payload(
                     "This advances argument-omission and existential-witness "
                     "coverage without claiming arbitrary quantifier-scope or "
                     "discourse semantics. "
+                    "The newest independent temporal model-candidate certificate "
+                    "then anchors the temporal class-readiness boundary to "
+                    "the provider temporal class certificate, "
+                    "IndependentRegisteredTemporalTruthConditionInstances, and "
+                    "ConcreteRegisteredCompositionalModel. For at_T, during_T, "
+                    "before_T, after_T, until_T, and since_T it records "
+                    "provider truth/atomic, constructor-ledger truth/atomic, "
+                    "compositional-model denotation, and model "
+                    "AtomicClosureTruth projections. This advances the "
+                    "Parsons/Luo-Shi temporal replacement route without "
+                    "claiming arbitrary aspect, attachment, or discourse "
+                    "coverage. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
