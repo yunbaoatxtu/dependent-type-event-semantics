@@ -586,6 +586,13 @@ gathers the lexical, Sigma, temporal, repeat, polarity, and Transition/Cause
 provider certificates, checks that each field matches its concrete certificate,
 and re-exposes the independent-provider and constructor-ledger soundness routes
 as suite-level projections.
+The provider class-instance suite example package introduces
+`ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage` and
+`concrete_truth_condition_provider_class_instance_suite_example_package`. It
+connects the provider suite to
+`concrete_registered_truth_condition_route_example_agreement`, checks the
+provider and route-agreement fields, and exposes direct, evidence-backed, and
+kernel-induced `AtomicClosureTruth` projections for every generated example.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

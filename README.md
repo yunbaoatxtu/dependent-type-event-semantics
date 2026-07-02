@@ -1643,6 +1643,14 @@ suite is backed by `IndependentRegisteredTruthConditionInstanceSuite`, and
 projects both the independent-provider and constructor-ledger soundness routes.
 It is a coverage certificate for the registered provider classes, not yet an
 independent truth-condition model for arbitrary natural-language meanings.
+The next verified objective
+`coq_concrete_truth_condition_provider_class_instance_suite_example_package`
+adds `ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage`. This
+stage binds the provider class-instance suite to
+`ConcreteRegisteredTruthConditionRouteExampleAgreement` and projects direct,
+evidence-backed, and kernel-induced `AtomicClosureTruth` witnesses for each
+currently exported example. It is a finite registered-example synchronization
+package, not a proof that the provider suite covers arbitrary future sentences.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

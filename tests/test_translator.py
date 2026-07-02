@@ -5220,6 +5220,46 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_provider_class_instance_suite_example_package :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_provider_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_agreement_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_independent_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_ledger_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -18029,6 +18069,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_provider_polarity_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_transition_cause_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_class_instance_suite_certificate",
+                "coq_concrete_truth_condition_provider_class_instance_suite_example_package",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27548,6 +27589,14 @@ class TranslatorTests(unittest.TestCase):
             "`ConcreteTruthConditionProviderClassInstanceSuiteCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_provider_class_instance_suite_example_package`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27932,6 +27981,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`concrete_truth_condition_provider_class_instance_suite_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_provider_class_instance_suite_example_package`",
             formalization_readme,
         )
         self.assertIn("AtomicValuationSpec", manuscript)
@@ -28321,6 +28378,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_provider_class_instance_suite_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_provider_class_instance_suite_example_package",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

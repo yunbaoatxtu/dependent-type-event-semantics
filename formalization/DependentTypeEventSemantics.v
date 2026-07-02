@@ -14630,6 +14630,229 @@ Proof.
     concrete_truth_condition_provider_class_instance_suite_certificate).
 Qed.
 
+Record ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage : Type := {
+  concrete_truth_condition_provider_class_instance_suite_example_provider :
+      ConcreteTruthConditionProviderClassInstanceSuiteCertificate;
+  concrete_truth_condition_provider_class_instance_suite_example_provider_eq :
+      concrete_truth_condition_provider_class_instance_suite_example_provider =
+        concrete_truth_condition_provider_class_instance_suite_certificate;
+  concrete_truth_condition_provider_class_instance_suite_example_agreement :
+      ConcreteRegisteredTruthConditionRouteExampleAgreement;
+  concrete_truth_condition_provider_class_instance_suite_example_agreement_eq :
+      concrete_truth_condition_provider_class_instance_suite_example_agreement =
+        concrete_registered_truth_condition_route_example_agreement;
+  concrete_truth_condition_provider_class_instance_suite_example_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_provider_class_instance_suite_example_ledger_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec
+          registered_truth_condition_constructor_discharge_certificate)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_provider_class_instance_suite_example_2_direct_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_provider_class_instance_suite_example_2_evidence_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_provider_class_instance_suite_example_2_kernel_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_provider_class_instance_suite_example_3_direct_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_provider_class_instance_suite_example_3_evidence_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_provider_class_instance_suite_example_3_kernel_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition concrete_truth_condition_provider_class_instance_suite_example_package :
+  ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage := {|
+  concrete_truth_condition_provider_class_instance_suite_example_provider :=
+    concrete_truth_condition_provider_class_instance_suite_certificate;
+  concrete_truth_condition_provider_class_instance_suite_example_provider_eq := eq_refl;
+  concrete_truth_condition_provider_class_instance_suite_example_agreement :=
+    concrete_registered_truth_condition_route_example_agreement;
+  concrete_truth_condition_provider_class_instance_suite_example_agreement_eq := eq_refl;
+  concrete_truth_condition_provider_class_instance_suite_example_independent_sound :=
+    concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected;
+  concrete_truth_condition_provider_class_instance_suite_example_ledger_sound :=
+    concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected;
+  concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic :=
+    concrete_registered_truth_condition_route_example_1_agreement_direct_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic :=
+    concrete_registered_truth_condition_route_example_1_agreement_evidence_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic :=
+    concrete_registered_truth_condition_route_example_1_agreement_kernel_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_2_direct_atomic :=
+    concrete_registered_truth_condition_route_example_2_agreement_direct_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_2_evidence_atomic :=
+    concrete_registered_truth_condition_route_example_2_agreement_evidence_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_2_kernel_atomic :=
+    concrete_registered_truth_condition_route_example_2_agreement_kernel_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_3_direct_atomic :=
+    concrete_registered_truth_condition_route_example_3_agreement_direct_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_3_evidence_atomic :=
+    concrete_registered_truth_condition_route_example_3_agreement_evidence_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_3_kernel_atomic :=
+    concrete_registered_truth_condition_route_example_3_agreement_kernel_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic :=
+    concrete_registered_truth_condition_route_example_4_agreement_direct_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic :=
+    concrete_registered_truth_condition_route_example_4_agreement_evidence_atomic_sound;
+  concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic :=
+    concrete_registered_truth_condition_route_example_4_agreement_kernel_atomic_sound
+|}.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_package_exists :
+  exists P : ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage,
+    P = concrete_truth_condition_provider_class_instance_suite_example_package.
+Proof.
+  exists concrete_truth_condition_provider_class_instance_suite_example_package.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_provider_matches :
+  concrete_truth_condition_provider_class_instance_suite_example_provider
+    concrete_truth_condition_provider_class_instance_suite_example_package =
+  concrete_truth_condition_provider_class_instance_suite_certificate.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_provider_eq
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_agreement_matches :
+  concrete_truth_condition_provider_class_instance_suite_example_agreement
+    concrete_truth_condition_provider_class_instance_suite_example_package =
+  concrete_registered_truth_condition_route_example_agreement.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_agreement_eq
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_independent_sound
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_ledger_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec
+        registered_truth_condition_constructor_discharge_certificate)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_ledger_sound
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_2_direct_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_2_direct_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_2_evidence_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_2_evidence_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_2_kernel_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_2_kernel_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_3_direct_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_3_direct_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_3_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_3_evidence_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_3_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_3_kernel_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
+Theorem concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic
+    concrete_truth_condition_provider_class_instance_suite_example_package).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -15680,3 +15903,22 @@ Check concrete_truth_condition_provider_class_instance_suite_polarity_certificat
 Check concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_matches.
 Check concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected.
 Check concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected.
+Check ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage.
+Check concrete_truth_condition_provider_class_instance_suite_example_package.
+Check concrete_truth_condition_provider_class_instance_suite_example_package_exists.
+Check concrete_truth_condition_provider_class_instance_suite_example_provider_matches.
+Check concrete_truth_condition_provider_class_instance_suite_example_agreement_matches.
+Check concrete_truth_condition_provider_class_instance_suite_example_independent_sound_projected.
+Check concrete_truth_condition_provider_class_instance_suite_example_ledger_sound_projected.
+Check concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_2_direct_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_2_evidence_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_2_kernel_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_3_direct_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_3_evidence_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_3_kernel_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic_sound.
+Check concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic_sound.
