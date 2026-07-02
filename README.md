@@ -1651,6 +1651,18 @@ stage binds the provider class-instance suite to
 evidence-backed, and kernel-induced `AtomicClosureTruth` witnesses for each
 currently exported example. It is a finite registered-example synchronization
 package, not a proof that the provider suite covers arbitrary future sentences.
+The next verified objective
+`coq_concrete_truth_condition_instance_supply_certificate` adds
+`ConcreteTruthConditionInstanceSupplyCertificate`. This certificate packages
+the direct `concrete_registered_truth_conditions` spec, the evidence-backed
+spec, the kernel-induced spec, the finite atomic concrete-truth instance
+ledger, the provider class-instance suite, and the provider example package.
+For each exported example it stores direct, evidence-backed, and
+kernel-induced `fully_registered_truth_denotes` inhabitants together with
+their `AtomicClosureTruth` projections. It is a finite supply certificate for
+the current registered benchmark fragment, not an independently justified
+truth-condition semantics for arbitrary lexical, temporal, causal,
+quantificational, or modifier constructions.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
@@ -1672,7 +1684,8 @@ finite-registered-atomic-kernel-alignment,
 finite-registered-completion-certificate,
 finite-registered-component-coverage-certificate,
 finite-registered-atomic-truth-condition-evidence-source-alignment-certificate,
-or registered-example package instances.
+registered-example package instances, or the finite
+concrete-truth-condition supply certificate.
 The same contract now carries a registered semantic-role inventory for
 `Goal`, `Instrument`, `Location`, `Manner`, and `Source`, each typed as `Adv`.
 The verifier reruns the registered cases and requires all observed modifier

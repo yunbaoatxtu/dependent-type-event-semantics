@@ -593,6 +593,14 @@ connects the provider suite to
 `concrete_registered_truth_condition_route_example_agreement`, checks the
 provider and route-agreement fields, and exposes direct, evidence-backed, and
 kernel-induced `AtomicClosureTruth` projections for every generated example.
+The concrete truth-condition instance supply certificate introduces
+`ConcreteTruthConditionInstanceSupplyCertificate` and
+`concrete_truth_condition_instance_supply_certificate`. It packages the direct
+concrete registered spec, the evidence-backed spec, the kernel-induced spec,
+the finite atomic concrete-truth instance ledger, the provider suite, and the
+provider example package. It then projects each generated example through
+direct, evidence-backed, and kernel-induced `fully_registered_truth_denotes`
+inhabitants, together with the matching `AtomicClosureTruth` projections.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

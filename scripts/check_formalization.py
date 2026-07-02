@@ -4658,6 +4658,80 @@ def main() -> None:
             and "Check concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic_sound."
             in coq
         ),
+        "lean concrete truth condition instance supply certificate": (
+            "structure ConcreteTruthConditionInstanceSupplyCertificate : Type where"
+            in lean
+            and "def concrete_truth_condition_instance_supply_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_direct_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_evidence_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_kernel_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_atomic_ledger_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_provider_suite_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_example_package_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_direct_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_evidence_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_kernel_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_example_1_direct_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_example_1_evidence_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_supply_example_1_kernel_truth_projected :"
+            in lean
+            and "#check ConcreteTruthConditionInstanceSupplyCertificate"
+            in lean
+            and "#check concrete_truth_condition_instance_supply_example_1_direct_truth_projected"
+            in lean
+        ),
+        "coq concrete truth condition instance supply certificate": (
+            "Record ConcreteTruthConditionInstanceSupplyCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_instance_supply_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_direct_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_evidence_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_kernel_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_atomic_ledger_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_provider_suite_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_example_package_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_direct_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_evidence_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_kernel_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_atom_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_example_1_direct_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_example_1_evidence_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_supply_example_1_kernel_truth_projected :"
+            in coq
+            and "Check ConcreteTruthConditionInstanceSupplyCertificate."
+            in coq
+            and "Check concrete_truth_condition_instance_supply_example_1_direct_truth_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

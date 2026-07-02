@@ -14853,6 +14853,437 @@ Proof.
     concrete_truth_condition_provider_class_instance_suite_example_package).
 Qed.
 
+Record ConcreteTruthConditionInstanceSupplyCertificate : Type := {
+  concrete_truth_condition_instance_supply_direct_spec :
+      FullyRegisteredTruthConditionSpec;
+  concrete_truth_condition_instance_supply_direct_spec_eq :
+      concrete_truth_condition_instance_supply_direct_spec =
+        concrete_registered_truth_conditions;
+  concrete_truth_condition_instance_supply_evidence_spec :
+      FullyRegisteredTruthConditionSpec;
+  concrete_truth_condition_instance_supply_evidence_spec_eq :
+      concrete_truth_condition_instance_supply_evidence_spec =
+        concrete_registered_evidence_backed_truth_conditions;
+  concrete_truth_condition_instance_supply_kernel_spec :
+      FullyRegisteredTruthConditionSpec;
+  concrete_truth_condition_instance_supply_kernel_spec_eq :
+      concrete_truth_condition_instance_supply_kernel_spec =
+        concrete_registered_truth_conditions_from_kernel;
+  concrete_truth_condition_instance_supply_atomic_ledger :
+      FiniteRegisteredAtomicConcreteTruthInstanceLedger;
+  concrete_truth_condition_instance_supply_atomic_ledger_eq :
+      concrete_truth_condition_instance_supply_atomic_ledger =
+        finite_registered_atomic_concrete_truth_instance_ledger;
+  concrete_truth_condition_instance_supply_provider_suite :
+      ConcreteTruthConditionProviderClassInstanceSuiteCertificate;
+  concrete_truth_condition_instance_supply_provider_suite_eq :
+      concrete_truth_condition_instance_supply_provider_suite =
+        concrete_truth_condition_provider_class_instance_suite_certificate;
+  concrete_truth_condition_instance_supply_example_package :
+      ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage;
+  concrete_truth_condition_instance_supply_example_package_eq :
+      concrete_truth_condition_instance_supply_example_package =
+        concrete_truth_condition_provider_class_instance_suite_example_package;
+  concrete_truth_condition_instance_supply_direct_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes concrete_registered_truth_conditions
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_instance_supply_evidence_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_evidence_backed_truth_conditions
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_instance_supply_kernel_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_truth_conditions_from_kernel
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_instance_supply_atom_sound :
+      forall atom : RegisteredTruthConditionAtom,
+      ConcreteRegisteredTruthInstance atom ->
+      AtomicClosureTruth
+        (registered_truth_condition_atom_type atom)
+        (registered_truth_condition_atom_term atom);
+  concrete_truth_condition_instance_supply_example_1_direct_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_1;
+  concrete_truth_condition_instance_supply_example_1_direct_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_instance_supply_example_1_evidence_truth :
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_1;
+  concrete_truth_condition_instance_supply_example_1_evidence_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_instance_supply_example_1_kernel_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_1;
+  concrete_truth_condition_instance_supply_example_1_kernel_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_instance_supply_example_2_direct_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions Prop example_2;
+  concrete_truth_condition_instance_supply_example_2_direct_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_instance_supply_example_2_evidence_truth :
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions Prop example_2;
+  concrete_truth_condition_instance_supply_example_2_evidence_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_instance_supply_example_2_kernel_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel Prop example_2;
+  concrete_truth_condition_instance_supply_example_2_kernel_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_instance_supply_example_3_direct_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_3;
+  concrete_truth_condition_instance_supply_example_3_direct_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_instance_supply_example_3_evidence_truth :
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_3;
+  concrete_truth_condition_instance_supply_example_3_evidence_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_instance_supply_example_3_kernel_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_3;
+  concrete_truth_condition_instance_supply_example_3_kernel_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_instance_supply_example_4_direct_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_4;
+  concrete_truth_condition_instance_supply_example_4_direct_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_instance_supply_example_4_evidence_truth :
+      fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_4;
+  concrete_truth_condition_instance_supply_example_4_evidence_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_instance_supply_example_4_kernel_truth :
+      fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_4;
+  concrete_truth_condition_instance_supply_example_4_kernel_atomic :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition concrete_truth_condition_instance_supply_certificate :
+  ConcreteTruthConditionInstanceSupplyCertificate := {|
+  concrete_truth_condition_instance_supply_direct_spec :=
+    concrete_registered_truth_conditions;
+  concrete_truth_condition_instance_supply_direct_spec_eq := eq_refl;
+  concrete_truth_condition_instance_supply_evidence_spec :=
+    concrete_registered_evidence_backed_truth_conditions;
+  concrete_truth_condition_instance_supply_evidence_spec_eq := eq_refl;
+  concrete_truth_condition_instance_supply_kernel_spec :=
+    concrete_registered_truth_conditions_from_kernel;
+  concrete_truth_condition_instance_supply_kernel_spec_eq := eq_refl;
+  concrete_truth_condition_instance_supply_atomic_ledger :=
+    finite_registered_atomic_concrete_truth_instance_ledger;
+  concrete_truth_condition_instance_supply_atomic_ledger_eq := eq_refl;
+  concrete_truth_condition_instance_supply_provider_suite :=
+    concrete_truth_condition_provider_class_instance_suite_certificate;
+  concrete_truth_condition_instance_supply_provider_suite_eq := eq_refl;
+  concrete_truth_condition_instance_supply_example_package :=
+    concrete_truth_condition_provider_class_instance_suite_example_package;
+  concrete_truth_condition_instance_supply_example_package_eq := eq_refl;
+  concrete_truth_condition_instance_supply_direct_sound :=
+    concrete_registered_truth_conditions_imply_atomic_closure;
+  concrete_truth_condition_instance_supply_evidence_sound :=
+    concrete_registered_evidence_backed_truth_conditions_imply_atomic_closure;
+  concrete_truth_condition_instance_supply_kernel_sound :=
+    concrete_registered_truth_conditions_from_kernel_imply_atomic_closure;
+  concrete_truth_condition_instance_supply_atom_sound :=
+    finite_registered_atomic_concrete_truth_instance_ledger_sound_projected;
+  concrete_truth_condition_instance_supply_example_1_direct_truth := example_1_concrete_registered_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_1_direct_atomic := concrete_truth_condition_provider_class_instance_suite_example_1_direct_atomic_sound;
+  concrete_truth_condition_instance_supply_example_1_evidence_truth := example_1_concrete_registered_evidence_backed_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_1_evidence_atomic := concrete_truth_condition_provider_class_instance_suite_example_1_evidence_atomic_sound;
+  concrete_truth_condition_instance_supply_example_1_kernel_truth := example_1_concrete_registered_truth_conditions_from_kernel_sound;
+  concrete_truth_condition_instance_supply_example_1_kernel_atomic := concrete_truth_condition_provider_class_instance_suite_example_1_kernel_atomic_sound;
+  concrete_truth_condition_instance_supply_example_2_direct_truth := example_2_concrete_registered_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_2_direct_atomic := concrete_truth_condition_provider_class_instance_suite_example_2_direct_atomic_sound;
+  concrete_truth_condition_instance_supply_example_2_evidence_truth := example_2_concrete_registered_evidence_backed_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_2_evidence_atomic := concrete_truth_condition_provider_class_instance_suite_example_2_evidence_atomic_sound;
+  concrete_truth_condition_instance_supply_example_2_kernel_truth := example_2_concrete_registered_truth_conditions_from_kernel_sound;
+  concrete_truth_condition_instance_supply_example_2_kernel_atomic := concrete_truth_condition_provider_class_instance_suite_example_2_kernel_atomic_sound;
+  concrete_truth_condition_instance_supply_example_3_direct_truth := example_3_concrete_registered_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_3_direct_atomic := concrete_truth_condition_provider_class_instance_suite_example_3_direct_atomic_sound;
+  concrete_truth_condition_instance_supply_example_3_evidence_truth := example_3_concrete_registered_evidence_backed_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_3_evidence_atomic := concrete_truth_condition_provider_class_instance_suite_example_3_evidence_atomic_sound;
+  concrete_truth_condition_instance_supply_example_3_kernel_truth := example_3_concrete_registered_truth_conditions_from_kernel_sound;
+  concrete_truth_condition_instance_supply_example_3_kernel_atomic := concrete_truth_condition_provider_class_instance_suite_example_3_kernel_atomic_sound;
+  concrete_truth_condition_instance_supply_example_4_direct_truth := example_4_concrete_registered_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_4_direct_atomic := concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic_sound;
+  concrete_truth_condition_instance_supply_example_4_evidence_truth := example_4_concrete_registered_evidence_backed_truth_condition_sound;
+  concrete_truth_condition_instance_supply_example_4_evidence_atomic := concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic_sound;
+  concrete_truth_condition_instance_supply_example_4_kernel_truth := example_4_concrete_registered_truth_conditions_from_kernel_sound;
+  concrete_truth_condition_instance_supply_example_4_kernel_atomic := concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic_sound
+|}.
+
+Theorem concrete_truth_condition_instance_supply_certificate_exists :
+  exists C : ConcreteTruthConditionInstanceSupplyCertificate,
+    C = concrete_truth_condition_instance_supply_certificate.
+Proof.
+  exists concrete_truth_condition_instance_supply_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_direct_spec_matches :
+  concrete_truth_condition_instance_supply_direct_spec
+    concrete_truth_condition_instance_supply_certificate =
+  concrete_registered_truth_conditions.
+Proof.
+  exact (concrete_truth_condition_instance_supply_direct_spec_eq
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_evidence_spec_matches :
+  concrete_truth_condition_instance_supply_evidence_spec
+    concrete_truth_condition_instance_supply_certificate =
+  concrete_registered_evidence_backed_truth_conditions.
+Proof.
+  exact (concrete_truth_condition_instance_supply_evidence_spec_eq
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_kernel_spec_matches :
+  concrete_truth_condition_instance_supply_kernel_spec
+    concrete_truth_condition_instance_supply_certificate =
+  concrete_registered_truth_conditions_from_kernel.
+Proof.
+  exact (concrete_truth_condition_instance_supply_kernel_spec_eq
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_atomic_ledger_matches :
+  concrete_truth_condition_instance_supply_atomic_ledger
+    concrete_truth_condition_instance_supply_certificate =
+  finite_registered_atomic_concrete_truth_instance_ledger.
+Proof.
+  exact (concrete_truth_condition_instance_supply_atomic_ledger_eq
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_provider_suite_matches :
+  concrete_truth_condition_instance_supply_provider_suite
+    concrete_truth_condition_instance_supply_certificate =
+  concrete_truth_condition_provider_class_instance_suite_certificate.
+Proof.
+  exact (concrete_truth_condition_instance_supply_provider_suite_eq
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_package_matches :
+  concrete_truth_condition_instance_supply_example_package
+    concrete_truth_condition_instance_supply_certificate =
+  concrete_truth_condition_provider_class_instance_suite_example_package.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_package_eq
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_direct_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes concrete_registered_truth_conditions
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_instance_supply_direct_sound
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_evidence_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_instance_supply_evidence_sound
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_kernel_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_truth_conditions_from_kernel
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_instance_supply_kernel_sound
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_atom_sound_projected :
+  forall atom : RegisteredTruthConditionAtom,
+    ConcreteRegisteredTruthInstance atom ->
+    AtomicClosureTruth
+      (registered_truth_condition_atom_type atom)
+      (registered_truth_condition_atom_term atom).
+Proof.
+  exact (concrete_truth_condition_instance_supply_atom_sound
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_1_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_1.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_1_direct_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_1_direct_atomic_projected :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_1_direct_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_1_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_1.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_1_evidence_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_1_evidence_atomic_projected :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_1_evidence_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_1_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_1.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_1_kernel_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_1_kernel_atomic_projected :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_1_kernel_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_2_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions Prop example_2.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_2_direct_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_2_direct_atomic_projected :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_2_direct_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_2_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions Prop example_2.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_2_evidence_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_2_evidence_atomic_projected :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_2_evidence_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_2_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel Prop example_2.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_2_kernel_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_2_kernel_atomic_projected :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_2_kernel_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_3_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_3.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_3_direct_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_3_direct_atomic_projected :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_3_direct_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_3_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_3.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_3_evidence_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_3_evidence_atomic_projected :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_3_evidence_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_3_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_3.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_3_kernel_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_3_kernel_atomic_projected :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_3_kernel_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_4_direct_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions PropT example_4.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_4_direct_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_4_direct_atomic_projected :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_4_direct_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_4_evidence_truth_projected :
+  fully_registered_truth_denotes concrete_registered_evidence_backed_truth_conditions PropT example_4.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_4_evidence_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_4_evidence_atomic_projected :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_4_evidence_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_4_kernel_truth_projected :
+  fully_registered_truth_denotes concrete_registered_truth_conditions_from_kernel PropT example_4.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_4_kernel_truth
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
+Theorem concrete_truth_condition_instance_supply_example_4_kernel_atomic_projected :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_instance_supply_example_4_kernel_atomic
+    concrete_truth_condition_instance_supply_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -15922,3 +16353,40 @@ Check concrete_truth_condition_provider_class_instance_suite_example_3_kernel_at
 Check concrete_truth_condition_provider_class_instance_suite_example_4_direct_atomic_sound.
 Check concrete_truth_condition_provider_class_instance_suite_example_4_evidence_atomic_sound.
 Check concrete_truth_condition_provider_class_instance_suite_example_4_kernel_atomic_sound.
+Check ConcreteTruthConditionInstanceSupplyCertificate.
+Check concrete_truth_condition_instance_supply_certificate.
+Check concrete_truth_condition_instance_supply_certificate_exists.
+Check concrete_truth_condition_instance_supply_direct_spec_matches.
+Check concrete_truth_condition_instance_supply_evidence_spec_matches.
+Check concrete_truth_condition_instance_supply_kernel_spec_matches.
+Check concrete_truth_condition_instance_supply_atomic_ledger_matches.
+Check concrete_truth_condition_instance_supply_provider_suite_matches.
+Check concrete_truth_condition_instance_supply_example_package_matches.
+Check concrete_truth_condition_instance_supply_direct_sound_projected.
+Check concrete_truth_condition_instance_supply_evidence_sound_projected.
+Check concrete_truth_condition_instance_supply_kernel_sound_projected.
+Check concrete_truth_condition_instance_supply_atom_sound_projected.
+Check concrete_truth_condition_instance_supply_example_1_direct_truth_projected.
+Check concrete_truth_condition_instance_supply_example_1_direct_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_1_evidence_truth_projected.
+Check concrete_truth_condition_instance_supply_example_1_evidence_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_1_kernel_truth_projected.
+Check concrete_truth_condition_instance_supply_example_1_kernel_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_2_direct_truth_projected.
+Check concrete_truth_condition_instance_supply_example_2_direct_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_2_evidence_truth_projected.
+Check concrete_truth_condition_instance_supply_example_2_evidence_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_2_kernel_truth_projected.
+Check concrete_truth_condition_instance_supply_example_2_kernel_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_3_direct_truth_projected.
+Check concrete_truth_condition_instance_supply_example_3_direct_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_3_evidence_truth_projected.
+Check concrete_truth_condition_instance_supply_example_3_evidence_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_3_kernel_truth_projected.
+Check concrete_truth_condition_instance_supply_example_3_kernel_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_4_direct_truth_projected.
+Check concrete_truth_condition_instance_supply_example_4_direct_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_4_evidence_truth_projected.
+Check concrete_truth_condition_instance_supply_example_4_evidence_atomic_projected.
+Check concrete_truth_condition_instance_supply_example_4_kernel_truth_projected.
+Check concrete_truth_condition_instance_supply_example_4_kernel_atomic_projected.

@@ -21437,6 +21437,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_instance_"
+                    "supply_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21880,6 +21888,15 @@ def project_completion_status_payload(
                     "to ConcreteRegisteredTruthConditionRouteExampleAgreement "
                     "and projects direct, evidence-backed, and kernel-induced "
                     "AtomicClosureTruth witnesses for every exported example. "
+                    "The newest instance-supply certificate then packages the "
+                    "direct concrete registered truth-condition spec, the "
+                    "evidence-backed spec, the kernel-induced spec, the finite "
+                    "atomic concrete-truth instance ledger, the provider suite, "
+                    "and the provider example package as "
+                    "ConcreteTruthConditionInstanceSupplyCertificate. For each "
+                    "exported example it records direct, evidence-backed, and "
+                    "kernel-induced fully_registered_truth_denotes inhabitants "
+                    "as well as their AtomicClosureTruth projections. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "
