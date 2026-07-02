@@ -4542,6 +4542,70 @@ def main() -> None:
             and "Check concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected."
             in coq
         ),
+        "lean concrete truth provider class instance suite certificate": (
+            "structure ConcreteTruthConditionProviderClassInstanceSuiteCertificate : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_class_instance_suite_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_source_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_independent_suite_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_lexical_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_sigma_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_temporal_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_repeat_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_polarity_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected :"
+            in lean
+            and "#check ConcreteTruthConditionProviderClassInstanceSuiteCertificate"
+            in lean
+            and "#check concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected"
+            in lean
+        ),
+        "coq concrete truth provider class instance suite certificate": (
+            "Record ConcreteTruthConditionProviderClassInstanceSuiteCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_class_instance_suite_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_source_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_independent_suite_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_lexical_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_sigma_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_temporal_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_repeat_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_polarity_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected :"
+            in coq
+            and "Check ConcreteTruthConditionProviderClassInstanceSuiteCertificate."
+            in coq
+            and "Check concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

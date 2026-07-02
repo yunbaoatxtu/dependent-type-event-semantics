@@ -9304,6 +9304,163 @@ theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_at
   exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.
     concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic
 
+structure ConcreteTruthConditionProviderClassInstanceSuiteCertificate : Type where
+  concrete_truth_condition_provider_class_instance_suite_source :
+      ConcreteTruthConditionProviderClassObligationSuite
+  concrete_truth_condition_provider_class_instance_suite_source_eq :
+      concrete_truth_condition_provider_class_instance_suite_source =
+        concrete_truth_condition_provider_class_obligation_suite
+  concrete_truth_condition_provider_class_instance_suite_independent_suite :
+      IndependentRegisteredTruthConditionInstanceSuite
+  concrete_truth_condition_provider_class_instance_suite_independent_suite_eq :
+      concrete_truth_condition_provider_class_instance_suite_independent_suite =
+        independent_registered_truth_condition_instance_suite
+  concrete_truth_condition_provider_class_instance_suite_lexical_certificate :
+      ConcreteTruthConditionProviderLexicalClassInstanceCertificate
+  concrete_truth_condition_provider_class_instance_suite_lexical_certificate_eq :
+      concrete_truth_condition_provider_class_instance_suite_lexical_certificate =
+        concrete_truth_condition_provider_lexical_class_instance_certificate
+  concrete_truth_condition_provider_class_instance_suite_sigma_certificate :
+      ConcreteTruthConditionProviderSigmaClassInstanceCertificate
+  concrete_truth_condition_provider_class_instance_suite_sigma_certificate_eq :
+      concrete_truth_condition_provider_class_instance_suite_sigma_certificate =
+        concrete_truth_condition_provider_sigma_class_instance_certificate
+  concrete_truth_condition_provider_class_instance_suite_temporal_certificate :
+      ConcreteTruthConditionProviderTemporalClassInstanceCertificate
+  concrete_truth_condition_provider_class_instance_suite_temporal_certificate_eq :
+      concrete_truth_condition_provider_class_instance_suite_temporal_certificate =
+        concrete_truth_condition_provider_temporal_class_instance_certificate
+  concrete_truth_condition_provider_class_instance_suite_repeat_certificate :
+      ConcreteTruthConditionProviderRepeatClassInstanceCertificate
+  concrete_truth_condition_provider_class_instance_suite_repeat_certificate_eq :
+      concrete_truth_condition_provider_class_instance_suite_repeat_certificate =
+        concrete_truth_condition_provider_repeat_class_instance_certificate
+  concrete_truth_condition_provider_class_instance_suite_polarity_certificate :
+      ConcreteTruthConditionProviderPolarityClassInstanceCertificate
+  concrete_truth_condition_provider_class_instance_suite_polarity_certificate_eq :
+      concrete_truth_condition_provider_class_instance_suite_polarity_certificate =
+        concrete_truth_condition_provider_polarity_class_instance_certificate
+  concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate :
+      ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate
+  concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_eq :
+      concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate =
+        concrete_truth_condition_provider_transition_cause_class_instance_certificate
+  concrete_truth_condition_provider_class_instance_suite_independent_spec_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound :
+      (A : Type) -> (term : A) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+
+def concrete_truth_condition_provider_class_instance_suite_certificate :
+    ConcreteTruthConditionProviderClassInstanceSuiteCertificate := {
+  concrete_truth_condition_provider_class_instance_suite_source :=
+    concrete_truth_condition_provider_class_obligation_suite,
+  concrete_truth_condition_provider_class_instance_suite_source_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_independent_suite :=
+    independent_registered_truth_condition_instance_suite,
+  concrete_truth_condition_provider_class_instance_suite_independent_suite_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_lexical_certificate :=
+    concrete_truth_condition_provider_lexical_class_instance_certificate,
+  concrete_truth_condition_provider_class_instance_suite_lexical_certificate_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_sigma_certificate :=
+    concrete_truth_condition_provider_sigma_class_instance_certificate,
+  concrete_truth_condition_provider_class_instance_suite_sigma_certificate_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_temporal_certificate :=
+    concrete_truth_condition_provider_temporal_class_instance_certificate,
+  concrete_truth_condition_provider_class_instance_suite_temporal_certificate_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_repeat_certificate :=
+    concrete_truth_condition_provider_repeat_class_instance_certificate,
+  concrete_truth_condition_provider_class_instance_suite_repeat_certificate_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_polarity_certificate :=
+    concrete_truth_condition_provider_polarity_class_instance_certificate,
+  concrete_truth_condition_provider_class_instance_suite_polarity_certificate_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate :=
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate,
+  concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_eq := rfl,
+  concrete_truth_condition_provider_class_instance_suite_independent_spec_sound :=
+    independent_registered_truth_condition_instance_suite_spec_sound,
+  concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound :=
+    concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+}
+
+theorem concrete_truth_condition_provider_class_instance_suite_certificate_exists :
+    Exists (fun C : ConcreteTruthConditionProviderClassInstanceSuiteCertificate =>
+      C = concrete_truth_condition_provider_class_instance_suite_certificate) := by
+  exact Exists.intro concrete_truth_condition_provider_class_instance_suite_certificate rfl
+
+theorem concrete_truth_condition_provider_class_instance_suite_source_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_source =
+        concrete_truth_condition_provider_class_obligation_suite := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_source_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_independent_suite_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_independent_suite =
+        independent_registered_truth_condition_instance_suite := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_independent_suite_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_lexical_certificate_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_lexical_certificate =
+        concrete_truth_condition_provider_lexical_class_instance_certificate := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_lexical_certificate_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_sigma_certificate_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_sigma_certificate =
+        concrete_truth_condition_provider_sigma_class_instance_certificate := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_sigma_certificate_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_temporal_certificate_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_temporal_certificate =
+        concrete_truth_condition_provider_temporal_class_instance_certificate := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_temporal_certificate_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_repeat_certificate_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_repeat_certificate =
+        concrete_truth_condition_provider_repeat_class_instance_certificate := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_repeat_certificate_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_polarity_certificate_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_polarity_certificate =
+        concrete_truth_condition_provider_polarity_class_instance_certificate := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_polarity_certificate_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_matches :
+    concrete_truth_condition_provider_class_instance_suite_certificate.
+      concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate =
+        concrete_truth_condition_provider_transition_cause_class_instance_certificate := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_eq
+
+theorem concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_independent_spec_sound
+
+theorem concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected :
+    (A : Type) -> (term : A) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_provider_class_instance_suite_certificate.
+    concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -10341,3 +10498,16 @@ theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_at
 #check concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected
 #check concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected
 #check concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected
+#check ConcreteTruthConditionProviderClassInstanceSuiteCertificate
+#check concrete_truth_condition_provider_class_instance_suite_certificate
+#check concrete_truth_condition_provider_class_instance_suite_certificate_exists
+#check concrete_truth_condition_provider_class_instance_suite_source_matches
+#check concrete_truth_condition_provider_class_instance_suite_independent_suite_matches
+#check concrete_truth_condition_provider_class_instance_suite_lexical_certificate_matches
+#check concrete_truth_condition_provider_class_instance_suite_sigma_certificate_matches
+#check concrete_truth_condition_provider_class_instance_suite_temporal_certificate_matches
+#check concrete_truth_condition_provider_class_instance_suite_repeat_certificate_matches
+#check concrete_truth_condition_provider_class_instance_suite_polarity_certificate_matches
+#check concrete_truth_condition_provider_class_instance_suite_transition_cause_certificate_matches
+#check concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected
+#check concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected

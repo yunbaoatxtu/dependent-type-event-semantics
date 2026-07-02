@@ -25803,6 +25803,309 @@ def concrete_truth_condition_provider_transition_cause_class_instance_certificat
     ]
 
 
+def concrete_truth_condition_provider_class_instance_suite_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Gather all concrete provider class-instance certificates."""
+
+    packages = [
+        (
+            "lexical",
+            "ConcreteTruthConditionProviderLexicalClassInstanceCertificate",
+            "concrete_truth_condition_provider_lexical_class_instance_certificate",
+        ),
+        (
+            "sigma",
+            "ConcreteTruthConditionProviderSigmaClassInstanceCertificate",
+            "concrete_truth_condition_provider_sigma_class_instance_certificate",
+        ),
+        (
+            "temporal",
+            "ConcreteTruthConditionProviderTemporalClassInstanceCertificate",
+            "concrete_truth_condition_provider_temporal_class_instance_certificate",
+        ),
+        (
+            "repeat",
+            "ConcreteTruthConditionProviderRepeatClassInstanceCertificate",
+            "concrete_truth_condition_provider_repeat_class_instance_certificate",
+        ),
+        (
+            "polarity",
+            "ConcreteTruthConditionProviderPolarityClassInstanceCertificate",
+            "concrete_truth_condition_provider_polarity_class_instance_certificate",
+        ),
+        (
+            "transition_cause",
+            "ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate",
+            "concrete_truth_condition_provider_transition_cause_class_instance_certificate",
+        ),
+    ]
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionProviderClassInstanceSuiteCertificate : Type where",
+            "  concrete_truth_condition_provider_class_instance_suite_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_class_instance_suite_source_eq :",
+            "      concrete_truth_condition_provider_class_instance_suite_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_class_instance_suite_independent_suite :",
+            "      IndependentRegisteredTruthConditionInstanceSuite",
+            "  concrete_truth_condition_provider_class_instance_suite_independent_suite_eq :",
+            "      concrete_truth_condition_provider_class_instance_suite_independent_suite =",
+            "        independent_registered_truth_condition_instance_suite",
+        ]
+        for field, type_name, instance in packages:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate :",
+                    f"      {type_name}",
+                    f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate_eq :",
+                    f"      concrete_truth_condition_provider_class_instance_suite_{field}_certificate =",
+                    f"        {instance}",
+                ]
+            )
+        lines.extend(
+            [
+                "  concrete_truth_condition_provider_class_instance_suite_independent_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                f"      {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound :",
+                "      (A : Type) -> (term : A) ->",
+                f"      {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "",
+                "def concrete_truth_condition_provider_class_instance_suite_certificate :",
+                "    ConcreteTruthConditionProviderClassInstanceSuiteCertificate := {",
+                "  concrete_truth_condition_provider_class_instance_suite_source :=",
+                "    concrete_truth_condition_provider_class_obligation_suite,",
+                "  concrete_truth_condition_provider_class_instance_suite_source_eq := rfl,",
+                "  concrete_truth_condition_provider_class_instance_suite_independent_suite :=",
+                "    independent_registered_truth_condition_instance_suite,",
+                "  concrete_truth_condition_provider_class_instance_suite_independent_suite_eq := rfl,",
+            ]
+        )
+        for field, _type_name, instance in packages:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate :=",
+                    f"    {instance},",
+                    f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate_eq := rfl,",
+                ]
+            )
+        lines.extend(
+            [
+                "  concrete_truth_condition_provider_class_instance_suite_independent_spec_sound :=",
+                "    independent_registered_truth_condition_instance_suite_spec_sound,",
+                "  concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound :=",
+                "    concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+                "}",
+                "",
+                "theorem concrete_truth_condition_provider_class_instance_suite_certificate_exists :",
+                "    Exists (fun C : ConcreteTruthConditionProviderClassInstanceSuiteCertificate =>",
+                "      C = concrete_truth_condition_provider_class_instance_suite_certificate) := by",
+                "  exact Exists.intro concrete_truth_condition_provider_class_instance_suite_certificate rfl",
+                "",
+                "theorem concrete_truth_condition_provider_class_instance_suite_source_matches :",
+                "    concrete_truth_condition_provider_class_instance_suite_certificate.",
+                "      concrete_truth_condition_provider_class_instance_suite_source =",
+                "        concrete_truth_condition_provider_class_obligation_suite := by",
+                "  exact concrete_truth_condition_provider_class_instance_suite_certificate.",
+                "    concrete_truth_condition_provider_class_instance_suite_source_eq",
+                "",
+                "theorem concrete_truth_condition_provider_class_instance_suite_independent_suite_matches :",
+                "    concrete_truth_condition_provider_class_instance_suite_certificate.",
+                "      concrete_truth_condition_provider_class_instance_suite_independent_suite =",
+                "        independent_registered_truth_condition_instance_suite := by",
+                "  exact concrete_truth_condition_provider_class_instance_suite_certificate.",
+                "    concrete_truth_condition_provider_class_instance_suite_independent_suite_eq",
+            ]
+        )
+        for field, _type_name, instance in packages:
+            lines.extend(
+                [
+                    "",
+                    "theorem "
+                    f"concrete_truth_condition_provider_class_instance_suite_{field}_certificate_matches :",
+                    "    concrete_truth_condition_provider_class_instance_suite_certificate.",
+                    f"      concrete_truth_condition_provider_class_instance_suite_{field}_certificate =",
+                    f"        {instance} := by",
+                    "  exact concrete_truth_condition_provider_class_instance_suite_certificate.",
+                    f"    concrete_truth_condition_provider_class_instance_suite_{field}_certificate_eq",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                f"    {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_provider_class_instance_suite_certificate.",
+                "    concrete_truth_condition_provider_class_instance_suite_independent_spec_sound",
+                "",
+                "theorem concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                f"    {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_provider_class_instance_suite_certificate.",
+                "    concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound",
+            ]
+        )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionProviderClassInstanceSuiteCertificate : Type := {",
+        "  concrete_truth_condition_provider_class_instance_suite_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_class_instance_suite_source_eq :",
+        "      concrete_truth_condition_provider_class_instance_suite_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_class_instance_suite_independent_suite :",
+        "      IndependentRegisteredTruthConditionInstanceSuite;",
+        "  concrete_truth_condition_provider_class_instance_suite_independent_suite_eq :",
+        "      concrete_truth_condition_provider_class_instance_suite_independent_suite =",
+        "        independent_registered_truth_condition_instance_suite;",
+    ]
+    for field, type_name, instance in packages:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate :",
+                f"      {type_name};",
+                f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate_eq :",
+                f"      concrete_truth_condition_provider_class_instance_suite_{field}_certificate =",
+                f"        {instance};",
+            ]
+        )
+    lines.extend(
+        [
+            "  concrete_truth_condition_provider_class_instance_suite_independent_spec_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            f"        {independent_spec_coq} A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            f"        {constructor_spec_coq} A term ->",
+            "      AtomicClosureTruth A term",
+            "}.",
+            "",
+            "Definition concrete_truth_condition_provider_class_instance_suite_certificate :",
+            "  ConcreteTruthConditionProviderClassInstanceSuiteCertificate := {|",
+            "  concrete_truth_condition_provider_class_instance_suite_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite;",
+            "  concrete_truth_condition_provider_class_instance_suite_source_eq := eq_refl;",
+            "  concrete_truth_condition_provider_class_instance_suite_independent_suite :=",
+            "    independent_registered_truth_condition_instance_suite;",
+            "  concrete_truth_condition_provider_class_instance_suite_independent_suite_eq :=",
+            "    eq_refl;",
+        ]
+    )
+    for field, _type_name, instance in packages:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate :=",
+                f"    {instance};",
+                f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate_eq :=",
+                "    eq_refl;",
+            ]
+        )
+    lines.extend(
+        [
+            "  concrete_truth_condition_provider_class_instance_suite_independent_spec_sound :=",
+            "    independent_registered_truth_condition_instance_suite_spec_sound;",
+            "  concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound :=",
+            "    concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_instance_suite_certificate_exists :",
+            "  exists C : ConcreteTruthConditionProviderClassInstanceSuiteCertificate,",
+            "    C = concrete_truth_condition_provider_class_instance_suite_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_provider_class_instance_suite_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_instance_suite_source_matches :",
+            "  concrete_truth_condition_provider_class_instance_suite_source",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate =",
+            "  concrete_truth_condition_provider_class_obligation_suite.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_instance_suite_source_eq",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_instance_suite_independent_suite_matches :",
+            "  concrete_truth_condition_provider_class_instance_suite_independent_suite",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate =",
+            "  independent_registered_truth_condition_instance_suite.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_instance_suite_independent_suite_eq",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate).",
+            "Qed.",
+        ]
+    )
+    for field, _type_name, instance in packages:
+        lines.extend(
+            [
+                "",
+                "Theorem "
+                f"concrete_truth_condition_provider_class_instance_suite_{field}_certificate_matches :",
+                f"  concrete_truth_condition_provider_class_instance_suite_{field}_certificate",
+                "    concrete_truth_condition_provider_class_instance_suite_certificate =",
+                f"  {instance}.",
+                "Proof.",
+                "  exact ("
+                f"concrete_truth_condition_provider_class_instance_suite_{field}_certificate_eq",
+                "    concrete_truth_condition_provider_class_instance_suite_certificate).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            f"      {independent_spec_coq} A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_instance_suite_independent_spec_sound",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            "    fully_registered_truth_denotes",
+            f"      {constructor_spec_coq} A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate).",
+            "Qed.",
+        ]
+    )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -30485,6 +30788,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_class_instance_suite_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -32168,6 +32477,44 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                         "concrete_truth_condition_provider_transition_cause_class_"
                         f"{route}_{constructor}_{projection}_projected"
                     )
+        lines.append(
+            "#check ConcreteTruthConditionProviderClassInstanceSuiteCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_instance_suite_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_instance_suite_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_instance_suite_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_class_instance_suite_independent_suite_matches"
+        )
+        for field in (
+            "lexical",
+            "sigma",
+            "temporal",
+            "repeat",
+            "polarity",
+            "transition_cause",
+        ):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_provider_class_instance_suite_"
+                f"{field}_certificate_matches"
+            )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_provider_class_instance_suite_"
+            "independent_spec_sound_projected"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_provider_class_instance_suite_"
+            "ledger_spec_sound_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -33070,6 +33417,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_provider_transition_cause_class_instance_certificate_lines(
+            target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_class_instance_suite_certificate_lines(
             target
         )
     )
@@ -34519,6 +34872,44 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "concrete_truth_condition_provider_transition_cause_class_"
                     f"{route}_{constructor}_{projection}_projected."
                 )
+    lines.append("Check ConcreteTruthConditionProviderClassInstanceSuiteCertificate.")
+    lines.append(
+        "Check concrete_truth_condition_provider_class_instance_suite_certificate."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_instance_suite_certificate_exists."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_class_instance_suite_source_matches."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_provider_class_instance_suite_"
+        "independent_suite_matches."
+    )
+    for field in (
+        "lexical",
+        "sigma",
+        "temporal",
+        "repeat",
+        "polarity",
+        "transition_cause",
+    ):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_provider_class_instance_suite_"
+            f"{field}_certificate_matches."
+        )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_provider_class_instance_suite_"
+        "independent_spec_sound_projected."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_provider_class_instance_suite_"
+        "ledger_spec_sound_projected."
+    )
     return "\n".join(lines) + "\n"
 
 

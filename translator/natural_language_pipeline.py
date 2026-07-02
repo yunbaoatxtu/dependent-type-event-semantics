@@ -21421,6 +21421,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_provider_"
+                    "class_instance_suite_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21851,6 +21859,14 @@ def project_completion_status_payload(
                     "recording provider truth/atomic projections and the "
                     "matching constructor-ledger truth/atomic routes for "
                     "Transition theme scale source target and Cause causer effect. "
+                    "The newest provider class-instance suite certificate "
+                    "then gathers the lexical, Sigma, temporal, repeat, "
+                    "polarity, and Transition/Cause provider certificates, "
+                    "checks that each suite field matches its concrete "
+                    "certificate, records the link to "
+                    "IndependentRegisteredTruthConditionInstanceSuite, and "
+                    "reprojects both the independent-provider and "
+                    "constructor-ledger soundness routes. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

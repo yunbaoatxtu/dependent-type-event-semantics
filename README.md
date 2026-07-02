@@ -1634,6 +1634,15 @@ constructor-ledger truth route, and constructor-ledger atomic projection. It is
 still a registered Transition/Cause constructor-class certificate, not an
 independent model of arbitrary causation, result-state lexicalization, or
 worldly causal explanation.
+The next verified objective
+`coq_concrete_truth_condition_provider_class_instance_suite_certificate` adds
+`ConcreteTruthConditionProviderClassInstanceSuiteCertificate`. This stage
+gathers the lexical, Sigma, temporal, repeat, polarity, and Transition/Cause
+provider class-instance certificates into one checked suite, records that the
+suite is backed by `IndependentRegisteredTruthConditionInstanceSuite`, and
+projects both the independent-provider and constructor-ledger soundness routes.
+It is a coverage certificate for the registered provider classes, not yet an
+independent truth-condition model for arbitrary natural-language meanings.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

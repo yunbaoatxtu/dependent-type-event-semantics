@@ -579,6 +579,13 @@ It connects the class-obligation suite to
 exposes provider truth, provider atomic, ledger truth, and ledger atomic
 projections for registered state transitions and causal-resultative
 `Cause causer effect` constructors.
+The provider class-instance suite certificate introduces
+`ConcreteTruthConditionProviderClassInstanceSuiteCertificate` and
+`concrete_truth_condition_provider_class_instance_suite_certificate`. It
+gathers the lexical, Sigma, temporal, repeat, polarity, and Transition/Cause
+provider certificates, checks that each field matches its concrete certificate,
+and re-exposes the independent-provider and constructor-ledger soundness routes
+as suite-level projections.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
