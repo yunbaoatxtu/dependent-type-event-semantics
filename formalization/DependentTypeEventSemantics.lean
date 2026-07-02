@@ -11928,6 +11928,182 @@ theorem concrete_truth_condition_independent_temporal_model_candidate_since_T_mo
   exact concrete_truth_condition_independent_temporal_model_candidate_certificate.
     concrete_truth_condition_independent_temporal_model_candidate_since_T_model_atomic
 
+structure ConcreteTruthConditionIndependentRepeatModelCandidateCertificate :
+    Type where
+  concrete_truth_condition_independent_repeat_model_candidate_source :
+      ConcreteTruthConditionIndependentModelClassReadinessCertificate
+  concrete_truth_condition_independent_repeat_model_candidate_source_eq :
+      concrete_truth_condition_independent_repeat_model_candidate_source =
+        concrete_truth_condition_independent_model_class_readiness_certificate
+  concrete_truth_condition_independent_repeat_model_candidate_class_certificate :
+      ConcreteTruthConditionProviderRepeatClassInstanceCertificate
+  concrete_truth_condition_independent_repeat_model_candidate_class_certificate_eq :
+      concrete_truth_condition_independent_repeat_model_candidate_class_certificate =
+        concrete_truth_condition_provider_repeat_class_instance_certificate
+  concrete_truth_condition_independent_repeat_model_candidate_instances :
+      IndependentRegisteredRepeatTruthConditionInstances
+  concrete_truth_condition_independent_repeat_model_candidate_instances_eq :
+      concrete_truth_condition_independent_repeat_model_candidate_instances =
+        independent_registered_repeat_truth_condition_instances
+  concrete_truth_condition_independent_repeat_model_candidate_compositional_model :
+      ConcreteRegisteredCompositionalModel
+  concrete_truth_condition_independent_repeat_model_candidate_compositional_model_eq :
+      concrete_truth_condition_independent_repeat_model_candidate_compositional_model =
+        concrete_registered_compositional_model
+  concrete_truth_condition_independent_repeat_model_candidate_independent_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_independent_repeat_model_candidate_constructor_sound :
+      (A : Type) -> (term : A) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_independent_repeat_model_candidate_model_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_compositional_model.concrete_registered_composition_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth :
+      (n : Nat) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (repeat n body)
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_atomic :
+      (n : Nat) -> (body : PropT) ->
+      independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+      AtomicClosureTruth PropT (repeat n body)
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_ledger_truth :
+      (n : Nat) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body)
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_ledger_atomic :
+      (n : Nat) -> (body : PropT) ->
+      registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+      AtomicClosureTruth PropT (repeat n body)
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_model_denotes :
+      (n : Nat) -> (body : PropT) ->
+      concrete_registered_compositional_model.concrete_registered_composition_denotes PropT body ->
+      concrete_registered_compositional_model.concrete_registered_composition_denotes PropT (repeat n body)
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic :
+      (n : Nat) -> (body : PropT) ->
+      concrete_registered_compositional_model.concrete_registered_composition_denotes PropT body ->
+      AtomicClosureTruth PropT (repeat n body)
+
+def concrete_truth_condition_independent_repeat_model_candidate_certificate :
+    ConcreteTruthConditionIndependentRepeatModelCandidateCertificate := {
+  concrete_truth_condition_independent_repeat_model_candidate_source :=
+    concrete_truth_condition_independent_model_class_readiness_certificate,
+  concrete_truth_condition_independent_repeat_model_candidate_source_eq := rfl,
+  concrete_truth_condition_independent_repeat_model_candidate_class_certificate :=
+    concrete_truth_condition_provider_repeat_class_instance_certificate,
+  concrete_truth_condition_independent_repeat_model_candidate_class_certificate_eq := rfl,
+  concrete_truth_condition_independent_repeat_model_candidate_instances :=
+    independent_registered_repeat_truth_condition_instances,
+  concrete_truth_condition_independent_repeat_model_candidate_instances_eq := rfl,
+  concrete_truth_condition_independent_repeat_model_candidate_compositional_model :=
+    concrete_registered_compositional_model,
+  concrete_truth_condition_independent_repeat_model_candidate_compositional_model_eq := rfl,
+  concrete_truth_condition_independent_repeat_model_candidate_independent_sound :=
+    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected,
+  concrete_truth_condition_independent_repeat_model_candidate_constructor_sound :=
+    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected,
+  concrete_truth_condition_independent_repeat_model_candidate_model_sound :=
+    concrete_registered_compositional_model_imply_atomic_closure,
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth :=
+    concrete_truth_condition_provider_repeat_class_provider_truth_projected,
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_atomic :=
+    concrete_truth_condition_provider_repeat_class_provider_atomic_projected,
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_ledger_truth :=
+    concrete_truth_condition_provider_repeat_class_ledger_truth_projected,
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_ledger_atomic :=
+    concrete_truth_condition_provider_repeat_class_ledger_atomic_projected,
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_model_denotes :=
+    fun n body body_truth =>
+      concrete_registered_compositional_model.concrete_registered_composition_repeat
+        n body body_truth,
+  concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic :=
+    fun n body body_truth =>
+      concrete_registered_compositional_model_imply_atomic_closure
+        PropT (repeat n body)
+        (concrete_registered_compositional_model.concrete_registered_composition_repeat
+          n body body_truth)
+}
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_certificate_exists :
+    Exists (fun C :
+      ConcreteTruthConditionIndependentRepeatModelCandidateCertificate =>
+      C = concrete_truth_condition_independent_repeat_model_candidate_certificate) := by
+  exact Exists.intro
+    concrete_truth_condition_independent_repeat_model_candidate_certificate rfl
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_source_matches :
+    concrete_truth_condition_independent_repeat_model_candidate_certificate.
+      concrete_truth_condition_independent_repeat_model_candidate_source =
+        concrete_truth_condition_independent_model_class_readiness_certificate := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_source_eq
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_class_certificate_matches :
+    concrete_truth_condition_independent_repeat_model_candidate_certificate.
+      concrete_truth_condition_independent_repeat_model_candidate_class_certificate =
+        concrete_truth_condition_provider_repeat_class_instance_certificate := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_class_certificate_eq
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_instances_matches :
+    concrete_truth_condition_independent_repeat_model_candidate_certificate.
+      concrete_truth_condition_independent_repeat_model_candidate_instances =
+        independent_registered_repeat_truth_condition_instances := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_instances_eq
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_compositional_model_matches :
+    concrete_truth_condition_independent_repeat_model_candidate_certificate.
+      concrete_truth_condition_independent_repeat_model_candidate_compositional_model =
+        concrete_registered_compositional_model := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_compositional_model_eq
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_independent_sound_projected :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_independent_sound
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_constructor_sound_projected :
+    (A : Type) -> (term : A) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_constructor_sound
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_model_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_compositional_model.concrete_registered_composition_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_model_sound
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth_projected :
+    (n : Nat) -> (body : PropT) ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT body ->
+    independent_registered_truth_condition_clause_instances.independent_registered_clause_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_ledger_truth_projected :
+    (n : Nat) -> (body : PropT) ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT body ->
+    registered_truth_condition_constructor_discharge_certificate.registered_truth_condition_constructor_discharge_spec.fully_registered_truth_denotes PropT (repeat n body) := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_repeat_ledger_truth
+
+theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected :
+    (n : Nat) -> (body : PropT) ->
+    concrete_registered_compositional_model.concrete_registered_composition_denotes PropT body ->
+    AtomicClosureTruth PropT (repeat n body) := by
+  exact concrete_truth_condition_independent_repeat_model_candidate_certificate.
+    concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -13152,3 +13328,15 @@ theorem concrete_truth_condition_independent_temporal_model_candidate_since_T_mo
 #check concrete_truth_condition_independent_temporal_model_candidate_model_sound_projected
 #check concrete_truth_condition_independent_temporal_model_candidate_at_T_provider_truth_projected
 #check concrete_truth_condition_independent_temporal_model_candidate_at_T_model_atomic_projected
+#check ConcreteTruthConditionIndependentRepeatModelCandidateCertificate
+#check concrete_truth_condition_independent_repeat_model_candidate_certificate
+#check concrete_truth_condition_independent_repeat_model_candidate_certificate_exists
+#check concrete_truth_condition_independent_repeat_model_candidate_source_matches
+#check concrete_truth_condition_independent_repeat_model_candidate_class_certificate_matches
+#check concrete_truth_condition_independent_repeat_model_candidate_instances_matches
+#check concrete_truth_condition_independent_repeat_model_candidate_compositional_model_matches
+#check concrete_truth_condition_independent_repeat_model_candidate_independent_sound_projected
+#check concrete_truth_condition_independent_repeat_model_candidate_constructor_sound_projected
+#check concrete_truth_condition_independent_repeat_model_candidate_model_sound_projected
+#check concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth_projected
+#check concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected

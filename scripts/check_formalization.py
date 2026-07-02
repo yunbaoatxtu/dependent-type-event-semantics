@@ -5032,6 +5032,54 @@ def main() -> None:
             and "Check concrete_truth_condition_independent_temporal_model_candidate_at_T_model_atomic_projected."
             in coq
         ),
+        "lean concrete truth condition independent repeat model candidate certificate": (
+            "structure ConcreteTruthConditionIndependentRepeatModelCandidateCertificate :"
+            in lean
+            and "def concrete_truth_condition_independent_repeat_model_candidate_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_class_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_instances_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_compositional_model_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_model_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionIndependentRepeatModelCandidateCertificate"
+            in lean
+            and "#check concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth condition independent repeat model candidate certificate": (
+            "Record ConcreteTruthConditionIndependentRepeatModelCandidateCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_independent_repeat_model_candidate_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_class_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_instances_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_compositional_model_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_model_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_provider_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionIndependentRepeatModelCandidateCertificate."
+            in coq
+            and "Check concrete_truth_condition_independent_repeat_model_candidate_repeat_model_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

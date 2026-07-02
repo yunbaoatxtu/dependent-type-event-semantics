@@ -652,6 +652,14 @@ It ties the temporal class entrance to the provider temporal certificate,
 `ConcreteRegisteredCompositionalModel`, then checks provider,
 constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
 for `at_T`, `during_T`, `before_T`, `after_T`, `until_T`, and `since_T`.
+The independent repeat model-candidate certificate introduces
+`ConcreteTruthConditionIndependentRepeatModelCandidateCertificate` and
+`concrete_truth_condition_independent_repeat_model_candidate_certificate`.
+It ties the natural-number-indexed repeat class entrance to the provider repeat
+certificate, `IndependentRegisteredRepeatTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`, then checks provider,
+constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
+for `repeat n body`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail
