@@ -29354,6 +29354,576 @@ def concrete_truth_condition_independent_lexical_model_candidate_certificate_lin
     return lines
 
 
+def concrete_truth_condition_independent_sigma_model_candidate_certificate_lines(
+    declarations: dict[str, Any],
+    target: str,
+) -> list[str]:
+    """Package the Sigma class-readiness entrance with compositional witnesses."""
+
+    sigma_types = list(declarations["types"])
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    model_denotes_lean = (
+        "concrete_registered_compositional_model."
+        "concrete_registered_composition_denotes"
+    )
+    model_denotes_coq = (
+        "concrete_registered_composition_denotes "
+        "concrete_registered_compositional_model"
+    )
+
+    def lean_sigma_term(type_name: str) -> str:
+        return f"(Exists fun x : {type_name} => P x)"
+
+    def coq_sigma_term(type_name: str) -> str:
+        return f"(exists x : {type_name}, P x)"
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionIndependentSigmaModelCandidateCertificate :",
+            "    Type where",
+            "  concrete_truth_condition_independent_sigma_model_candidate_source :",
+            "      ConcreteTruthConditionIndependentModelClassReadinessCertificate",
+            "  concrete_truth_condition_independent_sigma_model_candidate_source_eq :",
+            "      concrete_truth_condition_independent_sigma_model_candidate_source =",
+            "        concrete_truth_condition_independent_model_class_readiness_certificate",
+            "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate :",
+            "      ConcreteTruthConditionProviderSigmaClassInstanceCertificate",
+            "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq :",
+            "      concrete_truth_condition_independent_sigma_model_candidate_class_certificate =",
+            "        concrete_truth_condition_provider_sigma_class_instance_certificate",
+            "  concrete_truth_condition_independent_sigma_model_candidate_instances :",
+            "      IndependentRegisteredSigmaTruthConditionInstances",
+            "  concrete_truth_condition_independent_sigma_model_candidate_instances_eq :",
+            "      concrete_truth_condition_independent_sigma_model_candidate_instances =",
+            "        independent_registered_sigma_truth_condition_instances",
+            "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model :",
+            "      ConcreteRegisteredCompositionalModel",
+            "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq :",
+            "      concrete_truth_condition_independent_sigma_model_candidate_compositional_model =",
+            "        concrete_registered_compositional_model",
+            "  concrete_truth_condition_independent_sigma_model_candidate_independent_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_sigma_model_candidate_constructor_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_sigma_model_candidate_model_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {model_denotes_lean} A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+        for type_name in sigma_types:
+            sigma_term = lean_sigma_term(type_name)
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_truth :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {independent_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      {independent_spec_lean}.fully_registered_truth_denotes Prop {sigma_term}",
+                    f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_atomic :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {independent_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      AtomicClosureTruth Prop {sigma_term}",
+                    f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_truth :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      {constructor_spec_lean}.fully_registered_truth_denotes Prop {sigma_term}",
+                    f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_atomic :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)) ->",
+                    f"      AtomicClosureTruth Prop {sigma_term}",
+                    f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_denotes :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {model_denotes_lean} Prop (P x)) ->",
+                    f"      {model_denotes_lean} Prop {sigma_term}",
+                    f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_atomic :",
+                    f"      (P : {type_name} -> Prop) ->",
+                    f"      ((x : {type_name}) -> {model_denotes_lean} Prop (P x)) ->",
+                    f"      AtomicClosureTruth Prop {sigma_term}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_independent_sigma_model_candidate_certificate :",
+                "    ConcreteTruthConditionIndependentSigmaModelCandidateCertificate := {",
+                "  concrete_truth_condition_independent_sigma_model_candidate_source :=",
+                "    concrete_truth_condition_independent_model_class_readiness_certificate,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_source_eq := rfl,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate :=",
+                "    concrete_truth_condition_provider_sigma_class_instance_certificate,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq := rfl,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_instances :=",
+                "    independent_registered_sigma_truth_condition_instances,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_instances_eq := rfl,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model :=",
+                "    concrete_registered_compositional_model,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq := rfl,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_independent_sound :=",
+                "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_constructor_sound :=",
+                "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected,",
+                "  concrete_truth_condition_independent_sigma_model_candidate_model_sound :=",
+                "    concrete_registered_compositional_model_imply_atomic_closure,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for type_name in sigma_types:
+            sigma_term = lean_sigma_term(type_name)
+            assignments.extend(
+                [
+                    (
+                        f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_truth",
+                        f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_atomic",
+                        f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_truth",
+                        f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_atomic",
+                        f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_denotes",
+                        f"concrete_registered_compositional_model_sigma_{type_name}_clause",
+                    ),
+                    (
+                        f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_atomic",
+                        "fun P body_truth =>\n"
+                        "      concrete_registered_compositional_model_imply_atomic_closure\n"
+                        f"        Prop {sigma_term}\n"
+                        f"        (concrete_registered_compositional_model_sigma_{type_name}_clause P body_truth)",
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            value_lines = value.splitlines()
+            lines.append(f"  {field} :=")
+            for value_index, value_line in enumerate(value_lines):
+                if value_index == len(value_lines) - 1:
+                    lines.append(f"    {value_line}{suffix}")
+                else:
+                    lines.append(f"    {value_line}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_independent_sigma_model_candidate_certificate_exists :",
+                "    Exists (fun C :",
+                "      ConcreteTruthConditionIndependentSigmaModelCandidateCertificate =>",
+                "      C = concrete_truth_condition_independent_sigma_model_candidate_certificate) := by",
+                "  exact Exists.intro",
+                "    concrete_truth_condition_independent_sigma_model_candidate_certificate rfl",
+            ]
+        )
+        for match_name, field, expected in (
+            (
+                "source",
+                "concrete_truth_condition_independent_sigma_model_candidate_source",
+                "concrete_truth_condition_independent_model_class_readiness_certificate",
+            ),
+            (
+                "class_certificate",
+                "concrete_truth_condition_independent_sigma_model_candidate_class_certificate",
+                "concrete_truth_condition_provider_sigma_class_instance_certificate",
+            ),
+            (
+                "instances",
+                "concrete_truth_condition_independent_sigma_model_candidate_instances",
+                "independent_registered_sigma_truth_condition_instances",
+            ),
+            (
+                "compositional_model",
+                "concrete_truth_condition_independent_sigma_model_candidate_compositional_model",
+                "concrete_registered_compositional_model",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_sigma_model_candidate_"
+                    f"{match_name}_matches :",
+                    "    concrete_truth_condition_independent_sigma_model_candidate_certificate."
+                    f"{field} =",
+                    f"      {expected} := by",
+                    "  exact concrete_truth_condition_independent_sigma_model_candidate_certificate."
+                    f"{field}_eq",
+                ]
+            )
+        for projection, field, spec in (
+            (
+                "independent",
+                "concrete_truth_condition_independent_sigma_model_candidate_independent_sound",
+                independent_spec_lean,
+            ),
+            (
+                "constructor",
+                "concrete_truth_condition_independent_sigma_model_candidate_constructor_sound",
+                constructor_spec_lean,
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_sigma_model_candidate_"
+                    f"{projection}_sound_projected :",
+                    "    (A : Type) -> (term : A) ->",
+                    f"    {spec}.fully_registered_truth_denotes A term ->",
+                    "    AtomicClosureTruth A term := by",
+                    "  exact concrete_truth_condition_independent_sigma_model_candidate_certificate."
+                    f"{field}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "theorem concrete_truth_condition_independent_sigma_model_candidate_model_sound_projected :",
+                "    (A : Type) -> (term : A) ->",
+                f"    {model_denotes_lean} A term ->",
+                "    AtomicClosureTruth A term := by",
+                "  exact concrete_truth_condition_independent_sigma_model_candidate_certificate.",
+                "    concrete_truth_condition_independent_sigma_model_candidate_model_sound",
+            ]
+        )
+        for type_name in sigma_types:
+            sigma_term = lean_sigma_term(type_name)
+            for projection, body_truth, conclusion in (
+                (
+                    "provider_truth",
+                    f"{independent_spec_lean}.fully_registered_truth_denotes Prop (P x)",
+                    f"{independent_spec_lean}.fully_registered_truth_denotes Prop {sigma_term}",
+                ),
+                (
+                    "ledger_truth",
+                    f"{constructor_spec_lean}.fully_registered_truth_denotes Prop (P x)",
+                    f"{constructor_spec_lean}.fully_registered_truth_denotes Prop {sigma_term}",
+                ),
+                (
+                    "model_atomic",
+                    f"{model_denotes_lean} Prop (P x)",
+                    f"AtomicClosureTruth Prop {sigma_term}",
+                ),
+            ):
+                lines.extend(
+                    [
+                        "",
+                        "theorem concrete_truth_condition_independent_sigma_model_candidate_"
+                        f"sigma_{type_name}_{projection}_projected :",
+                        f"    (P : {type_name} -> Prop) ->",
+                        f"    ((x : {type_name}) -> {body_truth}) ->",
+                        f"    {conclusion} := by",
+                        "  exact concrete_truth_condition_independent_sigma_model_candidate_certificate.",
+                        "    concrete_truth_condition_independent_sigma_model_candidate_"
+                        f"sigma_{type_name}_{projection}",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionIndependentSigmaModelCandidateCertificate : Type := {",
+        "  concrete_truth_condition_independent_sigma_model_candidate_source :",
+        "      ConcreteTruthConditionIndependentModelClassReadinessCertificate;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_source_eq :",
+        "      concrete_truth_condition_independent_sigma_model_candidate_source =",
+        "        concrete_truth_condition_independent_model_class_readiness_certificate;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate :",
+        "      ConcreteTruthConditionProviderSigmaClassInstanceCertificate;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq :",
+        "      concrete_truth_condition_independent_sigma_model_candidate_class_certificate =",
+        "        concrete_truth_condition_provider_sigma_class_instance_certificate;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_instances :",
+        "      IndependentRegisteredSigmaTruthConditionInstances;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_instances_eq :",
+        "      concrete_truth_condition_independent_sigma_model_candidate_instances =",
+        "        independent_registered_sigma_truth_condition_instances;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model :",
+        "      ConcreteRegisteredCompositionalModel;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq :",
+        "      concrete_truth_condition_independent_sigma_model_candidate_compositional_model =",
+        "        concrete_registered_compositional_model;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_independent_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_constructor_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_sigma_model_candidate_model_sound :",
+        "      forall A : Type, forall term : A,",
+        f"      {model_denotes_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+    ]
+    for type_name in sigma_types:
+        sigma_term = coq_sigma_term(type_name)
+        lines.extend(
+            [
+                f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_truth :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {independent_spec_coq} Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                f"        {independent_spec_coq} Prop {sigma_term};",
+                f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_atomic :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {independent_spec_coq} Prop (P x)) ->",
+                f"      AtomicClosureTruth Prop {sigma_term};",
+                f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_truth :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {constructor_spec_coq} Prop (P x)) ->",
+                "      fully_registered_truth_denotes",
+                f"        {constructor_spec_coq} Prop {sigma_term};",
+                f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_atomic :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                "        fully_registered_truth_denotes",
+                f"          {constructor_spec_coq} Prop (P x)) ->",
+                f"      AtomicClosureTruth Prop {sigma_term};",
+                f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_denotes :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                f"        {model_denotes_coq} Prop (P x)) ->",
+                f"      {model_denotes_coq} Prop {sigma_term};",
+                f"  concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_atomic :",
+                f"      forall P : {type_name} -> Prop,",
+                f"      (forall x : {type_name},",
+                f"        {model_denotes_coq} Prop (P x)) ->",
+                f"      AtomicClosureTruth Prop {sigma_term};",
+            ]
+        )
+    lines[-1] = lines[-1].rstrip(";")
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_independent_sigma_model_candidate_certificate :",
+            "  ConcreteTruthConditionIndependentSigmaModelCandidateCertificate := {|",
+            "  concrete_truth_condition_independent_sigma_model_candidate_source :=",
+            "    concrete_truth_condition_independent_model_class_readiness_certificate;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_source_eq := eq_refl;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate :=",
+            "    concrete_truth_condition_provider_sigma_class_instance_certificate;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_instances :=",
+            "    independent_registered_sigma_truth_condition_instances;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_instances_eq := eq_refl;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model :=",
+            "    concrete_registered_compositional_model;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_independent_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_constructor_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;",
+            "  concrete_truth_condition_independent_sigma_model_candidate_model_sound :=",
+            "    concrete_registered_compositional_model_imply_atomic_closure;",
+        ]
+    )
+    assignments: list[tuple[str, str]] = []
+    for type_name in sigma_types:
+        sigma_term = f"(ex (fun x : {type_name} => P x))"
+        assignments.extend(
+            [
+                (
+                    f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_truth",
+                    f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_truth_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_provider_atomic",
+                    f"concrete_truth_condition_provider_sigma_class_provider_{type_name}_atomic_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_truth",
+                    f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_truth_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_ledger_atomic",
+                    f"concrete_truth_condition_provider_sigma_class_ledger_{type_name}_atomic_projected",
+                ),
+                (
+                    f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_denotes",
+                    f"concrete_registered_compositional_model_sigma_{type_name}_clause",
+                ),
+                (
+                    f"concrete_truth_condition_independent_sigma_model_candidate_sigma_{type_name}_model_atomic",
+                    "fun P body_truth =>\n"
+                    "      concrete_registered_compositional_model_imply_atomic_closure\n"
+                    f"        Prop {sigma_term}\n"
+                    f"        (concrete_registered_compositional_model_sigma_{type_name}_clause P body_truth)",
+                ),
+            ]
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        value_lines = value.splitlines()
+        lines.append(f"  {field} :=")
+        for value_index, value_line in enumerate(value_lines):
+            if value_index == len(value_lines) - 1:
+                lines.append(f"    {value_line}{suffix}")
+            else:
+                lines.append(f"    {value_line}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_independent_sigma_model_candidate_certificate_exists :",
+            "  exists C : ConcreteTruthConditionIndependentSigmaModelCandidateCertificate,",
+            "    C = concrete_truth_condition_independent_sigma_model_candidate_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_independent_sigma_model_candidate_certificate.",
+            "  reflexivity.",
+            "Qed.",
+        ]
+    )
+    for match_name, field, expected in (
+        (
+            "source",
+            "concrete_truth_condition_independent_sigma_model_candidate_source",
+            "concrete_truth_condition_independent_model_class_readiness_certificate",
+        ),
+        (
+            "class_certificate",
+            "concrete_truth_condition_independent_sigma_model_candidate_class_certificate",
+            "concrete_truth_condition_provider_sigma_class_instance_certificate",
+        ),
+        (
+            "instances",
+            "concrete_truth_condition_independent_sigma_model_candidate_instances",
+            "independent_registered_sigma_truth_condition_instances",
+        ),
+        (
+            "compositional_model",
+            "concrete_truth_condition_independent_sigma_model_candidate_compositional_model",
+            "concrete_registered_compositional_model",
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_sigma_model_candidate_"
+                f"{match_name}_matches :",
+                f"  {field}",
+                "    concrete_truth_condition_independent_sigma_model_candidate_certificate =",
+                f"  {expected}.",
+                "Proof.",
+                f"  exact ({field}_eq",
+                "    concrete_truth_condition_independent_sigma_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    for projection, field, spec in (
+        (
+            "independent",
+            "concrete_truth_condition_independent_sigma_model_candidate_independent_sound",
+            independent_spec_coq,
+        ),
+        (
+            "constructor",
+            "concrete_truth_condition_independent_sigma_model_candidate_constructor_sound",
+            constructor_spec_coq,
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_sigma_model_candidate_"
+                f"{projection}_sound_projected :",
+                "  forall A : Type, forall term : A,",
+                "    fully_registered_truth_denotes",
+                f"      {spec} A term ->",
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                f"  exact ({field}",
+                "    concrete_truth_condition_independent_sigma_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem concrete_truth_condition_independent_sigma_model_candidate_model_sound_projected :",
+            "  forall A : Type, forall term : A,",
+            f"    {model_denotes_coq} A term ->",
+            "    AtomicClosureTruth A term.",
+            "Proof.",
+            "  exact (concrete_truth_condition_independent_sigma_model_candidate_model_sound",
+            "    concrete_truth_condition_independent_sigma_model_candidate_certificate).",
+            "Qed.",
+        ]
+    )
+    for type_name in sigma_types:
+        sigma_term = coq_sigma_term(type_name)
+        for projection, body_truth, conclusion in (
+            (
+                "provider_truth",
+                "fully_registered_truth_denotes "
+                f"{independent_spec_coq} Prop (P x)",
+                "fully_registered_truth_denotes "
+                f"{independent_spec_coq} Prop {sigma_term}",
+            ),
+            (
+                "ledger_truth",
+                "fully_registered_truth_denotes "
+                f"{constructor_spec_coq} Prop (P x)",
+                "fully_registered_truth_denotes "
+                f"{constructor_spec_coq} Prop {sigma_term}",
+            ),
+            (
+                "model_atomic",
+                f"{model_denotes_coq} Prop (P x)",
+                f"AtomicClosureTruth Prop {sigma_term}",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "Theorem concrete_truth_condition_independent_sigma_model_candidate_"
+                    f"sigma_{type_name}_{projection}_projected :",
+                    f"  forall P : {type_name} -> Prop,",
+                    f"    (forall x : {type_name},",
+                    f"      {body_truth}) ->",
+                    f"    {conclusion}.",
+                    "Proof.",
+                    "  exact (concrete_truth_condition_independent_sigma_model_candidate_"
+                    f"sigma_{type_name}_{projection}",
+                    "    concrete_truth_condition_independent_sigma_model_candidate_certificate).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -34083,6 +34653,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_independent_sigma_model_candidate_certificate_lines(
+                declarations,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -36033,6 +36610,44 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "concrete_truth_condition_independent_lexical_model_candidate_"
                 "lexical_1_model_atomic_projected"
             )
+        lines.append(
+            "#check ConcreteTruthConditionIndependentSigmaModelCandidateCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_independent_sigma_model_candidate_certificate"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_sigma_model_candidate_certificate_exists"
+        )
+        for match_name in (
+            "source",
+            "class_certificate",
+            "instances",
+            "compositional_model",
+        ):
+            lines.append(
+                "#check "
+                f"concrete_truth_condition_independent_sigma_model_candidate_{match_name}_matches"
+            )
+        for projection in ("independent", "constructor", "model"):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_sigma_model_candidate_"
+                f"{projection}_sound_projected"
+            )
+        if declarations["types"]:
+            first_type = declarations["types"][0]
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_sigma_model_candidate_"
+                f"sigma_{first_type}_provider_truth_projected"
+            )
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_sigma_model_candidate_"
+                f"sigma_{first_type}_model_atomic_projected"
+            )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -36981,6 +37596,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_independent_lexical_model_candidate_certificate_lines(
+            declarations,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_independent_sigma_model_candidate_certificate_lines(
             declarations,
             target,
         )
@@ -38689,6 +39311,42 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "Check "
             "concrete_truth_condition_independent_lexical_model_candidate_"
             "lexical_1_model_atomic_projected."
+        )
+    lines.append("Check ConcreteTruthConditionIndependentSigmaModelCandidateCertificate.")
+    lines.append(
+        "Check concrete_truth_condition_independent_sigma_model_candidate_certificate."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_sigma_model_candidate_certificate_exists."
+    )
+    for match_name in (
+        "source",
+        "class_certificate",
+        "instances",
+        "compositional_model",
+    ):
+        lines.append(
+            "Check "
+            f"concrete_truth_condition_independent_sigma_model_candidate_{match_name}_matches."
+        )
+    for projection in ("independent", "constructor", "model"):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_sigma_model_candidate_"
+            f"{projection}_sound_projected."
+        )
+    if declarations["types"]:
+        first_type = declarations["types"][0]
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_sigma_model_candidate_"
+            f"sigma_{first_type}_provider_truth_projected."
+        )
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_sigma_model_candidate_"
+            f"sigma_{first_type}_model_atomic_projected."
         )
     return "\n".join(lines) + "\n"
 

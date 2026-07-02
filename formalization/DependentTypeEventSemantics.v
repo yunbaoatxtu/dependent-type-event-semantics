@@ -16674,6 +16674,545 @@ Proof.
     concrete_truth_condition_independent_lexical_model_candidate_certificate).
 Qed.
 
+Record ConcreteTruthConditionIndependentSigmaModelCandidateCertificate : Type := {
+  concrete_truth_condition_independent_sigma_model_candidate_source :
+      ConcreteTruthConditionIndependentModelClassReadinessCertificate;
+  concrete_truth_condition_independent_sigma_model_candidate_source_eq :
+      concrete_truth_condition_independent_sigma_model_candidate_source =
+        concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_sigma_model_candidate_class_certificate :
+      ConcreteTruthConditionProviderSigmaClassInstanceCertificate;
+  concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq :
+      concrete_truth_condition_independent_sigma_model_candidate_class_certificate =
+        concrete_truth_condition_provider_sigma_class_instance_certificate;
+  concrete_truth_condition_independent_sigma_model_candidate_instances :
+      IndependentRegisteredSigmaTruthConditionInstances;
+  concrete_truth_condition_independent_sigma_model_candidate_instances_eq :
+      concrete_truth_condition_independent_sigma_model_candidate_instances =
+        independent_registered_sigma_truth_condition_instances;
+  concrete_truth_condition_independent_sigma_model_candidate_compositional_model :
+      ConcreteRegisteredCompositionalModel;
+  concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq :
+      concrete_truth_condition_independent_sigma_model_candidate_compositional_model =
+        concrete_registered_compositional_model;
+  concrete_truth_condition_independent_sigma_model_candidate_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_sigma_model_candidate_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_sigma_model_candidate_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_composition_denotes concrete_registered_compositional_model A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_atomic :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_ledger_truth :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_ledger_atomic :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_denotes :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic :
+      forall P : Entity -> Prop,
+      (forall x : Entity,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Entity, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_provider_truth :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : Food, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_provider_atomic :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Food, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_ledger_truth :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Food, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_ledger_atomic :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Food, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_model_denotes :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (exists x : Food, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_model_atomic :
+      forall P : Food -> Prop,
+      (forall x : Food,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : Food, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_provider_truth :
+      forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : State, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_provider_atomic :
+      forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : State, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_ledger_truth :
+      forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : State, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_ledger_atomic :
+      forall P : State -> Prop,
+      (forall x : State,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : State, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_model_denotes :
+      forall P : State -> Prop,
+      (forall x : State,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (exists x : State, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_model_atomic :
+      forall P : State -> Prop,
+      (forall x : State,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : State, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_provider_truth :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : StateScale, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_provider_atomic :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : StateScale, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_ledger_truth :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : StateScale, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_ledger_atomic :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : StateScale, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_model_denotes :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (exists x : StateScale, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_model_atomic :
+      forall P : StateScale -> Prop,
+      (forall x : StateScale,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : StateScale, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_provider_truth :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : TransitionT, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_provider_atomic :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : TransitionT, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_ledger_truth :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : TransitionT, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_ledger_atomic :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        fully_registered_truth_denotes
+          (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : TransitionT, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_model_denotes :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (exists x : TransitionT, P x);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_model_atomic :
+      forall P : TransitionT -> Prop,
+      (forall x : TransitionT,
+        concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+      AtomicClosureTruth Prop (exists x : TransitionT, P x)
+}.
+
+Definition concrete_truth_condition_independent_sigma_model_candidate_certificate :
+  ConcreteTruthConditionIndependentSigmaModelCandidateCertificate := {|
+  concrete_truth_condition_independent_sigma_model_candidate_source :=
+    concrete_truth_condition_independent_model_class_readiness_certificate;
+  concrete_truth_condition_independent_sigma_model_candidate_source_eq := eq_refl;
+  concrete_truth_condition_independent_sigma_model_candidate_class_certificate :=
+    concrete_truth_condition_provider_sigma_class_instance_certificate;
+  concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_sigma_model_candidate_instances :=
+    independent_registered_sigma_truth_condition_instances;
+  concrete_truth_condition_independent_sigma_model_candidate_instances_eq := eq_refl;
+  concrete_truth_condition_independent_sigma_model_candidate_compositional_model :=
+    concrete_registered_compositional_model;
+  concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq :=
+    eq_refl;
+  concrete_truth_condition_independent_sigma_model_candidate_independent_sound :=
+    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_constructor_sound :=
+    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_model_sound :=
+    concrete_registered_compositional_model_imply_atomic_closure;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth :=
+    concrete_truth_condition_provider_sigma_class_provider_Entity_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_atomic :=
+    concrete_truth_condition_provider_sigma_class_provider_Entity_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_ledger_truth :=
+    concrete_truth_condition_provider_sigma_class_ledger_Entity_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_ledger_atomic :=
+    concrete_truth_condition_provider_sigma_class_ledger_Entity_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_denotes :=
+    concrete_registered_compositional_model_sigma_Entity_clause;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic :=
+    fun P body_truth =>
+          concrete_registered_compositional_model_imply_atomic_closure
+            Prop (ex (fun x : Entity => P x))
+            (concrete_registered_compositional_model_sigma_Entity_clause P body_truth);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_provider_truth :=
+    concrete_truth_condition_provider_sigma_class_provider_Food_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_provider_atomic :=
+    concrete_truth_condition_provider_sigma_class_provider_Food_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_ledger_truth :=
+    concrete_truth_condition_provider_sigma_class_ledger_Food_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_ledger_atomic :=
+    concrete_truth_condition_provider_sigma_class_ledger_Food_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_model_denotes :=
+    concrete_registered_compositional_model_sigma_Food_clause;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_model_atomic :=
+    fun P body_truth =>
+          concrete_registered_compositional_model_imply_atomic_closure
+            Prop (ex (fun x : Food => P x))
+            (concrete_registered_compositional_model_sigma_Food_clause P body_truth);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_provider_truth :=
+    concrete_truth_condition_provider_sigma_class_provider_State_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_provider_atomic :=
+    concrete_truth_condition_provider_sigma_class_provider_State_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_ledger_truth :=
+    concrete_truth_condition_provider_sigma_class_ledger_State_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_ledger_atomic :=
+    concrete_truth_condition_provider_sigma_class_ledger_State_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_model_denotes :=
+    concrete_registered_compositional_model_sigma_State_clause;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_State_model_atomic :=
+    fun P body_truth =>
+          concrete_registered_compositional_model_imply_atomic_closure
+            Prop (ex (fun x : State => P x))
+            (concrete_registered_compositional_model_sigma_State_clause P body_truth);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_provider_truth :=
+    concrete_truth_condition_provider_sigma_class_provider_StateScale_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_provider_atomic :=
+    concrete_truth_condition_provider_sigma_class_provider_StateScale_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_ledger_truth :=
+    concrete_truth_condition_provider_sigma_class_ledger_StateScale_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_ledger_atomic :=
+    concrete_truth_condition_provider_sigma_class_ledger_StateScale_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_model_denotes :=
+    concrete_registered_compositional_model_sigma_StateScale_clause;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_model_atomic :=
+    fun P body_truth =>
+          concrete_registered_compositional_model_imply_atomic_closure
+            Prop (ex (fun x : StateScale => P x))
+            (concrete_registered_compositional_model_sigma_StateScale_clause P body_truth);
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_provider_truth :=
+    concrete_truth_condition_provider_sigma_class_provider_TransitionT_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_provider_atomic :=
+    concrete_truth_condition_provider_sigma_class_provider_TransitionT_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_ledger_truth :=
+    concrete_truth_condition_provider_sigma_class_ledger_TransitionT_truth_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_ledger_atomic :=
+    concrete_truth_condition_provider_sigma_class_ledger_TransitionT_atomic_projected;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_model_denotes :=
+    concrete_registered_compositional_model_sigma_TransitionT_clause;
+  concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_model_atomic :=
+    fun P body_truth =>
+          concrete_registered_compositional_model_imply_atomic_closure
+            Prop (ex (fun x : TransitionT => P x))
+            (concrete_registered_compositional_model_sigma_TransitionT_clause P body_truth)
+|}.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_certificate_exists :
+  exists C : ConcreteTruthConditionIndependentSigmaModelCandidateCertificate,
+    C = concrete_truth_condition_independent_sigma_model_candidate_certificate.
+Proof.
+  exists concrete_truth_condition_independent_sigma_model_candidate_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_source_matches :
+  concrete_truth_condition_independent_sigma_model_candidate_source
+    concrete_truth_condition_independent_sigma_model_candidate_certificate =
+  concrete_truth_condition_independent_model_class_readiness_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_source_eq
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_class_certificate_matches :
+  concrete_truth_condition_independent_sigma_model_candidate_class_certificate
+    concrete_truth_condition_independent_sigma_model_candidate_certificate =
+  concrete_truth_condition_provider_sigma_class_instance_certificate.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_class_certificate_eq
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_instances_matches :
+  concrete_truth_condition_independent_sigma_model_candidate_instances
+    concrete_truth_condition_independent_sigma_model_candidate_certificate =
+  independent_registered_sigma_truth_condition_instances.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_instances_eq
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_compositional_model_matches :
+  concrete_truth_condition_independent_sigma_model_candidate_compositional_model
+    concrete_truth_condition_independent_sigma_model_candidate_certificate =
+  concrete_registered_compositional_model.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_compositional_model_eq
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_independent_sound
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_constructor_sound
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_model_sound_projected :
+  forall A : Type, forall term : A,
+    concrete_registered_composition_denotes concrete_registered_compositional_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_model_sound
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth_projected :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+    fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : Entity, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_ledger_truth_projected :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Entity, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_ledger_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected :
+  forall P : Entity -> Prop,
+    (forall x : Entity,
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+    AtomicClosureTruth Prop (exists x : Entity, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_provider_truth_projected :
+  forall P : Food -> Prop,
+    (forall x : Food,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+    fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : Food, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_provider_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_ledger_truth_projected :
+  forall P : Food -> Prop,
+    (forall x : Food,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : Food, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_ledger_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_model_atomic_projected :
+  forall P : Food -> Prop,
+    (forall x : Food,
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+    AtomicClosureTruth Prop (exists x : Food, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_Food_model_atomic
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_State_provider_truth_projected :
+  forall P : State -> Prop,
+    (forall x : State,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+    fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : State, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_State_provider_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_State_ledger_truth_projected :
+  forall P : State -> Prop,
+    (forall x : State,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : State, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_State_ledger_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_State_model_atomic_projected :
+  forall P : State -> Prop,
+    (forall x : State,
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+    AtomicClosureTruth Prop (exists x : State, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_State_model_atomic
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_provider_truth_projected :
+  forall P : StateScale -> Prop,
+    (forall x : StateScale,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+    fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : StateScale, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_provider_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_ledger_truth_projected :
+  forall P : StateScale -> Prop,
+    (forall x : StateScale,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : StateScale, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_ledger_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_model_atomic_projected :
+  forall P : StateScale -> Prop,
+    (forall x : StateScale,
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+    AtomicClosureTruth Prop (exists x : StateScale, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_StateScale_model_atomic
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_provider_truth_projected :
+  forall P : TransitionT -> Prop,
+    (forall x : TransitionT,
+      fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (P x)) ->
+    fully_registered_truth_denotes (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) Prop (exists x : TransitionT, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_provider_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_ledger_truth_projected :
+  forall P : TransitionT -> Prop,
+    (forall x : TransitionT,
+      fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (P x)) ->
+    fully_registered_truth_denotes (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) Prop (exists x : TransitionT, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_ledger_truth
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
+Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_model_atomic_projected :
+  forall P : TransitionT -> Prop,
+    (forall x : TransitionT,
+      concrete_registered_composition_denotes concrete_registered_compositional_model Prop (P x)) ->
+    AtomicClosureTruth Prop (exists x : TransitionT, P x).
+Proof.
+  exact (concrete_truth_condition_independent_sigma_model_candidate_sigma_TransitionT_model_atomic
+    concrete_truth_condition_independent_sigma_model_candidate_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -17874,3 +18413,15 @@ Check concrete_truth_condition_independent_lexical_model_candidate_independent_s
 Check concrete_truth_condition_independent_lexical_model_candidate_constructor_sound_projected.
 Check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_provider_truth_projected.
 Check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected.
+Check ConcreteTruthConditionIndependentSigmaModelCandidateCertificate.
+Check concrete_truth_condition_independent_sigma_model_candidate_certificate.
+Check concrete_truth_condition_independent_sigma_model_candidate_certificate_exists.
+Check concrete_truth_condition_independent_sigma_model_candidate_source_matches.
+Check concrete_truth_condition_independent_sigma_model_candidate_class_certificate_matches.
+Check concrete_truth_condition_independent_sigma_model_candidate_instances_matches.
+Check concrete_truth_condition_independent_sigma_model_candidate_compositional_model_matches.
+Check concrete_truth_condition_independent_sigma_model_candidate_independent_sound_projected.
+Check concrete_truth_condition_independent_sigma_model_candidate_constructor_sound_projected.
+Check concrete_truth_condition_independent_sigma_model_candidate_model_sound_projected.
+Check concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth_projected.
+Check concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected.

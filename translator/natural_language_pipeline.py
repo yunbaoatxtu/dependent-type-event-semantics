@@ -21477,6 +21477,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "sigma_model_candidate_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21967,6 +21975,17 @@ def project_completion_status_payload(
                     "AtomicClosureTruth projections. This starts the lexical "
                     "class of the future independent model while remaining "
                     "finite and registered. "
+                    "The newest independent Sigma model-candidate certificate "
+                    "then anchors the dependent-existential class-readiness "
+                    "boundary to the provider Sigma class certificate, "
+                    "IndependentRegisteredSigmaTruthConditionInstances, and "
+                    "ConcreteRegisteredCompositionalModel. For each exported "
+                    "Sigma witness type it records provider truth/atomic, "
+                    "constructor-ledger truth/atomic, compositional-model "
+                    "denotation, and model AtomicClosureTruth projections. "
+                    "This advances argument-omission and existential-witness "
+                    "coverage without claiming arbitrary quantifier-scope or "
+                    "discourse semantics. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

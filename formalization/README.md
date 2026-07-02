@@ -636,6 +636,14 @@ It ties the lexical class entrance to the provider lexical certificate,
 provider, constructor-ledger, registered-model, model-truth, and
 `AtomicClosureTruth` projections for each finite registered lexical
 application.
+The independent Sigma model-candidate certificate introduces
+`ConcreteTruthConditionIndependentSigmaModelCandidateCertificate` and
+`concrete_truth_condition_independent_sigma_model_candidate_certificate`.
+It ties the Sigma class entrance to the provider Sigma certificate,
+`IndependentRegisteredSigmaTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`, then checks provider,
+constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
+for each exported Sigma witness type.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

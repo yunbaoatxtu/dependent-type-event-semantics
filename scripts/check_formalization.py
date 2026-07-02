@@ -4936,6 +4936,54 @@ def main() -> None:
             and "Check concrete_truth_condition_independent_lexical_model_candidate_lexical_1_model_atomic_projected."
             in coq
         ),
+        "lean concrete truth condition independent sigma model candidate certificate": (
+            "structure ConcreteTruthConditionIndependentSigmaModelCandidateCertificate :"
+            in lean
+            and "def concrete_truth_condition_independent_sigma_model_candidate_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_class_certificate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_instances_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_compositional_model_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_model_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionIndependentSigmaModelCandidateCertificate"
+            in lean
+            and "#check concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth condition independent sigma model candidate certificate": (
+            "Record ConcreteTruthConditionIndependentSigmaModelCandidateCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_independent_sigma_model_candidate_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_class_certificate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_instances_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_compositional_model_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_model_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_provider_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionIndependentSigmaModelCandidateCertificate."
+            in coq
+            and "Check concrete_truth_condition_independent_sigma_model_candidate_sigma_Entity_model_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
