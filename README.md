@@ -1663,6 +1663,17 @@ their `AtomicClosureTruth` projections. It is a finite supply certificate for
 the current registered benchmark fragment, not an independently justified
 truth-condition semantics for arbitrary lexical, temporal, causal,
 quantificational, or modifier constructions.
+The next verified objective
+`coq_concrete_truth_condition_independent_model_candidate_certificate` adds
+`ConcreteTruthConditionIndependentModelCandidateCertificate`. This certificate
+binds the finite supply certificate to the direct
+`ConcreteRegisteredTruthConditionModel`, the evidence-backed truth-condition
+model, the concrete registered route, and the provider class-instance suite.
+It checks that the direct and evidence-backed supplied specs match their model
+specs, that the supplied kernel spec matches the route kernel conversion, and
+that model-to-spec and spec-to-atomic projections remain available for each
+exported example. It is a candidate-model boundary for the finite registered
+fragment, not a completed independent semantics for arbitrary English.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

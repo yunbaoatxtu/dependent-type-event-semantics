@@ -601,6 +601,14 @@ the finite atomic concrete-truth instance ledger, the provider suite, and the
 provider example package. It then projects each generated example through
 direct, evidence-backed, and kernel-induced `fully_registered_truth_denotes`
 inhabitants, together with the matching `AtomicClosureTruth` projections.
+The independent model-candidate certificate introduces
+`ConcreteTruthConditionIndependentModelCandidateCertificate` and
+`concrete_truth_condition_independent_model_candidate_certificate`. It binds
+the finite supply certificate to the direct concrete registered model, the
+evidence-backed model, the concrete registered route, and the provider
+class-instance suite, then checks direct/evidence spec-model alignment,
+kernel-spec route alignment, model-to-spec projections, and spec-to-atomic
+projections for the generated examples.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

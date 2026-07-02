@@ -26911,6 +26911,870 @@ def concrete_truth_condition_instance_supply_certificate_lines(
     return lines
 
 
+def concrete_truth_condition_independent_model_candidate_certificate_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Bind the finite supply certificate to its concrete model candidates."""
+
+    if target == "lean":
+        lines = [
+            "structure ConcreteTruthConditionIndependentModelCandidateCertificate :",
+            "    Type where",
+            "  concrete_truth_condition_independent_model_candidate_supply :",
+            "      ConcreteTruthConditionInstanceSupplyCertificate",
+            "  concrete_truth_condition_independent_model_candidate_supply_eq :",
+            "      concrete_truth_condition_independent_model_candidate_supply =",
+            "        concrete_truth_condition_instance_supply_certificate",
+            "  concrete_truth_condition_independent_model_candidate_direct_model :",
+            "      ConcreteRegisteredTruthConditionModel",
+            "  concrete_truth_condition_independent_model_candidate_direct_model_eq :",
+            "      concrete_truth_condition_independent_model_candidate_direct_model =",
+            "        concrete_registered_truth_condition_model",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model :",
+            "      ConcreteRegisteredEvidenceBackedTruthConditionModel",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model_eq :",
+            "      concrete_truth_condition_independent_model_candidate_evidence_model =",
+            "        concrete_registered_evidence_backed_truth_condition_model",
+            "  concrete_truth_condition_independent_model_candidate_route :",
+            "      ConcreteRegisteredTruthConditionRoute",
+            "  concrete_truth_condition_independent_model_candidate_route_eq :",
+            "      concrete_truth_condition_independent_model_candidate_route =",
+            "        concrete_registered_truth_condition_route",
+            "  concrete_truth_condition_independent_model_candidate_provider_suite :",
+            "      ConcreteTruthConditionProviderClassInstanceSuiteCertificate",
+            "  concrete_truth_condition_independent_model_candidate_provider_suite_eq :",
+            "      concrete_truth_condition_independent_model_candidate_provider_suite =",
+            "        concrete_truth_condition_provider_class_instance_suite_certificate",
+            "  concrete_truth_condition_independent_model_candidate_direct_spec_model_eq :",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_direct_spec =",
+            "        concrete_registered_truth_condition_model.",
+            "        concrete_registered_model_spec",
+            "  concrete_truth_condition_independent_model_candidate_evidence_spec_model_eq :",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_evidence_spec =",
+            "        concrete_registered_evidence_backed_truth_condition_model.",
+            "        concrete_registered_evidence_backed_model_spec",
+            "  concrete_truth_condition_independent_model_candidate_kernel_spec_route_eq :",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_kernel_spec =",
+            "        fully_registered_truth_conditions_from_concrete_registered_kernel",
+            "          concrete_registered_truth_condition_route.",
+            "          concrete_registered_route_kernel",
+            "  concrete_truth_condition_independent_model_candidate_supply_provider_suite_eq :",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_provider_suite =",
+            "        concrete_truth_condition_provider_class_instance_suite_certificate",
+            "  concrete_truth_condition_independent_model_candidate_direct_model_to_spec :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_registered_truth_condition_model.",
+            "      concrete_registered_model_denotes A term ->",
+            "      concrete_registered_truth_condition_model.",
+            "      concrete_registered_model_spec.",
+            "      fully_registered_truth_denotes A term",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model_to_spec :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_registered_evidence_backed_truth_condition_model.",
+            "      concrete_registered_evidence_backed_model_denotes A term ->",
+            "      concrete_registered_evidence_backed_truth_condition_model.",
+            "      concrete_registered_evidence_backed_model_spec.",
+            "      fully_registered_truth_denotes A term",
+            "  concrete_truth_condition_independent_model_candidate_direct_model_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_registered_truth_condition_model.",
+            "      concrete_registered_model_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_registered_evidence_backed_truth_condition_model.",
+            "      concrete_registered_evidence_backed_model_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_model_candidate_direct_supply_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_direct_spec.",
+            "      fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_model_candidate_evidence_supply_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_evidence_spec.",
+            "      fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_model_candidate_kernel_supply_sound :",
+            "      (A : Type) -> (term : A) ->",
+            "      concrete_truth_condition_instance_supply_certificate.",
+            "      concrete_truth_condition_instance_supply_kernel_spec.",
+            "      fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+        ]
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_independent_model_candidate_example_{idx}_direct_model_truth :",
+                    "      concrete_registered_truth_condition_model.",
+                    "      concrete_registered_model_spec.",
+                    f"      fully_registered_truth_denotes {annotation} example_{idx}",
+                    f"  concrete_truth_condition_independent_model_candidate_example_{idx}_evidence_model_truth :",
+                    "      concrete_registered_evidence_backed_truth_condition_model.",
+                    "      concrete_registered_evidence_backed_model_spec.",
+                    f"      fully_registered_truth_denotes {annotation} example_{idx}",
+                    f"  concrete_truth_condition_independent_model_candidate_example_{idx}_kernel_supply_truth :",
+                    "      concrete_truth_condition_instance_supply_certificate.",
+                    "      concrete_truth_condition_instance_supply_kernel_spec.",
+                    f"      fully_registered_truth_denotes {annotation} example_{idx}",
+                    f"  concrete_truth_condition_independent_model_candidate_example_{idx}_direct_atomic :",
+                    f"      AtomicClosureTruth {annotation} example_{idx}",
+                    f"  concrete_truth_condition_independent_model_candidate_example_{idx}_evidence_atomic :",
+                    f"      AtomicClosureTruth {annotation} example_{idx}",
+                    f"  concrete_truth_condition_independent_model_candidate_example_{idx}_kernel_atomic :",
+                    f"      AtomicClosureTruth {annotation} example_{idx}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_independent_model_candidate_certificate :",
+                "    ConcreteTruthConditionIndependentModelCandidateCertificate := {",
+                "  concrete_truth_condition_independent_model_candidate_supply :=",
+                "    concrete_truth_condition_instance_supply_certificate,",
+                "  concrete_truth_condition_independent_model_candidate_supply_eq := rfl,",
+                "  concrete_truth_condition_independent_model_candidate_direct_model :=",
+                "    concrete_registered_truth_condition_model,",
+                "  concrete_truth_condition_independent_model_candidate_direct_model_eq := rfl,",
+                "  concrete_truth_condition_independent_model_candidate_evidence_model :=",
+                "    concrete_registered_evidence_backed_truth_condition_model,",
+                "  concrete_truth_condition_independent_model_candidate_evidence_model_eq := rfl,",
+                "  concrete_truth_condition_independent_model_candidate_route :=",
+                "    concrete_registered_truth_condition_route,",
+                "  concrete_truth_condition_independent_model_candidate_route_eq := rfl,",
+                "  concrete_truth_condition_independent_model_candidate_provider_suite :=",
+                "    concrete_truth_condition_provider_class_instance_suite_certificate,",
+                "  concrete_truth_condition_independent_model_candidate_provider_suite_eq :=",
+                "    rfl,",
+                "  concrete_truth_condition_independent_model_candidate_direct_spec_model_eq :=",
+                "    rfl,",
+                "  concrete_truth_condition_independent_model_candidate_evidence_spec_model_eq :=",
+                "    rfl,",
+                "  concrete_truth_condition_independent_model_candidate_kernel_spec_route_eq :=",
+                "    rfl,",
+                "  concrete_truth_condition_independent_model_candidate_supply_provider_suite_eq :=",
+                "    rfl,",
+                "  concrete_truth_condition_independent_model_candidate_direct_model_to_spec :=",
+                "    concrete_registered_truth_condition_model_denote_spec,",
+                "  concrete_truth_condition_independent_model_candidate_evidence_model_to_spec :=",
+                "    concrete_registered_evidence_backed_truth_condition_model_denote_spec,",
+                "  concrete_truth_condition_independent_model_candidate_direct_model_sound :=",
+                "    concrete_registered_truth_condition_model_imply_atomic_closure,",
+                "  concrete_truth_condition_independent_model_candidate_evidence_model_sound :=",
+                "    concrete_registered_evidence_backed_truth_condition_model_imply_atomic_closure,",
+                "  concrete_truth_condition_independent_model_candidate_direct_supply_sound :=",
+                "    concrete_truth_condition_instance_supply_direct_sound_projected,",
+                "  concrete_truth_condition_independent_model_candidate_evidence_supply_sound :=",
+                "    concrete_truth_condition_instance_supply_evidence_sound_projected,",
+                "  concrete_truth_condition_independent_model_candidate_kernel_supply_sound :=",
+                "    concrete_truth_condition_instance_supply_kernel_sound_projected,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for idx in range(1, len(results) + 1):
+            assignments.extend(
+                [
+                    (
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_direct_model_truth",
+                        f"example_{idx}_concrete_registered_truth_condition_sound",
+                    ),
+                    (
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_evidence_model_truth",
+                        f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound",
+                    ),
+                    (
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_kernel_supply_truth",
+                        "concrete_truth_condition_instance_supply_"
+                        f"example_{idx}_kernel_truth_projected",
+                    ),
+                    (
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_direct_atomic",
+                        "concrete_truth_condition_instance_supply_"
+                        f"example_{idx}_direct_atomic_projected",
+                    ),
+                    (
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_evidence_atomic",
+                        "concrete_truth_condition_instance_supply_"
+                        f"example_{idx}_evidence_atomic_projected",
+                    ),
+                    (
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_kernel_atomic",
+                        "concrete_truth_condition_instance_supply_"
+                        f"example_{idx}_kernel_atomic_projected",
+                    ),
+                ]
+            )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_independent_model_candidate_certificate_exists :",
+                "    Exists (fun C :",
+                "      ConcreteTruthConditionIndependentModelCandidateCertificate =>",
+                "      C = concrete_truth_condition_independent_model_candidate_certificate) := by",
+                "  exact Exists.intro",
+                "    concrete_truth_condition_independent_model_candidate_certificate rfl",
+            ]
+        )
+        for match_name, field, expected in (
+            (
+                "supply",
+                "concrete_truth_condition_independent_model_candidate_supply",
+                "concrete_truth_condition_instance_supply_certificate",
+            ),
+            (
+                "direct_model",
+                "concrete_truth_condition_independent_model_candidate_direct_model",
+                "concrete_registered_truth_condition_model",
+            ),
+            (
+                "evidence_model",
+                "concrete_truth_condition_independent_model_candidate_evidence_model",
+                "concrete_registered_evidence_backed_truth_condition_model",
+            ),
+            (
+                "route",
+                "concrete_truth_condition_independent_model_candidate_route",
+                "concrete_registered_truth_condition_route",
+            ),
+            (
+                "provider_suite",
+                "concrete_truth_condition_independent_model_candidate_provider_suite",
+                "concrete_truth_condition_provider_class_instance_suite_certificate",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_model_candidate_"
+                    f"{match_name}_matches :",
+                    "    concrete_truth_condition_independent_model_candidate_certificate."
+                    f"{field} =",
+                    f"      {expected} := by",
+                    "  exact concrete_truth_condition_independent_model_candidate_certificate."
+                    f"{field}_eq",
+                ]
+            )
+        for match_name, field, lhs, rhs in (
+            (
+                "direct_spec_model",
+                "concrete_truth_condition_independent_model_candidate_direct_spec_model_eq",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_direct_spec",
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_spec",
+            ),
+            (
+                "evidence_spec_model",
+                "concrete_truth_condition_independent_model_candidate_evidence_spec_model_eq",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_evidence_spec",
+                "concrete_registered_evidence_backed_truth_condition_model."
+                "concrete_registered_evidence_backed_model_spec",
+            ),
+            (
+                "kernel_spec_route",
+                "concrete_truth_condition_independent_model_candidate_kernel_spec_route_eq",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_kernel_spec",
+                "fully_registered_truth_conditions_from_concrete_registered_kernel "
+                "concrete_registered_truth_condition_route."
+                "concrete_registered_route_kernel",
+            ),
+            (
+                "supply_provider_suite",
+                "concrete_truth_condition_independent_model_candidate_supply_provider_suite_eq",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_provider_suite",
+                "concrete_truth_condition_provider_class_instance_suite_certificate",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_model_candidate_"
+                    f"{match_name}_matches :",
+                    f"    {lhs} =",
+                    f"      {rhs} := by",
+                    "  exact concrete_truth_condition_independent_model_candidate_certificate."
+                    f"{field}",
+                ]
+            )
+        for theorem_name, field, premise, conclusion in (
+            (
+                "direct_model_to_spec",
+                "concrete_truth_condition_independent_model_candidate_direct_model_to_spec",
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_denotes A term",
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_spec."
+                "fully_registered_truth_denotes A term",
+            ),
+            (
+                "evidence_model_to_spec",
+                "concrete_truth_condition_independent_model_candidate_evidence_model_to_spec",
+                "concrete_registered_evidence_backed_truth_condition_model."
+                "concrete_registered_evidence_backed_model_denotes A term",
+                "concrete_registered_evidence_backed_truth_condition_model."
+                "concrete_registered_evidence_backed_model_spec."
+                "fully_registered_truth_denotes A term",
+            ),
+            (
+                "direct_model_sound",
+                "concrete_truth_condition_independent_model_candidate_direct_model_sound",
+                "concrete_registered_truth_condition_model."
+                "concrete_registered_model_denotes A term",
+                "AtomicClosureTruth A term",
+            ),
+            (
+                "evidence_model_sound",
+                "concrete_truth_condition_independent_model_candidate_evidence_model_sound",
+                "concrete_registered_evidence_backed_truth_condition_model."
+                "concrete_registered_evidence_backed_model_denotes A term",
+                "AtomicClosureTruth A term",
+            ),
+            (
+                "direct_supply_sound",
+                "concrete_truth_condition_independent_model_candidate_direct_supply_sound",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_direct_spec."
+                "fully_registered_truth_denotes A term",
+                "AtomicClosureTruth A term",
+            ),
+            (
+                "evidence_supply_sound",
+                "concrete_truth_condition_independent_model_candidate_evidence_supply_sound",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_evidence_spec."
+                "fully_registered_truth_denotes A term",
+                "AtomicClosureTruth A term",
+            ),
+            (
+                "kernel_supply_sound",
+                "concrete_truth_condition_independent_model_candidate_kernel_supply_sound",
+                "concrete_truth_condition_instance_supply_certificate."
+                "concrete_truth_condition_instance_supply_kernel_spec."
+                "fully_registered_truth_denotes A term",
+                "AtomicClosureTruth A term",
+            ),
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_independent_model_candidate_"
+                    f"{theorem_name}_projected :",
+                    f"    (A : Type) -> (term : A) -> {premise} ->",
+                    f"      {conclusion} := by",
+                    "  exact concrete_truth_condition_independent_model_candidate_certificate."
+                    f"{field}",
+                ]
+            )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            for projection, field, conclusion in (
+                (
+                    "direct_model_truth",
+                    "direct_model_truth",
+                    "concrete_registered_truth_condition_model."
+                    "concrete_registered_model_spec."
+                    f"fully_registered_truth_denotes {annotation} example_{idx}",
+                ),
+                (
+                    "evidence_model_truth",
+                    "evidence_model_truth",
+                    "concrete_registered_evidence_backed_truth_condition_model."
+                    "concrete_registered_evidence_backed_model_spec."
+                    f"fully_registered_truth_denotes {annotation} example_{idx}",
+                ),
+                (
+                    "kernel_supply_truth",
+                    "kernel_supply_truth",
+                    "concrete_truth_condition_instance_supply_certificate."
+                    "concrete_truth_condition_instance_supply_kernel_spec."
+                    f"fully_registered_truth_denotes {annotation} example_{idx}",
+                ),
+                (
+                    "direct_atomic",
+                    "direct_atomic",
+                    f"AtomicClosureTruth {annotation} example_{idx}",
+                ),
+                (
+                    "evidence_atomic",
+                    "evidence_atomic",
+                    f"AtomicClosureTruth {annotation} example_{idx}",
+                ),
+                (
+                    "kernel_atomic",
+                    "kernel_atomic",
+                    f"AtomicClosureTruth {annotation} example_{idx}",
+                ),
+            ):
+                lines.extend(
+                    [
+                        "",
+                        "theorem concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_{projection}_projected :",
+                        f"    {conclusion} := by",
+                        "  exact concrete_truth_condition_independent_model_candidate_certificate."
+                        "concrete_truth_condition_independent_model_candidate_"
+                        f"example_{idx}_{field}",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Record ConcreteTruthConditionIndependentModelCandidateCertificate : Type := {",
+        "  concrete_truth_condition_independent_model_candidate_supply :",
+        "      ConcreteTruthConditionInstanceSupplyCertificate;",
+        "  concrete_truth_condition_independent_model_candidate_supply_eq :",
+        "      concrete_truth_condition_independent_model_candidate_supply =",
+        "        concrete_truth_condition_instance_supply_certificate;",
+        "  concrete_truth_condition_independent_model_candidate_direct_model :",
+        "      ConcreteRegisteredTruthConditionModel;",
+        "  concrete_truth_condition_independent_model_candidate_direct_model_eq :",
+        "      concrete_truth_condition_independent_model_candidate_direct_model =",
+        "        concrete_registered_truth_condition_model;",
+        "  concrete_truth_condition_independent_model_candidate_evidence_model :",
+        "      ConcreteRegisteredEvidenceBackedTruthConditionModel;",
+        "  concrete_truth_condition_independent_model_candidate_evidence_model_eq :",
+        "      concrete_truth_condition_independent_model_candidate_evidence_model =",
+        "        concrete_registered_evidence_backed_truth_condition_model;",
+        "  concrete_truth_condition_independent_model_candidate_route :",
+        "      ConcreteRegisteredTruthConditionRoute;",
+        "  concrete_truth_condition_independent_model_candidate_route_eq :",
+        "      concrete_truth_condition_independent_model_candidate_route =",
+        "        concrete_registered_truth_condition_route;",
+        "  concrete_truth_condition_independent_model_candidate_provider_suite :",
+        "      ConcreteTruthConditionProviderClassInstanceSuiteCertificate;",
+        "  concrete_truth_condition_independent_model_candidate_provider_suite_eq :",
+        "      concrete_truth_condition_independent_model_candidate_provider_suite =",
+        "        concrete_truth_condition_provider_class_instance_suite_certificate;",
+        "  concrete_truth_condition_independent_model_candidate_direct_spec_model_eq :",
+        "      concrete_truth_condition_instance_supply_direct_spec",
+        "        concrete_truth_condition_instance_supply_certificate =",
+        "      concrete_registered_model_spec",
+        "        concrete_registered_truth_condition_model;",
+        "  concrete_truth_condition_independent_model_candidate_evidence_spec_model_eq :",
+        "      concrete_truth_condition_instance_supply_evidence_spec",
+        "        concrete_truth_condition_instance_supply_certificate =",
+        "      concrete_registered_evidence_backed_model_spec",
+        "        concrete_registered_evidence_backed_truth_condition_model;",
+        "  concrete_truth_condition_independent_model_candidate_kernel_spec_route_eq :",
+        "      concrete_truth_condition_instance_supply_kernel_spec",
+        "        concrete_truth_condition_instance_supply_certificate =",
+        "      fully_registered_truth_conditions_from_concrete_registered_kernel",
+        "        (concrete_registered_route_kernel",
+        "          concrete_registered_truth_condition_route);",
+        "  concrete_truth_condition_independent_model_candidate_supply_provider_suite_eq :",
+        "      concrete_truth_condition_instance_supply_provider_suite",
+        "        concrete_truth_condition_instance_supply_certificate =",
+        "      concrete_truth_condition_provider_class_instance_suite_certificate;",
+        "  concrete_truth_condition_independent_model_candidate_direct_model_to_spec :",
+        "      forall A : Type, forall term : A,",
+        "      concrete_registered_model_denotes",
+        "        concrete_registered_truth_condition_model A term ->",
+        "      fully_registered_truth_denotes",
+        "        (concrete_registered_model_spec",
+        "          concrete_registered_truth_condition_model) A term;",
+        "  concrete_truth_condition_independent_model_candidate_evidence_model_to_spec :",
+        "      forall A : Type, forall term : A,",
+        "      concrete_registered_evidence_backed_model_denotes",
+        "        concrete_registered_evidence_backed_truth_condition_model A term ->",
+        "      fully_registered_truth_denotes",
+        "        (concrete_registered_evidence_backed_model_spec",
+        "          concrete_registered_evidence_backed_truth_condition_model) A term;",
+        "  concrete_truth_condition_independent_model_candidate_direct_model_sound :",
+        "      forall A : Type, forall term : A,",
+        "      concrete_registered_model_denotes",
+        "        concrete_registered_truth_condition_model A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_model_candidate_evidence_model_sound :",
+        "      forall A : Type, forall term : A,",
+        "      concrete_registered_evidence_backed_model_denotes",
+        "        concrete_registered_evidence_backed_truth_condition_model A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_model_candidate_direct_supply_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (concrete_truth_condition_instance_supply_direct_spec",
+        "          concrete_truth_condition_instance_supply_certificate) A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_model_candidate_evidence_supply_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (concrete_truth_condition_instance_supply_evidence_spec",
+        "          concrete_truth_condition_instance_supply_certificate) A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_model_candidate_kernel_supply_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        "        (concrete_truth_condition_instance_supply_kernel_spec",
+        "          concrete_truth_condition_instance_supply_certificate) A term ->",
+        "      AtomicClosureTruth A term;",
+    ]
+    field_lines: list[str] = []
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        field_lines.extend(
+            [
+                "  concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_direct_model_truth :",
+                "      fully_registered_truth_denotes",
+                "        (concrete_registered_model_spec",
+                "          concrete_registered_truth_condition_model)",
+                f"        {annotation} example_{idx};",
+                "  concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_evidence_model_truth :",
+                "      fully_registered_truth_denotes",
+                "        (concrete_registered_evidence_backed_model_spec",
+                "          concrete_registered_evidence_backed_truth_condition_model)",
+                f"        {annotation} example_{idx};",
+                "  concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_kernel_supply_truth :",
+                "      fully_registered_truth_denotes",
+                "        (concrete_truth_condition_instance_supply_kernel_spec",
+                "          concrete_truth_condition_instance_supply_certificate)",
+                f"        {annotation} example_{idx};",
+                "  concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_direct_atomic :",
+                f"      AtomicClosureTruth {annotation} example_{idx};",
+                "  concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_evidence_atomic :",
+                f"      AtomicClosureTruth {annotation} example_{idx};",
+                "  concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_kernel_atomic :",
+                f"      AtomicClosureTruth {annotation} example_{idx};",
+            ]
+        )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_independent_model_candidate_certificate :",
+            "  ConcreteTruthConditionIndependentModelCandidateCertificate := {|",
+            "  concrete_truth_condition_independent_model_candidate_supply :=",
+            "    concrete_truth_condition_instance_supply_certificate;",
+            "  concrete_truth_condition_independent_model_candidate_supply_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_direct_model :=",
+            "    concrete_registered_truth_condition_model;",
+            "  concrete_truth_condition_independent_model_candidate_direct_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model :=",
+            "    concrete_registered_evidence_backed_truth_condition_model;",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_route :=",
+            "    concrete_registered_truth_condition_route;",
+            "  concrete_truth_condition_independent_model_candidate_route_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_provider_suite :=",
+            "    concrete_truth_condition_provider_class_instance_suite_certificate;",
+            "  concrete_truth_condition_independent_model_candidate_provider_suite_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_direct_spec_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_evidence_spec_model_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_kernel_spec_route_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_supply_provider_suite_eq :=",
+            "    eq_refl;",
+            "  concrete_truth_condition_independent_model_candidate_direct_model_to_spec :=",
+            "    concrete_registered_truth_condition_model_denote_spec;",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model_to_spec :=",
+            "    concrete_registered_evidence_backed_truth_condition_model_denote_spec;",
+            "  concrete_truth_condition_independent_model_candidate_direct_model_sound :=",
+            "    concrete_registered_truth_condition_model_imply_atomic_closure;",
+            "  concrete_truth_condition_independent_model_candidate_evidence_model_sound :=",
+            "    concrete_registered_evidence_backed_truth_condition_model_imply_atomic_closure;",
+            "  concrete_truth_condition_independent_model_candidate_direct_supply_sound :=",
+            "    concrete_truth_condition_instance_supply_direct_sound_projected;",
+            "  concrete_truth_condition_independent_model_candidate_evidence_supply_sound :=",
+            "    concrete_truth_condition_instance_supply_evidence_sound_projected;",
+            "  concrete_truth_condition_independent_model_candidate_kernel_supply_sound :=",
+            "    concrete_truth_condition_instance_supply_kernel_sound_projected;",
+        ]
+    )
+    assignments: list[tuple[str, str]] = []
+    for idx in range(1, len(results) + 1):
+        assignments.extend(
+            [
+                (
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_direct_model_truth",
+                    f"example_{idx}_concrete_registered_truth_condition_sound",
+                ),
+                (
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_evidence_model_truth",
+                    f"example_{idx}_concrete_registered_evidence_backed_truth_condition_sound",
+                ),
+                (
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_kernel_supply_truth",
+                    "concrete_truth_condition_instance_supply_"
+                    f"example_{idx}_kernel_truth_projected",
+                ),
+                (
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_direct_atomic",
+                    "concrete_truth_condition_instance_supply_"
+                    f"example_{idx}_direct_atomic_projected",
+                ),
+                (
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_evidence_atomic",
+                    "concrete_truth_condition_instance_supply_"
+                    f"example_{idx}_evidence_atomic_projected",
+                ),
+                (
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_kernel_atomic",
+                    "concrete_truth_condition_instance_supply_"
+                    f"example_{idx}_kernel_atomic_projected",
+                ),
+            ]
+        )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_independent_model_candidate_certificate_exists :",
+            "  exists C : ConcreteTruthConditionIndependentModelCandidateCertificate,",
+            "    C = concrete_truth_condition_independent_model_candidate_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_independent_model_candidate_certificate.",
+            "  reflexivity.",
+            "Qed.",
+        ]
+    )
+    for match_name, field, expected in (
+        (
+            "supply",
+            "concrete_truth_condition_independent_model_candidate_supply",
+            "concrete_truth_condition_instance_supply_certificate",
+        ),
+        (
+            "direct_model",
+            "concrete_truth_condition_independent_model_candidate_direct_model",
+            "concrete_registered_truth_condition_model",
+        ),
+        (
+            "evidence_model",
+            "concrete_truth_condition_independent_model_candidate_evidence_model",
+            "concrete_registered_evidence_backed_truth_condition_model",
+        ),
+        (
+            "route",
+            "concrete_truth_condition_independent_model_candidate_route",
+            "concrete_registered_truth_condition_route",
+        ),
+        (
+            "provider_suite",
+            "concrete_truth_condition_independent_model_candidate_provider_suite",
+            "concrete_truth_condition_provider_class_instance_suite_certificate",
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_model_candidate_"
+                f"{match_name}_matches :",
+                f"  {field}",
+                "    concrete_truth_condition_independent_model_candidate_certificate =",
+                f"  {expected}.",
+                "Proof.",
+                "  exact ("
+                f"{field}_eq",
+                "    concrete_truth_condition_independent_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Theorem concrete_truth_condition_independent_model_candidate_direct_spec_model_matches :",
+            "  concrete_truth_condition_instance_supply_direct_spec",
+            "    concrete_truth_condition_instance_supply_certificate =",
+            "  concrete_registered_model_spec",
+            "    concrete_registered_truth_condition_model.",
+            "Proof.",
+            "  exact (concrete_truth_condition_independent_model_candidate_direct_spec_model_eq",
+            "    concrete_truth_condition_independent_model_candidate_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_independent_model_candidate_evidence_spec_model_matches :",
+            "  concrete_truth_condition_instance_supply_evidence_spec",
+            "    concrete_truth_condition_instance_supply_certificate =",
+            "  concrete_registered_evidence_backed_model_spec",
+            "    concrete_registered_evidence_backed_truth_condition_model.",
+            "Proof.",
+            "  exact (concrete_truth_condition_independent_model_candidate_evidence_spec_model_eq",
+            "    concrete_truth_condition_independent_model_candidate_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_independent_model_candidate_kernel_spec_route_matches :",
+            "  concrete_truth_condition_instance_supply_kernel_spec",
+            "    concrete_truth_condition_instance_supply_certificate =",
+            "  fully_registered_truth_conditions_from_concrete_registered_kernel",
+            "    (concrete_registered_route_kernel",
+            "      concrete_registered_truth_condition_route).",
+            "Proof.",
+            "  exact (concrete_truth_condition_independent_model_candidate_kernel_spec_route_eq",
+            "    concrete_truth_condition_independent_model_candidate_certificate).",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_independent_model_candidate_supply_provider_suite_matches :",
+            "  concrete_truth_condition_instance_supply_provider_suite",
+            "    concrete_truth_condition_instance_supply_certificate =",
+            "  concrete_truth_condition_provider_class_instance_suite_certificate.",
+            "Proof.",
+            "  exact (concrete_truth_condition_independent_model_candidate_supply_provider_suite_eq",
+            "    concrete_truth_condition_independent_model_candidate_certificate).",
+            "Qed.",
+        ]
+    )
+    for theorem_name, field, premise, conclusion in (
+        (
+            "direct_model_to_spec",
+            "concrete_truth_condition_independent_model_candidate_direct_model_to_spec",
+            "concrete_registered_model_denotes "
+            "concrete_registered_truth_condition_model A term",
+            "fully_registered_truth_denotes "
+            "(concrete_registered_model_spec "
+            "concrete_registered_truth_condition_model) A term",
+        ),
+        (
+            "evidence_model_to_spec",
+            "concrete_truth_condition_independent_model_candidate_evidence_model_to_spec",
+            "concrete_registered_evidence_backed_model_denotes "
+            "concrete_registered_evidence_backed_truth_condition_model A term",
+            "fully_registered_truth_denotes "
+            "(concrete_registered_evidence_backed_model_spec "
+            "concrete_registered_evidence_backed_truth_condition_model) A term",
+        ),
+        (
+            "direct_model_sound",
+            "concrete_truth_condition_independent_model_candidate_direct_model_sound",
+            "concrete_registered_model_denotes "
+            "concrete_registered_truth_condition_model A term",
+            "AtomicClosureTruth A term",
+        ),
+        (
+            "evidence_model_sound",
+            "concrete_truth_condition_independent_model_candidate_evidence_model_sound",
+            "concrete_registered_evidence_backed_model_denotes "
+            "concrete_registered_evidence_backed_truth_condition_model A term",
+            "AtomicClosureTruth A term",
+        ),
+        (
+            "direct_supply_sound",
+            "concrete_truth_condition_independent_model_candidate_direct_supply_sound",
+            "fully_registered_truth_denotes "
+            "(concrete_truth_condition_instance_supply_direct_spec "
+            "concrete_truth_condition_instance_supply_certificate) A term",
+            "AtomicClosureTruth A term",
+        ),
+        (
+            "evidence_supply_sound",
+            "concrete_truth_condition_independent_model_candidate_evidence_supply_sound",
+            "fully_registered_truth_denotes "
+            "(concrete_truth_condition_instance_supply_evidence_spec "
+            "concrete_truth_condition_instance_supply_certificate) A term",
+            "AtomicClosureTruth A term",
+        ),
+        (
+            "kernel_supply_sound",
+            "concrete_truth_condition_independent_model_candidate_kernel_supply_sound",
+            "fully_registered_truth_denotes "
+            "(concrete_truth_condition_instance_supply_kernel_spec "
+            "concrete_truth_condition_instance_supply_certificate) A term",
+            "AtomicClosureTruth A term",
+        ),
+    ):
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_independent_model_candidate_"
+                f"{theorem_name}_projected :",
+                "  forall A : Type, forall term : A,",
+                f"    {premise} ->",
+                f"    {conclusion}.",
+                "Proof.",
+                "  exact ("
+                f"{field}",
+                "    concrete_truth_condition_independent_model_candidate_certificate).",
+                "Qed.",
+            ]
+        )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        projections = [
+            (
+                "direct_model_truth",
+                "fully_registered_truth_denotes "
+                "(concrete_registered_model_spec "
+                f"concrete_registered_truth_condition_model) {annotation} example_{idx}",
+            ),
+            (
+                "evidence_model_truth",
+                "fully_registered_truth_denotes "
+                "(concrete_registered_evidence_backed_model_spec "
+                "concrete_registered_evidence_backed_truth_condition_model) "
+                f"{annotation} example_{idx}",
+            ),
+            (
+                "kernel_supply_truth",
+                "fully_registered_truth_denotes "
+                "(concrete_truth_condition_instance_supply_kernel_spec "
+                "concrete_truth_condition_instance_supply_certificate) "
+                f"{annotation} example_{idx}",
+            ),
+            ("direct_atomic", f"AtomicClosureTruth {annotation} example_{idx}"),
+            ("evidence_atomic", f"AtomicClosureTruth {annotation} example_{idx}"),
+            ("kernel_atomic", f"AtomicClosureTruth {annotation} example_{idx}"),
+        ]
+        for projection, conclusion in projections:
+            lines.extend(
+                [
+                    "",
+                    "Theorem concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_{projection}_projected :",
+                    f"  {conclusion}.",
+                    "Proof.",
+                    "  exact (concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_{projection}",
+                    "    concrete_truth_condition_independent_model_candidate_certificate).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -31613,6 +32477,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_independent_model_candidate_certificate_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -33393,6 +34264,58 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                         "concrete_truth_condition_instance_supply_"
                         f"example_{idx}_{route}_{projection}_projected"
                     )
+        lines.append(
+            "#check ConcreteTruthConditionIndependentModelCandidateCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_independent_model_candidate_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_independent_model_candidate_certificate_exists"
+        )
+        for match_name in (
+            "supply",
+            "direct_model",
+            "evidence_model",
+            "route",
+            "provider_suite",
+            "direct_spec_model",
+            "evidence_spec_model",
+            "kernel_spec_route",
+            "supply_provider_suite",
+        ):
+            lines.append(
+                "#check "
+                f"concrete_truth_condition_independent_model_candidate_{match_name}_matches"
+            )
+        for projection in (
+            "direct_model_to_spec",
+            "evidence_model_to_spec",
+            "direct_model_sound",
+            "evidence_model_sound",
+            "direct_supply_sound",
+            "evidence_supply_sound",
+            "kernel_supply_sound",
+        ):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_model_candidate_"
+                f"{projection}_projected"
+            )
+        for idx in range(1, len(results) + 1):
+            for projection in (
+                "direct_model_truth",
+                "evidence_model_truth",
+                "kernel_supply_truth",
+                "direct_atomic",
+                "evidence_atomic",
+                "kernel_atomic",
+            ):
+                lines.append(
+                    "#check "
+                    "concrete_truth_condition_independent_model_candidate_"
+                    f"example_{idx}_{projection}_projected"
+                )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -34314,6 +35237,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_instance_supply_certificate_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_independent_model_candidate_certificate_lines(
             results,
             target,
         )
@@ -35865,6 +36795,54 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "concrete_truth_condition_instance_supply_"
                     f"example_{idx}_{route}_{projection}_projected."
                 )
+    lines.append("Check ConcreteTruthConditionIndependentModelCandidateCertificate.")
+    lines.append("Check concrete_truth_condition_independent_model_candidate_certificate.")
+    lines.append(
+        "Check concrete_truth_condition_independent_model_candidate_certificate_exists."
+    )
+    for match_name in (
+        "supply",
+        "direct_model",
+        "evidence_model",
+        "route",
+        "provider_suite",
+        "direct_spec_model",
+        "evidence_spec_model",
+        "kernel_spec_route",
+        "supply_provider_suite",
+    ):
+        lines.append(
+            "Check "
+            f"concrete_truth_condition_independent_model_candidate_{match_name}_matches."
+        )
+    for projection in (
+        "direct_model_to_spec",
+        "evidence_model_to_spec",
+        "direct_model_sound",
+        "evidence_model_sound",
+        "direct_supply_sound",
+        "evidence_supply_sound",
+        "kernel_supply_sound",
+    ):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_model_candidate_"
+            f"{projection}_projected."
+        )
+    for idx in range(1, len(results) + 1):
+        for projection in (
+            "direct_model_truth",
+            "evidence_model_truth",
+            "kernel_supply_truth",
+            "direct_atomic",
+            "evidence_atomic",
+            "kernel_atomic",
+        ):
+            lines.append(
+                "Check "
+                "concrete_truth_condition_independent_model_candidate_"
+                f"example_{idx}_{projection}_projected."
+            )
     return "\n".join(lines) + "\n"
 
 
