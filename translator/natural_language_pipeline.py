@@ -21525,6 +21525,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "model_candidate_class_suite_example_package"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22070,6 +22078,12 @@ def project_completion_status_payload(
                     "representative model-to-AtomicClosureTruth projections "
                     "for dependent existentials, time, repeat, negation, "
                     "registered transitions, and Cause. "
+                    "The newest class-suite example package then binds that "
+                    "suite to the exported examples by storing the concrete "
+                    "suite, model-candidate certificate, and instance-supply "
+                    "certificate together with direct, evidence-backed, and "
+                    "kernel-induced AtomicClosureTruth projections for every "
+                    "registered example. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

@@ -685,6 +685,12 @@ projections check each stored candidate against the concrete certificate and
 re-expose representative compositional-model routes for dependent
 existentials, temporal anchoring, repeat, negation, registered state
 transitions, and causal-resultative `Cause` forms.
+The class-suite example package introduces
+`ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage` and
+`concrete_truth_condition_independent_model_candidate_class_suite_example_package`.
+It stores the class-suite certificate, independent model-candidate certificate,
+and instance-supply certificate together with direct, evidence-backed, and
+kernel-induced `AtomicClosureTruth` projections for every exported example.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

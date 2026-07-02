@@ -1783,6 +1783,16 @@ model-to-`AtomicClosureTruth` projections for dependent existentials, temporal
 operators, repeat, negation, registered transitions, and `Cause causer effect`.
 It is still a finite registered-fragment model-candidate suite, not a proof of
 arbitrary lexical or causal truth-condition semantics.
+The next verified objective
+`coq_concrete_truth_condition_independent_model_candidate_class_suite_example_package`
+adds
+`ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage`. This
+package binds the class-suite certificate to the exported examples by storing
+the concrete suite, model-candidate certificate, and instance-supply certificate
+together with direct, evidence-backed, and kernel-induced
+`AtomicClosureTruth` projections for each registered example. It makes the
+suite-to-example route auditable without extending the claim beyond the finite
+registered fragment.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

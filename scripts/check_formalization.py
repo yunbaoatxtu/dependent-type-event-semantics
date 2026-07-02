@@ -5232,6 +5232,50 @@ def main() -> None:
             and "Check concrete_truth_condition_independent_model_candidate_class_suite_cause_model_atomic_projected."
             in coq
         ),
+        "lean concrete truth condition independent model candidate class suite example package": (
+            "structure ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage :"
+            in lean
+            and "def concrete_truth_condition_independent_model_candidate_class_suite_example_package :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_candidate_class_suite_example_package_exists :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_candidate_class_suite_example_suite_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_candidate_class_suite_example_candidate_matches :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_candidate_class_suite_example_model_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_candidate_class_suite_example_1_direct_atomic_sound :"
+            in lean
+            and "theorem concrete_truth_condition_independent_model_candidate_class_suite_example_1_kernel_atomic_sound :"
+            in lean
+            and "#check ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage"
+            in lean
+            and "#check concrete_truth_condition_independent_model_candidate_class_suite_example_1_kernel_atomic_sound"
+            in lean
+        ),
+        "coq concrete truth condition independent model candidate class suite example package": (
+            "Record ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_independent_model_candidate_class_suite_example_package :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_candidate_class_suite_example_package_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_candidate_class_suite_example_suite_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_candidate_class_suite_example_candidate_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_candidate_class_suite_example_model_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_candidate_class_suite_example_1_direct_atomic_sound :"
+            in coq
+            and "Theorem concrete_truth_condition_independent_model_candidate_class_suite_example_1_kernel_atomic_sound :"
+            in coq
+            and "Check ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage."
+            in coq
+            and "Check concrete_truth_condition_independent_model_candidate_class_suite_example_1_kernel_atomic_sound."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
