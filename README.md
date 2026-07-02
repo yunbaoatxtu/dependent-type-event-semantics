@@ -1793,6 +1793,18 @@ together with direct, evidence-backed, and kernel-induced
 `AtomicClosureTruth` projections for each registered example. It makes the
 suite-to-example route auditable without extending the claim beyond the finite
 registered fragment.
+The next verified objective
+`coq_concrete_truth_condition_registered_fragment_instance_completion_certificate`
+adds
+`ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate`. This
+certificate gathers the finite concrete instance supply, provider class-suite
+certificate, provider example package, independent model-candidate class suite,
+and model-candidate example package into one checked registered-fragment
+boundary. It reprojects direct, evidence-backed, kernel-induced,
+independent-suite, constructor-ledger, and compositional-model soundness, and
+stores direct/evidence/kernel `AtomicClosureTruth` witnesses for every exported
+example. It is a completion certificate for the finite registered instance
+supply, not for arbitrary English or unregistered lexical semantics.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

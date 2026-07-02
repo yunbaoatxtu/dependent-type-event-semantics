@@ -21533,6 +21533,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_registered_fragment_"
+                    "instance_completion_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22084,6 +22092,16 @@ def project_completion_status_payload(
                     "certificate together with direct, evidence-backed, and "
                     "kernel-induced AtomicClosureTruth projections for every "
                     "registered example. "
+                    "The newest registered-fragment instance-completion "
+                    "certificate then gathers the finite instance supply, "
+                    "provider class suite, provider example package, "
+                    "independent model-candidate suite, and model-candidate "
+                    "example package into a single checked boundary. It "
+                    "reprojects direct, evidence-backed, kernel-induced, "
+                    "independent-suite, constructor-ledger, and compositional "
+                    "model soundness, plus per-example direct/evidence/kernel "
+                    "AtomicClosureTruth witnesses, while keeping the claim "
+                    "restricted to the finite registered fragment. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

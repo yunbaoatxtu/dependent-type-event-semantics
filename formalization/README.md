@@ -691,6 +691,14 @@ The class-suite example package introduces
 It stores the class-suite certificate, independent model-candidate certificate,
 and instance-supply certificate together with direct, evidence-backed, and
 kernel-induced `AtomicClosureTruth` projections for every exported example.
+The registered-fragment instance-completion certificate introduces
+`ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate` and
+`concrete_truth_condition_registered_fragment_instance_completion_certificate`.
+It gathers the finite concrete instance supply, provider class suite, provider
+example package, independent model-candidate class suite, and model-candidate
+example package into one checked boundary, then reprojects direct,
+evidence-backed, kernel-induced, independent-suite, constructor-ledger, and
+compositional-model soundness for the registered fragment.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

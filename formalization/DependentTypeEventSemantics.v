@@ -19035,6 +19035,340 @@ Proof.
     concrete_truth_condition_independent_model_candidate_class_suite_example_package).
 Qed.
 
+Record ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate : Type := {
+  concrete_truth_condition_registered_fragment_instance_completion_supply :
+      ConcreteTruthConditionInstanceSupplyCertificate;
+  concrete_truth_condition_registered_fragment_instance_completion_supply_eq :
+      concrete_truth_condition_registered_fragment_instance_completion_supply =
+        concrete_truth_condition_instance_supply_certificate;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_suite :
+      ConcreteTruthConditionProviderClassInstanceSuiteCertificate;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_suite_eq :
+      concrete_truth_condition_registered_fragment_instance_completion_provider_suite =
+        concrete_truth_condition_provider_class_instance_suite_certificate;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_examples :
+      ConcreteTruthConditionProviderClassInstanceSuiteExamplePackage;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_examples_eq :
+      concrete_truth_condition_registered_fragment_instance_completion_provider_examples =
+        concrete_truth_condition_provider_class_instance_suite_example_package;
+  concrete_truth_condition_registered_fragment_instance_completion_model_suite :
+      ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate;
+  concrete_truth_condition_registered_fragment_instance_completion_model_suite_eq :
+      concrete_truth_condition_registered_fragment_instance_completion_model_suite =
+        concrete_truth_condition_independent_model_candidate_class_suite_certificate;
+  concrete_truth_condition_registered_fragment_instance_completion_model_examples :
+      ConcreteTruthConditionIndependentModelCandidateClassSuiteExamplePackage;
+  concrete_truth_condition_registered_fragment_instance_completion_model_examples_eq :
+      concrete_truth_condition_registered_fragment_instance_completion_model_examples =
+        concrete_truth_condition_independent_model_candidate_class_suite_example_package;
+  concrete_truth_condition_registered_fragment_instance_completion_direct_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes concrete_registered_truth_conditions
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_registered_fragment_instance_completion_evidence_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_evidence_backed_truth_conditions
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_registered_fragment_instance_completion_kernel_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_truth_conditions_from_kernel
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_registered_fragment_instance_completion_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_registered_fragment_instance_completion_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec
+          registered_truth_condition_constructor_discharge_certificate)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_registered_fragment_instance_completion_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_registered_fragment_instance_completion_example_1_direct_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_registered_fragment_instance_completion_example_1_evidence_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_registered_fragment_instance_completion_example_2_direct_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_registered_fragment_instance_completion_example_2_evidence_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_registered_fragment_instance_completion_example_2_kernel_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_registered_fragment_instance_completion_example_3_direct_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_registered_fragment_instance_completion_example_3_evidence_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_registered_fragment_instance_completion_example_3_kernel_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition concrete_truth_condition_registered_fragment_instance_completion_certificate :
+  ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate := {|
+  concrete_truth_condition_registered_fragment_instance_completion_supply :=
+    concrete_truth_condition_instance_supply_certificate;
+  concrete_truth_condition_registered_fragment_instance_completion_supply_eq := eq_refl;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_suite :=
+    concrete_truth_condition_provider_class_instance_suite_certificate;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_suite_eq := eq_refl;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_examples :=
+    concrete_truth_condition_provider_class_instance_suite_example_package;
+  concrete_truth_condition_registered_fragment_instance_completion_provider_examples_eq := eq_refl;
+  concrete_truth_condition_registered_fragment_instance_completion_model_suite :=
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate;
+  concrete_truth_condition_registered_fragment_instance_completion_model_suite_eq := eq_refl;
+  concrete_truth_condition_registered_fragment_instance_completion_model_examples :=
+    concrete_truth_condition_independent_model_candidate_class_suite_example_package;
+  concrete_truth_condition_registered_fragment_instance_completion_model_examples_eq := eq_refl;
+  concrete_truth_condition_registered_fragment_instance_completion_direct_sound :=
+    concrete_truth_condition_instance_supply_direct_sound_projected;
+  concrete_truth_condition_registered_fragment_instance_completion_evidence_sound :=
+    concrete_truth_condition_instance_supply_evidence_sound_projected;
+  concrete_truth_condition_registered_fragment_instance_completion_kernel_sound :=
+    concrete_truth_condition_instance_supply_kernel_sound_projected;
+  concrete_truth_condition_registered_fragment_instance_completion_independent_sound :=
+    concrete_truth_condition_provider_class_instance_suite_independent_spec_sound_projected;
+  concrete_truth_condition_registered_fragment_instance_completion_constructor_sound :=
+    concrete_truth_condition_provider_class_instance_suite_ledger_spec_sound_projected;
+  concrete_truth_condition_registered_fragment_instance_completion_model_sound :=
+    concrete_truth_condition_independent_model_candidate_class_suite_model_sound_projected;
+  concrete_truth_condition_registered_fragment_instance_completion_example_1_direct_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_1_direct_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_1_evidence_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_1_evidence_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_1_kernel_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_2_direct_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_2_direct_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_2_evidence_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_2_evidence_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_2_kernel_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_2_kernel_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_3_direct_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_3_direct_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_3_evidence_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_3_evidence_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_3_kernel_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_3_kernel_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_4_direct_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_4_evidence_atomic_sound;
+  concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic := concrete_truth_condition_independent_model_candidate_class_suite_example_4_kernel_atomic_sound
+|}.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_certificate_exists :
+  exists C : ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate,
+    C = concrete_truth_condition_registered_fragment_instance_completion_certificate.
+Proof.
+  exists concrete_truth_condition_registered_fragment_instance_completion_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_supply_matches :
+  concrete_truth_condition_registered_fragment_instance_completion_supply
+    concrete_truth_condition_registered_fragment_instance_completion_certificate =
+  concrete_truth_condition_instance_supply_certificate.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_supply_eq
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_provider_suite_matches :
+  concrete_truth_condition_registered_fragment_instance_completion_provider_suite
+    concrete_truth_condition_registered_fragment_instance_completion_certificate =
+  concrete_truth_condition_provider_class_instance_suite_certificate.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_provider_suite_eq
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_provider_examples_matches :
+  concrete_truth_condition_registered_fragment_instance_completion_provider_examples
+    concrete_truth_condition_registered_fragment_instance_completion_certificate =
+  concrete_truth_condition_provider_class_instance_suite_example_package.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_provider_examples_eq
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_model_suite_matches :
+  concrete_truth_condition_registered_fragment_instance_completion_model_suite
+    concrete_truth_condition_registered_fragment_instance_completion_certificate =
+  concrete_truth_condition_independent_model_candidate_class_suite_certificate.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_model_suite_eq
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_model_examples_matches :
+  concrete_truth_condition_registered_fragment_instance_completion_model_examples
+    concrete_truth_condition_registered_fragment_instance_completion_certificate =
+  concrete_truth_condition_independent_model_candidate_class_suite_example_package.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_model_examples_eq
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_direct_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes concrete_registered_truth_conditions
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_direct_sound
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_evidence_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_evidence_sound
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_kernel_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_truth_conditions_from_kernel
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_kernel_sound
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_independent_sound
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec
+        registered_truth_condition_constructor_discharge_certificate)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_constructor_sound
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_model_sound_projected :
+  forall A : Type, forall term : A,
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_model_sound
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_1_direct_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_1_direct_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_1_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_1_evidence_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_2_direct_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_2_direct_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_2_evidence_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_2_evidence_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_2_kernel_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_2_kernel_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_3_direct_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_3_direct_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_3_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_3_evidence_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_3_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_3_kernel_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
+Theorem concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic
+    concrete_truth_condition_registered_fragment_instance_completion_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -20338,3 +20672,29 @@ Check concrete_truth_condition_independent_model_candidate_class_suite_example_3
 Check concrete_truth_condition_independent_model_candidate_class_suite_example_4_direct_atomic_sound.
 Check concrete_truth_condition_independent_model_candidate_class_suite_example_4_evidence_atomic_sound.
 Check concrete_truth_condition_independent_model_candidate_class_suite_example_4_kernel_atomic_sound.
+Check ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate.
+Check concrete_truth_condition_registered_fragment_instance_completion_certificate.
+Check concrete_truth_condition_registered_fragment_instance_completion_certificate_exists.
+Check concrete_truth_condition_registered_fragment_instance_completion_supply_matches.
+Check concrete_truth_condition_registered_fragment_instance_completion_provider_suite_matches.
+Check concrete_truth_condition_registered_fragment_instance_completion_provider_examples_matches.
+Check concrete_truth_condition_registered_fragment_instance_completion_model_suite_matches.
+Check concrete_truth_condition_registered_fragment_instance_completion_model_examples_matches.
+Check concrete_truth_condition_registered_fragment_instance_completion_direct_sound_projected.
+Check concrete_truth_condition_registered_fragment_instance_completion_evidence_sound_projected.
+Check concrete_truth_condition_registered_fragment_instance_completion_kernel_sound_projected.
+Check concrete_truth_condition_registered_fragment_instance_completion_independent_sound_projected.
+Check concrete_truth_condition_registered_fragment_instance_completion_constructor_sound_projected.
+Check concrete_truth_condition_registered_fragment_instance_completion_model_sound_projected.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_1_direct_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_1_evidence_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_2_direct_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_2_evidence_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_2_kernel_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_3_direct_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_3_evidence_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_3_kernel_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic_sound.
+Check concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic_sound.
