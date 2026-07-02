@@ -14225,6 +14225,219 @@ Proof.
     concrete_truth_condition_provider_polarity_class_instance_certificate).
 Qed.
 
+Record ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate : Type := {
+  concrete_truth_condition_provider_transition_cause_class_source :
+      ConcreteTruthConditionProviderClassObligationSuite;
+  concrete_truth_condition_provider_transition_cause_class_source_eq :
+      concrete_truth_condition_provider_transition_cause_class_source =
+        concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_transition_cause_class_instances :
+      IndependentRegisteredTransitionCauseTruthConditionInstances;
+  concrete_truth_condition_provider_transition_cause_class_instances_eq :
+      concrete_truth_condition_provider_transition_cause_class_instances =
+        independent_registered_transition_cause_truth_condition_instances;
+  concrete_truth_condition_provider_transition_cause_class_provider_transition_truth :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances)
+        TransitionT (Transition theme scale source target);
+  concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      AtomicClosureTruth TransitionT (Transition theme scale source target);
+  concrete_truth_condition_provider_transition_cause_class_provider_cause_truth :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (Cause causer effect);
+  concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+      AtomicClosureTruth PropT (Cause causer effect);
+  concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+        TransitionT (Transition theme scale source target);
+  concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic :
+      forall theme : Entity, forall scale : StateScale,
+      forall source : State, forall target : State,
+      RegisteredStateTransitionTruth theme scale source target ->
+      AtomicClosureTruth TransitionT (Transition theme scale source target);
+  concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect);
+  concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic :
+      forall causer : Entity, forall effect : TransitionT,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+      AtomicClosureTruth PropT (Cause causer effect)
+}.
+
+Definition concrete_truth_condition_provider_transition_cause_class_instance_certificate :
+  ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate := {|
+  concrete_truth_condition_provider_transition_cause_class_source :=
+    concrete_truth_condition_provider_class_obligation_suite;
+  concrete_truth_condition_provider_transition_cause_class_source_eq := eq_refl;
+  concrete_truth_condition_provider_transition_cause_class_instances :=
+    independent_registered_transition_cause_truth_condition_instances;
+  concrete_truth_condition_provider_transition_cause_class_instances_eq := eq_refl;
+  concrete_truth_condition_provider_transition_cause_class_provider_transition_truth :=
+    independent_registered_transition_cause_truth_condition_transition_instance;
+  concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic :=
+    fun theme scale source target transition_truth =>
+      concrete_truth_condition_provider_class_obligation_independent_sound_projected
+        TransitionT (Transition theme scale source target)
+        (independent_registered_transition_cause_truth_condition_transition_instance
+          theme scale source target transition_truth);
+  concrete_truth_condition_provider_transition_cause_class_provider_cause_truth :=
+    independent_registered_transition_cause_truth_condition_cause_instance;
+  concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic :=
+    fun causer effect effect_truth =>
+      concrete_truth_condition_provider_class_obligation_independent_sound_projected
+        PropT (Cause causer effect)
+        (independent_registered_transition_cause_truth_condition_cause_instance
+          causer effect effect_truth);
+  concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_transition_projected;
+  concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic :=
+    fun theme scale source target transition_truth =>
+      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+        TransitionT (Transition theme scale source target)
+        (concrete_truth_condition_provider_class_obligation_ledger_transition_projected
+          theme scale source target transition_truth);
+  concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth :=
+    concrete_truth_condition_provider_class_obligation_ledger_cause_projected;
+  concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic :=
+    fun causer effect effect_truth =>
+      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected
+        PropT (Cause causer effect)
+        (concrete_truth_condition_provider_class_obligation_ledger_cause_projected
+          causer effect effect_truth)
+|}.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists :
+  exists C : ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate,
+    C = concrete_truth_condition_provider_transition_cause_class_instance_certificate.
+Proof.
+  exists concrete_truth_condition_provider_transition_cause_class_instance_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_source_matches :
+  concrete_truth_condition_provider_transition_cause_class_source
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate =
+  concrete_truth_condition_provider_class_obligation_suite.
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_source_eq
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_instances_match :
+  concrete_truth_condition_provider_transition_cause_class_instances
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate =
+  independent_registered_transition_cause_truth_condition_instances.
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_instances_eq
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances)
+      TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_provider_transition_truth
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    AtomicClosureTruth TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_provider_cause_truth
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec independent_registered_truth_condition_clause_instances) TransitionT effect ->
+    AtomicClosureTruth PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate)
+      TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected :
+  forall theme : Entity, forall scale : StateScale,
+  forall source : State, forall target : State,
+    RegisteredStateTransitionTruth theme scale source target ->
+    AtomicClosureTruth TransitionT (Transition theme scale source target).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
+Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected :
+  forall causer : Entity, forall effect : TransitionT,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec registered_truth_condition_constructor_discharge_certificate) TransitionT effect ->
+    AtomicClosureTruth PropT (Cause causer effect).
+Proof.
+  exact (concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic
+    concrete_truth_condition_provider_transition_cause_class_instance_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -15249,3 +15462,16 @@ Check concrete_truth_condition_provider_polarity_class_provider_truth_projected.
 Check concrete_truth_condition_provider_polarity_class_provider_atomic_projected.
 Check concrete_truth_condition_provider_polarity_class_ledger_truth_projected.
 Check concrete_truth_condition_provider_polarity_class_ledger_atomic_projected.
+Check ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate.
+Check concrete_truth_condition_provider_transition_cause_class_instance_certificate.
+Check concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists.
+Check concrete_truth_condition_provider_transition_cause_class_source_matches.
+Check concrete_truth_condition_provider_transition_cause_class_instances_match.
+Check concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected.
+Check concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected.
+Check concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected.
+Check concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected.
+Check concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected.
+Check concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected.
+Check concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected.
+Check concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected.

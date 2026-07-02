@@ -1623,6 +1623,17 @@ projection, constructor-ledger truth route, and constructor-ledger atomic
 projection. It is still a registered polarity constructor-class certificate,
 not an independent model of arbitrary natural-language negation, polarity
 licensing, or discourse-scope interaction.
+The next verified objective
+`coq_concrete_truth_condition_provider_transition_cause_class_instance_certificate`
+adds `ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate`.
+This stage binds the state-transition and causal-resultative provider class to
+`IndependentRegisteredTransitionCauseTruthConditionInstances`; for
+`Transition theme scale source target` and `Cause causer effect` it records
+the provider-side truth route, provider-side `AtomicClosureTruth` projection,
+constructor-ledger truth route, and constructor-ledger atomic projection. It is
+still a registered Transition/Cause constructor-class certificate, not an
+independent model of arbitrary causation, result-state lexicalization, or
+worldly causal explanation.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

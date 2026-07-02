@@ -5132,6 +5132,50 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_provider_transition_cause_class_instance_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -17939,6 +17983,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_provider_temporal_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_repeat_class_instance_certificate",
                 "coq_concrete_truth_condition_provider_polarity_class_instance_certificate",
+                "coq_concrete_truth_condition_provider_transition_cause_class_instance_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27442,6 +27487,14 @@ class TranslatorTests(unittest.TestCase):
             "`ConcreteTruthConditionProviderPolarityClassInstanceCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_provider_transition_cause_class_instance_certificate`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -27810,6 +27863,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`concrete_truth_condition_provider_polarity_class_instance_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_provider_transition_cause_class_instance_certificate`",
             formalization_readme,
         )
         self.assertIn("AtomicValuationSpec", manuscript)
@@ -28183,6 +28244,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_provider_polarity_class_instance_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_provider_transition_cause_class_instance_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

@@ -25389,6 +25389,420 @@ def concrete_truth_condition_provider_polarity_class_instance_certificate_lines(
     ]
 
 
+def concrete_truth_condition_provider_transition_cause_class_instance_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Discharge the registered Transition/Cause class."""
+
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+
+    if target == "lean":
+        return [
+            "structure ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate : Type where",
+            "  concrete_truth_condition_provider_transition_cause_class_source :",
+            "      ConcreteTruthConditionProviderClassObligationSuite",
+            "  concrete_truth_condition_provider_transition_cause_class_source_eq :",
+            "      concrete_truth_condition_provider_transition_cause_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite",
+            "  concrete_truth_condition_provider_transition_cause_class_instances :",
+            "      IndependentRegisteredTransitionCauseTruthConditionInstances",
+            "  concrete_truth_condition_provider_transition_cause_class_instances_eq :",
+            "      concrete_truth_condition_provider_transition_cause_class_instances =",
+            "        independent_registered_transition_cause_truth_condition_instances",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_transition_truth :",
+            "      (theme : Entity) -> (scale : StateScale) ->",
+            "      (source : State) -> (target : State) ->",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes TransitionT",
+            "        (Transition theme scale source target)",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic :",
+            "      (theme : Entity) -> (scale : StateScale) ->",
+            "      (source : State) -> (target : State) ->",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      AtomicClosureTruth TransitionT (Transition theme scale source target)",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_cause_truth :",
+            "      (causer : Entity) -> (effect : TransitionT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect)",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic :",
+            "      (causer : Entity) -> (effect : TransitionT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            "      AtomicClosureTruth PropT (Cause causer effect)",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth :",
+            "      (theme : Entity) -> (scale : StateScale) ->",
+            "      (source : State) -> (target : State) ->",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes TransitionT",
+            "        (Transition theme scale source target)",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic :",
+            "      (theme : Entity) -> (scale : StateScale) ->",
+            "      (source : State) -> (target : State) ->",
+            "      RegisteredStateTransitionTruth theme scale source target ->",
+            "      AtomicClosureTruth TransitionT (Transition theme scale source target)",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth :",
+            "      (causer : Entity) -> (effect : TransitionT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect)",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic :",
+            "      (causer : Entity) -> (effect : TransitionT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            "      AtomicClosureTruth PropT (Cause causer effect)",
+            "",
+            "def concrete_truth_condition_provider_transition_cause_class_instance_certificate :",
+            "    ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate := {",
+            "  concrete_truth_condition_provider_transition_cause_class_source :=",
+            "    concrete_truth_condition_provider_class_obligation_suite,",
+            "  concrete_truth_condition_provider_transition_cause_class_source_eq := rfl,",
+            "  concrete_truth_condition_provider_transition_cause_class_instances :=",
+            "    independent_registered_transition_cause_truth_condition_instances,",
+            "  concrete_truth_condition_provider_transition_cause_class_instances_eq := rfl,",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_transition_truth :=",
+            "    independent_registered_transition_cause_truth_condition_transition_instance,",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic :=",
+            "    fun theme scale source target transition_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+            "        TransitionT (Transition theme scale source target)",
+            "        (independent_registered_transition_cause_truth_condition_transition_instance",
+            "          theme scale source target transition_truth),",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_cause_truth :=",
+            "    independent_registered_transition_cause_truth_condition_cause_instance,",
+            "  concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic :=",
+            "    fun causer effect effect_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+            "        PropT (Cause causer effect)",
+            "        (independent_registered_transition_cause_truth_condition_cause_instance",
+            "          causer effect effect_truth),",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth :=",
+            "    concrete_truth_condition_provider_class_obligation_ledger_transition_projected,",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic :=",
+            "    fun theme scale source target transition_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+            "        TransitionT (Transition theme scale source target)",
+            "        (concrete_truth_condition_provider_class_obligation_ledger_transition_projected",
+            "          theme scale source target transition_truth),",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth :=",
+            "    concrete_truth_condition_provider_class_obligation_ledger_cause_projected,",
+            "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic :=",
+            "    fun causer effect effect_truth =>",
+            "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+            "        PropT (Cause causer effect)",
+            "        (concrete_truth_condition_provider_class_obligation_ledger_cause_projected",
+            "          causer effect effect_truth)",
+            "}",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists :",
+            "    Exists (fun C : ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate =>",
+            "      C = concrete_truth_condition_provider_transition_cause_class_instance_certificate) := by",
+            "  exact Exists.intro concrete_truth_condition_provider_transition_cause_class_instance_certificate rfl",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_source_matches :",
+            "    concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "      concrete_truth_condition_provider_transition_cause_class_source =",
+            "        concrete_truth_condition_provider_class_obligation_suite := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_source_eq",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_instances_match :",
+            "    concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "      concrete_truth_condition_provider_transition_cause_class_instances =",
+            "        independent_registered_transition_cause_truth_condition_instances := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_instances_eq",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected :",
+            "    (theme : Entity) -> (scale : StateScale) ->",
+            "    (source : State) -> (target : State) ->",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes TransitionT",
+            "      (Transition theme scale source target) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_provider_transition_truth",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected :",
+            "    (theme : Entity) -> (scale : StateScale) ->",
+            "    (source : State) -> (target : State) ->",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    AtomicClosureTruth TransitionT (Transition theme scale source target) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected :",
+            "    (causer : Entity) -> (effect : TransitionT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_provider_cause_truth",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected :",
+            "    (causer : Entity) -> (effect : TransitionT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            "    AtomicClosureTruth PropT (Cause causer effect) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected :",
+            "    (theme : Entity) -> (scale : StateScale) ->",
+            "    (source : State) -> (target : State) ->",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes TransitionT",
+            "      (Transition theme scale source target) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected :",
+            "    (theme : Entity) -> (scale : StateScale) ->",
+            "    (source : State) -> (target : State) ->",
+            "    RegisteredStateTransitionTruth theme scale source target ->",
+            "    AtomicClosureTruth TransitionT (Transition theme scale source target) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected :",
+            "    (causer : Entity) -> (effect : TransitionT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (Cause causer effect) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth",
+            "",
+            "theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected :",
+            "    (causer : Entity) -> (effect : TransitionT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes TransitionT effect ->",
+            "    AtomicClosureTruth PropT (Cause causer effect) := by",
+            "  exact concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+            "    concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic",
+        ]
+
+    return [
+        "Record ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate : Type := {",
+        "  concrete_truth_condition_provider_transition_cause_class_source :",
+        "      ConcreteTruthConditionProviderClassObligationSuite;",
+        "  concrete_truth_condition_provider_transition_cause_class_source_eq :",
+        "      concrete_truth_condition_provider_transition_cause_class_source =",
+        "        concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_transition_cause_class_instances :",
+        "      IndependentRegisteredTransitionCauseTruthConditionInstances;",
+        "  concrete_truth_condition_provider_transition_cause_class_instances_eq :",
+        "      concrete_truth_condition_provider_transition_cause_class_instances =",
+        "        independent_registered_transition_cause_truth_condition_instances;",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_transition_truth :",
+        "      forall theme : Entity, forall scale : StateScale,",
+        "      forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq}",
+        "        TransitionT (Transition theme scale source target);",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic :",
+        "      forall theme : Entity, forall scale : StateScale,",
+        "      forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      AtomicClosureTruth TransitionT (Transition theme scale source target);",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_cause_truth :",
+        "      forall causer : Entity, forall effect : TransitionT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} TransitionT effect ->",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT (Cause causer effect);",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic :",
+        "      forall causer : Entity, forall effect : TransitionT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} TransitionT effect ->",
+        "      AtomicClosureTruth PropT (Cause causer effect);",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth :",
+        "      forall theme : Entity, forall scale : StateScale,",
+        "      forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq}",
+        "        TransitionT (Transition theme scale source target);",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic :",
+        "      forall theme : Entity, forall scale : StateScale,",
+        "      forall source : State, forall target : State,",
+        "      RegisteredStateTransitionTruth theme scale source target ->",
+        "      AtomicClosureTruth TransitionT (Transition theme scale source target);",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth :",
+        "      forall causer : Entity, forall effect : TransitionT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} TransitionT effect ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT (Cause causer effect);",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic :",
+        "      forall causer : Entity, forall effect : TransitionT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} TransitionT effect ->",
+        "      AtomicClosureTruth PropT (Cause causer effect)",
+        "}.",
+        "",
+        "Definition concrete_truth_condition_provider_transition_cause_class_instance_certificate :",
+        "  ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate := {|",
+        "  concrete_truth_condition_provider_transition_cause_class_source :=",
+        "    concrete_truth_condition_provider_class_obligation_suite;",
+        "  concrete_truth_condition_provider_transition_cause_class_source_eq := eq_refl;",
+        "  concrete_truth_condition_provider_transition_cause_class_instances :=",
+        "    independent_registered_transition_cause_truth_condition_instances;",
+        "  concrete_truth_condition_provider_transition_cause_class_instances_eq := eq_refl;",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_transition_truth :=",
+        "    independent_registered_transition_cause_truth_condition_transition_instance;",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic :=",
+        "    fun theme scale source target transition_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+        "        TransitionT (Transition theme scale source target)",
+        "        (independent_registered_transition_cause_truth_condition_transition_instance",
+        "          theme scale source target transition_truth);",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_cause_truth :=",
+        "    independent_registered_transition_cause_truth_condition_cause_instance;",
+        "  concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic :=",
+        "    fun causer effect effect_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_independent_sound_projected",
+        "        PropT (Cause causer effect)",
+        "        (independent_registered_transition_cause_truth_condition_cause_instance",
+        "          causer effect effect_truth);",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth :=",
+        "    concrete_truth_condition_provider_class_obligation_ledger_transition_projected;",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic :=",
+        "    fun theme scale source target transition_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+        "        TransitionT (Transition theme scale source target)",
+        "        (concrete_truth_condition_provider_class_obligation_ledger_transition_projected",
+        "          theme scale source target transition_truth);",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth :=",
+        "    concrete_truth_condition_provider_class_obligation_ledger_cause_projected;",
+        "  concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic :=",
+        "    fun causer effect effect_truth =>",
+        "      concrete_truth_condition_provider_class_obligation_ledger_spec_sound_projected",
+        "        PropT (Cause causer effect)",
+        "        (concrete_truth_condition_provider_class_obligation_ledger_cause_projected",
+        "          causer effect effect_truth)",
+        "|}.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists :",
+        "  exists C : ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate,",
+        "    C = concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+        "Proof.",
+        "  exists concrete_truth_condition_provider_transition_cause_class_instance_certificate.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_source_matches :",
+        "  concrete_truth_condition_provider_transition_cause_class_source",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate =",
+        "  concrete_truth_condition_provider_class_obligation_suite.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_source_eq",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_instances_match :",
+        "  concrete_truth_condition_provider_transition_cause_class_instances",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate =",
+        "  independent_registered_transition_cause_truth_condition_instances.",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_instances_eq",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected :",
+        "  forall theme : Entity, forall scale : StateScale,",
+        "  forall source : State, forall target : State,",
+        "    RegisteredStateTransitionTruth theme scale source target ->",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq}",
+        "      TransitionT (Transition theme scale source target).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_provider_transition_truth",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected :",
+        "  forall theme : Entity, forall scale : StateScale,",
+        "  forall source : State, forall target : State,",
+        "    RegisteredStateTransitionTruth theme scale source target ->",
+        "    AtomicClosureTruth TransitionT (Transition theme scale source target).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected :",
+        "  forall causer : Entity, forall effect : TransitionT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} TransitionT effect ->",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT (Cause causer effect).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_provider_cause_truth",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected :",
+        "  forall causer : Entity, forall effect : TransitionT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} TransitionT effect ->",
+        "    AtomicClosureTruth PropT (Cause causer effect).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected :",
+        "  forall theme : Entity, forall scale : StateScale,",
+        "  forall source : State, forall target : State,",
+        "    RegisteredStateTransitionTruth theme scale source target ->",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq}",
+        "      TransitionT (Transition theme scale source target).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected :",
+        "  forall theme : Entity, forall scale : StateScale,",
+        "  forall source : State, forall target : State,",
+        "    RegisteredStateTransitionTruth theme scale source target ->",
+        "    AtomicClosureTruth TransitionT (Transition theme scale source target).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected :",
+        "  forall causer : Entity, forall effect : TransitionT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} TransitionT effect ->",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT (Cause causer effect).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected :",
+        "  forall causer : Entity, forall effect : TransitionT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} TransitionT effect ->",
+        "    AtomicClosureTruth PropT (Cause causer effect).",
+        "Proof.",
+        "  exact (concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic",
+        "    concrete_truth_condition_provider_transition_cause_class_instance_certificate).",
+        "Qed.",
+    ]
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -30065,6 +30479,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_provider_transition_cause_class_instance_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -31725,6 +32145,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "concrete_truth_condition_provider_polarity_class_"
                     f"{route}_{projection}_projected"
                 )
+        lines.append(
+            "#check ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_transition_cause_class_instance_certificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_transition_cause_class_source_matches"
+        )
+        lines.append(
+            "#check concrete_truth_condition_provider_transition_cause_class_instances_match"
+        )
+        for route in ("provider", "ledger"):
+            for constructor in ("transition", "cause"):
+                for projection in ("truth", "atomic"):
+                    lines.append(
+                        "#check "
+                        "concrete_truth_condition_provider_transition_cause_class_"
+                        f"{route}_{constructor}_{projection}_projected"
+                    )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -32621,6 +33064,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_provider_polarity_class_instance_certificate_lines(
+            target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_provider_transition_cause_class_instance_certificate_lines(
             target
         )
     )
@@ -34047,6 +34496,29 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                 "concrete_truth_condition_provider_polarity_class_"
                 f"{route}_{projection}_projected."
             )
+    lines.append(
+        "Check ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_transition_cause_class_instance_certificate."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_transition_cause_class_source_matches."
+    )
+    lines.append(
+        "Check concrete_truth_condition_provider_transition_cause_class_instances_match."
+    )
+    for route in ("provider", "ledger"):
+        for constructor in ("transition", "cause"):
+            for projection in ("truth", "atomic"):
+                lines.append(
+                    "Check "
+                    "concrete_truth_condition_provider_transition_cause_class_"
+                    f"{route}_{constructor}_{projection}_projected."
+                )
     return "\n".join(lines) + "\n"
 
 

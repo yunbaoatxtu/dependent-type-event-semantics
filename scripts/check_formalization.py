@@ -4478,6 +4478,70 @@ def main() -> None:
             and "Check concrete_truth_condition_provider_polarity_class_ledger_atomic_projected."
             in coq
         ),
+        "lean concrete truth provider transition cause class instance certificate": (
+            "structure ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate : Type where"
+            in lean
+            and "def concrete_truth_condition_provider_transition_cause_class_instance_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_source_matches :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_instances_match :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected :"
+            in lean
+            and "theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected :"
+            in lean
+            and "#check ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate"
+            in lean
+            and "#check concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected"
+            in lean
+        ),
+        "coq concrete truth provider transition cause class instance certificate": (
+            "Record ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_provider_transition_cause_class_instance_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_instance_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_source_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_instances_match :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_provider_transition_atomic_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_provider_cause_atomic_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_transition_atomic_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_truth_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected :"
+            in coq
+            and "Check ConcreteTruthConditionProviderTransitionCauseClassInstanceCertificate."
+            in coq
+            and "Check concrete_truth_condition_provider_transition_cause_class_ledger_cause_atomic_projected."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
