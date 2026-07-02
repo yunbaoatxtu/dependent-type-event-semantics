@@ -660,6 +660,14 @@ certificate, `IndependentRegisteredRepeatTruthConditionInstances`, and
 `ConcreteRegisteredCompositionalModel`, then checks provider,
 constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
 for `repeat n body`.
+The independent polarity model-candidate certificate introduces
+`ConcreteTruthConditionIndependentPolarityModelCandidateCertificate` and
+`concrete_truth_condition_independent_polarity_model_candidate_certificate`.
+It ties the proposition-level negation class entrance to the provider polarity
+certificate, `IndependentRegisteredPolarityTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`, then checks provider,
+constructor-ledger, compositional-model, and `AtomicClosureTruth` projections
+for `not_T body`.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

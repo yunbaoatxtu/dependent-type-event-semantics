@@ -1743,6 +1743,17 @@ projections, compositional-model denotation, and model-level
 `AtomicClosureTruth` projection. It advances the event-counting replacement
 route without claiming arbitrary event individuation or discourse-level
 counting semantics.
+The next verified objective
+`coq_concrete_truth_condition_independent_polarity_model_candidate_certificate`
+adds `ConcreteTruthConditionIndependentPolarityModelCandidateCertificate`.
+This polarity model-candidate certificate anchors the proposition-level
+negation class-readiness boundary to the provider polarity class certificate,
+`IndependentRegisteredPolarityTruthConditionInstances`, and
+`ConcreteRegisteredCompositionalModel`. For `not_T body`, it stores provider
+truth and atomic projections, constructor-ledger truth and atomic projections,
+compositional-model denotation, and model-level `AtomicClosureTruth`
+projection. It advances the negation replacement route without treating
+negation as an event predicate or an entity-level pseudo argument.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

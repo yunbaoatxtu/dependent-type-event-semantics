@@ -30914,6 +30914,429 @@ def concrete_truth_condition_independent_repeat_model_candidate_certificate_line
     ]
 
 
+def concrete_truth_condition_independent_polarity_model_candidate_certificate_lines(
+    target: str,
+) -> list[str]:
+    """Package the polarity/negation entrance with model witnesses."""
+
+    independent_spec_lean = (
+        "independent_registered_truth_condition_clause_instances."
+        "independent_registered_clause_spec"
+    )
+    independent_spec_coq = (
+        "(independent_registered_clause_spec "
+        "independent_registered_truth_condition_clause_instances)"
+    )
+    constructor_spec_lean = (
+        "registered_truth_condition_constructor_discharge_certificate."
+        "registered_truth_condition_constructor_discharge_spec"
+    )
+    constructor_spec_coq = (
+        "(registered_truth_condition_constructor_discharge_spec "
+        "registered_truth_condition_constructor_discharge_certificate)"
+    )
+    model_denotes_lean = (
+        "concrete_registered_compositional_model."
+        "concrete_registered_composition_denotes"
+    )
+    model_denotes_coq = (
+        "concrete_registered_composition_denotes "
+        "concrete_registered_compositional_model"
+    )
+
+    if target == "lean":
+        return [
+            "structure ConcreteTruthConditionIndependentPolarityModelCandidateCertificate :",
+            "    Type where",
+            "  concrete_truth_condition_independent_polarity_model_candidate_source :",
+            "      ConcreteTruthConditionIndependentModelClassReadinessCertificate",
+            "  concrete_truth_condition_independent_polarity_model_candidate_source_eq :",
+            "      concrete_truth_condition_independent_polarity_model_candidate_source =",
+            "        concrete_truth_condition_independent_model_class_readiness_certificate",
+            "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate :",
+            "      ConcreteTruthConditionProviderPolarityClassInstanceCertificate",
+            "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate_eq :",
+            "      concrete_truth_condition_independent_polarity_model_candidate_class_certificate =",
+            "        concrete_truth_condition_provider_polarity_class_instance_certificate",
+            "  concrete_truth_condition_independent_polarity_model_candidate_instances :",
+            "      IndependentRegisteredPolarityTruthConditionInstances",
+            "  concrete_truth_condition_independent_polarity_model_candidate_instances_eq :",
+            "      concrete_truth_condition_independent_polarity_model_candidate_instances =",
+            "        independent_registered_polarity_truth_condition_instances",
+            "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model :",
+            "      ConcreteRegisteredCompositionalModel",
+            "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model_eq :",
+            "      concrete_truth_condition_independent_polarity_model_candidate_compositional_model =",
+            "        concrete_registered_compositional_model",
+            "  concrete_truth_condition_independent_polarity_model_candidate_independent_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_polarity_model_candidate_constructor_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_polarity_model_candidate_model_sound :",
+            "      (A : Type) -> (term : A) ->",
+            f"      {model_denotes_lean} A term ->",
+            "      AtomicClosureTruth A term",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth :",
+            "      (body : PropT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT (not_T body)",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_atomic :",
+            "      (body : PropT) ->",
+            f"      {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "      AtomicClosureTruth PropT (not_T body)",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth :",
+            "      (body : PropT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT (not_T body)",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_atomic :",
+            "      (body : PropT) ->",
+            f"      {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            "      AtomicClosureTruth PropT (not_T body)",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_denotes :",
+            "      (body : PropT) ->",
+            f"      {model_denotes_lean} PropT body ->",
+            f"      {model_denotes_lean} PropT (not_T body)",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic :",
+            "      (body : PropT) ->",
+            f"      {model_denotes_lean} PropT body ->",
+            "      AtomicClosureTruth PropT (not_T body)",
+            "",
+            "def concrete_truth_condition_independent_polarity_model_candidate_certificate :",
+            "    ConcreteTruthConditionIndependentPolarityModelCandidateCertificate := {",
+            "  concrete_truth_condition_independent_polarity_model_candidate_source :=",
+            "    concrete_truth_condition_independent_model_class_readiness_certificate,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_source_eq := rfl,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate :=",
+            "    concrete_truth_condition_provider_polarity_class_instance_certificate,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate_eq := rfl,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_instances :=",
+            "    independent_registered_polarity_truth_condition_instances,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_instances_eq := rfl,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model :=",
+            "    concrete_registered_compositional_model,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model_eq := rfl,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_independent_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_constructor_sound :=",
+            "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_model_sound :=",
+            "    concrete_registered_compositional_model_imply_atomic_closure,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth :=",
+            "    concrete_truth_condition_provider_polarity_class_provider_truth_projected,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_atomic :=",
+            "    concrete_truth_condition_provider_polarity_class_provider_atomic_projected,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth :=",
+            "    concrete_truth_condition_provider_polarity_class_ledger_truth_projected,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_atomic :=",
+            "    concrete_truth_condition_provider_polarity_class_ledger_atomic_projected,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_denotes :=",
+            "    fun body body_truth =>",
+            "      concrete_registered_compositional_model.concrete_registered_composition_not_T",
+            "        body body_truth,",
+            "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic :=",
+            "    fun body body_truth =>",
+            "      concrete_registered_compositional_model_imply_atomic_closure",
+            "        PropT (not_T body)",
+            "        (concrete_registered_compositional_model.concrete_registered_composition_not_T",
+            "          body body_truth)",
+            "}",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_certificate_exists :",
+            "    Exists (fun C :",
+            "      ConcreteTruthConditionIndependentPolarityModelCandidateCertificate =>",
+            "      C = concrete_truth_condition_independent_polarity_model_candidate_certificate) := by",
+            "  exact Exists.intro",
+            "    concrete_truth_condition_independent_polarity_model_candidate_certificate rfl",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_source_matches :",
+            "    concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "      concrete_truth_condition_independent_polarity_model_candidate_source =",
+            "        concrete_truth_condition_independent_model_class_readiness_certificate := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_source_eq",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_class_certificate_matches :",
+            "    concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "      concrete_truth_condition_independent_polarity_model_candidate_class_certificate =",
+            "        concrete_truth_condition_provider_polarity_class_instance_certificate := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_class_certificate_eq",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_instances_matches :",
+            "    concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "      concrete_truth_condition_independent_polarity_model_candidate_instances =",
+            "        independent_registered_polarity_truth_condition_instances := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_instances_eq",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_compositional_model_matches :",
+            "    concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "      concrete_truth_condition_independent_polarity_model_candidate_compositional_model =",
+            "        concrete_registered_compositional_model := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_compositional_model_eq",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_independent_sound_projected :",
+            "    (A : Type) -> (term : A) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_independent_sound",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_constructor_sound_projected :",
+            "    (A : Type) -> (term : A) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_constructor_sound",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_model_sound_projected :",
+            "    (A : Type) -> (term : A) ->",
+            f"    {model_denotes_lean} A term ->",
+            "    AtomicClosureTruth A term := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_model_sound",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth_projected :",
+            "    (body : PropT) ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"    {independent_spec_lean}.fully_registered_truth_denotes PropT (not_T body) := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth_projected :",
+            "    (body : PropT) ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT body ->",
+            f"    {constructor_spec_lean}.fully_registered_truth_denotes PropT (not_T body) := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth",
+            "",
+            "theorem concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic_projected :",
+            "    (body : PropT) ->",
+            f"    {model_denotes_lean} PropT body ->",
+            "    AtomicClosureTruth PropT (not_T body) := by",
+            "  exact concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+            "    concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic",
+        ]
+
+    return [
+        "Record ConcreteTruthConditionIndependentPolarityModelCandidateCertificate : Type := {",
+        "  concrete_truth_condition_independent_polarity_model_candidate_source :",
+        "      ConcreteTruthConditionIndependentModelClassReadinessCertificate;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_source_eq :",
+        "      concrete_truth_condition_independent_polarity_model_candidate_source =",
+        "        concrete_truth_condition_independent_model_class_readiness_certificate;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate :",
+        "      ConcreteTruthConditionProviderPolarityClassInstanceCertificate;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate_eq :",
+        "      concrete_truth_condition_independent_polarity_model_candidate_class_certificate =",
+        "        concrete_truth_condition_provider_polarity_class_instance_certificate;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_instances :",
+        "      IndependentRegisteredPolarityTruthConditionInstances;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_instances_eq :",
+        "      concrete_truth_condition_independent_polarity_model_candidate_instances =",
+        "        independent_registered_polarity_truth_condition_instances;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model :",
+        "      ConcreteRegisteredCompositionalModel;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model_eq :",
+        "      concrete_truth_condition_independent_polarity_model_candidate_compositional_model =",
+        "        concrete_registered_compositional_model;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_independent_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_constructor_sound :",
+        "      forall A : Type, forall term : A,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_model_sound :",
+        "      forall A : Type, forall term : A,",
+        f"      {model_denotes_coq} A term ->",
+        "      AtomicClosureTruth A term;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT body ->",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT (not_T body);",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_atomic :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {independent_spec_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (not_T body);",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT body ->",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT (not_T body);",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_atomic :",
+        "      forall body : PropT,",
+        "      fully_registered_truth_denotes",
+        f"        {constructor_spec_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (not_T body);",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_denotes :",
+        "      forall body : PropT,",
+        f"      {model_denotes_coq} PropT body ->",
+        f"      {model_denotes_coq} PropT (not_T body);",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic :",
+        "      forall body : PropT,",
+        f"      {model_denotes_coq} PropT body ->",
+        "      AtomicClosureTruth PropT (not_T body)",
+        "}.",
+        "",
+        "Definition concrete_truth_condition_independent_polarity_model_candidate_certificate :",
+        "  ConcreteTruthConditionIndependentPolarityModelCandidateCertificate := {|",
+        "  concrete_truth_condition_independent_polarity_model_candidate_source :=",
+        "    concrete_truth_condition_independent_model_class_readiness_certificate;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_source_eq := eq_refl;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate :=",
+        "    concrete_truth_condition_provider_polarity_class_instance_certificate;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate_eq :=",
+        "    eq_refl;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_instances :=",
+        "    independent_registered_polarity_truth_condition_instances;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_instances_eq := eq_refl;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model :=",
+        "    concrete_registered_compositional_model;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model_eq :=",
+        "    eq_refl;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_independent_sound :=",
+        "    concrete_truth_condition_independent_model_class_readiness_independent_sound_projected;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_constructor_sound :=",
+        "    concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_model_sound :=",
+        "    concrete_registered_compositional_model_imply_atomic_closure;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth :=",
+        "    concrete_truth_condition_provider_polarity_class_provider_truth_projected;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_atomic :=",
+        "    concrete_truth_condition_provider_polarity_class_provider_atomic_projected;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth :=",
+        "    concrete_truth_condition_provider_polarity_class_ledger_truth_projected;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_atomic :=",
+        "    concrete_truth_condition_provider_polarity_class_ledger_atomic_projected;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_denotes :=",
+        "    concrete_registered_composition_not_T concrete_registered_compositional_model;",
+        "  concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic :=",
+        "    fun body body_truth =>",
+        "      concrete_registered_compositional_model_imply_atomic_closure",
+        "        PropT (not_T body)",
+        "        (concrete_registered_composition_not_T",
+        "          concrete_registered_compositional_model body body_truth)",
+        "|}.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_certificate_exists :",
+        "  exists C : ConcreteTruthConditionIndependentPolarityModelCandidateCertificate,",
+        "    C = concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+        "Proof.",
+        "  exists concrete_truth_condition_independent_polarity_model_candidate_certificate.",
+        "  reflexivity.",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_source_matches :",
+        "  concrete_truth_condition_independent_polarity_model_candidate_source",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate =",
+        "  concrete_truth_condition_independent_model_class_readiness_certificate.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_source_eq",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_class_certificate_matches :",
+        "  concrete_truth_condition_independent_polarity_model_candidate_class_certificate",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate =",
+        "  concrete_truth_condition_provider_polarity_class_instance_certificate.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_class_certificate_eq",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_instances_matches :",
+        "  concrete_truth_condition_independent_polarity_model_candidate_instances",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate =",
+        "  independent_registered_polarity_truth_condition_instances.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_instances_eq",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_compositional_model_matches :",
+        "  concrete_truth_condition_independent_polarity_model_candidate_compositional_model",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate =",
+        "  concrete_registered_compositional_model.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_compositional_model_eq",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_independent_sound_projected :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_independent_sound",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_constructor_sound_projected :",
+        "  forall A : Type, forall term : A,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_constructor_sound",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_model_sound_projected :",
+        "  forall A : Type, forall term : A,",
+        f"    {model_denotes_coq} A term ->",
+        "    AtomicClosureTruth A term.",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_model_sound",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth_projected :",
+        "  forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT body ->",
+        "    fully_registered_truth_denotes",
+        f"      {independent_spec_coq} PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_not_T_provider_truth",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth_projected :",
+        "  forall body : PropT,",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT body ->",
+        "    fully_registered_truth_denotes",
+        f"      {constructor_spec_coq} PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_not_T_ledger_truth",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+        "",
+        "Theorem concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic_projected :",
+        "  forall body : PropT,",
+        f"    {model_denotes_coq} PropT body ->",
+        "    AtomicClosureTruth PropT (not_T body).",
+        "Proof.",
+        "  exact (concrete_truth_condition_independent_polarity_model_candidate_not_T_model_atomic",
+        "    concrete_truth_condition_independent_polarity_model_candidate_certificate).",
+        "Qed.",
+    ]
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -35662,6 +36085,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_independent_polarity_model_candidate_certificate_lines(
+                target
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -37722,6 +38151,42 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             "concrete_truth_condition_independent_repeat_model_candidate_"
             "repeat_model_atomic_projected"
         )
+        lines.append(
+            "#check ConcreteTruthConditionIndependentPolarityModelCandidateCertificate"
+        )
+        lines.append(
+            "#check concrete_truth_condition_independent_polarity_model_candidate_certificate"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_polarity_model_candidate_certificate_exists"
+        )
+        for match_name in (
+            "source",
+            "class_certificate",
+            "instances",
+            "compositional_model",
+        ):
+            lines.append(
+                "#check "
+                f"concrete_truth_condition_independent_polarity_model_candidate_{match_name}_matches"
+            )
+        for projection in ("independent", "constructor", "model"):
+            lines.append(
+                "#check "
+                "concrete_truth_condition_independent_polarity_model_candidate_"
+                f"{projection}_sound_projected"
+            )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_polarity_model_candidate_"
+            "not_T_provider_truth_projected"
+        )
+        lines.append(
+            "#check "
+            "concrete_truth_condition_independent_polarity_model_candidate_"
+            "not_T_model_atomic_projected"
+        )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -38690,6 +39155,12 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_independent_repeat_model_candidate_certificate_lines(
+            target
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_independent_polarity_model_candidate_certificate_lines(
             target
         )
     )
@@ -40501,6 +40972,40 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         "Check "
         "concrete_truth_condition_independent_repeat_model_candidate_"
         "repeat_model_atomic_projected."
+    )
+    lines.append("Check ConcreteTruthConditionIndependentPolarityModelCandidateCertificate.")
+    lines.append(
+        "Check concrete_truth_condition_independent_polarity_model_candidate_certificate."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_polarity_model_candidate_certificate_exists."
+    )
+    for match_name in (
+        "source",
+        "class_certificate",
+        "instances",
+        "compositional_model",
+    ):
+        lines.append(
+            "Check "
+            f"concrete_truth_condition_independent_polarity_model_candidate_{match_name}_matches."
+        )
+    for projection in ("independent", "constructor", "model"):
+        lines.append(
+            "Check "
+            "concrete_truth_condition_independent_polarity_model_candidate_"
+            f"{projection}_sound_projected."
+        )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_polarity_model_candidate_"
+        "not_T_provider_truth_projected."
+    )
+    lines.append(
+        "Check "
+        "concrete_truth_condition_independent_polarity_model_candidate_"
+        "not_T_model_atomic_projected."
     )
     return "\n".join(lines) + "\n"
 
