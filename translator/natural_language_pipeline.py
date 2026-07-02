@@ -21461,6 +21461,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_independent_"
+                    "model_class_readiness_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -21931,6 +21939,14 @@ def project_completion_status_payload(
                     "independent-suite, and constructor-ledger soundness routes "
                     "to AtomicClosureTruth and verifies direct/evidence/kernel "
                     "example projections through that readiness package. "
+                    "The newest independent-model class-readiness certificate "
+                    "then refactors that readiness package into class-indexed "
+                    "entrances: lexical, Sigma, temporal, repeat, polarity, "
+                    "and Transition/Cause provider-class certificates are "
+                    "all tied back to the readiness boundary, while "
+                    "independent-suite and constructor-ledger soundness "
+                    "projections are re-exposed from the class-readiness "
+                    "record. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

@@ -618,6 +618,15 @@ instance-supply certificate, then re-exposes direct/evidence/kernel,
 independent-suite, and constructor-ledger soundness projections together with
 direct/evidence/kernel `AtomicClosureTruth` projections for each generated
 example.
+The independent model class-readiness certificate introduces
+`ConcreteTruthConditionIndependentModelClassReadinessCertificate` and
+`concrete_truth_condition_independent_model_class_readiness_certificate`. It
+ties the readiness package to the provider class-instance suite and to the
+lexical, Sigma, temporal, repeat, polarity, and Transition/Cause class
+certificates. The generated projections check that the provider obligation in
+this class-indexed boundary is the same provider obligation stored in the
+readiness package, and they re-expose the independent-suite and
+constructor-ledger soundness routes for future class-local model refinement.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

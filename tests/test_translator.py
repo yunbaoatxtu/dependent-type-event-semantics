@@ -5356,6 +5356,34 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Record ConcreteTruthConditionIndependentModelClassReadinessCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_independent_model_class_readiness_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_class_readiness_provider_obligation_matches_readiness :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_class_readiness_lexical_certificate_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_class_readiness_transition_cause_certificate_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_independent_model_class_readiness_constructor_sound_projected.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -18169,6 +18197,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_instance_supply_certificate",
                 "coq_concrete_truth_condition_independent_model_candidate_certificate",
                 "coq_concrete_truth_condition_independent_model_readiness_certificate",
+                "coq_concrete_truth_condition_independent_model_class_readiness_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -27720,6 +27749,14 @@ class TranslatorTests(unittest.TestCase):
             "`ConcreteTruthConditionIndependentModelReadinessCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_independent_model_class_readiness_certificate`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionIndependentModelClassReadinessCertificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -28557,6 +28594,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_independent_model_readiness_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionIndependentModelClassReadinessCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_independent_model_class_readiness_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

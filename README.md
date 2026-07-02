@@ -1685,6 +1685,16 @@ independent-suite, and constructor-ledger soundness routes to
 `AtomicClosureTruth`, plus direct/evidence/kernel example projections. It is
 a finite readiness package for the registered fragment, not the missing
 independently justified truth-condition model itself.
+The next verified objective
+`coq_concrete_truth_condition_independent_model_class_readiness_certificate`
+adds `ConcreteTruthConditionIndependentModelClassReadinessCertificate`. This
+class-readiness certificate ties the readiness package back to the six
+provider-class entrances already checked for the registered fragment:
+lexical application, Sigma, temporal operators, repeat, polarity, and
+Transition/Cause. It re-exposes independent-suite and constructor-ledger
+soundness projections from that class-indexed boundary, so the next concrete
+model work can target typed constructor classes rather than one undifferentiated
+proof gap.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently
