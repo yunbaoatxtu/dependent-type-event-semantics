@@ -21735,6 +21735,9 @@ def completion_frontier_audit_payload(
 TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE = (
     "semantic_snapshots_and_registered_variant_success_cases"
 )
+TRUTH_CONDITION_OBLIGATION_PROOF_INDEX_SCOPE = (
+    "registered_fragment_entrypoints_not_general_denotation"
+)
 
 
 def flatten_truth_condition_witness_text(value: Any) -> str:
@@ -21831,11 +21834,80 @@ def truth_condition_witness_class_ids(case: dict[str, Any]) -> set[str]:
     return class_ids
 
 
+def truth_condition_string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item)]
+
+
+def truth_condition_witness_proof_index(
+    source_kind: str,
+    case: dict[str, Any],
+) -> dict[str, Any]:
+    rule_id = str(case.get("rule_id", ""))
+    variant_id = str(case.get("variant_id", ""))
+    if source_kind == "semantic_snapshot":
+        coq_definitions = truth_condition_string_list(
+            case.get("expected_coq_definitions"),
+        )
+        coq_checks = [f"Check {name}." for name in coq_definitions]
+        semantic_reading_names = truth_condition_string_list(
+            case.get("expected_reading_names"),
+        )
+        semantic_reading_sources = truth_condition_string_list(
+            case.get("expected_reading_sources"),
+        )
+        primary_entrypoint = (
+            coq_checks[0] if coq_checks else f"semantic_snapshot:{rule_id}"
+        )
+        return {
+            "proof_index_kind": "semantic_snapshot_coq_entrypoints",
+            "verification_route": "semantic_snapshot_regression",
+            "primary_entrypoint": primary_entrypoint,
+            "coq_definitions": coq_definitions,
+            "coq_checks": coq_checks,
+            "semantic_reading_names": semantic_reading_names,
+            "semantic_reading_sources": semantic_reading_sources,
+            "type_check_type": str(case.get("expected_type_check_type", "")),
+            "runtime_checks": [],
+            "truth_condition_route": (
+                "semantic_snapshot_regression -> semantic_readings_check -> "
+                "coq_shallow_scaffold_boundary"
+            ),
+        }
+    primary_entrypoint = (
+        f"registered_variant_success_case:{variant_id}"
+        if variant_id
+        else f"registered_variant_success_case:{rule_id}"
+    )
+    return {
+        "proof_index_kind": "registered_variant_runtime_entrypoints",
+        "verification_route": "registered_variant_success_cases",
+        "primary_entrypoint": primary_entrypoint,
+        "coq_definitions": [],
+        "coq_checks": [],
+        "semantic_reading_names": [],
+        "semantic_reading_sources": [],
+        "type_check_type": "",
+        "runtime_checks": [
+            "coverage_matrix.registered_variant_success_cases",
+            "web_route_smoke_check:/api/analyze",
+            "web_route_smoke_check:/",
+        ],
+        "truth_condition_route": (
+            "registered_variant_success_cases -> web_route_smoke_check"
+        ),
+        "verification_scope_kind": str(case.get("expected_verification_scope_kind", "")),
+        "certification_level": str(case.get("expected_certification_level", "")),
+        "boundary_status": str(case.get("boundary_status", "")),
+    }
+
+
 def truth_condition_obligation_witnesses(
     semantic_snapshots: list[dict[str, Any]],
     registered_variant_success_cases: list[dict[str, Any]],
-) -> dict[str, list[dict[str, str]]]:
-    witnesses: dict[str, list[dict[str, str]]] = {
+) -> dict[str, list[dict[str, Any]]]:
+    witnesses: dict[str, list[dict[str, Any]]] = {
         "lexical_application": [],
         "sigma_quantification": [],
         "temporal_operators": [],
@@ -21870,13 +21942,17 @@ def truth_condition_obligation_witnesses(
                     "rule_id": rule_id,
                     "variant_id": variant_id,
                     "sentence": sentence,
+                    "proof_index": truth_condition_witness_proof_index(
+                        source_kind,
+                        case,
+                    ),
                 },
             )
     return witnesses
 
 
 def unique_truth_condition_witness_values(
-    witnesses: list[dict[str, str]],
+    witnesses: list[dict[str, Any]],
     key: str,
     limit: int,
 ) -> list[str]:
@@ -21894,11 +21970,12 @@ def unique_truth_condition_witness_values(
 
 
 def summarize_truth_condition_witnesses(
-    witnesses: list[dict[str, str]],
+    witnesses: list[dict[str, Any]],
 ) -> dict[str, Any]:
     return {
         "witness_source": TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE,
         "witness_scope": "finite_registered_fragment",
+        "proof_index_scope": TRUTH_CONDITION_OBLIGATION_PROOF_INDEX_SCOPE,
         "registered_witness_count": len(witnesses),
         "sample_rule_ids": unique_truth_condition_witness_values(
             witnesses,
@@ -21914,6 +21991,19 @@ def summarize_truth_condition_witnesses(
             witnesses,
             "sentence",
             3,
+        ),
+        "sample_proof_entrypoints": unique_truth_condition_witness_values(
+            [
+                {
+                    "primary_entrypoint": str(
+                        witness.get("proof_index", {}).get("primary_entrypoint", ""),
+                    ),
+                }
+                for witness in witnesses
+                if isinstance(witness.get("proof_index"), dict)
+            ],
+            "primary_entrypoint",
+            5,
         ),
         "sample_witnesses": witnesses[:3],
     }
@@ -22080,6 +22170,11 @@ def truth_condition_instance_obligations_payload(
         ),
         "witness_source": TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE,
         "witness_scope": "finite_registered_fragment",
+        "proof_index_scope": TRUTH_CONDITION_OBLIGATION_PROOF_INDEX_SCOPE,
+        "proof_index_claim": (
+            "entrypoints_trace_registered_witnesses_without_claiming_"
+            "general_denotational_closure"
+        ),
         "obligation_count": len(obligations),
         "obligations": obligations,
         "claim": "finite_registered_candidates_verified_general_instances_open",

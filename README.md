@@ -965,7 +965,13 @@ only a static ledger: they also carry `witness_source:
 sample variant ids, and sample sentences derived from the current semantic
 snapshots and registered variant coverage. The verifier recomputes this witness
 summary from the manifest, so a class can no longer advertise a witness count or
-sample that is not tied to a registered example.
+sample that is not tied to a registered example. Each witness now also carries a
+structured `proof_index`: semantic snapshots point to their generated Coq
+`Check ...` entrypoints and reading names, while registered variants point to
+the runtime coverage entries checked by the web-route smoke tests. The shared
+`proof_index_scope` is
+`registered_fragment_entrypoints_not_general_denotation`, making the route
+auditable without claiming a new general denotational proof.
 It also carries `completion_frontier_audit` with `schema_version:
 "completion_frontier_audit.v1"`. This audit points to
 `ConcreteTruthConditionDischargeFrontierCertificate`, records the status type

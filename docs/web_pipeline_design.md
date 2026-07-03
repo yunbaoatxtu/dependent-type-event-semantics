@@ -179,7 +179,14 @@ each row carries `witness_source`, `witness_scope`, `registered_witness_count`,
 the current semantic snapshots and registered variant success cases. The page
 mirrors those values through row-level data hooks, and the verifier recomputes
 the same payload so witness counts and samples cannot drift away from the
-registered fragment. The same object now carries a
+registered fragment. Each witness should also carry a `proof_index` with either
+semantic-snapshot Coq `Check ...` entrypoints or registered-variant runtime
+coverage entrypoints. The row-level hooks should expose
+`data-truth-condition-obligation-proof-index-scope` and
+`data-truth-condition-obligation-sample-entrypoints`; the scope remains
+`registered_fragment_entrypoints_not_general_denotation` so these links are
+trace indices, not a claim of arbitrary denotational closure. The same object
+now carries a
 `completion_frontier_audit.v1` child that links the page
 and JSON manifest back to `ConcreteTruthConditionDischargeFrontierCertificate`.
 It records `ConcreteTruthConditionDischargeFrontierStatus`, the discharged

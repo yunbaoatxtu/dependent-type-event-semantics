@@ -10946,6 +10946,16 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: truth-condition obligation witness source drift")
     if truth_obligations.get("witness_scope") != "finite_registered_fragment":
         raise SystemExit("web route smoke check failed: truth-condition obligation witness scope drift")
+    if (
+        truth_obligations.get("proof_index_scope")
+        != "registered_fragment_entrypoints_not_general_denotation"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition obligation proof index scope drift")
+    if (
+        truth_obligations.get("proof_index_claim")
+        != "entrypoints_trace_registered_witnesses_without_claiming_general_denotational_closure"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition obligation proof index claim drift")
     obligation_rows = truth_obligations.get("obligations")
     if not isinstance(obligation_rows, list):
         raise SystemExit("web route smoke check failed: truth-condition obligation rows missing")
@@ -11012,12 +11022,48 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit("web route smoke check failed: truth-condition obligation witness source drift")
         if row.get("witness_scope") != "finite_registered_fragment":
             raise SystemExit("web route smoke check failed: truth-condition obligation witness scope drift")
+        if (
+            row.get("proof_index_scope")
+            != "registered_fragment_entrypoints_not_general_denotation"
+        ):
+            raise SystemExit("web route smoke check failed: truth-condition obligation proof index scope drift")
         if not isinstance(row.get("registered_witness_count"), int) or row.get("registered_witness_count") <= 0:
             raise SystemExit("web route smoke check failed: truth-condition obligation witness count drift")
         if not string_list(row.get("sample_rule_ids")) or not row.get("sample_rule_ids"):
             raise SystemExit("web route smoke check failed: truth-condition obligation witness sample drift")
         if not string_list(row.get("sample_sentences")) or not row.get("sample_sentences"):
             raise SystemExit("web route smoke check failed: truth-condition obligation witness sample drift")
+        if not string_list(row.get("sample_proof_entrypoints")) or not row.get("sample_proof_entrypoints"):
+            raise SystemExit("web route smoke check failed: truth-condition obligation proof index sample drift")
+        sample_witnesses = row.get("sample_witnesses")
+        if not isinstance(sample_witnesses, list) or not sample_witnesses:
+            raise SystemExit("web route smoke check failed: truth-condition obligation proof index witness drift")
+        for witness in sample_witnesses:
+            if not isinstance(witness, dict):
+                raise SystemExit("web route smoke check failed: truth-condition obligation proof index witness drift")
+            proof_index = witness.get("proof_index")
+            if not isinstance(proof_index, dict):
+                raise SystemExit("web route smoke check failed: truth-condition obligation proof index witness drift")
+            if not nonempty_string(proof_index.get("primary_entrypoint")):
+                raise SystemExit("web route smoke check failed: truth-condition obligation proof index entrypoint drift")
+            if not nonempty_string(proof_index.get("truth_condition_route")):
+                raise SystemExit("web route smoke check failed: truth-condition obligation proof index route drift")
+            if witness.get("source") == "semantic_snapshot":
+                if proof_index.get("proof_index_kind") != "semantic_snapshot_coq_entrypoints":
+                    raise SystemExit("web route smoke check failed: truth-condition obligation proof index kind drift")
+                if not string_list(proof_index.get("coq_checks")) or not proof_index.get("coq_checks"):
+                    raise SystemExit("web route smoke check failed: truth-condition obligation proof index coq drift")
+            elif witness.get("source") == "registered_variant_success_case":
+                if proof_index.get("proof_index_kind") != "registered_variant_runtime_entrypoints":
+                    raise SystemExit("web route smoke check failed: truth-condition obligation proof index kind drift")
+                runtime_checks = proof_index.get("runtime_checks")
+                if (
+                    not string_list(runtime_checks)
+                    or "web_route_smoke_check:/api/analyze" not in runtime_checks
+                ):
+                    raise SystemExit("web route smoke check failed: truth-condition obligation proof index runtime drift")
+            else:
+                raise SystemExit("web route smoke check failed: truth-condition obligation proof index source drift")
     expected_truth_obligations = truth_condition_instance_obligations_payload(
         snapshots,
         registered_variant_cases,

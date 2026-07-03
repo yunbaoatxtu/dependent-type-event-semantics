@@ -18734,6 +18734,14 @@ class TranslatorTests(unittest.TestCase):
             truth_obligations["witness_scope"],
             "finite_registered_fragment",
         )
+        self.assertEqual(
+            truth_obligations["proof_index_scope"],
+            "registered_fragment_entrypoints_not_general_denotation",
+        )
+        self.assertEqual(
+            truth_obligations["proof_index_claim"],
+            "entrypoints_trace_registered_witnesses_without_claiming_general_denotational_closure",
+        )
         self.assertEqual(truth_obligations["obligation_count"], 7)
         obligation_by_id = {
             item["class_id"]: item
@@ -18769,10 +18777,36 @@ class TranslatorTests(unittest.TestCase):
                 "semantic_snapshots_and_registered_variant_success_cases",
             )
             self.assertEqual(obligation["witness_scope"], "finite_registered_fragment")
+            self.assertEqual(
+                obligation["proof_index_scope"],
+                "registered_fragment_entrypoints_not_general_denotation",
+            )
             self.assertGreater(obligation["registered_witness_count"], 0)
             self.assertTrue(obligation["sample_rule_ids"])
             self.assertTrue(obligation["sample_sentences"])
+            self.assertTrue(obligation["sample_proof_entrypoints"])
             self.assertTrue(obligation["sample_witnesses"])
+            for witness in obligation["sample_witnesses"]:
+                proof_index = witness["proof_index"]
+                self.assertTrue(proof_index["primary_entrypoint"])
+                self.assertTrue(proof_index["truth_condition_route"])
+                if witness["source"] == "semantic_snapshot":
+                    self.assertEqual(
+                        proof_index["proof_index_kind"],
+                        "semantic_snapshot_coq_entrypoints",
+                    )
+                    self.assertTrue(proof_index["coq_checks"])
+                elif witness["source"] == "registered_variant_success_case":
+                    self.assertEqual(
+                        proof_index["proof_index_kind"],
+                        "registered_variant_runtime_entrypoints",
+                    )
+                    self.assertIn(
+                        "web_route_smoke_check:/api/analyze",
+                        proof_index["runtime_checks"],
+                    )
+                else:
+                    self.fail(f"unexpected witness source: {witness['source']}")
         self.assertIn(
             "perception_nominalization",
             obligation_by_id["lexical_application"]["sample_rule_ids"],
@@ -18796,6 +18830,19 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "Mary laughed with a telescope",
             obligation_by_id["modifier_attachment"]["sample_sentences"],
+        )
+        self.assertIn(
+            "Check every_burning_consumes_oxygen.",
+            obligation_by_id["sigma_quantification"]["sample_proof_entrypoints"],
+        )
+        self.assertIn(
+            "registered_variant_success_case:temporal_event_counting",
+            obligation_by_id["repeat_counting"]["sample_proof_entrypoints"],
+        )
+        repeat_variant_witness = obligation_by_id["repeat_counting"]["sample_witnesses"][1]
+        self.assertEqual(
+            repeat_variant_witness["proof_index"]["truth_condition_route"],
+            "registered_variant_success_cases -> web_route_smoke_check",
         )
         self.assertIn(
             "unregistered_modifier_attachment_truth_conditions_open",
@@ -19765,6 +19812,18 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_certified_fragment_manifest(manifest)
 
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_instance_obligations"][
+            "obligations"
+        ][0]["sample_witnesses"][0]["proof_index"][
+            "primary_entrypoint"
+        ] = "Check imaginary_entrypoint."
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition obligation witness drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
     def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
         manifest = construction_fragment_manifest()
         fallback_sentence = manifest["coverage_matrix"]["fallback_success_cases"][0][
@@ -20397,6 +20456,13 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
+            data_attr(
+                "data-truth-condition-obligation-proof-index-scope",
+                truth_obligations["proof_index_scope"],
+            ),
+            page,
+        )
+        self.assertIn(
             'data-truth-condition-obligation-class="temporal_operators"',
             page,
         )
@@ -20414,6 +20480,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-truth-condition-obligation-sample-rules="universal_timed_burning | timed_after | causal_because | event_counting | resultative_predication"',
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-obligation-sample-entrypoints="Check every_burning_consumes_oxygen. | Check after_singing_salute. | registered_variant_success_case:transitive_causal_because | registered_variant_success_case:temporal_event_counting | registered_variant_success_case:temporal_resultative_predication"',
             page,
         )
         self.assertIn(
