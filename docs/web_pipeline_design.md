@@ -178,7 +178,10 @@ scaffold, and unsupported-fragment guard. The panel mirrors those fields with
 `data-parser-semantic-boundary-*` hooks, and the verifier recomputes the audit
 from the manifest before accepting either the API payload or the page. The
 front-end completion objective therefore now advances toward
-`extend_surface_parser_beyond_registered_examples`.
+`extend_surface_parser_beyond_registered_examples`; the latest surface audit
+expands from one modified-transitive family to two finite audited families by
+adding `manner_location_intransitive_adv_sequence`, but it still keeps full
+surface-parser certification false.
 The same
 manifest now exposes `fallback_promotion_candidates.v1`, derived from
 `coverage_matrix.fallback_success_cases`. These rows are rendered through
@@ -427,17 +430,23 @@ and `stacked_instrument_manner_location_instrument_intransitive_predication`,
 two-, three-, four-, and five-Adv Luo-Shi modifier routes as witnesses of the
 non-empty `ModifierSeq` rule rather than treating modifier count as a fallback
 boundary.
-The same manifest now includes `surface_parser_coverage` for
-`modified_transitive_adv_sequence`. This object records the open-ended type
-family `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, the parser
-claim `registered_examples_only`, `full_surface_parser_certification: false`,
-and the verified timed and untimed modifier counts `1,2,3,4,5`. The
-`Certified Fragment` panel mirrors these values through `data-surface-*`
-attributes, so the page can advertise the current parser boundary without
-confusing it with the stronger type-level Luo-Shi principle.
-It also carries `verified_examples`, a concrete witness list containing the
-registered primary one-Adv sentence plus every timed and untimed registered
-variant up through five Adv modifiers. The HTML panel renders each witness with
+The same manifest now includes `surface_parser_coverage` for two finite audited
+front-end families. `modified_transitive_adv_sequence` records the open-ended
+type family `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, the
+verified timed and untimed modifier counts `1,2,3,4,5`, and the existing
+controlled Agent/Theme/predicate lexical matrix. The newer
+`manner_location_intransitive_adv_sequence` records
+`forall n : nat, ModifierSeq n -> Entity -> PropT`, verified timed and untimed
+modifier counts `1,2,3,4,5,6`, and controlled subject/predicate/manner-location
+slot probes such as `John slept quietly in the garden yesterday`. Both objects
+retain the parser claim `registered_examples_only` and
+`full_surface_parser_certification: false`. The `Certified Fragment` panel
+mirrors these values through `data-surface-*` attributes, so the page can
+advertise the current parser boundary without confusing it with the stronger
+type-level Luo-Shi principle.
+Each family also carries `verified_examples`, a concrete witness list containing
+the registered primary sentences plus timed and untimed registered variants for
+that family. The HTML panel renders each witness with
 `data-surface-example-variant-id`, `data-surface-example-sentence`,
 `data-surface-example-modifier-count`, `data-surface-example-time-wrapped`, and
 `data-surface-example-source`, and exposes the total through

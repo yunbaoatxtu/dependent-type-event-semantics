@@ -19483,15 +19483,21 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             parser_semantic_boundary["surface_parser_families"],
-            ["modified_transitive_adv_sequence"],
+            [
+                "manner_location_intransitive_adv_sequence",
+                "modified_transitive_adv_sequence",
+            ],
         )
         self.assertEqual(
             parser_semantic_boundary["surface_verified_example_count"],
-            surface_parser_coverage["verified_example_count"],
+            sum(
+                family["verified_example_count"]
+                for family in manifest["surface_parser_coverage"].values()
+            ),
         )
-        self.assertEqual(parser_semantic_boundary["surface_slot_probe_count"], 4)
+        self.assertEqual(parser_semantic_boundary["surface_slot_probe_count"], 7)
         self.assertEqual(parser_semantic_boundary["surface_matrix_example_count"], 16)
-        self.assertEqual(parser_semantic_boundary["surface_total_witness_count"], 30)
+        self.assertEqual(parser_semantic_boundary["surface_total_witness_count"], 45)
         self.assertEqual(
             parser_semantic_boundary["registered_semantic_rule_count"],
             counts["registered_success_cases"],
@@ -19634,6 +19640,74 @@ class TranslatorTests(unittest.TestCase):
                 self.assertEqual(result["ast"]["kind"], example["expected_ast_kind"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
                 for fragment in example["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
+        intransitive_surface = manifest["surface_parser_coverage"][
+            "manner_location_intransitive_adv_sequence"
+        ]
+        self.assertEqual(
+            intransitive_surface["type_family"],
+            "forall n : nat, ModifierSeq n -> Entity -> PropT",
+        )
+        self.assertEqual(
+            intransitive_surface["verified_modifier_counts"],
+            [1, 2, 3, 4, 5, 6],
+        )
+        self.assertEqual(
+            intransitive_surface["verified_timed_modifier_counts"],
+            [1, 2, 3, 4, 5, 6],
+        )
+        self.assertEqual(
+            intransitive_surface["verified_untimed_modifier_counts"],
+            [1, 2, 3, 4, 5, 6],
+        )
+        self.assertEqual(intransitive_surface["verified_example_count"], 12)
+        self.assertEqual(
+            intransitive_surface["verified_examples"][-1][
+                "expected_dependent_type_fragments"
+            ],
+            [
+                "at_T(yesterday, laugh(6)(loudly, in(park), near(window), "
+                "beside(shelf), under(lamp), on(table), mary))",
+            ],
+        )
+        intransitive_slot_probes = intransitive_surface["slot_probe_examples"]
+        self.assertEqual(intransitive_slot_probes["probe_count"], 3)
+        self.assertEqual(
+            [probe["probe_id"] for probe in intransitive_slot_probes["probes"]],
+            [
+                "subject_slot_john",
+                "predicate_manner_sleep_quietly",
+                "predicate_manner_location_sleep_garden_timed",
+            ],
+        )
+        for witness in intransitive_surface["verified_examples"]:
+            with self.subTest(intransitive_surface_witness=witness["variant_id"]):
+                result = run_pipeline(witness["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["construction_rule"]["id"], witness["rule_id"])
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    witness["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], witness["expected_ast_kind"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+                for fragment in witness["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
+        for probe in intransitive_slot_probes["probes"]:
+            with self.subTest(intransitive_surface_probe=probe["probe_id"]):
+                result = run_pipeline(probe["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(
+                    result["construction_rule"]["id"],
+                    probe["expected_rule_id"],
+                )
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    probe["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], probe["expected_ast_kind"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+                for fragment in probe["expected_dependent_type_fragments"]:
                     self.assertIn(fragment, result["dependent_type_translation"])
         self.assertEqual(
             manifest["fallback"]["verification_scope_kind"],
@@ -21031,6 +21105,55 @@ class TranslatorTests(unittest.TestCase):
         ]
         for expected_attr in surface_attr_expectations:
             self.assertIn(expected_attr, page)
+        intransitive_surface = manifest["surface_parser_coverage"][
+            "manner_location_intransitive_adv_sequence"
+        ]
+        intransitive_slot_probes = intransitive_surface["slot_probe_examples"]
+        for expected_attr in [
+            data_attr(
+                "data-surface-parser-family",
+                "manner_location_intransitive_adv_sequence",
+            ),
+            data_attr(
+                "data-surface-verified-counts",
+                csv_attr(intransitive_surface["verified_modifier_counts"]),
+            ),
+            data_attr(
+                "data-surface-max-verified-count",
+                intransitive_surface["max_verified_modifier_count"],
+            ),
+            data_attr(
+                "data-surface-verified-example-count",
+                intransitive_surface["verified_example_count"],
+            ),
+            data_attr(
+                "data-surface-generator-kind",
+                intransitive_surface["witness_generation_spec"]["generator"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-count",
+                intransitive_slot_probes["probe_count"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-generation-kind",
+                intransitive_slot_probes["probe_generation_spec"]["generator"],
+            ),
+        ]:
+            self.assertIn(expected_attr, page)
+        self.assertIn(
+            data_attr(
+                "data-surface-example-variant-id",
+                "temporal_extended_manner_location_sequence_intransitive_predication",
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-surface-slot-probe-id",
+                "predicate_manner_location_sleep_garden_timed",
+            ),
+            page,
+        )
         with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
             validate_certified_fragment_html_panel(
                 page.replace(
@@ -21039,8 +21162,16 @@ class TranslatorTests(unittest.TestCase):
                 ),
                 manifest,
             )
-        surface_examples = surface_parser_coverage["verified_examples"]
-        surface_probe_rows = surface_slot_probes["probes"]
+        surface_examples = [
+            example
+            for family in manifest["surface_parser_coverage"].values()
+            for example in family["verified_examples"]
+        ]
+        surface_probe_rows = [
+            probe
+            for family in manifest["surface_parser_coverage"].values()
+            for probe in family["slot_probe_examples"]["probes"]
+        ]
         surface_matrix_rows = surface_slot_probes["matrix_examples"]
         semantic_snapshots = manifest["semantic_snapshots"]
         coverage_matrix = manifest["coverage_matrix"]
@@ -21259,7 +21390,7 @@ class TranslatorTests(unittest.TestCase):
             )
         stale_probe_attr = data_attr(
             "data-surface-slot-probe-id",
-            surface_probe_rows[0]["probe_id"],
+            surface_probe_rows[-1]["probe_id"],
         )
         with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
             validate_certified_fragment_html_panel(

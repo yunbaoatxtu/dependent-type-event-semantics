@@ -1438,6 +1438,83 @@ MODIFIED_TRANSITIVE_SURFACE_WITNESS_VARIANT_IDS = {
 }
 
 
+MANNER_LOCATION_INTRANSITIVE_SURFACE_MODIFIER_SEQUENCE = (
+    {
+        "index": 1,
+        "surface": "loudly",
+        "dependent_type_fragment": "loudly",
+        "semantic_role": "Manner",
+    },
+    {
+        "index": 2,
+        "surface": "in the park",
+        "dependent_type_fragment": "in(park)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 3,
+        "surface": "near a window",
+        "dependent_type_fragment": "near(window)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 4,
+        "surface": "beside a shelf",
+        "dependent_type_fragment": "beside(shelf)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 5,
+        "surface": "under a lamp",
+        "dependent_type_fragment": "under(lamp)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 6,
+        "surface": "on a table",
+        "dependent_type_fragment": "on(table)",
+        "semantic_role": "Location",
+    },
+)
+
+MANNER_LOCATION_INTRANSITIVE_RULE_ID_BY_PREFIX = {
+    "1": "manner_intransitive_predication",
+    "2": "manner_locative_intransitive_predication",
+    "3": "manner_two_location_intransitive_predication",
+    "4": "manner_three_location_intransitive_predication",
+    "5": "manner_location_sequence_intransitive_predication",
+    "6": "manner_location_sequence_intransitive_predication",
+}
+
+MANNER_LOCATION_INTRANSITIVE_ANALYSIS_BY_PREFIX = {
+    "1": "manner-intransitive-predication",
+    "2": "manner-locative-intransitive-predication",
+    "3": "manner-two-location-intransitive-predication",
+    "4": "manner-three-location-intransitive-predication",
+    "5": "manner-location-sequence-intransitive-predication",
+    "6": "manner-location-sequence-intransitive-predication",
+}
+
+MANNER_LOCATION_INTRANSITIVE_SURFACE_WITNESS_VARIANT_IDS = {
+    "untimed": {
+        "1": "primary_manner_intransitive_predication",
+        "2": "primary_manner_locative_intransitive_predication",
+        "3": "primary_manner_two_location_intransitive_predication",
+        "4": "primary_manner_three_location_intransitive_predication",
+        "5": "primary_manner_location_sequence_intransitive_predication",
+        "6": "extended_manner_location_sequence_intransitive_predication",
+    },
+    "timed": {
+        "1": "temporal_manner_intransitive_predication",
+        "2": "temporal_manner_locative_intransitive_predication",
+        "3": "temporal_manner_two_location_intransitive_predication",
+        "4": "temporal_manner_three_location_intransitive_predication",
+        "5": "temporal_manner_location_sequence_intransitive_predication",
+        "6": "temporal_extended_manner_location_sequence_intransitive_predication",
+    },
+}
+
+
 def modified_transitive_surface_witness_generation_spec() -> dict[str, Any]:
     source_by_prefix = {
         "untimed": {
@@ -1483,6 +1560,302 @@ def modified_transitive_surface_witness_generation_spec() -> dict[str, Any]:
             "{predicate}({n})({modifier_fragments}, {agent}, {theme})"
         ),
         "timed_translation_template": "{time_operator}({time_argument}, {body})",
+    }
+
+
+def manner_location_intransitive_surface_witness_generation_spec() -> dict[str, Any]:
+    source_by_prefix = {
+        "untimed": {
+            "1": "registered_primary_example",
+            "2": "registered_primary_example",
+            "3": "registered_primary_example",
+            "4": "registered_primary_example",
+            "5": "registered_primary_example",
+            "6": "registered_variant_example",
+        },
+        "timed": {
+            "1": "registered_variant_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+            "6": "registered_variant_example",
+        },
+    }
+    return {
+        "schema_version": "surface_witness_generation.v1",
+        "generator": "manner_location_prefix_with_optional_time_suffix",
+        "base_surface_sentence": "Mary laughed",
+        "predicate": "laugh",
+        "subject": "mary",
+        "modifiers": [
+            dict(modifier)
+            for modifier in MANNER_LOCATION_INTRANSITIVE_SURFACE_MODIFIER_SEQUENCE
+        ],
+        "time_suffix": "yesterday",
+        "time_operator": "at_T",
+        "time_argument": "yesterday",
+        "verified_prefix_lengths": [1, 2, 3, 4, 5, 6],
+        "rule_id_by_prefix": copy.deepcopy(
+            MANNER_LOCATION_INTRANSITIVE_RULE_ID_BY_PREFIX
+        ),
+        "event_analysis_by_prefix": copy.deepcopy(
+            MANNER_LOCATION_INTRANSITIVE_ANALYSIS_BY_PREFIX
+        ),
+        "variant_id_by_prefix": copy.deepcopy(
+            MANNER_LOCATION_INTRANSITIVE_SURFACE_WITNESS_VARIANT_IDS
+        ),
+        "source_by_prefix": source_by_prefix,
+        "expected_ast_kind_by_time_wrapped": {
+            "false": "application",
+            "true": "time",
+        },
+        "translation_template": "{predicate}({n})({modifier_fragments}, {subject})",
+        "timed_translation_template": "{time_operator}({time_argument}, {body})",
+    }
+
+
+def manner_location_intransitive_surface_witnesses_from_spec(
+    spec: dict[str, Any],
+) -> list[dict[str, Any]]:
+    modifiers = spec["modifiers"]
+    witnesses = []
+    for prefix_length in spec["verified_prefix_lengths"]:
+        key = str(prefix_length)
+        modifier_prefix = modifiers[:prefix_length]
+        modifier_surfaces = " ".join(
+            str(modifier["surface"]) for modifier in modifier_prefix
+        )
+        modifier_fragments = ", ".join(
+            str(modifier["dependent_type_fragment"])
+            for modifier in modifier_prefix
+        )
+        sentence_base = f"{spec['base_surface_sentence']} {modifier_surfaces}"
+        body = str(spec["translation_template"]).format(
+            predicate=spec["predicate"],
+            n=prefix_length,
+            modifier_fragments=modifier_fragments,
+            subject=spec["subject"],
+        )
+        for bucket, time_wrapped in (("untimed", False), ("timed", True)):
+            fragment = (
+                str(spec["timed_translation_template"]).format(
+                    time_operator=spec["time_operator"],
+                    time_argument=spec["time_argument"],
+                    body=body,
+                )
+                if time_wrapped
+                else body
+            )
+            witnesses.append(
+                {
+                    "rule_id": str(spec["rule_id_by_prefix"][key]),
+                    "variant_id": str(spec["variant_id_by_prefix"][bucket][key]),
+                    "sentence": (
+                        f"{sentence_base} {spec['time_suffix']}"
+                        if time_wrapped
+                        else sentence_base
+                    ),
+                    "modifier_count": prefix_length,
+                    "time_wrapped": time_wrapped,
+                    "source": str(spec["source_by_prefix"][bucket][key]),
+                    "boundary_status": (
+                        "registered_variant_example"
+                        if spec["source_by_prefix"][bucket][key]
+                        == "registered_variant_example"
+                        else "registered_construction_example"
+                    ),
+                    "expected_event_analysis": str(
+                        spec["event_analysis_by_prefix"][key]
+                    ),
+                    "expected_ast_kind": spec["expected_ast_kind_by_time_wrapped"][
+                        "true" if time_wrapped else "false"
+                    ],
+                    "expected_dependent_type_fragments": [fragment],
+                },
+            )
+    return witnesses
+
+
+def manner_location_intransitive_surface_slot_probe_generation_spec() -> dict[str, Any]:
+    return {
+        "schema_version": "surface_slot_probe_generation.v1",
+        "generator": "intransitive_subject_predicate_modifier_substitution",
+        "base_family": "manner_location_intransitive_adv_sequence",
+        "base_frame": {
+            "subject": {"surface": "Mary", "semantic": "mary"},
+            "predicate": {"surface": "laughed", "semantic": "laugh"},
+        },
+        "surface_template": "{subject_surface} {predicate_surface} {modifier_surfaces}",
+        "timed_surface_template": "{body} {time_suffix}",
+        "modifiers": [
+            dict(modifier)
+            for modifier in MANNER_LOCATION_INTRANSITIVE_SURFACE_MODIFIER_SEQUENCE
+        ],
+        "time_suffix": "yesterday",
+        "time_operator": "at_T",
+        "time_argument": "yesterday",
+        "expected_ast_kind_by_time_wrapped": {
+            "false": "application",
+            "true": "time",
+        },
+        "translation_template": "{predicate}({n})({modifier_fragments}, {subject})",
+        "timed_translation_template": "{time_operator}({time_argument}, {body})",
+        "probe_templates": [
+            {
+                "probe_id": "subject_slot_john",
+                "slot": "subject",
+                "modifier_prefix_length": 2,
+                "time_wrapped": False,
+                "expected_rule_id": "manner_locative_intransitive_predication",
+                "expected_event_analysis": "manner-locative-intransitive-predication",
+                "substitutions": {
+                    "subject": {"surface": "John", "semantic": "john"},
+                },
+            },
+            {
+                "probe_id": "predicate_manner_sleep_quietly",
+                "slot": "predicate_manner",
+                "modifier_prefix_length": 1,
+                "time_wrapped": False,
+                "expected_rule_id": "manner_intransitive_predication",
+                "expected_event_analysis": "manner-intransitive-predication",
+                "substitutions": {
+                    "subject": {"surface": "John", "semantic": "john"},
+                    "predicate": {"surface": "slept", "semantic": "sleep"},
+                    "modifiers": {
+                        "1": {
+                            "surface": "quietly",
+                            "dependent_type_fragment": "quietly",
+                            "semantic_role": "Manner",
+                        },
+                    },
+                },
+            },
+            {
+                "probe_id": "predicate_manner_location_sleep_garden_timed",
+                "slot": "predicate_manner_location_time",
+                "modifier_prefix_length": 2,
+                "time_wrapped": True,
+                "expected_rule_id": "manner_locative_intransitive_predication",
+                "expected_event_analysis": "manner-locative-intransitive-predication",
+                "substitutions": {
+                    "subject": {"surface": "John", "semantic": "john"},
+                    "predicate": {"surface": "slept", "semantic": "sleep"},
+                    "modifiers": {
+                        "1": {
+                            "surface": "quietly",
+                            "dependent_type_fragment": "quietly",
+                            "semantic_role": "Manner",
+                        },
+                        "2": {
+                            "surface": "in the garden",
+                            "dependent_type_fragment": "in(garden)",
+                            "semantic_role": "Location",
+                        },
+                    },
+                },
+            },
+        ],
+    }
+
+
+def manner_location_intransitive_surface_slot_probes_from_spec(
+    spec: dict[str, Any],
+) -> list[dict[str, Any]]:
+    probes = []
+    for template in spec["probe_templates"]:
+        frame = copy.deepcopy(spec["base_frame"])
+        modifiers = [dict(modifier) for modifier in spec["modifiers"]]
+        substitutions = template.get("substitutions", {})
+        if isinstance(substitutions, dict):
+            for slot in ("subject", "predicate"):
+                replacement = substitutions.get(slot)
+                if isinstance(replacement, dict):
+                    frame[slot] = dict(replacement)
+            modifier_substitutions = substitutions.get("modifiers")
+            if isinstance(modifier_substitutions, dict):
+                for index, replacement in modifier_substitutions.items():
+                    if isinstance(replacement, dict):
+                        modifiers[int(index) - 1] = {
+                            **modifiers[int(index) - 1],
+                            **replacement,
+                        }
+        modifier_count = int(template["modifier_prefix_length"])
+        modifier_prefix = modifiers[:modifier_count]
+        modifier_surfaces = " ".join(
+            str(modifier["surface"]) for modifier in modifier_prefix
+        )
+        modifier_fragments = ", ".join(
+            str(modifier["dependent_type_fragment"])
+            for modifier in modifier_prefix
+        )
+        sentence_body = str(spec["surface_template"]).format(
+            subject_surface=frame["subject"]["surface"],
+            predicate_surface=frame["predicate"]["surface"],
+            modifier_surfaces=modifier_surfaces,
+        )
+        body = str(spec["translation_template"]).format(
+            predicate=frame["predicate"]["semantic"],
+            n=modifier_count,
+            modifier_fragments=modifier_fragments,
+            subject=frame["subject"]["semantic"],
+        )
+        time_wrapped = template.get("time_wrapped") is True
+        sentence = (
+            str(spec["timed_surface_template"]).format(
+                body=sentence_body,
+                time_suffix=spec["time_suffix"],
+            )
+            if time_wrapped
+            else sentence_body
+        )
+        fragment = (
+            str(spec["timed_translation_template"]).format(
+                time_operator=spec["time_operator"],
+                time_argument=spec["time_argument"],
+                body=body,
+            )
+            if time_wrapped
+            else body
+        )
+        probes.append(
+            {
+                "probe_id": str(template["probe_id"]),
+                "slot": str(template["slot"]),
+                "sentence": sentence,
+                "modifier_count": modifier_count,
+                "time_wrapped": time_wrapped,
+                "expected_rule_id": str(template["expected_rule_id"]),
+                "expected_event_analysis": str(template["expected_event_analysis"]),
+                "expected_ast_kind": spec["expected_ast_kind_by_time_wrapped"][
+                    "true" if time_wrapped else "false"
+                ],
+                "expected_dependent_type_fragments": [fragment],
+            },
+        )
+    return probes
+
+
+def manner_location_intransitive_surface_slot_probe_payload() -> dict[str, Any]:
+    generation_spec = manner_location_intransitive_surface_slot_probe_generation_spec()
+    probes = manner_location_intransitive_surface_slot_probes_from_spec(
+        generation_spec,
+    )
+    return {
+        "schema_version": "surface_slot_probes.v1",
+        "probe_claim": "controlled_intransitive_subject_predicate_modifier_substitutions",
+        "full_lexical_slot_certification": False,
+        "base_family": "manner_location_intransitive_adv_sequence",
+        "expected_event_analysis_family": "manner_location_intransitive",
+        "probe_count": len(probes),
+        "probe_generation_spec": generation_spec,
+        "probes": probes,
+        "matrix_claim": "not_yet_cartesianized_for_this_family",
+        "full_lexical_matrix_certification": False,
+        "matrix_example_count": 0,
+        "matrix_generation_spec": {},
+        "matrix_examples": [],
     }
 
 
@@ -21363,6 +21736,12 @@ def construction_rules() -> list[ConstructionRule]:
 def surface_parser_coverage_payload() -> dict[str, Any]:
     witness_generation_spec = modified_transitive_surface_witness_generation_spec()
     slot_probe_payload = modified_transitive_surface_slot_probe_payload()
+    intransitive_witness_generation_spec = (
+        manner_location_intransitive_surface_witness_generation_spec()
+    )
+    intransitive_slot_probe_payload = (
+        manner_location_intransitive_surface_slot_probe_payload()
+    )
     snapshot_by_rule = {
         str(snapshot.get("rule_id", "")): snapshot
         for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
@@ -21444,6 +21823,28 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
         | set(timed_counts)
         | set(untimed_counts),
     )
+    intransitive_verified_examples = (
+        manner_location_intransitive_surface_witnesses_from_spec(
+            intransitive_witness_generation_spec,
+        )
+    )
+    intransitive_timed_counts = sorted(
+        {
+            int(example["modifier_count"])
+            for example in intransitive_verified_examples
+            if example.get("time_wrapped") is True
+        },
+    )
+    intransitive_untimed_counts = sorted(
+        {
+            int(example["modifier_count"])
+            for example in intransitive_verified_examples
+            if example.get("time_wrapped") is False
+        },
+    )
+    intransitive_verified_counts = sorted(
+        set(intransitive_timed_counts) | set(intransitive_untimed_counts),
+    )
     return {
         "modified_transitive_adv_sequence": {
             "rule_id": "modified_transitive_predication",
@@ -21465,6 +21866,34 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
                 "The dependent type family is open-ended in n, but the current "
                 "surface parser advertises only the registered and smoke-tested "
                 "modifier-count examples listed here."
+            ),
+        },
+        "manner_location_intransitive_adv_sequence": {
+            "rule_id": "manner_location_intransitive_family",
+            "type_principle": "manner_plus_location_modifier_sequence",
+            "type_family": "forall n : nat, ModifierSeq n -> Entity -> PropT",
+            "type_level_open_ended": True,
+            "surface_parser_claim": "registered_examples_only",
+            "full_surface_parser_certification": False,
+            "primary_modifier_count": 1,
+            "verified_modifier_counts": intransitive_verified_counts,
+            "verified_timed_modifier_counts": intransitive_timed_counts,
+            "verified_untimed_modifier_counts": intransitive_untimed_counts,
+            "max_verified_modifier_count": (
+                max(intransitive_verified_counts)
+                if intransitive_verified_counts
+                else 0
+            ),
+            "verified_example_count": len(intransitive_verified_examples),
+            "verified_examples": intransitive_verified_examples,
+            "witness_generation_spec": intransitive_witness_generation_spec,
+            "slot_probe_examples": intransitive_slot_probe_payload,
+            "boundary_note": (
+                "This family audits the intransitive manner/location Adv "
+                "front end separately from the transitive admire family: the "
+                "registered witness sequence and controlled sleep/quietly slot "
+                "probes are finite parser witnesses, not arbitrary English "
+                "coverage."
             ),
         },
     }

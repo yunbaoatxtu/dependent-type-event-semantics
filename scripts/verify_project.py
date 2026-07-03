@@ -10827,6 +10827,8 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         exported_prop_definition_names,
         fallback_promotion_draft_preflight_payload,
         fallback_promotion_candidates_payload,
+        manner_location_intransitive_surface_slot_probes_from_spec,
+        manner_location_intransitive_surface_witnesses_from_spec,
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
         run_pipeline,
@@ -11659,6 +11661,163 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
                 raise SystemExit(
                     "web route smoke check failed: certified surface parser witness live translation drift"
                 )
+    intransitive_surface = surface_parser_coverage.get(
+        "manner_location_intransitive_adv_sequence",
+    )
+    if not isinstance(intransitive_surface, dict):
+        raise SystemExit(
+            "web route smoke check failed: certified intransitive surface coverage missing"
+        )
+    intransitive_counts = [1, 2, 3, 4, 5, 6]
+    intransitive_generation_spec = intransitive_surface.get(
+        "witness_generation_spec",
+    )
+    if not isinstance(intransitive_generation_spec, dict):
+        raise SystemExit(
+            "web route smoke check failed: certified intransitive surface generation spec missing"
+        )
+    expected_intransitive_modifiers = [
+        "loudly",
+        "in(park)",
+        "near(window)",
+        "beside(shelf)",
+        "under(lamp)",
+        "on(table)",
+    ]
+    intransitive_modifiers = intransitive_generation_spec.get("modifiers")
+    if (
+        intransitive_surface.get("rule_id")
+        != "manner_location_intransitive_family"
+        or intransitive_surface.get("type_principle")
+        != "manner_plus_location_modifier_sequence"
+        or intransitive_surface.get("type_family")
+        != "forall n : nat, ModifierSeq n -> Entity -> PropT"
+        or intransitive_surface.get("type_level_open_ended") is not True
+        or intransitive_surface.get("surface_parser_claim")
+        != "registered_examples_only"
+        or intransitive_surface.get("full_surface_parser_certification") is not False
+        or intransitive_surface.get("primary_modifier_count") != 1
+        or intransitive_surface.get("verified_modifier_counts")
+        != intransitive_counts
+        or intransitive_surface.get("verified_timed_modifier_counts")
+        != intransitive_counts
+        or intransitive_surface.get("verified_untimed_modifier_counts")
+        != intransitive_counts
+        or intransitive_surface.get("max_verified_modifier_count") != 6
+        or intransitive_generation_spec.get("schema_version")
+        != "surface_witness_generation.v1"
+        or intransitive_generation_spec.get("generator")
+        != "manner_location_prefix_with_optional_time_suffix"
+        or intransitive_generation_spec.get("base_surface_sentence")
+        != "Mary laughed"
+        or intransitive_generation_spec.get("predicate") != "laugh"
+        or intransitive_generation_spec.get("subject") != "mary"
+        or intransitive_generation_spec.get("verified_prefix_lengths")
+        != intransitive_counts
+        or intransitive_generation_spec.get("translation_template")
+        != "{predicate}({n})({modifier_fragments}, {subject})"
+        or intransitive_generation_spec.get("timed_translation_template")
+        != "{time_operator}({time_argument}, {body})"
+        or not isinstance(intransitive_modifiers, list)
+        or [
+            modifier.get("dependent_type_fragment")
+            for modifier in intransitive_modifiers
+            if isinstance(modifier, dict)
+        ]
+        != expected_intransitive_modifiers
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified intransitive surface coverage drift"
+        )
+    expected_intransitive_examples = (
+        manner_location_intransitive_surface_witnesses_from_spec(
+            intransitive_generation_spec,
+        )
+    )
+    intransitive_examples = intransitive_surface.get("verified_examples")
+    if (
+        intransitive_surface.get("verified_example_count")
+        != len(expected_intransitive_examples)
+        or intransitive_examples != expected_intransitive_examples
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified intransitive surface witness drift"
+        )
+    for item in expected_intransitive_examples:
+        witness_result = run_pipeline(str(item.get("sentence", "")), require_coq=False)
+        if (
+            not witness_result.get("ok")
+            or witness_result.get("construction_rule", {}).get("id")
+            != item.get("rule_id")
+            or witness_result.get("event_semantics", {}).get("analysis")
+            != item.get("expected_event_analysis")
+            or witness_result.get("ast", {}).get("kind")
+            != item.get("expected_ast_kind")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified intransitive surface witness live drift"
+            )
+        witness_translation = str(
+            witness_result.get("dependent_type_translation", ""),
+        )
+        for fragment in item.get("expected_dependent_type_fragments", []):
+            if not isinstance(fragment, str) or fragment not in witness_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified intransitive surface witness live translation drift"
+                )
+    intransitive_slot_probe_examples = intransitive_surface.get(
+        "slot_probe_examples",
+    )
+    if (
+        not isinstance(intransitive_slot_probe_examples, dict)
+        or intransitive_slot_probe_examples.get("schema_version")
+        != "surface_slot_probes.v1"
+        or intransitive_slot_probe_examples.get("probe_claim")
+        != "controlled_intransitive_subject_predicate_modifier_substitutions"
+        or intransitive_slot_probe_examples.get("full_lexical_slot_certification")
+        is not False
+        or intransitive_slot_probe_examples.get("base_family")
+        != "manner_location_intransitive_adv_sequence"
+        or intransitive_slot_probe_examples.get("matrix_example_count") != 0
+        or intransitive_slot_probe_examples.get("matrix_examples") != []
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified intransitive surface slot probe schema drift"
+        )
+    expected_intransitive_probes = (
+        manner_location_intransitive_surface_slot_probes_from_spec(
+            intransitive_slot_probe_examples.get("probe_generation_spec"),
+        )
+    )
+    intransitive_probes = intransitive_slot_probe_examples.get("probes")
+    if (
+        intransitive_slot_probe_examples.get("probe_count")
+        != len(expected_intransitive_probes)
+        or intransitive_probes != expected_intransitive_probes
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified intransitive surface slot probe drift"
+        )
+    for probe in expected_intransitive_probes:
+        probe_result = run_pipeline(str(probe.get("sentence", "")), require_coq=False)
+        if (
+            not probe_result.get("ok")
+            or probe_result.get("construction_rule", {}).get("id")
+            != probe.get("expected_rule_id")
+            or probe_result.get("event_semantics", {}).get("analysis")
+            != probe.get("expected_event_analysis")
+            or probe_result.get("ast", {}).get("kind")
+            != probe.get("expected_ast_kind")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified intransitive surface slot probe live drift"
+            )
+        probe_translation = str(probe_result.get("dependent_type_translation", ""))
+        for fragment in probe.get("expected_dependent_type_fragments", []):
+            if not isinstance(fragment, str) or fragment not in probe_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified intransitive surface slot probe live translation drift"
+                )
     for witness in expected_modifier_role_witnesses:
         role = str(witness.get("role", ""))
         sentence = str(witness.get("sentence", ""))
@@ -12336,6 +12495,11 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         for family, item in surface_parser_coverage.items()
         if isinstance(family, str) and isinstance(item, dict)
     ]
+    surface_family_items = [
+        item
+        for item in surface_parser_coverage.values()
+        if isinstance(item, dict)
+    ]
     surface_family_name = surface_family_names[0] if surface_family_names else ""
     modified_surface = surface_parser_coverage.get(surface_family_name, {})
     if not isinstance(modified_surface, dict):
@@ -12345,22 +12509,29 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         surface_generation_spec = {}
     surface_generation_modifiers = surface_generation_spec.get("modifiers")
     surface_examples = [
-        item
-        for item in modified_surface.get("verified_examples", [])
-        if isinstance(item, dict)
+        example
+        for family_item in surface_family_items
+        for example in family_item.get("verified_examples", [])
+        if isinstance(example, dict)
     ]
     surface_slot_probes = modified_surface.get("slot_probe_examples")
     if not isinstance(surface_slot_probes, dict):
         surface_slot_probes = {}
     surface_probe_rows = [
-        item
-        for item in surface_slot_probes.get("probes", [])
-        if isinstance(item, dict)
+        probe
+        for family_item in surface_family_items
+        for slot_probe_payload in [family_item.get("slot_probe_examples")]
+        if isinstance(slot_probe_payload, dict)
+        for probe in slot_probe_payload.get("probes", [])
+        if isinstance(probe, dict)
     ]
     surface_matrix_rows = [
-        item
-        for item in surface_slot_probes.get("matrix_examples", [])
-        if isinstance(item, dict)
+        matrix_row
+        for family_item in surface_family_items
+        for slot_probe_payload in [family_item.get("slot_probe_examples")]
+        if isinstance(slot_probe_payload, dict)
+        for matrix_row in slot_probe_payload.get("matrix_examples", [])
+        if isinstance(matrix_row, dict)
     ]
     surface_slot_probe_generation_spec = surface_slot_probes.get(
         "probe_generation_spec",
