@@ -1002,6 +1002,23 @@ the runtime coverage entries checked by the web-route smoke tests. The shared
 `proof_index_scope` is
 `registered_fragment_entrypoints_not_general_denotation`, making the route
 auditable without claiming a new general denotational proof.
+It also carries `scope_attachment_discourse_audit` with `schema_version:
+"scope_attachment_discourse_audit.v1"`. This audit is deliberately finite: its
+claim is `finite_registered_witnesses_not_full_discourse_semantics`, and
+`full_scope_attachment_discourse_certification` remains false. The audit derives
+five rows from the current semantic snapshots and registered variants:
+quantifier scope, perception-complement nominalization, matrix/complement
+temporal attachment, typed modifier attachment, and local pronominal
+cause/reason dependencies. The newly registered quantifier variants cover
+`a boy loves a girl`, `every boy loves a girl`, `a boy loves every girl`, and
+`no boy loves a girl`; the perception variants cover `Mary saw John leave
+yesterday` and `Mary saw John leave after Bill waved`. The verifier recomputes
+the audit and reruns sample witnesses, checking reading names such as
+`every_boy_wide_scope` and attachment kinds such as
+`matrix_time_attachment`. The same payload keeps explicit open boundaries for
+relative-clause attachment, arbitrary discourse anaphora, and pragmatic
+attachment disambiguation, so this stage expands certified evidence without
+removing the open `unregistered_scope_attachment_discourse` objective.
 It also carries `completion_frontier_audit` with `schema_version:
 "completion_frontier_audit.v1"`. This audit points to
 `ConcreteTruthConditionDischargeFrontierCertificate`, records the status type

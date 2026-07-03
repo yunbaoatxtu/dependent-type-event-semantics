@@ -18556,7 +18556,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 79)
+        self.assertEqual(counts["registered_variant_success_cases"], 85)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -18702,6 +18702,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_instance_source_audit_certificate",
                 "coq_concrete_truth_condition_discharge_frontier_certificate",
                 "web_completion_frontier_audit",
+                "scope_attachment_discourse_coverage_audit",
                 "parser_semantic_boundary_audit",
                 "paper_docx_sync",
                 "web_and_api_contracts",
@@ -18909,6 +18910,50 @@ class TranslatorTests(unittest.TestCase):
             frontier_audit["finite_registered_frontier"][0]["frontier_status"],
             "finite_registered_fragment_discharged",
         )
+        scope_attachment_audit = completion_status["scope_attachment_discourse_audit"]
+        self.assertEqual(
+            scope_attachment_audit["schema_version"],
+            "scope_attachment_discourse_audit.v1",
+        )
+        self.assertEqual(
+            scope_attachment_audit["claim"],
+            "finite_registered_witnesses_not_full_discourse_semantics",
+        )
+        self.assertFalse(
+            scope_attachment_audit["full_scope_attachment_discourse_certification"],
+        )
+        scope_categories = {
+            item["category_id"]: item
+            for item in scope_attachment_audit["categories"]
+        }
+        self.assertEqual(
+            set(scope_categories),
+            {
+                "quantifier_scope",
+                "perception_complement_nominalization",
+                "perception_temporal_attachment",
+                "typed_modifier_attachment",
+                "discourse_pronominal_cause",
+            },
+        )
+        self.assertGreaterEqual(scope_categories["quantifier_scope"]["witness_count"], 5)
+        self.assertIn(
+            "every_boy_wide_scope",
+            scope_categories["quantifier_scope"]["reading_name_inventory"],
+        )
+        self.assertIn(
+            "matrix_time_attachment",
+            scope_categories["perception_temporal_attachment"][
+                "attachment_kind_inventory"
+            ],
+        )
+        self.assertIn(
+            "relative_clause_attachment",
+            {
+                item["boundary_id"]
+                for item in scope_attachment_audit["open_boundaries"]
+            },
+        )
         self.assertEqual(
             next(
                 item
@@ -18925,8 +18970,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 79)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 79)
+        self.assertEqual(modifier_contract["variant_case_count"], 85)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 85)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -20539,7 +20584,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 79,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 85,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -20678,7 +20723,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="79"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="85"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(
@@ -20823,6 +20868,42 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-truth-condition-obligation-remaining-status="unregistered_modifier_attachment_truth_conditions_open"',
+            page,
+        )
+        scope_attachment_audit = completion_status["scope_attachment_discourse_audit"]
+        self.assertIn("scope/attachment/discourse audit", page)
+        self.assertIn(
+            data_attr(
+                "data-scope-attachment-discourse-schema",
+                scope_attachment_audit["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-scope-attachment-discourse-claim",
+                scope_attachment_audit["claim"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-category="quantifier_scope"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-reading-names="a_boy_wide_scope | a_girl_wide_scope | every_boy_wide_scope | every_girl_wide_scope | no_boy_wide_scope | some_boy_wide_scope | some_girl_wide_scope"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-category="perception_temporal_attachment"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-attachment-kinds="complement_time_attachment | matrix_time_attachment | none"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-open-boundary="relative_clause_attachment"',
             page,
         )
         frontier_audit = completion_status["completion_frontier_audit"]

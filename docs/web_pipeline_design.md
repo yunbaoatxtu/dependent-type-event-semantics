@@ -218,6 +218,20 @@ coverage entrypoints. The row-level hooks should expose
 `data-truth-condition-obligation-sample-entrypoints`; the scope remains
 `registered_fragment_entrypoints_not_general_denotation` so these links are
 trace indices, not a claim of arbitrary denotational closure. The same object
+now carries a `scope_attachment_discourse_audit.v1` child. That child has the
+finite claim `finite_registered_witnesses_not_full_discourse_semantics`, keeps
+`full_scope_attachment_discourse_certification` false, and derives rows for
+quantifier scope, perception-complement nominalization, matrix/complement
+temporal attachment, typed modifier attachment, and local pronominal
+cause/reason dependencies. The page mirrors those rows through
+`data-scope-attachment-discourse-*` hooks, including reading-name inventories,
+attachment-kind inventories, sample sentences, witness counts, and open
+boundaries for relative-clause attachment, arbitrary discourse anaphora, and
+pragmatic attachment disambiguation. The verifier should recompute the audit
+from semantic snapshots and registered variant cases, then rerun sample
+witnesses so stale reading names or attachment kinds cannot remain in the
+Certified Fragment panel.
+The same object
 now carries a
 `completion_frontier_audit.v1` child that links the page
 and JSON manifest back to `ConcreteTruthConditionDischargeFrontierCertificate`.
@@ -365,6 +379,12 @@ The manifest also carries a `coverage_matrix` with
 rejected example rows with `data-coverage-kind`, `data-coverage-sentence`, and,
 for registered variants, `data-coverage-variant-id`; for rejection rows it also
 uses `data-coverage-marker`. Current registered variants include
+`indefinite_article_scope_ambiguity`,
+`subject_universal_object_existential_scope_ambiguity`,
+`subject_existential_object_universal_scope_ambiguity`,
+`negative_subject_existential_object_scope_ambiguity`,
+`perception_temporal_attachment_ambiguity`,
+`perception_after_temporal_nominalization`,
 `temporal_event_counting`, `temporal_plain_intransitive_predication`,
 `temporal_manner_intransitive_predication`,
 `temporal_instrument_intransitive_predication`,

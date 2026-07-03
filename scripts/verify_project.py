@@ -10815,6 +10815,252 @@ def validate_parser_semantic_boundary_audit(manifest: dict) -> None:
         )
 
 
+def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
+    from translator.natural_language_pipeline import (
+        run_pipeline,
+        scope_attachment_discourse_audit_payload,
+    )
+
+    completion_status = manifest.get("completion_status")
+    semantic_snapshots = manifest.get("semantic_snapshots")
+    coverage = manifest.get("coverage_matrix")
+    if (
+        not isinstance(completion_status, dict)
+        or not isinstance(semantic_snapshots, list)
+        or not isinstance(coverage, dict)
+    ):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse audit missing"
+        )
+    registered_variant_cases = coverage.get("registered_variant_success_cases")
+    if not isinstance(registered_variant_cases, list):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse variants missing"
+        )
+    audit = completion_status.get("scope_attachment_discourse_audit")
+    if not isinstance(audit, dict):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse audit missing"
+        )
+    expected_audit = scope_attachment_discourse_audit_payload(
+        semantic_snapshots,
+        registered_variant_cases,
+    )
+    if audit != expected_audit:
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse audit drift"
+        )
+    if audit.get("schema_version") != "scope_attachment_discourse_audit.v1":
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse schema drift"
+        )
+    if (
+        audit.get("claim")
+        != "finite_registered_witnesses_not_full_discourse_semantics"
+        or audit.get("full_scope_attachment_discourse_certification") is not False
+        or audit.get("blocker") != "fallback_certification_level_shallow_scaffold"
+        or audit.get("next_stage") != "expand_scope_attachment_discourse_coverage"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse boundary drift"
+        )
+    categories = audit.get("categories")
+    if not isinstance(categories, list):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse category drift"
+        )
+    if audit.get("category_count") != len(categories):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse category count drift"
+        )
+    if audit.get("registered_witness_count") != sum(
+        int(item.get("witness_count", 0))
+        for item in categories
+        if isinstance(item, dict)
+    ):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse witness count drift"
+        )
+    category_by_id = {
+        item.get("category_id"): item
+        for item in categories
+        if isinstance(item, dict) and isinstance(item.get("category_id"), str)
+    }
+    required_categories = {
+        "quantifier_scope",
+        "perception_complement_nominalization",
+        "perception_temporal_attachment",
+        "typed_modifier_attachment",
+        "discourse_pronominal_cause",
+    }
+    if set(category_by_id) != required_categories:
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse category id drift"
+        )
+    required_readings = {
+        "quantifier_scope": {
+            "some_boy_wide_scope",
+            "some_girl_wide_scope",
+            "a_boy_wide_scope",
+            "a_girl_wide_scope",
+            "every_boy_wide_scope",
+            "every_girl_wide_scope",
+            "no_boy_wide_scope",
+        },
+        "perception_temporal_attachment": {
+            "complement_time_attachment",
+            "matrix_time_attachment",
+            "primary",
+        },
+    }
+    required_attachments = {
+        "quantifier_scope": {"plain"},
+        "perception_temporal_attachment": {
+            "complement_time_attachment",
+            "matrix_time_attachment",
+            "none",
+        },
+    }
+    for category_id, row in category_by_id.items():
+        if row.get("witness_source") != "semantic_snapshots_and_registered_variant_success_cases":
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse source drift"
+            )
+        if row.get("witness_scope") != "finite_registered_fragment":
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse scope drift"
+            )
+        if not isinstance(row.get("witness_count"), int) or row.get("witness_count") <= 0:
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse empty category"
+            )
+        if not string_list(row.get("sample_sentences")) or not row.get("sample_sentences"):
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse sample drift"
+            )
+        if not string_list(row.get("required_future_instances")):
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse future-instance drift"
+            )
+        if category_id in required_readings and not required_readings[category_id].issubset(
+            set(row.get("reading_name_inventory", []))
+        ):
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse reading drift"
+            )
+        if category_id in required_attachments and not required_attachments[
+            category_id
+        ].issubset(set(row.get("attachment_kind_inventory", []))):
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse attachment drift"
+            )
+        sample_witnesses = row.get("sample_witnesses")
+        if not isinstance(sample_witnesses, list) or not sample_witnesses:
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse witness drift"
+            )
+        for witness in sample_witnesses:
+            if not isinstance(witness, dict):
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse witness shape drift"
+                )
+            sentence = witness.get("sentence")
+            if not isinstance(sentence, str) or not sentence:
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse witness sentence drift"
+                )
+            result = run_pipeline(sentence, require_coq=False)
+            if (
+                not result.get("ok")
+                or result.get("construction_rule", {}).get("id")
+                != witness.get("rule_id")
+                or result.get("event_semantics", {}).get("analysis")
+                != witness.get("expected_event_analysis")
+            ):
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse runtime drift"
+                )
+            expected_ast_kind = str(witness.get("expected_ast_kind", ""))
+            if expected_ast_kind and result.get("ast", {}).get("kind") != expected_ast_kind:
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse AST drift"
+                )
+            readings = result.get("semantic_readings")
+            if not isinstance(readings, list) or not readings:
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse reading missing"
+                )
+            actual_reading_names = {
+                item.get("name")
+                for item in readings
+                if isinstance(item, dict)
+            }
+            expected_reading_names = set(witness.get("expected_reading_names", []))
+            if expected_reading_names and not expected_reading_names.issubset(
+                actual_reading_names
+            ):
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse reading name drift"
+                )
+            actual_attachment_kinds = {
+                item.get("attachment_summary", {}).get("kind")
+                for item in readings
+                if isinstance(item, dict)
+                and isinstance(item.get("attachment_summary"), dict)
+            }
+            expected_attachment_kinds = set(witness.get("expected_attachment_kinds", []))
+            if expected_attachment_kinds and not expected_attachment_kinds.issubset(
+                actual_attachment_kinds
+            ):
+                raise SystemExit(
+                    "web route smoke check failed: scope/attachment/discourse attachment kind drift"
+                )
+    open_boundaries = audit.get("open_boundaries")
+    if not isinstance(open_boundaries, list) or audit.get("open_boundary_count") != len(
+        open_boundaries
+    ):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse open boundary drift"
+        )
+    open_by_id = {
+        item.get("boundary_id"): item
+        for item in open_boundaries
+        if isinstance(item, dict) and isinstance(item.get("boundary_id"), str)
+    }
+    if set(open_by_id) != {
+        "relative_clause_attachment",
+        "arbitrary_discourse_anaphora",
+        "pragmatic_attachment_disambiguation",
+    }:
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse open boundary id drift"
+        )
+    if open_by_id["relative_clause_attachment"].get("guarded_marker") != "that":
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse guard drift"
+        )
+    required_invariants = audit.get("required_invariants")
+    if (
+        not string_list(required_invariants)
+        or "audit_claim_is_finite_not_complete" not in required_invariants
+        or "open_boundaries_remain_explicit" not in required_invariants
+    ):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse invariant drift"
+        )
+    live_validation = audit.get("live_validation")
+    if (
+        not isinstance(live_validation, dict)
+        or live_validation.get("validator")
+        != "scripts/verify_project.py::validate_scope_attachment_discourse_audit"
+        or live_validation.get("html_hooks")
+        != "data-scope-attachment-discourse-*"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: scope/attachment/discourse validator drift"
+        )
+
+
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
         application_modifier_role_occurrences,
@@ -10834,6 +11080,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
         run_pipeline,
+        scope_attachment_discourse_audit_payload,
         truth_condition_instance_obligations_payload,
     )
 
@@ -11160,6 +11407,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_concrete_truth_condition_instance_source_audit_certificate",
         "coq_concrete_truth_condition_discharge_frontier_certificate",
         "web_completion_frontier_audit",
+        "scope_attachment_discourse_coverage_audit",
         "parser_semantic_boundary_audit",
         "paper_docx_sync",
         "web_and_api_contracts",
@@ -12437,6 +12685,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             raise SystemExit(
                 "web route smoke check failed: certified modifier sequence role coverage drift"
             )
+    validate_scope_attachment_discourse_audit(manifest)
     fallback = manifest.get("fallback")
     if (
         not isinstance(fallback, dict)
@@ -12634,6 +12883,21 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     completion_frontier_audit = completion_status.get("completion_frontier_audit")
     if not isinstance(completion_frontier_audit, dict):
         completion_frontier_audit = {}
+    scope_attachment_discourse_audit = completion_status.get(
+        "scope_attachment_discourse_audit",
+    )
+    if not isinstance(scope_attachment_discourse_audit, dict):
+        scope_attachment_discourse_audit = {}
+    scope_attachment_discourse_rows = [
+        item
+        for item in scope_attachment_discourse_audit.get("categories", [])
+        if isinstance(item, dict)
+    ]
+    scope_attachment_discourse_boundaries = [
+        item
+        for item in scope_attachment_discourse_audit.get("open_boundaries", [])
+        if isinstance(item, dict)
+    ]
     frontier_open = [
         item
         for item in completion_frontier_audit.get("open_frontier", [])
@@ -12788,6 +13052,39 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         ),
         data_fragment("data-completion-frontier-open-count", len(frontier_open)),
         data_fragment("data-completion-frontier-closed-count", len(frontier_closed)),
+        data_fragment(
+            "data-scope-attachment-discourse-schema",
+            scope_attachment_discourse_audit.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-scope-attachment-discourse-claim",
+            scope_attachment_discourse_audit.get("claim", ""),
+        ),
+        data_fragment(
+            "data-scope-attachment-discourse-category-count",
+            len(scope_attachment_discourse_rows),
+        ),
+        data_fragment(
+            "data-scope-attachment-discourse-witness-count",
+            scope_attachment_discourse_audit.get("registered_witness_count", ""),
+        ),
+        data_fragment(
+            "data-scope-attachment-discourse-open-count",
+            len(scope_attachment_discourse_boundaries),
+        ),
+        data_fragment(
+            "data-scope-attachment-discourse-next-stage",
+            scope_attachment_discourse_audit.get("next_stage", ""),
+        ),
+        data_fragment(
+            "data-scope-attachment-discourse-full-certification",
+            str(
+                scope_attachment_discourse_audit.get(
+                    "full_scope_attachment_discourse_certification",
+                )
+                is True
+            ).lower(),
+        ),
         data_fragment("data-surface-parser-family", surface_family_name),
         data_fragment(
             "data-surface-type-level-open-ended",
@@ -13019,9 +13316,60 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         "surface parser coverage",
         "parser/semantic boundary audit",
         "completion status",
+        "scope/attachment/discourse audit",
         "completion frontier audit",
         "<h2>Certified Fragment</h2>",
     ]
+    for item in scope_attachment_discourse_rows:
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-scope-attachment-discourse-category",
+                    item.get("category_id", ""),
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-verified-status",
+                    item.get("verified_status", ""),
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-remaining-status",
+                    item.get("remaining_status", ""),
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-witness-count",
+                    item.get("witness_count", ""),
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-reading-names",
+                    " | ".join(item.get("reading_name_inventory", []))
+                    if isinstance(item.get("reading_name_inventory"), list)
+                    else "",
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-attachment-kinds",
+                    " | ".join(item.get("attachment_kind_inventory", []))
+                    if isinstance(item.get("attachment_kind_inventory"), list)
+                    else "",
+                ),
+            ],
+        )
+    for item in scope_attachment_discourse_boundaries:
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-scope-attachment-discourse-open-boundary",
+                    item.get("boundary_id", ""),
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-open-status",
+                    item.get("status", ""),
+                ),
+                data_fragment(
+                    "data-scope-attachment-discourse-open-next-stage",
+                    item.get("next_stage", ""),
+                ),
+            ],
+        )
     for item in parser_semantic_boundary_rows:
         expected_fragments.extend(
             [

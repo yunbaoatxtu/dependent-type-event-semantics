@@ -256,6 +256,11 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_verification_scope_kind": "registered_construction",
         "expected_certification_level": "construction_rule",
         "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "a_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
     },
     {
         "rule_id": "causal_because",
@@ -273,6 +278,11 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_verification_scope_kind": "registered_construction",
         "expected_certification_level": "construction_rule",
         "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "every_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
     },
     {
         "rule_id": "causal_because",
@@ -286,6 +296,11 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_verification_scope_kind": "registered_construction",
         "expected_certification_level": "construction_rule",
         "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "a_boy_wide_scope",
+            "every_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
     },
     {
         "rule_id": "causal_because",
@@ -386,6 +401,146 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_verification_scope_kind": "registered_construction",
         "expected_certification_level": "construction_rule",
         "boundary_status": "registered_variant_example",
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "indefinite_article_scope_ambiguity",
+        "sentence": "a boy loves a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "girl(x_girl) and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : Entity. "
+                "boy(x_boy) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "a_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_universal_object_existential_scope_ambiguity",
+        "sentence": "every boy loves a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "forall x_boy : Entity. boy(x_boy) -> exists x_girl : Entity. "
+                "girl(x_girl) and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and (forall x_boy : "
+                "Entity. boy(x_boy) -> love(x_boy, x_girl))"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "every_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_existential_object_universal_scope_ambiguity",
+        "sentence": "a boy loves every girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and (forall x_girl : "
+                "Entity. girl(x_girl) -> love(x_boy, x_girl))"
+            ),
+            (
+                "forall x_girl : Entity. girl(x_girl) -> exists x_boy : "
+                "Entity. boy(x_boy) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "a_boy_wide_scope",
+            "every_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "negative_subject_existential_object_scope_ambiguity",
+        "sentence": "no boy loves a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "forall x_boy : Entity. boy(x_boy) -> not (exists x_girl : "
+                "Entity. girl(x_girl) and love(x_boy, x_girl))"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and (forall x_boy : "
+                "Entity. boy(x_boy) -> not (love(x_boy, x_girl)))"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "no_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+    },
+    {
+        "rule_id": "perception_nominalization",
+        "variant_id": "perception_temporal_attachment_ambiguity",
+        "sentence": "Mary saw John leave yesterday",
+        "expected_event_analysis": "parsons-perception-complement",
+        "expected_dependent_type_fragments": [
+            "see(Mary, E(at_T(yesterday, leave(John))))",
+        ],
+        "expected_ast_kind": "perception_nominalization",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "complement_time_attachment",
+            "matrix_time_attachment",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "complement_time_attachment",
+            "matrix_time_attachment",
+        ],
+    },
+    {
+        "rule_id": "perception_nominalization",
+        "variant_id": "perception_after_temporal_nominalization",
+        "sentence": "Mary saw John leave after Bill waved",
+        "expected_event_analysis": "parsons-perception-complement",
+        "expected_dependent_type_fragments": [
+            (
+                "see(Mary, E(exists t_main t_reference : Time. "
+                "leave(John, t_main) and wave(Bill, t_reference) and "
+                "before(t_reference, t_main)))"
+            ),
+        ],
+        "expected_ast_kind": "perception_nominalization",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": ["primary"],
+        "expected_scope_audit_attachment_kinds": ["none"],
     },
     {
         "rule_id": "event_counting",
@@ -22989,6 +23144,267 @@ def completion_frontier_audit_payload(
     }
 
 
+SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS = (
+    {
+        "category_id": "quantifier_scope",
+        "phenomenon": "scope-taking determiners",
+        "verified_status": "finite_registered_scope_readings",
+        "remaining_status": "unregistered_quantifier_interactions_open",
+        "required_future_instances": [
+            "nested quantifiers",
+            "quantifier interaction with relative clauses",
+            "quantifier interaction with discourse anaphora",
+        ],
+    },
+    {
+        "category_id": "perception_complement_nominalization",
+        "phenomenon": "E : Prop -> Entity perception complements",
+        "verified_status": "finite_registered_nominalization_readings",
+        "remaining_status": "unregistered_perception_complements_open",
+        "required_future_instances": [
+            "arbitrary embedded clauses",
+            "passive and raising complements",
+            "cross-clausal anaphora inside perceived propositions",
+        ],
+    },
+    {
+        "category_id": "perception_temporal_attachment",
+        "phenomenon": "matrix vs complement temporal attachment",
+        "verified_status": "finite_registered_temporal_attachment_readings",
+        "remaining_status": "unregistered_temporal_attachment_policies_open",
+        "required_future_instances": [
+            "arbitrary temporal adverbs",
+            "aspectual interactions",
+            "parenthesized or pragmatically marked attachment alternatives",
+        ],
+    },
+    {
+        "category_id": "typed_modifier_attachment",
+        "phenomenon": "Adv-typed modifier attachment",
+        "verified_status": "finite_registered_modifier_attachment_witnesses",
+        "remaining_status": "unregistered_pp_and_relative_attachment_open",
+        "required_future_instances": [
+            "NP-internal PP attachment",
+            "relative-clause attachment",
+            "comparative modifier attachment",
+        ],
+    },
+    {
+        "category_id": "discourse_pronominal_cause",
+        "phenomenon": "local pronominal cause/reason dependencies",
+        "verified_status": "finite_registered_pronominal_cause_witnesses",
+        "remaining_status": "arbitrary_discourse_anaphora_open",
+        "required_future_instances": [
+            "multi-sentence discourse anaphora",
+            "cataphora and bridging",
+            "competing antecedent resolution",
+        ],
+    },
+)
+
+
+def scope_attachment_discourse_case_categories(case: dict[str, Any]) -> set[str]:
+    rule_id = str(case.get("rule_id", ""))
+    variant_id = str(case.get("variant_id", ""))
+    sentence = str(case.get("sentence", ""))
+    expected_ast_kind = str(case.get("expected_ast_kind", ""))
+    text = flatten_truth_condition_witness_text(case).lower()
+    categories: set[str] = set()
+    if rule_id == "quantifier_scope_ambiguity" or expected_ast_kind == "scope_ambiguity":
+        categories.add("quantifier_scope")
+    if rule_id == "perception_nominalization":
+        categories.add("perception_complement_nominalization")
+        if (
+            " yesterday" in f" {sentence.lower()}"
+            or " after " in f" {sentence.lower()} "
+            or " before " in f" {sentence.lower()} "
+        ):
+            categories.add("perception_temporal_attachment")
+    if (
+        "modified" in text
+        or "instrument" in text
+        or "locative" in text
+        or "directional" in text
+        or "manner" in text
+        or re.search(r"\b(with|near|beside|under|into|from|on|in)\s*\(", text)
+    ):
+        categories.add("typed_modifier_attachment")
+    if rule_id == "causal_because" and (
+        " because it " in f" {sentence.lower()} "
+        or " it was " in f" {sentence.lower()} "
+        or "anaphoric" in variant_id
+    ):
+        categories.add("discourse_pronominal_cause")
+    return categories
+
+
+def scope_attachment_discourse_case_witness(
+    source: str,
+    case: dict[str, Any],
+) -> dict[str, Any]:
+    reading_names = case.get("expected_scope_audit_reading_names")
+    if not isinstance(reading_names, list):
+        reading_names = case.get("expected_reading_names")
+    if not isinstance(reading_names, list):
+        reading_names = []
+    attachment_kinds = case.get("expected_scope_audit_attachment_kinds")
+    if not isinstance(attachment_kinds, list):
+        attachment_kinds = []
+    return {
+        "source": source,
+        "rule_id": str(case.get("rule_id", "")),
+        "variant_id": str(case.get("variant_id", "")),
+        "sentence": str(case.get("sentence", "")),
+        "expected_event_analysis": str(case.get("expected_event_analysis", "")),
+        "expected_ast_kind": str(case.get("expected_ast_kind", "")),
+        "expected_reading_names": [
+            str(name) for name in reading_names if isinstance(name, str)
+        ],
+        "expected_attachment_kinds": [
+            str(kind) for kind in attachment_kinds if isinstance(kind, str)
+        ],
+        "verification_route": (
+            "semantic_snapshot_regression"
+            if source == "semantic_snapshot"
+            else "registered_variant_success_cases -> web_route_smoke_check"
+        ),
+    }
+
+
+def scope_attachment_discourse_audit_payload(
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
+) -> dict[str, Any]:
+    witness_by_category: dict[str, list[dict[str, Any]]] = {
+        str(spec["category_id"]): []
+        for spec in SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS
+    }
+    source_cases = [
+        ("semantic_snapshot", item) for item in semantic_snapshots
+    ] + [
+        ("registered_variant_success_case", item)
+        for item in registered_variant_success_cases
+    ]
+    for source, case in source_cases:
+        if not isinstance(case, dict):
+            continue
+        witness = scope_attachment_discourse_case_witness(source, case)
+        for category_id in scope_attachment_discourse_case_categories(case):
+            if category_id in witness_by_category:
+                witness_by_category[category_id].append(copy.deepcopy(witness))
+
+    categories = []
+    for spec in SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS:
+        category_id = str(spec["category_id"])
+        witnesses = witness_by_category[category_id]
+        reading_names = sorted(
+            {
+                name
+                for witness in witnesses
+                for name in witness.get("expected_reading_names", [])
+                if isinstance(name, str) and name
+            },
+        )
+        attachment_kinds = sorted(
+            {
+                kind
+                for witness in witnesses
+                for kind in witness.get("expected_attachment_kinds", [])
+                if isinstance(kind, str) and kind
+            },
+        )
+        categories.append(
+            {
+                **spec,
+                "witness_source": (
+                    "semantic_snapshots_and_registered_variant_success_cases"
+                ),
+                "witness_scope": "finite_registered_fragment",
+                "witness_count": len(witnesses),
+                "semantic_snapshot_witness_count": len(
+                    [
+                        witness
+                        for witness in witnesses
+                        if witness.get("source") == "semantic_snapshot"
+                    ],
+                ),
+                "registered_variant_witness_count": len(
+                    [
+                        witness
+                        for witness in witnesses
+                        if witness.get("source")
+                        == "registered_variant_success_case"
+                    ],
+                ),
+                "reading_name_inventory": reading_names,
+                "attachment_kind_inventory": attachment_kinds,
+                "sample_sentences": unique_truth_condition_witness_values(
+                    witnesses,
+                    "sentence",
+                    5,
+                ),
+                "sample_variant_ids": unique_truth_condition_witness_values(
+                    witnesses,
+                    "variant_id",
+                    5,
+                ),
+                "sample_witnesses": witnesses[:4],
+            },
+        )
+
+    open_boundaries = [
+        {
+            "boundary_id": "relative_clause_attachment",
+            "status": "unsupported_clause_marker_guarded",
+            "guarded_marker": "that",
+            "next_stage": "add_registered_relative_clause_attachment_rule",
+        },
+        {
+            "boundary_id": "arbitrary_discourse_anaphora",
+            "status": "unregistered_discourse_resolution_open",
+            "guarded_marker": "",
+            "next_stage": "add_discourse_referent_registry",
+        },
+        {
+            "boundary_id": "pragmatic_attachment_disambiguation",
+            "status": "unregistered_pragmatic_policy_open",
+            "guarded_marker": "",
+            "next_stage": "add_attachment_policy_witnesses",
+        },
+    ]
+    return {
+        "schema_version": "scope_attachment_discourse_audit.v1",
+        "claim": "finite_registered_witnesses_not_full_discourse_semantics",
+        "source": "semantic_snapshots_and_registered_variant_success_cases",
+        "full_scope_attachment_discourse_certification": False,
+        "blocker": "fallback_certification_level_shallow_scaffold",
+        "next_stage": "expand_scope_attachment_discourse_coverage",
+        "category_count": len(categories),
+        "registered_witness_count": sum(
+            int(item.get("witness_count", 0)) for item in categories
+        ),
+        "categories": categories,
+        "open_boundary_count": len(open_boundaries),
+        "open_boundaries": open_boundaries,
+        "required_invariants": [
+            "audit_claim_is_finite_not_complete",
+            "each_category_has_registered_witnesses",
+            "multi_reading_scope_cases_expose_reading_names",
+            "temporal_attachment_cases_expose_attachment_kinds",
+            "open_boundaries_remain_explicit",
+        ],
+        "live_validation": {
+            "validator": (
+                "scripts/verify_project.py::"
+                "validate_scope_attachment_discourse_audit"
+            ),
+            "html_hooks": "data-scope-attachment-discourse-*",
+            "source_completion_blocker": "fallback_certification_level_shallow_scaffold",
+            "source_next_stage": "expand_scope_attachment_discourse_coverage",
+        },
+    }
+
+
 TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE = (
     "semantic_snapshots_and_registered_variant_success_cases"
 )
@@ -24102,6 +24518,11 @@ def project_completion_status_payload(
                 "evidence": "completion_frontier_audit.v1",
             },
             {
+                "id": "scope_attachment_discourse_coverage_audit",
+                "status": "verified",
+                "evidence": "scope_attachment_discourse_audit.v1",
+            },
+            {
                 "id": "parser_semantic_boundary_audit",
                 "status": "verified",
                 "evidence": "parser_semantic_boundary_audit.v1",
@@ -24724,6 +25145,12 @@ def project_completion_status_payload(
     }
     status["truth_condition_instance_obligations"] = (
         truth_condition_instance_obligations_payload(
+            semantic_snapshots,
+            registered_variant_success_cases,
+        )
+    )
+    status["scope_attachment_discourse_audit"] = (
+        scope_attachment_discourse_audit_payload(
             semantic_snapshots,
             registered_variant_success_cases,
         )

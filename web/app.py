@@ -3390,6 +3390,21 @@ def certified_fragment_panel() -> str:
         for item in truth_condition_obligations.get("obligations", [])
         if isinstance(item, dict)
     ]
+    scope_attachment_discourse_audit = completion_status.get(
+        "scope_attachment_discourse_audit",
+    )
+    if not isinstance(scope_attachment_discourse_audit, dict):
+        scope_attachment_discourse_audit = {}
+    scope_attachment_discourse_rows = [
+        item
+        for item in scope_attachment_discourse_audit.get("categories", [])
+        if isinstance(item, dict)
+    ]
+    scope_attachment_discourse_boundaries = [
+        item
+        for item in scope_attachment_discourse_audit.get("open_boundaries", [])
+        if isinstance(item, dict)
+    ]
     fallback_promotion = manifest.get("fallback_promotion_candidates")
     if not isinstance(fallback_promotion, dict):
         fallback_promotion = {}
@@ -3961,6 +3976,40 @@ def certified_fragment_panel() -> str:
         )
         for item in truth_condition_obligation_rows
     )
+    scope_attachment_discourse_items = "".join(
+        (
+            '<li '
+            f'data-scope-attachment-discourse-category="{html.escape(str(item.get("category_id", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-phenomenon="{html.escape(str(item.get("phenomenon", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-verified-status="{html.escape(str(item.get("verified_status", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-remaining-status="{html.escape(str(item.get("remaining_status", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-witness-source="{html.escape(str(item.get("witness_source", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-witness-scope="{html.escape(str(item.get("witness_scope", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-witness-count="{html.escape(str(item.get("witness_count", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-snapshot-count="{html.escape(str(item.get("semantic_snapshot_witness_count", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-variant-count="{html.escape(str(item.get("registered_variant_witness_count", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-reading-names="{html.escape(data_list(item.get("reading_name_inventory")), quote=True)}" '
+            f'data-scope-attachment-discourse-attachment-kinds="{html.escape(data_list(item.get("attachment_kind_inventory")), quote=True)}" '
+            f'data-scope-attachment-discourse-sample-sentences="{html.escape(data_list(item.get("sample_sentences")), quote=True)}" '
+            f'data-scope-attachment-discourse-sample-variants="{html.escape(data_list(item.get("sample_variant_ids")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('category_id', '')))}</code>"
+            f"<span>{html.escape(str(item.get('phenomenon', '')))}</span>"
+            "</li>"
+        )
+        for item in scope_attachment_discourse_rows
+    )
+    scope_attachment_discourse_boundary_items = "".join(
+        (
+            '<li '
+            f'data-scope-attachment-discourse-open-boundary="{html.escape(str(item.get("boundary_id", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-open-status="{html.escape(str(item.get("status", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-open-marker="{html.escape(str(item.get("guarded_marker", "")), quote=True)}" '
+            f'data-scope-attachment-discourse-open-next-stage="{html.escape(str(item.get("next_stage", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('boundary_id', '')))}</code>"
+            "</li>"
+        )
+        for item in scope_attachment_discourse_boundaries
+    )
     frontier_closed_items = "".join(
         (
             '<li '
@@ -4049,6 +4098,14 @@ def certified_fragment_panel() -> str:
         f'data-truth-condition-obligation-witness-source="{html.escape(str(truth_condition_obligations.get("witness_source", "")), quote=True)}" '
         f'data-truth-condition-obligation-witness-scope="{html.escape(str(truth_condition_obligations.get("witness_scope", "")), quote=True)}" '
         f'data-truth-condition-obligation-proof-index-scope="{html.escape(str(truth_condition_obligations.get("proof_index_scope", "")), quote=True)}" '
+        f'data-scope-attachment-discourse-schema="{html.escape(str(scope_attachment_discourse_audit.get("schema_version", "")), quote=True)}" '
+        f'data-scope-attachment-discourse-claim="{html.escape(str(scope_attachment_discourse_audit.get("claim", "")), quote=True)}" '
+        f'data-scope-attachment-discourse-category-count="{len(scope_attachment_discourse_rows)}" '
+        f'data-scope-attachment-discourse-witness-count="{html.escape(str(scope_attachment_discourse_audit.get("registered_witness_count", "")), quote=True)}" '
+        f'data-scope-attachment-discourse-open-count="{len(scope_attachment_discourse_boundaries)}" '
+        f'data-scope-attachment-discourse-blocker="{html.escape(str(scope_attachment_discourse_audit.get("blocker", "")), quote=True)}" '
+        f'data-scope-attachment-discourse-next-stage="{html.escape(str(scope_attachment_discourse_audit.get("next_stage", "")), quote=True)}" '
+        f'data-scope-attachment-discourse-full-certification="{str(scope_attachment_discourse_audit.get("full_scope_attachment_discourse_certification") is True).lower()}" '
         f'data-completion-frontier-schema="{html.escape(str(completion_frontier_audit.get("schema_version", "")), quote=True)}" '
         f'data-completion-frontier-source-certificate="{html.escape(str(completion_frontier_audit.get("source_certificate", "")), quote=True)}" '
         f'data-completion-frontier-status-type="{html.escape(str(completion_frontier_audit.get("status_type", "")), quote=True)}" '
@@ -4131,6 +4188,7 @@ def certified_fragment_panel() -> str:
         f"<dt>completion basis</dt><dd><code>{html.escape(str(completion_status.get('completion_basis', '')))}</code></dd>"
         f"<dt>fallback promotion</dt><dd><code>{html.escape(str(fallback_promotion.get('schema_version', '')))}</code></dd>"
         f"<dt>truth obligations</dt><dd><code>{html.escape(str(truth_condition_obligations.get('schema_version', '')))}</code></dd>"
+        f"<dt>scope/attachment audit</dt><dd><code>{html.escape(str(scope_attachment_discourse_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier audit</dt><dd><code>{html.escape(str(completion_frontier_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier source</dt><dd><code>{html.escape(str(completion_frontier_audit.get('source_certificate', '')))}</code></dd>"
         f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
@@ -4180,6 +4238,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-completion"><strong>completion status</strong>'
         f"<ul>{verified_objective_items}{incomplete_objective_items}{completion_blocker_items}{next_stage_items}</ul></div>"
+        '<div class="certified-fragment-scope-attachment-discourse"><strong>scope/attachment/discourse audit</strong>'
+        f"<ul>{scope_attachment_discourse_items}{scope_attachment_discourse_boundary_items}</ul></div>"
         '<div class="certified-fragment-truth-obligations"><strong>truth-condition instance obligations</strong>'
         f"<ul>{truth_condition_obligation_items}</ul></div>"
         '<div class="certified-fragment-frontier"><strong>completion frontier audit</strong>'
