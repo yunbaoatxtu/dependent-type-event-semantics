@@ -21730,6 +21730,155 @@ def completion_frontier_audit_payload(
     }
 
 
+def truth_condition_instance_obligations_payload() -> dict[str, Any]:
+    obligations = [
+        {
+            "class_id": "lexical_application",
+            "semantic_class": "registered lexical applications",
+            "current_certificate": (
+                "coq_concrete_truth_condition_provider_"
+                "lexical_class_instance_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "lexical_model_candidate_certificate"
+            ),
+            "finite_registered_status": "finite_registered_candidate_verified",
+            "remaining_status": "unregistered_lexical_truth_conditions_open",
+            "required_independent_instances": [
+                "common-noun predicates",
+                "intransitive and transitive verb predicates",
+                "registered state predicates beyond the finite examples",
+            ],
+        },
+        {
+            "class_id": "sigma_quantification",
+            "semantic_class": "dependent Sigma and quantifier witnesses",
+            "current_certificate": (
+                "coq_concrete_truth_condition_provider_"
+                "sigma_class_instance_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "sigma_model_candidate_certificate"
+            ),
+            "finite_registered_status": "finite_registered_candidate_verified",
+            "remaining_status": "arbitrary_quantifier_scope_truth_conditions_open",
+            "required_independent_instances": [
+                "scope-taking determiners",
+                "dependent existential witnesses",
+                "unregistered quantifier interaction cases",
+            ],
+        },
+        {
+            "class_id": "temporal_operators",
+            "semantic_class": "typed temporal operators",
+            "current_certificate": (
+                "coq_concrete_truth_condition_provider_"
+                "temporal_class_instance_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "temporal_model_candidate_certificate"
+            ),
+            "finite_registered_status": "finite_registered_candidate_verified",
+            "remaining_status": "unregistered_temporal_attachment_truth_conditions_open",
+            "required_independent_instances": [
+                "at/during/before/after/until/since denotations",
+                "attachment disambiguation policies",
+                "aspectual temporal interaction cases",
+            ],
+        },
+        {
+            "class_id": "repeat_counting",
+            "semantic_class": "natural-number repeat and counting",
+            "current_certificate": (
+                "coq_concrete_truth_condition_provider_"
+                "repeat_class_instance_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "repeat_model_candidate_certificate"
+            ),
+            "finite_registered_status": "finite_registered_candidate_verified",
+            "remaining_status": "arbitrary_counting_truth_conditions_open",
+            "required_independent_instances": [
+                "repeat n body semantics",
+                "event-counting replacement cases",
+                "aspectual counting interactions",
+            ],
+        },
+        {
+            "class_id": "polarity",
+            "semantic_class": "proposition-level polarity",
+            "current_certificate": (
+                "coq_concrete_truth_condition_provider_"
+                "polarity_class_instance_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "polarity_model_candidate_certificate"
+            ),
+            "finite_registered_status": "finite_registered_candidate_verified",
+            "remaining_status": "arbitrary_negation_scope_truth_conditions_open",
+            "required_independent_instances": [
+                "not_T body semantics",
+                "negation scope",
+                "polarity-sensitive inference cases",
+            ],
+        },
+        {
+            "class_id": "transition_cause",
+            "semantic_class": "state transitions and causal resultatives",
+            "current_certificate": (
+                "coq_concrete_truth_condition_provider_"
+                "transition_cause_class_instance_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "transition_cause_model_candidate_certificate"
+            ),
+            "finite_registered_status": "finite_registered_candidate_verified",
+            "remaining_status": "arbitrary_causal_result_truth_conditions_open",
+            "required_independent_instances": [
+                "Transition theme scale source target semantics",
+                "Cause causer effect semantics",
+                "unregistered result-state lexicalizations",
+            ],
+        },
+        {
+            "class_id": "modifier_attachment",
+            "semantic_class": "modifier roles and attachment",
+            "current_certificate": (
+                "coq_concrete_truth_condition_independent_"
+                "model_candidate_class_suite_certificate"
+            ),
+            "model_candidate_certificate": (
+                "coq_concrete_truth_condition_registered_fragment_"
+                "instance_completion_certificate"
+            ),
+            "finite_registered_status": "registered_examples_only",
+            "remaining_status": "unregistered_modifier_attachment_truth_conditions_open",
+            "required_independent_instances": [
+                "Location/Instrument/Manner/Goal modifier denotations",
+                "attachment choices outside registered examples",
+                "discourse-sensitive modifier readings",
+            ],
+        },
+    ]
+    return {
+        "schema_version": "truth_condition_instance_obligations.v1",
+        "blocker": "concrete_truth_condition_instances_unproved",
+        "next_stage": "provide_concrete_truth_condition_instances",
+        "source_verified_objective": (
+            "coq_concrete_truth_condition_discharge_frontier_certificate"
+        ),
+        "obligation_count": len(obligations),
+        "obligations": obligations,
+        "claim": "finite_registered_candidates_verified_general_instances_open",
+    }
+
+
 def project_completion_status_payload(
     *,
     registered_rule_count: int,
@@ -23004,6 +23153,9 @@ def project_completion_status_payload(
         ],
         "coverage_summary": dict(coverage_matrix_counts),
     }
+    status["truth_condition_instance_obligations"] = (
+        truth_condition_instance_obligations_payload()
+    )
     status["completion_frontier_audit"] = completion_frontier_audit_payload(status)
     return status
 

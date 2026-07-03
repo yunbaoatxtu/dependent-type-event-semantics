@@ -18713,6 +18713,55 @@ class TranslatorTests(unittest.TestCase):
             "provide_concrete_truth_condition_instances",
             completion_status["next_recommended_stages"],
         )
+        truth_obligations = completion_status["truth_condition_instance_obligations"]
+        self.assertEqual(
+            truth_obligations["schema_version"],
+            "truth_condition_instance_obligations.v1",
+        )
+        self.assertEqual(
+            truth_obligations["blocker"],
+            "concrete_truth_condition_instances_unproved",
+        )
+        self.assertEqual(
+            truth_obligations["next_stage"],
+            "provide_concrete_truth_condition_instances",
+        )
+        self.assertEqual(truth_obligations["obligation_count"], 7)
+        obligation_by_id = {
+            item["class_id"]: item
+            for item in truth_obligations["obligations"]
+        }
+        self.assertEqual(
+            set(obligation_by_id),
+            {
+                "lexical_application",
+                "sigma_quantification",
+                "temporal_operators",
+                "repeat_counting",
+                "polarity",
+                "transition_cause",
+                "modifier_attachment",
+            },
+        )
+        self.assertEqual(
+            obligation_by_id["lexical_application"]["current_certificate"],
+            "coq_concrete_truth_condition_provider_lexical_class_instance_certificate",
+        )
+        self.assertEqual(
+            obligation_by_id["temporal_operators"]["model_candidate_certificate"],
+            "coq_concrete_truth_condition_independent_temporal_model_candidate_certificate",
+        )
+        self.assertEqual(
+            obligation_by_id["modifier_attachment"]["finite_registered_status"],
+            "registered_examples_only",
+        )
+        self.assertIn(
+            "unregistered_modifier_attachment_truth_conditions_open",
+            {
+                item["remaining_status"]
+                for item in truth_obligations["obligations"]
+            },
+        )
         frontier_audit = completion_status["completion_frontier_audit"]
         self.assertEqual(
             frontier_audit["schema_version"],
@@ -19642,6 +19691,18 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "completion coverage summary drift"):
             validate_certified_fragment_manifest(manifest)
 
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_instance_obligations"][
+            "obligations"
+        ] = manifest["completion_status"]["truth_condition_instance_obligations"][
+            "obligations"
+        ][:-1]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition obligation count drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
     def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
         manifest = construction_fragment_manifest()
         fallback_sentence = manifest["coverage_matrix"]["fallback_success_cases"][0][
@@ -20242,6 +20303,37 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-completion-next-stage="provide_concrete_truth_condition_instances"',
+            page,
+        )
+        truth_obligations = completion_status["truth_condition_instance_obligations"]
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-obligation-schema",
+                truth_obligations["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-obligation-count",
+                truth_obligations["obligation_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-obligation-class="temporal_operators"',
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-obligation-current-certificate="coq_concrete_truth_condition_provider_temporal_class_instance_certificate"',
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-obligation-class="modifier_attachment"',
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-obligation-remaining-status="unregistered_modifier_attachment_truth_conditions_open"',
             page,
         )
         frontier_audit = completion_status["completion_frontier_audit"]
@@ -27684,6 +27776,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`rejected_unsupported_cases`", readme)
         self.assertIn("`completion_status`", readme)
         self.assertIn('"project_completion_status.v1"', readme)
+        self.assertIn("`truth_condition_instance_obligations`", readme)
+        self.assertIn('"truth_condition_instance_obligations.v1"', readme)
         self.assertIn("`completion_frontier_audit`", readme)
         self.assertIn('"completion_frontier_audit.v1"', readme)
         self.assertIn("`data-completion-frontier-*`", readme)
@@ -27703,6 +27797,8 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn("`completion_frontier_audit.v1`", web_design)
+        self.assertIn("`truth_condition_instance_obligations.v1`", web_design)
+        self.assertIn("`data-truth-condition-obligation-*`", web_design)
         self.assertIn("`data-completion-frontier-*`", web_design)
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)

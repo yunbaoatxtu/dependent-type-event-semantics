@@ -167,7 +167,14 @@ the system is a certified finite fragment, and its verified objectives,
 incomplete objectives, blockers, and next-stage rows should be mirrored through
 `data-completion-*` hooks. The verifier should reject any drift that removes
 the arbitrary-natural-language or deep-Coq-proof open objectives. The same
-object now carries a `completion_frontier_audit.v1` child that links the page
+object now carries a `truth_condition_instance_obligations.v1` child for the
+remaining `concrete_truth_condition_instances_unproved` blocker. It splits that
+blocker into lexical application, Sigma/quantification, temporal operators,
+repeat/counting, polarity, Transition/Cause, and modifier-attachment rows. The
+panel mirrors the matrix through `data-truth-condition-obligation-*` hooks, and
+the verifier should reject missing rows, certificate drift, count drift, or
+empty required-instance lists. The same object now carries a
+`completion_frontier_audit.v1` child that links the page
 and JSON manifest back to `ConcreteTruthConditionDischargeFrontierCertificate`.
 It records `ConcreteTruthConditionDischargeFrontierStatus`, the discharged
 finite registered fragment, and each open objective's frontier status, blocker,

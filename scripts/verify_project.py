@@ -10929,6 +10929,80 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: completion blocker drift")
     if set(next_recommended_stages) != required_next_stages:
         raise SystemExit("web route smoke check failed: next completion stage drift")
+    truth_obligations = completion_status.get("truth_condition_instance_obligations")
+    if not isinstance(truth_obligations, dict):
+        raise SystemExit("web route smoke check failed: truth-condition obligation matrix missing")
+    if (
+        truth_obligations.get("schema_version")
+        != "truth_condition_instance_obligations.v1"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition obligation schema drift")
+    if truth_obligations.get("blocker") != "concrete_truth_condition_instances_unproved":
+        raise SystemExit("web route smoke check failed: truth-condition obligation blocker drift")
+    if truth_obligations.get("next_stage") != "provide_concrete_truth_condition_instances":
+        raise SystemExit("web route smoke check failed: truth-condition obligation next-stage drift")
+    obligation_rows = truth_obligations.get("obligations")
+    if not isinstance(obligation_rows, list):
+        raise SystemExit("web route smoke check failed: truth-condition obligation rows missing")
+    if truth_obligations.get("obligation_count") != len(obligation_rows):
+        raise SystemExit("web route smoke check failed: truth-condition obligation count drift")
+    obligation_by_id = {
+        item.get("class_id"): item
+        for item in obligation_rows
+        if isinstance(item, dict) and isinstance(item.get("class_id"), str)
+    }
+    required_obligation_ids = {
+        "lexical_application",
+        "sigma_quantification",
+        "temporal_operators",
+        "repeat_counting",
+        "polarity",
+        "transition_cause",
+        "modifier_attachment",
+    }
+    if set(obligation_by_id) != required_obligation_ids:
+        raise SystemExit("web route smoke check failed: truth-condition obligation class drift")
+    required_obligation_certificates = {
+        "lexical_application": (
+            "coq_concrete_truth_condition_provider_lexical_class_instance_certificate",
+            "coq_concrete_truth_condition_independent_lexical_model_candidate_certificate",
+        ),
+        "sigma_quantification": (
+            "coq_concrete_truth_condition_provider_sigma_class_instance_certificate",
+            "coq_concrete_truth_condition_independent_sigma_model_candidate_certificate",
+        ),
+        "temporal_operators": (
+            "coq_concrete_truth_condition_provider_temporal_class_instance_certificate",
+            "coq_concrete_truth_condition_independent_temporal_model_candidate_certificate",
+        ),
+        "repeat_counting": (
+            "coq_concrete_truth_condition_provider_repeat_class_instance_certificate",
+            "coq_concrete_truth_condition_independent_repeat_model_candidate_certificate",
+        ),
+        "polarity": (
+            "coq_concrete_truth_condition_provider_polarity_class_instance_certificate",
+            "coq_concrete_truth_condition_independent_polarity_model_candidate_certificate",
+        ),
+        "transition_cause": (
+            "coq_concrete_truth_condition_provider_transition_cause_class_instance_certificate",
+            "coq_concrete_truth_condition_independent_transition_cause_model_candidate_certificate",
+        ),
+        "modifier_attachment": (
+            "coq_concrete_truth_condition_independent_model_candidate_class_suite_certificate",
+            "coq_concrete_truth_condition_registered_fragment_instance_completion_certificate",
+        ),
+    }
+    for class_id, (current_certificate, model_candidate) in required_obligation_certificates.items():
+        row = obligation_by_id[class_id]
+        if row.get("current_certificate") != current_certificate:
+            raise SystemExit("web route smoke check failed: truth-condition obligation certificate drift")
+        if row.get("model_candidate_certificate") != model_candidate:
+            raise SystemExit("web route smoke check failed: truth-condition obligation model drift")
+        if not nonempty_string(row.get("remaining_status")):
+            raise SystemExit("web route smoke check failed: truth-condition obligation status drift")
+        required_instances = row.get("required_independent_instances")
+        if not string_list(required_instances) or not required_instances:
+            raise SystemExit("web route smoke check failed: truth-condition obligation instance drift")
     if verified_by_id["registered_construction_fragment"].get("count") != len(rules):
         raise SystemExit("web route smoke check failed: registered completion evidence drift")
     if verified_by_id["semantic_snapshot_regression"].get("count") != len(snapshots):

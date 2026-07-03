@@ -951,6 +951,14 @@ verified fragment objectives, lists still-open objectives such as arbitrary
 natural-language semantics and deep Coq semantic proofs, and advertises the next
 recommended stages. The verifier rejects drift in this object, so the project
 cannot accidentally present a finite registered fragment as the finished goal.
+It also carries `truth_condition_instance_obligations` with `schema_version:
+"truth_condition_instance_obligations.v1"`. This matrix splits the remaining
+`concrete_truth_condition_instances_unproved` blocker into checked rows for
+lexical application, Sigma/quantification, temporal operators, repeat/counting,
+polarity, Transition/Cause, and modifier attachment. Each row names the current
+finite registered certificate, the model-candidate or completion certificate,
+the remaining open status, and the independent instances still needed for the
+next `provide_concrete_truth_condition_instances` stage.
 It also carries `completion_frontier_audit` with `schema_version:
 "completion_frontier_audit.v1"`. This audit points to
 `ConcreteTruthConditionDischargeFrontierCertificate`, records the status type

@@ -3380,6 +3380,16 @@ def certified_fragment_panel() -> str:
     completion_frontier_audit = completion_status.get("completion_frontier_audit")
     if not isinstance(completion_frontier_audit, dict):
         completion_frontier_audit = {}
+    truth_condition_obligations = completion_status.get(
+        "truth_condition_instance_obligations",
+    )
+    if not isinstance(truth_condition_obligations, dict):
+        truth_condition_obligations = {}
+    truth_condition_obligation_rows = [
+        item
+        for item in truth_condition_obligations.get("obligations", [])
+        if isinstance(item, dict)
+    ]
     frontier_open = [
         item
         for item in completion_frontier_audit.get("open_frontier", [])
@@ -3842,6 +3852,20 @@ def certified_fragment_panel() -> str:
         )
         for stage in next_recommended_stages
     )
+    truth_condition_obligation_items = "".join(
+        (
+            '<li '
+            f'data-truth-condition-obligation-class="{html.escape(str(item.get("class_id", "")), quote=True)}" '
+            f'data-truth-condition-obligation-current-certificate="{html.escape(str(item.get("current_certificate", "")), quote=True)}" '
+            f'data-truth-condition-obligation-model-candidate="{html.escape(str(item.get("model_candidate_certificate", "")), quote=True)}" '
+            f'data-truth-condition-obligation-finite-status="{html.escape(str(item.get("finite_registered_status", "")), quote=True)}" '
+            f'data-truth-condition-obligation-remaining-status="{html.escape(str(item.get("remaining_status", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('class_id', '')))}</code>"
+            f"<span>{html.escape(str(item.get('semantic_class', '')))}</span>"
+            "</li>"
+        )
+        for item in truth_condition_obligation_rows
+    )
     frontier_closed_items = "".join(
         (
             '<li '
@@ -3918,6 +3942,10 @@ def certified_fragment_panel() -> str:
         f'data-completion-incomplete-count="{len(incomplete_objectives)}" '
         f'data-completion-blocker-count="{len(completion_blockers)}" '
         f'data-completion-next-stage-count="{len(next_recommended_stages)}" '
+        f'data-truth-condition-obligation-schema="{html.escape(str(truth_condition_obligations.get("schema_version", "")), quote=True)}" '
+        f'data-truth-condition-obligation-count="{len(truth_condition_obligation_rows)}" '
+        f'data-truth-condition-obligation-blocker="{html.escape(str(truth_condition_obligations.get("blocker", "")), quote=True)}" '
+        f'data-truth-condition-obligation-next-stage="{html.escape(str(truth_condition_obligations.get("next_stage", "")), quote=True)}" '
         f'data-completion-frontier-schema="{html.escape(str(completion_frontier_audit.get("schema_version", "")), quote=True)}" '
         f'data-completion-frontier-source-certificate="{html.escape(str(completion_frontier_audit.get("source_certificate", "")), quote=True)}" '
         f'data-completion-frontier-status-type="{html.escape(str(completion_frontier_audit.get("status_type", "")), quote=True)}" '
@@ -3987,6 +4015,7 @@ def certified_fragment_panel() -> str:
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
         f"<dt>project complete</dt><dd>{str(completion_status.get('is_complete') is True).lower()}</dd>"
         f"<dt>completion basis</dt><dd><code>{html.escape(str(completion_status.get('completion_basis', '')))}</code></dd>"
+        f"<dt>truth obligations</dt><dd><code>{html.escape(str(truth_condition_obligations.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier audit</dt><dd><code>{html.escape(str(completion_frontier_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier source</dt><dd><code>{html.escape(str(completion_frontier_audit.get('source_certificate', '')))}</code></dd>"
         f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
@@ -4029,6 +4058,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-completion"><strong>completion status</strong>'
         f"<ul>{verified_objective_items}{incomplete_objective_items}{completion_blocker_items}{next_stage_items}</ul></div>"
+        '<div class="certified-fragment-truth-obligations"><strong>truth-condition instance obligations</strong>'
+        f"<ul>{truth_condition_obligation_items}</ul></div>"
         '<div class="certified-fragment-frontier"><strong>completion frontier audit</strong>'
         f"<ul>{frontier_closed_items}{frontier_open_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'
