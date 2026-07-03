@@ -3482,6 +3482,19 @@ def certified_fragment_panel() -> str:
     modifier_sequence_contract = manifest.get("registered_modifier_sequence_contract")
     if not isinstance(modifier_sequence_contract, dict):
         modifier_sequence_contract = {}
+    parser_semantic_boundary_audit = manifest.get("parser_semantic_boundary_audit")
+    if not isinstance(parser_semantic_boundary_audit, dict):
+        parser_semantic_boundary_audit = {}
+    parser_semantic_boundary_rows = [
+        item
+        for item in parser_semantic_boundary_audit.get("boundary_rows", [])
+        if isinstance(item, dict)
+    ]
+    parser_semantic_boundary_invariants = [
+        item
+        for item in parser_semantic_boundary_audit.get("required_invariants", [])
+        if isinstance(item, str)
+    ]
 
     def count_list_attribute(value: object) -> str:
         if not isinstance(value, list):
@@ -3678,6 +3691,32 @@ def certified_fragment_panel() -> str:
             "</li>"
         )
         for item in modifier_role_witnesses
+    )
+    parser_semantic_boundary_items = "".join(
+        (
+            '<li '
+            f'data-parser-semantic-boundary-row="{html.escape(str(item.get("boundary_id", "")), quote=True)}" '
+            f'data-parser-semantic-boundary-row-component="{html.escape(str(item.get("component", "")), quote=True)}" '
+            f'data-parser-semantic-boundary-row-claim="{html.escape(str(item.get("claim", "")), quote=True)}" '
+            f'data-parser-semantic-boundary-row-status="{html.escape(str(item.get("status", "")), quote=True)}" '
+            f'data-parser-semantic-boundary-row-evidence-count="{html.escape(str(item.get("evidence_count", "")), quote=True)}" '
+            f'data-parser-semantic-boundary-row-blocks-completion="{str(item.get("blocks_completion") is True).lower()}" '
+            f'data-parser-semantic-boundary-row-blocker="{html.escape(str(item.get("blocker", "")), quote=True)}" '
+            f'data-parser-semantic-boundary-row-next-stage="{html.escape(str(item.get("next_stage", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('boundary_id', '')))}</code>"
+            f"<span>{html.escape(str(item.get('claim', '')))}</span>"
+            "</li>"
+        )
+        for item in parser_semantic_boundary_rows
+    )
+    parser_semantic_boundary_invariant_items = "".join(
+        (
+            '<li '
+            f'data-parser-semantic-boundary-invariant="{html.escape(str(invariant), quote=True)}">'
+            f"<code>{html.escape(str(invariant))}</code>"
+            "</li>"
+        )
+        for invariant in parser_semantic_boundary_invariants
     )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
@@ -4062,6 +4101,17 @@ def certified_fragment_panel() -> str:
         f'data-modifier-sequence-role-source-module="{html.escape(str(modifier_role_source_contract.get("source_module", "")), quote=True)}" '
         f'data-modifier-sequence-role-source-table="{html.escape(str(modifier_role_source_contract.get("preposition_role_table", "")), quote=True)}" '
         f'data-modifier-sequence-role-source-derived="{html.escape(modifier_role_source_roles, quote=True)}" '
+        f'data-parser-semantic-boundary-schema="{html.escape(str(parser_semantic_boundary_audit.get("schema_version", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-parser-claim="{html.escape(str(parser_semantic_boundary_audit.get("parser_claim", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-semantic-claim="{html.escape(str(parser_semantic_boundary_audit.get("semantic_claim", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-surface-family-count="{html.escape(str(parser_semantic_boundary_audit.get("surface_parser_family_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-surface-example-count="{html.escape(str(parser_semantic_boundary_audit.get("surface_verified_example_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-surface-slot-probe-count="{html.escape(str(parser_semantic_boundary_audit.get("surface_slot_probe_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-surface-matrix-count="{html.escape(str(parser_semantic_boundary_audit.get("surface_matrix_example_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-registered-rule-count="{html.escape(str(parser_semantic_boundary_audit.get("registered_semantic_rule_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-registered-variant-count="{html.escape(str(parser_semantic_boundary_audit.get("registered_semantic_variant_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-fallback-count="{html.escape(str(parser_semantic_boundary_audit.get("fallback_success_case_count", "")), quote=True)}" '
+        f'data-parser-semantic-boundary-rejected-count="{html.escape(str(parser_semantic_boundary_audit.get("rejected_unsupported_case_count", "")), quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -4095,6 +4145,9 @@ def certified_fragment_panel() -> str:
         f"<dt>role witnesses</dt><dd><code>{html.escape(modifier_role_witness_summary)}</code></dd>"
         f"<dt>witness selection</dt><dd><code>{html.escape(str(modifier_role_witness_selection_contract.get('selection_unit', '')))}</code></dd>"
         f"<dt>role source</dt><dd><code>{html.escape(str(modifier_role_source_contract.get('preposition_role_table', '')))}</code></dd>"
+        f"<dt>parser/semantic boundary</dt><dd><code>{html.escape(str(parser_semantic_boundary_audit.get('schema_version', '')))}</code></dd>"
+        f"<dt>parser claim</dt><dd><code>{html.escape(str(parser_semantic_boundary_audit.get('parser_claim', '')))}</code></dd>"
+        f"<dt>semantic claim</dt><dd><code>{html.escape(str(parser_semantic_boundary_audit.get('semantic_claim', '')))}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
@@ -4120,6 +4173,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{modifier_role_witness_items}</ul></div>"
         '<div class="certified-fragment-surface-parser"><strong>surface parser coverage</strong>'
         f"<ul>{surface_parser_items}</ul></div>"
+        '<div class="certified-fragment-boundary"><strong>parser/semantic boundary audit</strong>'
+        f"<ul>{parser_semantic_boundary_items}{parser_semantic_boundary_invariant_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
         f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-completion"><strong>completion status</strong>'

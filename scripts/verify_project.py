@@ -10686,6 +10686,135 @@ def expected_modified_surface_slot_probe_matrix_meta_from_spec(
     return ordered_ids, expected_meta
 
 
+def validate_parser_semantic_boundary_audit(manifest: dict) -> None:
+    from translator.natural_language_pipeline import (
+        parser_semantic_boundary_audit_payload,
+    )
+
+    audit = manifest.get("parser_semantic_boundary_audit")
+    surface_parser_coverage = manifest.get("surface_parser_coverage")
+    semantic_snapshots = manifest.get("semantic_snapshots")
+    coverage_matrix_counts = manifest.get("coverage_matrix_counts")
+    if (
+        not isinstance(audit, dict)
+        or not isinstance(surface_parser_coverage, dict)
+        or not isinstance(semantic_snapshots, list)
+        or not isinstance(coverage_matrix_counts, dict)
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary audit missing"
+        )
+    expected_audit = parser_semantic_boundary_audit_payload(
+        surface_parser_coverage,
+        semantic_snapshots,
+        coverage_matrix_counts,
+    )
+    if audit != expected_audit:
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary audit drift"
+        )
+    if audit.get("schema_version") != "parser_semantic_boundary_audit.v1":
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary schema drift"
+        )
+    if audit.get("parser_claim") == audit.get("semantic_claim"):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary claim drift"
+        )
+    if (
+        audit.get("full_surface_parser_certification") is not False
+        or audit.get("full_natural_language_certification") is not False
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary certification drift"
+        )
+    rows = audit.get("boundary_rows")
+    if not isinstance(rows, list):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary row drift"
+        )
+    rows_by_id = {
+        item.get("boundary_id"): item
+        for item in rows
+        if isinstance(item, dict) and isinstance(item.get("boundary_id"), str)
+    }
+    if set(rows_by_id) != {
+        "surface_parser_front_end",
+        "registered_semantic_translation",
+        "fallback_scaffold",
+        "unsupported_rejection",
+    }:
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary row drift"
+        )
+    if (
+        rows_by_id["surface_parser_front_end"].get("blocks_completion") is not True
+        or rows_by_id["surface_parser_front_end"].get("blocker")
+        != "surface_parser_claim_registered_examples_only"
+        or rows_by_id["surface_parser_front_end"].get("next_stage")
+        != "extend_surface_parser_beyond_registered_examples"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary parser row drift"
+        )
+    if (
+        rows_by_id["registered_semantic_translation"].get("blocks_completion")
+        is not False
+        or rows_by_id["registered_semantic_translation"].get("status")
+        != "verified_finite_registered_fragment"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary semantic row drift"
+        )
+    required_invariants = audit.get("required_invariants")
+    if (
+        not isinstance(required_invariants, list)
+        or "parser_claim_is_not_semantic_claim" not in required_invariants
+        or "surface_examples_do_not_imply_full_parser_certification"
+        not in required_invariants
+        or "completion_next_stage_targets_parser_expansion_not_completed_boundary_split"
+        not in required_invariants
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary invariant drift"
+        )
+    live_validation = audit.get("live_validation")
+    if (
+        not isinstance(live_validation, dict)
+        or live_validation.get("validator")
+        != "scripts/verify_project.py::validate_parser_semantic_boundary_audit"
+        or live_validation.get("html_hooks") != "data-parser-semantic-boundary-*"
+        or live_validation.get("source_completion_blocker")
+        != "surface_parser_claim_registered_examples_only"
+        or live_validation.get("source_next_stage")
+        != "extend_surface_parser_beyond_registered_examples"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary validator drift"
+        )
+    completion_status = manifest.get("completion_status")
+    if not isinstance(completion_status, dict):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary completion drift"
+        )
+    verified_ids = {
+        item.get("id")
+        for item in completion_status.get("verified_objectives", [])
+        if isinstance(item, dict)
+    }
+    next_stages = completion_status.get("next_recommended_stages")
+    if (
+        "parser_semantic_boundary_audit" not in verified_ids
+        or not isinstance(next_stages, list)
+        or "extend_surface_parser_beyond_registered_examples" not in next_stages
+        or "separate_parser_coverage_claims_from_semantic_translation_claims"
+        in next_stages
+    ):
+        raise SystemExit(
+            "web route smoke check failed: parser/semantic boundary completion drift"
+        )
+
+
 def validate_certified_fragment_manifest(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
         application_modifier_role_occurrences,
@@ -10889,6 +11018,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     expected_fallback_promotion = fallback_promotion_candidates_payload(fallback_cases)
     if fallback_promotion != expected_fallback_promotion:
         raise SystemExit("web route smoke check failed: fallback promotion candidate drift")
+    validate_parser_semantic_boundary_audit(manifest)
     completion_status = manifest.get("completion_status")
     if not isinstance(completion_status, dict):
         raise SystemExit("web route smoke check failed: completion status missing")
@@ -11026,6 +11156,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_concrete_truth_condition_instance_source_audit_certificate",
         "coq_concrete_truth_condition_discharge_frontier_certificate",
         "web_completion_frontier_audit",
+        "parser_semantic_boundary_audit",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
@@ -11045,7 +11176,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "promote_more_fallback_successes_to_registered_constructions",
         "provide_concrete_truth_condition_instances",
         "expand_scope_attachment_discourse_coverage",
-        "separate_parser_coverage_claims_from_semantic_translation_claims",
+        "extend_surface_parser_beyond_registered_examples",
     }
     if set(verified_by_id) != required_verified_ids:
         raise SystemExit("web route smoke check failed: verified objective drift")
@@ -11263,7 +11394,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "complete_front_end_lexical_replacement": (
             "complete_front_end_lexical_replacement_open",
             "surface_parser_claim_registered_examples_only",
-            "separate_parser_coverage_claims_from_semantic_translation_claims",
+            "extend_surface_parser_beyond_registered_examples",
         ),
     }
     for objective_id, (status, blocker, next_stage) in required_open_frontier.items():
@@ -12143,6 +12274,19 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     surface_parser_coverage = manifest.get("surface_parser_coverage")
     if not isinstance(surface_parser_coverage, dict):
         surface_parser_coverage = {}
+    parser_semantic_boundary_audit = manifest.get("parser_semantic_boundary_audit")
+    if not isinstance(parser_semantic_boundary_audit, dict):
+        parser_semantic_boundary_audit = {}
+    parser_semantic_boundary_rows = [
+        item
+        for item in parser_semantic_boundary_audit.get("boundary_rows", [])
+        if isinstance(item, dict)
+    ]
+    parser_semantic_boundary_invariants = [
+        item
+        for item in parser_semantic_boundary_audit.get("required_invariants", [])
+        if isinstance(item, str)
+    ]
     completion_status = manifest.get("completion_status")
     if not isinstance(completion_status, dict):
         completion_status = {}
@@ -12500,14 +12644,100 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             modifier_role_source_contract.get("preposition_role_table", ""),
         ),
         data_fragment("data-modifier-sequence-role-source-derived", source_roles),
+        data_fragment(
+            "data-parser-semantic-boundary-schema",
+            parser_semantic_boundary_audit.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-parser-claim",
+            parser_semantic_boundary_audit.get("parser_claim", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-semantic-claim",
+            parser_semantic_boundary_audit.get("semantic_claim", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-surface-family-count",
+            parser_semantic_boundary_audit.get("surface_parser_family_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-surface-example-count",
+            parser_semantic_boundary_audit.get("surface_verified_example_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-surface-slot-probe-count",
+            parser_semantic_boundary_audit.get("surface_slot_probe_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-surface-matrix-count",
+            parser_semantic_boundary_audit.get("surface_matrix_example_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-registered-rule-count",
+            parser_semantic_boundary_audit.get("registered_semantic_rule_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-registered-variant-count",
+            parser_semantic_boundary_audit.get("registered_semantic_variant_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-fallback-count",
+            parser_semantic_boundary_audit.get("fallback_success_case_count", ""),
+        ),
+        data_fragment(
+            "data-parser-semantic-boundary-rejected-count",
+            parser_semantic_boundary_audit.get("rejected_unsupported_case_count", ""),
+        ),
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
         "surface parser coverage",
+        "parser/semantic boundary audit",
         "completion status",
         "completion frontier audit",
         "<h2>Certified Fragment</h2>",
     ]
+    for item in parser_semantic_boundary_rows:
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-parser-semantic-boundary-row",
+                    item.get("boundary_id", ""),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-component",
+                    item.get("component", ""),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-claim",
+                    item.get("claim", ""),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-status",
+                    item.get("status", ""),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-evidence-count",
+                    item.get("evidence_count", ""),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-blocks-completion",
+                    str(item.get("blocks_completion") is True).lower(),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-blocker",
+                    item.get("blocker", ""),
+                ),
+                data_fragment(
+                    "data-parser-semantic-boundary-row-next-stage",
+                    item.get("next_stage", ""),
+                ),
+            ],
+        )
+    expected_fragments.extend(
+        data_fragment("data-parser-semantic-boundary-invariant", invariant)
+        for invariant in parser_semantic_boundary_invariants
+    )
     expected_fragments.extend(
         data_fragment("data-completion-verified-objective", item.get("id", ""))
         for item in verified_objectives

@@ -951,6 +951,18 @@ verified fragment objectives, lists still-open objectives such as arbitrary
 natural-language semantics and deep Coq semantic proofs, and advertises the next
 recommended stages. The verifier rejects drift in this object, so the project
 cannot accidentally present a finite registered fragment as the finished goal.
+It now also carries `parser_semantic_boundary_audit` with `schema_version:
+"parser_semantic_boundary_audit.v1"`. This audit separates the finite surface
+parser claim (`registered_examples_only`) from the registered semantic
+translation claim (`registered_construction_rules_only`). It counts the surface
+witnesses, slot probes, matrix examples, registered semantic rules, registered
+variants, fallback rows, and rejected rows, then exposes four boundary rows:
+surface parser front end, registered semantic translation, fallback scaffold,
+and unsupported-fragment rejection. The Certified Fragment panel mirrors this
+through `data-parser-semantic-boundary-*` hooks. Because the boundary split is
+now itself verified, the remaining front-end stage is
+`extend_surface_parser_beyond_registered_examples`, not another prose reminder
+to separate parser coverage from semantic coverage.
 It also carries `fallback_promotion_candidates` with `schema_version:
 "fallback_promotion_candidates.v1"`. This queue is derived from
 `coverage_matrix.fallback_success_cases`; at the current head its candidate
@@ -2099,6 +2111,11 @@ marking the current surface parser claim as `registered_examples_only` and
 boundary machine-readable: the dependent type family is not capped at five
 modifiers, but the present web parser only certifies the registered examples it
 actually smoke-tests.
+The `parser_semantic_boundary_audit.v1` record then ties this finite parser
+boundary back to the semantic side of the manifest without merging the two
+claims. Surface witnesses and lexical slot probes remain evidence for the web
+front end only; semantic snapshots and registered variant rows remain evidence
+for registered construction-level translation.
 The same record now includes a `verified_examples` witness list. Each witness
 stores the variant id, surface sentence, modifier count, whether the clause is
 time-wrapped, and whether the example came from the registered primary example

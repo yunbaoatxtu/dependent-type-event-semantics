@@ -21878,6 +21878,134 @@ def registered_modifier_sequence_contract_payload(
     }
 
 
+def parser_semantic_boundary_audit_payload(
+    surface_parser_coverage: dict[str, Any],
+    semantic_snapshots: list[dict[str, Any]],
+    coverage_matrix_counts: dict[str, int],
+) -> dict[str, Any]:
+    surface_family_names = sorted(
+        str(family)
+        for family, item in surface_parser_coverage.items()
+        if isinstance(family, str) and isinstance(item, dict)
+    )
+    surface_verified_example_count = 0
+    surface_slot_probe_count = 0
+    surface_matrix_example_count = 0
+    for item in surface_parser_coverage.values():
+        if not isinstance(item, dict):
+            continue
+        verified_count = item.get("verified_example_count")
+        if isinstance(verified_count, int):
+            surface_verified_example_count += verified_count
+        slot_probes = item.get("slot_probe_examples")
+        if isinstance(slot_probes, dict):
+            probes = slot_probes.get("probes")
+            matrix_examples = slot_probes.get("matrix_examples")
+            if isinstance(probes, list):
+                surface_slot_probe_count += len(
+                    [probe for probe in probes if isinstance(probe, dict)]
+                )
+            if isinstance(matrix_examples, list):
+                surface_matrix_example_count += len(
+                    [row for row in matrix_examples if isinstance(row, dict)]
+                )
+    registered_rule_count = int(coverage_matrix_counts.get("registered_success_cases", 0))
+    registered_variant_count = int(
+        coverage_matrix_counts.get("registered_variant_success_cases", 0)
+    )
+    fallback_count = int(coverage_matrix_counts.get("fallback_success_cases", 0))
+    rejected_count = int(coverage_matrix_counts.get("rejected_unsupported_cases", 0))
+    total_surface_witnesses = (
+        surface_verified_example_count
+        + surface_slot_probe_count
+        + surface_matrix_example_count
+    )
+    return {
+        "schema_version": "parser_semantic_boundary_audit.v1",
+        "audit_basis": "surface_parser_coverage_vs_registered_semantic_coverage",
+        "parser_claim": "registered_examples_only",
+        "semantic_claim": "registered_construction_rules_only",
+        "full_surface_parser_certification": False,
+        "full_natural_language_certification": False,
+        "surface_parser_family_count": len(surface_family_names),
+        "surface_parser_families": surface_family_names,
+        "surface_verified_example_count": surface_verified_example_count,
+        "surface_slot_probe_count": surface_slot_probe_count,
+        "surface_matrix_example_count": surface_matrix_example_count,
+        "surface_total_witness_count": total_surface_witnesses,
+        "registered_semantic_rule_count": registered_rule_count,
+        "registered_semantic_variant_count": registered_variant_count,
+        "semantic_snapshot_count": len(semantic_snapshots),
+        "fallback_success_case_count": fallback_count,
+        "rejected_unsupported_case_count": rejected_count,
+        "boundary_rows": [
+            {
+                "boundary_id": "surface_parser_front_end",
+                "component": "surface_parser",
+                "claim": "finite_surface_witnesses",
+                "status": "open_registered_examples_only",
+                "evidence_count": total_surface_witnesses,
+                "blocks_completion": True,
+                "blocker": "surface_parser_claim_registered_examples_only",
+                "next_stage": "extend_surface_parser_beyond_registered_examples",
+            },
+            {
+                "boundary_id": "registered_semantic_translation",
+                "component": "semantic_translation",
+                "claim": "registered_construction_semantics",
+                "status": "verified_finite_registered_fragment",
+                "evidence_count": (
+                    registered_rule_count
+                    + registered_variant_count
+                    + len(semantic_snapshots)
+                ),
+                "blocks_completion": False,
+                "blocker": "",
+                "next_stage": "",
+            },
+            {
+                "boundary_id": "fallback_scaffold",
+                "component": "fallback",
+                "claim": "shallow_scaffold_not_registered_semantics",
+                "status": "open_if_used",
+                "evidence_count": fallback_count,
+                "blocks_completion": True,
+                "blocker": "fallback_certification_level_shallow_scaffold",
+                "next_stage": "promote_more_fallback_successes_to_registered_constructions",
+            },
+            {
+                "boundary_id": "unsupported_rejection",
+                "component": "unsupported_fragment_guard",
+                "claim": "rejected_before_fallback_not_translated",
+                "status": "guarded",
+                "evidence_count": rejected_count,
+                "blocks_completion": False,
+                "blocker": "",
+                "next_stage": "",
+            },
+        ],
+        "required_invariants": [
+            "parser_claim_is_not_semantic_claim",
+            "surface_examples_do_not_imply_full_parser_certification",
+            "registered_semantic_rows_remain_construction_level",
+            "fallback_rows_remain_shallow_when_present",
+            "unsupported_rows_stop_before_fallback",
+            "completion_next_stage_targets_parser_expansion_not_completed_boundary_split",
+        ],
+        "live_validation": {
+            "validator": (
+                "scripts/verify_project.py::"
+                "validate_parser_semantic_boundary_audit"
+            ),
+            "html_hooks": "data-parser-semantic-boundary-*",
+            "source_completion_blocker": (
+                "surface_parser_claim_registered_examples_only"
+            ),
+            "source_next_stage": "extend_surface_parser_beyond_registered_examples",
+        },
+    }
+
+
 def construction_fragment_manifest() -> dict[str, Any]:
     rules = construction_rules()
     variant_examples_by_rule: dict[str, list[str]] = {}
@@ -21943,13 +22071,19 @@ def construction_fragment_manifest() -> dict[str, Any]:
         semantic_snapshots,
         registered_variant_success_cases,
     )
+    surface_parser_coverage = surface_parser_coverage_payload()
     return {
         "schema_version": "certified_fragment.v1",
         "full_natural_language_certification": False,
         "registered_construction_count": len(registered),
         "registered_constructions": registered,
-        "surface_parser_coverage": surface_parser_coverage_payload(),
+        "surface_parser_coverage": surface_parser_coverage,
         "registered_modifier_sequence_contract": modifier_sequence_contract,
+        "parser_semantic_boundary_audit": parser_semantic_boundary_audit_payload(
+            surface_parser_coverage,
+            semantic_snapshots,
+            coverage_matrix_counts,
+        ),
         "semantic_snapshot_count": len(semantic_snapshots),
         "semantic_snapshots": semantic_snapshots,
         "fallback": {
@@ -22046,9 +22180,7 @@ def completion_frontier_audit_payload(
                 "front_end_lexical_replacement_status_matches"
             ),
             "blocker": "surface_parser_claim_registered_examples_only",
-            "next_stage": (
-                "separate_parser_coverage_claims_from_semantic_translation_claims"
-            ),
+            "next_stage": "extend_surface_parser_beyond_registered_examples",
         },
     ]
     open_frontier = []
@@ -23211,6 +23343,11 @@ def project_completion_status_payload(
                 "evidence": "completion_frontier_audit.v1",
             },
             {
+                "id": "parser_semantic_boundary_audit",
+                "status": "verified",
+                "evidence": "parser_semantic_boundary_audit.v1",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -23804,8 +23941,11 @@ def project_completion_status_payload(
                 "id": "complete_front_end_lexical_replacement",
                 "status": "open",
                 "reason": (
-                    "Surface slot and matrix probes are finite audited witnesses, "
-                    "not proof of arbitrary lexical replacement."
+                    "The parser/semantic boundary audit now separates finite "
+                    "surface witnesses from registered semantic translation, "
+                    "but surface slot and matrix probes are still finite "
+                    "audited witnesses rather than proof of arbitrary lexical "
+                    "replacement."
                 ),
             },
         ],
@@ -23819,7 +23959,7 @@ def project_completion_status_payload(
             "promote_more_fallback_successes_to_registered_constructions",
             "provide_concrete_truth_condition_instances",
             "expand_scope_attachment_discourse_coverage",
-            "separate_parser_coverage_claims_from_semantic_translation_claims",
+            "extend_surface_parser_beyond_registered_examples",
         ],
         "coverage_summary": dict(coverage_matrix_counts),
     }

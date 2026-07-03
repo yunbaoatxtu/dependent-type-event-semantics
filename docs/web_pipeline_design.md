@@ -167,6 +167,19 @@ the system is a certified finite fragment, and its verified objectives,
 incomplete objectives, blockers, and next-stage rows should be mirrored through
 `data-completion-*` hooks. The verifier should reject any drift that removes
 the arbitrary-natural-language or deep-Coq-proof open objectives. The same
+manifest now exposes `parser_semantic_boundary_audit.v1`, which separates the
+front-end parser claim from the registered semantic translation claim. It
+records `parser_claim: registered_examples_only`,
+`semantic_claim: registered_construction_rules_only`, false full-surface and
+full-NL certification flags, surface witness/probe/matrix counts, registered
+semantic rule and variant counts, fallback and rejected counts, and four
+boundary rows for the parser front end, semantic translation, fallback
+scaffold, and unsupported-fragment guard. The panel mirrors those fields with
+`data-parser-semantic-boundary-*` hooks, and the verifier recomputes the audit
+from the manifest before accepting either the API payload or the page. The
+front-end completion objective therefore now advances toward
+`extend_surface_parser_beyond_registered_examples`.
+The same
 manifest now exposes `fallback_promotion_candidates.v1`, derived from
 `coverage_matrix.fallback_success_cases`. These rows are rendered through
 `data-fallback-promotion-*` hooks and record the fallback sentence's current
@@ -436,6 +449,11 @@ mirrors the analysis, AST kind, and fragment count through stable attributes.
 Thus a witness is not merely an example sentence: it is a compact semantic
 contract for what that surface sentence must produce. During the project smoke
 check, every surface witness is rerun through the live analyzer and compared
+with the advertised semantic fragments. The separate
+`parser_semantic_boundary_audit.v1` payload prevents these surface witnesses
+from being read as a proof of general parser coverage: it records them as
+front-end evidence while keeping registered semantic translation, fallback, and
+unsupported rejection in separate boundary rows.
 against that contract, so parser-boundary drift is caught at the same level as
 ordinary registered-construction drift. Dedicated regression tests patch the
 live analyzer response to simulate no-run, rule, analysis, AST, and translation

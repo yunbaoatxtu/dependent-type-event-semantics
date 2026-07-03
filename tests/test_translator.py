@@ -38,6 +38,7 @@ from scripts.verify_project import (
     validate_diagnostic_contract_manifest,
     validate_json_api_route_validation_contract,
     validate_certified_fragment_manifest,
+    validate_parser_semantic_boundary_audit,
     validate_diagnostic_fixture_routes,
     validate_analyze_action_download_artifacts,
     validate_core_json_api_artifacts,
@@ -18701,6 +18702,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_instance_source_audit_certificate",
                 "coq_concrete_truth_condition_discharge_frontier_certificate",
                 "web_completion_frontier_audit",
+                "parser_semantic_boundary_audit",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -18901,7 +18903,7 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(
             open_frontier["complete_front_end_lexical_replacement"]["next_stage"],
-            "separate_parser_coverage_claims_from_semantic_translation_claims",
+            "extend_surface_parser_beyond_registered_examples",
         )
         self.assertEqual(
             frontier_audit["finite_registered_frontier"][0]["frontier_status"],
@@ -19456,6 +19458,91 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(surface_parser_coverage["max_verified_modifier_count"], 5)
         self.assertEqual(surface_parser_coverage["verified_example_count"], 10)
+        parser_semantic_boundary = manifest["parser_semantic_boundary_audit"]
+        self.assertEqual(
+            parser_semantic_boundary["schema_version"],
+            "parser_semantic_boundary_audit.v1",
+        )
+        self.assertEqual(
+            parser_semantic_boundary["audit_basis"],
+            "surface_parser_coverage_vs_registered_semantic_coverage",
+        )
+        self.assertEqual(
+            parser_semantic_boundary["parser_claim"],
+            "registered_examples_only",
+        )
+        self.assertEqual(
+            parser_semantic_boundary["semantic_claim"],
+            "registered_construction_rules_only",
+        )
+        self.assertFalse(
+            parser_semantic_boundary["full_surface_parser_certification"],
+        )
+        self.assertFalse(
+            parser_semantic_boundary["full_natural_language_certification"],
+        )
+        self.assertEqual(
+            parser_semantic_boundary["surface_parser_families"],
+            ["modified_transitive_adv_sequence"],
+        )
+        self.assertEqual(
+            parser_semantic_boundary["surface_verified_example_count"],
+            surface_parser_coverage["verified_example_count"],
+        )
+        self.assertEqual(parser_semantic_boundary["surface_slot_probe_count"], 4)
+        self.assertEqual(parser_semantic_boundary["surface_matrix_example_count"], 16)
+        self.assertEqual(parser_semantic_boundary["surface_total_witness_count"], 30)
+        self.assertEqual(
+            parser_semantic_boundary["registered_semantic_rule_count"],
+            counts["registered_success_cases"],
+        )
+        self.assertEqual(
+            parser_semantic_boundary["registered_semantic_variant_count"],
+            counts["registered_variant_success_cases"],
+        )
+        self.assertEqual(
+            parser_semantic_boundary["semantic_snapshot_count"],
+            manifest["semantic_snapshot_count"],
+        )
+        boundary_rows = {
+            row["boundary_id"]: row
+            for row in parser_semantic_boundary["boundary_rows"]
+        }
+        self.assertEqual(
+            set(boundary_rows),
+            {
+                "surface_parser_front_end",
+                "registered_semantic_translation",
+                "fallback_scaffold",
+                "unsupported_rejection",
+            },
+        )
+        self.assertTrue(
+            boundary_rows["surface_parser_front_end"]["blocks_completion"],
+        )
+        self.assertEqual(
+            boundary_rows["surface_parser_front_end"]["next_stage"],
+            "extend_surface_parser_beyond_registered_examples",
+        )
+        self.assertFalse(
+            boundary_rows["registered_semantic_translation"]["blocks_completion"],
+        )
+        self.assertIn(
+            "parser_claim_is_not_semantic_claim",
+            parser_semantic_boundary["required_invariants"],
+        )
+        self.assertIn(
+            "parser_semantic_boundary_audit",
+            {item["id"] for item in completion_status["verified_objectives"]},
+        )
+        self.assertIn(
+            "extend_surface_parser_beyond_registered_examples",
+            completion_status["next_recommended_stages"],
+        )
+        self.assertNotIn(
+            "separate_parser_coverage_claims_from_semantic_translation_claims",
+            completion_status["next_recommended_stages"],
+        )
         self.assertEqual(len(surface_parser_coverage["verified_examples"]), 10)
         self.assertEqual(
             surface_parser_coverage["verified_examples"][0],
@@ -19847,6 +19934,42 @@ class TranslatorTests(unittest.TestCase):
             "truth-condition obligation witness drift",
         ):
             validate_certified_fragment_manifest(manifest)
+
+    def test_verification_rejects_parser_semantic_boundary_audit_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["parser_semantic_boundary_audit"]["parser_claim"] = (
+            "general_parser_certification"
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "parser/semantic boundary audit drift",
+        ):
+            validate_parser_semantic_boundary_audit(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["parser_semantic_boundary_audit"][
+            "surface_total_witness_count"
+        ] = -1
+        with self.assertRaisesRegex(
+            SystemExit,
+            "parser/semantic boundary audit drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["next_recommended_stages"] = [
+            stage
+            for stage in manifest["completion_status"]["next_recommended_stages"]
+            if stage != "extend_surface_parser_beyond_registered_examples"
+        ]
+        manifest["completion_status"]["next_recommended_stages"].append(
+            "separate_parser_coverage_claims_from_semantic_translation_claims",
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "parser/semantic boundary completion drift",
+        ):
+            validate_parser_semantic_boundary_audit(manifest)
 
     def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
         manifest = construction_fragment_manifest()
@@ -20391,6 +20514,11 @@ class TranslatorTests(unittest.TestCase):
             csv_attr(role_source_contract["derived_role_inventory"]),
         )
         completion_status = manifest["completion_status"]
+        parser_semantic_boundary = manifest["parser_semantic_boundary_audit"]
+        parser_boundary_schema_attr = data_attr(
+            "data-parser-semantic-boundary-schema",
+            parser_semantic_boundary["schema_version"],
+        )
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -20715,10 +20843,71 @@ class TranslatorTests(unittest.TestCase):
             'data-modifier-sequence-role-witness-normalized="on_mat"',
             page,
         )
+        self.assertIn("parser/semantic boundary audit", page)
+        self.assertIn(parser_boundary_schema_attr, page)
+        self.assertIn(
+            data_attr(
+                "data-parser-semantic-boundary-parser-claim",
+                parser_semantic_boundary["parser_claim"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-parser-semantic-boundary-semantic-claim",
+                parser_semantic_boundary["semantic_claim"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-parser-semantic-boundary-surface-example-count",
+                parser_semantic_boundary["surface_verified_example_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-parser-semantic-boundary-surface-slot-probe-count",
+                parser_semantic_boundary["surface_slot_probe_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-parser-semantic-boundary-surface-matrix-count",
+                parser_semantic_boundary["surface_matrix_example_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-parser-semantic-boundary-row="surface_parser_front_end"',
+            page,
+        )
+        self.assertIn(
+            'data-parser-semantic-boundary-row-next-stage="extend_surface_parser_beyond_registered_examples"',
+            page,
+        )
+        self.assertIn(
+            'data-parser-semantic-boundary-row="registered_semantic_translation"',
+            page,
+        )
+        self.assertIn(
+            'data-parser-semantic-boundary-invariant="parser_claim_is_not_semantic_claim"',
+            page,
+        )
         validate_certified_fragment_html_panel(page, manifest)
         with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
             validate_certified_fragment_html_panel(
                 page.replace(role_minima_attr, data_attr("data-modifier-sequence-role-minima", "stale")),
+                manifest,
+            )
+        with self.assertRaisesRegex(SystemExit, "certified fragment panel missing"):
+            validate_certified_fragment_html_panel(
+                page.replace(
+                    parser_boundary_schema_attr,
+                    data_attr("data-parser-semantic-boundary-schema", "stale"),
+                ),
                 manifest,
             )
         self.assertIn(
@@ -27032,10 +27221,16 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("In every burning, oxygen is consumed", web_design)
         self.assertIn("`project_completion_status.v1`", web_design)
         self.assertIn("`data-completion-*` hooks", web_design)
+        self.assertIn("`parser_semantic_boundary_audit.v1`", web_design)
+        self.assertIn("`data-parser-semantic-boundary-*` hooks", web_design)
+        self.assertIn("`extend_surface_parser_beyond_registered_examples`", web_design)
         self.assertIn("arbitrary-natural-language", web_design)
         self.assertIn("deep-Coq-proof", web_design)
         self.assertIn("registered_modifier_sequence_contract.v1", manuscript)
         self.assertIn("project_completion_status.v1", manuscript)
+        self.assertIn("parser_semantic_boundary_audit.v1", manuscript)
+        self.assertIn("parser_claim as registered_examples_only", manuscript)
+        self.assertIn("extend_surface_parser_beyond_registered_examples", manuscript)
         self.assertIn("is_complete false", manuscript)
         self.assertIn("incomplete_objectives for arbitrary natural-language semantics", manuscript)
         self.assertIn("project-completion drift", manuscript)
@@ -27987,6 +28182,10 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`rejected_unsupported_cases`", readme)
         self.assertIn("`completion_status`", readme)
         self.assertIn('"project_completion_status.v1"', readme)
+        self.assertIn("`parser_semantic_boundary_audit`", readme)
+        self.assertIn('"parser_semantic_boundary_audit.v1"', readme)
+        self.assertIn("`data-parser-semantic-boundary-*`", readme)
+        self.assertIn("`extend_surface_parser_beyond_registered_examples`", readme)
         self.assertIn("`fallback_promotion_candidates`", readme)
         self.assertIn('"fallback_promotion_candidates.v1"', readme)
         self.assertIn("`fallback_promotion_draft_preflight.v1`", readme)
