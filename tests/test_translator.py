@@ -20999,6 +20999,35 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("&quot;predicate&quot;: &quot;laugh&quot;", page)
         self.assertIn("before t_reference t_main_3", page)
 
+    def test_web_page_reports_perception_time_attachment_readings(self) -> None:
+        sentence = "Mary saw John leave yesterday"
+        result = analyze_sentence(sentence, require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 2)
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["complement_time_attachment", "matrix_time_attachment"],
+        )
+
+        page = render_page(sentence, require_coq=True, result=result)
+        self.assertIn("Semantic Readings Check", page)
+        self.assertIn("passed: 2 reading(s)", page)
+        self.assertIn('data-reading-name="complement_time_attachment"', page)
+        self.assertIn('data-reading-name="matrix_time_attachment"', page)
+        self.assertIn(
+            "embedded_complement: at_T(yesterday) : Entity via "
+            "Entity -&gt; Prop -&gt; Prop",
+            page,
+        )
+        self.assertIn(
+            "matrix_perception: at_T(yesterday) : Entity via "
+            "Entity -&gt; Prop -&gt; Prop",
+            page,
+        )
+        self.assertIn("mary_saw_john_leave_at_yesterday_matrix", page)
+        self.assertNotIn("<dt>typed time modifiers</dt><dd>none</dd>", page)
+
     def test_web_api_and_page_report_temporal_perception_disjunction_success(self) -> None:
         sentence = "Mary saw John leave or Sue smile after Bill waved"
         result = analyze_sentence(sentence, require_coq=True)

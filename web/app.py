@@ -2395,13 +2395,16 @@ def semantic_reading_typed_time_modifier_text(value: Any) -> str:
         if not isinstance(entry, dict):
             continue
         operator = str(entry.get("operator", ""))
-        argument = str(entry.get("argument", ""))
+        argument = str(entry.get("argument") or entry.get("name") or "")
         modifier_type = str(entry.get("type", "Time"))
-        site = str(entry.get("site", ""))
+        operator_type = str(entry.get("operator_type", ""))
+        site = str(entry.get("target") or entry.get("site") or "")
         if not operator or not argument:
             continue
+        operator_name = operator if operator.endswith("_T") else f"{operator}_T"
         prefix = f"{site}: " if site else ""
-        items.append(f"{prefix}{operator}_T({argument}) : {modifier_type}")
+        suffix = f" via {operator_type}" if operator_type else ""
+        items.append(f"{prefix}{operator_name}({argument}) : {modifier_type}{suffix}")
     return "; ".join(items) or "none"
 
 
