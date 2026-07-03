@@ -33893,6 +33893,463 @@ def concrete_truth_condition_instance_source_audit_certificate_lines(
     return lines
 
 
+def concrete_truth_condition_discharge_frontier_certificate_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Classify the finite registered discharge and still-open source frontiers."""
+
+    status_fields = (
+        ("finite_registered", "finite_registered_fragment_discharged"),
+        ("arbitrary_truth_conditions", "arbitrary_truth_condition_instances_open"),
+        ("unregistered_scope_attachment", "unregistered_scope_attachment_open"),
+        ("front_end_lexical_replacement", "complete_front_end_lexical_replacement_open"),
+    )
+    projections = ("direct", "evidence", "kernel", "independent", "constructor", "model")
+
+    if target == "lean":
+        lines = [
+            "inductive ConcreteTruthConditionDischargeFrontierStatus : Type where",
+            "  | finite_registered_fragment_discharged",
+            "  | arbitrary_truth_condition_instances_open",
+            "  | unregistered_scope_attachment_open",
+            "  | complete_front_end_lexical_replacement_open",
+            "",
+            "structure ConcreteTruthConditionDischargeFrontierCertificate : Type where",
+            "  concrete_truth_condition_discharge_frontier_source_audit :",
+            "      ConcreteTruthConditionInstanceSourceAuditCertificate",
+            "  concrete_truth_condition_discharge_frontier_source_audit_eq :",
+            "      concrete_truth_condition_discharge_frontier_source_audit =",
+            "        concrete_truth_condition_instance_source_audit_certificate",
+        ]
+        for field, constructor in status_fields:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_discharge_frontier_{field}_status :",
+                    "      ConcreteTruthConditionDischargeFrontierStatus",
+                    f"  concrete_truth_condition_discharge_frontier_{field}_status_eq :",
+                    f"      concrete_truth_condition_discharge_frontier_{field}_status =",
+                    "        ConcreteTruthConditionDischargeFrontierStatus."
+                    f"{constructor}",
+                ]
+            )
+        lines.extend(
+            [
+                "  concrete_truth_condition_discharge_frontier_direct_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_truth_conditions.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_discharge_frontier_evidence_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_evidence_backed_truth_conditions.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_discharge_frontier_kernel_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_truth_conditions_from_kernel.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_discharge_frontier_independent_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_discharge_frontier_constructor_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      registered_truth_condition_constructor_discharge_certificate.",
+                "      registered_truth_condition_constructor_discharge_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_discharge_frontier_model_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_compositional_model.",
+                "      concrete_registered_composition_denotes A term ->",
+                "      AtomicClosureTruth A term",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            for route in ("direct", "evidence", "kernel"):
+                lines.extend(
+                    [
+                        "  concrete_truth_condition_discharge_frontier_"
+                        f"example_{idx}_{route}_atomic :",
+                        f"      AtomicClosureTruth {annotation} example_{idx}",
+                    ]
+                )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_discharge_frontier_certificate :",
+                "    ConcreteTruthConditionDischargeFrontierCertificate := {",
+                "  concrete_truth_condition_discharge_frontier_source_audit :=",
+                "    concrete_truth_condition_instance_source_audit_certificate,",
+                "  concrete_truth_condition_discharge_frontier_source_audit_eq := rfl,",
+            ]
+        )
+        for field, constructor in status_fields:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_discharge_frontier_{field}_status :=",
+                    "    ConcreteTruthConditionDischargeFrontierStatus."
+                    f"{constructor},",
+                    f"  concrete_truth_condition_discharge_frontier_{field}_status_eq := rfl,",
+                ]
+            )
+        for projection in projections:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_discharge_frontier_{projection}_sound :=",
+                    "    concrete_truth_condition_instance_source_audit_"
+                    f"{projection}_sound_projected,",
+                ]
+            )
+        assignments: list[tuple[str, str]] = []
+        for idx in range(1, len(results) + 1):
+            for route in ("direct", "evidence", "kernel"):
+                assignments.append(
+                    (
+                        "concrete_truth_condition_discharge_frontier_"
+                        f"example_{idx}_{route}_atomic",
+                        "concrete_truth_condition_instance_source_audit_"
+                        f"example_{idx}_{route}_atomic_sound",
+                    )
+                )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_discharge_frontier_certificate_exists :",
+                "    Exists (fun C : ConcreteTruthConditionDischargeFrontierCertificate =>",
+                "      C = concrete_truth_condition_discharge_frontier_certificate) := by",
+                "  exact Exists.intro concrete_truth_condition_discharge_frontier_certificate rfl",
+                "",
+                "theorem concrete_truth_condition_discharge_frontier_source_audit_matches :",
+                "    concrete_truth_condition_discharge_frontier_certificate.",
+                "      concrete_truth_condition_discharge_frontier_source_audit =",
+                "        concrete_truth_condition_instance_source_audit_certificate := by",
+                "  exact concrete_truth_condition_discharge_frontier_certificate.",
+                "    concrete_truth_condition_discharge_frontier_source_audit_eq",
+            ]
+        )
+        for field, constructor in status_fields:
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_discharge_frontier_"
+                    f"{field}_status_matches :",
+                    "    concrete_truth_condition_discharge_frontier_certificate.",
+                    f"      concrete_truth_condition_discharge_frontier_{field}_status =",
+                    "        ConcreteTruthConditionDischargeFrontierStatus."
+                    f"{constructor} := by",
+                    "  exact concrete_truth_condition_discharge_frontier_certificate.",
+                    f"    concrete_truth_condition_discharge_frontier_{field}_status_eq",
+                ]
+            )
+        for projection in projections:
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_discharge_frontier_"
+                    f"{projection}_sound_projected :",
+                    "    (A : Type) -> (term : A) ->",
+                ]
+            )
+            if projection == "direct":
+                lines.extend(
+                    [
+                        "    concrete_registered_truth_conditions.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "evidence":
+                lines.extend(
+                    [
+                        "    concrete_registered_evidence_backed_truth_conditions.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "kernel":
+                lines.extend(
+                    [
+                        "    concrete_registered_truth_conditions_from_kernel.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "independent":
+                lines.extend(
+                    [
+                        "    independent_registered_truth_condition_clause_instances.",
+                        "    independent_registered_clause_spec.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "constructor":
+                lines.extend(
+                    [
+                        "    registered_truth_condition_constructor_discharge_certificate.",
+                        "    registered_truth_condition_constructor_discharge_spec.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            else:
+                lines.extend(
+                    [
+                        "    concrete_registered_compositional_model.",
+                        "    concrete_registered_composition_denotes A term ->",
+                    ]
+                )
+            lines.extend(
+                [
+                    "    AtomicClosureTruth A term := by",
+                    "  exact concrete_truth_condition_discharge_frontier_certificate.",
+                    f"    concrete_truth_condition_discharge_frontier_{projection}_sound",
+                ]
+            )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            for route in ("direct", "evidence", "kernel"):
+                lines.extend(
+                    [
+                        "",
+                        "theorem concrete_truth_condition_discharge_frontier_"
+                        f"example_{idx}_{route}_atomic_sound :",
+                        f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                        "  exact concrete_truth_condition_discharge_frontier_certificate.",
+                        "    concrete_truth_condition_discharge_frontier_"
+                        f"example_{idx}_{route}_atomic",
+                    ]
+                )
+        return lines
+
+    lines = [
+        "Inductive ConcreteTruthConditionDischargeFrontierStatus : Type :=",
+        "  | finite_registered_fragment_discharged",
+        "  | arbitrary_truth_condition_instances_open",
+        "  | unregistered_scope_attachment_open",
+        "  | complete_front_end_lexical_replacement_open.",
+        "",
+        "Record ConcreteTruthConditionDischargeFrontierCertificate : Type := {",
+        "  concrete_truth_condition_discharge_frontier_source_audit :",
+        "      ConcreteTruthConditionInstanceSourceAuditCertificate;",
+        "  concrete_truth_condition_discharge_frontier_source_audit_eq :",
+        "      concrete_truth_condition_discharge_frontier_source_audit =",
+        "        concrete_truth_condition_instance_source_audit_certificate;",
+    ]
+    for field, constructor in status_fields:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_discharge_frontier_{field}_status :",
+                "      ConcreteTruthConditionDischargeFrontierStatus;",
+                f"  concrete_truth_condition_discharge_frontier_{field}_status_eq :",
+                f"      concrete_truth_condition_discharge_frontier_{field}_status =",
+                f"        {constructor};",
+            ]
+        )
+    lines.extend(
+        [
+            "  concrete_truth_condition_discharge_frontier_direct_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes concrete_registered_truth_conditions",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_discharge_frontier_evidence_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        concrete_registered_evidence_backed_truth_conditions",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_discharge_frontier_kernel_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        concrete_registered_truth_conditions_from_kernel",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_discharge_frontier_independent_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        (independent_registered_clause_spec",
+            "          independent_registered_truth_condition_clause_instances)",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_discharge_frontier_constructor_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        (registered_truth_condition_constructor_discharge_spec",
+            "          registered_truth_condition_constructor_discharge_certificate)",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_discharge_frontier_model_sound :",
+            "      forall A : Type, forall term : A,",
+            "      concrete_registered_composition_denotes",
+            "        concrete_registered_compositional_model A term ->",
+            "      AtomicClosureTruth A term;",
+        ]
+    )
+    field_lines: list[str] = []
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        for route in ("direct", "evidence", "kernel"):
+            field_lines.extend(
+                [
+                    "  concrete_truth_condition_discharge_frontier_"
+                    f"example_{idx}_{route}_atomic :",
+                    f"      AtomicClosureTruth {annotation} example_{idx};",
+                ]
+            )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_discharge_frontier_certificate :",
+            "  ConcreteTruthConditionDischargeFrontierCertificate := {|",
+            "  concrete_truth_condition_discharge_frontier_source_audit :=",
+            "    concrete_truth_condition_instance_source_audit_certificate;",
+            "  concrete_truth_condition_discharge_frontier_source_audit_eq := eq_refl;",
+        ]
+    )
+    for field, constructor in status_fields:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_discharge_frontier_{field}_status :=",
+                f"    {constructor};",
+                f"  concrete_truth_condition_discharge_frontier_{field}_status_eq := eq_refl;",
+            ]
+        )
+    for projection in projections:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_discharge_frontier_{projection}_sound :=",
+                "    concrete_truth_condition_instance_source_audit_"
+                f"{projection}_sound_projected;",
+            ]
+        )
+    assignments: list[tuple[str, str]] = []
+    for idx in range(1, len(results) + 1):
+        for route in ("direct", "evidence", "kernel"):
+            assignments.append(
+                (
+                    "concrete_truth_condition_discharge_frontier_"
+                    f"example_{idx}_{route}_atomic",
+                    "concrete_truth_condition_instance_source_audit_"
+                    f"example_{idx}_{route}_atomic_sound",
+                )
+            )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_discharge_frontier_certificate_exists :",
+            "  exists C : ConcreteTruthConditionDischargeFrontierCertificate,",
+            "    C = concrete_truth_condition_discharge_frontier_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_discharge_frontier_certificate.",
+            "  reflexivity.",
+            "Qed.",
+            "",
+            "Theorem concrete_truth_condition_discharge_frontier_source_audit_matches :",
+            "  concrete_truth_condition_discharge_frontier_source_audit",
+            "    concrete_truth_condition_discharge_frontier_certificate =",
+            "  concrete_truth_condition_instance_source_audit_certificate.",
+            "Proof.",
+            "  exact (concrete_truth_condition_discharge_frontier_source_audit_eq",
+            "    concrete_truth_condition_discharge_frontier_certificate).",
+            "Qed.",
+        ]
+    )
+    for field, constructor in status_fields:
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_discharge_frontier_"
+                f"{field}_status_matches :",
+                f"  concrete_truth_condition_discharge_frontier_{field}_status",
+                "    concrete_truth_condition_discharge_frontier_certificate =",
+                f"  {constructor}.",
+                "Proof.",
+                "  exact (concrete_truth_condition_discharge_frontier_"
+                f"{field}_status_eq",
+                "    concrete_truth_condition_discharge_frontier_certificate).",
+                "Qed.",
+            ]
+        )
+    sound_specs = {
+        "direct": [
+            "    fully_registered_truth_denotes concrete_registered_truth_conditions",
+            "      A term ->",
+        ],
+        "evidence": [
+            "    fully_registered_truth_denotes",
+            "      concrete_registered_evidence_backed_truth_conditions",
+            "      A term ->",
+        ],
+        "kernel": [
+            "    fully_registered_truth_denotes",
+            "      concrete_registered_truth_conditions_from_kernel",
+            "      A term ->",
+        ],
+        "independent": [
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances)",
+            "      A term ->",
+        ],
+        "constructor": [
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      A term ->",
+        ],
+        "model": [
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model A term ->",
+        ],
+    }
+    for projection, premise_lines in sound_specs.items():
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_discharge_frontier_"
+                f"{projection}_sound_projected :",
+                "  forall A : Type, forall term : A,",
+                *premise_lines,
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                f"  exact (concrete_truth_condition_discharge_frontier_{projection}_sound",
+                "    concrete_truth_condition_discharge_frontier_certificate).",
+                "Qed.",
+            ]
+        )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        for route in ("direct", "evidence", "kernel"):
+            lines.extend(
+                [
+                    "",
+                    "Theorem concrete_truth_condition_discharge_frontier_"
+                    f"example_{idx}_{route}_atomic_sound :",
+                    f"  AtomicClosureTruth {annotation} example_{idx}.",
+                    "Proof.",
+                    "  exact (concrete_truth_condition_discharge_frontier_"
+                    f"example_{idx}_{route}_atomic",
+                    "    concrete_truth_condition_discharge_frontier_certificate).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -38680,6 +39137,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_discharge_frontier_certificate_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -40980,6 +41444,43 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "#check concrete_truth_condition_instance_source_audit_"
                     f"example_{idx}_{route}_atomic_sound"
                 )
+        lines.append("#check ConcreteTruthConditionDischargeFrontierStatus")
+        lines.append("#check ConcreteTruthConditionDischargeFrontierCertificate")
+        lines.append("#check concrete_truth_condition_discharge_frontier_certificate")
+        lines.append(
+            "#check concrete_truth_condition_discharge_frontier_certificate_exists"
+        )
+        lines.append(
+            "#check concrete_truth_condition_discharge_frontier_source_audit_matches"
+        )
+        for match_name in (
+            "finite_registered",
+            "arbitrary_truth_conditions",
+            "unregistered_scope_attachment",
+            "front_end_lexical_replacement",
+        ):
+            lines.append(
+                "#check concrete_truth_condition_discharge_frontier_"
+                f"{match_name}_status_matches"
+            )
+        for projection in (
+            "direct",
+            "evidence",
+            "kernel",
+            "independent",
+            "constructor",
+            "model",
+        ):
+            lines.append(
+                "#check concrete_truth_condition_discharge_frontier_"
+                f"{projection}_sound_projected"
+            )
+        for idx in range(1, len(results) + 1):
+            for route in ("direct", "evidence", "kernel"):
+                lines.append(
+                    "#check concrete_truth_condition_discharge_frontier_"
+                    f"example_{idx}_{route}_atomic_sound"
+                )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -41986,6 +42487,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_instance_source_audit_certificate_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_discharge_frontier_certificate_lines(
             results,
             target,
         )
@@ -44033,6 +44541,39 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
         for route in ("direct", "evidence", "kernel"):
             lines.append(
                 "Check concrete_truth_condition_instance_source_audit_"
+                f"example_{idx}_{route}_atomic_sound."
+            )
+    lines.append("Check ConcreteTruthConditionDischargeFrontierStatus.")
+    lines.append("Check ConcreteTruthConditionDischargeFrontierCertificate.")
+    lines.append("Check concrete_truth_condition_discharge_frontier_certificate.")
+    lines.append("Check concrete_truth_condition_discharge_frontier_certificate_exists.")
+    lines.append("Check concrete_truth_condition_discharge_frontier_source_audit_matches.")
+    for match_name in (
+        "finite_registered",
+        "arbitrary_truth_conditions",
+        "unregistered_scope_attachment",
+        "front_end_lexical_replacement",
+    ):
+        lines.append(
+            "Check concrete_truth_condition_discharge_frontier_"
+            f"{match_name}_status_matches."
+        )
+    for projection in (
+        "direct",
+        "evidence",
+        "kernel",
+        "independent",
+        "constructor",
+        "model",
+    ):
+        lines.append(
+            "Check concrete_truth_condition_discharge_frontier_"
+            f"{projection}_sound_projected."
+        )
+    for idx in range(1, len(results) + 1):
+        for route in ("direct", "evidence", "kernel"):
+            lines.append(
+                "Check concrete_truth_condition_discharge_frontier_"
                 f"example_{idx}_{route}_atomic_sound."
             )
     return "\n".join(lines) + "\n"

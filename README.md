@@ -1817,6 +1817,15 @@ also reprojects the six soundness routes and the direct/evidence/kernel
 source identification for the finite registered fragment, not a proof of
 arbitrary unregistered lexical, temporal, causal, quantificational, or modifier
 truth conditions.
+The follow-up verified objective
+`coq_concrete_truth_condition_discharge_frontier_certificate` introduces
+`ConcreteTruthConditionDischargeFrontierCertificate`. It adds a checked
+`ConcreteTruthConditionDischargeFrontierStatus` layer: the finite registered
+fragment is recorded as discharged, while arbitrary truth-condition instances,
+unregistered scope/attachment, and complete front-end lexical replacement are
+recorded as still open. The certificate reuses the source-audit soundness
+routes and per-example `AtomicClosureTruth` projections, making the completion
+frontier explicit in the generated Coq/Rocq scaffold.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

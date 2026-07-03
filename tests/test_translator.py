@@ -5664,6 +5664,46 @@ class TranslatorTests(unittest.TestCase):
             coq_module,
         )
         self.assertIn(
+            "Inductive ConcreteTruthConditionDischargeFrontierStatus : Type :=",
+            coq_module,
+        )
+        self.assertIn(
+            "Record ConcreteTruthConditionDischargeFrontierCertificate : Type := {",
+            coq_module,
+        )
+        self.assertIn(
+            "Definition concrete_truth_condition_discharge_frontier_certificate :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_discharge_frontier_source_audit_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_discharge_frontier_finite_registered_status_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_matches :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_discharge_frontier_direct_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_discharge_frontier_model_sound_projected :",
+            coq_module,
+        )
+        self.assertIn(
+            "Theorem concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound :",
+            coq_module,
+        )
+        self.assertIn(
+            "Check concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound.",
+            coq_module,
+        )
+        self.assertIn(
             "Definition atomic_closure_truth_conditions : TruthConditionSpec :=",
             coq_module,
         )
@@ -18488,6 +18528,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_independent_model_candidate_class_suite_example_package",
                 "coq_concrete_truth_condition_registered_fragment_instance_completion_certificate",
                 "coq_concrete_truth_condition_instance_source_audit_certificate",
+                "coq_concrete_truth_condition_discharge_frontier_certificate",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -28127,6 +28168,14 @@ class TranslatorTests(unittest.TestCase):
             "`ConcreteTruthConditionInstanceSourceAuditCertificate`",
             readme,
         )
+        self.assertIn(
+            "`coq_concrete_truth_condition_discharge_frontier_certificate`",
+            readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionDischargeFrontierCertificate`",
+            readme,
+        )
         self.assertIn("`AtomicValuationSpec`", formalization_readme)
         self.assertIn("`LexicalAtomTruthAssumptions`", formalization_readme)
         self.assertIn("`TransitionAtomTruthAssumptions`", formalization_readme)
@@ -28210,6 +28259,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "`concrete_truth_condition_instance_source_audit_certificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`ConcreteTruthConditionDischargeFrontierCertificate`",
+            formalization_readme,
+        )
+        self.assertIn(
+            "`concrete_truth_condition_discharge_frontier_certificate`",
             formalization_readme,
         )
         self.assertIn(
@@ -29124,6 +29181,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             "coq_concrete_truth_condition_instance_source_audit_certificate",
+            manuscript,
+        )
+        self.assertIn(
+            "ConcreteTruthConditionDischargeFrontierCertificate",
+            manuscript,
+        )
+        self.assertIn(
+            "coq_concrete_truth_condition_discharge_frontier_certificate",
             manuscript,
         )
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)

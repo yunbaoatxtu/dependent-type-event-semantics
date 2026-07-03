@@ -19811,6 +19811,346 @@ Proof.
     concrete_truth_condition_instance_source_audit_certificate).
 Qed.
 
+Inductive ConcreteTruthConditionDischargeFrontierStatus : Type :=
+  | finite_registered_fragment_discharged
+  | arbitrary_truth_condition_instances_open
+  | unregistered_scope_attachment_open
+  | complete_front_end_lexical_replacement_open.
+
+Record ConcreteTruthConditionDischargeFrontierCertificate : Type := {
+  concrete_truth_condition_discharge_frontier_source_audit :
+      ConcreteTruthConditionInstanceSourceAuditCertificate;
+  concrete_truth_condition_discharge_frontier_source_audit_eq :
+      concrete_truth_condition_discharge_frontier_source_audit =
+        concrete_truth_condition_instance_source_audit_certificate;
+  concrete_truth_condition_discharge_frontier_finite_registered_status :
+      ConcreteTruthConditionDischargeFrontierStatus;
+  concrete_truth_condition_discharge_frontier_finite_registered_status_eq :
+      concrete_truth_condition_discharge_frontier_finite_registered_status =
+        finite_registered_fragment_discharged;
+  concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status :
+      ConcreteTruthConditionDischargeFrontierStatus;
+  concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_eq :
+      concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status =
+        arbitrary_truth_condition_instances_open;
+  concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status :
+      ConcreteTruthConditionDischargeFrontierStatus;
+  concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status_eq :
+      concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status =
+        unregistered_scope_attachment_open;
+  concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status :
+      ConcreteTruthConditionDischargeFrontierStatus;
+  concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status_eq :
+      concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status =
+        complete_front_end_lexical_replacement_open;
+  concrete_truth_condition_discharge_frontier_direct_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes concrete_registered_truth_conditions
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_discharge_frontier_evidence_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_evidence_backed_truth_conditions
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_discharge_frontier_kernel_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        concrete_registered_truth_conditions_from_kernel
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_discharge_frontier_independent_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (independent_registered_clause_spec
+          independent_registered_truth_condition_clause_instances)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_discharge_frontier_constructor_sound :
+      forall A : Type, forall term : A,
+      fully_registered_truth_denotes
+        (registered_truth_condition_constructor_discharge_spec
+          registered_truth_condition_constructor_discharge_certificate)
+        A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_discharge_frontier_model_sound :
+      forall A : Type, forall term : A,
+      concrete_registered_composition_denotes
+        concrete_registered_compositional_model A term ->
+      AtomicClosureTruth A term;
+  concrete_truth_condition_discharge_frontier_example_1_direct_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_discharge_frontier_example_1_evidence_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_discharge_frontier_example_1_kernel_atomic :
+      AtomicClosureTruth PropT example_1;
+  concrete_truth_condition_discharge_frontier_example_2_direct_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_discharge_frontier_example_2_evidence_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_discharge_frontier_example_2_kernel_atomic :
+      AtomicClosureTruth Prop example_2;
+  concrete_truth_condition_discharge_frontier_example_3_direct_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_discharge_frontier_example_3_evidence_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_discharge_frontier_example_3_kernel_atomic :
+      AtomicClosureTruth PropT example_3;
+  concrete_truth_condition_discharge_frontier_example_4_direct_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_discharge_frontier_example_4_evidence_atomic :
+      AtomicClosureTruth PropT example_4;
+  concrete_truth_condition_discharge_frontier_example_4_kernel_atomic :
+      AtomicClosureTruth PropT example_4
+}.
+
+Definition concrete_truth_condition_discharge_frontier_certificate :
+  ConcreteTruthConditionDischargeFrontierCertificate := {|
+  concrete_truth_condition_discharge_frontier_source_audit :=
+    concrete_truth_condition_instance_source_audit_certificate;
+  concrete_truth_condition_discharge_frontier_source_audit_eq := eq_refl;
+  concrete_truth_condition_discharge_frontier_finite_registered_status :=
+    finite_registered_fragment_discharged;
+  concrete_truth_condition_discharge_frontier_finite_registered_status_eq := eq_refl;
+  concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status :=
+    arbitrary_truth_condition_instances_open;
+  concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_eq := eq_refl;
+  concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status :=
+    unregistered_scope_attachment_open;
+  concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status_eq := eq_refl;
+  concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status :=
+    complete_front_end_lexical_replacement_open;
+  concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status_eq := eq_refl;
+  concrete_truth_condition_discharge_frontier_direct_sound :=
+    concrete_truth_condition_instance_source_audit_direct_sound_projected;
+  concrete_truth_condition_discharge_frontier_evidence_sound :=
+    concrete_truth_condition_instance_source_audit_evidence_sound_projected;
+  concrete_truth_condition_discharge_frontier_kernel_sound :=
+    concrete_truth_condition_instance_source_audit_kernel_sound_projected;
+  concrete_truth_condition_discharge_frontier_independent_sound :=
+    concrete_truth_condition_instance_source_audit_independent_sound_projected;
+  concrete_truth_condition_discharge_frontier_constructor_sound :=
+    concrete_truth_condition_instance_source_audit_constructor_sound_projected;
+  concrete_truth_condition_discharge_frontier_model_sound :=
+    concrete_truth_condition_instance_source_audit_model_sound_projected;
+  concrete_truth_condition_discharge_frontier_example_1_direct_atomic := concrete_truth_condition_instance_source_audit_example_1_direct_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_1_evidence_atomic := concrete_truth_condition_instance_source_audit_example_1_evidence_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_1_kernel_atomic := concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_2_direct_atomic := concrete_truth_condition_instance_source_audit_example_2_direct_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_2_evidence_atomic := concrete_truth_condition_instance_source_audit_example_2_evidence_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_2_kernel_atomic := concrete_truth_condition_instance_source_audit_example_2_kernel_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_3_direct_atomic := concrete_truth_condition_instance_source_audit_example_3_direct_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_3_evidence_atomic := concrete_truth_condition_instance_source_audit_example_3_evidence_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_3_kernel_atomic := concrete_truth_condition_instance_source_audit_example_3_kernel_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_4_direct_atomic := concrete_truth_condition_instance_source_audit_example_4_direct_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_4_evidence_atomic := concrete_truth_condition_instance_source_audit_example_4_evidence_atomic_sound;
+  concrete_truth_condition_discharge_frontier_example_4_kernel_atomic := concrete_truth_condition_instance_source_audit_example_4_kernel_atomic_sound
+|}.
+
+Theorem concrete_truth_condition_discharge_frontier_certificate_exists :
+  exists C : ConcreteTruthConditionDischargeFrontierCertificate,
+    C = concrete_truth_condition_discharge_frontier_certificate.
+Proof.
+  exists concrete_truth_condition_discharge_frontier_certificate.
+  reflexivity.
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_source_audit_matches :
+  concrete_truth_condition_discharge_frontier_source_audit
+    concrete_truth_condition_discharge_frontier_certificate =
+  concrete_truth_condition_instance_source_audit_certificate.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_source_audit_eq
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_finite_registered_status_matches :
+  concrete_truth_condition_discharge_frontier_finite_registered_status
+    concrete_truth_condition_discharge_frontier_certificate =
+  finite_registered_fragment_discharged.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_finite_registered_status_eq
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_matches :
+  concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status
+    concrete_truth_condition_discharge_frontier_certificate =
+  arbitrary_truth_condition_instances_open.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_eq
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status_matches :
+  concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status
+    concrete_truth_condition_discharge_frontier_certificate =
+  unregistered_scope_attachment_open.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status_eq
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status_matches :
+  concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status
+    concrete_truth_condition_discharge_frontier_certificate =
+  complete_front_end_lexical_replacement_open.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status_eq
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_direct_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes concrete_registered_truth_conditions
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_direct_sound
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_evidence_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_evidence_backed_truth_conditions
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_evidence_sound
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_kernel_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      concrete_registered_truth_conditions_from_kernel
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_kernel_sound
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_independent_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (independent_registered_clause_spec
+        independent_registered_truth_condition_clause_instances)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_independent_sound
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_constructor_sound_projected :
+  forall A : Type, forall term : A,
+    fully_registered_truth_denotes
+      (registered_truth_condition_constructor_discharge_spec
+        registered_truth_condition_constructor_discharge_certificate)
+      A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_constructor_sound
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_model_sound_projected :
+  forall A : Type, forall term : A,
+    concrete_registered_composition_denotes
+      concrete_registered_compositional_model A term ->
+    AtomicClosureTruth A term.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_model_sound
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_1_direct_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_1_direct_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_1_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_1_evidence_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_1.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_1_kernel_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_2_direct_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_2_direct_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_2_evidence_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_2_evidence_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_2_kernel_atomic_sound :
+  AtomicClosureTruth Prop example_2.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_2_kernel_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_3_direct_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_3_direct_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_3_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_3_evidence_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_3_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_3.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_3_kernel_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_4_direct_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_4_direct_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_4_evidence_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_4_evidence_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
+Theorem concrete_truth_condition_discharge_frontier_example_4_kernel_atomic_sound :
+  AtomicClosureTruth PropT example_4.
+Proof.
+  exact (concrete_truth_condition_discharge_frontier_example_4_kernel_atomic
+    concrete_truth_condition_discharge_frontier_certificate).
+Qed.
+
 Check example_1.
 Check example_1_semantic_preservation_obligation.
 Check example_1_semantic_preservation_obligation_record.
@@ -21172,3 +21512,30 @@ Check concrete_truth_condition_instance_source_audit_example_3_kernel_atomic_sou
 Check concrete_truth_condition_instance_source_audit_example_4_direct_atomic_sound.
 Check concrete_truth_condition_instance_source_audit_example_4_evidence_atomic_sound.
 Check concrete_truth_condition_instance_source_audit_example_4_kernel_atomic_sound.
+Check ConcreteTruthConditionDischargeFrontierStatus.
+Check ConcreteTruthConditionDischargeFrontierCertificate.
+Check concrete_truth_condition_discharge_frontier_certificate.
+Check concrete_truth_condition_discharge_frontier_certificate_exists.
+Check concrete_truth_condition_discharge_frontier_source_audit_matches.
+Check concrete_truth_condition_discharge_frontier_finite_registered_status_matches.
+Check concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_matches.
+Check concrete_truth_condition_discharge_frontier_unregistered_scope_attachment_status_matches.
+Check concrete_truth_condition_discharge_frontier_front_end_lexical_replacement_status_matches.
+Check concrete_truth_condition_discharge_frontier_direct_sound_projected.
+Check concrete_truth_condition_discharge_frontier_evidence_sound_projected.
+Check concrete_truth_condition_discharge_frontier_kernel_sound_projected.
+Check concrete_truth_condition_discharge_frontier_independent_sound_projected.
+Check concrete_truth_condition_discharge_frontier_constructor_sound_projected.
+Check concrete_truth_condition_discharge_frontier_model_sound_projected.
+Check concrete_truth_condition_discharge_frontier_example_1_direct_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_1_evidence_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_2_direct_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_2_evidence_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_2_kernel_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_3_direct_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_3_evidence_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_3_kernel_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_4_direct_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_4_evidence_atomic_sound.
+Check concrete_truth_condition_discharge_frontier_example_4_kernel_atomic_sound.

@@ -21549,6 +21549,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_discharge_"
+                    "frontier_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22116,6 +22124,12 @@ def project_completion_status_payload(
                     "constructor-ledger, and compositional-model routes, "
                     "including the finite atomic concrete-truth ledger, "
                     "without discharging arbitrary unregistered sources. "
+                    "The newest discharge-frontier certificate then gives "
+                    "that distinction a checked status object: the finite "
+                    "registered fragment is marked discharged, while arbitrary "
+                    "truth-condition instances, unregistered scope/attachment, "
+                    "and complete front-end lexical replacement remain marked "
+                    "open. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

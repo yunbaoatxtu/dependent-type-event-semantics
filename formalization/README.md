@@ -709,6 +709,15 @@ constructor-ledger spec, and compositional model. It also rechecks the six
 soundness projections and per-example direct/evidence/kernel
 `AtomicClosureTruth` witnesses, so the finite registered sources can be
 inspected without claiming arbitrary source coverage.
+The discharge-frontier certificate introduces
+`ConcreteTruthConditionDischargeFrontierCertificate` and
+`concrete_truth_condition_discharge_frontier_certificate`. It adds a checked
+status layer over the source audit: the finite registered fragment is marked
+discharged, while arbitrary truth-condition instances, unregistered
+scope/attachment, and complete front-end lexical replacement remain explicitly
+open. The certificate reuses the source-audit route soundness and per-example
+`AtomicClosureTruth` witnesses, so the current proof boundary is visible as a
+typed object rather than only prose in the README.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

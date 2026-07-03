@@ -5384,6 +5384,62 @@ def main() -> None:
             and "Check concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound."
             in coq
         ),
+        "lean concrete truth condition discharge frontier certificate": (
+            "inductive ConcreteTruthConditionDischargeFrontierStatus : Type where"
+            in lean
+            and "structure ConcreteTruthConditionDischargeFrontierCertificate :"
+            in lean
+            and "def concrete_truth_condition_discharge_frontier_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_source_audit_matches :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_finite_registered_status_matches :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_matches :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_direct_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_model_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_example_1_direct_atomic_sound :"
+            in lean
+            and "theorem concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound :"
+            in lean
+            and "#check ConcreteTruthConditionDischargeFrontierCertificate"
+            in lean
+            and "#check concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound"
+            in lean
+        ),
+        "coq concrete truth condition discharge frontier certificate": (
+            "Inductive ConcreteTruthConditionDischargeFrontierStatus : Type :="
+            in coq
+            and "Record ConcreteTruthConditionDischargeFrontierCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_discharge_frontier_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_source_audit_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_finite_registered_status_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_arbitrary_truth_conditions_status_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_direct_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_model_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_example_1_direct_atomic_sound :"
+            in coq
+            and "Theorem concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound :"
+            in coq
+            and "Check ConcreteTruthConditionDischargeFrontierCertificate."
+            in coq
+            and "Check concrete_truth_condition_discharge_frontier_example_1_kernel_atomic_sound."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"
