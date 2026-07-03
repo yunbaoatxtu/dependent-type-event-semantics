@@ -5328,6 +5328,62 @@ def main() -> None:
             and "Check concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic_sound."
             in coq
         ),
+        "lean concrete truth condition instance source audit certificate": (
+            "structure ConcreteTruthConditionInstanceSourceAuditCertificate :"
+            in lean
+            and "def concrete_truth_condition_instance_source_audit_certificate :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_certificate_exists :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_completion_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_atomic_ledger_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_direct_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_constructor_spec_matches :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_direct_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_model_sound_projected :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_example_1_direct_atomic_sound :"
+            in lean
+            and "theorem concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound :"
+            in lean
+            and "#check ConcreteTruthConditionInstanceSourceAuditCertificate"
+            in lean
+            and "#check concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound"
+            in lean
+        ),
+        "coq concrete truth condition instance source audit certificate": (
+            "Record ConcreteTruthConditionInstanceSourceAuditCertificate : Type := {"
+            in coq
+            and "Definition concrete_truth_condition_instance_source_audit_certificate :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_certificate_exists :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_completion_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_atomic_ledger_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_direct_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_constructor_spec_matches :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_direct_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_model_sound_projected :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_example_1_direct_atomic_sound :"
+            in coq
+            and "Theorem concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound :"
+            in coq
+            and "Check ConcreteTruthConditionInstanceSourceAuditCertificate."
+            in coq
+            and "Check concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound."
+            in coq
+        ),
         "lean registered lexical truth model bridge": (
             "structure RegisteredLexicalTruthModel : Type where" in lean
             and "registered_lexical_model_denotes : (A : Type) -> A -> Prop"

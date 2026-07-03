@@ -13246,6 +13246,378 @@ theorem concrete_truth_condition_registered_fragment_instance_completion_example
   exact concrete_truth_condition_registered_fragment_instance_completion_certificate.
     concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic
 
+structure ConcreteTruthConditionInstanceSourceAuditCertificate : Type where
+  concrete_truth_condition_instance_source_audit_completion :
+      ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate
+  concrete_truth_condition_instance_source_audit_completion_eq :
+      concrete_truth_condition_instance_source_audit_completion =
+        concrete_truth_condition_registered_fragment_instance_completion_certificate
+  concrete_truth_condition_instance_source_audit_supply :
+      ConcreteTruthConditionInstanceSupplyCertificate
+  concrete_truth_condition_instance_source_audit_supply_eq :
+      concrete_truth_condition_instance_source_audit_supply =
+        concrete_truth_condition_instance_supply_certificate
+  concrete_truth_condition_instance_source_audit_provider_suite :
+      ConcreteTruthConditionProviderClassInstanceSuiteCertificate
+  concrete_truth_condition_instance_source_audit_provider_suite_eq :
+      concrete_truth_condition_instance_source_audit_provider_suite =
+        concrete_truth_condition_provider_class_instance_suite_certificate
+  concrete_truth_condition_instance_source_audit_model_suite :
+      ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate
+  concrete_truth_condition_instance_source_audit_model_suite_eq :
+      concrete_truth_condition_instance_source_audit_model_suite =
+        concrete_truth_condition_independent_model_candidate_class_suite_certificate
+  concrete_truth_condition_instance_source_audit_atomic_ledger :
+      FiniteRegisteredAtomicConcreteTruthInstanceLedger
+  concrete_truth_condition_instance_source_audit_atomic_ledger_eq :
+      concrete_truth_condition_instance_source_audit_atomic_ledger =
+        finite_registered_atomic_concrete_truth_instance_ledger
+  concrete_truth_condition_instance_source_audit_direct_spec :
+      FullyRegisteredTruthConditionSpec
+  concrete_truth_condition_instance_source_audit_direct_spec_eq :
+      concrete_truth_condition_instance_source_audit_direct_spec =
+        concrete_registered_truth_conditions
+  concrete_truth_condition_instance_source_audit_evidence_spec :
+      FullyRegisteredTruthConditionSpec
+  concrete_truth_condition_instance_source_audit_evidence_spec_eq :
+      concrete_truth_condition_instance_source_audit_evidence_spec =
+        concrete_registered_evidence_backed_truth_conditions
+  concrete_truth_condition_instance_source_audit_kernel_spec :
+      FullyRegisteredTruthConditionSpec
+  concrete_truth_condition_instance_source_audit_kernel_spec_eq :
+      concrete_truth_condition_instance_source_audit_kernel_spec =
+        concrete_registered_truth_conditions_from_kernel
+  concrete_truth_condition_instance_source_audit_independent_spec :
+      FullyRegisteredTruthConditionSpec
+  concrete_truth_condition_instance_source_audit_independent_spec_eq :
+      concrete_truth_condition_instance_source_audit_independent_spec =
+        independent_registered_truth_condition_clause_instances.
+          independent_registered_clause_spec
+  concrete_truth_condition_instance_source_audit_constructor_spec :
+      FullyRegisteredTruthConditionSpec
+  concrete_truth_condition_instance_source_audit_constructor_spec_eq :
+      concrete_truth_condition_instance_source_audit_constructor_spec =
+        registered_truth_condition_constructor_discharge_certificate.
+          registered_truth_condition_constructor_discharge_spec
+  concrete_truth_condition_instance_source_audit_model :
+      ConcreteRegisteredCompositionalModel
+  concrete_truth_condition_instance_source_audit_model_eq :
+      concrete_truth_condition_instance_source_audit_model =
+        concrete_registered_compositional_model
+  concrete_truth_condition_instance_source_audit_direct_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_truth_conditions.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_instance_source_audit_evidence_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_evidence_backed_truth_conditions.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_instance_source_audit_kernel_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_truth_conditions_from_kernel.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_instance_source_audit_independent_sound :
+      (A : Type) -> (term : A) ->
+      independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_instance_source_audit_constructor_sound :
+      (A : Type) -> (term : A) ->
+      registered_truth_condition_constructor_discharge_certificate.
+      registered_truth_condition_constructor_discharge_spec.
+      fully_registered_truth_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_instance_source_audit_model_sound :
+      (A : Type) -> (term : A) ->
+      concrete_registered_compositional_model.
+      concrete_registered_composition_denotes A term ->
+      AtomicClosureTruth A term
+  concrete_truth_condition_instance_source_audit_example_1_direct_atomic :
+      AtomicClosureTruth PropT example_1
+  concrete_truth_condition_instance_source_audit_example_1_evidence_atomic :
+      AtomicClosureTruth PropT example_1
+  concrete_truth_condition_instance_source_audit_example_1_kernel_atomic :
+      AtomicClosureTruth PropT example_1
+  concrete_truth_condition_instance_source_audit_example_2_direct_atomic :
+      AtomicClosureTruth Prop example_2
+  concrete_truth_condition_instance_source_audit_example_2_evidence_atomic :
+      AtomicClosureTruth Prop example_2
+  concrete_truth_condition_instance_source_audit_example_2_kernel_atomic :
+      AtomicClosureTruth Prop example_2
+  concrete_truth_condition_instance_source_audit_example_3_direct_atomic :
+      AtomicClosureTruth PropT example_3
+  concrete_truth_condition_instance_source_audit_example_3_evidence_atomic :
+      AtomicClosureTruth PropT example_3
+  concrete_truth_condition_instance_source_audit_example_3_kernel_atomic :
+      AtomicClosureTruth PropT example_3
+  concrete_truth_condition_instance_source_audit_example_4_direct_atomic :
+      AtomicClosureTruth PropT example_4
+  concrete_truth_condition_instance_source_audit_example_4_evidence_atomic :
+      AtomicClosureTruth PropT example_4
+  concrete_truth_condition_instance_source_audit_example_4_kernel_atomic :
+      AtomicClosureTruth PropT example_4
+
+def concrete_truth_condition_instance_source_audit_certificate :
+    ConcreteTruthConditionInstanceSourceAuditCertificate := {
+  concrete_truth_condition_instance_source_audit_completion :=
+    concrete_truth_condition_registered_fragment_instance_completion_certificate,
+  concrete_truth_condition_instance_source_audit_completion_eq := rfl,
+  concrete_truth_condition_instance_source_audit_supply :=
+    concrete_truth_condition_instance_supply_certificate,
+  concrete_truth_condition_instance_source_audit_supply_eq := rfl,
+  concrete_truth_condition_instance_source_audit_provider_suite :=
+    concrete_truth_condition_provider_class_instance_suite_certificate,
+  concrete_truth_condition_instance_source_audit_provider_suite_eq := rfl,
+  concrete_truth_condition_instance_source_audit_model_suite :=
+    concrete_truth_condition_independent_model_candidate_class_suite_certificate,
+  concrete_truth_condition_instance_source_audit_model_suite_eq := rfl,
+  concrete_truth_condition_instance_source_audit_atomic_ledger :=
+    finite_registered_atomic_concrete_truth_instance_ledger,
+  concrete_truth_condition_instance_source_audit_atomic_ledger_eq := rfl,
+  concrete_truth_condition_instance_source_audit_direct_spec :=
+    concrete_registered_truth_conditions,
+  concrete_truth_condition_instance_source_audit_direct_spec_eq := rfl,
+  concrete_truth_condition_instance_source_audit_evidence_spec :=
+    concrete_registered_evidence_backed_truth_conditions,
+  concrete_truth_condition_instance_source_audit_evidence_spec_eq := rfl,
+  concrete_truth_condition_instance_source_audit_kernel_spec :=
+    concrete_registered_truth_conditions_from_kernel,
+  concrete_truth_condition_instance_source_audit_kernel_spec_eq := rfl,
+  concrete_truth_condition_instance_source_audit_independent_spec :=
+    independent_registered_truth_condition_clause_instances.
+      independent_registered_clause_spec,
+  concrete_truth_condition_instance_source_audit_independent_spec_eq := rfl,
+  concrete_truth_condition_instance_source_audit_constructor_spec :=
+    registered_truth_condition_constructor_discharge_certificate.
+      registered_truth_condition_constructor_discharge_spec,
+  concrete_truth_condition_instance_source_audit_constructor_spec_eq := rfl,
+  concrete_truth_condition_instance_source_audit_model :=
+    concrete_registered_compositional_model,
+  concrete_truth_condition_instance_source_audit_model_eq := rfl,
+  concrete_truth_condition_instance_source_audit_direct_sound :=
+    concrete_truth_condition_registered_fragment_instance_completion_direct_sound_projected,
+  concrete_truth_condition_instance_source_audit_evidence_sound :=
+    concrete_truth_condition_registered_fragment_instance_completion_evidence_sound_projected,
+  concrete_truth_condition_instance_source_audit_kernel_sound :=
+    concrete_truth_condition_registered_fragment_instance_completion_kernel_sound_projected,
+  concrete_truth_condition_instance_source_audit_independent_sound :=
+    concrete_truth_condition_registered_fragment_instance_completion_independent_sound_projected,
+  concrete_truth_condition_instance_source_audit_constructor_sound :=
+    concrete_truth_condition_registered_fragment_instance_completion_constructor_sound_projected,
+  concrete_truth_condition_instance_source_audit_model_sound :=
+    concrete_truth_condition_registered_fragment_instance_completion_model_sound_projected,
+  concrete_truth_condition_instance_source_audit_example_1_direct_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_1_direct_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_1_evidence_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_1_evidence_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_1_kernel_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_1_kernel_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_2_direct_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_2_direct_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_2_evidence_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_2_evidence_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_2_kernel_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_2_kernel_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_3_direct_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_3_direct_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_3_evidence_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_3_evidence_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_3_kernel_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_3_kernel_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_4_direct_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_4_evidence_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic_sound,
+  concrete_truth_condition_instance_source_audit_example_4_kernel_atomic := concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic_sound
+}
+
+theorem concrete_truth_condition_instance_source_audit_certificate_exists :
+    Exists (fun C : ConcreteTruthConditionInstanceSourceAuditCertificate =>
+      C = concrete_truth_condition_instance_source_audit_certificate) := by
+  exact Exists.intro concrete_truth_condition_instance_source_audit_certificate rfl
+
+theorem concrete_truth_condition_instance_source_audit_completion_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_completion =
+        concrete_truth_condition_registered_fragment_instance_completion_certificate := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_completion_eq
+
+theorem concrete_truth_condition_instance_source_audit_supply_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_supply =
+        concrete_truth_condition_instance_supply_certificate := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_supply_eq
+
+theorem concrete_truth_condition_instance_source_audit_provider_suite_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_provider_suite =
+        concrete_truth_condition_provider_class_instance_suite_certificate := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_provider_suite_eq
+
+theorem concrete_truth_condition_instance_source_audit_model_suite_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_model_suite =
+        concrete_truth_condition_independent_model_candidate_class_suite_certificate := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_model_suite_eq
+
+theorem concrete_truth_condition_instance_source_audit_atomic_ledger_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_atomic_ledger =
+        finite_registered_atomic_concrete_truth_instance_ledger := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_atomic_ledger_eq
+
+theorem concrete_truth_condition_instance_source_audit_direct_spec_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_direct_spec =
+        concrete_registered_truth_conditions := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_direct_spec_eq
+
+theorem concrete_truth_condition_instance_source_audit_evidence_spec_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_evidence_spec =
+        concrete_registered_evidence_backed_truth_conditions := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_evidence_spec_eq
+
+theorem concrete_truth_condition_instance_source_audit_kernel_spec_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_kernel_spec =
+        concrete_registered_truth_conditions_from_kernel := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_kernel_spec_eq
+
+theorem concrete_truth_condition_instance_source_audit_independent_spec_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_independent_spec =
+        independent_registered_truth_condition_clause_instances.
+          independent_registered_clause_spec := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_independent_spec_eq
+
+theorem concrete_truth_condition_instance_source_audit_constructor_spec_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_constructor_spec =
+        registered_truth_condition_constructor_discharge_certificate.
+          registered_truth_condition_constructor_discharge_spec := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_constructor_spec_eq
+
+theorem concrete_truth_condition_instance_source_audit_model_matches :
+    concrete_truth_condition_instance_source_audit_certificate.
+      concrete_truth_condition_instance_source_audit_model =
+        concrete_registered_compositional_model := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_model_eq
+
+theorem concrete_truth_condition_instance_source_audit_direct_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_truth_conditions.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_direct_sound
+
+theorem concrete_truth_condition_instance_source_audit_evidence_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_evidence_backed_truth_conditions.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_evidence_sound
+
+theorem concrete_truth_condition_instance_source_audit_kernel_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_truth_conditions_from_kernel.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_kernel_sound
+
+theorem concrete_truth_condition_instance_source_audit_independent_sound_projected :
+    (A : Type) -> (term : A) ->
+    independent_registered_truth_condition_clause_instances.
+    independent_registered_clause_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_independent_sound
+
+theorem concrete_truth_condition_instance_source_audit_constructor_sound_projected :
+    (A : Type) -> (term : A) ->
+    registered_truth_condition_constructor_discharge_certificate.
+    registered_truth_condition_constructor_discharge_spec.
+    fully_registered_truth_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_constructor_sound
+
+theorem concrete_truth_condition_instance_source_audit_model_sound_projected :
+    (A : Type) -> (term : A) ->
+    concrete_registered_compositional_model.
+    concrete_registered_composition_denotes A term ->
+    AtomicClosureTruth A term := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_model_sound
+
+theorem concrete_truth_condition_instance_source_audit_example_1_direct_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_1_direct_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_1_evidence_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_1_evidence_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound :
+    AtomicClosureTruth PropT example_1 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_1_kernel_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_2_direct_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_2_direct_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_2_evidence_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_2_evidence_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_2_kernel_atomic_sound :
+    AtomicClosureTruth Prop example_2 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_2_kernel_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_3_direct_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_3_direct_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_3_evidence_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_3_evidence_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_3_kernel_atomic_sound :
+    AtomicClosureTruth PropT example_3 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_3_kernel_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_4_direct_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_4_direct_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_4_evidence_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_4_evidence_atomic
+
+theorem concrete_truth_condition_instance_source_audit_example_4_kernel_atomic_sound :
+    AtomicClosureTruth PropT example_4 := by
+  exact concrete_truth_condition_instance_source_audit_certificate.
+    concrete_truth_condition_instance_source_audit_example_4_kernel_atomic
+
 #check example_1
 #check example_1_semantic_preservation_obligation
 #check example_1_semantic_preservation_obligation_record
@@ -14575,3 +14947,35 @@ theorem concrete_truth_condition_registered_fragment_instance_completion_example
 #check concrete_truth_condition_registered_fragment_instance_completion_example_4_direct_atomic_sound
 #check concrete_truth_condition_registered_fragment_instance_completion_example_4_evidence_atomic_sound
 #check concrete_truth_condition_registered_fragment_instance_completion_example_4_kernel_atomic_sound
+#check ConcreteTruthConditionInstanceSourceAuditCertificate
+#check concrete_truth_condition_instance_source_audit_certificate
+#check concrete_truth_condition_instance_source_audit_certificate_exists
+#check concrete_truth_condition_instance_source_audit_completion_matches
+#check concrete_truth_condition_instance_source_audit_supply_matches
+#check concrete_truth_condition_instance_source_audit_provider_suite_matches
+#check concrete_truth_condition_instance_source_audit_model_suite_matches
+#check concrete_truth_condition_instance_source_audit_atomic_ledger_matches
+#check concrete_truth_condition_instance_source_audit_direct_spec_matches
+#check concrete_truth_condition_instance_source_audit_evidence_spec_matches
+#check concrete_truth_condition_instance_source_audit_kernel_spec_matches
+#check concrete_truth_condition_instance_source_audit_independent_spec_matches
+#check concrete_truth_condition_instance_source_audit_constructor_spec_matches
+#check concrete_truth_condition_instance_source_audit_model_matches
+#check concrete_truth_condition_instance_source_audit_direct_sound_projected
+#check concrete_truth_condition_instance_source_audit_evidence_sound_projected
+#check concrete_truth_condition_instance_source_audit_kernel_sound_projected
+#check concrete_truth_condition_instance_source_audit_independent_sound_projected
+#check concrete_truth_condition_instance_source_audit_constructor_sound_projected
+#check concrete_truth_condition_instance_source_audit_model_sound_projected
+#check concrete_truth_condition_instance_source_audit_example_1_direct_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_1_evidence_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_1_kernel_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_2_direct_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_2_evidence_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_2_kernel_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_3_direct_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_3_evidence_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_3_kernel_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_4_direct_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_4_evidence_atomic_sound
+#check concrete_truth_condition_instance_source_audit_example_4_kernel_atomic_sound

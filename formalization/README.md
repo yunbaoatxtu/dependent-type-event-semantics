@@ -699,6 +699,16 @@ example package, independent model-candidate class suite, and model-candidate
 example package into one checked boundary, then reprojects direct,
 evidence-backed, kernel-induced, independent-suite, constructor-ledger, and
 compositional-model soundness for the registered fragment.
+The instance-source audit certificate introduces
+`ConcreteTruthConditionInstanceSourceAuditCertificate` and
+`concrete_truth_condition_instance_source_audit_certificate`. It ties the
+registered-fragment completion certificate back to the concrete supply,
+provider suite, independent model-candidate suite, finite atomic concrete-truth
+ledger, direct/evidence/kernel specs, independent-suite spec,
+constructor-ledger spec, and compositional model. It also rechecks the six
+soundness projections and per-example direct/evidence/kernel
+`AtomicClosureTruth` witnesses, so the finite registered sources can be
+inspected without claiming arbitrary source coverage.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

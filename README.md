@@ -1805,6 +1805,18 @@ independent-suite, constructor-ledger, and compositional-model soundness, and
 stores direct/evidence/kernel `AtomicClosureTruth` witnesses for every exported
 example. It is a completion certificate for the finite registered instance
 supply, not for arbitrary English or unregistered lexical semantics.
+The next verified objective
+`coq_concrete_truth_condition_instance_source_audit_certificate` introduces
+`ConcreteTruthConditionInstanceSourceAuditCertificate`. This audit record
+pins the registered-fragment completion certificate to the concrete instance
+supply, provider suite, independent model-candidate suite, finite atomic
+concrete-truth ledger, direct spec, evidence-backed spec, kernel-induced spec,
+independent-suite spec, constructor-ledger spec, and compositional model. It
+also reprojects the six soundness routes and the direct/evidence/kernel
+`AtomicClosureTruth` witnesses for every exported example. Its purpose is
+source identification for the finite registered fragment, not a proof of
+arbitrary unregistered lexical, temporal, causal, quantificational, or modifier
+truth conditions.
 The open blocker remains
 `concrete_truth_condition_instances_unproved`; the next Coq stage is
 `provide_concrete_truth_condition_instances`, which must supply independently

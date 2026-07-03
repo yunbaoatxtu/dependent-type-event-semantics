@@ -21541,6 +21541,14 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": (
+                    "coq_concrete_truth_condition_instance_source_"
+                    "audit_certificate"
+                ),
+                "status": "verified",
+                "evidence": "scripts/check_formalization.py",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22102,6 +22110,12 @@ def project_completion_status_payload(
                     "model soundness, plus per-example direct/evidence/kernel "
                     "AtomicClosureTruth witnesses, while keeping the claim "
                     "restricted to the finite registered fragment. "
+                    "The newest instance-source audit certificate then "
+                    "identifies the finite registered sources for direct, "
+                    "evidence-backed, kernel-induced, independent-suite, "
+                    "constructor-ledger, and compositional-model routes, "
+                    "including the finite atomic concrete-truth ledger, "
+                    "without discharging arbitrary unregistered sources. "
                     "These "
                     "stages prove the kernel wiring and structural instance "
                     "paths, but the remaining deep proof work is still to "

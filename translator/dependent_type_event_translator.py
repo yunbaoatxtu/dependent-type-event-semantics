@@ -33325,6 +33325,574 @@ def concrete_truth_condition_registered_fragment_instance_completion_certificate
     return lines
 
 
+def concrete_truth_condition_instance_source_audit_certificate_lines(
+    results: list[dict[str, Any]],
+    target: str,
+) -> list[str]:
+    """Audit the finite registered sources for concrete truth-condition instances."""
+
+    match_fields = (
+        (
+            "completion",
+            "ConcreteTruthConditionRegisteredFragmentInstanceCompletionCertificate",
+            "concrete_truth_condition_registered_fragment_instance_completion_certificate",
+        ),
+        (
+            "supply",
+            "ConcreteTruthConditionInstanceSupplyCertificate",
+            "concrete_truth_condition_instance_supply_certificate",
+        ),
+        (
+            "provider_suite",
+            "ConcreteTruthConditionProviderClassInstanceSuiteCertificate",
+            "concrete_truth_condition_provider_class_instance_suite_certificate",
+        ),
+        (
+            "model_suite",
+            "ConcreteTruthConditionIndependentModelCandidateClassSuiteCertificate",
+            "concrete_truth_condition_independent_model_candidate_class_suite_certificate",
+        ),
+        (
+            "atomic_ledger",
+            "FiniteRegisteredAtomicConcreteTruthInstanceLedger",
+            "finite_registered_atomic_concrete_truth_instance_ledger",
+        ),
+        ("direct_spec", "FullyRegisteredTruthConditionSpec", "concrete_registered_truth_conditions"),
+        (
+            "evidence_spec",
+            "FullyRegisteredTruthConditionSpec",
+            "concrete_registered_evidence_backed_truth_conditions",
+        ),
+        (
+            "kernel_spec",
+            "FullyRegisteredTruthConditionSpec",
+            "concrete_registered_truth_conditions_from_kernel",
+        ),
+        (
+            "independent_spec",
+            "FullyRegisteredTruthConditionSpec",
+            "independent_registered_truth_condition_clause_instances",
+        ),
+        (
+            "constructor_spec",
+            "FullyRegisteredTruthConditionSpec",
+            "registered_truth_condition_constructor_discharge_certificate",
+        ),
+        (
+            "model",
+            "ConcreteRegisteredCompositionalModel",
+            "concrete_registered_compositional_model",
+        ),
+    )
+
+    if target == "lean":
+        lines = ["structure ConcreteTruthConditionInstanceSourceAuditCertificate : Type where"]
+        for field, type_name, value in match_fields:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_instance_source_audit_{field} :",
+                    f"      {type_name}",
+                    f"  concrete_truth_condition_instance_source_audit_{field}_eq :",
+                    f"      concrete_truth_condition_instance_source_audit_{field} =",
+                ]
+            )
+            if field == "independent_spec":
+                lines.extend(
+                    [
+                        "        independent_registered_truth_condition_clause_instances.",
+                        "          independent_registered_clause_spec",
+                    ]
+                )
+            elif field == "constructor_spec":
+                lines.extend(
+                    [
+                        "        registered_truth_condition_constructor_discharge_certificate.",
+                        "          registered_truth_condition_constructor_discharge_spec",
+                    ]
+                )
+            else:
+                lines.append(f"        {value}")
+        lines.extend(
+            [
+                "  concrete_truth_condition_instance_source_audit_direct_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_truth_conditions.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_instance_source_audit_evidence_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_evidence_backed_truth_conditions.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_instance_source_audit_kernel_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_truth_conditions_from_kernel.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_instance_source_audit_independent_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      independent_registered_truth_condition_clause_instances.",
+                "      independent_registered_clause_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_instance_source_audit_constructor_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      registered_truth_condition_constructor_discharge_certificate.",
+                "      registered_truth_condition_constructor_discharge_spec.",
+                "      fully_registered_truth_denotes A term ->",
+                "      AtomicClosureTruth A term",
+                "  concrete_truth_condition_instance_source_audit_model_sound :",
+                "      (A : Type) -> (term : A) ->",
+                "      concrete_registered_compositional_model.",
+                "      concrete_registered_composition_denotes A term ->",
+                "      AtomicClosureTruth A term",
+            ]
+        )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            for route in ("direct", "evidence", "kernel"):
+                lines.extend(
+                    [
+                        "  concrete_truth_condition_instance_source_audit_"
+                        f"example_{idx}_{route}_atomic :",
+                        f"      AtomicClosureTruth {annotation} example_{idx}",
+                    ]
+                )
+        lines.extend(
+            [
+                "",
+                "def concrete_truth_condition_instance_source_audit_certificate :",
+                "    ConcreteTruthConditionInstanceSourceAuditCertificate := {",
+            ]
+        )
+        for field, _, value in match_fields:
+            lines.extend(
+                [
+                    f"  concrete_truth_condition_instance_source_audit_{field} :=",
+                ]
+            )
+            if field == "independent_spec":
+                lines.extend(
+                    [
+                        "    independent_registered_truth_condition_clause_instances.",
+                        "      independent_registered_clause_spec,",
+                    ]
+                )
+            elif field == "constructor_spec":
+                lines.extend(
+                    [
+                        "    registered_truth_condition_constructor_discharge_certificate.",
+                        "      registered_truth_condition_constructor_discharge_spec,",
+                    ]
+                )
+            else:
+                lines.append(f"    {value},")
+            lines.append(f"  concrete_truth_condition_instance_source_audit_{field}_eq := rfl,")
+        lines.extend(
+            [
+                "  concrete_truth_condition_instance_source_audit_direct_sound :=",
+                "    concrete_truth_condition_registered_fragment_instance_completion_direct_sound_projected,",
+                "  concrete_truth_condition_instance_source_audit_evidence_sound :=",
+                "    concrete_truth_condition_registered_fragment_instance_completion_evidence_sound_projected,",
+                "  concrete_truth_condition_instance_source_audit_kernel_sound :=",
+                "    concrete_truth_condition_registered_fragment_instance_completion_kernel_sound_projected,",
+                "  concrete_truth_condition_instance_source_audit_independent_sound :=",
+                "    concrete_truth_condition_registered_fragment_instance_completion_independent_sound_projected,",
+                "  concrete_truth_condition_instance_source_audit_constructor_sound :=",
+                "    concrete_truth_condition_registered_fragment_instance_completion_constructor_sound_projected,",
+                "  concrete_truth_condition_instance_source_audit_model_sound :=",
+                "    concrete_truth_condition_registered_fragment_instance_completion_model_sound_projected,",
+            ]
+        )
+        assignments: list[tuple[str, str]] = []
+        for idx in range(1, len(results) + 1):
+            for route in ("direct", "evidence", "kernel"):
+                assignments.append(
+                    (
+                        "concrete_truth_condition_instance_source_audit_"
+                        f"example_{idx}_{route}_atomic",
+                        "concrete_truth_condition_registered_fragment_instance_completion_"
+                        f"example_{idx}_{route}_atomic_sound",
+                    )
+                )
+        for index, (field, value) in enumerate(assignments):
+            suffix = "," if index < len(assignments) - 1 else ""
+            lines.append(f"  {field} := {value}{suffix}")
+        lines.extend(
+            [
+                "}",
+                "",
+                "theorem concrete_truth_condition_instance_source_audit_certificate_exists :",
+                "    Exists (fun C : ConcreteTruthConditionInstanceSourceAuditCertificate =>",
+                "      C = concrete_truth_condition_instance_source_audit_certificate) := by",
+                "  exact Exists.intro concrete_truth_condition_instance_source_audit_certificate rfl",
+            ]
+        )
+        for field, _, value in match_fields:
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_instance_source_audit_"
+                    f"{field}_matches :",
+                    "    concrete_truth_condition_instance_source_audit_certificate.",
+                    f"      concrete_truth_condition_instance_source_audit_{field} =",
+                ]
+            )
+            if field == "independent_spec":
+                lines.extend(
+                    [
+                        "        independent_registered_truth_condition_clause_instances.",
+                        "          independent_registered_clause_spec := by",
+                    ]
+                )
+            elif field == "constructor_spec":
+                lines.extend(
+                    [
+                        "        registered_truth_condition_constructor_discharge_certificate.",
+                        "          registered_truth_condition_constructor_discharge_spec := by",
+                    ]
+                )
+            else:
+                lines.append(f"        {value} := by")
+            lines.extend(
+                [
+                    "  exact concrete_truth_condition_instance_source_audit_certificate.",
+                    f"    concrete_truth_condition_instance_source_audit_{field}_eq",
+                ]
+            )
+        for projection in (
+            "direct",
+            "evidence",
+            "kernel",
+            "independent",
+            "constructor",
+            "model",
+        ):
+            lines.extend(
+                [
+                    "",
+                    "theorem concrete_truth_condition_instance_source_audit_"
+                    f"{projection}_sound_projected :",
+                    "    (A : Type) -> (term : A) ->",
+                ]
+            )
+            if projection == "direct":
+                lines.extend(
+                    [
+                        "    concrete_registered_truth_conditions.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "evidence":
+                lines.extend(
+                    [
+                        "    concrete_registered_evidence_backed_truth_conditions.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "kernel":
+                lines.extend(
+                    [
+                        "    concrete_registered_truth_conditions_from_kernel.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "independent":
+                lines.extend(
+                    [
+                        "    independent_registered_truth_condition_clause_instances.",
+                        "    independent_registered_clause_spec.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            elif projection == "constructor":
+                lines.extend(
+                    [
+                        "    registered_truth_condition_constructor_discharge_certificate.",
+                        "    registered_truth_condition_constructor_discharge_spec.",
+                        "    fully_registered_truth_denotes A term ->",
+                    ]
+                )
+            else:
+                lines.extend(
+                    [
+                        "    concrete_registered_compositional_model.",
+                        "    concrete_registered_composition_denotes A term ->",
+                    ]
+                )
+            lines.extend(
+                [
+                    "    AtomicClosureTruth A term := by",
+                    "  exact concrete_truth_condition_instance_source_audit_certificate.",
+                    f"    concrete_truth_condition_instance_source_audit_{projection}_sound",
+                ]
+            )
+        for idx, result in enumerate(results, 1):
+            annotation = export_result_type(result["ast"])
+            for route in ("direct", "evidence", "kernel"):
+                lines.extend(
+                    [
+                        "",
+                        "theorem concrete_truth_condition_instance_source_audit_"
+                        f"example_{idx}_{route}_atomic_sound :",
+                        f"    AtomicClosureTruth {annotation} example_{idx} := by",
+                        "  exact concrete_truth_condition_instance_source_audit_certificate.",
+                        "    concrete_truth_condition_instance_source_audit_"
+                        f"example_{idx}_{route}_atomic",
+                    ]
+                )
+        return lines
+
+    lines = ["Record ConcreteTruthConditionInstanceSourceAuditCertificate : Type := {"]
+    for field, type_name, value in match_fields:
+        lines.extend(
+            [
+                f"  concrete_truth_condition_instance_source_audit_{field} :",
+                f"      {type_name};",
+                f"  concrete_truth_condition_instance_source_audit_{field}_eq :",
+                f"      concrete_truth_condition_instance_source_audit_{field} =",
+            ]
+        )
+        if field == "independent_spec":
+            lines.extend(
+                [
+                    "        (independent_registered_clause_spec",
+                    "          independent_registered_truth_condition_clause_instances);",
+                ]
+            )
+        elif field == "constructor_spec":
+            lines.extend(
+                [
+                    "        (registered_truth_condition_constructor_discharge_spec",
+                    "          registered_truth_condition_constructor_discharge_certificate);",
+                ]
+            )
+        else:
+            lines.append(f"        {value};")
+    lines.extend(
+        [
+            "  concrete_truth_condition_instance_source_audit_direct_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes concrete_registered_truth_conditions",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_instance_source_audit_evidence_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        concrete_registered_evidence_backed_truth_conditions",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_instance_source_audit_kernel_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        concrete_registered_truth_conditions_from_kernel",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_instance_source_audit_independent_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        (independent_registered_clause_spec",
+            "          independent_registered_truth_condition_clause_instances)",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_instance_source_audit_constructor_sound :",
+            "      forall A : Type, forall term : A,",
+            "      fully_registered_truth_denotes",
+            "        (registered_truth_condition_constructor_discharge_spec",
+            "          registered_truth_condition_constructor_discharge_certificate)",
+            "        A term ->",
+            "      AtomicClosureTruth A term;",
+            "  concrete_truth_condition_instance_source_audit_model_sound :",
+            "      forall A : Type, forall term : A,",
+            "      concrete_registered_composition_denotes",
+            "        concrete_registered_compositional_model A term ->",
+            "      AtomicClosureTruth A term;",
+        ]
+    )
+    field_lines: list[str] = []
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        for route in ("direct", "evidence", "kernel"):
+            field_lines.extend(
+                [
+                    "  concrete_truth_condition_instance_source_audit_"
+                    f"example_{idx}_{route}_atomic :",
+                    f"      AtomicClosureTruth {annotation} example_{idx};",
+                ]
+            )
+    if field_lines:
+        field_lines[-1] = field_lines[-1].rstrip(";")
+    lines.extend(field_lines)
+    lines.extend(
+        [
+            "}.",
+            "",
+            "Definition concrete_truth_condition_instance_source_audit_certificate :",
+            "  ConcreteTruthConditionInstanceSourceAuditCertificate := {|",
+        ]
+    )
+    for field, _, value in match_fields:
+        lines.append(f"  concrete_truth_condition_instance_source_audit_{field} :=")
+        if field == "independent_spec":
+            lines.extend(
+                [
+                    "    (independent_registered_clause_spec",
+                    "      independent_registered_truth_condition_clause_instances);",
+                ]
+            )
+        elif field == "constructor_spec":
+            lines.extend(
+                [
+                    "    (registered_truth_condition_constructor_discharge_spec",
+                    "      registered_truth_condition_constructor_discharge_certificate);",
+                ]
+            )
+        else:
+            lines.append(f"    {value};")
+        lines.append(f"  concrete_truth_condition_instance_source_audit_{field}_eq := eq_refl;")
+    lines.extend(
+        [
+            "  concrete_truth_condition_instance_source_audit_direct_sound :=",
+            "    concrete_truth_condition_registered_fragment_instance_completion_direct_sound_projected;",
+            "  concrete_truth_condition_instance_source_audit_evidence_sound :=",
+            "    concrete_truth_condition_registered_fragment_instance_completion_evidence_sound_projected;",
+            "  concrete_truth_condition_instance_source_audit_kernel_sound :=",
+            "    concrete_truth_condition_registered_fragment_instance_completion_kernel_sound_projected;",
+            "  concrete_truth_condition_instance_source_audit_independent_sound :=",
+            "    concrete_truth_condition_registered_fragment_instance_completion_independent_sound_projected;",
+            "  concrete_truth_condition_instance_source_audit_constructor_sound :=",
+            "    concrete_truth_condition_registered_fragment_instance_completion_constructor_sound_projected;",
+            "  concrete_truth_condition_instance_source_audit_model_sound :=",
+            "    concrete_truth_condition_registered_fragment_instance_completion_model_sound_projected;",
+        ]
+    )
+    assignments: list[tuple[str, str]] = []
+    for idx in range(1, len(results) + 1):
+        for route in ("direct", "evidence", "kernel"):
+            assignments.append(
+                (
+                    "concrete_truth_condition_instance_source_audit_"
+                    f"example_{idx}_{route}_atomic",
+                    "concrete_truth_condition_registered_fragment_instance_completion_"
+                    f"example_{idx}_{route}_atomic_sound",
+                )
+            )
+    for index, (field, value) in enumerate(assignments):
+        suffix = ";" if index < len(assignments) - 1 else ""
+        lines.append(f"  {field} := {value}{suffix}")
+    lines.extend(
+        [
+            "|}.",
+            "",
+            "Theorem concrete_truth_condition_instance_source_audit_certificate_exists :",
+            "  exists C : ConcreteTruthConditionInstanceSourceAuditCertificate,",
+            "    C = concrete_truth_condition_instance_source_audit_certificate.",
+            "Proof.",
+            "  exists concrete_truth_condition_instance_source_audit_certificate.",
+            "  reflexivity.",
+            "Qed.",
+        ]
+    )
+    for field, _, value in match_fields:
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_instance_source_audit_"
+                f"{field}_matches :",
+                f"  concrete_truth_condition_instance_source_audit_{field}",
+                "    concrete_truth_condition_instance_source_audit_certificate =",
+            ]
+        )
+        if field == "independent_spec":
+            lines.extend(
+                [
+                    "  (independent_registered_clause_spec",
+                    "    independent_registered_truth_condition_clause_instances).",
+                ]
+            )
+        elif field == "constructor_spec":
+            lines.extend(
+                [
+                    "  (registered_truth_condition_constructor_discharge_spec",
+                    "    registered_truth_condition_constructor_discharge_certificate).",
+                ]
+            )
+        else:
+            lines.append(f"  {value}.")
+        lines.extend(
+            [
+                "Proof.",
+                f"  exact (concrete_truth_condition_instance_source_audit_{field}_eq",
+                "    concrete_truth_condition_instance_source_audit_certificate).",
+                "Qed.",
+            ]
+        )
+    sound_specs = {
+        "direct": [
+            "    fully_registered_truth_denotes concrete_registered_truth_conditions",
+            "      A term ->",
+        ],
+        "evidence": [
+            "    fully_registered_truth_denotes",
+            "      concrete_registered_evidence_backed_truth_conditions",
+            "      A term ->",
+        ],
+        "kernel": [
+            "    fully_registered_truth_denotes",
+            "      concrete_registered_truth_conditions_from_kernel",
+            "      A term ->",
+        ],
+        "independent": [
+            "    fully_registered_truth_denotes",
+            "      (independent_registered_clause_spec",
+            "        independent_registered_truth_condition_clause_instances)",
+            "      A term ->",
+        ],
+        "constructor": [
+            "    fully_registered_truth_denotes",
+            "      (registered_truth_condition_constructor_discharge_spec",
+            "        registered_truth_condition_constructor_discharge_certificate)",
+            "      A term ->",
+        ],
+        "model": [
+            "    concrete_registered_composition_denotes",
+            "      concrete_registered_compositional_model A term ->",
+        ],
+    }
+    for projection, premise_lines in sound_specs.items():
+        lines.extend(
+            [
+                "",
+                "Theorem concrete_truth_condition_instance_source_audit_"
+                f"{projection}_sound_projected :",
+                "  forall A : Type, forall term : A,",
+                *premise_lines,
+                "    AtomicClosureTruth A term.",
+                "Proof.",
+                f"  exact (concrete_truth_condition_instance_source_audit_{projection}_sound",
+                "    concrete_truth_condition_instance_source_audit_certificate).",
+                "Qed.",
+            ]
+        )
+    for idx, result in enumerate(results, 1):
+        annotation = export_result_type(result["ast"])
+        for route in ("direct", "evidence", "kernel"):
+            lines.extend(
+                [
+                    "",
+                    "Theorem concrete_truth_condition_instance_source_audit_"
+                    f"example_{idx}_{route}_atomic_sound :",
+                    f"  AtomicClosureTruth {annotation} example_{idx}.",
+                    "Proof.",
+                    "  exact (concrete_truth_condition_instance_source_audit_"
+                    f"example_{idx}_{route}_atomic",
+                    "    concrete_truth_condition_instance_source_audit_certificate).",
+                    "Qed.",
+                ]
+            )
+    return lines
+
+
 def concrete_registered_example_truth_instance_lines(
     results: list[dict[str, Any]],
     target: str,
@@ -38105,6 +38673,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            concrete_truth_condition_instance_source_audit_certificate_lines(
+                results,
+                target,
+            )
+        )
+        lines.append("")
         for idx in range(1, len(results) + 1):
             lines.append(f"#check example_{idx}")
             lines.append(f"#check example_{idx}_semantic_preservation_obligation")
@@ -40365,6 +40940,46 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
                     "concrete_truth_condition_registered_fragment_instance_completion_"
                     f"example_{idx}_{route}_atomic_sound"
                 )
+        lines.append("#check ConcreteTruthConditionInstanceSourceAuditCertificate")
+        lines.append("#check concrete_truth_condition_instance_source_audit_certificate")
+        lines.append(
+            "#check concrete_truth_condition_instance_source_audit_certificate_exists"
+        )
+        for match_name in (
+            "completion",
+            "supply",
+            "provider_suite",
+            "model_suite",
+            "atomic_ledger",
+            "direct_spec",
+            "evidence_spec",
+            "kernel_spec",
+            "independent_spec",
+            "constructor_spec",
+            "model",
+        ):
+            lines.append(
+                "#check concrete_truth_condition_instance_source_audit_"
+                f"{match_name}_matches"
+            )
+        for projection in (
+            "direct",
+            "evidence",
+            "kernel",
+            "independent",
+            "constructor",
+            "model",
+        ):
+            lines.append(
+                "#check concrete_truth_condition_instance_source_audit_"
+                f"{projection}_sound_projected"
+            )
+        for idx in range(1, len(results) + 1):
+            for route in ("direct", "evidence", "kernel"):
+                lines.append(
+                    "#check concrete_truth_condition_instance_source_audit_"
+                    f"example_{idx}_{route}_atomic_sound"
+                )
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -41364,6 +41979,13 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
     lines.append("")
     lines.extend(
         concrete_truth_condition_registered_fragment_instance_completion_certificate_lines(
+            results,
+            target,
+        )
+    )
+    lines.append("")
+    lines.extend(
+        concrete_truth_condition_instance_source_audit_certificate_lines(
             results,
             target,
         )
@@ -43373,6 +43995,44 @@ def export_module(results: list[dict[str, Any]], target: str) -> str:
             lines.append(
                 "Check "
                 "concrete_truth_condition_registered_fragment_instance_completion_"
+                f"example_{idx}_{route}_atomic_sound."
+            )
+    lines.append("Check ConcreteTruthConditionInstanceSourceAuditCertificate.")
+    lines.append("Check concrete_truth_condition_instance_source_audit_certificate.")
+    lines.append("Check concrete_truth_condition_instance_source_audit_certificate_exists.")
+    for match_name in (
+        "completion",
+        "supply",
+        "provider_suite",
+        "model_suite",
+        "atomic_ledger",
+        "direct_spec",
+        "evidence_spec",
+        "kernel_spec",
+        "independent_spec",
+        "constructor_spec",
+        "model",
+    ):
+        lines.append(
+            "Check concrete_truth_condition_instance_source_audit_"
+            f"{match_name}_matches."
+        )
+    for projection in (
+        "direct",
+        "evidence",
+        "kernel",
+        "independent",
+        "constructor",
+        "model",
+    ):
+        lines.append(
+            "Check concrete_truth_condition_instance_source_audit_"
+            f"{projection}_sound_projected."
+        )
+    for idx in range(1, len(results) + 1):
+        for route in ("direct", "evidence", "kernel"):
+            lines.append(
+                "Check concrete_truth_condition_instance_source_audit_"
                 f"example_{idx}_{route}_atomic_sound."
             )
     return "\n".join(lines) + "\n"
