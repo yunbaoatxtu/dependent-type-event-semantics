@@ -1515,6 +1515,93 @@ MANNER_LOCATION_INTRANSITIVE_SURFACE_WITNESS_VARIANT_IDS = {
 }
 
 
+MIXED_ROLE_INTRANSITIVE_SURFACE_MODIFIER_SEQUENCE = (
+    {
+        "index": 1,
+        "surface": "from a window",
+        "dependent_type_fragment": "from(window)",
+        "semantic_role": "Source",
+    },
+    {
+        "index": 2,
+        "surface": "into a room",
+        "dependent_type_fragment": "into(room)",
+        "semantic_role": "Goal",
+    },
+    {
+        "index": 3,
+        "surface": "with a camera",
+        "dependent_type_fragment": "with(camera)",
+        "semantic_role": "Instrument",
+    },
+    {
+        "index": 4,
+        "surface": "beside a shelf",
+        "dependent_type_fragment": "beside(shelf)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 5,
+        "surface": "loudly",
+        "dependent_type_fragment": "loudly",
+        "semantic_role": "Manner",
+    },
+    {
+        "index": 6,
+        "surface": "under a lamp",
+        "dependent_type_fragment": "under(lamp)",
+        "semantic_role": "Location",
+    },
+    {
+        "index": 7,
+        "surface": "on a table",
+        "dependent_type_fragment": "on(table)",
+        "semantic_role": "Location",
+    },
+)
+
+MIXED_ROLE_INTRANSITIVE_RULE_ID_BY_PREFIX = {
+    "1": "directional_intransitive_predication",
+    "2": "directional_intransitive_predication",
+    "3": "directional_instrument_intransitive_predication",
+    "4": "directional_instrument_location_intransitive_predication",
+    "5": "directional_instrument_location_manner_intransitive_predication",
+    "6": "directional_instrument_two_location_manner_intransitive_predication",
+    "7": "directional_instrument_location_manner_location_sequence_intransitive_predication",
+}
+
+MIXED_ROLE_INTRANSITIVE_ANALYSIS_BY_PREFIX = {
+    "1": "directional-intransitive-predication",
+    "2": "directional-intransitive-predication",
+    "3": "directional-instrument-intransitive-predication",
+    "4": "directional-instrument-location-intransitive-predication",
+    "5": "directional-instrument-location-manner-intransitive-predication",
+    "6": "directional-instrument-two-location-manner-intransitive-predication",
+    "7": "directional-instrument-location-manner-location-sequence-intransitive-predication",
+}
+
+MIXED_ROLE_INTRANSITIVE_SURFACE_WITNESS_VARIANT_IDS = {
+    "untimed": {
+        "1": "primary_mixed_role_directional_intransitive_predication",
+        "2": "source_goal_mixed_role_directional_intransitive_predication",
+        "3": "source_goal_instrument_mixed_role_intransitive_predication",
+        "4": "source_goal_instrument_location_mixed_role_intransitive_predication",
+        "5": "source_goal_instrument_location_manner_mixed_role_intransitive_predication",
+        "6": "source_goal_instrument_two_location_manner_mixed_role_intransitive_predication",
+        "7": "source_goal_instrument_location_manner_sequence_mixed_role_intransitive_predication",
+    },
+    "timed": {
+        "1": "temporal_primary_mixed_role_directional_intransitive_predication",
+        "2": "temporal_source_goal_mixed_role_directional_intransitive_predication",
+        "3": "temporal_source_goal_instrument_mixed_role_intransitive_predication",
+        "4": "temporal_source_goal_instrument_location_mixed_role_intransitive_predication",
+        "5": "temporal_source_goal_instrument_location_manner_mixed_role_intransitive_predication",
+        "6": "temporal_source_goal_instrument_two_location_manner_mixed_role_intransitive_predication",
+        "7": "temporal_source_goal_instrument_location_manner_sequence_mixed_role_intransitive_predication",
+    },
+}
+
+
 def modified_transitive_surface_witness_generation_spec() -> dict[str, Any]:
     source_by_prefix = {
         "untimed": {
@@ -1615,6 +1702,60 @@ def manner_location_intransitive_surface_witness_generation_spec() -> dict[str, 
     }
 
 
+def mixed_role_intransitive_surface_witness_generation_spec() -> dict[str, Any]:
+    source_by_prefix = {
+        "untimed": {
+            "1": "registered_primary_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+            "6": "registered_variant_example",
+            "7": "registered_variant_example",
+        },
+        "timed": {
+            "1": "registered_variant_example",
+            "2": "registered_variant_example",
+            "3": "registered_variant_example",
+            "4": "registered_variant_example",
+            "5": "registered_variant_example",
+            "6": "registered_variant_example",
+            "7": "registered_variant_example",
+        },
+    }
+    return {
+        "schema_version": "surface_witness_generation.v1",
+        "generator": "mixed_role_intransitive_prefix_with_optional_time_suffix",
+        "base_surface_sentence": "Mary laughed",
+        "predicate": "laugh",
+        "subject": "mary",
+        "modifiers": [
+            dict(modifier)
+            for modifier in MIXED_ROLE_INTRANSITIVE_SURFACE_MODIFIER_SEQUENCE
+        ],
+        "time_suffix": "yesterday",
+        "time_operator": "at_T",
+        "time_argument": "yesterday",
+        "verified_prefix_lengths": [1, 2, 3, 4, 5, 6, 7],
+        "rule_id_by_prefix": copy.deepcopy(
+            MIXED_ROLE_INTRANSITIVE_RULE_ID_BY_PREFIX
+        ),
+        "event_analysis_by_prefix": copy.deepcopy(
+            MIXED_ROLE_INTRANSITIVE_ANALYSIS_BY_PREFIX
+        ),
+        "variant_id_by_prefix": copy.deepcopy(
+            MIXED_ROLE_INTRANSITIVE_SURFACE_WITNESS_VARIANT_IDS
+        ),
+        "source_by_prefix": source_by_prefix,
+        "expected_ast_kind_by_time_wrapped": {
+            "false": "application",
+            "true": "time",
+        },
+        "translation_template": "{predicate}({n})({modifier_fragments}, {subject})",
+        "timed_translation_template": "{time_operator}({time_argument}, {body})",
+    }
+
+
 def manner_location_intransitive_surface_witnesses_from_spec(
     spec: dict[str, Any],
 ) -> list[dict[str, Any]]:
@@ -1675,6 +1816,12 @@ def manner_location_intransitive_surface_witnesses_from_spec(
                 },
             )
     return witnesses
+
+
+def mixed_role_intransitive_surface_witnesses_from_spec(
+    spec: dict[str, Any],
+) -> list[dict[str, Any]]:
+    return manner_location_intransitive_surface_witnesses_from_spec(spec)
 
 
 def manner_location_intransitive_surface_slot_probe_generation_spec() -> dict[str, Any]:
@@ -1848,6 +1995,136 @@ def manner_location_intransitive_surface_slot_probe_payload() -> dict[str, Any]:
         "full_lexical_slot_certification": False,
         "base_family": "manner_location_intransitive_adv_sequence",
         "expected_event_analysis_family": "manner_location_intransitive",
+        "probe_count": len(probes),
+        "probe_generation_spec": generation_spec,
+        "probes": probes,
+        "matrix_claim": "not_yet_cartesianized_for_this_family",
+        "full_lexical_matrix_certification": False,
+        "matrix_example_count": 0,
+        "matrix_generation_spec": {},
+        "matrix_examples": [],
+    }
+
+
+def mixed_role_intransitive_surface_slot_probe_generation_spec() -> dict[str, Any]:
+    return {
+        "schema_version": "surface_slot_probe_generation.v1",
+        "generator": "mixed_role_intransitive_subject_predicate_modifier_substitution",
+        "base_family": "mixed_role_intransitive_adv_sequence",
+        "base_frame": {
+            "subject": {"surface": "Mary", "semantic": "mary"},
+            "predicate": {"surface": "laughed", "semantic": "laugh"},
+        },
+        "surface_template": "{subject_surface} {predicate_surface} {modifier_surfaces}",
+        "timed_surface_template": "{body} {time_suffix}",
+        "modifiers": [
+            dict(modifier)
+            for modifier in MIXED_ROLE_INTRANSITIVE_SURFACE_MODIFIER_SEQUENCE
+        ],
+        "time_suffix": "yesterday",
+        "time_operator": "at_T",
+        "time_argument": "yesterday",
+        "expected_ast_kind_by_time_wrapped": {
+            "false": "application",
+            "true": "time",
+        },
+        "translation_template": "{predicate}({n})({modifier_fragments}, {subject})",
+        "timed_translation_template": "{time_operator}({time_argument}, {body})",
+        "probe_templates": [
+            {
+                "probe_id": "subject_slot_john_source_goal_instrument",
+                "slot": "subject",
+                "modifier_prefix_length": 3,
+                "time_wrapped": False,
+                "expected_rule_id": "directional_instrument_intransitive_predication",
+                "expected_event_analysis": "directional-instrument-intransitive-predication",
+                "substitutions": {
+                    "subject": {"surface": "John", "semantic": "john"},
+                },
+            },
+            {
+                "probe_id": "predicate_slot_walk_source_goal_instrument",
+                "slot": "predicate",
+                "modifier_prefix_length": 3,
+                "time_wrapped": False,
+                "expected_rule_id": "directional_instrument_intransitive_predication",
+                "expected_event_analysis": "directional-instrument-intransitive-predication",
+                "substitutions": {
+                    "subject": {"surface": "John", "semantic": "john"},
+                    "predicate": {"surface": "walked", "semantic": "walk"},
+                },
+            },
+            {
+                "probe_id": "source_slot_doorway_source_goal_instrument",
+                "slot": "source_modifier",
+                "modifier_prefix_length": 3,
+                "time_wrapped": False,
+                "expected_rule_id": "directional_instrument_intransitive_predication",
+                "expected_event_analysis": "directional-instrument-intransitive-predication",
+                "substitutions": {
+                    "modifiers": {
+                        "1": {
+                            "surface": "from a doorway",
+                            "dependent_type_fragment": "from(doorway)",
+                            "semantic_role": "Source",
+                        },
+                    },
+                },
+            },
+            {
+                "probe_id": "combined_slots_timed_full_mixed_role_sequence",
+                "slot": "subject_predicate_source_goal_instrument",
+                "modifier_prefix_length": 7,
+                "time_wrapped": True,
+                "expected_rule_id": (
+                    "directional_instrument_location_manner_location_sequence_"
+                    "intransitive_predication"
+                ),
+                "expected_event_analysis": (
+                    "directional-instrument-location-manner-location-sequence-"
+                    "intransitive-predication"
+                ),
+                "substitutions": {
+                    "subject": {"surface": "John", "semantic": "john"},
+                    "predicate": {"surface": "walked", "semantic": "walk"},
+                    "modifiers": {
+                        "1": {
+                            "surface": "from a doorway",
+                            "dependent_type_fragment": "from(doorway)",
+                            "semantic_role": "Source",
+                        },
+                        "2": {
+                            "surface": "into a hallway",
+                            "dependent_type_fragment": "into(hallway)",
+                            "semantic_role": "Goal",
+                        },
+                        "3": {
+                            "surface": "with a telescope",
+                            "dependent_type_fragment": "with(telescope)",
+                            "semantic_role": "Instrument",
+                        },
+                    },
+                },
+            },
+        ],
+    }
+
+
+def mixed_role_intransitive_surface_slot_probes_from_spec(
+    spec: dict[str, Any],
+) -> list[dict[str, Any]]:
+    return manner_location_intransitive_surface_slot_probes_from_spec(spec)
+
+
+def mixed_role_intransitive_surface_slot_probe_payload() -> dict[str, Any]:
+    generation_spec = mixed_role_intransitive_surface_slot_probe_generation_spec()
+    probes = mixed_role_intransitive_surface_slot_probes_from_spec(generation_spec)
+    return {
+        "schema_version": "surface_slot_probes.v1",
+        "probe_claim": "controlled_mixed_role_intransitive_slot_substitutions",
+        "full_lexical_slot_certification": False,
+        "base_family": "mixed_role_intransitive_adv_sequence",
+        "expected_event_analysis_family": "mixed_role_intransitive",
         "probe_count": len(probes),
         "probe_generation_spec": generation_spec,
         "probes": probes,
@@ -21742,6 +22019,12 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
     intransitive_slot_probe_payload = (
         manner_location_intransitive_surface_slot_probe_payload()
     )
+    mixed_role_witness_generation_spec = (
+        mixed_role_intransitive_surface_witness_generation_spec()
+    )
+    mixed_role_slot_probe_payload = (
+        mixed_role_intransitive_surface_slot_probe_payload()
+    )
     snapshot_by_rule = {
         str(snapshot.get("rule_id", "")): snapshot
         for snapshot in CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS
@@ -21845,6 +22128,26 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
     intransitive_verified_counts = sorted(
         set(intransitive_timed_counts) | set(intransitive_untimed_counts),
     )
+    mixed_role_verified_examples = mixed_role_intransitive_surface_witnesses_from_spec(
+        mixed_role_witness_generation_spec,
+    )
+    mixed_role_timed_counts = sorted(
+        {
+            int(example["modifier_count"])
+            for example in mixed_role_verified_examples
+            if example.get("time_wrapped") is True
+        },
+    )
+    mixed_role_untimed_counts = sorted(
+        {
+            int(example["modifier_count"])
+            for example in mixed_role_verified_examples
+            if example.get("time_wrapped") is False
+        },
+    )
+    mixed_role_verified_counts = sorted(
+        set(mixed_role_timed_counts) | set(mixed_role_untimed_counts),
+    )
     return {
         "modified_transitive_adv_sequence": {
             "rule_id": "modified_transitive_predication",
@@ -21894,6 +22197,33 @@ def surface_parser_coverage_payload() -> dict[str, Any]:
                 "registered witness sequence and controlled sleep/quietly slot "
                 "probes are finite parser witnesses, not arbitrary English "
                 "coverage."
+            ),
+        },
+        "mixed_role_intransitive_adv_sequence": {
+            "rule_id": "mixed_role_intransitive_family",
+            "type_principle": "source_goal_instrument_location_manner_modifier_sequence",
+            "type_family": "forall n : nat, ModifierSeq n -> Entity -> PropT",
+            "type_level_open_ended": True,
+            "surface_parser_claim": "registered_examples_only",
+            "full_surface_parser_certification": False,
+            "primary_modifier_count": 1,
+            "verified_modifier_counts": mixed_role_verified_counts,
+            "verified_timed_modifier_counts": mixed_role_timed_counts,
+            "verified_untimed_modifier_counts": mixed_role_untimed_counts,
+            "max_verified_modifier_count": (
+                max(mixed_role_verified_counts)
+                if mixed_role_verified_counts
+                else 0
+            ),
+            "verified_example_count": len(mixed_role_verified_examples),
+            "verified_examples": mixed_role_verified_examples,
+            "witness_generation_spec": mixed_role_witness_generation_spec,
+            "slot_probe_examples": mixed_role_slot_probe_payload,
+            "boundary_note": (
+                "This family audits mixed Source/Goal/Instrument/Location/"
+                "Manner Adv sequences for intransitives. It is a finite "
+                "registered-surface witness family, not a claim of arbitrary "
+                "prepositional-phrase attachment coverage."
             ),
         },
     }

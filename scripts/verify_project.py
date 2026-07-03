@@ -10829,6 +10829,8 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         fallback_promotion_candidates_payload,
         manner_location_intransitive_surface_slot_probes_from_spec,
         manner_location_intransitive_surface_witnesses_from_spec,
+        mixed_role_intransitive_surface_slot_probes_from_spec,
+        mixed_role_intransitive_surface_witnesses_from_spec,
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
         run_pipeline,
@@ -11817,6 +11819,158 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
             if not isinstance(fragment, str) or fragment not in probe_translation:
                 raise SystemExit(
                     "web route smoke check failed: certified intransitive surface slot probe live translation drift"
+                )
+    mixed_role_surface = surface_parser_coverage.get(
+        "mixed_role_intransitive_adv_sequence",
+    )
+    if not isinstance(mixed_role_surface, dict):
+        raise SystemExit(
+            "web route smoke check failed: certified mixed-role surface coverage missing"
+        )
+    mixed_role_counts = [1, 2, 3, 4, 5, 6, 7]
+    mixed_role_generation_spec = mixed_role_surface.get("witness_generation_spec")
+    if not isinstance(mixed_role_generation_spec, dict):
+        raise SystemExit(
+            "web route smoke check failed: certified mixed-role surface generation spec missing"
+        )
+    expected_mixed_role_modifiers = [
+        "from(window)",
+        "into(room)",
+        "with(camera)",
+        "beside(shelf)",
+        "loudly",
+        "under(lamp)",
+        "on(table)",
+    ]
+    mixed_role_modifiers = mixed_role_generation_spec.get("modifiers")
+    if (
+        mixed_role_surface.get("rule_id") != "mixed_role_intransitive_family"
+        or mixed_role_surface.get("type_principle")
+        != "source_goal_instrument_location_manner_modifier_sequence"
+        or mixed_role_surface.get("type_family")
+        != "forall n : nat, ModifierSeq n -> Entity -> PropT"
+        or mixed_role_surface.get("type_level_open_ended") is not True
+        or mixed_role_surface.get("surface_parser_claim")
+        != "registered_examples_only"
+        or mixed_role_surface.get("full_surface_parser_certification") is not False
+        or mixed_role_surface.get("primary_modifier_count") != 1
+        or mixed_role_surface.get("verified_modifier_counts") != mixed_role_counts
+        or mixed_role_surface.get("verified_timed_modifier_counts")
+        != mixed_role_counts
+        or mixed_role_surface.get("verified_untimed_modifier_counts")
+        != mixed_role_counts
+        or mixed_role_surface.get("max_verified_modifier_count") != 7
+        or mixed_role_generation_spec.get("schema_version")
+        != "surface_witness_generation.v1"
+        or mixed_role_generation_spec.get("generator")
+        != "mixed_role_intransitive_prefix_with_optional_time_suffix"
+        or mixed_role_generation_spec.get("base_surface_sentence")
+        != "Mary laughed"
+        or mixed_role_generation_spec.get("predicate") != "laugh"
+        or mixed_role_generation_spec.get("subject") != "mary"
+        or mixed_role_generation_spec.get("verified_prefix_lengths")
+        != mixed_role_counts
+        or mixed_role_generation_spec.get("translation_template")
+        != "{predicate}({n})({modifier_fragments}, {subject})"
+        or mixed_role_generation_spec.get("timed_translation_template")
+        != "{time_operator}({time_argument}, {body})"
+        or not isinstance(mixed_role_modifiers, list)
+        or [
+            modifier.get("dependent_type_fragment")
+            for modifier in mixed_role_modifiers
+            if isinstance(modifier, dict)
+        ]
+        != expected_mixed_role_modifiers
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified mixed-role surface coverage drift"
+        )
+    expected_mixed_role_examples = (
+        mixed_role_intransitive_surface_witnesses_from_spec(
+            mixed_role_generation_spec,
+        )
+    )
+    mixed_role_examples = mixed_role_surface.get("verified_examples")
+    if (
+        mixed_role_surface.get("verified_example_count")
+        != len(expected_mixed_role_examples)
+        or mixed_role_examples != expected_mixed_role_examples
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified mixed-role surface witness drift"
+        )
+    for item in expected_mixed_role_examples:
+        witness_result = run_pipeline(str(item.get("sentence", "")), require_coq=False)
+        if (
+            not witness_result.get("ok")
+            or witness_result.get("construction_rule", {}).get("id")
+            != item.get("rule_id")
+            or witness_result.get("event_semantics", {}).get("analysis")
+            != item.get("expected_event_analysis")
+            or witness_result.get("ast", {}).get("kind")
+            != item.get("expected_ast_kind")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified mixed-role surface witness live drift"
+            )
+        witness_translation = str(
+            witness_result.get("dependent_type_translation", ""),
+        )
+        for fragment in item.get("expected_dependent_type_fragments", []):
+            if not isinstance(fragment, str) or fragment not in witness_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified mixed-role surface witness live translation drift"
+                )
+    mixed_role_slot_probe_examples = mixed_role_surface.get("slot_probe_examples")
+    if (
+        not isinstance(mixed_role_slot_probe_examples, dict)
+        or mixed_role_slot_probe_examples.get("schema_version")
+        != "surface_slot_probes.v1"
+        or mixed_role_slot_probe_examples.get("probe_claim")
+        != "controlled_mixed_role_intransitive_slot_substitutions"
+        or mixed_role_slot_probe_examples.get("full_lexical_slot_certification")
+        is not False
+        or mixed_role_slot_probe_examples.get("base_family")
+        != "mixed_role_intransitive_adv_sequence"
+        or mixed_role_slot_probe_examples.get("matrix_example_count") != 0
+        or mixed_role_slot_probe_examples.get("matrix_examples") != []
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified mixed-role surface slot probe schema drift"
+        )
+    expected_mixed_role_probes = (
+        mixed_role_intransitive_surface_slot_probes_from_spec(
+            mixed_role_slot_probe_examples.get("probe_generation_spec"),
+        )
+    )
+    mixed_role_probes = mixed_role_slot_probe_examples.get("probes")
+    if (
+        mixed_role_slot_probe_examples.get("probe_count")
+        != len(expected_mixed_role_probes)
+        or mixed_role_probes != expected_mixed_role_probes
+    ):
+        raise SystemExit(
+            "web route smoke check failed: certified mixed-role surface slot probe drift"
+        )
+    for probe in expected_mixed_role_probes:
+        probe_result = run_pipeline(str(probe.get("sentence", "")), require_coq=False)
+        if (
+            not probe_result.get("ok")
+            or probe_result.get("construction_rule", {}).get("id")
+            != probe.get("expected_rule_id")
+            or probe_result.get("event_semantics", {}).get("analysis")
+            != probe.get("expected_event_analysis")
+            or probe_result.get("ast", {}).get("kind")
+            != probe.get("expected_ast_kind")
+        ):
+            raise SystemExit(
+                "web route smoke check failed: certified mixed-role surface slot probe live drift"
+            )
+        probe_translation = str(probe_result.get("dependent_type_translation", ""))
+        for fragment in probe.get("expected_dependent_type_fragments", []):
+            if not isinstance(fragment, str) or fragment not in probe_translation:
+                raise SystemExit(
+                    "web route smoke check failed: certified mixed-role surface slot probe live translation drift"
                 )
     for witness in expected_modifier_role_witnesses:
         role = str(witness.get("role", ""))

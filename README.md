@@ -960,11 +960,12 @@ variants, fallback rows, and rejected rows, then exposes four boundary rows:
 surface parser front end, registered semantic translation, fallback scaffold,
 and unsupported-fragment rejection. The Certified Fragment panel mirrors this
 through `data-parser-semantic-boundary-*` hooks. Because the boundary split is
-now itself verified and the surface witness audit covers both the modified
-transitive Adv family and the manner/location intransitive Adv family, the
+now itself verified and the surface witness audit covers the modified
+transitive Adv family, the manner/location intransitive Adv family, and the
+mixed Source/Goal/Instrument/Location/Manner intransitive Adv family, the
 remaining front-end stage is still
-`extend_surface_parser_beyond_registered_examples`: the new family expands the
-finite audited parser evidence but does not certify arbitrary English.
+`extend_surface_parser_beyond_registered_examples`: these families expand the
+finite audited parser evidence but do not certify arbitrary English.
 It also carries `fallback_promotion_candidates` with `schema_version:
 "fallback_promotion_candidates.v1"`. This queue is derived from
 `coverage_matrix.fallback_success_cases`; at the current head its candidate
@@ -2104,14 +2105,19 @@ under a lamp on a table with a microphone yesterday` under
 `temporal_quint_adv_modified_transitive_predication`; fallback cases remain
 explicitly shallow, and rejected cases record the marker that must stop the
 pipeline before fallback.
-The manifest also exposes `surface_parser_coverage` for two audited front-end
+The manifest also exposes `surface_parser_coverage` for three audited front-end
 families. `modified_transitive_adv_sequence` states the open-ended type
 principle `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT` and
 audits timed/untimed modifier counts `1,2,3,4,5`. The newer
 `manner_location_intransitive_adv_sequence` states the corresponding unary
 family `forall n : nat, ModifierSeq n -> Entity -> PropT` and audits
 timed/untimed modifier counts `1,2,3,4,5,6`, including controlled
-`sleep/quietly` subject/predicate/modifier slot probes. Both records keep
+`sleep/quietly` subject/predicate/modifier slot probes. The
+`mixed_role_intransitive_adv_sequence` family audits the same unary type shape
+over Source/Goal/Instrument/Location/Manner prefixes `1..7`, including
+controlled subject, predicate, source, and timed full-sequence probes such as
+`John walked from a doorway into a hallway with a telescope beside a shelf
+loudly under a lamp on a table yesterday`. All three records keep
 `surface_parser_claim: registered_examples_only` and
 `full_surface_parser_certification: false`. This makes the boundary
 machine-readable: the dependent type families are not capped by those concrete

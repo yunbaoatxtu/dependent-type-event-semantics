@@ -179,9 +179,10 @@ scaffold, and unsupported-fragment guard. The panel mirrors those fields with
 from the manifest before accepting either the API payload or the page. The
 front-end completion objective therefore now advances toward
 `extend_surface_parser_beyond_registered_examples`; the latest surface audit
-expands from one modified-transitive family to two finite audited families by
-adding `manner_location_intransitive_adv_sequence`, but it still keeps full
-surface-parser certification false.
+expands from one modified-transitive family to three finite audited families by
+adding `manner_location_intransitive_adv_sequence` and
+`mixed_role_intransitive_adv_sequence`, but it still keeps full surface-parser
+certification false.
 The same
 manifest now exposes `fallback_promotion_candidates.v1`, derived from
 `coverage_matrix.fallback_success_cases`. These rows are rendered through
@@ -430,7 +431,7 @@ and `stacked_instrument_manner_location_instrument_intransitive_predication`,
 two-, three-, four-, and five-Adv Luo-Shi modifier routes as witnesses of the
 non-empty `ModifierSeq` rule rather than treating modifier count as a fallback
 boundary.
-The same manifest now includes `surface_parser_coverage` for two finite audited
+The same manifest now includes `surface_parser_coverage` for three finite audited
 front-end families. `modified_transitive_adv_sequence` records the open-ended
 type family `forall n : nat, ModifierSeq n -> Entity -> Entity -> PropT`, the
 verified timed and untimed modifier counts `1,2,3,4,5`, and the existing
@@ -438,7 +439,12 @@ controlled Agent/Theme/predicate lexical matrix. The newer
 `manner_location_intransitive_adv_sequence` records
 `forall n : nat, ModifierSeq n -> Entity -> PropT`, verified timed and untimed
 modifier counts `1,2,3,4,5,6`, and controlled subject/predicate/manner-location
-slot probes such as `John slept quietly in the garden yesterday`. Both objects
+slot probes such as `John slept quietly in the garden yesterday`. The
+`mixed_role_intransitive_adv_sequence` record keeps the same unary family while
+auditing Source/Goal/Instrument/Location/Manner prefixes `1..7`, including
+controlled replacement probes such as `John walked from a doorway into a hallway
+with a telescope beside a shelf loudly under a lamp on a table yesterday`. All
+three objects
 retain the parser claim `registered_examples_only` and
 `full_surface_parser_certification: false`. The `Certified Fragment` panel
 mirrors these values through `data-surface-*` attributes, so the page can

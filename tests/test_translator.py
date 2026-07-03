@@ -19485,6 +19485,7 @@ class TranslatorTests(unittest.TestCase):
             parser_semantic_boundary["surface_parser_families"],
             [
                 "manner_location_intransitive_adv_sequence",
+                "mixed_role_intransitive_adv_sequence",
                 "modified_transitive_adv_sequence",
             ],
         )
@@ -19495,9 +19496,9 @@ class TranslatorTests(unittest.TestCase):
                 for family in manifest["surface_parser_coverage"].values()
             ),
         )
-        self.assertEqual(parser_semantic_boundary["surface_slot_probe_count"], 7)
+        self.assertEqual(parser_semantic_boundary["surface_slot_probe_count"], 11)
         self.assertEqual(parser_semantic_boundary["surface_matrix_example_count"], 16)
-        self.assertEqual(parser_semantic_boundary["surface_total_witness_count"], 45)
+        self.assertEqual(parser_semantic_boundary["surface_total_witness_count"], 63)
         self.assertEqual(
             parser_semantic_boundary["registered_semantic_rule_count"],
             counts["registered_success_cases"],
@@ -19695,6 +19696,76 @@ class TranslatorTests(unittest.TestCase):
                     self.assertIn(fragment, result["dependent_type_translation"])
         for probe in intransitive_slot_probes["probes"]:
             with self.subTest(intransitive_surface_probe=probe["probe_id"]):
+                result = run_pipeline(probe["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(
+                    result["construction_rule"]["id"],
+                    probe["expected_rule_id"],
+                )
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    probe["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], probe["expected_ast_kind"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+                for fragment in probe["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
+        mixed_role_surface = manifest["surface_parser_coverage"][
+            "mixed_role_intransitive_adv_sequence"
+        ]
+        self.assertEqual(
+            mixed_role_surface["type_principle"],
+            "source_goal_instrument_location_manner_modifier_sequence",
+        )
+        self.assertEqual(
+            mixed_role_surface["verified_modifier_counts"],
+            [1, 2, 3, 4, 5, 6, 7],
+        )
+        self.assertEqual(
+            mixed_role_surface["verified_timed_modifier_counts"],
+            [1, 2, 3, 4, 5, 6, 7],
+        )
+        self.assertEqual(
+            mixed_role_surface["verified_untimed_modifier_counts"],
+            [1, 2, 3, 4, 5, 6, 7],
+        )
+        self.assertEqual(mixed_role_surface["verified_example_count"], 14)
+        self.assertEqual(
+            mixed_role_surface["verified_examples"][-1][
+                "expected_dependent_type_fragments"
+            ],
+            [
+                "at_T(yesterday, laugh(7)(from(window), into(room), "
+                "with(camera), beside(shelf), loudly, under(lamp), "
+                "on(table), mary))",
+            ],
+        )
+        mixed_role_slot_probes = mixed_role_surface["slot_probe_examples"]
+        self.assertEqual(mixed_role_slot_probes["probe_count"], 4)
+        self.assertEqual(
+            [probe["probe_id"] for probe in mixed_role_slot_probes["probes"]],
+            [
+                "subject_slot_john_source_goal_instrument",
+                "predicate_slot_walk_source_goal_instrument",
+                "source_slot_doorway_source_goal_instrument",
+                "combined_slots_timed_full_mixed_role_sequence",
+            ],
+        )
+        for witness in mixed_role_surface["verified_examples"]:
+            with self.subTest(mixed_role_surface_witness=witness["variant_id"]):
+                result = run_pipeline(witness["sentence"], require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["construction_rule"]["id"], witness["rule_id"])
+                self.assertEqual(
+                    result["event_semantics"]["analysis"],
+                    witness["expected_event_analysis"],
+                )
+                self.assertEqual(result["ast"]["kind"], witness["expected_ast_kind"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+                for fragment in witness["expected_dependent_type_fragments"]:
+                    self.assertIn(fragment, result["dependent_type_translation"])
+        for probe in mixed_role_slot_probes["probes"]:
+            with self.subTest(mixed_role_surface_probe=probe["probe_id"]):
                 result = run_pipeline(probe["sentence"], require_coq=True)
                 self.assertTrue(result["ok"])
                 self.assertEqual(
@@ -21151,6 +21222,55 @@ class TranslatorTests(unittest.TestCase):
             data_attr(
                 "data-surface-slot-probe-id",
                 "predicate_manner_location_sleep_garden_timed",
+            ),
+            page,
+        )
+        mixed_role_surface = manifest["surface_parser_coverage"][
+            "mixed_role_intransitive_adv_sequence"
+        ]
+        mixed_role_slot_probes = mixed_role_surface["slot_probe_examples"]
+        for expected_attr in [
+            data_attr(
+                "data-surface-parser-family",
+                "mixed_role_intransitive_adv_sequence",
+            ),
+            data_attr(
+                "data-surface-verified-counts",
+                csv_attr(mixed_role_surface["verified_modifier_counts"]),
+            ),
+            data_attr(
+                "data-surface-max-verified-count",
+                mixed_role_surface["max_verified_modifier_count"],
+            ),
+            data_attr(
+                "data-surface-verified-example-count",
+                mixed_role_surface["verified_example_count"],
+            ),
+            data_attr(
+                "data-surface-generator-kind",
+                mixed_role_surface["witness_generation_spec"]["generator"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-count",
+                mixed_role_slot_probes["probe_count"],
+            ),
+            data_attr(
+                "data-surface-slot-probe-generation-kind",
+                mixed_role_slot_probes["probe_generation_spec"]["generator"],
+            ),
+        ]:
+            self.assertIn(expected_attr, page)
+        self.assertIn(
+            data_attr(
+                "data-surface-example-variant-id",
+                "temporal_source_goal_instrument_location_manner_sequence_mixed_role_intransitive_predication",
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-surface-slot-probe-id",
+                "combined_slots_timed_full_mixed_role_sequence",
             ),
             page,
         )
