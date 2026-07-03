@@ -95,6 +95,7 @@ from translator.dependent_type_event_translator import (
 )
 from translator.natural_language_pipeline import (
     CERTIFICATION_UPGRADE_PLAN_SCHEMA,
+    CONSTRUCTION_RULE_EXAMPLES,
     CONSTRUCTION_RULE_DRAFT_SCHEMA,
     CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
     ConstructionRule,
@@ -20817,95 +20818,12 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("A successful fallback analysis is intentionally weaker", page)
 
     def test_registered_rule_outputs_do_not_contain_forbidden_coq_fragments(self) -> None:
-        examples = {
-            "simple_conditional": "if John left, Mary cried",
-            "causal_because": "John left because Mary cried",
-            "active_argument_omission": "John ate",
-            "plain_intransitive_predication": "Mary smiled",
-            "manner_intransitive_predication": "Mary laughed loudly",
-            "instrument_intransitive_predication": (
-                "Mary laughed with a telescope"
-            ),
-            "directional_intransitive_predication": (
-                "Mary laughed from a window"
-            ),
-            "directional_instrument_intransitive_predication": (
-                "Mary laughed from a window with a camera"
-            ),
-            "directional_instrument_location_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf"
-            ),
-            "directional_instrument_location_manner_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly"
-            ),
-            "directional_instrument_two_location_manner_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp"
-            ),
-            "directional_instrument_location_manner_location_sequence_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_instrument_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife"
-            ),
-            "manner_instrument_intransitive_predication": (
-                "Mary laughed loudly with a telescope"
-            ),
-            "manner_locative_intransitive_predication": (
-                "Mary laughed loudly in the park"
-            ),
-            "manner_two_location_intransitive_predication": (
-                "Mary laughed loudly in the park near a window"
-            ),
-            "manner_three_location_intransitive_predication": (
-                "Mary laughed loudly in the park near a window beside a shelf"
-            ),
-            "manner_location_sequence_intransitive_predication": (
-                "Mary laughed loudly in the park near a window beside a shelf under a lamp"
-            ),
-            "manner_location_instrument_intransitive_predication": (
-                "Mary laughed loudly in the park with a telescope"
-            ),
-            "manner_mixed_location_instrument_intransitive_predication": (
-                "Mary laughed loudly in the park with a telescope near a window with a camera"
-            ),
-            "manner_mixed_directional_instrument_intransitive_predication": (
-                "Mary laughed loudly in the park with a telescope from a window with a camera"
-            ),
-            "plain_transitive_predication": "Mary admired the painting",
-            "modified_transitive_predication": "Mary admired the painting in the gallery",
-            "passive_argument_omission": "the toast was buttered",
-            "lexical_state_change": "the door opened",
-            "stative_result_state": "the vase is broken",
-            "resultative_predication": "John hammered the metal flat",
-            "timed_after": "after the singing of the Marseillaise, John saluted the flag",
-            "perception_nominalization": "Mary saw John leave",
-            "universal_timed_burning": "In every burning, oxygen is consumed",
-            "quantifier_scope_ambiguity": "some boy loves some girl",
-            "copular_property": "Mary is happy",
-            "do_support_negation": "John did not walk",
-            "predicate_coordination": "John walked and talked",
-            "subject_coordination": "John and Mary walked",
-            "transitive_subject_coordination": "John and Mary ate bread",
-            "object_coordination": "Mary visited Paris and London",
-            "transitive_predicate_coordination": "John ate bread and drank water",
-            "locative_intransitive_predication": "a cat sits on a mat",
-            "event_counting": "John knocked twice",
-        }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):
-                result = run_pipeline(examples[rule.rule_id], require_coq=True)
+                result = run_pipeline(
+                    CONSTRUCTION_RULE_EXAMPLES[rule.rule_id],
+                    require_coq=True,
+                )
                 self.assertTrue(result["ok"])
                 self.assertTrue(result["construction_hygiene"]["ok"])
                 self.assertEqual(result["construction_hygiene"]["found_forbidden_fragments"], [])
@@ -20913,95 +20831,12 @@ class TranslatorTests(unittest.TestCase):
                     self.assertNotIn(fragment, result["coq_code"])
 
     def test_registered_rule_success_outputs_expose_semantic_readings_check(self) -> None:
-        examples = {
-            "simple_conditional": "if John left, Mary cried",
-            "causal_because": "John left because Mary cried",
-            "active_argument_omission": "John ate",
-            "plain_intransitive_predication": "Mary smiled",
-            "manner_intransitive_predication": "Mary laughed loudly",
-            "instrument_intransitive_predication": (
-                "Mary laughed with a telescope"
-            ),
-            "directional_intransitive_predication": (
-                "Mary laughed from a window"
-            ),
-            "directional_instrument_intransitive_predication": (
-                "Mary laughed from a window with a camera"
-            ),
-            "directional_instrument_location_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf"
-            ),
-            "directional_instrument_location_manner_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly"
-            ),
-            "directional_instrument_two_location_manner_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp"
-            ),
-            "directional_instrument_location_manner_location_sequence_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window"
-            ),
-            "directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_instrument_tail_intransitive_predication": (
-                "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife"
-            ),
-            "manner_instrument_intransitive_predication": (
-                "Mary laughed loudly with a telescope"
-            ),
-            "manner_locative_intransitive_predication": (
-                "Mary laughed loudly in the park"
-            ),
-            "manner_two_location_intransitive_predication": (
-                "Mary laughed loudly in the park near a window"
-            ),
-            "manner_three_location_intransitive_predication": (
-                "Mary laughed loudly in the park near a window beside a shelf"
-            ),
-            "manner_location_sequence_intransitive_predication": (
-                "Mary laughed loudly in the park near a window beside a shelf under a lamp"
-            ),
-            "manner_location_instrument_intransitive_predication": (
-                "Mary laughed loudly in the park with a telescope"
-            ),
-            "manner_mixed_location_instrument_intransitive_predication": (
-                "Mary laughed loudly in the park with a telescope near a window with a camera"
-            ),
-            "manner_mixed_directional_instrument_intransitive_predication": (
-                "Mary laughed loudly in the park with a telescope from a window with a camera"
-            ),
-            "plain_transitive_predication": "Mary admired the painting",
-            "modified_transitive_predication": "Mary admired the painting in the gallery",
-            "passive_argument_omission": "the toast was buttered",
-            "lexical_state_change": "the door opened",
-            "stative_result_state": "the vase is broken",
-            "resultative_predication": "John hammered the metal flat",
-            "timed_after": "after the singing of the Marseillaise, John saluted the flag",
-            "perception_nominalization": "Mary saw John leave",
-            "universal_timed_burning": "In every burning, oxygen is consumed",
-            "quantifier_scope_ambiguity": "some boy loves some girl",
-            "copular_property": "Mary is happy",
-            "do_support_negation": "John did not walk",
-            "predicate_coordination": "John walked and talked",
-            "subject_coordination": "John and Mary walked",
-            "transitive_subject_coordination": "John and Mary ate bread",
-            "object_coordination": "Mary visited Paris and London",
-            "transitive_predicate_coordination": "John ate bread and drank water",
-            "locative_intransitive_predication": "a cat sits on a mat",
-            "event_counting": "John knocked twice",
-        }
         for rule in construction_rules():
             with self.subTest(rule=rule.rule_id):
-                result = run_pipeline(examples[rule.rule_id], require_coq=True)
+                result = run_pipeline(
+                    CONSTRUCTION_RULE_EXAMPLES[rule.rule_id],
+                    require_coq=True,
+                )
                 self.assertTrue(result["ok"])
                 self.assertEqual(
                     result["verification_scope"]["kind"],
