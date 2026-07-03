@@ -10339,6 +10339,25 @@ def perception_embedded_time_operators(proposition: dict[str, Any]) -> list[str]
     return []
 
 
+def perception_time_attachment_summary(
+    *,
+    kind: str,
+    proposition: dict[str, Any],
+    target: str,
+) -> dict[str, Any]:
+    summary = empty_attachment_summary(kind)
+    summary["typed_time_modifiers"] = [
+        {
+            "name": proposition["argument"]["name"],
+            "type": proposition["argument"]["type"],
+            "operator": proposition["operator_name"],
+            "operator_type": proposition["operator_type"],
+            "target": target,
+        }
+    ]
+    return summary
+
+
 def check_timed_perception_clause(
     clause: dict[str, Any],
     expected_time: str,
@@ -10727,17 +10746,80 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         reading["coq_definition"] = (
             f"mary_saw_{definition_suffix}_{reading['name']}"
         )
+    time_modified_attachment = (
+        embedded_proposition
+        if embedded_proposition.get("kind") == "time_modified_proposition"
+        else None
+    )
+    matrix_time_attachment: dict[str, Any] | None = None
+    if time_modified_attachment is not None:
+        matrix_body = time_modified_attachment["body"]
+        matrix_body_suffix = perception_embedded_definition_suffix(matrix_body)
+        matrix_body_translation = render_perception_embedded_translation(matrix_body)
+        matrix_body_coq = render_perception_embedded_coq(matrix_body)
+        matrix_operator = time_modified_attachment["operator_name"]
+        matrix_argument = time_modified_attachment["argument"]["name"]
+        matrix_time_attachment = {
+            "name": "matrix_time_attachment",
+            "dependent_type_translation": (
+                f"{matrix_operator}("
+                f"{matrix_argument}, "
+                f"see(Mary, E({matrix_body_translation})))"
+            ),
+            "coq_definition": (
+                f"mary_saw_{matrix_body_suffix}_"
+                f"{time_modified_attachment['operator']}_{matrix_argument}_matrix"
+            ),
+            "coq_term": (
+                f"{matrix_operator} {matrix_argument} "
+                f"({perception_predicate} {experiencer} (E ({matrix_body_coq})))"
+            ),
+            "attachment_summary": perception_time_attachment_summary(
+                kind="matrix_time_attachment",
+                proposition=time_modified_attachment,
+                target="matrix_perception",
+            ),
+            "reading_explanation": (
+                f"The temporal modifier {matrix_argument} attaches to the matrix "
+                "perception proposition, while the perceived complement remains "
+                f"E({matrix_body_translation})."
+            ),
+        }
     semantic_readings = [
         semantic_reading(
-            name="primary",
+            name=(
+                "complement_time_attachment"
+                if time_modified_attachment is not None
+                else "primary"
+            ),
             dependent_type_translation=f"see(Mary, E({embedded_translation}))",
             coq_definition=f"mary_saw_{definition_suffix}",
+            scope=(
+                "embedded_complement_time"
+                if time_modified_attachment is not None
+                else None
+            ),
             scope_policy=(
                 {
                     "main": "and_before_or",
                     "reference": "and_before_or",
                 }
                 if alternative_scope_readings
+                else None
+            ),
+            attachment_summary=(
+                perception_time_attachment_summary(
+                    kind="complement_time_attachment",
+                    proposition=time_modified_attachment,
+                    target="embedded_complement",
+                )
+                if time_modified_attachment is not None
+                else None
+            ),
+            reading_explanation=(
+                "The temporal modifier attaches inside the perceived complement "
+                f"before E nominalizes {embedded_translation}."
+                if time_modified_attachment is not None
                 else None
             ),
             type_check={
@@ -10748,6 +10830,25 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             source="perception_nominalization",
         )
     ]
+    if matrix_time_attachment is not None:
+        semantic_readings.append(
+            semantic_reading(
+                name=matrix_time_attachment["name"],
+                dependent_type_translation=matrix_time_attachment[
+                    "dependent_type_translation"
+                ],
+                coq_definition=matrix_time_attachment["coq_definition"],
+                scope="matrix_perception_time",
+                type_check={
+                    "ok": True,
+                    "type": "Prop",
+                    "errors": [],
+                },
+                source="perception_nominalization",
+                attachment_summary=matrix_time_attachment["attachment_summary"],
+                reading_explanation=matrix_time_attachment["reading_explanation"],
+            )
+        )
     semantic_readings.extend(
         semantic_reading(
             name=reading["name"],
@@ -10808,6 +10909,18 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             "",
             f"Definition mary_saw_{definition_suffix} : Prop :=",
             f"  {perception_predicate} {experiencer} (E ({embedded_coq})).",
+            *(
+                [
+                    "",
+                    (
+                        f"Definition {matrix_time_attachment['coq_definition']} "
+                        ": Prop :="
+                    ),
+                    f"  {matrix_time_attachment['coq_term']}.",
+                ]
+                if matrix_time_attachment is not None
+                else []
+            ),
             *[
                 line
                 for reading in alternative_scope_readings
@@ -10822,6 +10935,11 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
             ],
             "",
             f"Check mary_saw_{definition_suffix}.",
+            *(
+                [f"Check {matrix_time_attachment['coq_definition']}."]
+                if matrix_time_attachment is not None
+                else []
+            ),
             *[
                 f"Check {reading['coq_definition']}."
                 for reading in alternative_scope_readings
@@ -10841,6 +10959,23 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         "semantic_readings": semantic_readings,
         "semantic_readings_check": semantic_readings_check,
     }
+    if matrix_time_attachment is not None:
+        event_semantics["attachment_ambiguity_readings"] = [
+            {
+                "name": "complement_time_attachment",
+                "dependent_type_translation": f"see(Mary, E({embedded_translation}))",
+                "coq_definition": f"mary_saw_{definition_suffix}",
+                "attachment_summary": semantic_readings[0]["attachment_summary"],
+            },
+            {
+                "name": matrix_time_attachment["name"],
+                "dependent_type_translation": matrix_time_attachment[
+                    "dependent_type_translation"
+                ],
+                "coq_definition": matrix_time_attachment["coq_definition"],
+                "attachment_summary": matrix_time_attachment["attachment_summary"],
+            },
+        ]
     if alternative_scope_readings:
         event_semantics["alternative_scope_readings"] = alternative_scope_readings
     ast = perception_nominalization_ast(
@@ -10856,6 +10991,11 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
         "dependent_type_translation": event_semantics["typed_replacement"],
         "semantic_readings": semantic_readings,
         "semantic_readings_check": semantic_readings_check,
+        **(
+            {"attachment_ambiguity_readings": event_semantics["attachment_ambiguity_readings"]}
+            if matrix_time_attachment is not None
+            else {}
+        ),
         **(
             {"alternative_scope_readings": alternative_scope_readings}
             if alternative_scope_readings

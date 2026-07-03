@@ -15263,6 +15263,53 @@ class TranslatorTests(unittest.TestCase):
             "see Mary (E (at_T yesterday (leave John)))",
             result["coq_code"],
         )
+        self.assertIn(
+            "at_T yesterday (see Mary (E (leave John)))",
+            result["coq_code"],
+        )
+        self.assertEqual(
+            [reading["name"] for reading in result["semantic_readings"]],
+            ["complement_time_attachment", "matrix_time_attachment"],
+        )
+        self.assertEqual(result["semantic_readings_check"]["reading_count"], 2)
+        self.assertTrue(result["semantic_readings_check"]["ok"])
+        self.assertEqual(
+            result["semantic_readings"][0]["dependent_type_translation"],
+            "see(Mary, E(at_T(yesterday, leave(John))))",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["attachment_summary"]["kind"],
+            "complement_time_attachment",
+        )
+        self.assertEqual(
+            result["semantic_readings"][0]["attachment_summary"]["typed_time_modifiers"],
+            [
+                {
+                    "name": "yesterday",
+                    "type": "Entity",
+                    "operator": "at_T",
+                    "operator_type": "Entity -> Prop -> Prop",
+                    "target": "embedded_complement",
+                }
+            ],
+        )
+        self.assertEqual(
+            result["semantic_readings"][1]["dependent_type_translation"],
+            "at_T(yesterday, see(Mary, E(leave(John))))",
+        )
+        self.assertEqual(
+            result["semantic_readings"][1]["coq_definition"],
+            "mary_saw_john_leave_at_yesterday_matrix",
+        )
+        self.assertEqual(
+            result["semantic_readings"][1]["attachment_summary"]["kind"],
+            "matrix_time_attachment",
+        )
+        self.assertEqual(
+            result["semantic_readings"][1]["attachment_summary"]["typed_time_modifiers"][0]["target"],
+            "matrix_perception",
+        )
+        self.assertEqual(len(result["attachment_ambiguity_readings"]), 2)
         self.assertNotIn("mary_saw_john", result["dependent_type_translation"])
         self.assertNotIn("Parameter mary_saw_john : Entity.", result["coq_code"])
         nominalized = result["ast"]["perception"]["object"]
