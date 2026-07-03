@@ -10899,6 +10899,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "coq_concrete_truth_condition_registered_fragment_instance_completion_certificate",
         "coq_concrete_truth_condition_instance_source_audit_certificate",
         "coq_concrete_truth_condition_discharge_frontier_certificate",
+        "web_completion_frontier_audit",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
@@ -10934,6 +10935,81 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: semantic snapshot completion evidence drift")
     if completion_status.get("coverage_summary") != counts:
         raise SystemExit("web route smoke check failed: completion coverage summary drift")
+    frontier_audit = completion_status.get("completion_frontier_audit")
+    if not isinstance(frontier_audit, dict):
+        raise SystemExit("web route smoke check failed: completion frontier audit missing")
+    if frontier_audit.get("schema_version") != "completion_frontier_audit.v1":
+        raise SystemExit("web route smoke check failed: completion frontier audit schema drift")
+    if (
+        frontier_audit.get("source_verified_objective")
+        != "coq_concrete_truth_condition_discharge_frontier_certificate"
+    ):
+        raise SystemExit("web route smoke check failed: completion frontier source drift")
+    if frontier_audit.get("source_verified_objective") not in verified_by_id:
+        raise SystemExit("web route smoke check failed: completion frontier unverified source")
+    if frontier_audit.get("source_certificate") != "ConcreteTruthConditionDischargeFrontierCertificate":
+        raise SystemExit("web route smoke check failed: completion frontier certificate drift")
+    if frontier_audit.get("status_type") != "ConcreteTruthConditionDischargeFrontierStatus":
+        raise SystemExit("web route smoke check failed: completion frontier status type drift")
+    closed_frontier = frontier_audit.get("finite_registered_frontier")
+    open_frontier = frontier_audit.get("open_frontier")
+    if not isinstance(closed_frontier, list) or not isinstance(open_frontier, list):
+        raise SystemExit("web route smoke check failed: completion frontier shape drift")
+    if frontier_audit.get("closed_frontier_count") != len(closed_frontier):
+        raise SystemExit("web route smoke check failed: completion frontier closed count drift")
+    if frontier_audit.get("open_frontier_count") != len(open_frontier):
+        raise SystemExit("web route smoke check failed: completion frontier open count drift")
+    closed_by_id = {
+        item.get("objective_id"): item
+        for item in closed_frontier
+        if isinstance(item, dict) and isinstance(item.get("objective_id"), str)
+    }
+    open_by_id = {
+        item.get("objective_id"): item
+        for item in open_frontier
+        if isinstance(item, dict) and isinstance(item.get("objective_id"), str)
+    }
+    if set(open_by_id) != required_incomplete_ids:
+        raise SystemExit("web route smoke check failed: completion frontier objective drift")
+    if set(closed_by_id) != {
+        "coq_concrete_truth_condition_registered_fragment_instance_completion_certificate",
+    }:
+        raise SystemExit("web route smoke check failed: completion frontier closed objective drift")
+    closed_item = next(iter(closed_by_id.values()))
+    if closed_item.get("frontier_status") != "finite_registered_fragment_discharged":
+        raise SystemExit("web route smoke check failed: completion frontier closed status drift")
+    required_open_frontier = {
+        "arbitrary_natural_language_semantics": (
+            "arbitrary_truth_condition_instances_open",
+            "full_natural_language_certification_false",
+            "promote_more_fallback_successes_to_registered_constructions",
+        ),
+        "deep_coq_semantic_proofs": (
+            "arbitrary_truth_condition_instances_open",
+            "concrete_truth_condition_instances_unproved",
+            "provide_concrete_truth_condition_instances",
+        ),
+        "unregistered_scope_attachment_discourse": (
+            "unregistered_scope_attachment_open",
+            "fallback_certification_level_shallow_scaffold",
+            "expand_scope_attachment_discourse_coverage",
+        ),
+        "complete_front_end_lexical_replacement": (
+            "complete_front_end_lexical_replacement_open",
+            "surface_parser_claim_registered_examples_only",
+            "separate_parser_coverage_claims_from_semantic_translation_claims",
+        ),
+    }
+    for objective_id, (status, blocker, next_stage) in required_open_frontier.items():
+        item = open_by_id[objective_id]
+        if item.get("frontier_status") != status:
+            raise SystemExit("web route smoke check failed: completion frontier status drift")
+        if item.get("blocker") != blocker or blocker not in completion_blockers:
+            raise SystemExit("web route smoke check failed: completion frontier blocker drift")
+        if item.get("next_stage") != next_stage or next_stage not in next_recommended_stages:
+            raise SystemExit("web route smoke check failed: completion frontier next-stage drift")
+        if item.get("objective_status") != incomplete_by_id[objective_id].get("status"):
+            raise SystemExit("web route smoke check failed: completion frontier objective status drift")
     modifier_contract = manifest.get("registered_modifier_sequence_contract")
     expected_modifier_invariants = [
         "modifier_vector_length_matches_modifiers",
@@ -11824,6 +11900,19 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         for item in completion_status.get("next_recommended_stages", [])
         if isinstance(item, str)
     ]
+    completion_frontier_audit = completion_status.get("completion_frontier_audit")
+    if not isinstance(completion_frontier_audit, dict):
+        completion_frontier_audit = {}
+    frontier_open = [
+        item
+        for item in completion_frontier_audit.get("open_frontier", [])
+        if isinstance(item, dict)
+    ]
+    frontier_closed = [
+        item
+        for item in completion_frontier_audit.get("finite_registered_frontier", [])
+        if isinstance(item, dict)
+    ]
     surface_family_names = [
         family
         for family, item in surface_parser_coverage.items()
@@ -11926,6 +12015,20 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         data_fragment("data-completion-incomplete-count", len(incomplete_objectives)),
         data_fragment("data-completion-blocker-count", len(completion_blockers)),
         data_fragment("data-completion-next-stage-count", len(next_recommended_stages)),
+        data_fragment(
+            "data-completion-frontier-schema",
+            completion_frontier_audit.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-completion-frontier-source-certificate",
+            completion_frontier_audit.get("source_certificate", ""),
+        ),
+        data_fragment(
+            "data-completion-frontier-status-type",
+            completion_frontier_audit.get("status_type", ""),
+        ),
+        data_fragment("data-completion-frontier-open-count", len(frontier_open)),
+        data_fragment("data-completion-frontier-closed-count", len(frontier_closed)),
         data_fragment("data-surface-parser-family", surface_family_name),
         data_fragment(
             "data-surface-type-level-open-ended",
@@ -12112,6 +12215,7 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
         "surface parser coverage",
         "completion status",
+        "completion frontier audit",
         "<h2>Certified Fragment</h2>",
     ]
     expected_fragments.extend(
@@ -12129,6 +12233,26 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     expected_fragments.extend(
         data_fragment("data-completion-next-stage", stage)
         for stage in next_recommended_stages
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-frontier-closed-objective", item.get("objective_id", ""))
+        for item in frontier_closed
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-frontier-open-objective", item.get("objective_id", ""))
+        for item in frontier_open
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-frontier-blocker", item.get("blocker", ""))
+        for item in frontier_open
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-frontier-next-stage", item.get("next_stage", ""))
+        for item in frontier_open
+    )
+    expected_fragments.extend(
+        data_fragment("data-completion-frontier-theorem", item.get("status_match_theorem", ""))
+        for item in [*frontier_closed, *frontier_open]
     )
     expected_fragments.extend(
         data_fragment("data-modifier-sequence-role", item.get("role", ""))

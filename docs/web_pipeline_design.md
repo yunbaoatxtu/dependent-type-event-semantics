@@ -166,7 +166,13 @@ The manifest and panel should also expose a `project_completion_status.v1`
 the system is a certified finite fragment, and its verified objectives,
 incomplete objectives, blockers, and next-stage rows should be mirrored through
 `data-completion-*` hooks. The verifier should reject any drift that removes
-the arbitrary-natural-language or deep-Coq-proof open objectives. After the
+the arbitrary-natural-language or deep-Coq-proof open objectives. The same
+object now carries a `completion_frontier_audit.v1` child that links the page
+and JSON manifest back to `ConcreteTruthConditionDischargeFrontierCertificate`.
+It records `ConcreteTruthConditionDischargeFrontierStatus`, the discharged
+finite registered fragment, and each open objective's frontier status, blocker,
+next stage, and matching theorem; the panel mirrors those facts through
+`data-completion-frontier-*` hooks. After the
 named-obligation scaffold stage, `coq_named_obligation_scaffold` and
 `coq_obligation_wellformedness_proofs` belong on the verified side: the latter
 covers the generated Coq proofs that each named target is a `Prop`-level

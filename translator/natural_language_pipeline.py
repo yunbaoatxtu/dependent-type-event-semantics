@@ -20900,13 +20900,112 @@ def construction_fragment_manifest() -> dict[str, Any]:
     }
 
 
+def completion_frontier_audit_payload(
+    completion_status: dict[str, Any],
+) -> dict[str, Any]:
+    incomplete_by_id = {
+        item.get("id"): item
+        for item in completion_status.get("incomplete_objectives", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    open_frontier_specs = [
+        {
+            "objective_id": "arbitrary_natural_language_semantics",
+            "frontier_status": "arbitrary_truth_condition_instances_open",
+            "status_match_theorem": (
+                "concrete_truth_condition_discharge_frontier_"
+                "arbitrary_truth_conditions_status_matches"
+            ),
+            "blocker": "full_natural_language_certification_false",
+            "next_stage": "promote_more_fallback_successes_to_registered_constructions",
+        },
+        {
+            "objective_id": "deep_coq_semantic_proofs",
+            "frontier_status": "arbitrary_truth_condition_instances_open",
+            "status_match_theorem": (
+                "concrete_truth_condition_discharge_frontier_"
+                "arbitrary_truth_conditions_status_matches"
+            ),
+            "blocker": "concrete_truth_condition_instances_unproved",
+            "next_stage": "provide_concrete_truth_condition_instances",
+        },
+        {
+            "objective_id": "unregistered_scope_attachment_discourse",
+            "frontier_status": "unregistered_scope_attachment_open",
+            "status_match_theorem": (
+                "concrete_truth_condition_discharge_frontier_"
+                "unregistered_scope_attachment_status_matches"
+            ),
+            "blocker": "fallback_certification_level_shallow_scaffold",
+            "next_stage": "expand_scope_attachment_discourse_coverage",
+        },
+        {
+            "objective_id": "complete_front_end_lexical_replacement",
+            "frontier_status": "complete_front_end_lexical_replacement_open",
+            "status_match_theorem": (
+                "concrete_truth_condition_discharge_frontier_"
+                "front_end_lexical_replacement_status_matches"
+            ),
+            "blocker": "surface_parser_claim_registered_examples_only",
+            "next_stage": (
+                "separate_parser_coverage_claims_from_semantic_translation_claims"
+            ),
+        },
+    ]
+    open_frontier = []
+    for spec in open_frontier_specs:
+        objective = incomplete_by_id.get(spec["objective_id"], {})
+        open_frontier.append(
+            {
+                **spec,
+                "objective_status": str(objective.get("status", "open")),
+                "objective_reason": str(objective.get("reason", "")),
+            },
+        )
+    finite_registered_frontier = [
+        {
+            "objective_id": (
+                "coq_concrete_truth_condition_registered_fragment_"
+                "instance_completion_certificate"
+            ),
+            "frontier_status": "finite_registered_fragment_discharged",
+            "status_match_theorem": (
+                "concrete_truth_condition_discharge_frontier_"
+                "finite_registered_status_matches"
+            ),
+            "source_verified_objective": (
+                "coq_concrete_truth_condition_discharge_frontier_certificate"
+            ),
+        },
+    ]
+    return {
+        "schema_version": "completion_frontier_audit.v1",
+        "audit_basis": (
+            "project_completion_status.incomplete_objectives_with_"
+            "discharge_frontier_statuses"
+        ),
+        "source_verified_objective": (
+            "coq_concrete_truth_condition_discharge_frontier_certificate"
+        ),
+        "source_certificate": "ConcreteTruthConditionDischargeFrontierCertificate",
+        "source_certificate_definition": (
+            "concrete_truth_condition_discharge_frontier_certificate"
+        ),
+        "status_type": "ConcreteTruthConditionDischargeFrontierStatus",
+        "finite_registered_frontier": finite_registered_frontier,
+        "open_frontier": open_frontier,
+        "closed_frontier_count": len(finite_registered_frontier),
+        "open_frontier_count": len(open_frontier),
+    }
+
+
 def project_completion_status_payload(
     *,
     registered_rule_count: int,
     semantic_snapshot_count: int,
     coverage_matrix_counts: dict[str, int],
 ) -> dict[str, Any]:
-    return {
+    status = {
         "schema_version": "project_completion_status.v1",
         "is_complete": False,
         "completion_basis": "verified_fragment_not_full_goal",
@@ -21557,6 +21656,11 @@ def project_completion_status_payload(
                 "evidence": "scripts/check_formalization.py",
             },
             {
+                "id": "web_completion_frontier_audit",
+                "status": "verified",
+                "evidence": "completion_frontier_audit.v1",
+            },
+            {
                 "id": "paper_docx_sync",
                 "status": "verified",
                 "evidence": "scripts/check_paper_docx_sync.py",
@@ -22169,6 +22273,8 @@ def project_completion_status_payload(
         ],
         "coverage_summary": dict(coverage_matrix_counts),
     }
+    status["completion_frontier_audit"] = completion_frontier_audit_payload(status)
+    return status
 
 
 def check_forbidden_coq_fragments(

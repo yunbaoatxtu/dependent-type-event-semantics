@@ -718,6 +718,9 @@ scope/attachment, and complete front-end lexical replacement remain explicitly
 open. The certificate reuses the source-audit route soundness and per-example
 `AtomicClosureTruth` witnesses, so the current proof boundary is visible as a
 typed object rather than only prose in the README.
+The web/API manifest now mirrors that typed boundary as
+`completion_frontier_audit.v1`, linking each open project objective to the
+corresponding discharge-frontier status, blocker, next stage, and theorem name.
 
 Use `python3 scripts/verify_project.py --skip-coq` to skip this optional
 boundary check, or `python3 scripts/verify_project.py --require-coq` to fail

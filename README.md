@@ -951,6 +951,14 @@ verified fragment objectives, lists still-open objectives such as arbitrary
 natural-language semantics and deep Coq semantic proofs, and advertises the next
 recommended stages. The verifier rejects drift in this object, so the project
 cannot accidentally present a finite registered fragment as the finished goal.
+It also carries `completion_frontier_audit` with `schema_version:
+"completion_frontier_audit.v1"`. This audit points to
+`ConcreteTruthConditionDischargeFrontierCertificate`, records the status type
+`ConcreteTruthConditionDischargeFrontierStatus`, marks the finite registered
+fragment as `finite_registered_fragment_discharged`, and maps every open
+objective to its frontier status, blocker, and next recommended stage. The
+Certified Fragment panel mirrors those rows through
+`data-completion-frontier-*` hooks.
 The verified objective list now includes `coq_named_obligation_scaffold`,
 `coq_obligation_wellformedness_proofs`,
 `coq_obligation_record_binding_proofs`, and

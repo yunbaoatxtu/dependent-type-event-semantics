@@ -18529,6 +18529,7 @@ class TranslatorTests(unittest.TestCase):
                 "coq_concrete_truth_condition_registered_fragment_instance_completion_certificate",
                 "coq_concrete_truth_condition_instance_source_audit_certificate",
                 "coq_concrete_truth_condition_discharge_frontier_certificate",
+                "web_completion_frontier_audit",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -18552,6 +18553,50 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "provide_concrete_truth_condition_instances",
             completion_status["next_recommended_stages"],
+        )
+        frontier_audit = completion_status["completion_frontier_audit"]
+        self.assertEqual(
+            frontier_audit["schema_version"],
+            "completion_frontier_audit.v1",
+        )
+        self.assertEqual(
+            frontier_audit["source_certificate"],
+            "ConcreteTruthConditionDischargeFrontierCertificate",
+        )
+        self.assertEqual(
+            frontier_audit["status_type"],
+            "ConcreteTruthConditionDischargeFrontierStatus",
+        )
+        self.assertEqual(
+            frontier_audit["open_frontier_count"],
+            len(completion_status["incomplete_objectives"]),
+        )
+        open_frontier = {
+            item["objective_id"]: item
+            for item in frontier_audit["open_frontier"]
+        }
+        self.assertEqual(
+            set(open_frontier),
+            {
+                item["id"]
+                for item in completion_status["incomplete_objectives"]
+            },
+        )
+        self.assertEqual(
+            open_frontier["deep_coq_semantic_proofs"]["frontier_status"],
+            "arbitrary_truth_condition_instances_open",
+        )
+        self.assertEqual(
+            open_frontier["unregistered_scope_attachment_discourse"]["frontier_status"],
+            "unregistered_scope_attachment_open",
+        )
+        self.assertEqual(
+            open_frontier["complete_front_end_lexical_replacement"]["next_stage"],
+            "separate_parser_coverage_claims_from_semantic_translation_claims",
+        )
+        self.assertEqual(
+            frontier_audit["finite_registered_frontier"][0]["frontier_status"],
+            "finite_registered_fragment_discharged",
         )
         self.assertEqual(
             next(
@@ -20038,6 +20083,38 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-completion-next-stage="provide_concrete_truth_condition_instances"',
+            page,
+        )
+        frontier_audit = completion_status["completion_frontier_audit"]
+        self.assertIn("completion frontier audit", page)
+        self.assertIn(
+            data_attr(
+                "data-completion-frontier-schema",
+                frontier_audit["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-completion-frontier-source-certificate",
+                frontier_audit["source_certificate"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-completion-frontier-closed-objective="coq_concrete_truth_condition_registered_fragment_instance_completion_certificate"',
+            page,
+        )
+        self.assertIn(
+            'data-completion-frontier-open-objective="deep_coq_semantic_proofs"',
+            page,
+        )
+        self.assertIn(
+            'data-completion-frontier-status="arbitrary_truth_condition_instances_open"',
+            page,
+        )
+        self.assertIn(
+            'data-completion-frontier-next-stage="provide_concrete_truth_condition_instances"',
             page,
         )
         self.assertIn(
@@ -27579,6 +27656,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`rejected_unsupported_cases`", readme)
         self.assertIn("`completion_status`", readme)
         self.assertIn('"project_completion_status.v1"', readme)
+        self.assertIn("`completion_frontier_audit`", readme)
+        self.assertIn('"completion_frontier_audit.v1"', readme)
+        self.assertIn("`data-completion-frontier-*`", readme)
         self.assertIn("`is_complete: false`", readme)
         self.assertIn("arbitrary", readme)
         self.assertIn("natural-language semantics", readme)
@@ -27594,6 +27674,8 @@ class TranslatorTests(unittest.TestCase):
             "`coq_atomic_closure_evidence_backed_truth_sources`",
             readme,
         )
+        self.assertIn("`completion_frontier_audit.v1`", web_design)
+        self.assertIn("`data-completion-frontier-*`", web_design)
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", readme)
@@ -27616,6 +27698,7 @@ class TranslatorTests(unittest.TestCase):
             "`atomic_closure_evidence_backed_truth_sources`",
             formalization_readme,
         )
+        self.assertIn("completion_frontier_audit.v1", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", formalization_readme)
         self.assertIn("`example_i_semantic_preservation_target_matches`", formalization_readme)
@@ -29191,6 +29274,8 @@ class TranslatorTests(unittest.TestCase):
             "coq_concrete_truth_condition_discharge_frontier_certificate",
             manuscript,
         )
+        self.assertIn("completion_frontier_audit.v1", manuscript)
+        self.assertIn("data-completion-frontier-*", manuscript)
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
         self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
         self.assertIn("coq_atomic_valuation_spec_instance", manuscript)

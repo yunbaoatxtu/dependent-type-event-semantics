@@ -3374,6 +3374,19 @@ def certified_fragment_panel() -> str:
         for item in completion_status.get("next_recommended_stages", [])
         if isinstance(item, str)
     ]
+    completion_frontier_audit = completion_status.get("completion_frontier_audit")
+    if not isinstance(completion_frontier_audit, dict):
+        completion_frontier_audit = {}
+    frontier_open = [
+        item
+        for item in completion_frontier_audit.get("open_frontier", [])
+        if isinstance(item, dict)
+    ]
+    frontier_closed = [
+        item
+        for item in completion_frontier_audit.get("finite_registered_frontier", [])
+        if isinstance(item, dict)
+    ]
     semantic_snapshots = [
         item
         for item in manifest.get("semantic_snapshots", [])
@@ -3826,6 +3839,30 @@ def certified_fragment_panel() -> str:
         )
         for stage in next_recommended_stages
     )
+    frontier_closed_items = "".join(
+        (
+            '<li '
+            f'data-completion-frontier-closed-objective="{html.escape(str(item.get("objective_id", "")), quote=True)}" '
+            f'data-completion-frontier-status="{html.escape(str(item.get("frontier_status", "")), quote=True)}" '
+            f'data-completion-frontier-theorem="{html.escape(str(item.get("status_match_theorem", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('objective_id', '')))}</code>"
+            "</li>"
+        )
+        for item in frontier_closed
+    )
+    frontier_open_items = "".join(
+        (
+            '<li '
+            f'data-completion-frontier-open-objective="{html.escape(str(item.get("objective_id", "")), quote=True)}" '
+            f'data-completion-frontier-status="{html.escape(str(item.get("frontier_status", "")), quote=True)}" '
+            f'data-completion-frontier-blocker="{html.escape(str(item.get("blocker", "")), quote=True)}" '
+            f'data-completion-frontier-next-stage="{html.escape(str(item.get("next_stage", "")), quote=True)}" '
+            f'data-completion-frontier-theorem="{html.escape(str(item.get("status_match_theorem", "")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('objective_id', '')))}</code>"
+            "</li>"
+        )
+        for item in frontier_open
+    )
     surface_parser_items = "".join(
         (
             '<li '
@@ -3878,6 +3915,11 @@ def certified_fragment_panel() -> str:
         f'data-completion-incomplete-count="{len(incomplete_objectives)}" '
         f'data-completion-blocker-count="{len(completion_blockers)}" '
         f'data-completion-next-stage-count="{len(next_recommended_stages)}" '
+        f'data-completion-frontier-schema="{html.escape(str(completion_frontier_audit.get("schema_version", "")), quote=True)}" '
+        f'data-completion-frontier-source-certificate="{html.escape(str(completion_frontier_audit.get("source_certificate", "")), quote=True)}" '
+        f'data-completion-frontier-status-type="{html.escape(str(completion_frontier_audit.get("status_type", "")), quote=True)}" '
+        f'data-completion-frontier-open-count="{len(frontier_open)}" '
+        f'data-completion-frontier-closed-count="{len(frontier_closed)}" '
         'data-surface-parser-family="modified_transitive_adv_sequence" '
         f'data-surface-type-level-open-ended="{str(modified_surface.get("type_level_open_ended") is True).lower()}" '
         f'data-surface-parser-claim="{html.escape(str(modified_surface.get("surface_parser_claim", "")), quote=True)}" '
@@ -3942,6 +3984,8 @@ def certified_fragment_panel() -> str:
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
         f"<dt>project complete</dt><dd>{str(completion_status.get('is_complete') is True).lower()}</dd>"
         f"<dt>completion basis</dt><dd><code>{html.escape(str(completion_status.get('completion_basis', '')))}</code></dd>"
+        f"<dt>frontier audit</dt><dd><code>{html.escape(str(completion_frontier_audit.get('schema_version', '')))}</code></dd>"
+        f"<dt>frontier source</dt><dd><code>{html.escape(str(completion_frontier_audit.get('source_certificate', '')))}</code></dd>"
         f"<dt>surface parser claim</dt><dd><code>{html.escape(str(modified_surface.get('surface_parser_claim', '')))}</code></dd>"
         f"<dt>verified Adv counts</dt><dd><code>{html.escape(surface_verified_counts)}</code></dd>"
         f"<dt>surface generator</dt><dd><code>{html.escape(surface_generator_kind)}</code></dd>"
@@ -3982,6 +4026,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-completion"><strong>completion status</strong>'
         f"<ul>{verified_objective_items}{incomplete_objective_items}{completion_blocker_items}{next_stage_items}</ul></div>"
+        '<div class="certified-fragment-frontier"><strong>completion frontier audit</strong>'
+        f"<ul>{frontier_closed_items}{frontier_open_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'
         f"<ul>{marker_items}</ul></div>"
         "</div>"
