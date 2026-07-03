@@ -3403,6 +3403,38 @@ def certified_fragment_panel() -> str:
             return ""
         return " | ".join(str(value) for value in values)
 
+    def fallback_promotion_item(item: dict[str, object]) -> str:
+        draft_preflight = item.get("draft_preflight")
+        if not isinstance(draft_preflight, dict):
+            draft_preflight = {}
+        return (
+            '<li '
+            f'data-fallback-promotion-candidate-id="{html.escape(str(item.get("candidate_id", "")), quote=True)}" '
+            f'data-fallback-promotion-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
+            f'data-fallback-promotion-source="{html.escape(str(item.get("source", "")), quote=True)}" '
+            f'data-fallback-promotion-current-scope="{html.escape(str(item.get("current_scope_kind", "")), quote=True)}" '
+            f'data-fallback-promotion-current-level="{html.escape(str(item.get("current_certification_level", "")), quote=True)}" '
+            f'data-fallback-promotion-boundary="{html.escape(str(item.get("current_boundary_status", "")), quote=True)}" '
+            f'data-fallback-promotion-target-family="{html.escape(str(item.get("target_rule_family", "")), quote=True)}" '
+            f'data-fallback-promotion-target-claim="{html.escape(str(item.get("target_rule_claim", "")), quote=True)}" '
+            f'data-fallback-promotion-semantic-classes="{html.escape(data_list(item.get("semantic_classes")), quote=True)}" '
+            f'data-fallback-promotion-gap-ids="{html.escape(data_list(item.get("required_gap_ids")), quote=True)}" '
+            f'data-fallback-promotion-checks="{html.escape(data_list(item.get("promotion_checks")), quote=True)}" '
+            f'data-fallback-promotion-draft-preflight-schema="{html.escape(str(draft_preflight.get("schema_version", "")), quote=True)}" '
+            f'data-fallback-promotion-draft-route-status="{html.escape(str(draft_preflight.get("route_status", "")), quote=True)}" '
+            f'data-fallback-promotion-draft-api-path="{html.escape(str(draft_preflight.get("draft_api_path", "")), quote=True)}" '
+            f'data-fallback-promotion-draft-download-path="{html.escape(str(draft_preflight.get("download_api_path", "")), quote=True)}" '
+            f'data-fallback-promotion-draft-download-filename="{html.escape(str(draft_preflight.get("download_filename", "")), quote=True)}" '
+            f'data-fallback-promotion-draft-candidate-rule-id="{html.escape(str(draft_preflight.get("candidate_rule_id", "")), quote=True)}" '
+            f'data-fallback-promotion-draft-response-schema="{html.escape(str(draft_preflight.get("response_schema_version", "")), quote=True)}" '
+            f'data-fallback-promotion-registration-preflight-schema="{html.escape(str(draft_preflight.get("registration_preflight_schema_version", "")), quote=True)}" '
+            f'data-fallback-promotion-registration-status="{html.escape(str(draft_preflight.get("registration_status", "")), quote=True)}" '
+            f'data-fallback-promotion-can-auto-register="{str(draft_preflight.get("can_auto_register") is True).lower()}">'
+            f"<code>{html.escape(str(item.get('candidate_id', '')))}</code>"
+            f"<span>{html.escape(str(item.get('target_rule_family', '')))}</span>"
+            "</li>"
+        )
+
     frontier_open = [
         item
         for item in completion_frontier_audit.get("open_frontier", [])
@@ -3866,24 +3898,7 @@ def certified_fragment_panel() -> str:
         for stage in next_recommended_stages
     )
     fallback_promotion_items = "".join(
-        (
-            '<li '
-            f'data-fallback-promotion-candidate-id="{html.escape(str(item.get("candidate_id", "")), quote=True)}" '
-            f'data-fallback-promotion-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
-            f'data-fallback-promotion-source="{html.escape(str(item.get("source", "")), quote=True)}" '
-            f'data-fallback-promotion-current-scope="{html.escape(str(item.get("current_scope_kind", "")), quote=True)}" '
-            f'data-fallback-promotion-current-level="{html.escape(str(item.get("current_certification_level", "")), quote=True)}" '
-            f'data-fallback-promotion-boundary="{html.escape(str(item.get("current_boundary_status", "")), quote=True)}" '
-            f'data-fallback-promotion-target-family="{html.escape(str(item.get("target_rule_family", "")), quote=True)}" '
-            f'data-fallback-promotion-target-claim="{html.escape(str(item.get("target_rule_claim", "")), quote=True)}" '
-            f'data-fallback-promotion-semantic-classes="{html.escape(data_list(item.get("semantic_classes")), quote=True)}" '
-            f'data-fallback-promotion-gap-ids="{html.escape(data_list(item.get("required_gap_ids")), quote=True)}" '
-            f'data-fallback-promotion-checks="{html.escape(data_list(item.get("promotion_checks")), quote=True)}">'
-            f"<code>{html.escape(str(item.get('candidate_id', '')))}</code>"
-            f"<span>{html.escape(str(item.get('target_rule_family', '')))}</span>"
-            "</li>"
-        )
-        for item in fallback_promotion_rows
+        fallback_promotion_item(item) for item in fallback_promotion_rows
     )
     truth_condition_obligation_items = "".join(
         (

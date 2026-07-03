@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlencode
 
 from translator.dependent_type_event_translator import (
     INCOMPATIBLE_STATE_PAIRS,
@@ -1855,10 +1856,59 @@ CONSTRUCTION_RULE_DRAFT_SCHEMA = "construction_rule_draft.v1"
 CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA = (
     "construction_rule_registration_preflight.v1"
 )
+FALLBACK_PROMOTION_DRAFT_PREFLIGHT_SCHEMA = "fallback_promotion_draft_preflight.v1"
 
 
 def fallback_certification_gap_payload() -> list[dict[str, str]]:
     return [dict(gap) for gap in FALLBACK_CERTIFICATION_GAPS]
+
+
+def fallback_promotion_draft_preflight_payload(sentence: str) -> dict[str, Any]:
+    event_semantics = sentence_to_event_semantics(sentence)
+    translation = translate(event_semantics)
+    ast = translation.get("ast")
+    candidate_rule_id = fallback_candidate_rule_id(
+        ast if isinstance(ast, dict) else {},
+    )
+    candidate_analyzer = f"{candidate_rule_id}_pipeline"
+    route_query = urlencode({"sentence": sentence, "require_coq": "1"})
+    download_query = urlencode(
+        {"sentence": sentence, "require_coq": "1", "download": "1"},
+    )
+    return {
+        "schema_version": FALLBACK_PROMOTION_DRAFT_PREFLIGHT_SCHEMA,
+        "source": "construction_rule_draft",
+        "route_status": "draft_route_available_not_registered",
+        "candidate_rule_id": candidate_rule_id,
+        "candidate_analyzer": candidate_analyzer,
+        "draft_schema_version": CONSTRUCTION_RULE_DRAFT_SCHEMA,
+        "response_schema_version": "construction_rule_draft_response.v1",
+        "registration_preflight_schema_version": (
+            CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA
+        ),
+        "registration_status": "human_review_required",
+        "can_auto_register": False,
+        "type_check_ok": (
+            isinstance(translation.get("type_check"), dict)
+            and translation["type_check"].get("ok") is True
+        ),
+        "ast_summary": ast_structure_summary(ast if isinstance(ast, dict) else {}),
+        "draft_api_path": f"/api/construction-rule-draft?{route_query}",
+        "download_api_path": f"/api/construction-rule-draft?{download_query}",
+        "download_filename": (
+            f"construction_rule_draft__{candidate_rule_id}.json"
+        ),
+        "required_route_checks": [
+            "draft_response_schema_matches_candidate",
+            "download_artifact_filename_matches_candidate",
+            "registration_preflight_schema_matches_candidate",
+            "registration_status_remains_human_review_required",
+        ],
+        "non_claim": (
+            "draft preflight only; this does not promote the fallback row "
+            "to a registered construction"
+        ),
+    }
 
 
 def fallback_promotion_candidates_payload(
@@ -1871,6 +1921,7 @@ def fallback_promotion_candidates_payload(
     candidates = []
     for index, case in enumerate(fallback_success_cases, start=1):
         sentence = str(case.get("sentence", ""))
+        draft_preflight = fallback_promotion_draft_preflight_payload(sentence)
         candidates.append(
             {
                 "candidate_id": f"fallback_promotion_{index}",
@@ -1901,8 +1952,10 @@ def fallback_promotion_candidates_payload(
                 "runtime_checks": [
                     "coverage_matrix.fallback_success_cases",
                     "web_route_smoke_check:/api/analyze",
+                    "web_route_smoke_check:/api/construction-rule-draft",
                     "web_route_smoke_check:/",
                 ],
+                "draft_preflight": draft_preflight,
                 "non_claim": (
                     "promotion candidate only; not a registered construction "
                     "and not full natural-language certification"

@@ -10702,6 +10702,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         derive_registered_modifier_role_inventory,
         derive_registered_modifier_role_witnesses,
         exported_prop_definition_names,
+        fallback_promotion_draft_preflight_payload,
         fallback_promotion_candidates_payload,
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
@@ -10837,8 +10838,58 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         if (
             not string_list(runtime_checks)
             or "web_route_smoke_check:/api/analyze" not in runtime_checks
+            or "web_route_smoke_check:/api/construction-rule-draft" not in runtime_checks
         ):
             raise SystemExit("web route smoke check failed: fallback promotion runtime drift")
+        draft_preflight = row.get("draft_preflight")
+        if not isinstance(draft_preflight, dict):
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft preflight missing"
+            )
+        if draft_preflight.get("schema_version") != "fallback_promotion_draft_preflight.v1":
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft preflight schema drift"
+            )
+        if draft_preflight.get("draft_schema_version") != "construction_rule_draft.v1":
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft schema drift"
+            )
+        if (
+            draft_preflight.get("registration_preflight_schema_version")
+            != "construction_rule_registration_preflight.v1"
+        ):
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion registration preflight schema drift"
+            )
+        if draft_preflight.get("registration_status") != "human_review_required":
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion registration status drift"
+            )
+        if draft_preflight.get("can_auto_register") is not False:
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion auto-registration drift"
+            )
+        if not nonempty_string(draft_preflight.get("draft_api_path")):
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft route drift"
+            )
+        if not nonempty_string(draft_preflight.get("download_api_path")):
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft download drift"
+            )
+        if not str(draft_preflight.get("download_filename", "")).startswith(
+            "construction_rule_draft__",
+        ):
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft filename drift"
+            )
+        if (
+            draft_preflight
+            != fallback_promotion_draft_preflight_payload(str(sentence))
+        ):
+            raise SystemExit(
+                "web route smoke check failed: fallback promotion draft preflight drift"
+            )
         if "not full natural-language certification" not in str(row.get("non_claim", "")):
             raise SystemExit("web route smoke check failed: fallback promotion non-claim drift")
     expected_fallback_promotion = fallback_promotion_candidates_payload(fallback_cases)
@@ -12480,6 +12531,9 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         for stage in next_recommended_stages
     )
     for item in fallback_promotion_rows:
+        draft_preflight = item.get("draft_preflight")
+        if not isinstance(draft_preflight, dict):
+            draft_preflight = {}
         expected_fragments.extend(
             [
                 data_fragment(
@@ -12531,6 +12585,46 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
                     " | ".join(str(value) for value in item.get("promotion_checks", []))
                     if isinstance(item.get("promotion_checks"), list)
                     else "",
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-preflight-schema",
+                    draft_preflight.get("schema_version", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-route-status",
+                    draft_preflight.get("route_status", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-api-path",
+                    draft_preflight.get("draft_api_path", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-download-path",
+                    draft_preflight.get("download_api_path", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-download-filename",
+                    draft_preflight.get("download_filename", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-candidate-rule-id",
+                    draft_preflight.get("candidate_rule_id", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-draft-response-schema",
+                    draft_preflight.get("response_schema_version", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-registration-preflight-schema",
+                    draft_preflight.get("registration_preflight_schema_version", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-registration-status",
+                    draft_preflight.get("registration_status", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-can-auto-register",
+                    str(draft_preflight.get("can_auto_register") is True).lower(),
                 ),
             ],
         )

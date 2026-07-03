@@ -960,6 +960,10 @@ artifacts, promotion checks, and runtime checks needed before that example can
 be moved into the registered fragment. Its claim is deliberately
 `promotion_queue_not_registered_certification`, so it documents the next
 registration work without treating fallback success as a certified construction.
+Each candidate also carries a `fallback_promotion_draft_preflight.v1` child with
+the matching construction-rule-draft route, stable download filename, expected
+draft and registration-preflight schemas, `human_review_required` status, and a
+false `can_auto_register` flag.
 It also carries `truth_condition_instance_obligations` with `schema_version:
 "truth_condition_instance_obligations.v1"`. This matrix splits the remaining
 `concrete_truth_condition_instances_unproved` blocker into checked rows for

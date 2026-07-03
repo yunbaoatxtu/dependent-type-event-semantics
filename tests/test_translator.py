@@ -122,6 +122,7 @@ from translator.natural_language_pipeline import (
     fallback_candidate_rule_id,
     fallback_certification_gap_payload,
     fallback_construction_rule_registration_preflight,
+    fallback_promotion_draft_preflight_payload,
     run_registered_rule,
     run_pipeline,
     sentence_to_event_semantics,
@@ -18623,6 +18624,43 @@ class TranslatorTests(unittest.TestCase):
             promotion_candidate["runtime_checks"],
         )
         self.assertIn(
+            "web_route_smoke_check:/api/construction-rule-draft",
+            promotion_candidate["runtime_checks"],
+        )
+        draft_preflight = promotion_candidate["draft_preflight"]
+        self.assertEqual(
+            draft_preflight,
+            fallback_promotion_draft_preflight_payload(fallback_case["sentence"]),
+        )
+        self.assertEqual(
+            draft_preflight["schema_version"],
+            "fallback_promotion_draft_preflight.v1",
+        )
+        self.assertEqual(
+            draft_preflight["draft_schema_version"],
+            CONSTRUCTION_RULE_DRAFT_SCHEMA,
+        )
+        self.assertEqual(
+            draft_preflight["registration_preflight_schema_version"],
+            CONSTRUCTION_RULE_REGISTRATION_PREFLIGHT_SCHEMA,
+        )
+        self.assertEqual(
+            draft_preflight["registration_status"],
+            "human_review_required",
+        )
+        self.assertFalse(draft_preflight["can_auto_register"])
+        self.assertIn(
+            "/api/construction-rule-draft?",
+            draft_preflight["draft_api_path"],
+        )
+        self.assertEqual(
+            draft_preflight["download_filename"],
+            (
+                "construction_rule_draft__"
+                f"{draft_preflight['candidate_rule_id']}.json"
+            ),
+        )
+        self.assertIn(
             "not full natural-language certification",
             promotion_candidate["non_claim"],
         )
@@ -19846,6 +19884,26 @@ class TranslatorTests(unittest.TestCase):
             validate_certified_fragment_manifest(manifest)
 
         manifest = deepcopy(construction_fragment_manifest())
+        manifest["fallback_promotion_candidates"]["candidates"][0][
+            "draft_preflight"
+        ]["registration_status"] = "registered"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback promotion registration status drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["fallback_promotion_candidates"]["candidates"][0][
+            "draft_preflight"
+        ]["download_filename"] = "construction_rule_draft__stale.json"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "fallback promotion draft preflight drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
         manifest["completion_status"]["coverage_summary"][
             "registered_success_cases"
         ] = -1
@@ -20521,6 +20579,53 @@ class TranslatorTests(unittest.TestCase):
                 "data-fallback-promotion-target-family",
                 fallback_promotion_candidate["target_rule_family"],
             ),
+            page,
+        )
+        draft_preflight = fallback_promotion_candidate["draft_preflight"]
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-draft-preflight-schema",
+                draft_preflight["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-draft-route-status",
+                draft_preflight["route_status"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-draft-api-path",
+                draft_preflight["draft_api_path"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-draft-download-filename",
+                draft_preflight["download_filename"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-registration-preflight-schema",
+                draft_preflight["registration_preflight_schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-registration-status",
+                "human_review_required",
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr("data-fallback-promotion-can-auto-register", "false"),
             page,
         )
         self.assertIn(
@@ -28063,6 +28168,7 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn('"project_completion_status.v1"', readme)
         self.assertIn("`fallback_promotion_candidates`", readme)
         self.assertIn('"fallback_promotion_candidates.v1"', readme)
+        self.assertIn("`fallback_promotion_draft_preflight.v1`", readme)
         self.assertIn("`truth_condition_instance_obligations`", readme)
         self.assertIn('"truth_condition_instance_obligations.v1"', readme)
         self.assertIn("`completion_frontier_audit`", readme)
@@ -28085,7 +28191,9 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("`completion_frontier_audit.v1`", web_design)
         self.assertIn("`fallback_promotion_candidates.v1`", web_design)
+        self.assertIn("`fallback_promotion_draft_preflight.v1`", web_design)
         self.assertIn("`data-fallback-promotion-*`", web_design)
+        self.assertIn("`data-fallback-promotion-draft-*`", web_design)
         self.assertIn("`truth_condition_instance_obligations.v1`", web_design)
         self.assertIn("`data-truth-condition-obligation-*`", web_design)
         self.assertIn("`data-completion-frontier-*`", web_design)
@@ -29689,7 +29797,9 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn("completion_frontier_audit.v1", manuscript)
         self.assertIn("fallback_promotion_candidates.v1", manuscript)
+        self.assertIn("fallback_promotion_draft_preflight.v1", manuscript)
         self.assertIn("promotion_queue_not_registered_certification", manuscript)
+        self.assertIn("data-fallback-promotion-draft-*", manuscript)
         self.assertIn("data-completion-frontier-*", manuscript)
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
         self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
@@ -31381,7 +31491,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("coverage_matrix", verifier)
         self.assertIn("coverage_matrix_counts", verifier)
         self.assertIn("fallback_promotion_candidates.v1", verifier)
+        self.assertIn("fallback_promotion_draft_preflight.v1", verifier)
         self.assertIn("data-fallback-promotion-schema", verifier)
+        self.assertIn("data-fallback-promotion-draft-preflight-schema", verifier)
         self.assertIn("data-coverage-registered-success-count", verifier)
         self.assertIn("data-coverage-marker", verifier)
         self.assertIn("semantic_snapshots", verifier)

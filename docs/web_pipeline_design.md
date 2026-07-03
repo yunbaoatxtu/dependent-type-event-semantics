@@ -173,7 +173,15 @@ manifest now exposes `fallback_promotion_candidates.v1`, derived from
 shallow scope, target rule family, required gap ids, promotion checks, runtime
 checks, and a non-claim that the row is not registered certification. The
 verifier recomputes the queue from fallback coverage so a promotion candidate
-cannot silently detach from the shallow example it is meant to replace. The same
+cannot silently detach from the shallow example it is meant to replace. Each row
+also carries a `fallback_promotion_draft_preflight.v1` object that points to the
+matching `/api/construction-rule-draft` route, the stable download artifact
+filename, the expected `construction_rule_draft.v1` payload schema, and the
+`construction_rule_registration_preflight.v1` status. These values are mirrored
+through row-level `data-fallback-promotion-draft-*` hooks, and the verifier
+rejects drift in the route, download filename, schema, registration status, or
+`can_auto_register` flag while preserving the claim that the candidate is still
+not a registered construction. The same
 object now carries a `truth_condition_instance_obligations.v1` child for the
 remaining `concrete_truth_condition_instances_unproved` blocker. It splits that
 blocker into lexical application, Sigma/quantification, temporal operators,
