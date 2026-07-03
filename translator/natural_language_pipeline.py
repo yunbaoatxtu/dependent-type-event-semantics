@@ -21617,6 +21617,8 @@ def construction_fragment_manifest() -> dict[str, Any]:
             registered_rule_count=len(registered),
             semantic_snapshot_count=len(semantic_snapshots),
             coverage_matrix_counts=coverage_matrix_counts,
+            semantic_snapshots=semantic_snapshots,
+            registered_variant_success_cases=registered_variant_success_cases,
         ),
         "rejected_fragment_markers": sorted(UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS),
         "scope_determiners": {
@@ -21730,7 +21732,201 @@ def completion_frontier_audit_payload(
     }
 
 
-def truth_condition_instance_obligations_payload() -> dict[str, Any]:
+TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE = (
+    "semantic_snapshots_and_registered_variant_success_cases"
+)
+
+
+def flatten_truth_condition_witness_text(value: Any) -> str:
+    if isinstance(value, dict):
+        return " ".join(
+            flatten_truth_condition_witness_text(item)
+            for item in value.values()
+        )
+    if isinstance(value, (list, tuple, set)):
+        return " ".join(flatten_truth_condition_witness_text(item) for item in value)
+    return str(value)
+
+
+def truth_condition_witness_class_ids(case: dict[str, Any]) -> set[str]:
+    summary = case.get("expected_ast_summary")
+    if not isinstance(summary, dict):
+        summary = {}
+    fragments = case.get("expected_dependent_type_fragments")
+    if not isinstance(fragments, list):
+        fragments = []
+    text = flatten_truth_condition_witness_text(
+        [
+            case.get("rule_id", ""),
+            case.get("variant_id", ""),
+            case.get("sentence", ""),
+            case.get("expected_event_analysis", ""),
+            case.get("expected_ast_kind", ""),
+            summary,
+            fragments,
+        ],
+    )
+    text_lower = text.lower()
+    class_ids: set[str] = set()
+    predicate_symbols = summary.get("predicate_symbols")
+    if predicate_symbols or re.search(r"\b[A-Za-z][A-Za-z0-9_]*\s*\(", text):
+        class_ids.add("lexical_application")
+    if (
+        "exists " in text_lower
+        or "forall " in text_lower
+        or "sigma" in text_lower
+        or re.search(r"\bscope(?:_ambiguity|[-_ ]taking|[-_ ]scope)?\b", text_lower)
+        or summary.get("binder_signatures")
+        or summary.get("quantifier_signatures")
+    ):
+        class_ids.add("sigma_quantification")
+    if (
+        "time" in text_lower
+        or "at_t(" in text_lower
+        or "during_t(" in text_lower
+        or "before_t(" in text_lower
+        or "after_t(" in text_lower
+        or "until_t(" in text_lower
+        or "since_t(" in text_lower
+        or "before(" in text_lower
+        or int(summary.get("top_level_time_modifier_count") or 0) > 0
+    ):
+        class_ids.add("temporal_operators")
+    if (
+        "repeat(" in text_lower
+        or "event-counting" in text_lower
+        or "counting" in text_lower
+        or " twice" in text_lower
+        or " thrice" in text_lower
+    ):
+        class_ids.add("repeat_counting")
+    if (
+        "not_t(" in text_lower
+        or "negat" in text_lower
+        or "polarity" in text_lower
+        or " not " in text_lower
+    ):
+        class_ids.add("polarity")
+    if (
+        "transition(" in text_lower
+        or "cause(" in text_lower
+        or "causewithinstrument(" in text_lower
+        or "change(" in text_lower
+        or "holds_state(" in text_lower
+        or "causal" in text_lower
+        or "resultative" in text_lower
+        or summary.get("state_symbols")
+    ):
+        class_ids.add("transition_cause")
+    if (
+        "modified" in text_lower
+        or "instrument" in text_lower
+        or "locative" in text_lower
+        or "directional" in text_lower
+        or "manner" in text_lower
+        or re.search(r"\b(with|near|beside|under|into|from|on|in)\s*\(", text_lower)
+        or int(summary.get("top_level_modifier_count") or 0) > 0
+    ):
+        class_ids.add("modifier_attachment")
+    return class_ids
+
+
+def truth_condition_obligation_witnesses(
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
+) -> dict[str, list[dict[str, str]]]:
+    witnesses: dict[str, list[dict[str, str]]] = {
+        "lexical_application": [],
+        "sigma_quantification": [],
+        "temporal_operators": [],
+        "repeat_counting": [],
+        "polarity": [],
+        "transition_cause": [],
+        "modifier_attachment": [],
+    }
+    seen: dict[str, set[tuple[str, str, str]]] = {
+        class_id: set() for class_id in witnesses
+    }
+    source_cases = [
+        ("semantic_snapshot", item) for item in semantic_snapshots
+    ] + [
+        ("registered_variant_success_case", item)
+        for item in registered_variant_success_cases
+    ]
+    for source_kind, case in source_cases:
+        if not isinstance(case, dict):
+            continue
+        rule_id = str(case.get("rule_id", ""))
+        variant_id = str(case.get("variant_id", ""))
+        sentence = str(case.get("sentence", ""))
+        key = (source_kind, rule_id, variant_id or sentence)
+        for class_id in truth_condition_witness_class_ids(case):
+            if key in seen[class_id]:
+                continue
+            seen[class_id].add(key)
+            witnesses[class_id].append(
+                {
+                    "source": source_kind,
+                    "rule_id": rule_id,
+                    "variant_id": variant_id,
+                    "sentence": sentence,
+                },
+            )
+    return witnesses
+
+
+def unique_truth_condition_witness_values(
+    witnesses: list[dict[str, str]],
+    key: str,
+    limit: int,
+) -> list[str]:
+    values: list[str] = []
+    seen: set[str] = set()
+    for witness in witnesses:
+        value = witness.get(key, "")
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        values.append(value)
+        if len(values) >= limit:
+            break
+    return values
+
+
+def summarize_truth_condition_witnesses(
+    witnesses: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "witness_source": TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE,
+        "witness_scope": "finite_registered_fragment",
+        "registered_witness_count": len(witnesses),
+        "sample_rule_ids": unique_truth_condition_witness_values(
+            witnesses,
+            "rule_id",
+            5,
+        ),
+        "sample_variant_ids": unique_truth_condition_witness_values(
+            witnesses,
+            "variant_id",
+            5,
+        ),
+        "sample_sentences": unique_truth_condition_witness_values(
+            witnesses,
+            "sentence",
+            3,
+        ),
+        "sample_witnesses": witnesses[:3],
+    }
+
+
+def truth_condition_instance_obligations_payload(
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
+) -> dict[str, Any]:
+    witness_by_class = truth_condition_obligation_witnesses(
+        semantic_snapshots,
+        registered_variant_success_cases,
+    )
     obligations = [
         {
             "class_id": "lexical_application",
@@ -21866,6 +22062,15 @@ def truth_condition_instance_obligations_payload() -> dict[str, Any]:
             ],
         },
     ]
+    obligations = [
+        {
+            **row,
+            **summarize_truth_condition_witnesses(
+                witness_by_class.get(str(row.get("class_id", "")), []),
+            ),
+        }
+        for row in obligations
+    ]
     return {
         "schema_version": "truth_condition_instance_obligations.v1",
         "blocker": "concrete_truth_condition_instances_unproved",
@@ -21873,6 +22078,8 @@ def truth_condition_instance_obligations_payload() -> dict[str, Any]:
         "source_verified_objective": (
             "coq_concrete_truth_condition_discharge_frontier_certificate"
         ),
+        "witness_source": TRUTH_CONDITION_OBLIGATION_WITNESS_SOURCE,
+        "witness_scope": "finite_registered_fragment",
         "obligation_count": len(obligations),
         "obligations": obligations,
         "claim": "finite_registered_candidates_verified_general_instances_open",
@@ -21884,6 +22091,8 @@ def project_completion_status_payload(
     registered_rule_count: int,
     semantic_snapshot_count: int,
     coverage_matrix_counts: dict[str, int],
+    semantic_snapshots: list[dict[str, Any]],
+    registered_variant_success_cases: list[dict[str, Any]],
 ) -> dict[str, Any]:
     status = {
         "schema_version": "project_completion_status.v1",
@@ -23154,7 +23363,10 @@ def project_completion_status_payload(
         "coverage_summary": dict(coverage_matrix_counts),
     }
     status["truth_condition_instance_obligations"] = (
-        truth_condition_instance_obligations_payload()
+        truth_condition_instance_obligations_payload(
+            semantic_snapshots,
+            registered_variant_success_cases,
+        )
     )
     status["completion_frontier_audit"] = completion_frontier_audit_payload(status)
     return status

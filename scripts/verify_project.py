@@ -10705,6 +10705,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
         run_pipeline,
+        truth_condition_instance_obligations_payload,
     )
 
     if manifest.get("schema_version") != "certified_fragment.v1":
@@ -10941,6 +10942,10 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: truth-condition obligation blocker drift")
     if truth_obligations.get("next_stage") != "provide_concrete_truth_condition_instances":
         raise SystemExit("web route smoke check failed: truth-condition obligation next-stage drift")
+    if truth_obligations.get("witness_source") != "semantic_snapshots_and_registered_variant_success_cases":
+        raise SystemExit("web route smoke check failed: truth-condition obligation witness source drift")
+    if truth_obligations.get("witness_scope") != "finite_registered_fragment":
+        raise SystemExit("web route smoke check failed: truth-condition obligation witness scope drift")
     obligation_rows = truth_obligations.get("obligations")
     if not isinstance(obligation_rows, list):
         raise SystemExit("web route smoke check failed: truth-condition obligation rows missing")
@@ -11003,6 +11008,22 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         required_instances = row.get("required_independent_instances")
         if not string_list(required_instances) or not required_instances:
             raise SystemExit("web route smoke check failed: truth-condition obligation instance drift")
+        if row.get("witness_source") != "semantic_snapshots_and_registered_variant_success_cases":
+            raise SystemExit("web route smoke check failed: truth-condition obligation witness source drift")
+        if row.get("witness_scope") != "finite_registered_fragment":
+            raise SystemExit("web route smoke check failed: truth-condition obligation witness scope drift")
+        if not isinstance(row.get("registered_witness_count"), int) or row.get("registered_witness_count") <= 0:
+            raise SystemExit("web route smoke check failed: truth-condition obligation witness count drift")
+        if not string_list(row.get("sample_rule_ids")) or not row.get("sample_rule_ids"):
+            raise SystemExit("web route smoke check failed: truth-condition obligation witness sample drift")
+        if not string_list(row.get("sample_sentences")) or not row.get("sample_sentences"):
+            raise SystemExit("web route smoke check failed: truth-condition obligation witness sample drift")
+    expected_truth_obligations = truth_condition_instance_obligations_payload(
+        snapshots,
+        registered_variant_cases,
+    )
+    if truth_obligations != expected_truth_obligations:
+        raise SystemExit("web route smoke check failed: truth-condition obligation witness drift")
     if verified_by_id["registered_construction_fragment"].get("count") != len(rules):
         raise SystemExit("web route smoke check failed: registered completion evidence drift")
     if verified_by_id["semantic_snapshot_regression"].get("count") != len(snapshots):

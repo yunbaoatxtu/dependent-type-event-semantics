@@ -18726,6 +18726,14 @@ class TranslatorTests(unittest.TestCase):
             truth_obligations["next_stage"],
             "provide_concrete_truth_condition_instances",
         )
+        self.assertEqual(
+            truth_obligations["witness_source"],
+            "semantic_snapshots_and_registered_variant_success_cases",
+        )
+        self.assertEqual(
+            truth_obligations["witness_scope"],
+            "finite_registered_fragment",
+        )
         self.assertEqual(truth_obligations["obligation_count"], 7)
         obligation_by_id = {
             item["class_id"]: item
@@ -18754,6 +18762,40 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(
             obligation_by_id["modifier_attachment"]["finite_registered_status"],
             "registered_examples_only",
+        )
+        for obligation in truth_obligations["obligations"]:
+            self.assertEqual(
+                obligation["witness_source"],
+                "semantic_snapshots_and_registered_variant_success_cases",
+            )
+            self.assertEqual(obligation["witness_scope"], "finite_registered_fragment")
+            self.assertGreater(obligation["registered_witness_count"], 0)
+            self.assertTrue(obligation["sample_rule_ids"])
+            self.assertTrue(obligation["sample_sentences"])
+            self.assertTrue(obligation["sample_witnesses"])
+        self.assertIn(
+            "perception_nominalization",
+            obligation_by_id["lexical_application"]["sample_rule_ids"],
+        )
+        self.assertIn(
+            "universal_timed_burning",
+            obligation_by_id["sigma_quantification"]["sample_rule_ids"],
+        )
+        self.assertIn(
+            "temporal_event_counting",
+            obligation_by_id["repeat_counting"]["sample_variant_ids"],
+        )
+        self.assertIn(
+            "negated_stative_reason_because",
+            obligation_by_id["polarity"]["sample_variant_ids"],
+        )
+        self.assertIn(
+            "state_change_causal_because",
+            obligation_by_id["transition_cause"]["sample_variant_ids"],
+        )
+        self.assertIn(
+            "Mary laughed with a telescope",
+            obligation_by_id["modifier_attachment"]["sample_sentences"],
         )
         self.assertIn(
             "unregistered_modifier_attachment_truth_conditions_open",
@@ -19703,6 +19745,26 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_certified_fragment_manifest(manifest)
 
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_instance_obligations"][
+            "obligations"
+        ][0]["registered_witness_count"] = 0
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition obligation witness count drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_instance_obligations"][
+            "obligations"
+        ][0]["sample_sentences"] = ["not a registered witness"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition obligation witness drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
     def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
         manifest = construction_fragment_manifest()
         fallback_sentence = manifest["coverage_matrix"]["fallback_success_cases"][0][
@@ -20321,7 +20383,37 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
+            data_attr(
+                "data-truth-condition-obligation-witness-source",
+                truth_obligations["witness_source"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-obligation-witness-scope",
+                truth_obligations["witness_scope"],
+            ),
+            page,
+        )
+        self.assertIn(
             'data-truth-condition-obligation-class="temporal_operators"',
+            page,
+        )
+        temporal_obligation = next(
+            item
+            for item in truth_obligations["obligations"]
+            if item["class_id"] == "temporal_operators"
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-obligation-witness-count",
+                temporal_obligation["registered_witness_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-obligation-sample-rules="universal_timed_burning | timed_after | causal_because | event_counting | resultative_predication"',
             page,
         )
         self.assertIn(

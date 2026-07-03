@@ -173,7 +173,13 @@ blocker into lexical application, Sigma/quantification, temporal operators,
 repeat/counting, polarity, Transition/Cause, and modifier-attachment rows. The
 panel mirrors the matrix through `data-truth-condition-obligation-*` hooks, and
 the verifier should reject missing rows, certificate drift, count drift, or
-empty required-instance lists. The same object now carries a
+empty required-instance lists. The obligation matrix should be evidence-traced:
+each row carries `witness_source`, `witness_scope`, `registered_witness_count`,
+`sample_rule_ids`, `sample_variant_ids`, and `sample_sentences` computed from
+the current semantic snapshots and registered variant success cases. The page
+mirrors those values through row-level data hooks, and the verifier recomputes
+the same payload so witness counts and samples cannot drift away from the
+registered fragment. The same object now carries a
 `completion_frontier_audit.v1` child that links the page
 and JSON manifest back to `ConcreteTruthConditionDischargeFrontierCertificate`.
 It records `ConcreteTruthConditionDischargeFrontierStatus`, the discharged

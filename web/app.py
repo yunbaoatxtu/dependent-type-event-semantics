@@ -3390,6 +3390,11 @@ def certified_fragment_panel() -> str:
         for item in truth_condition_obligations.get("obligations", [])
         if isinstance(item, dict)
     ]
+    def data_list(values: object) -> str:
+        if not isinstance(values, list):
+            return ""
+        return " | ".join(str(value) for value in values)
+
     frontier_open = [
         item
         for item in completion_frontier_audit.get("open_frontier", [])
@@ -3859,7 +3864,13 @@ def certified_fragment_panel() -> str:
             f'data-truth-condition-obligation-current-certificate="{html.escape(str(item.get("current_certificate", "")), quote=True)}" '
             f'data-truth-condition-obligation-model-candidate="{html.escape(str(item.get("model_candidate_certificate", "")), quote=True)}" '
             f'data-truth-condition-obligation-finite-status="{html.escape(str(item.get("finite_registered_status", "")), quote=True)}" '
-            f'data-truth-condition-obligation-remaining-status="{html.escape(str(item.get("remaining_status", "")), quote=True)}">'
+            f'data-truth-condition-obligation-remaining-status="{html.escape(str(item.get("remaining_status", "")), quote=True)}" '
+            f'data-truth-condition-obligation-witness-source="{html.escape(str(item.get("witness_source", "")), quote=True)}" '
+            f'data-truth-condition-obligation-witness-scope="{html.escape(str(item.get("witness_scope", "")), quote=True)}" '
+            f'data-truth-condition-obligation-witness-count="{html.escape(str(item.get("registered_witness_count", "")), quote=True)}" '
+            f'data-truth-condition-obligation-sample-rules="{html.escape(data_list(item.get("sample_rule_ids")), quote=True)}" '
+            f'data-truth-condition-obligation-sample-variants="{html.escape(data_list(item.get("sample_variant_ids")), quote=True)}" '
+            f'data-truth-condition-obligation-sample-sentences="{html.escape(data_list(item.get("sample_sentences")), quote=True)}">'
             f"<code>{html.escape(str(item.get('class_id', '')))}</code>"
             f"<span>{html.escape(str(item.get('semantic_class', '')))}</span>"
             "</li>"
@@ -3946,6 +3957,8 @@ def certified_fragment_panel() -> str:
         f'data-truth-condition-obligation-count="{len(truth_condition_obligation_rows)}" '
         f'data-truth-condition-obligation-blocker="{html.escape(str(truth_condition_obligations.get("blocker", "")), quote=True)}" '
         f'data-truth-condition-obligation-next-stage="{html.escape(str(truth_condition_obligations.get("next_stage", "")), quote=True)}" '
+        f'data-truth-condition-obligation-witness-source="{html.escape(str(truth_condition_obligations.get("witness_source", "")), quote=True)}" '
+        f'data-truth-condition-obligation-witness-scope="{html.escape(str(truth_condition_obligations.get("witness_scope", "")), quote=True)}" '
         f'data-completion-frontier-schema="{html.escape(str(completion_frontier_audit.get("schema_version", "")), quote=True)}" '
         f'data-completion-frontier-source-certificate="{html.escape(str(completion_frontier_audit.get("source_certificate", "")), quote=True)}" '
         f'data-completion-frontier-status-type="{html.escape(str(completion_frontier_audit.get("status_type", "")), quote=True)}" '

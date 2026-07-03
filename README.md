@@ -958,7 +958,14 @@ lexical application, Sigma/quantification, temporal operators, repeat/counting,
 polarity, Transition/Cause, and modifier attachment. Each row names the current
 finite registered certificate, the model-candidate or completion certificate,
 the remaining open status, and the independent instances still needed for the
-next `provide_concrete_truth_condition_instances` stage.
+next `provide_concrete_truth_condition_instances` stage. The rows are no longer
+only a static ledger: they also carry `witness_source:
+"semantic_snapshots_and_registered_variant_success_cases"`, `witness_scope:
+"finite_registered_fragment"`, a registered witness count, sample rule ids,
+sample variant ids, and sample sentences derived from the current semantic
+snapshots and registered variant coverage. The verifier recomputes this witness
+summary from the manifest, so a class can no longer advertise a witness count or
+sample that is not tied to a registered example.
 It also carries `completion_frontier_audit` with `schema_version:
 "completion_frontier_audit.v1"`. This audit points to
 `ConcreteTruthConditionDischargeFrontierCertificate`, records the status type
