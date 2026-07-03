@@ -951,6 +951,15 @@ verified fragment objectives, lists still-open objectives such as arbitrary
 natural-language semantics and deep Coq semantic proofs, and advertises the next
 recommended stages. The verifier rejects drift in this object, so the project
 cannot accidentally present a finite registered fragment as the finished goal.
+It also carries `fallback_promotion_candidates` with `schema_version:
+"fallback_promotion_candidates.v1"`. This queue is derived from
+`coverage_matrix.fallback_success_cases`, records the current shallow
+certification level, points to a target rule family such as
+`modified_intransitive_adv_sequence`, and lists the required fallback-gap ids,
+artifacts, promotion checks, and runtime checks needed before that example can
+be moved into the registered fragment. Its claim is deliberately
+`promotion_queue_not_registered_certification`, so it documents the next
+registration work without treating fallback success as a certified construction.
 It also carries `truth_condition_instance_obligations` with `schema_version:
 "truth_condition_instance_obligations.v1"`. This matrix splits the remaining
 `concrete_truth_condition_instances_unproved` blocker into checked rows for

@@ -3390,6 +3390,14 @@ def certified_fragment_panel() -> str:
         for item in truth_condition_obligations.get("obligations", [])
         if isinstance(item, dict)
     ]
+    fallback_promotion = manifest.get("fallback_promotion_candidates")
+    if not isinstance(fallback_promotion, dict):
+        fallback_promotion = {}
+    fallback_promotion_rows = [
+        item
+        for item in fallback_promotion.get("candidates", [])
+        if isinstance(item, dict)
+    ]
     def data_list(values: object) -> str:
         if not isinstance(values, list):
             return ""
@@ -3857,6 +3865,26 @@ def certified_fragment_panel() -> str:
         )
         for stage in next_recommended_stages
     )
+    fallback_promotion_items = "".join(
+        (
+            '<li '
+            f'data-fallback-promotion-candidate-id="{html.escape(str(item.get("candidate_id", "")), quote=True)}" '
+            f'data-fallback-promotion-sentence="{html.escape(str(item.get("sentence", "")), quote=True)}" '
+            f'data-fallback-promotion-source="{html.escape(str(item.get("source", "")), quote=True)}" '
+            f'data-fallback-promotion-current-scope="{html.escape(str(item.get("current_scope_kind", "")), quote=True)}" '
+            f'data-fallback-promotion-current-level="{html.escape(str(item.get("current_certification_level", "")), quote=True)}" '
+            f'data-fallback-promotion-boundary="{html.escape(str(item.get("current_boundary_status", "")), quote=True)}" '
+            f'data-fallback-promotion-target-family="{html.escape(str(item.get("target_rule_family", "")), quote=True)}" '
+            f'data-fallback-promotion-target-claim="{html.escape(str(item.get("target_rule_claim", "")), quote=True)}" '
+            f'data-fallback-promotion-semantic-classes="{html.escape(data_list(item.get("semantic_classes")), quote=True)}" '
+            f'data-fallback-promotion-gap-ids="{html.escape(data_list(item.get("required_gap_ids")), quote=True)}" '
+            f'data-fallback-promotion-checks="{html.escape(data_list(item.get("promotion_checks")), quote=True)}">'
+            f"<code>{html.escape(str(item.get('candidate_id', '')))}</code>"
+            f"<span>{html.escape(str(item.get('target_rule_family', '')))}</span>"
+            "</li>"
+        )
+        for item in fallback_promotion_rows
+    )
     truth_condition_obligation_items = "".join(
         (
             '<li '
@@ -3955,6 +3983,10 @@ def certified_fragment_panel() -> str:
         f'data-completion-incomplete-count="{len(incomplete_objectives)}" '
         f'data-completion-blocker-count="{len(completion_blockers)}" '
         f'data-completion-next-stage-count="{len(next_recommended_stages)}" '
+        f'data-fallback-promotion-schema="{html.escape(str(fallback_promotion.get("schema_version", "")), quote=True)}" '
+        f'data-fallback-promotion-count="{len(fallback_promotion_rows)}" '
+        f'data-fallback-promotion-claim="{html.escape(str(fallback_promotion.get("claim", "")), quote=True)}" '
+        f'data-fallback-promotion-next-stage="{html.escape(str(fallback_promotion.get("next_stage", "")), quote=True)}" '
         f'data-truth-condition-obligation-schema="{html.escape(str(truth_condition_obligations.get("schema_version", "")), quote=True)}" '
         f'data-truth-condition-obligation-count="{len(truth_condition_obligation_rows)}" '
         f'data-truth-condition-obligation-blocker="{html.escape(str(truth_condition_obligations.get("blocker", "")), quote=True)}" '
@@ -4031,6 +4063,7 @@ def certified_fragment_panel() -> str:
         f"<dt>rejected cases</dt><dd>{html.escape(rejected_case_count)}</dd>"
         f"<dt>project complete</dt><dd>{str(completion_status.get('is_complete') is True).lower()}</dd>"
         f"<dt>completion basis</dt><dd><code>{html.escape(str(completion_status.get('completion_basis', '')))}</code></dd>"
+        f"<dt>fallback promotion</dt><dd><code>{html.escape(str(fallback_promotion.get('schema_version', '')))}</code></dd>"
         f"<dt>truth obligations</dt><dd><code>{html.escape(str(truth_condition_obligations.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier audit</dt><dd><code>{html.escape(str(completion_frontier_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier source</dt><dd><code>{html.escape(str(completion_frontier_audit.get('source_certificate', '')))}</code></dd>"
@@ -4058,6 +4091,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{registered_variant_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>fallback coverage</strong>'
         f"<ul>{fallback_items}</ul></div>"
+        '<div class="certified-fragment-coverage"><strong>fallback promotion candidates</strong>'
+        f"<ul>{fallback_promotion_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>fallback certification gaps</strong>'
         f"<ul>{fallback_gap_items}</ul></div>"
         '<div class="certified-fragment-coverage"><strong>rejected coverage</strong>'

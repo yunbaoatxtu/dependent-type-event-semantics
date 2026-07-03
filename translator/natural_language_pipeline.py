@@ -1861,6 +1861,64 @@ def fallback_certification_gap_payload() -> list[dict[str, str]]:
     return [dict(gap) for gap in FALLBACK_CERTIFICATION_GAPS]
 
 
+def fallback_promotion_candidates_payload(
+    fallback_success_cases: list[dict[str, Any]],
+) -> dict[str, Any]:
+    gap_ids = [str(gap["id"]) for gap in FALLBACK_CERTIFICATION_GAPS]
+    required_artifacts = [
+        str(gap["required_artifact"]) for gap in FALLBACK_CERTIFICATION_GAPS
+    ]
+    candidates = []
+    for index, case in enumerate(fallback_success_cases, start=1):
+        sentence = str(case.get("sentence", ""))
+        candidates.append(
+            {
+                "candidate_id": f"fallback_promotion_{index}",
+                "sentence": sentence,
+                "source": "coverage_matrix.fallback_success_cases",
+                "current_scope_kind": str(
+                    case.get("expected_verification_scope_kind", ""),
+                ),
+                "current_certification_level": str(
+                    case.get("expected_certification_level", ""),
+                ),
+                "current_boundary_status": str(case.get("boundary_status", "")),
+                "target_rule_family": "modified_intransitive_adv_sequence",
+                "target_rule_claim": "registered_construction_rule_not_full_parser",
+                "semantic_classes": [
+                    "lexical_application",
+                    "modifier_attachment",
+                    "temporal_operators",
+                ],
+                "required_gap_ids": gap_ids,
+                "required_artifacts": required_artifacts,
+                "promotion_checks": [
+                    "add a ConstructionRule analyzer before fallback",
+                    "emit named semantic_readings tied to modifier/time structure",
+                    "add forbidden_coq_fragments hygiene for the new rule",
+                    "add primary and variant coverage rows with web smoke checks",
+                ],
+                "runtime_checks": [
+                    "coverage_matrix.fallback_success_cases",
+                    "web_route_smoke_check:/api/analyze",
+                    "web_route_smoke_check:/",
+                ],
+                "non_claim": (
+                    "promotion candidate only; not a registered construction "
+                    "and not full natural-language certification"
+                ),
+            },
+        )
+    return {
+        "schema_version": "fallback_promotion_candidates.v1",
+        "source": "coverage_matrix.fallback_success_cases",
+        "claim": "promotion_queue_not_registered_certification",
+        "next_stage": "promote_more_fallback_successes_to_registered_constructions",
+        "candidate_count": len(candidates),
+        "candidates": candidates,
+    }
+
+
 UNSUPPORTED_FRAGMENT_COVERAGE_EXAMPLES = (
     {
         "sentence": "John left because Mary cried because Sue left",
@@ -21612,6 +21670,9 @@ def construction_fragment_manifest() -> dict[str, Any]:
             "fallback_success_cases": fallback_success_cases,
             "rejected_unsupported_cases": rejected_unsupported_cases,
         },
+        "fallback_promotion_candidates": fallback_promotion_candidates_payload(
+            fallback_success_cases,
+        ),
         "coverage_matrix_counts": coverage_matrix_counts,
         "completion_status": project_completion_status_payload(
             registered_rule_count=len(registered),

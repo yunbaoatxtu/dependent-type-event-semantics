@@ -18568,6 +18568,64 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
         self.assertEqual(counts["registered_variant_success_cases"], 79)
+        fallback_promotion = manifest["fallback_promotion_candidates"]
+        self.assertEqual(
+            fallback_promotion["schema_version"],
+            "fallback_promotion_candidates.v1",
+        )
+        self.assertEqual(
+            fallback_promotion["source"],
+            "coverage_matrix.fallback_success_cases",
+        )
+        self.assertEqual(
+            fallback_promotion["claim"],
+            "promotion_queue_not_registered_certification",
+        )
+        self.assertEqual(
+            fallback_promotion["next_stage"],
+            "promote_more_fallback_successes_to_registered_constructions",
+        )
+        self.assertEqual(
+            fallback_promotion["candidate_count"],
+            len(coverage["fallback_success_cases"]),
+        )
+        self.assertEqual(len(fallback_promotion["candidates"]), 1)
+        promotion_candidate = fallback_promotion["candidates"][0]
+        fallback_case = coverage["fallback_success_cases"][0]
+        self.assertEqual(promotion_candidate["sentence"], fallback_case["sentence"])
+        self.assertEqual(
+            promotion_candidate["current_scope_kind"],
+            fallback_case["expected_verification_scope_kind"],
+        )
+        self.assertEqual(
+            promotion_candidate["current_certification_level"],
+            "shallow_scaffold",
+        )
+        self.assertEqual(
+            promotion_candidate["target_rule_family"],
+            "modified_intransitive_adv_sequence",
+        )
+        self.assertEqual(
+            promotion_candidate["target_rule_claim"],
+            "registered_construction_rule_not_full_parser",
+        )
+        self.assertIn("modifier_attachment", promotion_candidate["semantic_classes"])
+        self.assertEqual(
+            set(promotion_candidate["required_gap_ids"]),
+            {
+                "no_registered_construction_rule",
+                "no_fragment_specific_readings",
+                "no_construction_hygiene_policy",
+            },
+        )
+        self.assertIn(
+            "web_route_smoke_check:/api/analyze",
+            promotion_candidate["runtime_checks"],
+        )
+        self.assertIn(
+            "not full natural-language certification",
+            promotion_candidate["non_claim"],
+        )
         self.assertEqual(manifest["semantic_snapshot_count"], len(rules))
         self.assertEqual(set(snapshots), set(rules))
         completion_status = manifest["completion_status"]
@@ -19774,6 +19832,20 @@ class TranslatorTests(unittest.TestCase):
             validate_certified_fragment_manifest(manifest)
 
         manifest = deepcopy(construction_fragment_manifest())
+        manifest["fallback_promotion_candidates"]["candidates"][0][
+            "sentence"
+        ] = "Mary laughed yesterday"
+        with self.assertRaisesRegex(SystemExit, "fallback promotion sentence drift"):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["fallback_promotion_candidates"]["candidates"][0][
+            "target_rule_claim"
+        ] = "registered_construction_rule"
+        with self.assertRaisesRegex(SystemExit, "fallback promotion target claim drift"):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
         manifest["completion_status"]["coverage_summary"][
             "registered_success_cases"
         ] = -1
@@ -20404,6 +20476,57 @@ class TranslatorTests(unittest.TestCase):
             data_attr(
                 "data-completion-basis",
                 completion_status["completion_basis"],
+            ),
+            page,
+        )
+        fallback_promotion = manifest["fallback_promotion_candidates"]
+        fallback_promotion_candidate = fallback_promotion["candidates"][0]
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-schema",
+                fallback_promotion["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-count",
+                fallback_promotion["candidate_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-claim",
+                fallback_promotion["claim"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-next-stage",
+                fallback_promotion["next_stage"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-candidate-id",
+                fallback_promotion_candidate["candidate_id"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-target-family",
+                fallback_promotion_candidate["target_rule_family"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-fallback-promotion-current-level",
+                "shallow_scaffold",
             ),
             page,
         )
@@ -27938,6 +28061,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`rejected_unsupported_cases`", readme)
         self.assertIn("`completion_status`", readme)
         self.assertIn('"project_completion_status.v1"', readme)
+        self.assertIn("`fallback_promotion_candidates`", readme)
+        self.assertIn('"fallback_promotion_candidates.v1"', readme)
         self.assertIn("`truth_condition_instance_obligations`", readme)
         self.assertIn('"truth_condition_instance_obligations.v1"', readme)
         self.assertIn("`completion_frontier_audit`", readme)
@@ -27959,6 +28084,8 @@ class TranslatorTests(unittest.TestCase):
             readme,
         )
         self.assertIn("`completion_frontier_audit.v1`", web_design)
+        self.assertIn("`fallback_promotion_candidates.v1`", web_design)
+        self.assertIn("`data-fallback-promotion-*`", web_design)
         self.assertIn("`truth_condition_instance_obligations.v1`", web_design)
         self.assertIn("`data-truth-condition-obligation-*`", web_design)
         self.assertIn("`data-completion-frontier-*`", web_design)
@@ -29561,6 +29688,8 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("completion_frontier_audit.v1", manuscript)
+        self.assertIn("fallback_promotion_candidates.v1", manuscript)
+        self.assertIn("promotion_queue_not_registered_certification", manuscript)
         self.assertIn("data-completion-frontier-*", manuscript)
         self.assertIn("coq_lexical_transition_truth_assumption_split", manuscript)
         self.assertIn("coq_lexical_transition_truth_model_instance", manuscript)
@@ -31251,6 +31380,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("data-certified-rule-id", verifier)
         self.assertIn("coverage_matrix", verifier)
         self.assertIn("coverage_matrix_counts", verifier)
+        self.assertIn("fallback_promotion_candidates.v1", verifier)
+        self.assertIn("data-fallback-promotion-schema", verifier)
         self.assertIn("data-coverage-registered-success-count", verifier)
         self.assertIn("data-coverage-marker", verifier)
         self.assertIn("semantic_snapshots", verifier)

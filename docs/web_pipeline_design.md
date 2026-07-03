@@ -167,6 +167,13 @@ the system is a certified finite fragment, and its verified objectives,
 incomplete objectives, blockers, and next-stage rows should be mirrored through
 `data-completion-*` hooks. The verifier should reject any drift that removes
 the arbitrary-natural-language or deep-Coq-proof open objectives. The same
+manifest now exposes `fallback_promotion_candidates.v1`, derived from
+`coverage_matrix.fallback_success_cases`. These rows are rendered through
+`data-fallback-promotion-*` hooks and record the fallback sentence's current
+shallow scope, target rule family, required gap ids, promotion checks, runtime
+checks, and a non-claim that the row is not registered certification. The
+verifier recomputes the queue from fallback coverage so a promotion candidate
+cannot silently detach from the shallow example it is meant to replace. The same
 object now carries a `truth_condition_instance_obligations.v1` child for the
 remaining `concrete_truth_condition_instances_unproved` blocker. It splits that
 blocker into lexical application, Sigma/quantification, temporal operators,

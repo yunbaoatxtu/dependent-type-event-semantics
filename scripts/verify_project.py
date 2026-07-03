@@ -10702,6 +10702,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         derive_registered_modifier_role_inventory,
         derive_registered_modifier_role_witnesses,
         exported_prop_definition_names,
+        fallback_promotion_candidates_payload,
         registered_modifier_role_source_contract,
         registered_modifier_role_witness_selection_contract,
         run_pipeline,
@@ -10764,6 +10765,85 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: certified fallback coverage count drift")
     if counts.get("rejected_unsupported_cases") != len(rejected_cases):
         raise SystemExit("web route smoke check failed: certified rejected coverage count drift")
+    fallback_promotion = manifest.get("fallback_promotion_candidates")
+    if not isinstance(fallback_promotion, dict):
+        raise SystemExit("web route smoke check failed: fallback promotion candidates missing")
+    if (
+        fallback_promotion.get("schema_version")
+        != "fallback_promotion_candidates.v1"
+    ):
+        raise SystemExit("web route smoke check failed: fallback promotion schema drift")
+    if fallback_promotion.get("source") != "coverage_matrix.fallback_success_cases":
+        raise SystemExit("web route smoke check failed: fallback promotion source drift")
+    if (
+        fallback_promotion.get("claim")
+        != "promotion_queue_not_registered_certification"
+    ):
+        raise SystemExit("web route smoke check failed: fallback promotion claim drift")
+    if (
+        fallback_promotion.get("next_stage")
+        != "promote_more_fallback_successes_to_registered_constructions"
+    ):
+        raise SystemExit("web route smoke check failed: fallback promotion next-stage drift")
+    promotion_rows = fallback_promotion.get("candidates")
+    if not isinstance(promotion_rows, list):
+        raise SystemExit("web route smoke check failed: fallback promotion rows missing")
+    if fallback_promotion.get("candidate_count") != len(promotion_rows):
+        raise SystemExit("web route smoke check failed: fallback promotion count drift")
+    if len(promotion_rows) != len(fallback_cases):
+        raise SystemExit("web route smoke check failed: fallback promotion coverage drift")
+    fallback_by_sentence = {
+        item.get("sentence"): item
+        for item in fallback_cases
+        if isinstance(item, dict) and isinstance(item.get("sentence"), str)
+    }
+    for row in promotion_rows:
+        if not isinstance(row, dict):
+            raise SystemExit("web route smoke check failed: fallback promotion row drift")
+        sentence = row.get("sentence")
+        fallback_case = fallback_by_sentence.get(sentence)
+        if not isinstance(fallback_case, dict):
+            raise SystemExit("web route smoke check failed: fallback promotion sentence drift")
+        if row.get("source") != "coverage_matrix.fallback_success_cases":
+            raise SystemExit("web route smoke check failed: fallback promotion source drift")
+        if row.get("current_scope_kind") != fallback_case.get("expected_verification_scope_kind"):
+            raise SystemExit("web route smoke check failed: fallback promotion scope drift")
+        if row.get("current_certification_level") != fallback_case.get("expected_certification_level"):
+            raise SystemExit("web route smoke check failed: fallback promotion level drift")
+        if row.get("current_boundary_status") != fallback_case.get("boundary_status"):
+            raise SystemExit("web route smoke check failed: fallback promotion boundary drift")
+        if not nonempty_string(row.get("target_rule_family")):
+            raise SystemExit("web route smoke check failed: fallback promotion target drift")
+        if row.get("target_rule_claim") != "registered_construction_rule_not_full_parser":
+            raise SystemExit("web route smoke check failed: fallback promotion target claim drift")
+        if not string_list(row.get("semantic_classes")) or not row.get("semantic_classes"):
+            raise SystemExit("web route smoke check failed: fallback promotion semantic class drift")
+        required_gap_ids = row.get("required_gap_ids")
+        if (
+            not string_list(required_gap_ids)
+            or set(required_gap_ids)
+            != {
+                "no_registered_construction_rule",
+                "no_fragment_specific_readings",
+                "no_construction_hygiene_policy",
+            }
+        ):
+            raise SystemExit("web route smoke check failed: fallback promotion gap drift")
+        if not string_list(row.get("required_artifacts")) or not row.get("required_artifacts"):
+            raise SystemExit("web route smoke check failed: fallback promotion artifact drift")
+        if not string_list(row.get("promotion_checks")) or len(row.get("promotion_checks", [])) < 3:
+            raise SystemExit("web route smoke check failed: fallback promotion check drift")
+        runtime_checks = row.get("runtime_checks")
+        if (
+            not string_list(runtime_checks)
+            or "web_route_smoke_check:/api/analyze" not in runtime_checks
+        ):
+            raise SystemExit("web route smoke check failed: fallback promotion runtime drift")
+        if "not full natural-language certification" not in str(row.get("non_claim", "")):
+            raise SystemExit("web route smoke check failed: fallback promotion non-claim drift")
+    expected_fallback_promotion = fallback_promotion_candidates_payload(fallback_cases)
+    if fallback_promotion != expected_fallback_promotion:
+        raise SystemExit("web route smoke check failed: fallback promotion candidate drift")
     completion_status = manifest.get("completion_status")
     if not isinstance(completion_status, dict):
         raise SystemExit("web route smoke check failed: completion status missing")
@@ -12041,6 +12121,14 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         for item in completion_status.get("next_recommended_stages", [])
         if isinstance(item, str)
     ]
+    fallback_promotion = manifest.get("fallback_promotion_candidates")
+    if not isinstance(fallback_promotion, dict):
+        fallback_promotion = {}
+    fallback_promotion_rows = [
+        item
+        for item in fallback_promotion.get("candidates", [])
+        if isinstance(item, dict)
+    ]
     completion_frontier_audit = completion_status.get("completion_frontier_audit")
     if not isinstance(completion_frontier_audit, dict):
         completion_frontier_audit = {}
@@ -12156,6 +12244,22 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         data_fragment("data-completion-incomplete-count", len(incomplete_objectives)),
         data_fragment("data-completion-blocker-count", len(completion_blockers)),
         data_fragment("data-completion-next-stage-count", len(next_recommended_stages)),
+        data_fragment(
+            "data-fallback-promotion-schema",
+            fallback_promotion.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-fallback-promotion-count",
+            len(fallback_promotion_rows),
+        ),
+        data_fragment(
+            "data-fallback-promotion-claim",
+            fallback_promotion.get("claim", ""),
+        ),
+        data_fragment(
+            "data-fallback-promotion-next-stage",
+            fallback_promotion.get("next_stage", ""),
+        ),
         data_fragment(
             "data-completion-frontier-schema",
             completion_frontier_audit.get("schema_version", ""),
@@ -12375,6 +12479,61 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         data_fragment("data-completion-next-stage", stage)
         for stage in next_recommended_stages
     )
+    for item in fallback_promotion_rows:
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-fallback-promotion-candidate-id",
+                    item.get("candidate_id", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-sentence",
+                    item.get("sentence", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-source",
+                    item.get("source", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-current-scope",
+                    item.get("current_scope_kind", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-current-level",
+                    item.get("current_certification_level", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-boundary",
+                    item.get("current_boundary_status", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-target-family",
+                    item.get("target_rule_family", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-target-claim",
+                    item.get("target_rule_claim", ""),
+                ),
+                data_fragment(
+                    "data-fallback-promotion-semantic-classes",
+                    " | ".join(str(value) for value in item.get("semantic_classes", []))
+                    if isinstance(item.get("semantic_classes"), list)
+                    else "",
+                ),
+                data_fragment(
+                    "data-fallback-promotion-gap-ids",
+                    " | ".join(str(value) for value in item.get("required_gap_ids", []))
+                    if isinstance(item.get("required_gap_ids"), list)
+                    else "",
+                ),
+                data_fragment(
+                    "data-fallback-promotion-checks",
+                    " | ".join(str(value) for value in item.get("promotion_checks", []))
+                    if isinstance(item.get("promotion_checks"), list)
+                    else "",
+                ),
+            ],
+        )
     expected_fragments.extend(
         data_fragment("data-completion-frontier-closed-objective", item.get("objective_id", ""))
         for item in frontier_closed
