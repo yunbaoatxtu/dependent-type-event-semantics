@@ -2532,7 +2532,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
             "from+a+window+with+a+camera+beside+a+shelf+"
             "loudly+under+a+lamp+on+a+table+with+a+microphone+"
             "near+a+door+with+a+telescope+near+a+window+"
-            "with+a+knife+yesterday&amp;require_coq=1&amp;download=1"
+            "with+a+knife+near+a+table+yesterday&amp;require_coq=1&amp;download=1"
         ),
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
@@ -13410,7 +13410,7 @@ def validate_construction_rule_draft_download_artifact() -> None:
     from web.app import PipelineHandler, compact_json
 
     print("==> construction rule draft download artifact check")
-    sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
+    sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
     query = urlencode({"sentence": sentence, "require_coq": "1"})
     handler = object.__new__(PipelineHandler)
     payload, status = PipelineHandler.handle_construction_rule_draft_api(handler, query)
@@ -15234,7 +15234,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday"
+        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)

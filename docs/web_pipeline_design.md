@@ -1060,10 +1060,17 @@ window yesterday`, the corresponding Goal witness, the Source+Goal witness, and
 a longer terminal Location-tail variant under
 `directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_intransitive_predication`,
 with `near_window` declared as `Adv` rather than an Entity surrogate. The
+Directional+Instrument+Location+Manner+Location-sequence+Instrument+Location+Instrument+Location+Instrument-tail
+route now promotes the former fallback frontier
+`Mary laughed from a window with a camera beside a shelf loudly under a lamp on
+a table with a microphone near a door with a telescope near a window with a
+knife yesterday` under
+`directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_instrument_tail_intransitive_predication`,
+with `with_knife` declared as `Adv` rather than an Entity surrogate. The
 ordinary fallback success contract is instead
-exercised with `Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday`,
+exercised with `Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday`,
 a shallow Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location+Instrument mixed modifier scaffold
-`at_T(yesterday, laugh(11)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), mary))`
+`at_T(yesterday, laugh(12)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), near(table), mary))`
 with `fallback_single_reading` and a downloadable construction-rule draft. This
 keeps promoted constructions and the
 remaining fallback success contract from drifting apart.
@@ -1364,11 +1371,11 @@ Source/Goal+Instrument+Location+Manner slices, the
 Source/Goal+Instrument+Location+Manner+Location-sequence slice, and the final
 Instrument-tail, Instrument+Location-tail, and Instrument+Location+Instrument-tail
 extensions, the terminal Location-tail extension, plus the
-Manner/Instrument slices, are now
-registered:
-`Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife yesterday`
+terminal Instrument-tail extension, plus the
+Manner/Instrument slices, are now registered. A still deeper residual path,
+`Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday`
 remains a shallow Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location+Instrument mixed modifier scaffold,
-`at_T(yesterday, laugh(11)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), mary))`,
+`at_T(yesterday, laugh(12)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), near(table), mary))`,
 with a construction-rule draft rather than construction-level certification.
 
 The fallback path is intentionally guarded. A small allowlisted rule handles

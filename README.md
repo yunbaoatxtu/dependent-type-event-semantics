@@ -2588,15 +2588,25 @@ the
 			`explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_tail_at_time`
 			scope, typed Adv declarations through `near_window`, and no Entity
 			surrogate for any modifier in the sequence.
+			It also requests the registered
+			Source/Goal+Instrument+Location+Manner+Location-sequence+Instrument+Location+Instrument+Location+Instrument-tail
+			route
+			`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+with+a+microphone+near+a+door+with+a+telescope+near+a+window+with+a+knife+yesterday&require_coq=1`,
+			requiring
+			`directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_instrument_tail_intransitive_predication_single_reading`,
+			the
+			`explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_instrument_tail_at_time`
+			scope, typed Adv declarations through `with_knife`, and no Entity
+			surrogate for any modifier in the sequence.
 			It also requests the timed locative route
 			`/api/analyze?sentence=Mary+laughed+near+a+window+yesterday&require_coq=1`,
 	requiring `locative_intransitive_predication_single_reading`,
 		`at_T(yesterday, laugh(1)(near(window), mary))`, and `near_window : Adv`
 		rather than an Entity surrogate. It then checks ordinary fallback separately with
-			`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+with+a+microphone+near+a+door+with+a+telescope+near+a+window+with+a+knife+yesterday&require_coq=1`,
+			`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+with+a+microphone+near+a+door+with+a+telescope+near+a+window+with+a+knife+near+a+table+yesterday&require_coq=1`,
 		requiring both surfaces to expose the same `fallback_single_reading` row, the
 		typed Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location+Instrument mixed modifier scaffold
-		`at_T(yesterday, laugh(11)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), mary))`, and the
+		`at_T(yesterday, laugh(12)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), near(table), mary))`, and the
 	construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the
