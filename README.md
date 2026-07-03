@@ -897,7 +897,7 @@ fallback sentence has become construction-level certified. The same payload is
 available from `/api/construction-rule-draft`, with `download=1` returning a
 JSON artifact for review. The successful response now also carries
 `download_api_path` and a stable `download_filename` such as
-`construction_rule_draft__fallback_time_time_candidate.json`, and the page's
+`construction_rule_draft__fallback_be_application_candidate.json`, and the page's
 download link mirrors the same filename. The deterministic verifier now checks
 this route even when the local HTTP smoke test is unavailable: the
 `construction_rule_draft_response.v1` wrapper must carry the same
@@ -939,7 +939,7 @@ The manifest also exposes a `registered_modifier_sequence_contract` with
 `schema_version: "registered_modifier_sequence_contract.v1"`. This contract is
 explicitly scoped to `registered_examples_only`, not full surface-parser
 certification. It records the currently declared dependent application modifier
-counts `0..11`, the maximum declared count `11`, and the live invariants checked
+counts `0..12`, the maximum declared count `12`, and the live invariants checked
 for every registered primary and variant success case: modifier vectors must have
 the same length as the surface modifiers, nested vector tails must decrease to
 zero, modifier-role rows must be `Adv` rather than `Entity`, and the surface
@@ -953,11 +953,13 @@ recommended stages. The verifier rejects drift in this object, so the project
 cannot accidentally present a finite registered fragment as the finished goal.
 It also carries `fallback_promotion_candidates` with `schema_version:
 "fallback_promotion_candidates.v1"`. This queue is derived from
-`coverage_matrix.fallback_success_cases`, records the current shallow
-certification level, points to a target rule family such as
-`modified_intransitive_adv_sequence`, and lists the required fallback-gap ids,
-artifacts, promotion checks, and runtime checks needed before that example can
-be moved into the registered fragment. Its claim is deliberately
+`coverage_matrix.fallback_success_cases`; at the current head its candidate
+count is zero because the former long open-Adv-sequence fallback has been moved
+into the registered fragment. When the queue is non-empty, each row records the
+current shallow certification level, points to a target rule family, and lists
+the required fallback-gap ids, artifacts, promotion checks, and runtime checks
+needed before that example can be moved into the registered fragment. Its claim
+is deliberately
 `promotion_queue_not_registered_certification`, so it documents the next
 registration work without treating fallback success as a certified construction.
 Each candidate also carries a `fallback_promotion_draft_preflight.v1` child with
@@ -2632,15 +2634,20 @@ the
 			`explicit_agent_with_directional_instrument_location_manner_location_sequence_instrument_location_instrument_location_instrument_tail_at_time`
 			scope, typed Adv declarations through `with_knife`, and no Entity
 			surrogate for any modifier in the sequence.
-			It also requests the timed locative route
+			It also requests the registered open Adv-sequence route
+			`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+with+a+microphone+near+a+door+with+a+telescope+near+a+window+with+a+knife+near+a+table+yesterday&require_coq=1`,
+		requiring `modified_intransitive_adv_sequence_single_reading`, the
+		`explicit_agent_with_open_adv_sequence_at_time` scope, the typed
+		Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location+Instrument+Location role pattern,
+		`at_T(yesterday, laugh(12)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), near(table), mary))`,
+		and no construction-rule draft. It also requests the timed locative route
 			`/api/analyze?sentence=Mary+laughed+near+a+window+yesterday&require_coq=1`,
 	requiring `locative_intransitive_predication_single_reading`,
 		`at_T(yesterday, laugh(1)(near(window), mary))`, and `near_window : Adv`
 		rather than an Entity surrogate. It then checks ordinary fallback separately with
-			`/api/analyze?sentence=Mary+laughed+from+a+window+with+a+camera+beside+a+shelf+loudly+under+a+lamp+on+a+table+with+a+microphone+near+a+door+with+a+telescope+near+a+window+with+a+knife+near+a+table+yesterday&require_coq=1`,
+			`/api/analyze?sentence=Mary+is+in+the+garden&require_coq=1`,
 		requiring both surfaces to expose the same `fallback_single_reading` row, the
-		typed Source+Instrument+Location+Manner+Location+Location+Instrument+Location+Instrument+Location+Instrument mixed modifier scaffold
-		`at_T(yesterday, laugh(12)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), near(table), mary))`, and the
+		typed shallow scaffold `be(1)(in(garden), mary)`, and the
 	construction-rule draft before the diagnostic fixture sweep begins.
 The same live boundary now requests
 `/api/analyze?sentence=some+boy+loves+some+girl&require_coq=1` and checks the

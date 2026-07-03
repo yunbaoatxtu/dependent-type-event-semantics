@@ -222,6 +222,10 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "manner_mixed_directional_instrument_intransitive_predication": (
         "Mary laughed loudly in the park with a telescope from a window with a camera"
     ),
+    "modified_intransitive_adv_sequence": (
+        "Mary laughed from a window with a camera beside a shelf loudly "
+        "under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
+    ),
     "plain_transitive_predication": "Mary admired the painting",
     "modified_transitive_predication": "Mary admired the painting in the gallery",
     "passive_argument_omission": "the toast was buttered",
@@ -236,17 +240,7 @@ CONSTRUCTION_RULE_EXAMPLES = {
     "event_counting": "John knocked twice",
 }
 
-FALLBACK_COVERAGE_EXAMPLES = (
-    {
-        "sentence": (
-            "Mary laughed from a window with a camera beside a shelf loudly "
-            "under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
-        ),
-        "expected_verification_scope_kind": "fallback_shallow",
-        "expected_certification_level": "shallow_scaffold",
-        "boundary_status": "structurally_checked_shallow_scaffold",
-    },
-)
+FALLBACK_COVERAGE_EXAMPLES: tuple[dict[str, Any], ...] = ()
 
 
 REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
@@ -2419,6 +2413,26 @@ CERTIFIED_FRAGMENT_SEMANTIC_SNAPSHOTS = (
         "expected_type_check_type": "t",
     },
     {
+        "rule_id": "modified_intransitive_adv_sequence",
+        "sentence": (
+            "Mary laughed from a window with a camera beside a shelf loudly "
+            "under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
+        ),
+        "expected_event_analysis": "modified-intransitive-adv-sequence",
+        "expected_dependent_type_fragments": [
+            "at_T(yesterday, laugh(12)(from(window), with(camera), beside(shelf), loudly, under(lamp), on(table), with(microphone), near(door), with(telescope), near(window), with(knife), near(table), mary))",
+        ],
+        "expected_reading_names": [
+            "modified_intransitive_adv_sequence_single_reading"
+        ],
+        "expected_reading_sources": ["modified_intransitive_adv_sequence"],
+        "expected_reading_scopes": [
+            "explicit_agent_with_open_adv_sequence_at_time"
+        ],
+        "expected_coq_definitions": ["example_1"],
+        "expected_type_check_type": "t",
+    },
+    {
         "rule_id": "manner_instrument_intransitive_predication",
         "sentence": "Mary laughed loudly with a telescope",
         "expected_event_analysis": "manner-instrument-intransitive-predication",
@@ -3101,6 +3115,21 @@ CERTIFIED_FRAGMENT_AST_SUMMARY_SNAPSHOTS = {
         "binder_signatures": [],
         "quantifier_signatures": [],
         "top_level_modifier_count": 11,
+        "top_level_time_modifier_count": 0,
+        "reading_count": 0,
+        "clause_count": 0,
+        "subject_count": 0,
+        "object_count": 0,
+    },
+    "modified_intransitive_adv_sequence": {
+        "kind": "time",
+        "predicate_symbols": ["laugh"],
+        "predicate_types": [],
+        "entity_symbols": ["mary"],
+        "state_symbols": [],
+        "binder_signatures": [],
+        "quantifier_signatures": [],
+        "top_level_modifier_count": 0,
         "top_level_time_modifier_count": 0,
         "reading_count": 0,
         "clause_count": 0,
@@ -18034,6 +18063,200 @@ def directional_instrument_location_manner_location_sequence_instrument_location
     )
 
 
+def modified_intransitive_adv_sequence_application_details(
+    ast: dict[str, Any],
+) -> dict[str, Any] | None:
+    if ast.get("kind") != "application":
+        return None
+    modifiers = ast.get("modifiers")
+    modifier_vector = ast.get("modifier_vector")
+    modifier_roles = ast.get("modifier_roles", {}).get("roles")
+    if (
+        not isinstance(modifiers, list)
+        or not modifiers
+        or ast.get("adverb_count") != len(modifiers)
+        or not isinstance(modifier_vector, dict)
+        or modifier_vector.get("length") != len(modifiers)
+        or not isinstance(modifier_vector.get("items"), list)
+        or len(modifier_vector["items"]) != len(modifiers)
+        or not isinstance(modifier_roles, list)
+        or len(modifier_roles) != len(modifiers)
+    ):
+        return None
+
+    semantic_roles: list[str] = []
+    normalized_modifiers: list[str] = []
+    allowed_roles = {"Source", "Goal", "Instrument", "Location", "Manner"}
+    for index, (modifier, vector_item, role_item) in enumerate(
+        zip(modifiers, modifier_vector["items"], modifier_roles)
+    ):
+        if not isinstance(modifier, str) or not modifier:
+            return None
+        if not isinstance(vector_item, dict) or not isinstance(role_item, dict):
+            return None
+        semantic_role = role_item.get("semantic_role")
+        surface_lexicon = role_item.get("surface_lexicon")
+        if (
+            vector_item.get("modifier") != modifier
+            or vector_item.get("tail_length") != len(modifiers) - index - 1
+            or role_item.get("modifier") != modifier
+            or role_item.get("type") != "Adv"
+            or role_item.get("source") != "modifier"
+            or semantic_role not in allowed_roles
+            or not isinstance(surface_lexicon, dict)
+            or surface_lexicon.get("surface_modifier") != modifier
+            or surface_lexicon.get("type") != "Adv"
+            or surface_lexicon.get("semantic_role") != semantic_role
+            or surface_lexicon.get("source") != "translator/surface_lexicon.py"
+        ):
+            return None
+        normalized_modifier = surface_lexicon.get("normalized_modifier")
+        if not isinstance(normalized_modifier, str) or not normalized_modifier:
+            return None
+        semantic_roles.append(str(semantic_role))
+        normalized_modifiers.append(normalized_modifier)
+
+    role_details = plain_intransitive_application_details(
+        {
+            **ast,
+            "adverb_count": 0,
+            "modifiers": [],
+            "modifier_vector": {"kind": "modifier_vector", "length": 0, "items": []},
+            "modifier_roles": {"kind": "modifier_roles", "roles": []},
+        }
+    )
+    if role_details is None:
+        return None
+
+    role_counts = {
+        role: semantic_roles.count(role)
+        for role in ("Source", "Goal", "Instrument", "Location", "Manner")
+        if semantic_roles.count(role)
+    }
+    role_witnesses: dict[str, str] = {}
+    for modifier, role in zip(modifiers, semantic_roles):
+        role_witnesses.setdefault(role, str(modifier))
+    return {
+        **role_details,
+        "modifiers": [str(modifier) for modifier in modifiers],
+        "normalized_modifiers": normalized_modifiers,
+        "modifier_roles": copy.deepcopy(modifier_roles),
+        "semantic_roles": semantic_roles,
+        "role_counts": role_counts,
+        "role_witnesses": role_witnesses,
+    }
+
+
+def modified_intransitive_adv_sequence_pipeline(
+    sentence: str,
+) -> dict[str, Any] | None:
+    try:
+        event_semantics = sentence_to_event_semantics(sentence)
+        translation = translate(event_semantics)
+    except ValueError:
+        return None
+    ast = translation.get("ast", {})
+    if not isinstance(ast, dict) or translation.get("omitted_arguments"):
+        return None
+    if translation.get("type_check", {}).get("ok") is not True:
+        return None
+
+    time_modifier = None
+    application_ast = ast
+    if ast.get("kind") == "time":
+        time_arguments = ast.get("arguments")
+        body = ast.get("body")
+        operator = ast.get("operator")
+        if (
+            not isinstance(time_arguments, list)
+            or len(time_arguments) != 1
+            or not isinstance(time_arguments[0], str)
+            or not isinstance(operator, str)
+            or not isinstance(body, dict)
+        ):
+            return None
+        time_modifier = {
+            "operator": operator,
+            "argument": time_arguments[0],
+        }
+        application_ast = body
+    elif ast.get("kind") != "application":
+        return None
+
+    details = modified_intransitive_adv_sequence_application_details(application_ast)
+    if details is None:
+        return None
+
+    predicate = str(details["predicate"])
+    arguments = list(details["arguments"])
+    modifiers = [str(modifier) for modifier in details["modifiers"]]
+    normalized_modifiers = [str(modifier) for modifier in details["normalized_modifiers"]]
+    modifier_roles = copy.deepcopy(details["modifier_roles"])
+    semantic_roles = [str(role) for role in details["semantic_roles"]]
+    role_counts = dict(details["role_counts"])
+    role_witnesses = dict(details["role_witnesses"])
+    scope = (
+        "explicit_agent_with_open_adv_sequence_at_time"
+        if time_modifier
+        else "explicit_agent_with_open_adv_sequence"
+    )
+    time_summary = (
+        f" under {time_modifier['operator']}_T({time_modifier['argument']}, ...)"
+        if time_modifier
+        else ""
+    )
+    predication_record = {
+        "predicate": predicate,
+        "agent": arguments[0],
+        "agent_type": "Entity",
+        "modifier_count": len(modifiers),
+        "modifiers": modifiers,
+        "normalized_modifiers": normalized_modifiers,
+        "modifier_roles": modifier_roles,
+        "modifier_role_pattern": semantic_roles,
+        "role_counts": role_counts,
+        "role_witnesses": role_witnesses,
+        "representation": (
+            "ModifierSeq-indexed typed unary predicate over one explicit Agent "
+            "and a non-empty surface-ordered Adv sequence whose vector length, "
+            "tail indices, role metadata, and surface-lexicon audits all agree"
+        ),
+    }
+    if time_modifier is not None:
+        predication_record["time_modifier"] = time_modifier
+    coq_code = export_module([translation], "coq")
+    return attach_single_semantic_reading(
+        {
+            "kind": "modified_intransitive_adv_sequence",
+            "input_sentence": sentence,
+            "event_semantics": {
+                **event_semantics,
+                "analysis": "modified-intransitive-adv-sequence",
+                "modified_intransitive_adv_sequence": predication_record,
+            },
+            "dependent_type_translation": translation["translation"],
+            "result_state_lexicon": translation["result_state_lexicon"],
+            "ast": translation["ast"],
+            "type_check": translation["type_check"],
+            "construction_summary": (
+                f"Modified intransitive Adv sequence: {predicate} is applied "
+                f"to {len(modifiers)} typed Adv modifier(s) in surface order "
+                f"{', '.join(modifiers)}, then to explicit Entity Agent "
+                f"{arguments[0]} as a ModifierSeq-indexed unary predicate"
+                f"{time_summary}. This registered rule certifies the typed "
+                "modifier sequence boundary without introducing Event, Agent, "
+                "or Theme predicates and without claiming arbitrary parser "
+                "coverage."
+            ),
+            "coq_code": coq_code,
+        },
+        name="modified_intransitive_adv_sequence_single_reading",
+        coq_definition="example_1",
+        source="modified_intransitive_adv_sequence",
+        scope=scope,
+    )
+
+
 def manner_instrument_intransitive_application_details(
     ast: dict[str, Any],
 ) -> dict[str, Any] | None:
@@ -21059,6 +21282,35 @@ def construction_rules() -> list[ConstructionRule]:
                 "Parameter from_window : Entity.",
                 "Parameter into_room : Entity.",
                 "Parameter with_camera : Entity.",
+            ),
+        ),
+        ConstructionRule(
+            rule_id="modified_intransitive_adv_sequence",
+            label="Modified intransitive Adv sequence",
+            phenomenon=(
+                "Intransitive predicate with a non-empty surface-ordered Adv "
+                "sequence certified by ModifierSeq length, tail-index, and "
+                "surface-role audits"
+            ),
+            analyzer=modified_intransitive_adv_sequence_pipeline,
+            forbidden_coq_fragments=(
+                "Parameter Event : Type.",
+                "exists e : Event",
+                "Parameter Agent :",
+                "Parameter Theme :",
+                "Parameter from_window : Entity.",
+                "Parameter into_room : Entity.",
+                "Parameter with_camera : Entity.",
+                "Parameter beside_shelf : Entity.",
+                "Parameter loudly : Entity.",
+                "Parameter under_lamp : Entity.",
+                "Parameter on_table : Entity.",
+                "Parameter near_door : Entity.",
+                "Parameter with_microphone : Entity.",
+                "Parameter with_telescope : Entity.",
+                "Parameter near_window : Entity.",
+                "Parameter with_knife : Entity.",
+                "Parameter near_table : Entity.",
             ),
         ),
         ConstructionRule(

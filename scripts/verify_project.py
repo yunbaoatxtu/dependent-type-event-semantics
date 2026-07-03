@@ -2440,7 +2440,7 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         upgrade_plan.get("schema_version") != "certification_upgrade_plan.v1"
         or upgrade_plan.get("source_verification_scope") != "fallback_shallow"
         or upgrade_plan.get("target_certification_level") != "construction_rule"
-        or upgrade_plan.get("candidate_rule_id") != "fallback_time_time_candidate"
+        or upgrade_plan.get("candidate_rule_id") != "fallback_be_application_candidate"
         or upgrade_plan.get("automation_mode") != "human_review_required"
         or upgrade_plan.get("can_auto_apply") is not False
     ):
@@ -2458,8 +2458,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         rule_draft.get("schema_version") != "construction_rule_draft.v1"
         or rule_draft.get("source_verification_scope") != "fallback_shallow"
-        or rule_draft.get("candidate_rule_id") != "fallback_time_time_candidate"
-        or rule_draft.get("candidate_analyzer") != "fallback_time_time_candidate_pipeline"
+        or rule_draft.get("candidate_rule_id") != "fallback_be_application_candidate"
+        or rule_draft.get("candidate_analyzer") != "fallback_be_application_candidate_pipeline"
         or rule_draft.get("automation_mode") != "human_review_required"
         or rule_draft.get("can_auto_apply") is not False
     ):
@@ -2468,8 +2468,8 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
     if (
         not isinstance(draft_readings, list)
         or len(draft_readings) != 1
-        or draft_readings[0].get("name") != "fallback_time_time_candidate_single_reading"
-        or draft_readings[0].get("source") != "fallback_time_time_candidate"
+        or draft_readings[0].get("name") != "fallback_be_application_candidate_single_reading"
+        or draft_readings[0].get("source") != "fallback_be_application_candidate"
     ):
         raise SystemExit("web route smoke check failed: fallback rule draft reading drift")
     hygiene = rule_draft.get("hygiene_policy_draft")
@@ -2516,24 +2516,18 @@ def validate_analyze_fallback_success(payload: dict, page: str, sentence: str) -
         'data-upgrade-plan-schema="certification_upgrade_plan.v1"',
         'data-upgrade-source-scope="fallback_shallow"',
         'data-upgrade-target-level="construction_rule"',
-        'data-upgrade-candidate-rule-id="fallback_time_time_candidate"',
+        'data-upgrade-candidate-rule-id="fallback_be_application_candidate"',
         'data-upgrade-gap-id="no_registered_construction_rule"',
         'data-upgrade-action-kind="draft_construction_rule"',
         "Construction Rule Draft",
         'data-rule-draft-schema="construction_rule_draft.v1"',
         'data-rule-draft-source-scope="fallback_shallow"',
-        'data-rule-draft-id="fallback_time_time_candidate"',
-        'data-rule-draft-analyzer="fallback_time_time_candidate_pipeline"',
+        'data-rule-draft-id="fallback_be_application_candidate"',
+        'data-rule-draft-analyzer="fallback_be_application_candidate_pipeline"',
         'data-rule-draft-can-auto-apply="false"',
-        'data-rule-draft-reading="fallback_time_time_candidate_single_reading"',
+        'data-rule-draft-reading="fallback_be_application_candidate_single_reading"',
         'data-rule-draft-forbidden-fragment="Parameter Event : Type."',
-        (
-            "/api/construction-rule-draft?sentence=Mary+laughed+"
-            "from+a+window+with+a+camera+beside+a+shelf+"
-            "loudly+under+a+lamp+on+a+table+with+a+microphone+"
-            "near+a+door+with+a+telescope+near+a+window+"
-            "with+a+knife+near+a+table+yesterday&amp;require_coq=1&amp;download=1"
-        ),
+        "/api/construction-rule-draft?sentence=Mary+is+in+the+garden&amp;require_coq=1&amp;download=1",
     ]
     require_text_fragments(page, expected_page_fragments, "fallback HTML")
     if html.escape(sentence, quote=True) not in page:
@@ -13804,7 +13798,7 @@ def validate_construction_rule_draft_download_artifact() -> None:
     from web.app import PipelineHandler, compact_json
 
     print("==> construction rule draft download artifact check")
-    sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
+    sentence = "Mary is in the garden"
     query = urlencode({"sentence": sentence, "require_coq": "1"})
     handler = object.__new__(PipelineHandler)
     payload, status = PipelineHandler.handle_construction_rule_draft_api(handler, query)
@@ -15628,7 +15622,7 @@ def run_web_route_smoke_check() -> None:
             timed_resultative_page,
             timed_resultative_sentence,
         )
-        fallback_sentence = "Mary laughed from a window with a camera beside a shelf loudly under a lamp on a table with a microphone near a door with a telescope near a window with a knife near a table yesterday"
+        fallback_sentence = "Mary is in the garden"
         fallback_query = urlencode({"sentence": fallback_sentence, "require_coq": "1"})
         with opener.open(f"{base_url}/api/analyze?{fallback_query}", timeout=5) as response:
             fallback_payload = json.load(response)
