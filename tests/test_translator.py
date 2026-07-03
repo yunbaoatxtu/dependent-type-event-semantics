@@ -15247,6 +15247,43 @@ class TranslatorTests(unittest.TestCase):
         self.assertTrue(result["type_check"]["ok"])
         self.assertEqual(result["coq_check"]["status"], "passed")
 
+    def test_perception_nominalization_keeps_final_time_inside_complement(
+        self,
+    ) -> None:
+        result = run_pipeline("Mary saw John leave yesterday", require_coq=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["kind"], "perception_nominalization")
+        self.assertEqual(
+            result["dependent_type_translation"],
+            "see(Mary, E(at_T(yesterday, leave(John))))",
+        )
+        self.assertIn("Parameter yesterday : Entity.", result["coq_code"])
+        self.assertIn("Parameter at_T : Entity -> Prop -> Prop.", result["coq_code"])
+        self.assertIn(
+            "see Mary (E (at_T yesterday (leave John)))",
+            result["coq_code"],
+        )
+        self.assertNotIn("mary_saw_john", result["dependent_type_translation"])
+        self.assertNotIn("Parameter mary_saw_john : Entity.", result["coq_code"])
+        nominalized = result["ast"]["perception"]["object"]
+        self.assertEqual(
+            nominalized["proposition"],
+            {
+                "kind": "time_modified_proposition",
+                "operator": "at",
+                "operator_name": "at_T",
+                "operator_type": "Entity -> Prop -> Prop",
+                "argument": {"name": "yesterday", "type": "Entity"},
+                "body": {
+                    "predicate": "leave",
+                    "predicate_type": "Entity -> Prop",
+                    "subject": {"name": "John", "type": "Entity"},
+                },
+            },
+        )
+        self.assertTrue(result["type_check"]["ok"])
+        self.assertEqual(result["coq_check"]["status"], "passed")
+
     def test_perception_nominalization_can_embed_subject_coordination(self) -> None:
         cases = (
             (

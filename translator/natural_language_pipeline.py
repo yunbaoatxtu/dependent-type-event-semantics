@@ -9404,6 +9404,25 @@ def simple_perception_embedded_proposition(
     }
 
 
+def time_modified_perception_embedded_proposition(
+    body: dict[str, Any],
+    *,
+    operator: str,
+    argument: str,
+) -> dict[str, Any]:
+    return {
+        "kind": "time_modified_proposition",
+        "operator": operator,
+        "operator_name": f"{operator}_T",
+        "operator_type": "Entity -> Prop -> Prop",
+        "argument": {
+            "name": argument,
+            "type": "Entity",
+        },
+        "body": body,
+    }
+
+
 def timed_perception_embedded_proposition(
     embedded_predicate: str,
     embedded_subject: str,
@@ -9787,6 +9806,21 @@ def parse_simple_perception_embedded_clause(
     )
 
 
+def parse_time_modified_perception_embedded_proposition(
+    tokens: list[str],
+) -> dict[str, Any] | None:
+    if len(tokens) < 3 or tokens[-1] not in TEMPORAL_ADVERBS:
+        return None
+    body = parse_simple_perception_embedded_clause(tokens[:-1])
+    if body is None:
+        return None
+    return time_modified_perception_embedded_proposition(
+        body,
+        operator="at",
+        argument=tokens[-1],
+    )
+
+
 def parse_timed_perception_embedded_clause(
     tokens: list[str],
     time_variable: str,
@@ -9882,6 +9916,12 @@ def perception_clause_definition_suffix(clause: dict[str, Any]) -> str:
 
 
 def perception_embedded_definition_suffix(proposition: dict[str, Any]) -> str:
+    if proposition.get("kind") == "time_modified_proposition":
+        argument = proposition["argument"]["name"]
+        return (
+            f"{perception_embedded_definition_suffix(proposition['body'])}_"
+            f"{proposition['operator']}_{argument}"
+        )
     if proposition.get("kind") == "subject_coordination":
         subjects = [subject["name"].lower() for subject in proposition["subjects"]]
         connective = str(proposition["connective"]).replace("_T", "")
@@ -10031,6 +10071,12 @@ def render_disjunctive_temporal_relation_translation(proposition: dict[str, Any]
 
 
 def render_perception_embedded_translation(proposition: dict[str, Any]) -> str:
+    if proposition.get("kind") == "time_modified_proposition":
+        return (
+            f"{proposition['operator_name']}("
+            f"{proposition['argument']['name']}, "
+            f"{render_perception_embedded_translation(proposition['body'])})"
+        )
     if proposition.get("kind") == "subject_coordination":
         return render_subject_coordination_translation(proposition)
     if proposition.get("kind") == "proposition_coordination":
@@ -10130,6 +10176,11 @@ def render_disjunctive_temporal_relation_coq(proposition: dict[str, Any]) -> str
 
 
 def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
+    if proposition.get("kind") == "time_modified_proposition":
+        return (
+            f"{proposition['operator_name']} {proposition['argument']['name']} "
+            f"({render_perception_embedded_coq(proposition['body'])})"
+        )
     if proposition.get("kind") == "subject_coordination":
         predicate = proposition["predicate"]["name"]
         subjects = [subject["name"] for subject in proposition["subjects"]]
@@ -10163,6 +10214,8 @@ def render_perception_embedded_coq(proposition: dict[str, Any]) -> str:
 
 
 def perception_embedded_subjects(proposition: dict[str, Any]) -> list[str]:
+    if proposition.get("kind") == "time_modified_proposition":
+        return perception_embedded_subjects(proposition["body"])
     if proposition.get("kind") == "subject_coordination":
         return [subject["name"] for subject in proposition["subjects"]]
     if proposition.get("kind") in {
@@ -10184,6 +10237,8 @@ def perception_embedded_subjects(proposition: dict[str, Any]) -> list[str]:
 def perception_embedded_predicate_declarations(
     proposition: dict[str, Any],
 ) -> list[tuple[str, str]]:
+    if proposition.get("kind") == "time_modified_proposition":
+        return perception_embedded_predicate_declarations(proposition["body"])
     if proposition.get("kind") == "subject_coordination":
         return [(proposition["predicate"]["name"], "Entity -> Prop")]
     if proposition.get("kind") == "proposition_coordination":
@@ -10206,6 +10261,8 @@ def perception_embedded_predicate_declarations(
 
 
 def perception_embedded_connectives(proposition: dict[str, Any]) -> list[str]:
+    if proposition.get("kind") == "time_modified_proposition":
+        return perception_embedded_connectives(proposition["body"])
     if proposition.get("kind") == "subject_coordination":
         return [proposition["connective"]]
     if proposition.get("kind") in {
@@ -10225,11 +10282,61 @@ def perception_embedded_connectives(proposition: dict[str, Any]) -> list[str]:
 
 
 def perception_embedded_uses_time(proposition: dict[str, Any]) -> bool:
+    if proposition.get("kind") == "time_modified_proposition":
+        return perception_embedded_uses_time(proposition["body"])
     if proposition.get("kind") == "temporal_relation":
         return True
     if proposition.get("kind") == "proposition_coordination":
         return any(perception_embedded_uses_time(clause) for clause in proposition["clauses"])
     return False
+
+
+def perception_embedded_time_arguments(proposition: dict[str, Any]) -> list[str]:
+    if proposition.get("kind") == "time_modified_proposition":
+        return [
+            proposition["argument"]["name"],
+            *perception_embedded_time_arguments(proposition["body"]),
+        ]
+    if proposition.get("kind") in {
+        "subject_coordination",
+        "proposition_coordination",
+        "timed_proposition_coordination",
+    }:
+        arguments: list[str] = []
+        for clause in proposition.get("clauses", []):
+            if isinstance(clause, dict):
+                arguments.extend(perception_embedded_time_arguments(clause))
+        return arguments
+    if proposition.get("kind") == "temporal_relation":
+        return (
+            perception_embedded_time_arguments(proposition["main"])
+            + perception_embedded_time_arguments(proposition["reference"])
+        )
+    return []
+
+
+def perception_embedded_time_operators(proposition: dict[str, Any]) -> list[str]:
+    if proposition.get("kind") == "time_modified_proposition":
+        return [
+            proposition["operator_name"],
+            *perception_embedded_time_operators(proposition["body"]),
+        ]
+    if proposition.get("kind") in {
+        "subject_coordination",
+        "proposition_coordination",
+        "timed_proposition_coordination",
+    }:
+        operators: list[str] = []
+        for clause in proposition.get("clauses", []):
+            if isinstance(clause, dict):
+                operators.extend(perception_embedded_time_operators(clause))
+        return operators
+    if proposition.get("kind") == "temporal_relation":
+        return (
+            perception_embedded_time_operators(proposition["main"])
+            + perception_embedded_time_operators(proposition["reference"])
+        )
+    return []
 
 
 def check_timed_perception_clause(
@@ -10331,6 +10438,25 @@ def check_perception_embedded_proposition(
     proposition: dict[str, Any],
     errors: list[str],
 ) -> None:
+    if proposition.get("kind") == "time_modified_proposition":
+        if proposition.get("operator") not in {"at", "during"}:
+            errors.append("embedded time-modified proposition operator must be at or during")
+        if proposition.get("operator_name") != f"{proposition.get('operator')}_T":
+            errors.append("embedded time-modified proposition operator_name must match operator")
+        if proposition.get("operator_type") != "Entity -> Prop -> Prop":
+            errors.append(
+                "embedded time-modified proposition operator must have type Entity -> Prop -> Prop"
+            )
+        argument = proposition.get("argument")
+        if not isinstance(argument, dict) or argument.get("type") != "Entity":
+            errors.append("embedded time-modified proposition argument must have type Entity")
+        body = proposition.get("body")
+        if not isinstance(body, dict):
+            errors.append("embedded time-modified proposition body must be a proposition")
+            return
+        check_perception_embedded_proposition(body, errors)
+        return
+
     if proposition.get("kind") == "subject_coordination":
         if proposition.get("modifiers") != []:
             errors.append(
@@ -10520,15 +10646,19 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     embedded_tokens = tokens[2:]
     embedded_proposition: dict[str, Any] | None = None
 
-    simple_clause = parse_simple_perception_embedded_clause(embedded_tokens)
-    if simple_clause is not None:
-        embedded_proposition = simple_clause
+    time_modified = parse_time_modified_perception_embedded_proposition(embedded_tokens)
+    if time_modified is not None:
+        embedded_proposition = time_modified
     else:
-        temporal_relation = parse_temporal_perception_embedded_proposition(
-            embedded_tokens,
-        )
-        if temporal_relation is not None:
-            embedded_proposition = temporal_relation
+        simple_clause = parse_simple_perception_embedded_clause(embedded_tokens)
+        if simple_clause is not None:
+            embedded_proposition = simple_clause
+        else:
+            temporal_relation = parse_temporal_perception_embedded_proposition(
+                embedded_tokens,
+            )
+            if temporal_relation is not None:
+                embedded_proposition = temporal_relation
 
     if embedded_proposition is None:
         if (
@@ -10634,6 +10764,12 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
     )
     embedded_subjects = perception_embedded_subjects(embedded_proposition)
     connectives = unique_names(perception_embedded_connectives(embedded_proposition))
+    embedded_time_arguments = unique_names(
+        perception_embedded_time_arguments(embedded_proposition)
+    )
+    embedded_time_operators = unique_names(
+        perception_embedded_time_operators(embedded_proposition)
+    )
     coq_code = "\n".join(
         [
             "(* Luo-Shi-style nominalization for perception complements. *)",
@@ -10645,6 +10781,10 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
                 f"Parameter {subject} : Entity."
                 for subject in unique_names(embedded_subjects)
             ],
+            *[
+                f"Parameter {argument} : Entity."
+                for argument in embedded_time_arguments
+            ],
             "",
             "Parameter E : Prop -> Entity.",
             *[
@@ -10652,6 +10792,10 @@ def perception_nominalization_pipeline(sentence: str) -> dict[str, Any] | None:
                 for predicate, predicate_type in embedded_predicate_declarations
             ],
             f"Parameter {perception_predicate} : Entity -> Entity -> Prop.",
+            *[
+                f"Parameter {operator} : Entity -> Prop -> Prop."
+                for operator in embedded_time_operators
+            ],
             *(
                 ["Parameter before : Time -> Time -> Prop."]
                 if perception_embedded_uses_time(embedded_proposition)
