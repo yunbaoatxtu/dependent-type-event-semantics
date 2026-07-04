@@ -11269,6 +11269,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         registered_modifier_role_witness_selection_contract,
         run_pipeline,
         scope_attachment_discourse_audit_payload,
+        truth_condition_discharge_plan_payload,
         truth_condition_instance_obligations_payload,
     )
 
@@ -11768,6 +11769,79 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
     )
     if truth_obligations != expected_truth_obligations:
         raise SystemExit("web route smoke check failed: truth-condition obligation witness drift")
+    truth_discharge_plan = completion_status.get("truth_condition_discharge_plan")
+    if not isinstance(truth_discharge_plan, dict):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan missing")
+    if (
+        truth_discharge_plan.get("schema_version")
+        != "truth_condition_discharge_plan.v1"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan schema drift")
+    if (
+        truth_discharge_plan.get("source_obligation_schema")
+        != "truth_condition_instance_obligations.v1"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan source drift")
+    if truth_discharge_plan.get("blocker") != "concrete_truth_condition_instances_unproved":
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan blocker drift")
+    if truth_discharge_plan.get("next_stage") != "provide_concrete_truth_condition_instances":
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan next-stage drift")
+    if (
+        truth_discharge_plan.get("plan_scope")
+        != "finite_registered_obligation_plan_not_completion"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan scope drift")
+    if (
+        truth_discharge_plan.get("claim")
+        != "ordered_discharge_plan_keeps_general_instances_open"
+    ):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan claim drift")
+    if truth_discharge_plan.get("can_close_blocker") is not False:
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan closure drift")
+    discharge_stages = truth_discharge_plan.get("stages")
+    if not isinstance(discharge_stages, list):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan rows missing")
+    if truth_discharge_plan.get("stage_count") != len(discharge_stages):
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan count drift")
+    if truth_discharge_plan.get("stage_order") != [
+        item.get("stage_id") for item in discharge_stages if isinstance(item, dict)
+    ]:
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan order drift")
+    stage_classes = {
+        item.get("obligation_class")
+        for item in discharge_stages
+        if isinstance(item, dict)
+    }
+    if stage_classes != required_obligation_ids:
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan class drift")
+    for stage in discharge_stages:
+        if not isinstance(stage, dict):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan row drift")
+        class_id = stage.get("obligation_class")
+        obligation = obligation_by_id.get(class_id)
+        if not isinstance(obligation, dict):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan class drift")
+        if stage.get("stage_id") != f"discharge_{class_id}":
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan stage drift")
+        if stage.get("current_certificate") != obligation.get("current_certificate"):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan certificate drift")
+        if stage.get("model_candidate_certificate") != obligation.get("model_candidate_certificate"):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan model drift")
+        if stage.get("registered_witness_count") != obligation.get("registered_witness_count"):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan witness drift")
+        if stage.get("required_independent_instances") != obligation.get("required_independent_instances"):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan instance drift")
+        if not string_list(stage.get("acceptance_evidence")):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan evidence drift")
+        if not nonempty_string(stage.get("closure_gate")):
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan closure-gate drift")
+        if stage.get("can_close_blocker") is not False:
+            raise SystemExit("web route smoke check failed: truth-condition discharge plan closure drift")
+    expected_discharge_plan = truth_condition_discharge_plan_payload(
+        expected_truth_obligations,
+    )
+    if truth_discharge_plan != expected_discharge_plan:
+        raise SystemExit("web route smoke check failed: truth-condition discharge plan drift")
     if verified_by_id["registered_construction_fragment"].get("count") != len(rules):
         raise SystemExit("web route smoke check failed: registered completion evidence drift")
     if verified_by_id["semantic_snapshot_regression"].get("count") != len(snapshots):
@@ -13078,6 +13152,14 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         for item in fallback_promotion.get("candidates", [])
         if isinstance(item, dict)
     ]
+    truth_discharge_plan = completion_status.get("truth_condition_discharge_plan")
+    if not isinstance(truth_discharge_plan, dict):
+        truth_discharge_plan = {}
+    truth_discharge_stages = [
+        item
+        for item in truth_discharge_plan.get("stages", [])
+        if isinstance(item, dict)
+    ]
     completion_frontier_audit = completion_status.get("completion_frontier_audit")
     if not isinstance(completion_frontier_audit, dict):
         completion_frontier_audit = {}
@@ -13235,6 +13317,30 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         data_fragment(
             "data-fallback-promotion-next-stage",
             fallback_promotion.get("next_stage", ""),
+        ),
+        data_fragment(
+            "data-truth-condition-discharge-plan-schema",
+            truth_discharge_plan.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-truth-condition-discharge-plan-source-schema",
+            truth_discharge_plan.get("source_obligation_schema", ""),
+        ),
+        data_fragment(
+            "data-truth-condition-discharge-plan-scope",
+            truth_discharge_plan.get("plan_scope", ""),
+        ),
+        data_fragment(
+            "data-truth-condition-discharge-plan-claim",
+            truth_discharge_plan.get("claim", ""),
+        ),
+        data_fragment(
+            "data-truth-condition-discharge-plan-stage-count",
+            len(truth_discharge_stages),
+        ),
+        data_fragment(
+            "data-truth-condition-discharge-plan-can-close-blocker",
+            str(truth_discharge_plan.get("can_close_blocker") is True).lower(),
         ),
         data_fragment(
             "data-completion-frontier-schema",
@@ -13774,6 +13880,45 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
                 data_fragment(
                     "data-fallback-promotion-can-auto-register",
                     str(draft_preflight.get("can_auto_register") is True).lower(),
+                ),
+            ],
+        )
+    for item in truth_discharge_stages:
+        expected_fragments.extend(
+            [
+                data_fragment(
+                    "data-truth-condition-discharge-stage",
+                    item.get("stage_id", ""),
+                ),
+                data_fragment(
+                    "data-truth-condition-discharge-priority",
+                    item.get("priority", ""),
+                ),
+                data_fragment(
+                    "data-truth-condition-discharge-class",
+                    item.get("obligation_class", ""),
+                ),
+                data_fragment(
+                    "data-truth-condition-discharge-depends-on",
+                    " | ".join(str(value) for value in item.get("depends_on", []))
+                    if isinstance(item.get("depends_on"), list)
+                    else "",
+                ),
+                data_fragment(
+                    "data-truth-condition-discharge-closure-gate",
+                    item.get("closure_gate", ""),
+                ),
+                data_fragment(
+                    "data-truth-condition-discharge-evidence",
+                    " | ".join(
+                        str(value) for value in item.get("acceptance_evidence", [])
+                    )
+                    if isinstance(item.get("acceptance_evidence"), list)
+                    else "",
+                ),
+                data_fragment(
+                    "data-truth-condition-discharge-can-close-blocker",
+                    str(item.get("can_close_blocker") is True).lower(),
                 ),
             ],
         )

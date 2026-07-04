@@ -19621,6 +19621,55 @@ class TranslatorTests(unittest.TestCase):
                 for item in truth_obligations["obligations"]
             },
         )
+        discharge_plan = completion_status["truth_condition_discharge_plan"]
+        self.assertEqual(
+            discharge_plan["schema_version"],
+            "truth_condition_discharge_plan.v1",
+        )
+        self.assertEqual(
+            discharge_plan["source_obligation_schema"],
+            truth_obligations["schema_version"],
+        )
+        self.assertEqual(
+            discharge_plan["plan_scope"],
+            "finite_registered_obligation_plan_not_completion",
+        )
+        self.assertEqual(
+            discharge_plan["claim"],
+            "ordered_discharge_plan_keeps_general_instances_open",
+        )
+        self.assertFalse(discharge_plan["can_close_blocker"])
+        self.assertEqual(discharge_plan["stage_count"], truth_obligations["obligation_count"])
+        self.assertEqual(
+            discharge_plan["stage_order"],
+            [item["stage_id"] for item in discharge_plan["stages"]],
+        )
+        stage_by_class = {
+            item["obligation_class"]: item
+            for item in discharge_plan["stages"]
+        }
+        self.assertEqual(set(stage_by_class), set(obligation_by_id))
+        self.assertEqual(stage_by_class["lexical_application"]["priority"], 1)
+        self.assertEqual(
+            stage_by_class["modifier_attachment"]["depends_on"],
+            ["lexical_application", "temporal_operators"],
+        )
+        self.assertEqual(
+            stage_by_class["transition_cause"]["closure_gate"],
+            "general_transition_cause_model_supplied",
+        )
+        for class_id, stage in stage_by_class.items():
+            obligation = obligation_by_id[class_id]
+            self.assertEqual(
+                stage["current_certificate"],
+                obligation["current_certificate"],
+            )
+            self.assertEqual(
+                stage["registered_witness_count"],
+                obligation["registered_witness_count"],
+            )
+            self.assertFalse(stage["can_close_blocker"])
+            self.assertTrue(stage["acceptance_evidence"])
         frontier_audit = completion_status["completion_frontier_audit"]
         self.assertEqual(
             frontier_audit["schema_version"],
@@ -21020,6 +21069,46 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_certified_fragment_manifest(manifest)
 
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_discharge_plan"][
+            "can_close_blocker"
+        ] = True
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition discharge plan closure drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_discharge_plan"][
+            "stage_count"
+        ] = 1
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition discharge plan count drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_discharge_plan"][
+            "stages"
+        ][3]["depends_on"] = ["lexical_application"]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition discharge plan drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["truth_condition_discharge_plan"][
+            "stages"
+        ][0]["current_certificate"] = "imaginary_certificate"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "truth-condition discharge plan certificate drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
     def test_verification_rejects_parser_semantic_boundary_audit_drift(self) -> None:
         manifest = deepcopy(construction_fragment_manifest())
         manifest["parser_semantic_boundary_audit"]["parser_claim"] = (
@@ -21801,6 +21890,66 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-truth-condition-obligation-remaining-status="unregistered_modifier_attachment_truth_conditions_open"',
+            page,
+        )
+        discharge_plan = completion_status["truth_condition_discharge_plan"]
+        self.assertIn("truth-condition discharge plan", page)
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-plan-schema",
+                discharge_plan["schema_version"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-plan-source-schema",
+                discharge_plan["source_obligation_schema"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-plan-scope",
+                discharge_plan["plan_scope"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-plan-stage-count",
+                discharge_plan["stage_count"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-truth-condition-discharge-plan-can-close-blocker="false"',
+            page,
+        )
+        modifier_stage = next(
+            item
+            for item in discharge_plan["stages"]
+            if item["obligation_class"] == "modifier_attachment"
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-stage",
+                modifier_stage["stage_id"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-depends-on",
+                " | ".join(modifier_stage["depends_on"]),
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-truth-condition-discharge-closure-gate",
+                modifier_stage["closure_gate"],
+            ),
             page,
         )
         scope_attachment_audit = completion_status["scope_attachment_discourse_audit"]
@@ -29533,6 +29682,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`fallback_promotion_draft_preflight.v1`", readme)
         self.assertIn("`truth_condition_instance_obligations`", readme)
         self.assertIn('"truth_condition_instance_obligations.v1"', readme)
+        self.assertIn("`truth_condition_discharge_plan`", readme)
+        self.assertIn('"truth_condition_discharge_plan.v1"', readme)
+        self.assertIn("`data-truth-condition-discharge-*`", readme)
         self.assertIn("`completion_frontier_audit`", readme)
         self.assertIn('"completion_frontier_audit.v1"', readme)
         self.assertIn("`data-completion-frontier-*`", readme)
@@ -29558,6 +29710,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-fallback-promotion-draft-*`", web_design)
         self.assertIn("`truth_condition_instance_obligations.v1`", web_design)
         self.assertIn("`data-truth-condition-obligation-*`", web_design)
+        self.assertIn("`truth_condition_discharge_plan.v1`", web_design)
+        self.assertIn("`data-truth-condition-discharge-*`", web_design)
         self.assertIn("`data-completion-frontier-*`", web_design)
         self.assertIn("`example_1_semantic_preservation_obligation`", readme)
         self.assertIn("`example_i_semantic_preservation_obligation_is_prop`", readme)
@@ -31158,6 +31312,9 @@ class TranslatorTests(unittest.TestCase):
             manuscript,
         )
         self.assertIn("completion_frontier_audit.v1", manuscript)
+        self.assertIn("truth_condition_discharge_plan.v1", manuscript)
+        self.assertIn("data-truth-condition-discharge-*", manuscript)
+        self.assertIn("finite_registered_obligation_plan_not_completion", manuscript)
         self.assertIn("fallback_promotion_candidates.v1", manuscript)
         self.assertIn("fallback_promotion_draft_preflight.v1", manuscript)
         self.assertIn("promotion_queue_not_registered_certification", manuscript)
@@ -32854,6 +33011,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("coverage_matrix_counts", verifier)
         self.assertIn("fallback_promotion_candidates.v1", verifier)
         self.assertIn("fallback_promotion_draft_preflight.v1", verifier)
+        self.assertIn("truth_condition_discharge_plan.v1", verifier)
+        self.assertIn("data-truth-condition-discharge-plan-schema", verifier)
         self.assertIn("data-fallback-promotion-schema", verifier)
         self.assertIn("data-fallback-promotion-draft-preflight-schema", verifier)
         self.assertIn("data-coverage-registered-success-count", verifier)

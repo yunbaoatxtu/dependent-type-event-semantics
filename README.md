@@ -1067,6 +1067,17 @@ the runtime coverage entries checked by the web-route smoke tests. The shared
 `proof_index_scope` is
 `registered_fragment_entrypoints_not_general_denotation`, making the route
 auditable without claiming a new general denotational proof.
+The completion object now also carries `truth_condition_discharge_plan` with
+`schema_version: "truth_condition_discharge_plan.v1"`. This plan is derived from
+the obligation matrix and orders the seven open truth-condition classes into
+explicit discharge stages. Each stage records its priority, dependencies,
+current finite certificate, model-candidate certificate, required independent
+instances, acceptance evidence, and `closure_gate`. Both the top-level plan and
+each stage keep `can_close_blocker: false`, because the plan is a route toward
+`provide_concrete_truth_condition_instances`, not evidence that the remaining
+general lexical, temporal, causal, quantificational, polarity, counting, or
+modifier models have already been supplied. The Certified Fragment panel mirrors
+the plan through `data-truth-condition-discharge-*` hooks.
 It also carries `scope_attachment_discourse_audit` with `schema_version:
 "scope_attachment_discourse_audit.v1"`. This audit is deliberately finite: its
 claim is `finite_registered_witnesses_not_full_discourse_semantics`, and

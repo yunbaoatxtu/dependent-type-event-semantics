@@ -3390,6 +3390,16 @@ def certified_fragment_panel() -> str:
         for item in truth_condition_obligations.get("obligations", [])
         if isinstance(item, dict)
     ]
+    truth_condition_discharge_plan = completion_status.get(
+        "truth_condition_discharge_plan",
+    )
+    if not isinstance(truth_condition_discharge_plan, dict):
+        truth_condition_discharge_plan = {}
+    truth_condition_discharge_stages = [
+        item
+        for item in truth_condition_discharge_plan.get("stages", [])
+        if isinstance(item, dict)
+    ]
     scope_attachment_discourse_audit = completion_status.get(
         "scope_attachment_discourse_audit",
     )
@@ -3993,6 +4003,22 @@ def certified_fragment_panel() -> str:
         )
         for item in truth_condition_obligation_rows
     )
+    truth_condition_discharge_stage_items = "".join(
+        (
+            '<li '
+            f'data-truth-condition-discharge-stage="{html.escape(str(item.get("stage_id", "")), quote=True)}" '
+            f'data-truth-condition-discharge-priority="{html.escape(str(item.get("priority", "")), quote=True)}" '
+            f'data-truth-condition-discharge-class="{html.escape(str(item.get("obligation_class", "")), quote=True)}" '
+            f'data-truth-condition-discharge-depends-on="{html.escape(data_list(item.get("depends_on")), quote=True)}" '
+            f'data-truth-condition-discharge-closure-gate="{html.escape(str(item.get("closure_gate", "")), quote=True)}" '
+            f'data-truth-condition-discharge-evidence="{html.escape(data_list(item.get("acceptance_evidence")), quote=True)}" '
+            f'data-truth-condition-discharge-can-close-blocker="{str(item.get("can_close_blocker") is True).lower()}">'
+            f"<code>{html.escape(str(item.get('stage_id', '')))}</code>"
+            f"<span>{html.escape(str(item.get('closure_gate', '')))}</span>"
+            "</li>"
+        )
+        for item in truth_condition_discharge_stages
+    )
     scope_attachment_discourse_items = "".join(
         (
             '<li '
@@ -4116,6 +4142,12 @@ def certified_fragment_panel() -> str:
         f'data-truth-condition-obligation-witness-source="{html.escape(str(truth_condition_obligations.get("witness_source", "")), quote=True)}" '
         f'data-truth-condition-obligation-witness-scope="{html.escape(str(truth_condition_obligations.get("witness_scope", "")), quote=True)}" '
         f'data-truth-condition-obligation-proof-index-scope="{html.escape(str(truth_condition_obligations.get("proof_index_scope", "")), quote=True)}" '
+        f'data-truth-condition-discharge-plan-schema="{html.escape(str(truth_condition_discharge_plan.get("schema_version", "")), quote=True)}" '
+        f'data-truth-condition-discharge-plan-source-schema="{html.escape(str(truth_condition_discharge_plan.get("source_obligation_schema", "")), quote=True)}" '
+        f'data-truth-condition-discharge-plan-scope="{html.escape(str(truth_condition_discharge_plan.get("plan_scope", "")), quote=True)}" '
+        f'data-truth-condition-discharge-plan-claim="{html.escape(str(truth_condition_discharge_plan.get("claim", "")), quote=True)}" '
+        f'data-truth-condition-discharge-plan-stage-count="{len(truth_condition_discharge_stages)}" '
+        f'data-truth-condition-discharge-plan-can-close-blocker="{str(truth_condition_discharge_plan.get("can_close_blocker") is True).lower()}" '
         f'data-scope-attachment-discourse-schema="{html.escape(str(scope_attachment_discourse_audit.get("schema_version", "")), quote=True)}" '
         f'data-scope-attachment-discourse-claim="{html.escape(str(scope_attachment_discourse_audit.get("claim", "")), quote=True)}" '
         f'data-scope-attachment-discourse-category-count="{len(scope_attachment_discourse_rows)}" '
@@ -4217,6 +4249,7 @@ def certified_fragment_panel() -> str:
         f"<dt>completion basis</dt><dd><code>{html.escape(str(completion_status.get('completion_basis', '')))}</code></dd>"
         f"<dt>fallback promotion</dt><dd><code>{html.escape(str(fallback_promotion.get('schema_version', '')))}</code></dd>"
         f"<dt>truth obligations</dt><dd><code>{html.escape(str(truth_condition_obligations.get('schema_version', '')))}</code></dd>"
+        f"<dt>truth discharge plan</dt><dd><code>{html.escape(str(truth_condition_discharge_plan.get('schema_version', '')))}</code></dd>"
         f"<dt>scope/attachment audit</dt><dd><code>{html.escape(str(scope_attachment_discourse_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier audit</dt><dd><code>{html.escape(str(completion_frontier_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>frontier source</dt><dd><code>{html.escape(str(completion_frontier_audit.get('source_certificate', '')))}</code></dd>"
@@ -4275,6 +4308,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{scope_attachment_discourse_items}{scope_attachment_discourse_boundary_items}</ul></div>"
         '<div class="certified-fragment-truth-obligations"><strong>truth-condition instance obligations</strong>'
         f"<ul>{truth_condition_obligation_items}</ul></div>"
+        '<div class="certified-fragment-truth-discharge-plan"><strong>truth-condition discharge plan</strong>'
+        f"<ul>{truth_condition_discharge_stage_items}</ul></div>"
         '<div class="certified-fragment-frontier"><strong>completion frontier audit</strong>'
         f"<ul>{frontier_closed_items}{frontier_open_items}</ul></div>"
         '<div class="certified-fragment-markers"><strong>rejected markers</strong>'

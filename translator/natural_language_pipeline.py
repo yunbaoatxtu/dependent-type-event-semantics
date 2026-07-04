@@ -24942,6 +24942,147 @@ def truth_condition_instance_obligations_payload(
     }
 
 
+TRUTH_CONDITION_DISCHARGE_STAGE_METADATA: dict[str, dict[str, Any]] = {
+    "lexical_application": {
+        "priority": 1,
+        "depends_on": [],
+        "acceptance_evidence": [
+            "independent common-noun predicate denotations",
+            "independent verb-frame denotations",
+            "registered lexical atom coverage preservation",
+        ],
+        "closure_gate": "general_lexical_model_supplied",
+    },
+    "sigma_quantification": {
+        "priority": 2,
+        "depends_on": ["lexical_application"],
+        "acceptance_evidence": [
+            "dependent existential witness semantics",
+            "quantifier restrictor and scope-denotation semantics",
+            "registered scope ambiguity preservation",
+        ],
+        "closure_gate": "general_quantifier_model_supplied",
+    },
+    "temporal_operators": {
+        "priority": 3,
+        "depends_on": ["lexical_application"],
+        "acceptance_evidence": [
+            "interval-denotation clauses for temporal operators",
+            "temporal attachment policy semantics",
+            "Parsons/Luo-Shi temporal benchmark preservation",
+        ],
+        "closure_gate": "general_temporal_model_supplied",
+    },
+    "modifier_attachment": {
+        "priority": 4,
+        "depends_on": ["lexical_application", "temporal_operators"],
+        "acceptance_evidence": [
+            "role-indexed Adv denotations",
+            "attachment-choice semantics beyond registered examples",
+            "modifier role inventory preservation",
+        ],
+        "closure_gate": "general_modifier_attachment_model_supplied",
+    },
+    "repeat_counting": {
+        "priority": 5,
+        "depends_on": ["lexical_application", "temporal_operators"],
+        "acceptance_evidence": [
+            "natural-number repeat semantics",
+            "counting/event-cardinality replacement semantics",
+            "aspectual counting interaction preservation",
+        ],
+        "closure_gate": "general_counting_model_supplied",
+    },
+    "polarity": {
+        "priority": 6,
+        "depends_on": ["lexical_application", "sigma_quantification"],
+        "acceptance_evidence": [
+            "proposition-level negation denotation",
+            "negation-scope interaction semantics",
+            "polarity-sensitive inference preservation",
+        ],
+        "closure_gate": "general_polarity_model_supplied",
+    },
+    "transition_cause": {
+        "priority": 7,
+        "depends_on": ["lexical_application", "temporal_operators"],
+        "acceptance_evidence": [
+            "state-transition denotation by scale/source/target",
+            "causal resultative denotation",
+            "registered state-change frame preservation",
+        ],
+        "closure_gate": "general_transition_cause_model_supplied",
+    },
+}
+
+
+def truth_condition_discharge_plan_payload(
+    truth_condition_obligations: dict[str, Any],
+) -> dict[str, Any]:
+    obligations = [
+        item
+        for item in truth_condition_obligations.get("obligations", [])
+        if isinstance(item, dict)
+    ]
+    stages = []
+    for obligation in obligations:
+        class_id = str(obligation.get("class_id", ""))
+        metadata = TRUTH_CONDITION_DISCHARGE_STAGE_METADATA.get(class_id, {})
+        priority = int(metadata.get("priority", len(stages) + 1))
+        stages.append(
+            {
+                "stage_id": f"discharge_{class_id}",
+                "priority": priority,
+                "obligation_class": class_id,
+                "depends_on": list(metadata.get("depends_on", [])),
+                "current_certificate": obligation.get("current_certificate", ""),
+                "model_candidate_certificate": obligation.get(
+                    "model_candidate_certificate",
+                    "",
+                ),
+                "finite_registered_status": obligation.get(
+                    "finite_registered_status",
+                    "",
+                ),
+                "remaining_status": obligation.get("remaining_status", ""),
+                "registered_witness_count": obligation.get(
+                    "registered_witness_count",
+                    0,
+                ),
+                "required_independent_instances": list(
+                    obligation.get("required_independent_instances", []),
+                ),
+                "acceptance_evidence": list(
+                    metadata.get("acceptance_evidence", []),
+                ),
+                "closure_gate": metadata.get(
+                    "closure_gate",
+                    "general_truth_condition_model_supplied",
+                ),
+                "can_close_blocker": False,
+            }
+        )
+    stages.sort(key=lambda item: int(item.get("priority", 0)))
+    return {
+        "schema_version": "truth_condition_discharge_plan.v1",
+        "source_obligation_schema": truth_condition_obligations.get(
+            "schema_version",
+            "",
+        ),
+        "blocker": truth_condition_obligations.get("blocker", ""),
+        "next_stage": truth_condition_obligations.get("next_stage", ""),
+        "plan_scope": "finite_registered_obligation_plan_not_completion",
+        "claim": "ordered_discharge_plan_keeps_general_instances_open",
+        "stage_count": len(stages),
+        "stage_order": [str(item.get("stage_id", "")) for item in stages],
+        "blocker_close_gate": (
+            "all_discharge_stages_need_independently_supplied_general_models"
+        ),
+        "can_close_blocker": False,
+        "stages": stages,
+    }
+
+
 def project_completion_status_payload(
     *,
     registered_rule_count: int,
@@ -26236,11 +26377,13 @@ def project_completion_status_payload(
         ],
         "coverage_summary": dict(coverage_matrix_counts),
     }
-    status["truth_condition_instance_obligations"] = (
-        truth_condition_instance_obligations_payload(
-            semantic_snapshots,
-            registered_variant_success_cases,
-        )
+    truth_condition_obligations = truth_condition_instance_obligations_payload(
+        semantic_snapshots,
+        registered_variant_success_cases,
+    )
+    status["truth_condition_instance_obligations"] = truth_condition_obligations
+    status["truth_condition_discharge_plan"] = truth_condition_discharge_plan_payload(
+        truth_condition_obligations,
     )
     status["scope_attachment_discourse_audit"] = (
         scope_attachment_discourse_audit_payload(

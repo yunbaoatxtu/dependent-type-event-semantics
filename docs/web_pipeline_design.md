@@ -223,7 +223,14 @@ coverage entrypoints. The row-level hooks should expose
 `data-truth-condition-obligation-proof-index-scope` and
 `data-truth-condition-obligation-sample-entrypoints`; the scope remains
 `registered_fragment_entrypoints_not_general_denotation` so these links are
-trace indices, not a claim of arbitrary denotational closure. The same object
+trace indices, not a claim of arbitrary denotational closure. The completion
+object also carries a `truth_condition_discharge_plan.v1` child derived from the
+obligation matrix. It orders the seven classes into discharge stages, records
+their dependencies, acceptance evidence, closure gates, and finite-certificate
+sources, and mirrors those fields through `data-truth-condition-discharge-*`
+hooks. The plan keeps `can_close_blocker: false`, so it is a testable path
+toward `provide_concrete_truth_condition_instances`, not a completion marker.
+The same object
 now carries a `scope_attachment_discourse_audit.v1` child. That child has the
 finite claim `finite_registered_witnesses_not_full_discourse_semantics`, keeps
 `full_scope_attachment_discourse_certification` false, and derives rows for
