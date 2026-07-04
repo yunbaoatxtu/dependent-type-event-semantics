@@ -10929,9 +10929,11 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
             "plain",
             "subject_relative_object_np_restrictor",
             "subject_relative_adv",
+            "subject_relative_stacked_restrictor",
             "clause_adv",
             "object_relative_object_np_restrictor",
             "object_relative_adv",
+            "object_relative_stacked_restrictor",
         },
     }
     required_relative_restrictor_sites = {

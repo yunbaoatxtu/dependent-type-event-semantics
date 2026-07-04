@@ -16576,6 +16576,82 @@ class TranslatorTests(unittest.TestCase):
         self.assertNotIn("Parameter that :", object_relative["coq_code"])
         self.assertEqual(object_relative["coq_check"]["status"], "passed")
 
+        subject_stacked_relative = run_pipeline(
+            "some boy who laughed who smiled loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_stacked_relative["ok"])
+        self.assertEqual(
+            [variant["kind"] for variant in subject_stacked_relative["ast"]["attachment_variants"]],
+            ["subject_relative_stacked_restrictor"],
+        )
+        self.assertEqual(
+            [
+                restrictor["predicate"]
+                for restrictor in subject_stacked_relative["ast"]["noun_phrases"][
+                    "subject"
+                ]["relative_clause_restrictors"]
+            ],
+            ["laugh", "smile"],
+        )
+        self.assertEqual(
+            [
+                restrictor["stacked_relative_count"]
+                for restrictor in subject_stacked_relative["ast"]["noun_phrases"][
+                    "subject"
+                ]["relative_clause_restrictors"]
+            ],
+            [2, 2],
+        )
+        self.assertEqual(
+            subject_stacked_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and laugh(x_boy) and smile(x_boy)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn("Parameter laugh : Entity -> Prop.", subject_stacked_relative["coq_code"])
+        self.assertIn("Parameter smile : Entity -> Prop.", subject_stacked_relative["coq_code"])
+        self.assertNotIn("boy_who_laughed_who_smiled", subject_stacked_relative["dependent_type_translation"])
+        self.assertEqual(subject_stacked_relative["coq_check"]["status"], "passed")
+
+        object_stacked_relative = run_pipeline(
+            "some boy loved a girl that smiled that laughed",
+            require_coq=True,
+        )
+        self.assertTrue(object_stacked_relative["ok"])
+        self.assertEqual(
+            [variant["kind"] for variant in object_stacked_relative["ast"]["attachment_variants"]],
+            ["object_relative_stacked_restrictor"],
+        )
+        self.assertEqual(
+            [
+                restrictor["predicate"]
+                for restrictor in object_stacked_relative["ast"]["noun_phrases"][
+                    "object"
+                ]["relative_clause_restrictors"]
+            ],
+            ["smile", "laugh"],
+        )
+        self.assertEqual(
+            object_stacked_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. boy(x_boy) and "
+                "exists x_girl : Entity. "
+                "(girl(x_girl) and smile(x_girl) and laugh(x_girl)) and "
+                "love(x_boy, x_girl)"
+            ),
+        )
+        self.assertIn("Parameter smile : Entity -> Prop.", object_stacked_relative["coq_code"])
+        self.assertIn("Parameter laugh : Entity -> Prop.", object_stacked_relative["coq_code"])
+        self.assertNotIn("girl_that_smiled_that_laughed", object_stacked_relative["dependent_type_translation"])
+        self.assertEqual(object_stacked_relative["coq_check"]["status"], "passed")
+
         subject_transitive_relative = run_pipeline(
             "some boy who saw Mary loved a girl",
             require_coq=True,
@@ -18556,7 +18632,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 89)
+        self.assertEqual(counts["registered_variant_success_cases"], 91)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -18963,6 +19039,14 @@ class TranslatorTests(unittest.TestCase):
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
         self.assertIn(
+            "some boy who laughed who smiled loved a girl",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl that smiled that laughed",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
             "some boy who saw a girl in the park loved a cat",
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
@@ -18978,9 +19062,11 @@ class TranslatorTests(unittest.TestCase):
                 "clause_adv",
                 "object_relative_adv",
                 "object_relative_object_np_restrictor",
+                "object_relative_stacked_restrictor",
                 "plain",
                 "subject_relative_adv",
                 "subject_relative_object_np_restrictor",
+                "subject_relative_stacked_restrictor",
             ],
         )
         self.assertIn(
@@ -19006,8 +19092,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 89)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 89)
+        self.assertEqual(modifier_contract["variant_case_count"], 91)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 91)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -20620,7 +20706,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 89,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 91,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -20759,7 +20845,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="89"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="91"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(
@@ -20947,7 +21033,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-scope-attachment-discourse-attachment-kinds="clause_adv | object_relative_adv | object_relative_object_np_restrictor | plain | subject_relative_adv | subject_relative_object_np_restrictor"',
+            'data-scope-attachment-discourse-attachment-kinds="clause_adv | object_relative_adv | object_relative_object_np_restrictor | object_relative_stacked_restrictor | plain | subject_relative_adv | subject_relative_object_np_restrictor | subject_relative_stacked_restrictor"',
             page,
         )
         self.assertIn(

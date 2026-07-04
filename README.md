@@ -200,7 +200,12 @@ certified temporal modifiers:
 `boy(x_boy) and exists x_rel_girl : Entity. girl(x_rel_girl) and see(x_boy, x_rel_girl)`,
 while `some boy who saw the young girl loved a cat` renders the internal
 object description as `(young(x_rel_girl) and girl(x_rel_girl))` rather than as
-a constant named `the_young_girl`. Likewise,
+a constant named `the_young_girl`. A finite stacked-relative slice is now
+registered for consecutive simple intransitive restrictors:
+`some boy who laughed who smiled loved a girl` renders
+`boy(x_boy) and laugh(x_boy) and smile(x_boy)`, and
+`some boy loved a girl that smiled that laughed` renders
+`girl(x_girl) and smile(x_girl) and laugh(x_girl)`. Likewise,
 `some boy who quickly saw Mary loved a girl` renders
 `boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
 `ModifierSeq`-indexed predicate family. A single non-temporal PP after a named
@@ -567,9 +572,12 @@ the same typed attachment split:
 branch with `see(1)(in(park), x_boy, x_rel_girl)`. On the object side,
 `some boy loved a girl that saw a cat in the park` exposes `clause_adv`,
 `object_relative_object_np_restrictor`, and `object_relative_adv` branches. The
-marker `who` or `that` is not exported as an entity, and stacked relative-object
-PP material such as `a girl in the park with a telescope` remains outside the
-certified fragment.
+marker `who` or `that` is not exported as an entity. The finite stacked
+restrictor cases `some boy who laughed who smiled loved a girl` and
+`some boy loved a girl that smiled that laughed` expose
+`subject_relative_stacked_restrictor` and `object_relative_stacked_restrictor`,
+while stacked relative-object PP material such as `a girl in the park with a
+telescope` remains outside the certified fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.
@@ -1023,14 +1031,17 @@ variants cover
 `no boy loves a girl`; the perception variants cover `Mary saw John leave
 yesterday` and `Mary saw John leave after Bill waved`; and the relative-clause
 variants cover `some boy who laughed loved a girl` and `some boy loved a girl
-that smiled`, plus the PP-attachment alternatives in `some boy who saw a girl in
-the park loved a cat` and `some boy loved a girl that saw a cat in the park`.
+that smiled`, finite stacked relatives such as `some boy who laughed who smiled
+loved a girl` and `some boy loved a girl that smiled that laughed`, plus the
+PP-attachment alternatives in `some boy who saw a girl in the park loved a cat`
+and `some boy loved a girl that saw a cat in the park`.
 The verifier recomputes the audit and reruns sample witnesses, checking reading
 names such as `every_boy_wide_scope`, attachment kinds such as
-`matrix_time_attachment`, `subject_relative_adv`, and `object_relative_adv`,
+`matrix_time_attachment`, `subject_relative_adv`,
+`subject_relative_stacked_restrictor`, and `object_relative_adv`,
 and relative restrictor sites such as `subject` and `object`. The same payload
-keeps explicit open boundaries for stacked/reduced relative-clause attachment,
-arbitrary discourse anaphora, and pragmatic
+keeps explicit open boundaries for complex stacked/reduced relative-clause
+attachment, arbitrary discourse anaphora, and pragmatic
 attachment disambiguation, so this stage expands certified evidence without
 removing the open `unregistered_scope_attachment_discourse` objective.
 It also carries `completion_frontier_audit` with `schema_version:

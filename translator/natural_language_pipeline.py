@@ -557,6 +557,66 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     },
     {
         "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_stacked_relative_clause_restrictor_scope",
+        "sentence": "some boy who laughed who smiled loved a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy) and "
+                "smile(x_boy)) and exists x_girl : Entity. girl(x_girl) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : "
+                "Entity. (boy(x_boy) and laugh(x_boy) and smile(x_boy)) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "subject_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_stacked_relative_clause_restrictor_scope",
+        "sentence": "some boy loved a girl that smiled that laughed",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and smile(x_girl) and laugh(x_girl)) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and smile(x_girl) "
+                "and laugh(x_girl)) and exists x_boy : Entity. boy(x_boy) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "object_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
         "variant_id": "subject_relative_clause_pp_attachment_scope",
         "sentence": "some boy who saw a girl in the park loved a cat",
         "expected_event_analysis": "quantifier-scope",
@@ -4789,7 +4849,7 @@ def parse_relative_restrictor_variants(
     if not marker_indices:
         return [(tokens, [])]
     if len(marker_indices) != 1:
-        return None
+        return parse_stacked_simple_relative_restrictor_variants(tokens, marker_indices)
     marker_index = marker_indices[0]
     if marker_index == 0:
         return None
@@ -4891,6 +4951,60 @@ def parse_relative_restrictor_variants(
             variants.append((tokens[:marker_index], [restrictor]))
         return variants
     return None
+
+
+def parse_stacked_simple_relative_restrictor_variants(
+    tokens: list[str],
+    marker_indices: list[int],
+) -> list[tuple[list[str], list[dict[str, Any]]]] | None:
+    if not marker_indices or marker_indices[0] == 0:
+        return None
+    nominal_tokens = tokens[: marker_indices[0]]
+    restrictors: list[dict[str, Any]] = []
+    for offset, marker_index in enumerate(marker_indices):
+        next_marker = (
+            marker_indices[offset + 1]
+            if offset + 1 < len(marker_indices)
+            else len(tokens)
+        )
+        segment = tokens[marker_index:next_marker]
+        relative_tokens = segment[1:]
+        if not relative_tokens:
+            return None
+        leading_modifiers: list[dict[str, Any]] = []
+        while relative_tokens and relative_tokens[0] in COMMON_ADVERBS:
+            leading_modifiers.append(modifier_record(relative_tokens.pop(0)))
+        if not relative_tokens:
+            return None
+        relative_surface = relative_tokens[0]
+        if (
+            not is_likely_surface_verb(relative_surface)
+            or is_likely_transitive_verb(relative_surface)
+        ):
+            return None
+        trailing_modifiers = split_common_adv_and_time_modifiers(relative_tokens[1:])
+        if trailing_modifiers is None:
+            return None
+        adv_modifiers, time_modifiers = trailing_modifiers
+        modifiers = [*leading_modifiers, *adv_modifiers]
+        restrictor: dict[str, Any] = {
+            "predicate": lemma_verb(relative_surface),
+            "predicate_type": (
+                MODIFIER_INDEXED_UNARY_RELATION if modifiers else "Entity -> Prop"
+            ),
+            "surface": " ".join(segment),
+            "marker": segment[0],
+            "relative_verb": relative_surface,
+            "kind": "relative_clause_restrictor",
+            "stacked_relative_index": offset,
+            "stacked_relative_count": len(marker_indices),
+        }
+        if modifiers:
+            restrictor["modifiers"] = modifiers
+        if time_modifiers:
+            restrictor["time_modifiers"] = time_modifiers
+        restrictors.append(restrictor)
+    return [(nominal_tokens, restrictors)]
 
 
 def parse_relative_restrictor(
@@ -5282,7 +5396,12 @@ def quantifier_np_relative_attachment_kind(
         and relative_object_np_has_postnominal_restrictor(restrictor)
         for restrictor in relative_restrictors
     )
+    has_stacked_restrictor = len(
+        [restrictor for restrictor in relative_restrictors if isinstance(restrictor, dict)]
+    ) > 1
     parts: list[str] = []
+    if has_stacked_restrictor:
+        parts.append("stacked_restrictor")
     if has_adv:
         parts.append("adv")
     if has_time:
@@ -23508,12 +23627,12 @@ def scope_attachment_discourse_audit_payload(
                 "sample_sentences": unique_truth_condition_witness_values(
                     witnesses,
                     "sentence",
-                    5,
+                    7,
                 ),
                 "sample_variant_ids": unique_truth_condition_witness_values(
                     witnesses,
                     "variant_id",
-                    5,
+                    7,
                 ),
                 "sample_witnesses": witnesses[:4],
             },

@@ -231,8 +231,10 @@ relative-clause attachment, arbitrary discourse anaphora, and pragmatic
 attachment disambiguation. The relative-clause row now includes finite PP
 attachment alternatives such as `subject_relative_object_np_restrictor`,
 `subject_relative_adv`, `object_relative_object_np_restrictor`, and
-`object_relative_adv`, while keeping full relative-clause attachment
-certification false. The verifier should recompute the audit from semantic
+`object_relative_adv`, plus finite stacked-restrictor witnesses
+`subject_relative_stacked_restrictor` and
+`object_relative_stacked_restrictor`, while keeping full relative-clause
+attachment certification false. The verifier should recompute the audit from semantic
 snapshots and registered variant cases, then rerun sample witnesses so stale
 reading names, attachment kinds, or relative-clause restrictor sites cannot
 remain in the Certified Fragment panel.
@@ -1598,7 +1600,10 @@ When PP or relative-clause attachment is ambiguous, each quantifier
 `object_np: in_park_np : Entity -> Prop`. The page renders the same summary in
 the `Semantic Readings Check` rows and adds the `reading_explanation` text as an
 `interpretation` field, so users can distinguish Adv modification from binder
-restriction without opening the raw AST.
+restriction without opening the raw AST. Finite stacked relatives expose
+`subject_relative_stacked_restrictor` or
+`object_relative_stacked_restrictor` without treating the second marker as an
+entity name.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the
