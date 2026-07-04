@@ -234,9 +234,10 @@ attachment alternatives such as `subject_relative_object_np_restrictor`,
 `object_relative_adv`, plus finite stacked-restrictor witnesses
 `subject_relative_stacked_restrictor` and
 `object_relative_stacked_restrictor`, including explicit `and who`/`and that`
-surface coordination and single-marker coordination such as `who laughed and
-smiled` or `that smiled and laughed` for the same conjunctive restrictor
-reading, while keeping full relative-clause attachment certification false. The verifier should recompute the audit from semantic
+surface coordination and finite n-ary single-marker coordination such as `who
+laughed and smiled and slept` or `that smiled and laughed and slept` for the
+same conjunctive restrictor reading, while keeping full relative-clause
+attachment certification false. The verifier should recompute the audit from semantic
 snapshots and registered variant cases, then rerun sample witnesses so stale
 reading names, attachment kinds, or relative-clause restrictor sites cannot
 remain in the Certified Fragment panel.
@@ -1606,9 +1607,9 @@ restriction without opening the raw AST. Finite stacked relatives expose
 `subject_relative_stacked_restrictor` or
 `object_relative_stacked_restrictor` without treating the second marker or the
 `and` coordinator as an entity name. The same display contract covers
-single-marker coordinated relatives where the second marker is elided; `or
-who`/`or that` and single-marker `or` relatives remain outside this certified
-conjunctive slice.
+finite n-ary single-marker coordinated relatives where later markers are
+elided; `or who`/`or that` and single-marker `or` relatives remain outside this
+certified conjunctive slice.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the
