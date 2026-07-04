@@ -18556,7 +18556,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 87)
+        self.assertEqual(counts["registered_variant_success_cases"], 89)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -18963,6 +18963,27 @@ class TranslatorTests(unittest.TestCase):
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
         self.assertIn(
+            "some boy who saw a girl in the park loved a cat",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl that saw a cat in the park",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertEqual(
+            scope_categories["relative_clause_restrictors"][
+                "attachment_kind_inventory"
+            ],
+            [
+                "clause_adv",
+                "object_relative_adv",
+                "object_relative_object_np_restrictor",
+                "plain",
+                "subject_relative_adv",
+                "subject_relative_object_np_restrictor",
+            ],
+        )
+        self.assertIn(
             "relative_clause_attachment",
             {
                 item["boundary_id"]
@@ -18985,8 +19006,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 87)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 87)
+        self.assertEqual(modifier_contract["variant_case_count"], 89)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 89)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -20599,7 +20620,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 87,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 89,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -20738,7 +20759,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="87"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="89"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(
@@ -20906,7 +20927,7 @@ class TranslatorTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            'data-scope-attachment-discourse-reading-names="a_boy_wide_scope | a_girl_wide_scope | every_boy_wide_scope | every_girl_wide_scope | no_boy_wide_scope | some_boy_wide_scope | some_girl_wide_scope"',
+            'data-scope-attachment-discourse-reading-names="a_boy_wide_scope | a_cat_wide_scope_subject_relative_adv | a_girl_wide_scope | a_girl_wide_scope_object_relative_object_np_restrictor | every_boy_wide_scope | every_girl_wide_scope | no_boy_wide_scope | some_boy_wide_scope | some_boy_wide_scope_clause_adv | some_boy_wide_scope_object_relative_adv | some_boy_wide_scope_subject_relative_object_np_restrictor | some_girl_wide_scope"',
             page,
         )
         self.assertIn(
@@ -20923,6 +20944,10 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-scope-attachment-discourse-relative-sites="object | subject"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-attachment-kinds="clause_adv | object_relative_adv | object_relative_object_np_restrictor | plain | subject_relative_adv | subject_relative_object_np_restrictor"',
             page,
         )
         self.assertIn(

@@ -226,12 +226,16 @@ temporal attachment, typed modifier attachment, relative-clause restrictors, and
 local pronominal cause/reason dependencies. The page mirrors those rows through
 `data-scope-attachment-discourse-*` hooks, including reading-name inventories,
 attachment-kind inventories, relative-restrictor site inventories, sample
-sentences, witness counts, and open boundaries for arbitrary relative-clause
-attachment, arbitrary discourse anaphora, and pragmatic attachment
-disambiguation. The verifier should recompute the audit from semantic snapshots
-and registered variant cases, then rerun sample witnesses so stale reading
-names, attachment kinds, or relative-clause restrictor sites cannot remain in
-the Certified Fragment panel.
+sentences, witness counts, and open boundaries for stacked/reduced
+relative-clause attachment, arbitrary discourse anaphora, and pragmatic
+attachment disambiguation. The relative-clause row now includes finite PP
+attachment alternatives such as `subject_relative_object_np_restrictor`,
+`subject_relative_adv`, `object_relative_object_np_restrictor`, and
+`object_relative_adv`, while keeping full relative-clause attachment
+certification false. The verifier should recompute the audit from semantic
+snapshots and registered variant cases, then rerun sample witnesses so stale
+reading names, attachment kinds, or relative-clause restrictor sites cannot
+remain in the Certified Fragment panel.
 The same object
 now carries a
 `completion_frontier_audit.v1` child that links the page

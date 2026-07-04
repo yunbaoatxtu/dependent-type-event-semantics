@@ -10925,7 +10925,14 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
             "matrix_time_attachment",
             "none",
         },
-        "relative_clause_restrictors": {"plain"},
+        "relative_clause_restrictors": {
+            "plain",
+            "subject_relative_object_np_restrictor",
+            "subject_relative_adv",
+            "clause_adv",
+            "object_relative_object_np_restrictor",
+            "object_relative_adv",
+        },
     }
     required_relative_restrictor_sites = {
         "relative_clause_restrictors": {"subject", "object"},
@@ -11055,9 +11062,14 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
                             not isinstance(restrictor, dict)
                             or restrictor.get("kind")
                             != "relative_clause_restrictor"
-                            or not str(
-                                restrictor.get("predicate_type", ""),
-                            ).endswith("Prop")
+                            or not (
+                                str(restrictor.get("predicate_type", "")).endswith(
+                                    "Prop",
+                                )
+                                or str(
+                                    restrictor.get("predicate_type", ""),
+                                ).endswith("PropT")
+                            )
                             for restrictor in restrictors
                         )
                     ):
@@ -11086,10 +11098,13 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
         )
     if (
         open_by_id["relative_clause_attachment"].get("status")
-        != "finite_restrictor_witnesses_registered_arbitrary_attachment_open"
+        != (
+            "finite_relative_attachment_alternatives_registered_"
+            "arbitrary_attachment_open"
+        )
         or open_by_id["relative_clause_attachment"].get("guarded_marker") != ""
         or open_by_id["relative_clause_attachment"].get("next_stage")
-        != "generalize_relative_clause_attachment_policy"
+        != "generalize_stacked_relative_clause_attachment_policy"
     ):
         raise SystemExit(
             "web route smoke check failed: scope/attachment/discourse guard drift"

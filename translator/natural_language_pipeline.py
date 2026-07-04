@@ -556,6 +556,82 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_scope_audit_relative_restrictor_sites": ["object"],
     },
     {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_relative_clause_pp_attachment_scope",
+        "sentence": "some boy who saw a girl in the park loved a cat",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and exists x_rel_girl : "
+                "Entity. (girl(x_rel_girl) and in_park_np(x_rel_girl)) and "
+                "see(0)(x_boy, x_rel_girl)) and exists x_cat : Entity. "
+                "cat(x_cat) and love(x_boy, x_cat)"
+            ),
+            (
+                "exists x_boy : Entity. (boy(x_boy) and exists x_rel_girl : "
+                "Entity. girl(x_rel_girl) and see(1)(in(park), x_boy, "
+                "x_rel_girl)) and exists x_cat : Entity. cat(x_cat) and "
+                "love(x_boy, x_cat)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope_subject_relative_object_np_restrictor",
+            "a_cat_wide_scope_subject_relative_adv",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "subject_relative_object_np_restrictor",
+            "subject_relative_adv",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+        "modifier_role_inventory_scope": "scope_attachment_discourse_audit",
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_relative_clause_pp_attachment_scope",
+        "sentence": "some boy loved a girl that saw a cat in the park",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and exists x_rel_cat : Entity. "
+                "cat(x_rel_cat) and see(0)(x_girl, x_rel_cat)) and "
+                "love(1)(in(park), x_boy, x_girl)"
+            ),
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and exists x_rel_cat : Entity. "
+                "(cat(x_rel_cat) and in_park_np(x_rel_cat)) and "
+                "see(0)(x_girl, x_rel_cat)) and love(0)(x_boy, x_girl)"
+            ),
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and exists x_rel_cat : Entity. "
+                "cat(x_rel_cat) and see(1)(in(park), x_girl, x_rel_cat)) "
+                "and love(0)(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope_clause_adv",
+            "a_girl_wide_scope_object_relative_object_np_restrictor",
+            "some_boy_wide_scope_object_relative_adv",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "clause_adv",
+            "object_relative_object_np_restrictor",
+            "object_relative_adv",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+        "modifier_role_inventory_scope": "scope_attachment_discourse_audit",
+    },
+    {
         "rule_id": "perception_nominalization",
         "variant_id": "perception_temporal_attachment_ambiguity",
         "sentence": "Mary saw John leave yesterday",
@@ -22598,6 +22674,8 @@ def derive_registered_modifier_role_inventory(
     role_counts: Counter[str] = Counter()
     coverage_items = [*semantic_snapshots, *registered_variant_success_cases]
     for item in coverage_items:
+        if item.get("modifier_role_inventory_scope") == "scope_attachment_discourse_audit":
+            continue
         fragments = item.get("expected_dependent_type_fragments")
         if not isinstance(fragments, list):
             continue
@@ -23246,11 +23324,11 @@ SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS = (
         "category_id": "relative_clause_restrictors",
         "phenomenon": "relative clauses as NP restrictor predicates",
         "verified_status": "finite_registered_relative_restrictor_witnesses",
-        "remaining_status": "arbitrary_relative_clause_attachment_open",
+        "remaining_status": "arbitrary_stacked_relative_clause_attachment_open",
         "required_future_instances": [
             "stacked relative clauses",
             "reduced relatives and non-finite relatives",
-            "relative clauses interacting with PP attachment and discourse anaphora",
+            "relative clauses interacting with discourse anaphora",
         ],
     },
     {
@@ -23444,9 +23522,12 @@ def scope_attachment_discourse_audit_payload(
     open_boundaries = [
         {
             "boundary_id": "relative_clause_attachment",
-            "status": "finite_restrictor_witnesses_registered_arbitrary_attachment_open",
+            "status": (
+                "finite_relative_attachment_alternatives_registered_"
+                "arbitrary_attachment_open"
+            ),
             "guarded_marker": "",
-            "next_stage": "generalize_relative_clause_attachment_policy",
+            "next_stage": "generalize_stacked_relative_clause_attachment_policy",
         },
         {
             "boundary_id": "arbitrary_discourse_anaphora",

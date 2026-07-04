@@ -531,6 +531,14 @@ phrase object with its own internal existential binder:
 `some boy who saw a girl loved a cat` records an `object_np` with
 `variable: "x_rel_girl"` and `girl : Entity -> Prop`, then renders
 `boy(x_boy) and exists x_rel_girl : Entity. girl(x_rel_girl) and see(x_boy, x_rel_girl)`.
+PP material inside a relative clause is now audited through finite attachment
+alternatives rather than collapsed into a pseudo-entity: `some boy who saw a
+girl in the park loved a cat` has both a subject-relative object-NP-restrictor
+reading with `in_park_np(x_rel_girl)` and a subject-relative Adv reading with
+`see(1)(in(park), x_boy, x_rel_girl)`. The object-relative counterpart
+`some boy loved a girl that saw a cat in the park` additionally keeps the
+clause-level Adv reading separate from the object-relative object-NP-restrictor
+and object-relative Adv readings.
 For descriptive definites such as
 `some boy who saw the young girl loved a cat`, the object NP restrictors are
 `young : Entity -> Prop` and `girl : Entity -> Prop`; no `the_young_girl`
@@ -1015,11 +1023,14 @@ variants cover
 `no boy loves a girl`; the perception variants cover `Mary saw John leave
 yesterday` and `Mary saw John leave after Bill waved`; and the relative-clause
 variants cover `some boy who laughed loved a girl` and `some boy loved a girl
-that smiled`. The verifier recomputes the audit and reruns sample witnesses,
-checking reading names such as `every_boy_wide_scope`, attachment kinds such as
-`matrix_time_attachment`, and relative restrictor sites such as `subject` and
-`object`. The same payload keeps explicit open boundaries for arbitrary
-relative-clause attachment, arbitrary discourse anaphora, and pragmatic
+that smiled`, plus the PP-attachment alternatives in `some boy who saw a girl in
+the park loved a cat` and `some boy loved a girl that saw a cat in the park`.
+The verifier recomputes the audit and reruns sample witnesses, checking reading
+names such as `every_boy_wide_scope`, attachment kinds such as
+`matrix_time_attachment`, `subject_relative_adv`, and `object_relative_adv`,
+and relative restrictor sites such as `subject` and `object`. The same payload
+keeps explicit open boundaries for stacked/reduced relative-clause attachment,
+arbitrary discourse anaphora, and pragmatic
 attachment disambiguation, so this stage expands certified evidence without
 removing the open `unregistered_scope_attachment_discourse` objective.
 It also carries `completion_frontier_audit` with `schema_version:
