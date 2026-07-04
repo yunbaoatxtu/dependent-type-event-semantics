@@ -18556,7 +18556,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 85)
+        self.assertEqual(counts["registered_variant_success_cases"], 87)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -18933,6 +18933,7 @@ class TranslatorTests(unittest.TestCase):
                 "perception_complement_nominalization",
                 "perception_temporal_attachment",
                 "typed_modifier_attachment",
+                "relative_clause_restrictors",
                 "discourse_pronominal_cause",
             },
         )
@@ -18946,6 +18947,20 @@ class TranslatorTests(unittest.TestCase):
             scope_categories["perception_temporal_attachment"][
                 "attachment_kind_inventory"
             ],
+        )
+        self.assertEqual(
+            scope_categories["relative_clause_restrictors"][
+                "relative_restrictor_site_inventory"
+            ],
+            ["object", "subject"],
+        )
+        self.assertIn(
+            "some boy who laughed loved a girl",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl that smiled",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
         self.assertIn(
             "relative_clause_attachment",
@@ -18970,8 +18985,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 85)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 85)
+        self.assertEqual(modifier_contract["variant_case_count"], 87)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 87)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -20584,7 +20599,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 85,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 87,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -20723,7 +20738,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="85"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="87"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(
@@ -20900,6 +20915,14 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-scope-attachment-discourse-attachment-kinds="complement_time_attachment | matrix_time_attachment | none"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-category="relative_clause_restrictors"',
+            page,
+        )
+        self.assertIn(
+            'data-scope-attachment-discourse-relative-sites="object | subject"',
             page,
         )
         self.assertIn(

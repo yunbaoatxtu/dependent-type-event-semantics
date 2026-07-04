@@ -503,6 +503,59 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_scope_audit_attachment_kinds": ["plain"],
     },
     {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_relative_clause_restrictor_scope",
+        "sentence": "some boy who laughed loved a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : "
+                "Entity. (boy(x_boy) and laugh(x_boy)) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_relative_clause_restrictor_scope",
+        "sentence": "some boy loved a girl that smiled",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and smile(x_girl)) and "
+                "love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and smile(x_girl)) "
+                "and exists x_boy : Entity. boy(x_boy) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
         "rule_id": "perception_nominalization",
         "variant_id": "perception_temporal_attachment_ambiguity",
         "sentence": "Mary saw John leave yesterday",
@@ -23190,6 +23243,17 @@ SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS = (
         ],
     },
     {
+        "category_id": "relative_clause_restrictors",
+        "phenomenon": "relative clauses as NP restrictor predicates",
+        "verified_status": "finite_registered_relative_restrictor_witnesses",
+        "remaining_status": "arbitrary_relative_clause_attachment_open",
+        "required_future_instances": [
+            "stacked relative clauses",
+            "reduced relatives and non-finite relatives",
+            "relative clauses interacting with PP attachment and discourse anaphora",
+        ],
+    },
+    {
         "category_id": "discourse_pronominal_cause",
         "phenomenon": "local pronominal cause/reason dependencies",
         "verified_status": "finite_registered_pronominal_cause_witnesses",
@@ -23235,6 +23299,12 @@ def scope_attachment_discourse_case_categories(case: dict[str, Any]) -> set[str]
         or "anaphoric" in variant_id
     ):
         categories.add("discourse_pronominal_cause")
+    if (
+        " who " in f" {sentence.lower()} "
+        or " that " in f" {sentence.lower()} "
+        or "relative_clause_restrictor" in text
+    ):
+        categories.add("relative_clause_restrictors")
     return categories
 
 
@@ -23250,6 +23320,11 @@ def scope_attachment_discourse_case_witness(
     attachment_kinds = case.get("expected_scope_audit_attachment_kinds")
     if not isinstance(attachment_kinds, list):
         attachment_kinds = []
+    relative_restrictor_sites = case.get(
+        "expected_scope_audit_relative_restrictor_sites",
+    )
+    if not isinstance(relative_restrictor_sites, list):
+        relative_restrictor_sites = []
     return {
         "source": source,
         "rule_id": str(case.get("rule_id", "")),
@@ -23262,6 +23337,11 @@ def scope_attachment_discourse_case_witness(
         ],
         "expected_attachment_kinds": [
             str(kind) for kind in attachment_kinds if isinstance(kind, str)
+        ],
+        "expected_relative_restrictor_sites": [
+            str(site)
+            for site in relative_restrictor_sites
+            if isinstance(site, str)
         ],
         "verification_route": (
             "semantic_snapshot_regression"
@@ -23313,6 +23393,14 @@ def scope_attachment_discourse_audit_payload(
                 if isinstance(kind, str) and kind
             },
         )
+        relative_restrictor_sites = sorted(
+            {
+                site
+                for witness in witnesses
+                for site in witness.get("expected_relative_restrictor_sites", [])
+                if isinstance(site, str) and site
+            },
+        )
         categories.append(
             {
                 **spec,
@@ -23338,6 +23426,7 @@ def scope_attachment_discourse_audit_payload(
                 ),
                 "reading_name_inventory": reading_names,
                 "attachment_kind_inventory": attachment_kinds,
+                "relative_restrictor_site_inventory": relative_restrictor_sites,
                 "sample_sentences": unique_truth_condition_witness_values(
                     witnesses,
                     "sentence",
@@ -23355,9 +23444,9 @@ def scope_attachment_discourse_audit_payload(
     open_boundaries = [
         {
             "boundary_id": "relative_clause_attachment",
-            "status": "unsupported_clause_marker_guarded",
-            "guarded_marker": "that",
-            "next_stage": "add_registered_relative_clause_attachment_rule",
+            "status": "finite_restrictor_witnesses_registered_arbitrary_attachment_open",
+            "guarded_marker": "",
+            "next_stage": "generalize_relative_clause_attachment_policy",
         },
         {
             "boundary_id": "arbitrary_discourse_anaphora",

@@ -3990,6 +3990,7 @@ def certified_fragment_panel() -> str:
             f'data-scope-attachment-discourse-variant-count="{html.escape(str(item.get("registered_variant_witness_count", "")), quote=True)}" '
             f'data-scope-attachment-discourse-reading-names="{html.escape(data_list(item.get("reading_name_inventory")), quote=True)}" '
             f'data-scope-attachment-discourse-attachment-kinds="{html.escape(data_list(item.get("attachment_kind_inventory")), quote=True)}" '
+            f'data-scope-attachment-discourse-relative-sites="{html.escape(data_list(item.get("relative_restrictor_site_inventory")), quote=True)}" '
             f'data-scope-attachment-discourse-sample-sentences="{html.escape(data_list(item.get("sample_sentences")), quote=True)}" '
             f'data-scope-attachment-discourse-sample-variants="{html.escape(data_list(item.get("sample_variant_ids")), quote=True)}">'
             f"<code>{html.escape(str(item.get('category_id', '')))}</code>"

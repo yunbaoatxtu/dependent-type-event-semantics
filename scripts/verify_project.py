@@ -10891,6 +10891,7 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
         "perception_complement_nominalization",
         "perception_temporal_attachment",
         "typed_modifier_attachment",
+        "relative_clause_restrictors",
         "discourse_pronominal_cause",
     }
     if set(category_by_id) != required_categories:
@@ -10912,6 +10913,10 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
             "matrix_time_attachment",
             "primary",
         },
+        "relative_clause_restrictors": {
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        },
     }
     required_attachments = {
         "quantifier_scope": {"plain"},
@@ -10920,6 +10925,10 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
             "matrix_time_attachment",
             "none",
         },
+        "relative_clause_restrictors": {"plain"},
+    }
+    required_relative_restrictor_sites = {
+        "relative_clause_restrictors": {"subject", "object"},
     }
     for category_id, row in category_by_id.items():
         if row.get("witness_source") != "semantic_snapshots_and_registered_variant_success_cases":
@@ -10953,6 +10962,14 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
         ].issubset(set(row.get("attachment_kind_inventory", []))):
             raise SystemExit(
                 "web route smoke check failed: scope/attachment/discourse attachment drift"
+            )
+        if category_id in required_relative_restrictor_sites and not (
+            required_relative_restrictor_sites[category_id].issubset(
+                set(row.get("relative_restrictor_site_inventory", [])),
+            )
+        ):
+            raise SystemExit(
+                "web route smoke check failed: scope/attachment/discourse relative restrictor site drift"
             )
         sample_witnesses = row.get("sample_witnesses")
         if not isinstance(sample_witnesses, list) or not sample_witnesses:
@@ -11015,6 +11032,38 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
                 raise SystemExit(
                     "web route smoke check failed: scope/attachment/discourse attachment kind drift"
                 )
+            expected_relative_sites = set(
+                witness.get("expected_relative_restrictor_sites", []),
+            )
+            if expected_relative_sites:
+                noun_phrases = result.get("ast", {}).get("noun_phrases")
+                if not isinstance(noun_phrases, dict):
+                    raise SystemExit(
+                        "web route smoke check failed: scope/attachment/discourse relative restrictor AST drift"
+                    )
+                for site in expected_relative_sites:
+                    noun_phrase = noun_phrases.get(site)
+                    if not isinstance(noun_phrase, dict):
+                        raise SystemExit(
+                            "web route smoke check failed: scope/attachment/discourse relative restrictor site drift"
+                        )
+                    restrictors = noun_phrase.get("relative_clause_restrictors")
+                    if (
+                        not isinstance(restrictors, list)
+                        or not restrictors
+                        or any(
+                            not isinstance(restrictor, dict)
+                            or restrictor.get("kind")
+                            != "relative_clause_restrictor"
+                            or not str(
+                                restrictor.get("predicate_type", ""),
+                            ).endswith("Prop")
+                            for restrictor in restrictors
+                        )
+                    ):
+                        raise SystemExit(
+                            "web route smoke check failed: scope/attachment/discourse relative restrictor runtime drift"
+                        )
     open_boundaries = audit.get("open_boundaries")
     if not isinstance(open_boundaries, list) or audit.get("open_boundary_count") != len(
         open_boundaries
@@ -11035,7 +11084,13 @@ def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
         raise SystemExit(
             "web route smoke check failed: scope/attachment/discourse open boundary id drift"
         )
-    if open_by_id["relative_clause_attachment"].get("guarded_marker") != "that":
+    if (
+        open_by_id["relative_clause_attachment"].get("status")
+        != "finite_restrictor_witnesses_registered_arbitrary_attachment_open"
+        or open_by_id["relative_clause_attachment"].get("guarded_marker") != ""
+        or open_by_id["relative_clause_attachment"].get("next_stage")
+        != "generalize_relative_clause_attachment_policy"
+    ):
         raise SystemExit(
             "web route smoke check failed: scope/attachment/discourse guard drift"
         )

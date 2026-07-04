@@ -1006,16 +1006,19 @@ It also carries `scope_attachment_discourse_audit` with `schema_version:
 "scope_attachment_discourse_audit.v1"`. This audit is deliberately finite: its
 claim is `finite_registered_witnesses_not_full_discourse_semantics`, and
 `full_scope_attachment_discourse_certification` remains false. The audit derives
-five rows from the current semantic snapshots and registered variants:
+six rows from the current semantic snapshots and registered variants:
 quantifier scope, perception-complement nominalization, matrix/complement
-temporal attachment, typed modifier attachment, and local pronominal
-cause/reason dependencies. The newly registered quantifier variants cover
+temporal attachment, typed modifier attachment, relative-clause restrictors, and
+local pronominal cause/reason dependencies. The newly registered quantifier
+variants cover
 `a boy loves a girl`, `every boy loves a girl`, `a boy loves every girl`, and
 `no boy loves a girl`; the perception variants cover `Mary saw John leave
-yesterday` and `Mary saw John leave after Bill waved`. The verifier recomputes
-the audit and reruns sample witnesses, checking reading names such as
-`every_boy_wide_scope` and attachment kinds such as
-`matrix_time_attachment`. The same payload keeps explicit open boundaries for
+yesterday` and `Mary saw John leave after Bill waved`; and the relative-clause
+variants cover `some boy who laughed loved a girl` and `some boy loved a girl
+that smiled`. The verifier recomputes the audit and reruns sample witnesses,
+checking reading names such as `every_boy_wide_scope`, attachment kinds such as
+`matrix_time_attachment`, and relative restrictor sites such as `subject` and
+`object`. The same payload keeps explicit open boundaries for arbitrary
 relative-clause attachment, arbitrary discourse anaphora, and pragmatic
 attachment disambiguation, so this stage expands certified evidence without
 removing the open `unregistered_scope_attachment_discourse` objective.
