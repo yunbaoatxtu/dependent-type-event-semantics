@@ -617,6 +617,66 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     },
     {
         "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_coordinated_stacked_relative_clause_restrictor_scope",
+        "sentence": "some boy who laughed and who smiled loved a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy) and "
+                "smile(x_boy)) and exists x_girl : Entity. girl(x_girl) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : "
+                "Entity. (boy(x_boy) and laugh(x_boy) and smile(x_boy)) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "subject_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_coordinated_stacked_relative_clause_restrictor_scope",
+        "sentence": "some boy loved a girl that smiled and that laughed",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and smile(x_girl) and laugh(x_girl)) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and smile(x_girl) "
+                "and laugh(x_girl)) and exists x_boy : Entity. boy(x_boy) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "object_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
         "variant_id": "subject_relative_clause_pp_attachment_scope",
         "sentence": "some boy who saw a girl in the park loved a cat",
         "expected_event_analysis": "quantifier-scope",
@@ -4961,6 +5021,7 @@ def parse_stacked_simple_relative_restrictor_variants(
         return None
     nominal_tokens = tokens[: marker_indices[0]]
     restrictors: list[dict[str, Any]] = []
+    coordination_count = 0
     for offset, marker_index in enumerate(marker_indices):
         next_marker = (
             marker_indices[offset + 1]
@@ -4970,6 +5031,14 @@ def parse_stacked_simple_relative_restrictor_variants(
         segment = tokens[marker_index:next_marker]
         relative_tokens = segment[1:]
         if not relative_tokens:
+            return None
+        coordination_to_next = False
+        if offset + 1 < len(marker_indices) and relative_tokens[-1:] == ["and"]:
+            relative_tokens = relative_tokens[:-1]
+            segment = segment[:-1]
+            coordination_to_next = True
+            coordination_count += 1
+        elif offset + 1 < len(marker_indices) and relative_tokens[-1:] == ["or"]:
             return None
         leading_modifiers: list[dict[str, Any]] = []
         while relative_tokens and relative_tokens[0] in COMMON_ADVERBS:
@@ -4999,11 +5068,16 @@ def parse_stacked_simple_relative_restrictor_variants(
             "stacked_relative_index": offset,
             "stacked_relative_count": len(marker_indices),
         }
+        if coordination_to_next:
+            restrictor["stacked_relative_coordination_to_next"] = "and"
         if modifiers:
             restrictor["modifiers"] = modifiers
         if time_modifiers:
             restrictor["time_modifiers"] = time_modifiers
         restrictors.append(restrictor)
+    if coordination_count:
+        for restrictor in restrictors:
+            restrictor["stacked_relative_coordination_count"] = coordination_count
     return [(nominal_tokens, restrictors)]
 
 
@@ -23627,12 +23701,12 @@ def scope_attachment_discourse_audit_payload(
                 "sample_sentences": unique_truth_condition_witness_values(
                     witnesses,
                     "sentence",
-                    7,
+                    9,
                 ),
                 "sample_variant_ids": unique_truth_condition_witness_values(
                     witnesses,
                     "variant_id",
-                    7,
+                    9,
                 ),
                 "sample_witnesses": witnesses[:4],
             },

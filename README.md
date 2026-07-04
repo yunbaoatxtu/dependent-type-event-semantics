@@ -205,7 +205,12 @@ registered for consecutive simple intransitive restrictors:
 `some boy who laughed who smiled loved a girl` renders
 `boy(x_boy) and laugh(x_boy) and smile(x_boy)`, and
 `some boy loved a girl that smiled that laughed` renders
-`girl(x_girl) and smile(x_girl) and laugh(x_girl)`. Likewise,
+`girl(x_girl) and smile(x_girl) and laugh(x_girl)`. The same finite stacked
+slice now accepts explicit `and who`/`and that` coordination, so
+`some boy who laughed and who smiled loved a girl` and
+`some boy loved a girl that smiled and that laughed` receive the same
+conjunctive restrictor formulas while `or who`/`or that` remains outside the
+certified fragment. Likewise,
 `some boy who quickly saw Mary loved a girl` renders
 `boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
 `ModifierSeq`-indexed predicate family. A single non-temporal PP after a named
@@ -574,7 +579,8 @@ branch with `see(1)(in(park), x_boy, x_rel_girl)`. On the object side,
 `object_relative_object_np_restrictor`, and `object_relative_adv` branches. The
 marker `who` or `that` is not exported as an entity. The finite stacked
 restrictor cases `some boy who laughed who smiled loved a girl` and
-`some boy loved a girl that smiled that laughed` expose
+`some boy loved a girl that smiled that laughed`, together with their
+coordinated `and who`/`and that` counterparts, expose
 `subject_relative_stacked_restrictor` and `object_relative_stacked_restrictor`,
 while stacked relative-object PP material such as `a girl in the park with a
 telescope` remains outside the certified fragment.
@@ -1032,8 +1038,10 @@ variants cover
 yesterday` and `Mary saw John leave after Bill waved`; and the relative-clause
 variants cover `some boy who laughed loved a girl` and `some boy loved a girl
 that smiled`, finite stacked relatives such as `some boy who laughed who smiled
-loved a girl` and `some boy loved a girl that smiled that laughed`, plus the
-PP-attachment alternatives in `some boy who saw a girl in the park loved a cat`
+loved a girl`, `some boy loved a girl that smiled that laughed`,
+`some boy who laughed and who smiled loved a girl`, and `some boy loved a girl
+that smiled and that laughed`, plus the PP-attachment alternatives in
+`some boy who saw a girl in the park loved a cat`
 and `some boy loved a girl that saw a cat in the park`.
 The verifier recomputes the audit and reruns sample witnesses, checking reading
 names such as `every_boy_wide_scope`, attachment kinds such as

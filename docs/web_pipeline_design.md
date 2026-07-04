@@ -233,7 +233,8 @@ attachment alternatives such as `subject_relative_object_np_restrictor`,
 `subject_relative_adv`, `object_relative_object_np_restrictor`, and
 `object_relative_adv`, plus finite stacked-restrictor witnesses
 `subject_relative_stacked_restrictor` and
-`object_relative_stacked_restrictor`, while keeping full relative-clause
+`object_relative_stacked_restrictor`, including explicit `and who`/`and that`
+surface coordination for the same conjunctive restrictor reading, while keeping full relative-clause
 attachment certification false. The verifier should recompute the audit from semantic
 snapshots and registered variant cases, then rerun sample witnesses so stale
 reading names, attachment kinds, or relative-clause restrictor sites cannot
@@ -1602,8 +1603,9 @@ the `Semantic Readings Check` rows and adds the `reading_explanation` text as an
 `interpretation` field, so users can distinguish Adv modification from binder
 restriction without opening the raw AST. Finite stacked relatives expose
 `subject_relative_stacked_restrictor` or
-`object_relative_stacked_restrictor` without treating the second marker as an
-entity name.
+`object_relative_stacked_restrictor` without treating the second marker or the
+`and` coordinator as an entity name; `or who`/`or that` remains outside this
+certified conjunctive slice.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the
