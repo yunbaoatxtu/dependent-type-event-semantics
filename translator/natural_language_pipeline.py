@@ -677,6 +677,66 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     },
     {
         "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_single_marker_coordinated_relative_restrictor_scope",
+        "sentence": "some boy who laughed and smiled loved a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy) and "
+                "smile(x_boy)) and exists x_girl : Entity. girl(x_girl) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : "
+                "Entity. (boy(x_boy) and laugh(x_boy) and smile(x_boy)) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "subject_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_single_marker_coordinated_relative_restrictor_scope",
+        "sentence": "some boy loved a girl that smiled and laughed",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and smile(x_girl) and laugh(x_girl)) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and smile(x_girl) "
+                "and laugh(x_girl)) and exists x_boy : Entity. boy(x_boy) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "object_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
         "variant_id": "subject_relative_clause_pp_attachment_scope",
         "sentence": "some boy who saw a girl in the park loved a cat",
         "expected_event_analysis": "quantifier-scope",
@@ -4916,6 +4976,13 @@ def parse_relative_restrictor_variants(
     relative_tokens = list(tokens[marker_index + 1 :])
     if not relative_tokens:
         return None
+    coordinated_simple = parse_single_marker_coordinated_relative_restrictor_variants(
+        tokens,
+        marker_index,
+        relative_tokens,
+    )
+    if coordinated_simple is not None:
+        return coordinated_simple
     leading_modifiers: list[dict[str, Any]] = []
     while relative_tokens and relative_tokens[0] in COMMON_ADVERBS:
         leading_modifiers.append(modifier_record(relative_tokens.pop(0)))
@@ -5011,6 +5078,63 @@ def parse_relative_restrictor_variants(
             variants.append((tokens[:marker_index], [restrictor]))
         return variants
     return None
+
+
+def parse_single_marker_coordinated_relative_restrictor_variants(
+    tokens: list[str],
+    marker_index: int,
+    relative_tokens: list[str],
+) -> list[tuple[list[str], list[dict[str, Any]]]] | None:
+    if "and" not in relative_tokens:
+        return None
+    if "or" in relative_tokens:
+        return None
+    segments: list[list[str]] = []
+    segment: list[str] = []
+    for token in relative_tokens:
+        if token == "and":
+            if not segment:
+                return None
+            segments.append(segment)
+            segment = []
+            continue
+        segment.append(token)
+    if not segment:
+        return None
+    segments.append(segment)
+    if len(segments) < 2:
+        return None
+    restrictors: list[dict[str, Any]] = []
+    for offset, segment_tokens in enumerate(segments):
+        if len(segment_tokens) != 1:
+            return None
+        relative_surface = segment_tokens[0]
+        if (
+            not is_likely_surface_verb(relative_surface)
+            or is_likely_transitive_verb(relative_surface)
+        ):
+            return None
+        restrictor: dict[str, Any] = {
+            "predicate": lemma_verb(relative_surface),
+            "predicate_type": "Entity -> Prop",
+            "surface": (
+                f"{tokens[marker_index]} {relative_surface}"
+                if offset == 0
+                else relative_surface
+            ),
+            "marker": tokens[marker_index] if offset == 0 else "",
+            "relative_verb": relative_surface,
+            "kind": "relative_clause_restrictor",
+            "stacked_relative_index": offset,
+            "stacked_relative_count": len(segments),
+            "single_marker_relative_coordination": "and",
+            "single_marker_relative_coordination_count": len(segments) - 1,
+        }
+        if offset > 0:
+            restrictor["inherited_marker"] = tokens[marker_index]
+            restrictor["relative_marker_elided"] = True
+        restrictors.append(restrictor)
+    return [(tokens[:marker_index], restrictors)]
 
 
 def parse_stacked_simple_relative_restrictor_variants(
@@ -23701,12 +23825,12 @@ def scope_attachment_discourse_audit_payload(
                 "sample_sentences": unique_truth_condition_witness_values(
                     witnesses,
                     "sentence",
-                    9,
+                    11,
                 ),
                 "sample_variant_ids": unique_truth_condition_witness_values(
                     witnesses,
                     "variant_id",
-                    9,
+                    11,
                 ),
                 "sample_witnesses": witnesses[:4],
             },

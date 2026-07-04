@@ -16767,6 +16767,145 @@ class TranslatorTests(unittest.TestCase):
             "passed",
         )
 
+        subject_single_marker_coordinated_relative = run_pipeline(
+            "some boy who laughed and smiled loved a girl",
+            require_coq=True,
+        )
+        self.assertTrue(subject_single_marker_coordinated_relative["ok"])
+        self.assertEqual(
+            [
+                variant["kind"]
+                for variant in subject_single_marker_coordinated_relative["ast"][
+                    "attachment_variants"
+                ]
+            ],
+            ["subject_relative_stacked_restrictor"],
+        )
+        subject_single_marker_restrictors = (
+            subject_single_marker_coordinated_relative["ast"]["noun_phrases"][
+                "subject"
+            ]["relative_clause_restrictors"]
+        )
+        self.assertEqual(
+            [
+                restrictor["predicate"]
+                for restrictor in subject_single_marker_restrictors
+            ],
+            ["laugh", "smile"],
+        )
+        self.assertEqual(
+            [
+                restrictor.get("single_marker_relative_coordination_count")
+                for restrictor in subject_single_marker_restrictors
+            ],
+            [1, 1],
+        )
+        self.assertEqual(
+            subject_single_marker_restrictors[0][
+                "single_marker_relative_coordination"
+            ],
+            "and",
+        )
+        self.assertTrue(
+            subject_single_marker_restrictors[1]["relative_marker_elided"]
+        )
+        self.assertEqual(
+            subject_single_marker_restrictors[1]["inherited_marker"],
+            "who",
+        )
+        self.assertEqual(
+            subject_single_marker_coordinated_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. "
+                "(boy(x_boy) and laugh(x_boy) and smile(x_boy)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+        )
+        self.assertNotIn(
+            "boy_who_laughed_and_smiled",
+            subject_single_marker_coordinated_relative["dependent_type_translation"],
+        )
+        self.assertNotIn(
+            "Parameter and :",
+            subject_single_marker_coordinated_relative["coq_code"],
+        )
+        self.assertEqual(
+            subject_single_marker_coordinated_relative["coq_check"]["status"],
+            "passed",
+        )
+
+        object_single_marker_coordinated_relative = run_pipeline(
+            "some boy loved a girl that smiled and laughed",
+            require_coq=True,
+        )
+        self.assertTrue(object_single_marker_coordinated_relative["ok"])
+        self.assertEqual(
+            [
+                variant["kind"]
+                for variant in object_single_marker_coordinated_relative["ast"][
+                    "attachment_variants"
+                ]
+            ],
+            ["object_relative_stacked_restrictor"],
+        )
+        object_single_marker_restrictors = (
+            object_single_marker_coordinated_relative["ast"]["noun_phrases"][
+                "object"
+            ]["relative_clause_restrictors"]
+        )
+        self.assertEqual(
+            [
+                restrictor["predicate"]
+                for restrictor in object_single_marker_restrictors
+            ],
+            ["smile", "laugh"],
+        )
+        self.assertEqual(
+            [
+                restrictor.get("single_marker_relative_coordination_count")
+                for restrictor in object_single_marker_restrictors
+            ],
+            [1, 1],
+        )
+        self.assertEqual(
+            object_single_marker_restrictors[0][
+                "single_marker_relative_coordination"
+            ],
+            "and",
+        )
+        self.assertTrue(
+            object_single_marker_restrictors[1]["relative_marker_elided"]
+        )
+        self.assertEqual(
+            object_single_marker_restrictors[1]["inherited_marker"],
+            "that",
+        )
+        self.assertEqual(
+            object_single_marker_coordinated_relative["semantic_readings"][0][
+                "dependent_type_translation"
+            ],
+            (
+                "exists x_boy : Entity. boy(x_boy) and "
+                "exists x_girl : Entity. "
+                "(girl(x_girl) and smile(x_girl) and laugh(x_girl)) and "
+                "love(x_boy, x_girl)"
+            ),
+        )
+        self.assertNotIn(
+            "girl_that_smiled_and_laughed",
+            object_single_marker_coordinated_relative["dependent_type_translation"],
+        )
+        self.assertNotIn(
+            "Parameter and :",
+            object_single_marker_coordinated_relative["coq_code"],
+        )
+        self.assertEqual(
+            object_single_marker_coordinated_relative["coq_check"]["status"],
+            "passed",
+        )
+
         disjunctive_stacked_relative = run_pipeline(
             "some boy who laughed or who smiled loved a girl",
             require_coq=True,
@@ -16779,6 +16918,20 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn(
             "Unsupported clause-level marker",
             disjunctive_stacked_relative["error"],
+        )
+
+        single_marker_disjunctive_relative = run_pipeline(
+            "some boy who laughed or smiled loved a girl",
+            require_coq=True,
+        )
+        self.assertFalse(single_marker_disjunctive_relative["ok"])
+        self.assertEqual(
+            single_marker_disjunctive_relative["verification_scope"]["kind"],
+            "rejected_unsupported_fragment",
+        )
+        self.assertIn(
+            "Unsupported clause-level marker",
+            single_marker_disjunctive_relative["error"],
         )
 
         subject_transitive_relative = run_pipeline(
@@ -18761,7 +18914,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 93)
+        self.assertEqual(counts["registered_variant_success_cases"], 95)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -19184,6 +19337,14 @@ class TranslatorTests(unittest.TestCase):
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
         self.assertIn(
+            "some boy who laughed and smiled loved a girl",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl that smiled and laughed",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
             "some boy who saw a girl in the park loved a cat",
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
@@ -19229,8 +19390,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 93)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 93)
+        self.assertEqual(modifier_contract["variant_case_count"], 95)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 95)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -20843,7 +21004,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 93,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 95,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -20982,7 +21143,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="93"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="95"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(
