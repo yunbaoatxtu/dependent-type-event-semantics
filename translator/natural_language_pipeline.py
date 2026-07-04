@@ -797,6 +797,119 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
     },
     {
         "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_reduced_relative_restrictor_scope",
+        "sentence": "some boy laughing loved a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy)) and "
+                "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : "
+                "Entity. (boy(x_boy) and laugh(x_boy)) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_reduced_relative_restrictor_scope",
+        "sentence": "some boy loved a girl smiling",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and smile(x_girl)) and "
+                "love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and smile(x_girl)) "
+                "and exists x_boy : Entity. boy(x_boy) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_nary_reduced_relative_restrictor_scope",
+        "sentence": "some boy laughing and smiling loved a girl",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy) and "
+                "smile(x_boy)) and exists x_girl : Entity. girl(x_girl) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. girl(x_girl) and exists x_boy : "
+                "Entity. (boy(x_boy) and laugh(x_boy) and smile(x_boy)) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "subject_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_nary_reduced_relative_restrictor_scope",
+        "sentence": "some boy loved a girl smiling and laughing",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and smile(x_girl) and laugh(x_girl)) "
+                "and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and smile(x_girl) "
+                "and laugh(x_girl)) and exists x_boy : Entity. boy(x_boy) "
+                "and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": [
+            "object_relative_stacked_restrictor",
+        ],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
         "variant_id": "subject_relative_clause_pp_attachment_scope",
         "sentence": "some boy who saw a girl in the park loved a cat",
         "expected_event_analysis": "quantifier-scope",
@@ -5027,6 +5140,9 @@ def parse_relative_restrictor_variants(
         if token in RELATIVE_RESTRICTOR_MARKERS
     ]
     if not marker_indices:
+        reduced_relative = parse_reduced_relative_restrictor_variants(tokens)
+        if reduced_relative is not None:
+            return reduced_relative
         return [(tokens, [])]
     if len(marker_indices) != 1:
         return parse_stacked_simple_relative_restrictor_variants(tokens, marker_indices)
@@ -5137,6 +5253,66 @@ def parse_relative_restrictor_variants(
                 restrictor["time_modifiers"] = time_modifiers
             variants.append((tokens[:marker_index], [restrictor]))
         return variants
+    return None
+
+
+def is_reduced_relative_surface(token: str) -> bool:
+    return (
+        token.endswith("ing")
+        and is_likely_surface_verb(token)
+        and not is_likely_transitive_verb(token)
+    )
+
+
+def parse_reduced_relative_restrictor_variants(
+    tokens: list[str],
+) -> list[tuple[list[str], list[dict[str, Any]]]] | None:
+    for reduced_start in range(1, len(tokens)):
+        relative_tokens = tokens[reduced_start:]
+        if not relative_tokens or not is_reduced_relative_surface(relative_tokens[0]):
+            continue
+        if "or" in relative_tokens:
+            return None
+
+        segments: list[list[str]] = []
+        segment: list[str] = []
+        for token in relative_tokens:
+            if token == "and":
+                if not segment:
+                    return None
+                segments.append(segment)
+                segment = []
+                continue
+            segment.append(token)
+        if not segment:
+            return None
+        segments.append(segment)
+
+        restrictors: list[dict[str, Any]] = []
+        for offset, segment_tokens in enumerate(segments):
+            if len(segment_tokens) != 1:
+                return None
+            relative_surface = segment_tokens[0]
+            if not is_reduced_relative_surface(relative_surface):
+                return None
+            restrictor: dict[str, Any] = {
+                "predicate": lemma_verb(relative_surface),
+                "predicate_type": "Entity -> Prop",
+                "surface": relative_surface,
+                "marker": "",
+                "relative_verb": relative_surface,
+                "kind": "relative_clause_restrictor",
+                "relative_marker_elided": True,
+                "reduced_relative": True,
+                "reduced_relative_form": "present_participle",
+            }
+            if len(segments) > 1:
+                restrictor["stacked_relative_index"] = offset
+                restrictor["stacked_relative_count"] = len(segments)
+                restrictor["reduced_relative_coordination"] = "and"
+                restrictor["reduced_relative_coordination_count"] = len(segments) - 1
+            restrictors.append(restrictor)
+        return [(tokens[:reduced_start], restrictors)]
     return None
 
 
@@ -23704,7 +23880,7 @@ SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS = (
         "remaining_status": "arbitrary_stacked_relative_clause_attachment_open",
         "required_future_instances": [
             "stacked relative clauses",
-            "reduced relatives and non-finite relatives",
+            "complex reduced relatives and non-finite relatives",
             "relative clauses interacting with discourse anaphora",
         ],
     },
@@ -23757,6 +23933,7 @@ def scope_attachment_discourse_case_categories(case: dict[str, Any]) -> set[str]
     if (
         " who " in f" {sentence.lower()} "
         or " that " in f" {sentence.lower()} "
+        or "reduced_relative" in variant_id
         or "relative_clause_restrictor" in text
     ):
         categories.add("relative_clause_restrictors")
@@ -23885,12 +24062,12 @@ def scope_attachment_discourse_audit_payload(
                 "sample_sentences": unique_truth_condition_witness_values(
                     witnesses,
                     "sentence",
-                    13,
+                    17,
                 ),
                 "sample_variant_ids": unique_truth_condition_witness_values(
                     witnesses,
                     "variant_id",
-                    13,
+                    17,
                 ),
                 "sample_witnesses": witnesses[:4],
             },
@@ -25912,8 +26089,53 @@ def unsupported_certified_clause_markers(sentence: str) -> list[str]:
     ]
 
 
+def contains_reduced_relative_disjunction(tokens: list[str]) -> bool:
+    if "or" not in tokens:
+        return False
+    for or_index, token in enumerate(tokens):
+        if token != "or" or or_index == 0 or or_index + 1 >= len(tokens):
+            continue
+        if not (
+            is_reduced_relative_surface(tokens[or_index - 1])
+            and is_reduced_relative_surface(tokens[or_index + 1])
+        ):
+            continue
+        for nominal_index in range(or_index - 2, -1, -1):
+            if tokens[nominal_index] in BOOLEAN_COORDINATORS:
+                break
+            if tokens[nominal_index] in SUPPORTED_SCOPE_DETERMINERS:
+                break
+            if tokens[nominal_index] not in (
+                PREPOSITIONS | COMMON_ADVERBS | TEMPORAL_ADVERBS
+            ):
+                return True
+    return False
+
+
+def unsupported_reduced_relative_disjunction_markers(sentence: str) -> list[str]:
+    tokens = tokenize(sentence)
+    if "or" not in tokens or len(tokens) < 5 or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS:
+        return []
+    for object_quantifier_index in range(3, len(tokens) - 1):
+        if tokens[object_quantifier_index] not in SUPPORTED_SCOPE_DETERMINERS:
+            continue
+        predicate_index = object_quantifier_index - 1
+        if not is_likely_transitive_verb(tokens[predicate_index]):
+            continue
+        subject_tokens = tokens[1:predicate_index]
+        object_tokens = tokens[object_quantifier_index + 1 :]
+        if contains_reduced_relative_disjunction(
+            subject_tokens
+        ) or contains_reduced_relative_disjunction(object_tokens):
+            return ["or"]
+    return []
+
+
 def reject_unsupported_certified_clause_markers(sentence: str) -> None:
-    markers = unsupported_certified_clause_markers(sentence)
+    markers = [
+        *unsupported_certified_clause_markers(sentence),
+        *unsupported_reduced_relative_disjunction_markers(sentence),
+    ]
     if not markers:
         return
     quoted_markers = ", ".join(f"'{marker}'" for marker in sorted(set(markers)))

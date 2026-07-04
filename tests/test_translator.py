@@ -17024,6 +17024,94 @@ class TranslatorTests(unittest.TestCase):
             "passed",
         )
 
+        reduced_relative_cases = [
+            (
+                "some boy laughing loved a girl",
+                "subject",
+                "plain",
+                ["laugh"],
+                (
+                    "exists x_boy : Entity. (boy(x_boy) and laugh(x_boy)) "
+                    "and exists x_girl : Entity. girl(x_girl) and "
+                    "love(x_boy, x_girl)"
+                ),
+            ),
+            (
+                "some boy loved a girl smiling",
+                "object",
+                "plain",
+                ["smile"],
+                (
+                    "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                    "Entity. (girl(x_girl) and smile(x_girl)) and "
+                    "love(x_boy, x_girl)"
+                ),
+            ),
+            (
+                "some boy laughing and smiling loved a girl",
+                "subject",
+                "subject_relative_stacked_restrictor",
+                ["laugh", "smile"],
+                (
+                    "exists x_boy : Entity. "
+                    "(boy(x_boy) and laugh(x_boy) and smile(x_boy)) and "
+                    "exists x_girl : Entity. girl(x_girl) and love(x_boy, x_girl)"
+                ),
+            ),
+            (
+                "some boy loved a girl smiling and laughing",
+                "object",
+                "object_relative_stacked_restrictor",
+                ["smile", "laugh"],
+                (
+                    "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                    "Entity. (girl(x_girl) and smile(x_girl) and laugh(x_girl)) "
+                    "and love(x_boy, x_girl)"
+                ),
+            ),
+        ]
+        for (
+            sentence,
+            relative_site,
+            attachment_kind,
+            predicates,
+            first_reading,
+        ) in reduced_relative_cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "quantifier_scope_ambiguity")
+                self.assertEqual(
+                    [variant["kind"] for variant in result["ast"]["attachment_variants"]],
+                    [attachment_kind],
+                )
+                np = result["ast"]["noun_phrases"][relative_site]
+                self.assertEqual(
+                    [restrictor["predicate"] for restrictor in np["relative_clause_restrictors"]],
+                    predicates,
+                )
+                self.assertEqual(
+                    {restrictor["reduced_relative_form"] for restrictor in np["relative_clause_restrictors"]},
+                    {"present_participle"},
+                )
+                self.assertTrue(
+                    all(
+                        restrictor["relative_marker_elided"]
+                        and restrictor["reduced_relative"]
+                        and restrictor["marker"] == ""
+                        for restrictor in np["relative_clause_restrictors"]
+                    )
+                )
+                self.assertEqual(
+                    result["semantic_readings"][0]["dependent_type_translation"],
+                    first_reading,
+                )
+                self.assertNotIn("x_laugh", result["dependent_type_translation"])
+                self.assertNotIn("x_smile", result["dependent_type_translation"])
+                self.assertNotIn("some_boy_loved_girl", result["dependent_type_translation"])
+                self.assertNotIn("Parameter and :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
         disjunctive_stacked_relative = run_pipeline(
             "some boy who laughed or who smiled loved a girl",
             require_coq=True,
@@ -17065,6 +17153,20 @@ class TranslatorTests(unittest.TestCase):
             "Unsupported clause-level marker",
             nary_single_marker_disjunctive_relative["error"],
         )
+
+        reduced_disjunctive_relative_cases = [
+            "some boy laughing or smiling loved a girl",
+            "some boy loved a girl smiling or laughing",
+        ]
+        for sentence in reduced_disjunctive_relative_cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertFalse(result["ok"])
+                self.assertEqual(
+                    result["verification_scope"]["kind"],
+                    "rejected_unsupported_fragment",
+                )
+                self.assertIn("Unsupported clause-level marker", result["error"])
 
         subject_transitive_relative = run_pipeline(
             "some boy who saw Mary loved a girl",
@@ -19046,7 +19148,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 97)
+        self.assertEqual(counts["registered_variant_success_cases"], 101)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -19485,6 +19587,22 @@ class TranslatorTests(unittest.TestCase):
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
         self.assertIn(
+            "some boy laughing loved a girl",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl smiling",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy laughing and smiling loved a girl",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl smiling and laughing",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
             "some boy who saw a girl in the park loved a cat",
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
@@ -19530,8 +19648,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 97)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 97)
+        self.assertEqual(modifier_contract["variant_case_count"], 101)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 101)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -21144,7 +21262,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 97,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 101,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -21283,7 +21401,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="97"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="101"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(

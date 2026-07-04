@@ -226,7 +226,7 @@ temporal attachment, typed modifier attachment, relative-clause restrictors, and
 local pronominal cause/reason dependencies. The page mirrors those rows through
 `data-scope-attachment-discourse-*` hooks, including reading-name inventories,
 attachment-kind inventories, relative-restrictor site inventories, sample
-sentences, witness counts, and open boundaries for stacked/reduced
+sentences, witness counts, and open boundaries for complex stacked/reduced
 relative-clause attachment, arbitrary discourse anaphora, and pragmatic
 attachment disambiguation. The relative-clause row now includes finite PP
 attachment alternatives such as `subject_relative_object_np_restrictor`,
@@ -236,7 +236,13 @@ attachment alternatives such as `subject_relative_object_np_restrictor`,
 `object_relative_stacked_restrictor`, including explicit `and who`/`and that`
 surface coordination and finite n-ary single-marker coordination such as `who
 laughed and smiled and slept` or `that smiled and laughed and slept` for the
-same conjunctive restrictor reading, while keeping full relative-clause
+same conjunctive restrictor reading. It also includes finite marker-elided
+present-participle reduced relatives such as `some boy laughing loved a girl`,
+`some boy loved a girl smiling`, `some boy laughing and smiling loved a girl`,
+and `some boy loved a girl smiling and laughing`; these keep the binder heads
+`boy` and `girl` while adding `laugh` or `smile` as `Entity -> Prop`
+restrictors. Disjunctive reduced relatives still stop before fallback, while
+full relative-clause
 attachment certification false. The verifier should recompute the audit from semantic
 snapshots and registered variant cases, then rerun sample witnesses so stale
 reading names, attachment kinds, or relative-clause restrictor sites cannot
@@ -1609,7 +1615,12 @@ restriction without opening the raw AST. Finite stacked relatives expose
 `and` coordinator as an entity name. The same display contract covers
 finite n-ary single-marker coordinated relatives where later markers are
 elided; `or who`/`or that` and single-marker `or` relatives remain outside this
-certified conjunctive slice.
+certified conjunctive slice. Marker-elided present-participle reduced relatives
+are shown through the same attachment contract: single reduced relatives keep
+the `plain` attachment kind while storing `relative_marker_elided: true`, and
+coordinated reduced relatives expose `subject_relative_stacked_restrictor` or
+`object_relative_stacked_restrictor` without creating pseudo-entities such as
+`some_boy_loved_girl`.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the

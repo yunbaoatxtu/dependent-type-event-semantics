@@ -214,8 +214,16 @@ single-marker coordinated forms where later markers are elided, so
 `some boy loved a girl that smiled and laughed`; the n-ary examples
 `some boy who laughed and smiled and slept loved a girl` and
 `some boy loved a girl that smiled and laughed and slept` receive the same
-conjunctive restrictor formulas while `or who`/`or that` and single-marker `or`
-relatives remain outside the certified fragment. Likewise,
+conjunctive restrictor formulas. A finite present-participle reduced-relative
+slice now uses the same binder restrictor interface without exporting the
+participle as the NP head: `some boy laughing loved a girl` renders
+`boy(x_boy) and laugh(x_boy)`, `some boy loved a girl smiling` renders
+`girl(x_girl) and smile(x_girl)`, and the coordinated variants
+`some boy laughing and smiling loved a girl` and
+`some boy loved a girl smiling and laughing` keep `x_boy` and `x_girl` as the
+bound variables while recording `relative_marker_elided: true` in the AST.
+`or who`/`or that`, single-marker `or` relatives, and reduced-relative `or`
+cases remain outside the certified fragment. Likewise,
 `some boy who quickly saw Mary loved a girl` renders
 `boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
 `ModifierSeq`-indexed predicate family. A single non-temporal PP after a named
@@ -589,8 +597,13 @@ coordinated `and who`/`and that` counterparts and finite single-marker
 coordinated forms such as
 `some boy who laughed and smiled and slept loved a girl`, expose
 `subject_relative_stacked_restrictor` and `object_relative_stacked_restrictor`,
-while stacked relative-object PP material such as `a girl in the park with a
-telescope` remains outside the certified fragment.
+while the finite present-participle reduced relatives
+`some boy laughing loved a girl`, `some boy loved a girl smiling`,
+`some boy laughing and smiling loved a girl`, and
+`some boy loved a girl smiling and laughing` are parsed as marker-elided
+relative restrictors rather than as heads named `laugh` or `smile`. Stacked
+relative-object PP material such as `a girl in the park with a telescope`
+remains outside the certified fragment.
 Fronted variants such as `In the bathroom some boy loved some girl` use the
 clause-Adv branch only: the modifier parser stops before the quantified subject
 and does not collapse the phrase into a malformed `in_bathroom_some` constant.
@@ -1050,7 +1063,11 @@ loved a girl`, `some boy loved a girl that smiled that laughed`,
 that smiled and that laughed`, `some boy who laughed and smiled loved a girl`,
 `some boy loved a girl that smiled and laughed`,
 `some boy who laughed and smiled and slept loved a girl`, and
-`some boy loved a girl that smiled and laughed and slept`, plus the
+`some boy loved a girl that smiled and laughed and slept`, the reduced-relative
+variants `some boy laughing loved a girl`,
+`some boy loved a girl smiling`,
+`some boy laughing and smiling loved a girl`, and
+`some boy loved a girl smiling and laughing`, plus the
 PP-attachment alternatives in
 `some boy who saw a girl in the park loved a cat`
 and `some boy loved a girl that saw a cat in the park`.
@@ -1059,8 +1076,8 @@ names such as `every_boy_wide_scope`, attachment kinds such as
 `matrix_time_attachment`, `subject_relative_adv`,
 `subject_relative_stacked_restrictor`, and `object_relative_adv`,
 and relative restrictor sites such as `subject` and `object`. The same payload
-keeps explicit open boundaries for complex stacked/reduced relative-clause
-attachment, arbitrary discourse anaphora, and pragmatic
+keeps explicit open boundaries for complex stacked relative-clause attachment,
+complex or disjunctive reduced relatives, arbitrary discourse anaphora, and pragmatic
 attachment disambiguation, so this stage expands certified evidence without
 removing the open `unregistered_scope_attachment_discourse` objective.
 It also carries `completion_frontier_audit` with `schema_version:
