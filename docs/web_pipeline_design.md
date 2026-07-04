@@ -183,8 +183,14 @@ expands from one modified-transitive family to three finite audited families by
 adding `manner_location_intransitive_adv_sequence` and
 `mixed_role_intransitive_adv_sequence`, but it still keeps full surface-parser
 certification false.
-The same
-manifest now exposes `fallback_promotion_candidates.v1`, derived from
+The same manifest and panel expose `proof_assistant_boundary_audit.v1`, which
+records Coq/Rocq as an external boundary checker rather than as the
+implementation language or a semantic-completion flag. It fixes the optional
+skip env, timeout env, default timeout, required-validation policy, and
+optional/required timeout statuses, mirrors them through
+`data-proof-assistant-boundary-*` hooks, and lets the verifier reject drift
+before a runtime mode is mistaken for a completed proof.
+The manifest also exposes `fallback_promotion_candidates.v1`, derived from
 `coverage_matrix.fallback_success_cases`. These rows are rendered through
 `data-fallback-promotion-*` hooks and record the fallback sentence's current
 shallow scope, target rule family, required gap ids, promotion checks, runtime
@@ -1317,6 +1323,11 @@ the real boundary validator, optional checks that exceed the configured
 `DTES_COQ_CHECK_TIMEOUT_SECONDS` boundary are reported as skipped, and required
 checks fail explicitly rather than leaving the web or project verifier waiting
 indefinitely.
+The Certified Fragment manifest exposes the same policy as
+`proof_assistant_boundary_audit.v1`, and the page mirrors it through
+`data-proof-assistant-boundary-*` hooks for the schema, tool, skip env, timeout
+env, default timeout, required-validation policy, optional/required timeout
+statuses, and invariants.
 
 ## Failure Modes
 

@@ -40,6 +40,7 @@ from scripts.verify_project import (
     validate_json_api_route_validation_contract,
     validate_certified_fragment_manifest,
     validate_parser_semantic_boundary_audit,
+    validate_proof_assistant_boundary_audit,
     validate_diagnostic_fixture_routes,
     validate_analyze_action_download_artifacts,
     validate_core_json_api_artifacts,
@@ -19457,6 +19458,7 @@ class TranslatorTests(unittest.TestCase):
                 "web_completion_frontier_audit",
                 "scope_attachment_discourse_coverage_audit",
                 "parser_semantic_boundary_audit",
+                "proof_assistant_boundary_audit",
                 "paper_docx_sync",
                 "web_and_api_contracts",
             },
@@ -20442,6 +20444,44 @@ class TranslatorTests(unittest.TestCase):
             "parser_semantic_boundary_audit",
             {item["id"] for item in completion_status["verified_objectives"]},
         )
+        proof_assistant_boundary = manifest["proof_assistant_boundary_audit"]
+        self.assertEqual(
+            proof_assistant_boundary["schema_version"],
+            "proof_assistant_boundary_audit.v1",
+        )
+        self.assertEqual(proof_assistant_boundary["boundary_tool"], "Coq/Rocq")
+        self.assertEqual(
+            proof_assistant_boundary["optional_skip_env"],
+            "DTES_SKIP_OPTIONAL_COQ",
+        )
+        self.assertEqual(
+            proof_assistant_boundary["timeout_env"],
+            "DTES_COQ_CHECK_TIMEOUT_SECONDS",
+        )
+        self.assertEqual(proof_assistant_boundary["default_timeout_seconds"], 30.0)
+        self.assertEqual(
+            proof_assistant_boundary["required_validation_policy"],
+            "require_coq_ignores_optional_skip",
+        )
+        self.assertEqual(
+            proof_assistant_boundary["optional_timeout_status"],
+            "skipped",
+        )
+        self.assertEqual(
+            proof_assistant_boundary["required_timeout_status"],
+            "failed",
+        )
+        self.assertTrue(
+            proof_assistant_boundary["verifier_skip_coq_sets_optional_skip"],
+        )
+        self.assertIn(
+            "optional_skip_never_satisfies_require_coq",
+            proof_assistant_boundary["required_invariants"],
+        )
+        self.assertIn(
+            "proof_assistant_boundary_audit",
+            {item["id"] for item in completion_status["verified_objectives"]},
+        )
         self.assertIn(
             "extend_surface_parser_beyond_registered_examples",
             completion_status["next_recommended_stages"],
@@ -21016,6 +21056,39 @@ class TranslatorTests(unittest.TestCase):
         ):
             validate_parser_semantic_boundary_audit(manifest)
 
+    def test_verification_rejects_proof_assistant_boundary_audit_drift(self) -> None:
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["proof_assistant_boundary_audit"]["optional_skip_env"] = (
+            "UNSAFE_SKIP_COQ"
+        )
+        with self.assertRaisesRegex(
+            SystemExit,
+            "proof-assistant boundary audit drift",
+        ):
+            validate_proof_assistant_boundary_audit(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["proof_assistant_boundary_audit"][
+            "required_validation_policy"
+        ] = "optional_skip_satisfies_required_validation"
+        with self.assertRaisesRegex(
+            SystemExit,
+            "proof-assistant boundary audit drift",
+        ):
+            validate_certified_fragment_manifest(manifest)
+
+        manifest = deepcopy(construction_fragment_manifest())
+        manifest["completion_status"]["verified_objectives"] = [
+            item
+            for item in manifest["completion_status"]["verified_objectives"]
+            if item.get("id") != "proof_assistant_boundary_audit"
+        ]
+        with self.assertRaisesRegex(
+            SystemExit,
+            "proof-assistant boundary completion drift",
+        ):
+            validate_proof_assistant_boundary_audit(manifest)
+
     def test_verification_rejects_certified_fragment_fallback_runtime_drift(self) -> None:
         manifest = construction_fragment_manifest()
         self.assertEqual(manifest["coverage_matrix"]["fallback_success_cases"], [])
@@ -21564,6 +21637,11 @@ class TranslatorTests(unittest.TestCase):
             "data-parser-semantic-boundary-schema",
             parser_semantic_boundary["schema_version"],
         )
+        proof_assistant_boundary = manifest["proof_assistant_boundary_audit"]
+        proof_boundary_schema_attr = data_attr(
+            "data-proof-assistant-boundary-schema",
+            proof_assistant_boundary["schema_version"],
+        )
 
         page = render_page("John knocked twice", require_coq=True)
         self.assertIn("Certified Fragment", page)
@@ -21998,6 +22076,54 @@ class TranslatorTests(unittest.TestCase):
         )
         self.assertIn(
             'data-parser-semantic-boundary-invariant="parser_claim_is_not_semantic_claim"',
+            page,
+        )
+        self.assertIn("proof-assistant boundary audit", page)
+        self.assertIn(proof_boundary_schema_attr, page)
+        self.assertIn(
+            data_attr(
+                "data-proof-assistant-boundary-optional-skip-env",
+                proof_assistant_boundary["optional_skip_env"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-proof-assistant-boundary-timeout-env",
+                proof_assistant_boundary["timeout_env"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-proof-assistant-boundary-default-timeout-seconds",
+                proof_assistant_boundary["default_timeout_seconds"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-proof-assistant-boundary-required-validation-policy",
+                proof_assistant_boundary["required_validation_policy"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-proof-assistant-boundary-optional-timeout-status",
+                proof_assistant_boundary["optional_timeout_status"],
+            ),
+            page,
+        )
+        self.assertIn(
+            data_attr(
+                "data-proof-assistant-boundary-required-timeout-status",
+                proof_assistant_boundary["required_timeout_status"],
+            ),
+            page,
+        )
+        self.assertIn(
+            'data-proof-assistant-boundary-invariant="optional_skip_never_satisfies_require_coq"',
             page,
         )
         validate_certified_fragment_html_panel(page, manifest)
@@ -28433,12 +28559,15 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`data-completion-*` hooks", web_design)
         self.assertIn("`parser_semantic_boundary_audit.v1`", web_design)
         self.assertIn("`data-parser-semantic-boundary-*` hooks", web_design)
+        self.assertIn("`proof_assistant_boundary_audit.v1`", web_design)
+        self.assertIn("`data-proof-assistant-boundary-*` hooks", web_design)
         self.assertIn("`extend_surface_parser_beyond_registered_examples`", web_design)
         self.assertIn("arbitrary-natural-language", web_design)
         self.assertIn("deep-Coq-proof", web_design)
         self.assertIn("registered_modifier_sequence_contract.v1", manuscript)
         self.assertIn("project_completion_status.v1", manuscript)
         self.assertIn("parser_semantic_boundary_audit.v1", manuscript)
+        self.assertIn("proof_assistant_boundary_audit.v1", manuscript)
         self.assertIn("parser_claim as registered_examples_only", manuscript)
         self.assertIn("extend_surface_parser_beyond_registered_examples", manuscript)
         self.assertIn("is_complete false", manuscript)
@@ -29395,6 +29524,9 @@ class TranslatorTests(unittest.TestCase):
         self.assertIn("`parser_semantic_boundary_audit`", readme)
         self.assertIn('"parser_semantic_boundary_audit.v1"', readme)
         self.assertIn("`data-parser-semantic-boundary-*`", readme)
+        self.assertIn("`proof_assistant_boundary_audit`", readme)
+        self.assertIn('"proof_assistant_boundary_audit.v1"', readme)
+        self.assertIn("`data-proof-assistant-boundary-*`", readme)
         self.assertIn("`extend_surface_parser_beyond_registered_examples`", readme)
         self.assertIn("`fallback_promotion_candidates`", readme)
         self.assertIn('"fallback_promotion_candidates.v1"', readme)

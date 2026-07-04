@@ -3510,6 +3510,14 @@ def certified_fragment_panel() -> str:
         for item in parser_semantic_boundary_audit.get("required_invariants", [])
         if isinstance(item, str)
     ]
+    proof_assistant_boundary_audit = manifest.get("proof_assistant_boundary_audit")
+    if not isinstance(proof_assistant_boundary_audit, dict):
+        proof_assistant_boundary_audit = {}
+    proof_assistant_boundary_invariants = [
+        item
+        for item in proof_assistant_boundary_audit.get("required_invariants", [])
+        if isinstance(item, str)
+    ]
 
     def count_list_attribute(value: object) -> str:
         if not isinstance(value, list):
@@ -3732,6 +3740,15 @@ def certified_fragment_panel() -> str:
             "</li>"
         )
         for invariant in parser_semantic_boundary_invariants
+    )
+    proof_assistant_boundary_invariant_items = "".join(
+        (
+            '<li '
+            f'data-proof-assistant-boundary-invariant="{html.escape(str(invariant), quote=True)}">'
+            f"<code>{html.escape(str(invariant))}</code>"
+            "</li>"
+        )
+        for invariant in proof_assistant_boundary_invariants
     )
 
     def surface_parser_example_items(item: dict[str, object]) -> str:
@@ -4171,6 +4188,17 @@ def certified_fragment_panel() -> str:
         f'data-parser-semantic-boundary-registered-variant-count="{html.escape(str(parser_semantic_boundary_audit.get("registered_semantic_variant_count", "")), quote=True)}" '
         f'data-parser-semantic-boundary-fallback-count="{html.escape(str(parser_semantic_boundary_audit.get("fallback_success_case_count", "")), quote=True)}" '
         f'data-parser-semantic-boundary-rejected-count="{html.escape(str(parser_semantic_boundary_audit.get("rejected_unsupported_case_count", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-schema="{html.escape(str(proof_assistant_boundary_audit.get("schema_version", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-tool="{html.escape(str(proof_assistant_boundary_audit.get("boundary_tool", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-optional-skip-env="{html.escape(str(proof_assistant_boundary_audit.get("optional_skip_env", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-timeout-env="{html.escape(str(proof_assistant_boundary_audit.get("timeout_env", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-default-timeout-seconds="{html.escape(str(proof_assistant_boundary_audit.get("default_timeout_seconds", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-optional-skip-scope="{html.escape(str(proof_assistant_boundary_audit.get("optional_skip_scope", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-required-validation-policy="{html.escape(str(proof_assistant_boundary_audit.get("required_validation_policy", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-optional-timeout-status="{html.escape(str(proof_assistant_boundary_audit.get("optional_timeout_status", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-required-timeout-status="{html.escape(str(proof_assistant_boundary_audit.get("required_timeout_status", "")), quote=True)}" '
+        f'data-proof-assistant-boundary-skip-coq-sets-optional-skip="{str(proof_assistant_boundary_audit.get("verifier_skip_coq_sets_optional_skip") is True).lower()}" '
+        f'data-proof-assistant-boundary-external-tool-claim="{html.escape(str(proof_assistant_boundary_audit.get("external_tool_claim", "")), quote=True)}" '
         f'data-full-natural-language-certification="{str(bool(manifest.get("full_natural_language_certification"))).lower()}" '
         f'data-fallback-certification-level="{html.escape(fallback_level, quote=True)}">'
         "<h2>Certified Fragment</h2>"
@@ -4208,6 +4236,8 @@ def certified_fragment_panel() -> str:
         f"<dt>parser/semantic boundary</dt><dd><code>{html.escape(str(parser_semantic_boundary_audit.get('schema_version', '')))}</code></dd>"
         f"<dt>parser claim</dt><dd><code>{html.escape(str(parser_semantic_boundary_audit.get('parser_claim', '')))}</code></dd>"
         f"<dt>semantic claim</dt><dd><code>{html.escape(str(parser_semantic_boundary_audit.get('semantic_claim', '')))}</code></dd>"
+        f"<dt>proof assistant boundary</dt><dd><code>{html.escape(str(proof_assistant_boundary_audit.get('schema_version', '')))}</code></dd>"
+        f"<dt>proof timeout</dt><dd><code>{html.escape(str(proof_assistant_boundary_audit.get('default_timeout_seconds', '')))}</code></dd>"
         f"<dt>fallback level</dt><dd><code>{html.escape(fallback_level)}</code></dd>"
         "</dl>"
         f"<p>{html.escape(str(manifest.get('methodological_guard', '')))}</p>"
@@ -4235,6 +4265,8 @@ def certified_fragment_panel() -> str:
         f"<ul>{surface_parser_items}</ul></div>"
         '<div class="certified-fragment-boundary"><strong>parser/semantic boundary audit</strong>'
         f"<ul>{parser_semantic_boundary_items}{parser_semantic_boundary_invariant_items}</ul></div>"
+        '<div class="certified-fragment-proof-assistant-boundary"><strong>proof-assistant boundary audit</strong>'
+        f"<ul>{proof_assistant_boundary_invariant_items}</ul></div>"
         '<div class="certified-fragment-snapshots"><strong>semantic snapshots</strong>'
         f"<ul>{semantic_snapshot_items}</ul></div>"
         '<div class="certified-fragment-completion"><strong>completion status</strong>'

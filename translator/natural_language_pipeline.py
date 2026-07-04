@@ -23930,6 +23930,43 @@ def parser_semantic_boundary_audit_payload(
     }
 
 
+def proof_assistant_boundary_audit_payload() -> dict[str, Any]:
+    return {
+        "schema_version": "proof_assistant_boundary_audit.v1",
+        "boundary_id": "external_coq_rocq_validation",
+        "boundary_tool": "Coq/Rocq",
+        "checker_entrypoint": "translator.natural_language_pipeline.verify_coq_code",
+        "repository_verifier_entrypoint": "scripts/verify_project.py",
+        "optional_skip_env": SKIP_OPTIONAL_COQ_ENV,
+        "timeout_env": COQ_CHECK_TIMEOUT_ENV,
+        "default_timeout_seconds": DEFAULT_COQ_CHECK_TIMEOUT_SECONDS,
+        "optional_skip_scope": "optional_external_boundary_checks_only",
+        "required_validation_policy": "require_coq_ignores_optional_skip",
+        "optional_timeout_status": "skipped",
+        "required_timeout_status": "failed",
+        "missing_tool_optional_status": "skipped",
+        "missing_tool_required_status": "failed",
+        "verifier_skip_coq_sets_optional_skip": True,
+        "external_tool_claim": "proof_assistant_boundary_not_semantic_completion",
+        "required_invariants": [
+            "optional_skip_never_satisfies_require_coq",
+            "timeout_prevents_external_boundary_hangs",
+            "missing_required_tool_fails_required_validation",
+            "external_checker_status_does_not_mark_project_complete",
+            "skip_coq_is_a_verifier_runtime_mode_not_a_semantic_certificate",
+        ],
+        "live_validation": {
+            "validator": (
+                "scripts/verify_project.py::"
+                "validate_proof_assistant_boundary_audit"
+            ),
+            "html_hooks": "data-proof-assistant-boundary-*",
+            "source_optional_skip_env": SKIP_OPTIONAL_COQ_ENV,
+            "source_timeout_env": COQ_CHECK_TIMEOUT_ENV,
+        },
+    }
+
+
 def construction_fragment_manifest() -> dict[str, Any]:
     rules = construction_rules()
     variant_examples_by_rule: dict[str, list[str]] = {}
@@ -24008,6 +24045,7 @@ def construction_fragment_manifest() -> dict[str, Any]:
             semantic_snapshots,
             coverage_matrix_counts,
         ),
+        "proof_assistant_boundary_audit": proof_assistant_boundary_audit_payload(),
         "semantic_snapshot_count": len(semantic_snapshots),
         "semantic_snapshots": semantic_snapshots,
         "fallback": {
@@ -25576,6 +25614,11 @@ def project_completion_status_payload(
                 "id": "parser_semantic_boundary_audit",
                 "status": "verified",
                 "evidence": "parser_semantic_boundary_audit.v1",
+            },
+            {
+                "id": "proof_assistant_boundary_audit",
+                "status": "verified",
+                "evidence": "proof_assistant_boundary_audit.v1",
             },
             {
                 "id": "paper_docx_sync",

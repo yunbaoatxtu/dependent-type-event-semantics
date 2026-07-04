@@ -1020,6 +1020,17 @@ mixed Source/Goal/Instrument/Location/Manner intransitive Adv family, the
 remaining front-end stage is still
 `extend_surface_parser_beyond_registered_examples`: these families expand the
 finite audited parser evidence but do not certify arbitrary English.
+The manifest now also exposes `proof_assistant_boundary_audit` with
+`schema_version: "proof_assistant_boundary_audit.v1"`. This audit records that
+Coq/Rocq is an external boundary checker, not the implementation language or a
+semantic-completion flag. It fixes the optional skip switch
+`DTES_SKIP_OPTIONAL_COQ`, the timeout switch `DTES_COQ_CHECK_TIMEOUT_SECONDS`,
+the default thirty-second timeout, the policy that optional skips affect only
+non-required probes, and the rule that required Coq/Rocq validation still fails
+explicitly when the tool is missing or times out. The Certified Fragment panel
+mirrors these facts through `data-proof-assistant-boundary-*` hooks, and the
+verifier rejects drift before an operational runtime mode can be mistaken for a
+semantic certificate.
 It also carries `fallback_promotion_candidates` with `schema_version:
 "fallback_promotion_candidates.v1"`. This queue is derived from
 `coverage_matrix.fallback_success_cases`; at the current head its candidate
@@ -3367,6 +3378,10 @@ so that a stalled proof-assistant process cannot hang project verification
 indefinitely. Optional checks that exceed the timeout are reported as skipped,
 while `--require-coq` checks fail explicitly. Set
 `DTES_COQ_CHECK_TIMEOUT_SECONDS` to tune the default 30-second boundary.
+The `/api/certified-fragment` payload and Certified Fragment panel expose the
+same policy as `proof_assistant_boundary_audit.v1`, including
+`data-proof-assistant-boundary-*` hooks. This keeps the verifier's runtime mode
+auditable while preserving `is_complete: false`.
 
 Use `--require-docx` when Word-generation tests must be enforced. If the system
 Python does not provide `python-docx`, run the command with the bundled Codex

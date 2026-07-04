@@ -10844,6 +10844,93 @@ def validate_parser_semantic_boundary_audit(manifest: dict) -> None:
         )
 
 
+def validate_proof_assistant_boundary_audit(manifest: dict) -> None:
+    from translator.natural_language_pipeline import (
+        proof_assistant_boundary_audit_payload,
+    )
+
+    audit = manifest.get("proof_assistant_boundary_audit")
+    if not isinstance(audit, dict):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary audit missing"
+        )
+    expected_audit = proof_assistant_boundary_audit_payload()
+    if audit != expected_audit:
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary audit drift"
+        )
+    if audit.get("schema_version") != "proof_assistant_boundary_audit.v1":
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary schema drift"
+        )
+    if (
+        audit.get("optional_skip_env") != SKIP_OPTIONAL_COQ_ENV
+        or audit.get("timeout_env") != COQ_CHECK_TIMEOUT_ENV
+        or audit.get("default_timeout_seconds") != DEFAULT_COQ_CHECK_TIMEOUT_SECONDS
+    ):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary env drift"
+        )
+    if (
+        audit.get("optional_skip_scope")
+        != "optional_external_boundary_checks_only"
+        or audit.get("required_validation_policy")
+        != "require_coq_ignores_optional_skip"
+        or audit.get("optional_timeout_status") != "skipped"
+        or audit.get("required_timeout_status") != "failed"
+        or audit.get("missing_tool_optional_status") != "skipped"
+        or audit.get("missing_tool_required_status") != "failed"
+        or audit.get("verifier_skip_coq_sets_optional_skip") is not True
+        or audit.get("external_tool_claim")
+        != "proof_assistant_boundary_not_semantic_completion"
+    ):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary policy drift"
+        )
+    required_invariants = audit.get("required_invariants")
+    if (
+        not isinstance(required_invariants, list)
+        or "optional_skip_never_satisfies_require_coq" not in required_invariants
+        or "timeout_prevents_external_boundary_hangs" not in required_invariants
+        or "external_checker_status_does_not_mark_project_complete"
+        not in required_invariants
+        or "skip_coq_is_a_verifier_runtime_mode_not_a_semantic_certificate"
+        not in required_invariants
+    ):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary invariant drift"
+        )
+    live_validation = audit.get("live_validation")
+    if (
+        not isinstance(live_validation, dict)
+        or live_validation.get("validator")
+        != "scripts/verify_project.py::validate_proof_assistant_boundary_audit"
+        or live_validation.get("html_hooks") != "data-proof-assistant-boundary-*"
+        or live_validation.get("source_optional_skip_env") != SKIP_OPTIONAL_COQ_ENV
+        or live_validation.get("source_timeout_env") != COQ_CHECK_TIMEOUT_ENV
+    ):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary validator drift"
+        )
+    completion_status = manifest.get("completion_status")
+    if not isinstance(completion_status, dict):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary completion drift"
+        )
+    verified_ids = {
+        item.get("id")
+        for item in completion_status.get("verified_objectives", [])
+        if isinstance(item, dict)
+    }
+    if (
+        "proof_assistant_boundary_audit" not in verified_ids
+        or completion_status.get("is_complete") is not False
+    ):
+        raise SystemExit(
+            "web route smoke check failed: proof-assistant boundary completion drift"
+        )
+
+
 def validate_scope_attachment_discourse_audit(manifest: dict) -> None:
     from translator.natural_language_pipeline import (
         run_pipeline,
@@ -11380,6 +11467,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         raise SystemExit("web route smoke check failed: project completion boundary drift")
     if completion_status.get("completion_basis") != "verified_fragment_not_full_goal":
         raise SystemExit("web route smoke check failed: completion basis drift")
+    validate_proof_assistant_boundary_audit(manifest)
     verified_objectives = completion_status.get("verified_objectives")
     incomplete_objectives = completion_status.get("incomplete_objectives")
     completion_blockers = completion_status.get("completion_blockers")
@@ -11510,6 +11598,7 @@ def validate_certified_fragment_manifest(manifest: dict) -> None:
         "web_completion_frontier_audit",
         "scope_attachment_discourse_coverage_audit",
         "parser_semantic_boundary_audit",
+        "proof_assistant_boundary_audit",
         "paper_docx_sync",
         "web_and_api_contracts",
     }
@@ -12950,6 +13039,14 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
         for item in parser_semantic_boundary_audit.get("required_invariants", [])
         if isinstance(item, str)
     ]
+    proof_assistant_boundary_audit = manifest.get("proof_assistant_boundary_audit")
+    if not isinstance(proof_assistant_boundary_audit, dict):
+        proof_assistant_boundary_audit = {}
+    proof_assistant_boundary_invariants = [
+        item
+        for item in proof_assistant_boundary_audit.get("required_invariants", [])
+        if isinstance(item, str)
+    ]
     completion_status = manifest.get("completion_status")
     if not isinstance(completion_status, dict):
         completion_status = {}
@@ -13411,11 +13508,61 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
             "data-parser-semantic-boundary-rejected-count",
             parser_semantic_boundary_audit.get("rejected_unsupported_case_count", ""),
         ),
+        data_fragment(
+            "data-proof-assistant-boundary-schema",
+            proof_assistant_boundary_audit.get("schema_version", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-tool",
+            proof_assistant_boundary_audit.get("boundary_tool", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-optional-skip-env",
+            proof_assistant_boundary_audit.get("optional_skip_env", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-timeout-env",
+            proof_assistant_boundary_audit.get("timeout_env", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-default-timeout-seconds",
+            proof_assistant_boundary_audit.get("default_timeout_seconds", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-optional-skip-scope",
+            proof_assistant_boundary_audit.get("optional_skip_scope", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-required-validation-policy",
+            proof_assistant_boundary_audit.get("required_validation_policy", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-optional-timeout-status",
+            proof_assistant_boundary_audit.get("optional_timeout_status", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-required-timeout-status",
+            proof_assistant_boundary_audit.get("required_timeout_status", ""),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-skip-coq-sets-optional-skip",
+            str(
+                proof_assistant_boundary_audit.get(
+                    "verifier_skip_coq_sets_optional_skip",
+                )
+                is True
+            ).lower(),
+        ),
+        data_fragment(
+            "data-proof-assistant-boundary-external-tool-claim",
+            proof_assistant_boundary_audit.get("external_tool_claim", ""),
+        ),
         'data-modifier-sequence-invariant="modifier_vector_length_matches_modifiers"',
         'data-modifier-sequence-invariant="modifier_roles_are_adv_not_entity"',
         'data-modifier-sequence-invariant="registered_modifier_roles_have_live_witnesses"',
         "surface parser coverage",
         "parser/semantic boundary audit",
+        "proof-assistant boundary audit",
         "completion status",
         "scope/attachment/discourse audit",
         "completion frontier audit",
@@ -13511,6 +13658,10 @@ def validate_certified_fragment_html_panel(page: str, manifest: dict) -> None:
     expected_fragments.extend(
         data_fragment("data-parser-semantic-boundary-invariant", invariant)
         for invariant in parser_semantic_boundary_invariants
+    )
+    expected_fragments.extend(
+        data_fragment("data-proof-assistant-boundary-invariant", invariant)
+        for invariant in proof_assistant_boundary_invariants
     )
     expected_fragments.extend(
         data_fragment("data-completion-verified-objective", item.get("id", ""))
