@@ -1310,7 +1310,13 @@ stable `data-resolve-draft-id` hook; the form posts `resolve_draft_id` and
 
 The Coq/Rocq step remains a boundary check, not the implementation language of
 the translator. If it is unavailable, the web page can still show the internal
-type-check result and mark external validation as skipped.
+type-check result and mark external validation as skipped. External Coq/Rocq
+calls should also be controllable and time-bounded: `DTES_SKIP_OPTIONAL_COQ=1`
+skips only non-required proof-assistant probes, `require_coq=1` still requests
+the real boundary validator, optional checks that exceed the configured
+`DTES_COQ_CHECK_TIMEOUT_SECONDS` boundary are reported as skipped, and required
+checks fail explicitly rather than leaving the web or project verifier waiting
+indefinitely.
 
 ## Failure Modes
 
@@ -1620,7 +1626,13 @@ are shown through the same attachment contract: single reduced relatives keep
 the `plain` attachment kind while storing `relative_marker_elided: true`, and
 coordinated reduced relatives expose `subject_relative_stacked_restrictor` or
 `object_relative_stacked_restrictor` without creating pseudo-entities such as
-`some_boy_loved_girl`.
+`some_boy_loved_girl`. Passive reduced relatives in the finite `participle by
+NP` slice use the same page contract but record the by-phrase as an Agent
+argument: `some girl seen by John loved a boy` displays `see(john, x_girl)`,
+and `some girl seen by a boy loved a cat` displays an internal `x_rel_boy`
+existential. The raw AST exposes `passive_reduced_relative: true`,
+`reduced_relative_form: past_participle_passive`, and `argument_order:
+[Agent, Patient]`; the UI does not turn `by` into a predicate or entity.
 
 The first Parsons-style event-talk case is handled by a timed replacement
 instead of an event parameter. The sentence `after the singing of the

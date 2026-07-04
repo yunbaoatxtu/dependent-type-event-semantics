@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 import html
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -1319,6 +1320,65 @@ class TranslatorTests(unittest.TestCase):
         coq_check = verify_coq_code(broken_module, require_coq=True)
         self.assertEqual(coq_check["status"], "failed")
         self.assertIn("ModifierSeq", coq_check["message"])
+
+    def test_verify_coq_code_skips_optional_timeout(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"DTES_SKIP_OPTIONAL_COQ": ""},
+        ), patch.object(
+            natural_language_pipeline,
+            "coq_command",
+            return_value=["coqc", "pipeline_check.v"],
+        ), patch.object(
+            natural_language_pipeline.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired(["coqc"], 30),
+        ):
+            coq_check = verify_coq_code(
+                "Parameter PropT : Type.\nDefinition example_1 : PropT.",
+                require_coq=False,
+            )
+
+        self.assertEqual(coq_check["ok"], None)
+        self.assertEqual(coq_check["status"], "skipped")
+        self.assertIn("timed out", coq_check["message"])
+
+    def test_verify_coq_code_honors_optional_skip_env(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"DTES_SKIP_OPTIONAL_COQ": "1"},
+        ), patch.object(
+            natural_language_pipeline,
+            "coq_command",
+        ) as coq_command:
+            coq_check = verify_coq_code(
+                "Parameter PropT : Type.\nDefinition example_1 : PropT.",
+                require_coq=False,
+            )
+
+        coq_command.assert_not_called()
+        self.assertEqual(coq_check["ok"], None)
+        self.assertEqual(coq_check["status"], "skipped")
+        self.assertIn("DTES_SKIP_OPTIONAL_COQ", coq_check["message"])
+
+    def test_verify_coq_code_fails_required_timeout(self) -> None:
+        with patch.object(
+            natural_language_pipeline,
+            "coq_command",
+            return_value=["coqc", "pipeline_check.v"],
+        ), patch.object(
+            natural_language_pipeline.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired(["coqc"], 30),
+        ):
+            coq_check = verify_coq_code(
+                "Parameter PropT : Type.\nDefinition example_1 : PropT.",
+                require_coq=True,
+            )
+
+        self.assertFalse(coq_check["ok"])
+        self.assertEqual(coq_check["status"], "failed")
+        self.assertIn("timed out", coq_check["message"])
 
     def test_export_module_contains_declarations_and_examples(self) -> None:
         results = [
@@ -17112,6 +17172,105 @@ class TranslatorTests(unittest.TestCase):
                 self.assertNotIn("Parameter and :", result["coq_code"])
                 self.assertEqual(result["coq_check"]["status"], "passed")
 
+        passive_reduced_relative_cases = [
+            (
+                "some girl seen by John loved a boy",
+                "subject",
+                "agent",
+                "john",
+                (
+                    "exists x_girl : Entity. (girl(x_girl) and see(john, x_girl)) "
+                    "and exists x_boy : Entity. boy(x_boy) and "
+                    "love(x_girl, x_boy)"
+                ),
+            ),
+            (
+                "some girl seen by a boy loved a cat",
+                "subject",
+                "agent_np",
+                "x_rel_boy",
+                (
+                    "exists x_girl : Entity. (girl(x_girl) and exists x_rel_boy : "
+                    "Entity. boy(x_rel_boy) and see(x_rel_boy, x_girl)) and "
+                    "exists x_cat : Entity. cat(x_cat) and love(x_girl, x_cat)"
+                ),
+            ),
+            (
+                "some boy loved a girl seen by John",
+                "object",
+                "agent",
+                "john",
+                (
+                    "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                    "Entity. (girl(x_girl) and see(john, x_girl)) and "
+                    "love(x_boy, x_girl)"
+                ),
+            ),
+            (
+                "some boy loved a girl seen by a man",
+                "object",
+                "agent_np",
+                "x_rel_man",
+                (
+                    "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                    "Entity. (girl(x_girl) and exists x_rel_man : Entity. "
+                    "man(x_rel_man) and see(x_rel_man, x_girl)) and "
+                    "love(x_boy, x_girl)"
+                ),
+            ),
+        ]
+        for (
+            sentence,
+            relative_site,
+            agent_field,
+            agent_name,
+            first_reading,
+        ) in passive_reduced_relative_cases:
+            with self.subTest(sentence=sentence):
+                result = run_pipeline(sentence, require_coq=True)
+                self.assertTrue(result["ok"])
+                self.assertEqual(result["kind"], "quantifier_scope_ambiguity")
+                self.assertEqual(
+                    [variant["kind"] for variant in result["ast"]["attachment_variants"]],
+                    ["plain"],
+                )
+                np = result["ast"]["noun_phrases"][relative_site]
+                self.assertEqual(np["head"], "girl")
+                restrictor = np["relative_clause_restrictors"][0]
+                self.assertEqual(restrictor["predicate"], "see")
+                self.assertEqual(restrictor["predicate_type"], "Entity -> Entity -> Prop")
+                self.assertEqual(restrictor["relative_verb"], "seen")
+                self.assertEqual(restrictor["reduced_relative_form"], "past_participle_passive")
+                self.assertTrue(restrictor["relative_marker_elided"])
+                self.assertTrue(restrictor["reduced_relative"])
+                self.assertTrue(restrictor["passive_reduced_relative"])
+                self.assertEqual(restrictor["argument_order"], ["Agent", "Patient"])
+                self.assertEqual(
+                    restrictor["surface_lexicon"],
+                    {
+                        "participle": "seen",
+                        "lemma": "see",
+                        "source": "translator/surface_lexicon.py",
+                    },
+                )
+                if agent_field == "agent":
+                    self.assertEqual(restrictor["agent"]["name"], agent_name)
+                    self.assertEqual(restrictor["agent"]["type"], "Entity")
+                    self.assertIn(f"Parameter {agent_name} : Entity.", result["coq_code"])
+                else:
+                    self.assertEqual(restrictor["agent_np"]["variable"], agent_name)
+                    self.assertEqual(restrictor["agent_np"]["semantic_role"], "Agent")
+                self.assertEqual(
+                    result["semantic_readings"][0]["dependent_type_translation"],
+                    first_reading,
+                )
+                self.assertIn("see", result["dependent_type_translation"])
+                self.assertNotIn("by(", result["dependent_type_translation"])
+                self.assertNotIn("x_seen", result["dependent_type_translation"])
+                self.assertNotIn("girl_seen_by", result["dependent_type_translation"])
+                self.assertNotIn("Parameter by :", result["coq_code"])
+                self.assertEqual(result["coq_check"]["status"], "passed")
+
         disjunctive_stacked_relative = run_pipeline(
             "some boy who laughed or who smiled loved a girl",
             require_coq=True,
@@ -17157,6 +17316,8 @@ class TranslatorTests(unittest.TestCase):
         reduced_disjunctive_relative_cases = [
             "some boy laughing or smiling loved a girl",
             "some boy loved a girl smiling or laughing",
+            "some girl seen by John or admired by Mary loved a boy",
+            "some boy loved a girl seen by John or admired by Mary",
         ]
         for sentence in reduced_disjunctive_relative_cases:
             with self.subTest(sentence=sentence):
@@ -19148,7 +19309,7 @@ class TranslatorTests(unittest.TestCase):
             len(coverage["rejected_unsupported_cases"]),
         )
         self.assertEqual(counts["registered_success_cases"], len(rules))
-        self.assertEqual(counts["registered_variant_success_cases"], 101)
+        self.assertEqual(counts["registered_variant_success_cases"], 105)
         fallback_promotion = manifest["fallback_promotion_candidates"]
         self.assertEqual(
             fallback_promotion["schema_version"],
@@ -19603,6 +19764,22 @@ class TranslatorTests(unittest.TestCase):
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
         self.assertIn(
+            "some girl seen by John loved a boy",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some girl seen by a boy loved a cat",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl seen by John",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
+            "some boy loved a girl seen by a man",
+            scope_categories["relative_clause_restrictors"]["sample_sentences"],
+        )
+        self.assertIn(
             "some boy who saw a girl in the park loved a cat",
             scope_categories["relative_clause_restrictors"]["sample_sentences"],
         )
@@ -19648,8 +19825,8 @@ class TranslatorTests(unittest.TestCase):
         self.assertEqual(modifier_contract["claim"], "registered_examples_only")
         self.assertFalse(modifier_contract["full_surface_parser_certification"])
         self.assertEqual(modifier_contract["primary_case_count"], len(rules))
-        self.assertEqual(modifier_contract["variant_case_count"], 101)
-        self.assertEqual(modifier_contract["case_count"], len(rules) + 101)
+        self.assertEqual(modifier_contract["variant_case_count"], 105)
+        self.assertEqual(modifier_contract["case_count"], len(rules) + 105)
         self.assertEqual(
             modifier_contract["declared_application_modifier_counts"],
             list(range(13)),
@@ -21262,7 +21439,7 @@ class TranslatorTests(unittest.TestCase):
             len(construction_rules()),
         )
         self.assertEqual(
-            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 101,
+            manifest["coverage_matrix_counts"]["registered_variant_success_cases"], 105,
         )
         self.assertEqual(
             manifest["coverage_matrix_counts"]["fallback_success_cases"],
@@ -21401,7 +21578,7 @@ class TranslatorTests(unittest.TestCase):
             f'data-coverage-registered-success-count="{len(construction_rules())}"',
             page,
         )
-        self.assertIn('data-coverage-registered-variant-success-count="101"', page)
+        self.assertIn('data-coverage-registered-variant-success-count="105"', page)
         self.assertIn("completion status", page)
         self.assertIn(
             data_attr(
@@ -21568,8 +21745,19 @@ class TranslatorTests(unittest.TestCase):
             'data-scope-attachment-discourse-category="quantifier_scope"',
             page,
         )
+        scope_categories_by_id = {
+            item["category_id"]: item
+            for item in scope_attachment_audit["categories"]
+        }
         self.assertIn(
-            'data-scope-attachment-discourse-reading-names="a_boy_wide_scope | a_cat_wide_scope_subject_relative_adv | a_girl_wide_scope | a_girl_wide_scope_object_relative_object_np_restrictor | every_boy_wide_scope | every_girl_wide_scope | no_boy_wide_scope | some_boy_wide_scope | some_boy_wide_scope_clause_adv | some_boy_wide_scope_object_relative_adv | some_boy_wide_scope_subject_relative_object_np_restrictor | some_girl_wide_scope"',
+            data_attr(
+                "data-scope-attachment-discourse-reading-names",
+                " | ".join(
+                    scope_categories_by_id["quantifier_scope"][
+                        "reading_name_inventory"
+                    ]
+                ),
+            ),
             page,
         )
         self.assertIn(
@@ -22475,7 +22663,7 @@ class TranslatorTests(unittest.TestCase):
                         )
 
     def test_web_analyze_sentence_success(self) -> None:
-        result = analyze_sentence("John broke the vase")
+        result = analyze_sentence("John broke the vase", require_coq=True)
         self.assertTrue(result["ok"])
         self.assertIn(
             "Cause(John, Transition(vase, integrity_scale, intact, broken))",

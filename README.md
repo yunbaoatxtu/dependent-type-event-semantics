@@ -222,8 +222,20 @@ participle as the NP head: `some boy laughing loved a girl` renders
 `some boy laughing and smiling loved a girl` and
 `some boy loved a girl smiling and laughing` keep `x_boy` and `x_girl` as the
 bound variables while recording `relative_marker_elided: true` in the AST.
-`or who`/`or that`, single-marker `or` relatives, and reduced-relative `or`
-cases remain outside the certified fragment. Likewise,
+The same finite restrictor interface now covers a narrow passive reduced
+relative slice with an explicit `by` agent. `some girl seen by John loved a boy`
+renders `girl(x_girl) and see(john, x_girl)`, while
+`some girl seen by a boy loved a cat` renders the by-agent as an internal
+existential restrictor:
+`girl(x_girl) and exists x_rel_boy : Entity. boy(x_rel_boy) and
+see(x_rel_boy, x_girl)`. Object-side forms such as
+`some boy loved a girl seen by John` are analogous. The AST records
+`reduced_relative_form: past_participle_passive`,
+`passive_reduced_relative: true`, `argument_order: [Agent, Patient]`, and the
+passive `surface_lexicon` audit for `seen -> see`; `by` is not exported as a
+predicate or entity. `or who`/`or that`, single-marker `or` relatives, and
+present- or passive-reduced `or` cases remain outside the certified fragment.
+Likewise,
 `some boy who quickly saw Mary loved a girl` renders
 `boy(x_boy) and see(1)(quickly, x_boy, mary)`, with `see` lifted to a
 `ModifierSeq`-indexed predicate family. A single non-temporal PP after a named
@@ -3346,6 +3358,15 @@ Use `--skip-coq` to run only the Python and scaffold-consistency checks, or
 python3 scripts/verify_project.py --skip-coq
 python3 scripts/verify_project.py --require-coq
 ```
+
+When `--skip-coq` is used, the verifier also sets `DTES_SKIP_OPTIONAL_COQ=1`
+so non-required per-sentence Coq/Rocq probes are reported as skipped instead of
+calling an external proof assistant. Explicit `require_coq=1` requests still
+run the real boundary validator. External Coq/Rocq calls are also time-bounded
+so that a stalled proof-assistant process cannot hang project verification
+indefinitely. Optional checks that exceed the timeout are reported as skipped,
+while `--require-coq` checks fail explicitly. Set
+`DTES_COQ_CHECK_TIMEOUT_SECONDS` to tune the default 30-second boundary.
 
 Use `--require-docx` when Word-generation tests must be enforced. If the system
 Python does not provide `python-docx`, run the command with the bundled Codex

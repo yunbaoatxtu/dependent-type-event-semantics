@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -74,6 +75,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
+COQ_CHECK_TIMEOUT_ENV = "DTES_COQ_CHECK_TIMEOUT_SECONDS"
+SKIP_OPTIONAL_COQ_ENV = "DTES_SKIP_OPTIONAL_COQ"
+DEFAULT_COQ_CHECK_TIMEOUT_SECONDS = 30.0
 FRONTED_MODIFIER_PREPOSITIONS = PREPOSITIONS
 PROPERTY_DEGREES = {"very"}
 QUANTIFIER_SUBJECT_DETERMINERS = {"some", "every", "each", "all", "no"}
@@ -906,6 +910,115 @@ REGISTERED_VARIANT_COVERAGE_EXAMPLES = (
         "expected_scope_audit_attachment_kinds": [
             "object_relative_stacked_restrictor",
         ],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_passive_reduced_relative_named_agent_scope",
+        "sentence": "some girl seen by John loved a boy",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_girl : Entity. (girl(x_girl) and see(john, x_girl)) "
+                "and exists x_boy : Entity. boy(x_boy) and love(x_girl, x_boy)"
+            ),
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and see(john, x_girl)) and love(x_girl, x_boy)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_girl_wide_scope",
+            "a_boy_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "subject_passive_reduced_relative_quantified_agent_scope",
+        "sentence": "some girl seen by a boy loved a cat",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_girl : Entity. (girl(x_girl) and exists x_rel_boy : "
+                "Entity. boy(x_rel_boy) and see(x_rel_boy, x_girl)) and "
+                "exists x_cat : Entity. cat(x_cat) and love(x_girl, x_cat)"
+            ),
+            (
+                "exists x_cat : Entity. cat(x_cat) and exists x_girl : Entity. "
+                "(girl(x_girl) and exists x_rel_boy : Entity. boy(x_rel_boy) "
+                "and see(x_rel_boy, x_girl)) and love(x_girl, x_cat)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_girl_wide_scope",
+            "a_cat_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["subject"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_passive_reduced_relative_named_agent_scope",
+        "sentence": "some boy loved a girl seen by John",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : "
+                "Entity. (girl(x_girl) and see(john, x_girl)) and "
+                "love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and see(john, x_girl)) "
+                "and exists x_boy : Entity. boy(x_boy) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
+        "expected_scope_audit_relative_restrictor_sites": ["object"],
+    },
+    {
+        "rule_id": "quantifier_scope_ambiguity",
+        "variant_id": "object_passive_reduced_relative_quantified_agent_scope",
+        "sentence": "some boy loved a girl seen by a man",
+        "expected_event_analysis": "quantifier-scope",
+        "expected_dependent_type_fragments": [
+            (
+                "exists x_boy : Entity. boy(x_boy) and exists x_girl : Entity. "
+                "(girl(x_girl) and exists x_rel_man : Entity. man(x_rel_man) "
+                "and see(x_rel_man, x_girl)) and love(x_boy, x_girl)"
+            ),
+            (
+                "exists x_girl : Entity. (girl(x_girl) and exists x_rel_man : "
+                "Entity. man(x_rel_man) and see(x_rel_man, x_girl)) and "
+                "exists x_boy : Entity. boy(x_boy) and love(x_boy, x_girl)"
+            ),
+        ],
+        "expected_ast_kind": "scope_ambiguity",
+        "expected_verification_scope_kind": "registered_construction",
+        "expected_certification_level": "construction_rule",
+        "boundary_status": "registered_variant_example",
+        "expected_scope_audit_reading_names": [
+            "some_boy_wide_scope",
+            "a_girl_wide_scope",
+        ],
+        "expected_scope_audit_attachment_kinds": ["plain"],
         "expected_scope_audit_relative_restrictor_sites": ["object"],
     },
     {
@@ -5140,6 +5253,11 @@ def parse_relative_restrictor_variants(
         if token in RELATIVE_RESTRICTOR_MARKERS
     ]
     if not marker_indices:
+        passive_reduced_relative = parse_passive_reduced_relative_restrictor_variants(
+            tokens
+        )
+        if passive_reduced_relative is not None:
+            return passive_reduced_relative
         reduced_relative = parse_reduced_relative_restrictor_variants(tokens)
         if reduced_relative is not None:
             return reduced_relative
@@ -5262,6 +5380,86 @@ def is_reduced_relative_surface(token: str) -> bool:
         and is_likely_surface_verb(token)
         and not is_likely_transitive_verb(token)
     )
+
+
+def is_passive_reduced_relative_surface(token: str) -> bool:
+    return is_passive_participle(token) and is_likely_transitive_verb(token)
+
+
+def parse_passive_reduced_relative_agent(
+    tokens: list[str],
+) -> dict[str, Any] | None:
+    if not tokens:
+        return None
+    forbidden_agent_tokens = (
+        COMMON_ADVERBS
+        | TEMPORAL_ADVERBS
+        | COUNT_WORDS
+        | COUNT_NOUNS
+        | set(BOOLEAN_COORDINATORS)
+        | set(TEMPORAL_RELATION_CONNECTORS)
+        | UNSUPPORTED_CERTIFIED_CLAUSE_MARKERS
+        | PREPOSITIONS
+        | {"by"}
+    )
+    if tokens[0] in RELATIVE_OBJECT_NP_DETERMINERS:
+        nominal_tokens = tokens[1:]
+        if (
+            not nominal_tokens
+            or any(token in forbidden_agent_tokens for token in nominal_tokens)
+            or any(token in RELATIVE_OBJECT_NP_DETERMINERS for token in nominal_tokens)
+        ):
+            return None
+        agent_np = relative_object_np_base(tokens[0], nominal_tokens, tokens)
+        agent_np["semantic_role"] = "Agent"
+        return {"agent_np": agent_np}
+    if len(tokens) != 1 or tokens[0] in forbidden_agent_tokens:
+        return None
+    return {
+        "agent": {
+            "name": normalize_surface_name(tokens[0]),
+            "surface": tokens[0],
+            "type": "Entity",
+            "semantic_role": "Agent",
+        }
+    }
+
+
+def parse_passive_reduced_relative_restrictor_variants(
+    tokens: list[str],
+) -> list[tuple[list[str], list[dict[str, Any]]]] | None:
+    for reduced_start in range(1, len(tokens)):
+        relative_tokens = tokens[reduced_start:]
+        if (
+            not relative_tokens
+            or not is_passive_reduced_relative_surface(relative_tokens[0])
+        ):
+            continue
+        if "or" in relative_tokens or "and" in relative_tokens:
+            return None
+        if len(relative_tokens) < 3 or relative_tokens[1] != "by":
+            return None
+        agent_parse = parse_passive_reduced_relative_agent(relative_tokens[2:])
+        if agent_parse is None:
+            return None
+        relative_surface = relative_tokens[0]
+        restrictor: dict[str, Any] = {
+            "predicate": lemma_verb(relative_surface),
+            "predicate_type": "Entity -> Entity -> Prop",
+            "surface": " ".join(relative_tokens),
+            "marker": "",
+            "relative_verb": relative_surface,
+            "kind": "relative_clause_restrictor",
+            "relative_marker_elided": True,
+            "reduced_relative": True,
+            "reduced_relative_form": "past_participle_passive",
+            "passive_reduced_relative": True,
+            "argument_order": ["Agent", "Patient"],
+            "surface_lexicon": passive_participle_audit(relative_surface),
+        }
+        restrictor.update(agent_parse)
+        return [(tokens[:reduced_start], [restrictor])]
+    return None
 
 
 def parse_reduced_relative_restrictor_variants(
@@ -5912,6 +6110,18 @@ def quantifier_scope_restrictor_predicate_declarations(
                             str,
                         ):
                             declarations.append((np_predicate, np_predicate_type))
+                agent_np = restrictor.get("agent_np")
+                if isinstance(agent_np, dict):
+                    for np_restrictor in agent_np.get("restrictors", []):
+                        if not isinstance(np_restrictor, dict):
+                            continue
+                        np_predicate = np_restrictor.get("predicate")
+                        np_predicate_type = np_restrictor.get("predicate_type")
+                        if isinstance(np_predicate, str) and isinstance(
+                            np_predicate_type,
+                            str,
+                        ):
+                            declarations.append((np_predicate, np_predicate_type))
     return unique_typed_declarations(declarations)
 
 
@@ -5930,6 +6140,9 @@ def quantifier_scope_relative_object_names(readings: list[dict[str, Any]]) -> li
                 obj = restrictor.get("object")
                 if isinstance(obj, dict) and isinstance(obj.get("name"), str):
                     names.append(obj["name"])
+                agent = restrictor.get("agent")
+                if isinstance(agent, dict) and isinstance(agent.get("name"), str):
+                    names.append(agent["name"])
     return unique_names(names)
 
 
@@ -6193,6 +6406,13 @@ def relative_binary_object_variable(restrictor: dict[str, Any]) -> str:
     return restrictor["object"]["name"]
 
 
+def relative_binary_agent_variable(restrictor: dict[str, Any]) -> str:
+    agent_np = restrictor.get("agent_np")
+    if isinstance(agent_np, dict):
+        return agent_np["variable"]
+    return restrictor["agent"]["name"]
+
+
 def render_binary_restrictor_relation(
     restrictor: dict[str, Any],
     subject_variable: str,
@@ -6202,6 +6422,11 @@ def render_binary_restrictor_relation(
     predicate = restrictor["predicate"]
     predicate_type = restrictor.get("predicate_type")
     modifiers = restrictor.get("modifiers", [])
+    if restrictor.get("passive_reduced_relative") is True:
+        agent = relative_binary_agent_variable(restrictor)
+        if coq:
+            return f"{predicate} {agent} {subject_variable}"
+        return f"{predicate}({agent}, {subject_variable})"
     obj = relative_binary_object_variable(restrictor)
     if predicate_type == MODIFIER_INDEXED_BINARY_RELATION:
         if coq:
@@ -6229,9 +6454,30 @@ def render_relative_object_np_application(
     object_np = restrictor.get("object_np")
     if not isinstance(object_np, dict):
         return relation_application
-    variable = object_np["variable"]
+    return render_relative_np_application(object_np, relation_application, coq=coq)
+
+
+def render_relative_agent_np_application(
+    restrictor: dict[str, Any],
+    relation_application: str,
+    *,
+    coq: bool,
+) -> str:
+    agent_np = restrictor.get("agent_np")
+    if not isinstance(agent_np, dict):
+        return relation_application
+    return render_relative_np_application(agent_np, relation_application, coq=coq)
+
+
+def render_relative_np_application(
+    relative_np: dict[str, Any],
+    relation_application: str,
+    *,
+    coq: bool,
+) -> str:
+    variable = relative_np["variable"]
     restrictor_application = render_entity_predicate_applications(
-        object_np["restrictors"],
+        relative_np["restrictors"],
         variable,
         coq=coq,
     )
@@ -6265,11 +6511,18 @@ def quantifier_binder_restrictor_applications(
                 var,
                 coq=coq,
             )
-            application = render_relative_object_np_application(
-                restrictor,
-                application,
-                coq=coq,
-            )
+            if restrictor.get("passive_reduced_relative") is True:
+                application = render_relative_agent_np_application(
+                    restrictor,
+                    application,
+                    coq=coq,
+                )
+            else:
+                application = render_relative_object_np_application(
+                    restrictor,
+                    application,
+                    coq=coq,
+                )
         elif predicate_type == MODIFIER_INDEXED_UNARY_RELATION:
             if coq:
                 application = (
@@ -6290,11 +6543,18 @@ def quantifier_binder_restrictor_applications(
                 var,
                 coq=coq,
             )
-            application = render_relative_object_np_application(
-                restrictor,
-                application,
-                coq=coq,
-            )
+            if restrictor.get("passive_reduced_relative") is True:
+                application = render_relative_agent_np_application(
+                    restrictor,
+                    application,
+                    coq=coq,
+                )
+            else:
+                application = render_relative_object_np_application(
+                    restrictor,
+                    application,
+                    coq=coq,
+                )
         else:
             application = f"{predicate} {var}" if coq else f"{predicate}({var})"
         applications.append(
@@ -6920,11 +7180,33 @@ def collect_np_attachment_summary(
                         "type": str(relative_object.get("type", "Entity")),
                     }
                 )
+            relative_agent = restrictor.get("agent")
+            if isinstance(relative_agent, dict) and isinstance(
+                relative_agent.get("name"),
+                str,
+            ):
+                relative_objects.append(
+                    {
+                        "site": f"{relative_site}_agent",
+                        "name": relative_agent["name"],
+                        "type": str(relative_agent.get("type", "Entity")),
+                    }
+                )
             object_np = restrictor.get("object_np")
             if isinstance(object_np, dict):
                 collect_np_attachment_summary(
                     object_np,
                     f"{relative_site}_object",
+                    typed_modifiers,
+                    typed_time_modifiers,
+                    typed_np_restrictors,
+                    relative_objects,
+                )
+            agent_np = restrictor.get("agent_np")
+            if isinstance(agent_np, dict):
+                collect_np_attachment_summary(
+                    agent_np,
+                    f"{relative_site}_agent",
                     typed_modifiers,
                     typed_time_modifiers,
                     typed_np_restrictors,
@@ -7083,7 +7365,7 @@ def quantifier_attachment_explanation(summary: dict[str, Any]) -> str:
         )
     if relative_object_items:
         clauses.append(
-            "Relative object(s) "
+            "Relative object/agent argument(s) "
             + "; ".join(relative_object_items)
             + " remain Entity arguments of the relative predicate."
         )
@@ -7173,34 +7455,78 @@ def check_quantifier_scope_binder_restrictors(
         if predicate_type in {"Entity -> Entity -> Prop", MODIFIER_INDEXED_BINARY_RELATION}:
             obj = restrictor.get("object")
             object_np = restrictor.get("object_np")
+            agent = restrictor.get("agent")
+            agent_np = restrictor.get("agent_np")
             has_object = isinstance(obj, dict)
             has_object_np = isinstance(object_np, dict)
-            if has_object and has_object_np:
-                errors.append(
-                    f"{context}.restrictors[{restrictor_index}] "
-                    "cannot contain both object and object_np"
-                )
-            elif has_object:
-                if not isinstance(obj.get("name"), str) or not obj["name"]:
+            has_agent = isinstance(agent, dict)
+            has_agent_np = isinstance(agent_np, dict)
+            is_passive_reduced = restrictor.get("passive_reduced_relative") is True
+            if is_passive_reduced:
+                if has_object or has_object_np:
                     errors.append(
-                        f"{context}.restrictors[{restrictor_index}].object.name "
-                        "must be non-empty"
+                        f"{context}.restrictors[{restrictor_index}] "
+                        "passive reduced relatives cannot contain object or object_np"
                     )
-                if obj.get("type") != "Entity":
+                if has_agent and has_agent_np:
                     errors.append(
-                        f"{context}.restrictors[{restrictor_index}].object.type "
-                        "must be Entity"
+                        f"{context}.restrictors[{restrictor_index}] "
+                        "cannot contain both agent and agent_np"
                     )
-            elif has_object_np:
-                check_relative_object_np(
-                    errors,
-                    object_np,
-                    f"{context}.restrictors[{restrictor_index}].object_np",
-                )
+                elif not has_agent and not has_agent_np:
+                    errors.append(
+                        f"{context}.restrictors[{restrictor_index}] "
+                        "passive reduced relatives must contain agent or agent_np"
+                    )
+                elif has_agent:
+                    if not isinstance(agent.get("name"), str) or not agent["name"]:
+                        errors.append(
+                            f"{context}.restrictors[{restrictor_index}].agent.name "
+                            "must be non-empty"
+                        )
+                    if agent.get("type") != "Entity":
+                        errors.append(
+                            f"{context}.restrictors[{restrictor_index}].agent.type "
+                            "must be Entity"
+                        )
+                else:
+                    check_relative_object_np(
+                        errors,
+                        agent_np,
+                        f"{context}.restrictors[{restrictor_index}].agent_np",
+                    )
             else:
-                errors.append(
-                    f"{context}.restrictors[{restrictor_index}].object must be an object"
-                )
+                if has_agent or has_agent_np:
+                    errors.append(
+                        f"{context}.restrictors[{restrictor_index}] "
+                        "active relative restrictors cannot contain agent or agent_np"
+                    )
+                if has_object and has_object_np:
+                    errors.append(
+                        f"{context}.restrictors[{restrictor_index}] "
+                        "cannot contain both object and object_np"
+                    )
+                elif not has_object and not has_object_np:
+                    errors.append(
+                        f"{context}.restrictors[{restrictor_index}].object must be an object"
+                    )
+                elif has_object:
+                    if not isinstance(obj.get("name"), str) or not obj["name"]:
+                        errors.append(
+                            f"{context}.restrictors[{restrictor_index}].object.name "
+                            "must be non-empty"
+                        )
+                    if obj.get("type") != "Entity":
+                        errors.append(
+                            f"{context}.restrictors[{restrictor_index}].object.type "
+                            "must be Entity"
+                        )
+                else:
+                    check_relative_object_np(
+                        errors,
+                        object_np,
+                        f"{context}.restrictors[{restrictor_index}].object_np",
+                    )
     if (
         isinstance(binder.get("predicate"), str)
         and restrictor_predicates
@@ -23880,7 +24206,7 @@ SCOPE_ATTACHMENT_DISCOURSE_CATEGORY_SPECS = (
         "remaining_status": "arbitrary_stacked_relative_clause_attachment_open",
         "required_future_instances": [
             "stacked relative clauses",
-            "complex reduced relatives and non-finite relatives",
+            "complex reduced relatives beyond finite by-agent passives",
             "relative clauses interacting with discourse anaphora",
         ],
     },
@@ -24062,12 +24388,12 @@ def scope_attachment_discourse_audit_payload(
                 "sample_sentences": unique_truth_condition_witness_values(
                     witnesses,
                     "sentence",
-                    17,
+                    21,
                 ),
                 "sample_variant_ids": unique_truth_condition_witness_values(
                     witnesses,
                     "variant_id",
-                    17,
+                    21,
                 ),
                 "sample_witnesses": witnesses[:4],
             },
@@ -26112,6 +26438,16 @@ def contains_reduced_relative_disjunction(tokens: list[str]) -> bool:
     return False
 
 
+def contains_passive_reduced_relative(tokens: list[str]) -> bool:
+    return any(
+        index > 0
+        and index + 2 < len(tokens)
+        and is_passive_reduced_relative_surface(token)
+        and tokens[index + 1] == "by"
+        for index, token in enumerate(tokens)
+    )
+
+
 def unsupported_reduced_relative_disjunction_markers(sentence: str) -> list[str]:
     tokens = tokenize(sentence)
     if "or" not in tokens or len(tokens) < 5 or tokens[0] not in SUPPORTED_SCOPE_DETERMINERS:
@@ -26127,6 +26463,10 @@ def unsupported_reduced_relative_disjunction_markers(sentence: str) -> list[str]
         if contains_reduced_relative_disjunction(
             subject_tokens
         ) or contains_reduced_relative_disjunction(object_tokens):
+            return ["or"]
+        if contains_passive_reduced_relative(
+            subject_tokens
+        ) or contains_passive_reduced_relative(object_tokens):
             return ["or"]
     return []
 
@@ -26420,7 +26760,32 @@ def coq_command(coq_file: Path) -> list[str] | None:
     return None
 
 
+def coq_check_timeout_seconds() -> float:
+    raw_timeout = os.environ.get(COQ_CHECK_TIMEOUT_ENV)
+    if raw_timeout is None:
+        return DEFAULT_COQ_CHECK_TIMEOUT_SECONDS
+    try:
+        timeout = float(raw_timeout)
+    except ValueError:
+        return DEFAULT_COQ_CHECK_TIMEOUT_SECONDS
+    return max(timeout, 0.1)
+
+
+def skip_optional_coq_validation() -> bool:
+    value = os.environ.get(SKIP_OPTIONAL_COQ_ENV, "")
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
+    if not require_coq and skip_optional_coq_validation():
+        return {
+            "ok": None,
+            "status": "skipped",
+            "message": (
+                "Optional Coq/Rocq boundary validation skipped by "
+                f"{SKIP_OPTIONAL_COQ_ENV}."
+            ),
+        }
     command = coq_command(Path("pipeline_check.v"))
     if command is None:
         if require_coq:
@@ -26440,13 +26805,29 @@ def verify_coq_code(coq_code: str, require_coq: bool = False) -> dict[str, Any]:
         coq_file.write_text(coq_code, encoding="utf-8")
         command = coq_command(coq_file)
         assert command is not None
-        completed = subprocess.run(
-            command,
-            cwd=tmp,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        timeout = coq_check_timeout_seconds()
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=tmp,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            message = f"Coq/Rocq validation timed out after {timeout:g}s."
+            if require_coq:
+                return {
+                    "ok": False,
+                    "status": "failed",
+                    "message": message,
+                }
+            return {
+                "ok": None,
+                "status": "skipped",
+                "message": message,
+            }
     output = "\n".join(
         part for part in (completed.stdout.strip(), completed.stderr.strip()) if part
     )

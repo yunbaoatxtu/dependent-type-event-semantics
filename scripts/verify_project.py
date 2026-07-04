@@ -7,6 +7,7 @@ import argparse
 import html
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -46,6 +47,9 @@ PACKAGE_WHEEL_DIR = ROOT / "work" / "verify_package_build"
 ROCQ_ENV = Path(
     "/Applications/Rocq-Platform~9.0~2025.08.app/Contents/Resources/bin/coq-env.sh"
 )
+COQ_CHECK_TIMEOUT_ENV = "DTES_COQ_CHECK_TIMEOUT_SECONDS"
+SKIP_OPTIONAL_COQ_ENV = "DTES_SKIP_OPTIONAL_COQ"
+DEFAULT_COQ_CHECK_TIMEOUT_SECONDS = 30.0
 VALID_DIAGNOSTIC_FAILURE_STAGES = DIAGNOSTIC_FAILURE_STAGES
 VALID_DIAGNOSTIC_RECOVERY_ACTION_KINDS = DIAGNOSTIC_RECOVERY_ACTION_KINDS
 VALID_DIAGNOSTIC_REPAIR_PLAN_AUTOMATION_MODES = (
@@ -118,13 +122,38 @@ def run(label: str, command: list[str]) -> None:
     subprocess.run(command, cwd=ROOT, check=True)
 
 
+def coq_check_timeout_seconds() -> float:
+    raw_timeout = os.environ.get(COQ_CHECK_TIMEOUT_ENV)
+    if raw_timeout is None:
+        return DEFAULT_COQ_CHECK_TIMEOUT_SECONDS
+    try:
+        timeout = float(raw_timeout)
+    except ValueError:
+        return DEFAULT_COQ_CHECK_TIMEOUT_SECONDS
+    return max(timeout, 0.1)
+
+
+def run_coq_boundary_command(label: str, command: list[str]) -> None:
+    timeout = coq_check_timeout_seconds()
+    print(f"==> {label}")
+    try:
+        subprocess.run(command, cwd=ROOT, check=True, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        raise SystemExit(
+            f"Coq scaffold boundary check timed out after {timeout:g}s"
+        ) from exc
+
+
 def run_optional_coq_check(require_coq: bool) -> None:
     if shutil.which("coqc"):
-        run("optional Coq scaffold boundary check", ["coqc", str(COQ_FILE)])
+        run_coq_boundary_command(
+            "optional Coq scaffold boundary check",
+            ["coqc", str(COQ_FILE)],
+        )
         return
 
     if ROCQ_ENV.exists():
-        run(
+        run_coq_boundary_command(
             "optional Coq scaffold boundary check",
             [
                 "/bin/zsh",
@@ -17016,6 +17045,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.skip_coq:
+        os.environ[SKIP_OPTIONAL_COQ_ENV] = "1"
     check_python_docx_requirement(args.require_docx)
     run("unit tests", [sys.executable, "-m", "unittest", "discover", "-v"])
     run(
